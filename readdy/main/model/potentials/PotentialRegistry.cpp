@@ -22,6 +22,7 @@
 
 #include <readdy/model/potentials/PotentialRegistry.h>
 #include <readdy/common/Utils.h>
+#include <readdy/model/potentials/PotentialsOrder1.h>
 
 /**
  * << detailed description >>
@@ -36,12 +37,12 @@
 namespace readdy {
 namespace model {
 namespace potentials {
-PotentialRegistry::PotentialRegistry(particle_type_registry_ref typeRegistry) : typeRegistry(typeRegistry) {}
+PotentialRegistry::PotentialRegistry(particle_type_registry_ref typeRegistry) : _types(typeRegistry) {}
 
-const Potential::id PotentialRegistry::add_external(potentials::PotentialOrder2 *potential) {
-    const auto id = potential->getId();
-    auto type1Id = typeRegistry.id_of(potential->particleType1);
-    auto type2Id = typeRegistry.id_of(potential->particleType2);
+PotentialRegistry::id_type PotentialRegistry::addUserDefined(potentials::PotentialOrder2 *potential) {
+    auto id = potential->getId();
+    auto type1Id = potential->particleType1();
+    auto type2Id = potential->particleType2();
     auto pp = std::tie(type1Id, type2Id);
     if (potentialO2RegistryExternal.find(pp) == potentialO2RegistryExternal.end()) {
         potentialO2RegistryExternal.emplace(pp, pot_ptr_vec2_external());
@@ -50,8 +51,8 @@ const Potential::id PotentialRegistry::add_external(potentials::PotentialOrder2 
     return id;
 }
 
-const Potential::id PotentialRegistry::add_external(potentials::PotentialOrder1 *potential) {
-    auto typeId = typeRegistry.id_of(potential->particleType);
+PotentialRegistry::id_type PotentialRegistry::addUserDefined(potentials::PotentialOrder1 *potential) {
+    auto typeId = potential->particleType();
     if (potentialO1RegistryExternal.find(typeId) == potentialO1RegistryExternal.end()) {
         potentialO1RegistryExternal.emplace(std::make_pair(typeId, pot_ptr_vec1_external()));
     }
@@ -59,118 +60,114 @@ const Potential::id PotentialRegistry::add_external(potentials::PotentialOrder1 
     return potential->getId();
 }
 
-void PotentialRegistry::remove(const Potential::id handle) {
+void PotentialRegistry::remove(const Potential::id_type handle) {
     for (auto &entry : potentialO1RegistryInternal) {
         entry.second.erase(std::remove_if(entry.second.begin(), entry.second.end(),
-                                        [=](const std::unique_ptr<potentials::PotentialOrder1> &p) -> bool {
-                                            return handle == p->getId();
-                                        }
+                                          [=](const std::shared_ptr<potentials::PotentialOrder1> &p) -> bool {
+                                              return handle == p->getId();
+                                          }
         ), entry.second.end());
     }
     for (auto &entry : potentialO2RegistryInternal) {
         entry.second.erase(std::remove_if(entry.second.begin(), entry.second.end(),
-                                        [=](const std::unique_ptr<potentials::PotentialOrder2> &p) -> bool {
-                                            return handle == p->getId();
-                                        }
+                                          [=](const std::shared_ptr<potentials::PotentialOrder2> &p) -> bool {
+                                              return handle == p->getId();
+                                          }
         ), entry.second.end());
     }
     for (auto &entry : potentialO1RegistryExternal) {
         entry.second.erase(std::remove_if(entry.second.begin(), entry.second.end(),
-                                        [=](potentials::PotentialOrder1 *p) -> bool {
-                                            return handle == p->getId();
-                                        }
+                                          [=](potentials::PotentialOrder1 *p) -> bool {
+                                              return handle == p->getId();
+                                          }
         ), entry.second.end());
     }
     for (auto &entry : potentialO2RegistryExternal) {
         entry.second.erase(std::remove_if(entry.second.begin(), entry.second.end(),
-                                        [=](potentials::PotentialOrder2 *p) -> bool {
-                                            return handle == p->getId();
-                                        }
+                                          [=](potentials::PotentialOrder2 *p) -> bool {
+                                              return handle == p->getId();
+                                          }
         ), entry.second.end());
     }
 }
 
-const PotentialRegistry::potentials_o1& PotentialRegistry::potentials_of(const particle_type_type type) const {
+const PotentialRegistry::potentials_o1 &PotentialRegistry::potentialsOf(const particle_type_type type) const {
     auto it = potentialO1Registry.find(type);
-    if(it != potentialO1Registry.end()) {
+    if (it != potentialO1Registry.end()) {
         return it->second;
     }
     return defaultPotentialsO1;
 }
 
-const PotentialRegistry::potential_o1_registry& PotentialRegistry::potentials_order1() const {
+const PotentialRegistry::potential_o1_registry &PotentialRegistry::potentialsOrder1() const {
     return potentialO1Registry;
 }
 
 const std::vector<PotentialOrder2 *> &
-PotentialRegistry::potentials_of(const particle_type_type t1, const particle_type_type t2) const {
+PotentialRegistry::potentialsOf(const particle_type_type t1, const particle_type_type t2) const {
     auto it = potentialO2Registry.find(std::tie(t1, t2));
-    if(it != potentialO2Registry.end()) {
+    if (it != potentialO2Registry.end()) {
         return it->second;
     }
     return defaultPotentialsO2;
 }
 
-const PotentialRegistry::potential_o2_registry &PotentialRegistry::potentials_order2() const {
+const PotentialRegistry::potential_o2_registry &PotentialRegistry::potentialsOrder2() const {
     return potentialO2Registry;
 }
 
-const PotentialRegistry::potentials_o1& PotentialRegistry::potentials_of(const std::string &type) const {
-    return potentials_of(typeRegistry.id_of(type));
+const PotentialRegistry::potentials_o1 &PotentialRegistry::potentialsOf(const std::string &type) const {
+    return potentialsOf(_types.get().idOf(type));
 }
 
 const PotentialRegistry::potentials_o2 &
-PotentialRegistry::potentials_of(const std::string &t1, const std::string &t2) const {
-    return potentials_of(typeRegistry.id_of(t1), typeRegistry.id_of(t2));
+PotentialRegistry::potentialsOf(const std::string &t1, const std::string &t2) const {
+    return potentialsOf(_types.get().idOf(t1), _types.get().idOf(t2));
 }
 
 void PotentialRegistry::configure() {
     namespace coll = readdy::util::collections;
     using pair = util::particle_type_pair;
     using pot1 = potentials::PotentialOrder1;
-    using pot1_ptr = std::unique_ptr<potentials::PotentialOrder1>;
-    using pot2_ptr = std::unique_ptr<potentials::PotentialOrder2>;
+    using pot1_ptr = std::shared_ptr<potentials::PotentialOrder1>;
+    using pot2_ptr = std::shared_ptr<potentials::PotentialOrder2>;
     using pot2 = potentials::PotentialOrder2;
     potentialO1Registry.clear();
     potentialO2Registry.clear();
 
     coll::for_each_value(potentialO1RegistryInternal, [&](const particle_type_type type, const pot1_ptr &ptr) {
-        ptr->configureForType(&typeRegistry, type);
         (potentialO1Registry)[type].push_back(ptr.get());
     });
     coll::for_each_value(potentialO2RegistryInternal, [&](const pair &type, const pot2_ptr &ptr) {
-        ptr->configureForTypes(&typeRegistry, std::get<0>(type), std::get<1>(type));
         (potentialO2Registry)[type].push_back(ptr.get());
     });
     coll::for_each_value(potentialO1RegistryExternal, [&](const particle_type_type type, pot1 *ptr) {
-        ptr->configureForType(&typeRegistry, type);
         (potentialO1Registry)[type].push_back(ptr);
     });
     coll::for_each_value(potentialO2RegistryExternal, [&](const pair &type, pot2 *ptr) {
-        ptr->configureForTypes(&typeRegistry, std::get<0>(type), std::get<1>(type));
         (potentialO2Registry)[type].push_back(ptr);
     });
 }
 
-void PotentialRegistry::debug_output() const {
+void PotentialRegistry::debugOutput() const {
     auto find_pot_name = [this](particle_type_type type) -> const std::string {
-        for (auto &&t : typeRegistry.type_mapping()) {
+        for (auto &&t : _types.get().typeMapping()) {
             if (t.second == type) return t.first;
         }
         return "";
     };
-    if (!potentials_order1().empty()) {
+    if (!potentialsOrder1().empty()) {
         log::debug(" - potentials of order 1:");
-        for (const auto &types : potentials_order1()) {
+        for (const auto &types : potentialsOrder1()) {
             log::debug("     * for type {}", find_pot_name(types.first));
             for (auto pot : types.second) {
                 log::debug("         * {}", pot->describe());
             }
         }
     }
-    if (!potentials_order2().empty()) {
+    if (!potentialsOrder2().empty()) {
         log::debug(" - potentials of order 2:");
-        for (const auto &types : potentials_order2()) {
+        for (const auto &types : potentialsOrder2()) {
             log::debug("     * for types {} and {}", find_pot_name(std::get<0>(types.first)),
                        find_pot_name(std::get<1>(types.first)));
             for (auto pot : types.second) {
@@ -180,20 +177,140 @@ void PotentialRegistry::debug_output() const {
     }
 }
 
-const Potential::id PotentialRegistry::add(std::unique_ptr<PotentialOrder1> potential) {
-    const auto id = potential->getId();
-    auto typeId = typeRegistry.id_of(potential->particleType);
-    potentialO1RegistryInternal[typeId].push_back(std::move(potential));
-    return id;
+Potential::id_type PotentialRegistry::addBox(const std::string &particleType, scalar forceConstant, const Vec3 &origin,
+                                             const Vec3 &extent) {
+    return addBox(_types.get()(particleType), forceConstant, origin, extent);
 }
 
-const Potential::id PotentialRegistry::add(std::unique_ptr<PotentialOrder2> potential) {
-    const auto id = potential->getId();
-    auto type1Id = typeRegistry.id_of(potential->particleType1);
-    auto type2Id = typeRegistry.id_of(potential->particleType2);
-    potentialO2RegistryInternal[std::tie(type1Id, type2Id)].push_back(std::move(potential));
-    return id;
+Potential::id_type PotentialRegistry::addBox(particle_type_type particleType, scalar forceConstant, const Vec3 &origin,
+                                             const Vec3 &extent) {
+    auto &pots = potentialO1RegistryInternal[particleType];
+    pots.emplace_back(std::make_shared<Box>(particleType, forceConstant, origin, extent));
+    return pots.back()->getId();
 }
+
+PotentialRegistry::id_type
+PotentialRegistry::addHarmonicRepulsion(const std::string &type1, const std::string &type2, scalar forceConstant, scalar interactionDistance) {
+    return addHarmonicRepulsion(_types.get()(type1), _types.get()(type2), forceConstant, interactionDistance);
+}
+
+PotentialRegistry::id_type
+PotentialRegistry::addHarmonicRepulsion(particle_type_type type1, particle_type_type type2, scalar forceConstant, scalar interactionDistance) {
+    auto &pots = potentialO2RegistryInternal[std::tie(type1, type2)];
+    pots.emplace_back(std::make_shared<HarmonicRepulsion>(type1, type2, forceConstant, interactionDistance));
+    return pots.back()->getId();
+}
+
+PotentialRegistry::id_type
+PotentialRegistry::addWeakInteractionPiecewiseHarmonic(const std::string &type1, const std::string &type2,
+                                                       scalar forceConstant,
+                                                       const WeakInteractionPiecewiseHarmonic::Configuration &config) {
+    return addWeakInteractionPiecewiseHarmonic(_types.get()(type1), _types.get()(type2), forceConstant, config);
+}
+
+PotentialRegistry::id_type
+PotentialRegistry::addWeakInteractionPiecewiseHarmonic(particle_type_type type1, particle_type_type type2,
+                                                       scalar forceConstant,
+                                                       const WeakInteractionPiecewiseHarmonic::Configuration &config) {
+    auto &pots = potentialO2RegistryInternal[std::tie(type1, type2)];
+    pots.emplace_back(std::make_shared<WeakInteractionPiecewiseHarmonic>(type1, type2, forceConstant, config));
+    return pots.back()->getId();
+}
+
+PotentialRegistry::id_type
+PotentialRegistry::addWeakInteractionPiecewiseHarmonic(particle_type_type type1, particle_type_type type2,
+                                                       scalar forceConstant, scalar desiredDist, scalar depth,
+                                                       scalar cutoff) {
+    WeakInteractionPiecewiseHarmonic::Configuration conf{desiredDist, depth, cutoff};
+    return addWeakInteractionPiecewiseHarmonic(type1, type2, forceConstant, conf);
+}
+
+PotentialRegistry::id_type
+PotentialRegistry::addWeakInteractionPiecewiseHarmonic(const std::string &type1, const std::string &type2,
+                                                       scalar forceConstant, scalar desiredDist, scalar depth,
+                                                       scalar cutoff) {
+    return addWeakInteractionPiecewiseHarmonic(_types.get()(type1), _types.get()(type2), forceConstant, desiredDist,
+                                               depth, cutoff);
+}
+
+PotentialRegistry::id_type
+PotentialRegistry::addLennardJones(const std::string &type1, const std::string &type2, unsigned int m, unsigned int n,
+                                   scalar cutoff, bool shift, scalar epsilon, scalar sigma) {
+    return addLennardJones(_types.get()(type1), _types.get()(type2), m, n, cutoff, shift, epsilon, sigma);
+}
+
+PotentialRegistry::id_type
+PotentialRegistry::addLennardJones(particle_type_type type1, particle_type_type type2, unsigned int m, unsigned int n,
+                                   scalar cutoff, bool shift, scalar epsilon, scalar sigma) {
+    auto &pots = potentialO2RegistryInternal[std::tie(type1, type2)];
+    pots.emplace_back(std::make_shared<LennardJones>(type1, type2, m, n, cutoff, shift, epsilon, sigma));
+    return pots.back()->getId();
+}
+
+PotentialRegistry::id_type
+PotentialRegistry::addScreenedElectrostatics(const std::string &particleType1, const std::string &particleType2,
+                                             scalar electrostaticStrength, scalar inverseScreeningDepth,
+                                             scalar repulsionStrength, scalar repulsionDistance, unsigned int exponent,
+                                             scalar cutoff) {
+    return addScreenedElectrostatics(_types.get()(particleType1), _types.get()(particleType2), electrostaticStrength,
+                                     inverseScreeningDepth, repulsionStrength, repulsionDistance, exponent, cutoff);
+}
+
+PotentialRegistry::id_type
+PotentialRegistry::addScreenedElectrostatics(particle_type_type particleType1, particle_type_type particleType2,
+                                             scalar electrostaticStrength, scalar inverseScreeningDepth,
+                                             scalar repulsionStrength, scalar repulsionDistance, unsigned int exponent,
+                                             scalar cutoff) {
+    auto &pots = potentialO2RegistryInternal[std::tie(particleType1, particleType2)];
+    pots.emplace_back(std::make_shared<ScreenedElectrostatics>(particleType1, particleType2, electrostaticStrength,
+                                                               inverseScreeningDepth, repulsionStrength,
+                                                               repulsionDistance, exponent, cutoff));
+    return pots.back()->getId();
+}
+
+PotentialRegistry::id_type
+PotentialRegistry::addSphereOut(const std::string &particleType, scalar forceConstant, const Vec3 &origin,
+                                scalar radius) {
+    return addSphereOut(_types.get()(particleType), forceConstant, origin, radius);
+}
+
+PotentialRegistry::id_type
+PotentialRegistry::addSphereOut(particle_type_type particleType, scalar forceConstant, const Vec3 &origin,
+                                scalar radius) {
+    auto &pots = potentialO1RegistryInternal[particleType];
+    pots.emplace_back(std::make_shared<SphereOut>(particleType, forceConstant, origin, radius));
+    return pots.back()->getId();
+}
+
+PotentialRegistry::id_type
+PotentialRegistry::addSphereIn(const std::string &particleType, scalar forceConstant, const Vec3 &origin,
+                               scalar radius) {
+    return addSphereIn(_types.get()(particleType), forceConstant, origin, radius);
+}
+
+PotentialRegistry::id_type
+PotentialRegistry::addSphereIn(particle_type_type particleType, scalar forceConstant, const Vec3 &origin,
+                               scalar radius) {
+    auto &pots = potentialO1RegistryInternal[particleType];
+    pots.emplace_back(std::make_shared<SphereIn>(particleType, forceConstant, origin, radius));
+    return pots.back()->getId();
+}
+
+PotentialRegistry::id_type
+PotentialRegistry::addSphericalBarrier(const std::string &particleType, scalar height, scalar width, const Vec3 &origin,
+                                       scalar radius) {
+    return addSphericalBarrier(_types.get()(particleType), height, width, origin, radius);
+}
+
+PotentialRegistry::id_type
+PotentialRegistry::addSphericalBarrier(particle_type_type particleType, scalar height, scalar width, const Vec3 &origin,
+                                       scalar radius) {
+    auto &pots = potentialO1RegistryInternal[particleType];
+    pots.emplace_back(std::make_shared<SphericalBarrier>(particleType, height, width, origin, radius));
+    return pots.back()->getId();
+}
+
+
 }
 }
 }

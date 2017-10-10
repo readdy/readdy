@@ -59,8 +59,8 @@ Plane::Plane(const Compartment::conversion_map &conversions, const std::string &
           largerOrLess(largerOrLess) {
     const auto normSquared = normalCoefficients * normalCoefficients;
     if (std::abs(normSquared - 1) > 0.0001) {
-        log::warn("Plane coefficients not sufficiently normalized. Unwanted behavior ahead! Make sure that coefficients and distance"
-                                     "accord to the Hesse normal form");
+        throw std::invalid_argument("Plane coefficients not sufficiently normalized. Make sure that coefficients and "
+                                            "distance are according to the Hesse normal form");
     }
 }
 

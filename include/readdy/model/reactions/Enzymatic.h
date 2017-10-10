@@ -36,30 +36,30 @@ NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(reactions)
 
-class Enzymatic : public Reaction<2> {
+class Enzymatic : public Reaction {
 
 public:
     Enzymatic(const std::string &name, particle_type_type catalyst, particle_type_type from, particle_type_type to,
               const scalar rate, const scalar eductDistance) :
-            Reaction(name, rate, eductDistance, 0, 2) {
-        educts = {from, catalyst};
-        products = {to, catalyst};
+            Reaction(name, rate, eductDistance, 0, 2, 2) {
+        _educts = {from, catalyst};
+        _products = {to, catalyst};
     }
 
 
-    const unsigned int getCatalyst() const {
-        return educts[1];
+    const particle_type_type getCatalyst() const {
+        return _educts[1];
     }
 
-    const unsigned int getFrom() const {
-        return educts[0];
+    const particle_type_type getFrom() const {
+        return _educts[0];
     }
 
-    const unsigned int getTo() const {
-        return products[0];
+    const particle_type_type getTo() const {
+        return _products[0];
     }
 
-    virtual const ReactionType getType() override {
+    virtual const ReactionType type() const override {
         return ReactionType::Enzymatic;
     }
 };

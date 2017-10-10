@@ -49,15 +49,39 @@ NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(util)
 
 struct PerformanceData {
+    /**
+     * defines the type in which elapsed time is stored
+     */
     using time = readdy::scalar;
+
+    /**
+     * Creates a new performance datum containing the cumulative time and the number of calls.
+     * @param t the initial cumulative time
+     * @param c the initial number of calls
+     */
     PerformanceData(time t, std::size_t c) : _cumulativeTime(t), _count(c) {}
 
+    /**
+     * Record some elapsed time
+     * @param elapsed the elapsed time
+     */
     void record(time elapsed) const;
 
+    /**
+     * the current value of the aggregated time in this datum
+     * @return the cumulative time
+     */
     time cumulativeTime() const;
 
+    /**
+     * the number of calls that were made to record plus the initial number of counts given in the constructor
+     * @return the number of calls
+     */
     std::size_t count() const;
 
+    /**
+     * clears this datum
+     */
     void clear() const;
 private:
     mutable time _cumulativeTime = 0.;
@@ -67,17 +91,39 @@ private:
 
 class Timer {
 public:
+    /**
+     * Creates a new timer object that will record the time elapsed between construction and destruction in a given
+     * performance datum.
+     *
+     * @param target the performance datum to store the elapsed time in
+     * @param measure if set to false, the measurements will not be stored
+     */
     explicit Timer(const PerformanceData &target, bool measure);
 
+    /**
+     * Destructor of the timer, recording the elapsed lifetime of this object into the given performance datum.
+     */
     ~Timer();
 
-    Timer(const Timer &other) = delete;
+    /**
+     * no copy
+     */
+    Timer(const Timer &) = delete;
 
-    Timer(Timer &&other) = default;
+    /**
+     * no move
+     */
+    Timer(Timer &&) = default;
 
-    Timer &operator=(const Timer &other) = delete;
+    /**
+     * NO COPY ASSIGN
+     */
+    Timer &operator=(const Timer &) = delete;
 
-    Timer &operator=(Timer &&other) = delete;
+    /**
+     * NO MOVE ASSIGN
+     */
+    Timer &operator=(Timer &&) = delete;
 
 private:
     bool measure;
@@ -87,8 +133,17 @@ private:
 
 class PerformanceNode {
 public:
+    /**
+     * a reference to a performance node
+     */
     using performance_node_ref = std::unique_ptr<PerformanceNode>;
+    /**
+     * the mutex implementation to use
+     */
     using performance_mutex = std::mutex;
+    /**
+     * the lock implementation to use
+     */
     using performance_lock = std::unique_lock<performance_mutex>;
 
     /**
@@ -106,16 +161,41 @@ public:
      */
     PerformanceNode(const std::string &name, bool measure, const PerformanceNode &root);
 
+    /**
+     * Creates a subnode to this performance node
+     * @param name subnode's name
+     * @return the subnode
+     */
     const PerformanceNode &subnode(const std::string &name) const;
 
+    /**
+     * clear all performance data in this node and the child nodes
+     */
     void clear();
 
+    /**
+     * creates a RAII timer object belonging to this node
+     * @return the timer object
+     */
     Timer timeit() const;
 
+    /**
+     * returns the performance datum of this
+     * @return the performance datum
+     */
     const PerformanceData &data() const;
 
+    /**
+     * This node's name.
+     * @return the node's name
+     */
     const std::string &name() const;
 
+    /**
+     * Yields the child node with the given name. Raises if no such node exists.
+     * @param name the child node's name
+     * @return the child node
+     */
     const PerformanceNode &direct_child(const std::string &name) const;
 
     /**
@@ -126,22 +206,56 @@ public:
      */
     const PerformanceNode &child(const std::string &path) const;
 
+    /**
+     * yields a child node
+     * @param labels resolved path
+     * @return the child node
+     */
     const PerformanceNode &child(const std::vector<std::string> &labels) const;
 
+    /**
+     * returns the number of direct child nodes
+     * @return the number of direct child nodes
+     */
     const std::size_t n_children() const;
 
+    /**
+     * This is how we print this.
+     * @param os the output stream
+     * @param node a performance node instance
+     * @return the output stream
+     */
     friend std::ostream& operator<<(std::ostream &os, const PerformanceNode &node) {
         os << node.describe();
         return os;
     }
 
+    /**
+     * Yields a string representation of this
+     * @param level the indent level
+     * @return a string representation
+     */
     std::string describe(std::size_t level = 0) const;
 
+    /**
+     * Yields the child nodes' names.
+     * @return the child nodes' names.
+     */
     std::vector<std::string> keys() const;
 
 private:
+    /**
+     * Parse a path into a vector of strings, i.e., its components.
+     * @param path the path
+     * @return the path's components
+     */
     std::vector<std::string> parse(const std::string &path) const;
 
+    /**
+     * validate a name
+     * @param name the name
+     * @return trimmed copy of the name if everything was o.k.
+     */
     std::string validateName(const std::string &name) const;
 
     std::string _name;

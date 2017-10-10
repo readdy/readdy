@@ -31,8 +31,8 @@
 
 #pragma once
 
-#include <readdy/model/KernelStateModel.h>
-#include <readdy/model/KernelContext.h>
+#include <readdy/model/StateModel.h>
+#include <readdy/model/Context.h>
 #include <readdy/common/thread/Config.h>
 #include <readdy/model/reactions/ReactionRecord.h>
 #include <readdy/model/observables/ReactionCounts.h>
@@ -45,20 +45,19 @@
 namespace readdy {
 namespace kernel {
 namespace cpu {
-class CPUStateModel : public readdy::model::KernelStateModel {
+class CPUStateModel : public readdy::model::StateModel {
 
 public:
 
     using data_type = readdy::kernel::cpu::data::EntryDataContainer;
     using particle_type = readdy::model::Particle;
-    using reaction_counts_order1_map = readdy::model::observables::ReactionCounts::reaction_counts_order1_map;
-    using reaction_counts_order2_map = readdy::model::observables::ReactionCounts::reaction_counts_order2_map;
+    using reaction_counts_map = readdy::model::reactions::reaction_counts_map;
 
     using topology = readdy::model::top::GraphTopology;
     using topology_ref = std::unique_ptr<topology>;
     using topologies_vec = readdy::util::index_persistent_vector<topology_ref>;
 
-    CPUStateModel(readdy::model::KernelContext* context, readdy::util::thread::Config const* config,
+    CPUStateModel(const readdy::model::Context &context, readdy::util::thread::Config const* config,
                   readdy::model::top::TopologyActionFactory const* taf);
 
     ~CPUStateModel() override;
@@ -113,9 +112,11 @@ public:
 
     const std::vector<readdy::model::reactions::ReactionRecord> &reactionRecords() const;
 
-    const std::pair<reaction_counts_order1_map, reaction_counts_order2_map> &reactionCounts() const;
+    const reaction_counts_map & reactionCounts() const;
 
-    std::pair<reaction_counts_order1_map, reaction_counts_order2_map> &reactionCounts();
+    reaction_counts_map &reactionCounts();
+
+    void resetReactionCounts();
 
     particle_type getParticleForIndex(std::size_t index) const override;
 
@@ -135,12 +136,12 @@ public:
 
 private:
     std::reference_wrapper<const readdy::util::thread::Config> _config;
-    std::reference_wrapper<const readdy::model::KernelContext> _context;
+    std::reference_wrapper<const readdy::model::Context> _context;
     std::unique_ptr<neighbor_list> _neighborList;
     std::unique_ptr<readdy::signals::scoped_connection> _reorderConnection;
     std::reference_wrapper<const readdy::model::top::TopologyActionFactory> _topologyActionFactory;
     std::vector<readdy::model::reactions::ReactionRecord> _reactionRecords{};
-    std::pair<reaction_counts_order1_map, reaction_counts_order2_map> _reactionCounts;
+    reaction_counts_map _reactionCounts;
     scalar _currentEnergy = 0;
     topologies_vec _topologies{};
 };

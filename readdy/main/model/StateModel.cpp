@@ -30,12 +30,12 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#include <readdy/model/KernelStateModel.h>
+#include <readdy/model/StateModel.h>
 
 namespace readdy {
 namespace model {
 
-std::vector<Particle> KernelStateModel::getParticlesForTopology(const top::GraphTopology &topology) const {
+std::vector<Particle> StateModel::getParticlesForTopology(const top::GraphTopology &topology) const {
     std::vector<Particle> result;
     result.reserve(topology.getNParticles());
     for(const auto& p : topology.getParticles()) {

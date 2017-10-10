@@ -48,10 +48,10 @@ public:
     using skin_size_t = scalar;
     using data_type = data::NLDataContainer;
 
-    AdaptiveNeighborList(data::EntryDataContainer *data, const readdy::model::KernelContext &context, const readdy::util::thread::Config &config,
+    AdaptiveNeighborList(data::EntryDataContainer *data, const readdy::model::Context &context, const readdy::util::thread::Config &config,
                          bool hilbert_sort = true);
 
-    AdaptiveNeighborList(const readdy::model::KernelContext &context, const readdy::util::thread::Config &config,
+    AdaptiveNeighborList(const readdy::model::Context &context, const readdy::util::thread::Config &config,
                          bool hilbert_sort = true);
 
     ~AdaptiveNeighborList() = default;

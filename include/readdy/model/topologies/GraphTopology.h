@@ -41,6 +41,7 @@
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
+class StateModel;
 NAMESPACE_BEGIN(top)
 
 class GraphTopology : public Topology {
@@ -50,6 +51,7 @@ public:
     using topology_reaction_rate = scalar;
     using topology_reaction_rates = std::vector<topology_reaction_rate>;
     using types_vec = std::vector<particle_type_type>;
+    using vertex = graph::Vertex;
 
     /**
      * Creates a new graph topology. An internal graph object will be created with vertices corresponding to the
@@ -57,10 +59,11 @@ public:
      * @param type the type
      * @param particles the particles
      * @param types particle's types
-     * @param config the configuration table
+     * @param context the kernel's context
+     * @param stateModel the kernel's state model
      */
     GraphTopology(topology_type_type type, const particle_indices &particles, const types_vec &types,
-                  const api::PotentialConfiguration &config);
+                  const model::Context &context, const StateModel* stateModel);
 
     /**
      * Will create a graph topology out of an already existing graph and a list of particles, where the i-th vertex
@@ -68,10 +71,11 @@ public:
      * @param type the type
      * @param particles the particles list
      * @param graph the already existing graph
-     * @param config the configuration table
+     * @param context the kernel's context
+     * @param stateModel the kernels state model
      */
     GraphTopology(topology_type_type type, particle_indices &&particles, topology_graph &&graph,
-                  const api::PotentialConfiguration &config);
+                  const model::Context &context, const StateModel* stateModel);
 
     virtual ~GraphTopology() = default;
 
@@ -117,9 +121,18 @@ public:
 
     const topology_reaction_rates &rates() const;
 
+    const model::Context &context() const;
+
+    std::vector<Particle> fetchParticles() const;
+
+    Particle particleForVertex(const vertex &vertex) const;
+
+    Particle particleForVertex(topology_graph::vertex_ref vertexRef) const;
+
 protected:
     topology_graph graph_;
-    std::reference_wrapper<const api::PotentialConfiguration> config;
+    std::reference_wrapper<const model::Context> _context;
+    const model::StateModel *_stateModel;
     topology_reaction_rates _reaction_rates;
     topology_reaction_rate _cumulativeRate;
     topology_type_type _topology_type;

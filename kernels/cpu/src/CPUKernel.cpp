@@ -41,17 +41,13 @@ const std::string CPUKernel::name = "CPU";
 
 struct CPUKernel::Impl {
     std::unique_ptr<actions::CPUActionFactory> actionFactory;
-    std::unique_ptr<readdy::model::potentials::PotentialFactory> potentialFactory;
-    std::unique_ptr<readdy::model::reactions::ReactionFactory> reactionFactory;
     std::unique_ptr<observables::CPUObservableFactory> observableFactory;
-    std::unique_ptr<readdy::model::compartments::CompartmentFactory> compartmentFactory;
     std::unique_ptr<CPUStateModel> stateModel;
-    std::unique_ptr<readdy::model::KernelContext> context;
     std::unique_ptr<readdy::util::thread::Config> config;
     std::unique_ptr<readdy::model::top::TopologyActionFactory> topologyActionFactory;
 };
 
-readdy::model::Kernel* CPUKernel::create() {
+readdy::model::Kernel *CPUKernel::create() {
     return new CPUKernel();
 }
 
@@ -59,38 +55,19 @@ CPUKernel::CPUKernel() : readdy::model::Kernel(name), pimpl(std::make_unique<Imp
     pimpl->config = std::make_unique<readdy::util::thread::Config>();
     pimpl->config->setMode(readdy::util::thread::ThreadMode::pool);
 
-    pimpl->reactionFactory = std::make_unique<readdy::model::reactions::ReactionFactory>();
-    pimpl->context = std::make_unique<readdy::model::KernelContext>();
     pimpl->actionFactory = std::make_unique<actions::CPUActionFactory>(this);
     pimpl->topologyActionFactory = std::make_unique<readdy::kernel::cpu::actions::top::CPUTopologyActionFactory>(this);
-    pimpl->stateModel = std::make_unique<CPUStateModel>(pimpl->context.get(), pimpl->config.get(), pimpl->topologyActionFactory.get());
-    pimpl->potentialFactory = std::make_unique<readdy::model::potentials::PotentialFactory>();
+    pimpl->stateModel = std::make_unique<CPUStateModel>(_context, pimpl->config.get(),
+                                                        pimpl->topologyActionFactory.get());
     pimpl->observableFactory = std::make_unique<observables::CPUObservableFactory>(this);
-    pimpl->compartmentFactory = std::make_unique<readdy::model::compartments::CompartmentFactory>();
 }
 
 CPUStateModel &CPUKernel::getKernelStateModelInternal() const {
     return *pimpl->stateModel;
 }
 
-readdy::model::KernelContext &CPUKernel::getKernelContextInternal() const {
-    return *pimpl->context;
-}
-
-readdy::model::potentials::PotentialFactory &CPUKernel::getPotentialFactoryInternal() const {
-    return *pimpl->potentialFactory;
-}
-
-readdy::model::reactions::ReactionFactory &CPUKernel::getReactionFactoryInternal() const {
-    return *pimpl->reactionFactory;
-}
-
 readdy::model::observables::ObservableFactory &CPUKernel::getObservableFactoryInternal() const {
     return *pimpl->observableFactory;
-}
-
-readdy::model::compartments::CompartmentFactory &CPUKernel::getCompartmentFactoryInternal() const {
-    return *pimpl->compartmentFactory;
 }
 
 unsigned long CPUKernel::getNThreads() const {
@@ -127,13 +104,10 @@ readdy::util::thread::Config &CPUKernel::threadConfig() {
 
 void CPUKernel::initialize() {
     readdy::model::Kernel::initialize();
-    readdy::conf::cpu::Configuration configuration {};
-    const auto &fullConfiguration = getKernelContext().kernelConfiguration();
 
-    if(fullConfiguration.find("CPU") != fullConfiguration.end()) {
-        configuration = fullConfiguration["CPU"];
-    }
+    const auto &fullConfiguration = context().kernelConfiguration();
 
+    const auto &configuration = fullConfiguration.cpu;
     {
         // thread config
         if (configuration.threadConfig.nThreads > 0) {
@@ -145,10 +119,12 @@ void CPUKernel::initialize() {
         // state model config
         getCPUKernelStateModel().configure(configuration);
     }
-    for(auto& top : getCPUKernelStateModel().topologies()) {
+    for (auto &top : getCPUKernelStateModel().topologies()) {
         top->configure();
-        top->updateReactionRates(getKernelContext().topology_registry().structural_reactions_of(top->type()));
+        top->updateReactionRates(context().topology_registry().structuralReactionsOf(top->type()));
     }
+    getCPUKernelStateModel().reactionRecords().clear();
+    getCPUKernelStateModel().resetReactionCounts();
 }
 
 void CPUKernel::finalize() {
@@ -167,10 +143,10 @@ CPUKernel::~CPUKernel() = default;
 }
 
 
-const char* name()  {
+const char *name() {
     return readdy::kernel::cpu::CPUKernel::name.c_str();
 }
 
-readdy::model::Kernel* createKernel() {
+readdy::model::Kernel *createKernel() {
     return readdy::kernel::cpu::CPUKernel::create();
 }

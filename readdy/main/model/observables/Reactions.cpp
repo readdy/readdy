@@ -47,7 +47,6 @@ struct Reactions::Impl {
     std::unique_ptr<util::TimeSeriesWriter> time;
     std::unique_ptr<h5rd::Group> group;
     std::unique_ptr<util::CompoundH5Types> h5types;
-    bool firstWrite = true;
 };
 
 Reactions::Reactions(Kernel *const kernel, unsigned int stride)
@@ -60,32 +59,27 @@ void Reactions::flush() {
 }
 
 void Reactions::initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) {
-    if (!pimpl->writer) {
-        h5rd::dimensions fs = {flushStride};
-        h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
-        pimpl->h5types = std::make_unique<util::CompoundH5Types>(util::getReactionRecordTypes(file.ref()));
-        pimpl->group = std::make_unique<h5rd::Group>(
-                file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName));
-        pimpl->writer = pimpl->group->createVLENDataSet("records", fs, dims, std::get<0>(*pimpl->h5types),
-                                                        std::get<1>(*pimpl->h5types));
-        pimpl->time = std::make_unique<util::TimeSeriesWriter>(*pimpl->group, flushStride);
-    }
+    result.clear();
+    h5rd::dimensions fs = {flushStride};
+    h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
+    pimpl->h5types = std::make_unique<util::CompoundH5Types>(util::getReactionRecordTypes(file.ref()));
+    pimpl->group = std::make_unique<h5rd::Group>(
+            file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName));
+    pimpl->writer = pimpl->group->createVLENDataSet("records", fs, dims, std::get<0>(*pimpl->h5types),
+                                                    std::get<1>(*pimpl->h5types));
+    pimpl->time = std::make_unique<util::TimeSeriesWriter>(*pimpl->group, flushStride);
 }
 
 void Reactions::append() {
     pimpl->writer->append({1}, &result);
-    if (pimpl->firstWrite) {
-        pimpl->firstWrite = false;
-        ioutils::writeReactionInformation(*pimpl->group, kernel->getKernelContext());
-    }
     pimpl->time->append(t_current);
 }
 
 void Reactions::initialize(Kernel *const kernel) {
-    if (!kernel->getKernelContext().recordReactionsWithPositions()) {
+    if (!kernel->context().recordReactionsWithPositions()) {
         log::warn("The \"Reactions\"-observable set context.recordReactionsWithPositions() to true. "
                           "If this is undesired, the observable should not be registered.");
-        kernel->getKernelContext().recordReactionsWithPositions() = true;
+        kernel->context().recordReactionsWithPositions() = true;
     }
 }
 

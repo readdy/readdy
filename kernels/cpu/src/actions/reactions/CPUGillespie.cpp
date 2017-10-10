@@ -41,8 +41,8 @@ CPUGillespie::CPUGillespie(CPUKernel *const kernel, scalar timeStep) : super(tim
 
 void CPUGillespie::perform(const util::PerformanceNode &node) {
     auto t = node.timeit();
-    const auto &ctx = kernel->getKernelContext();
-    if(ctx.reactions().n_order1() == 0 && ctx.reactions().n_order2() == 0) {
+    const auto &ctx = kernel->context();
+    if(ctx.reactions().nOrder1() == 0 && ctx.reactions().nOrder2() == 0) {
         return;
     }
     auto &stateModel = kernel->getCPUKernelStateModel();
@@ -52,7 +52,7 @@ void CPUGillespie::perform(const util::PerformanceNode &node) {
     const auto nl = stateModel.getNeighborList();
 
     if(ctx.recordReactionCounts()) {
-        readdy::model::observables::ReactionCounts::initializeCounts(stateModel.reactionCounts(), ctx);
+        stateModel.resetReactionCounts();
     }
 
     scalar alpha = 0.0;

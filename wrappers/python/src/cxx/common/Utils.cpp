@@ -35,6 +35,7 @@
 #include <pybind11/numpy.h>
 
 #include <fstream>
+#include <utility>
 
 #include <spdlog/fmt/ostr.h>
 
@@ -42,6 +43,8 @@
 #include <readdy/model/observables/io/Types.h>
 #include <readdy/model/IOUtils.h>
 #include <readdy/io/BloscFilter.h>
+#include <readdy/model/reactions/ReactionRecord.h>
+#include "ReadableReactionRecord.h"
 
 namespace py = pybind11;
 using rvp = py::return_value_policy;
@@ -56,7 +59,7 @@ py::tuple convert_readdy_viewer(const std::string &h5name, const std::string &tr
 
     auto f = h5rd::File::open(h5name, h5rd::File::Flag::READ_ONLY);
 
-    auto particleInfoH5Type = readdy::model::ioutils::getReactionInfoMemoryType(f->ref());
+    auto particleInfoH5Type = readdy::model::ioutils::getParticleTypeInfoType(f->ref());
 
     // get particle types from config
     std::vector<readdy::model::ioutils::ParticleTypeInfo> types;
@@ -130,7 +133,7 @@ convert_xyz(const std::string &h5name, const std::string &trajName, const std::s
 
     auto f = h5rd::File::open(h5name, h5rd::File::Flag::READ_ONLY);
 
-    auto particleInfoH5Type = readdy::model::ioutils::getReactionInfoMemoryType(f->ref());
+    auto particleInfoH5Type = readdy::model::ioutils::getParticleTypeInfoType(f->ref());
 
     // get particle types from config
     std::vector<readdy::model::ioutils::ParticleTypeInfo> types;
@@ -276,9 +279,206 @@ convert_xyz(const std::string &h5name, const std::string &trajName, const std::s
     readdy::log::debug("converting finished");
 }
 
+std::vector<std::vector<rpy::ReadableReactionRecord>> read_reactions_obs(const std::string &filename, const std::string &name){
+    readdy::io::BloscFilter bloscFilter;
+    bloscFilter.registerFilter();
+
+    auto f = h5rd::File::open(filename, h5rd::File::Flag::READ_ONLY);
+
+    auto reactionInfoH5Type = readdy::model::ioutils::getReactionInfoMemoryType(f->ref());
+
+    // get reaction info from config
+    std::unordered_map<readdy::model::reactions::Reaction::reaction_id, readdy::model::ioutils::ReactionInfo>
+            reactionsMap;
+    {
+        std::vector<readdy::model::ioutils::ReactionInfo> reactionInfo;
+        auto config = f->getSubgroup("readdy/config/");
+        config.read("registered_reactions", reactionInfo, &std::get<0>(reactionInfoH5Type),
+                    &std::get<1>(reactionInfoH5Type));
+        for (const auto &info : reactionInfo) {
+            reactionsMap[info.id] = info;
+        }
+    }
+
+    std::vector<std::vector<readdy::model::reactions::ReactionRecord>> records;
+    {
+        auto reactionRecordH5Types = readdy::model::observables::util::getReactionRecordTypes(f->ref());
+        auto dsgroup = f->getSubgroup("readdy/observables/" + name);
+        dsgroup.readVLEN("records", records, &std::get<0>(reactionRecordH5Types), &std::get<1>(reactionRecordH5Types));
+    }
+
+    std::vector<std::vector<rpy::ReadableReactionRecord>> result;
+    result.reserve(records.size());
+    for(const auto &reactions : records) {
+        result.emplace_back();
+        auto &readableRecords = result.back();
+        readableRecords.reserve(reactions.size());
+
+        for(const auto &reaction : reactions) {
+            readableRecords.push_back(rpy::convert(reaction, reactionsMap.at(reaction.id).name));
+        }
+
+    }
+
+    return result;
+}
+
+struct TrajectoryParticle {
+    TrajectoryParticle(std::string type, std::string flavor, const std::array<readdy::scalar, 3> &pos,
+                       readdy::model::Particle::id_type id, readdy::time_step_type t)
+            : type(std::move(type)), flavor(std::move(flavor)), position(pos), id(id), t(t) {}
+    std::string type;
+    std::string flavor;
+    std::array<readdy::scalar, 3> position;
+    readdy::model::Particle::id_type id;
+    readdy::time_step_type t;
+};
+
+std::string repr(const TrajectoryParticle &p) {
+    std::stringstream ss;
+
+    ss << "Particle[id=" << p.id << ", type=" << p.type << ", time=" << p.t << ", flavor=" << p.flavor
+       << ", position=(" << p.position[0] << ", " << p.position[1] << ", " << p.position[2] << ")]";
+
+    return ss.str();
+}
+
+std::vector<std::vector<TrajectoryParticle>> read_trajectory(const std::string &filename, const std::string &name) {
+    readdy::io::BloscFilter bloscFilter;
+    bloscFilter.registerFilter();
+
+    auto f = h5rd::File::open(filename, h5rd::File::Flag::READ_ONLY);
+
+    auto particleInfoH5Type = readdy::model::ioutils::getParticleTypeInfoType(f->ref());
+
+    // get particle types from config
+    std::vector<readdy::model::ioutils::ParticleTypeInfo> types;
+    {
+        auto config = f->getSubgroup("readdy/config");
+        config.read("particle_types", types, &std::get<0>(particleInfoH5Type), &std::get<1>(particleInfoH5Type));
+    }
+    std::unordered_map<std::size_t, std::string> typeMapping;
+    for(const auto &type : types) {
+        typeMapping[type.type_id] = std::string(type.name);
+    }
+
+    auto traj = f->getSubgroup("readdy/trajectory/" + name);
+
+    // limits
+    std::vector<std::size_t> limits;
+    traj.read("limits", limits);
+
+    // time
+    std::vector<readdy::time_step_type> time;
+    traj.read("time", time);
+
+    // records
+    std::vector<readdy::model::observables::TrajectoryEntry> entries;
+    auto trajectoryEntryTypes = readdy::model::observables::util::getTrajectoryEntryTypes(f->ref());
+    traj.read("records", entries, &std::get<0>(trajectoryEntryTypes), &std::get<1>(trajectoryEntryTypes));
+
+    auto n_frames = limits.size()/2;
+    readdy::log::debug("got n frames: {}", n_frames);
+
+    std::vector<std::vector<TrajectoryParticle>> result;
+    result.reserve(n_frames);
+
+
+    auto timeIt = time.begin();
+    for (std::size_t frame = 0; frame < limits.size(); frame += 2, ++timeIt) {
+        auto begin = limits[frame];
+        auto end = limits[frame + 1];
+        result.emplace_back();
+        auto &currentFrame = result.back();
+        currentFrame.reserve(end - begin);
+
+        for (auto it = entries.begin() + begin; it != entries.begin() + end; ++it) {
+            currentFrame.emplace_back(typeMapping[it->typeId],
+                                      readdy::model::particleflavor::particle_flavor_to_str(it->flavor),
+                                      it->pos.data, it->id, *timeIt);
+        }
+    }
+
+    return std::move(result);
+}
+
 void exportUtils(py::module &m) {
     using namespace pybind11::literals;
+    py::class_<TrajectoryParticle>(m, "TrajectoryParticle")
+            .def_property_readonly("type", [](const TrajectoryParticle &self) {return self.type;}, R"docs(
+                Returns the type of the particle.
+
+                :return: type of the particle
+            )docs")
+            .def_property_readonly("flavor", [](const TrajectoryParticle &self) {return self.flavor;}, R"docs(
+                Returns the flavor of the particle (NORMAL or TOPOLOGY).
+
+                :return: flavor of the particle
+            )docs")
+            .def_property_readonly("position", [](const TrajectoryParticle &self) {return self.position;}, R"docs(
+                Returns the position of the particle as array of length 3.
+
+                :return: position of the particle
+            )docs")
+            .def_property_readonly("id", [](const TrajectoryParticle &self) {return self.id;}, R"docs(
+                Returns the id of the particle.
+
+                :return: id of the particle
+            )docs")
+            .def_property_readonly("t", [](const TrajectoryParticle &self) {return self.t;}, R"docs(
+                Returns the current simulation time.
+
+                :return: the simulation time
+            )docs")
+            .def("__repr__", [](const TrajectoryParticle &p) {
+                return repr(p);
+            })
+            .def("__str__", [](const TrajectoryParticle &p) {
+                return repr(p);
+            });
+    py::class_<rpy::ReadableReactionRecord>(m, "ReactionRecord")
+            .def_property_readonly("type", [](const rpy::ReadableReactionRecord &self) { return self.type; }, R"docs(
+                Returns the type of reaction that occurred. One of conversion, fission, fusion, enzymatic, decay.
+
+                :return: the type of reaction
+            )docs")
+            .def_property_readonly("reaction_label", [](const rpy::ReadableReactionRecord &self) {
+                return self.reaction_label;
+            }, R"docs(
+                Returns the label of the specific reaction as defined in the reaction diffusion system.
+
+                :return: the label
+            )docs")
+            .def_property_readonly("educts", [](const rpy::ReadableReactionRecord &self) {
+                return self.educts;
+            }, R"docs(
+                Returns the particle IDs of the the educts of this reaction.
+
+                :return: the IDs
+            )docs")
+            .def_property_readonly("products", [](const rpy::ReadableReactionRecord &self) {
+                return self.products;
+            }, R"docs(
+                Returns the product IDs of the products of this reaction.
+
+                :return: the IDs
+            )docs")
+            .def_property_readonly("position", [](const rpy::ReadableReactionRecord &self) {
+                return self.where;
+            }, R"docs(
+                Returns the position of the reaction event.
+
+                :return: the position
+            )docs")
+            .def("__repr__", [](const rpy::ReadableReactionRecord &self) {
+                return repr(self);
+            })
+            .def("__str__", [](const rpy::ReadableReactionRecord &self) {
+                return repr(self);
+            });
     m.def("convert_xyz", &convert_xyz, "h5_file_name"_a, "traj_data_set_name"_a, "xyz_out_file_name"_a,
           "generate_tcl"_a = true, "tcl_with_grid"_a = false, "radii"_a = radiusmap{});
     m.def("convert_readdyviewer", &convert_readdy_viewer, "h5_file_name"_a, "traj_data_set_name"_a);
+    m.def("read_trajectory", &read_trajectory, "filename"_a, "name"_a);
+    m.def("read_reaction_observable", &read_reactions_obs, "filename"_a, "name"_a);
 }

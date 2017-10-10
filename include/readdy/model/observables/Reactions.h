@@ -45,19 +45,22 @@ class Reactions : public Observable<std::vector<reactions::ReactionRecord>> {
     using super = Observable<std::vector<reactions::ReactionRecord>>;
 
 public:
-    Reactions(Kernel* kernel, unsigned int stride);
+    Reactions(Kernel *kernel, unsigned int stride);
 
-    Reactions(const Reactions&) = delete;
-    Reactions& operator=(const Reactions&) = delete;
-    Reactions(Reactions&&) = default;
-    Reactions& operator=(Reactions&&) = delete;
+    Reactions(const Reactions &) = delete;
+
+    Reactions &operator=(const Reactions &) = delete;
+
+    Reactions(Reactions &&) = default;
+
+    Reactions &operator=(Reactions &&) = delete;
 
     virtual ~Reactions();
 
     void flush() override;
 
 protected:
-    void initialize(Kernel* kernel) override;
+    void initialize(Kernel *kernel) override;
 
     void initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) override;
 

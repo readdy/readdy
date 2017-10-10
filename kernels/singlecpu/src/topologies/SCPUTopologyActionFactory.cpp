@@ -30,7 +30,9 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#include <readdy/kernel/singlecpu/model/topologies/SCPUTopologyActionFactory.h>
+
+#include <readdy/kernel/singlecpu/SCPUKernel.h>
+
 #include <readdy/kernel/singlecpu/model/topologies/SCPUTopologyActions.h>
 
 namespace c_top = readdy::model::top;
@@ -46,7 +48,7 @@ SCPUTopologyActionFactory::SCPUTopologyActionFactory(const SCPUKernel *const ker
 std::unique_ptr<c_top::pot::CalculateHarmonicBondPotential>
 SCPUTopologyActionFactory::createCalculateHarmonicBondPotential(const harmonic_bond *const potential) const {
     return std::make_unique<SCPUCalculateHarmonicBondPotential>(
-            &kernel->getKernelContext(), kernel->getSCPUKernelStateModel().getParticleData(), potential
+            &kernel->context(), kernel->getSCPUKernelStateModel().getParticleData(), potential
     );
 }
 
@@ -54,7 +56,7 @@ std::unique_ptr<readdy::model::top::pot::CalculateHarmonicAnglePotential>
 SCPUTopologyActionFactory::createCalculateHarmonicAnglePotential(
         const harmonic_angle *const potential) const {
     return std::make_unique<SCPUCalculateHarmonicAnglePotential>(
-            &kernel->getKernelContext(), kernel->getSCPUKernelStateModel().getParticleData(), potential
+            &kernel->context(), kernel->getSCPUKernelStateModel().getParticleData(), potential
     );
 }
 
@@ -62,11 +64,11 @@ std::unique_ptr<top::pot::CalculateCosineDihedralPotential>
 SCPUTopologyActionFactory::createCalculateCosineDihedralPotential(
         const cos_dihedral *const potential) const {
     return std::make_unique<SCPUCalculateCosineDihedralPotential>(
-            &kernel->getKernelContext(), kernel->getSCPUKernelStateModel().getParticleData(), potential
+            &kernel->context(), kernel->getSCPUKernelStateModel().getParticleData(), potential
     );
 }
 
-SCPUTopologyActionFactory::operation_ref
+SCPUTopologyActionFactory::action_ref
 SCPUTopologyActionFactory::createChangeParticleType(top::GraphTopology *const topology, const vertex &v,
                                                     const particle_type_type &type_to) const {
     return std::make_unique<reactions::op::SCPUChangeParticleType>(
@@ -74,11 +76,11 @@ SCPUTopologyActionFactory::createChangeParticleType(top::GraphTopology *const to
     );
 }
 
-top::reactions::actions::TopologyReactionActionFactory::operation_ref
+top::reactions::actions::TopologyReactionActionFactory::action_ref
 SCPUTopologyActionFactory::createChangeTopologyType(top::GraphTopology *const topology,
                                                     const std::string &type_to) const {
     return std::make_unique<readdy::model::top::reactions::actions::ChangeTopologyType>(
-            topology, kernel->getKernelContext().topology_registry().id_of(type_to)
+            topology, kernel->context().topology_registry().idOf(type_to)
     );
 }
 

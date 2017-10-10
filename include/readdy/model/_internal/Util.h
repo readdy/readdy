@@ -33,7 +33,7 @@
 #pragma once
 
 #include <set>
-#include <readdy/model/KernelContext.h>
+#include <readdy/model/Context.h>
 #include <sstream>
 
 NAMESPACE_BEGIN(readdy)
@@ -41,31 +41,29 @@ NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(_internal)
 NAMESPACE_BEGIN(util)
 
-inline std::set<unsigned int> transformTypes(const std::vector<std::string> &types, const readdy::model::KernelContext &ctx) {
+inline std::set<unsigned int> transformTypes(const std::vector<std::string> &types, const readdy::model::Context &ctx) {
     std::set<unsigned int> result;
     for (const auto &t : types) {
-        result.insert(ctx.particle_types().id_of(t));
+        result.insert(ctx.particle_types().idOf(t));
     }
     return result;
 }
 
 inline std::vector<unsigned int>
-transformTypes2(const std::vector<std::string> &types, const readdy::model::KernelContext &ctx) {
+transformTypes2(const std::vector<std::string> &types, const readdy::model::Context &ctx) {
     std::vector<unsigned int> result;
     result.reserve(types.size());
     for (auto &t : types) {
-        result.push_back(ctx.particle_types().id_of(t));
+        result.push_back(ctx.particle_types().idOf(t));
     }
     return result;
 }
 
 inline std::unordered_map<Particle::type_type, Particle::type_type>
-transformTypesMap(const std::unordered_map<std::string, std::string> &stringMap, const readdy::model::KernelContext &ctx) {
+transformTypesMap(const std::unordered_map<std::string, std::string> &stringMap, const ParticleTypeRegistry &types) {
     std::unordered_map<Particle::type_type, Particle::type_type> result;
     for (const auto &pair : stringMap) {
-        const auto id1 = ctx.particle_types().id_of(pair.first);
-        const auto id2 = ctx.particle_types().id_of(pair.second);
-        result.emplace(id1, id2);
+        result.emplace(types(pair.first), types(pair.second));
     }
     return result;
 }

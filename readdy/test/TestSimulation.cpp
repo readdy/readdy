@@ -83,7 +83,7 @@ TEST_F(TestSimulation, TestMeanSquaredDisplacement) {
     simulation.setBoxSize(10, 10, 10);
     unsigned int n_particles = 103;
     readdy::scalar diffusionConstant = 1;
-    simulation.registerParticleType("type", diffusionConstant, .1);
+    simulation.registerParticleType("type", diffusionConstant);
     for (auto _ = 0; _ < n_particles; ++_) {
         simulation.addParticle("type", 0, 0, 0);
     }
@@ -108,7 +108,7 @@ TEST_F(TestSimulation, TestObservables) {
     simulation.setBoxSize(10, 10, 10);
     unsigned int n_particles = 103;
     readdy::scalar diffusionConstant = 1;
-    simulation.registerParticleType("type", diffusionConstant, .1);
+    simulation.registerParticleType("type", diffusionConstant);
     for (auto _ = 0; _ < n_particles; ++_) {
         simulation.addParticle("type", 0, 0, 0);
     }

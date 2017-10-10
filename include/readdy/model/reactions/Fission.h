@@ -39,39 +39,39 @@ NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(reactions)
 
-class Fission : public Reaction<1> {
-    using super = Reaction<1>;
+class Fission : public Reaction {
+    using super = Reaction;
 public:
     Fission(const std::string &name, particle_type_type from, particle_type_type to1, particle_type_type to2,
             const scalar rate, const scalar productDistance, const scalar weight1 = 0.5,
             const scalar weight2 = 0.5) :
-            Reaction(name, rate, 0, productDistance, 2) {
-        super::weight1 = weight1;
-        super::weight2 = weight2;
-        educts = {from};
-        products = {to1, to2};
+            Reaction(name, rate, 0, productDistance, 1, 2) {
+        super::_weight1 = weight1;
+        super::_weight2 = weight2;
+        _educts = {from};
+        _products = {to1, to2};
         const auto sum = weight1 + weight2;
         if (sum != 1) {
-            this->weight1 /= sum;
-            this->weight2 /= sum;
+            this->_weight1 /= sum;
+            this->_weight2 /= sum;
             log::warn("The weights did not add up to 1, they were changed to weight1={}, weight2={}",
-                      this->weight1, this->weight2);
+                      this->_weight1, this->_weight2);
         }
     }
 
-    const unsigned int getFrom() const {
-        return educts[0];
+    const particle_type_type getFrom() const {
+        return _educts[0];
     }
 
-    const unsigned int getTo1() const {
-        return products[0];
+    const particle_type_type getTo1() const {
+        return _products[0];
     }
 
-    const unsigned int getTo2() const {
-        return products[1];
+    const particle_type_type getTo2() const {
+        return _products[1];
     }
 
-    virtual const ReactionType getType() override {
+    virtual const ReactionType type() const override {
         return ReactionType::Fission;
     }
 

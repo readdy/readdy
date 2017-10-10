@@ -38,8 +38,8 @@ namespace model {
 namespace top {
 topology_type_type TopologyRegistry::counter = 0;
 
-void TopologyRegistry::add_structural_reaction(topology_type_type type,
-                                               const reactions::StructuralTopologyReaction &reaction) {
+void TopologyRegistry::addStructuralReaction(topology_type_type type,
+                                             const reactions::StructuralTopologyReaction &reaction) {
     auto it = _registry.find(type);
     if (it != _registry.end()) {
         it->second.structural_reactions.push_back(reaction);
@@ -48,8 +48,8 @@ void TopologyRegistry::add_structural_reaction(topology_type_type type,
     }
 }
 
-void TopologyRegistry::add_structural_reaction(topology_type_type type,
-                                               reactions::StructuralTopologyReaction &&reaction) {
+void TopologyRegistry::addStructuralReaction(topology_type_type type,
+                                             reactions::StructuralTopologyReaction &&reaction) {
     auto it = _registry.find(type);
     if (it != _registry.end()) {
         it->second.structural_reactions.push_back(std::move(reaction));
@@ -59,7 +59,7 @@ void TopologyRegistry::add_structural_reaction(topology_type_type type,
 }
 
 const TopologyTypeInfo &
-TopologyRegistry::info_of(topology_type_type type) const {
+TopologyRegistry::infoOf(topology_type_type type) const {
     auto it = _registry.find(type);
     if (it != _registry.end()) {
         return it->second;
@@ -68,48 +68,48 @@ TopologyRegistry::info_of(topology_type_type type) const {
 }
 
 const TopologyTypeInfo::structural_reaction_vector &
-TopologyRegistry::structural_reactions_of(topology_type_type type) const {
+TopologyRegistry::structuralReactionsOf(topology_type_type type) const {
     auto it = _registry.find(type);
     if (it != _registry.end()) {
         return it->second.structural_reactions;
     }
     log::warn("requested structural topology reactions of type {} which did not exist!", type);
-    return defaultInfo.structural_reactions;
+    return _defaultInfo.structural_reactions;
 }
 
 bool TopologyRegistry::empty() {
     return _registry.empty();
 }
 
-bool TopologyRegistry::contains_structural_reactions() {
-    return _contains_structural_reactions;
+bool TopologyRegistry::containsStructuralReactions() {
+    return _containsStructuralReactions;
 }
 
 void TopologyRegistry::configure() {
-    _topology_reaction_types.clear();
-    _contains_structural_reactions = false;
+    _topologyReactionTypes.clear();
+    _containsStructuralReactions = false;
 
     for (const auto &e : _registry) {
-        _contains_structural_reactions |= e.second.structural_reactions.empty();
+        _containsStructuralReactions |= e.second.structural_reactions.empty();
     }
 
-    for (const auto &entry : _spatial_reactions) {
-        _topology_reaction_types.emplace(std::get<0>(entry.first));
-        _topology_reaction_types.emplace(std::get<2>(entry.first));
+    for (const auto &entry : _spatialReactions) {
+        _topologyReactionTypes.emplace(std::get<0>(entry.first));
+        _topologyReactionTypes.emplace(std::get<2>(entry.first));
     }
 }
 
-void TopologyRegistry::debug_output() const {
-    if (!_spatial_reactions.empty()) {
+void TopologyRegistry::debugOutput() const {
+    if (!_spatialReactions.empty()) {
         log::debug(" - spatial topology reactions:");
-        for (const auto &entry : _spatial_reactions) {
+        for (const auto &entry : _spatialReactions) {
             for (const auto &reaction : entry.second) {
                 auto d = fmt::format(
                         "SpatialTopologyReaction( ({} (id={}), {} (id={})) -> ({} (id={}), {} (id={})) , radius={}, rate={}",
-                        _type_registry.get().name_of(reaction.type1()), reaction.type1(),
-                        _type_registry.get().name_of(reaction.type2()), reaction.type2(),
-                        _type_registry.get().name_of(reaction.type_to1()), reaction.type_to1(),
-                        _type_registry.get().name_of(reaction.type_to2()), reaction.type_to2(),
+                        _typeRegistry.get().nameOf(reaction.type1()), reaction.type1(),
+                        _typeRegistry.get().nameOf(reaction.type2()), reaction.type2(),
+                        _typeRegistry.get().nameOf(reaction.type_to1()), reaction.type_to1(),
+                        _typeRegistry.get().nameOf(reaction.type_to2()), reaction.type_to2(),
                         reaction.radius(), reaction.rate());
                 log::debug("     * reaction {}", d);
             }
@@ -132,11 +132,11 @@ void TopologyRegistry::debug_output() const {
     }
 
     log::debug(" - topology potential configuration:");
-    log::debug("     - bonds ({}):", potentialConfiguration_.pairPotentials.size());
-    for (const auto &entry : potentialConfiguration_.pairPotentials) {
+    log::debug("     - bonds ({}):", _potentialConfiguration.pairPotentials.size());
+    for (const auto &entry : _potentialConfiguration.pairPotentials) {
         log::debug("         - Bonds for particle types {} and {}:",
-                   _type_registry.get().name_of(std::get<0>(entry.first)),
-                   _type_registry.get().name_of(std::get<1>(entry.first)));
+                   _typeRegistry.get().nameOf(std::get<0>(entry.first)),
+                   _typeRegistry.get().nameOf(std::get<1>(entry.first)));
         auto bondToStr = [](const api::Bond &bond) -> std::string {
             switch (bond.type) {
                 case api::BondType::HARMONIC:
@@ -148,8 +148,8 @@ void TopologyRegistry::debug_output() const {
                        bond.forceConstant, bond.length);
         }
     }
-    log::debug("     - angles ({}):", potentialConfiguration_.anglePotentials.size());
-    for (const auto &entry : potentialConfiguration_.anglePotentials) {
+    log::debug("     - angles ({}):", _potentialConfiguration.anglePotentials.size());
+    for (const auto &entry : _potentialConfiguration.anglePotentials) {
         auto angleToStr = [](const api::Angle &angle) -> std::string {
             switch (angle.type) {
                 case api::AngleType::HARMONIC:
@@ -161,8 +161,8 @@ void TopologyRegistry::debug_output() const {
                        angleToStr(angle), angle.forceConstant, angle.equilibriumAngle);
         }
     }
-    log::debug("     - torsions ({}):", potentialConfiguration_.torsionPotentials.size());
-    for (const auto &entry : potentialConfiguration_.torsionPotentials) {
+    log::debug("     - torsions ({}):", _potentialConfiguration.torsionPotentials.size());
+    for (const auto &entry : _potentialConfiguration.torsionPotentials) {
         auto torsionToStr = [](const api::TorsionAngle &torsion) -> std::string {
             switch (torsion.type) {
                 case api::TorsionType::COS_DIHEDRAL:
@@ -176,7 +176,7 @@ void TopologyRegistry::debug_output() const {
     }
 }
 
-const std::string &TopologyRegistry::name_of(readdy::topology_type_type type) const {
+const std::string &TopologyRegistry::nameOf(readdy::topology_type_type type) const {
     auto it = _registry.find(type);
     if (it != _registry.end()) {
         return it->second.name;
@@ -184,7 +184,7 @@ const std::string &TopologyRegistry::name_of(readdy::topology_type_type type) co
     throw std::invalid_argument(fmt::format("The requested type id {} did not exist.", type));
 }
 
-readdy::topology_type_type TopologyRegistry::id_of(const std::string &name) const {
+readdy::topology_type_type TopologyRegistry::idOf(const std::string &name) const {
     if (name.empty()) return topology_type_empty;
     using entry_type = type_registry::value_type;
     auto it = std::find_if(_registry.begin(), _registry.end(), [&name](const entry_type &entry) {
@@ -196,7 +196,7 @@ readdy::topology_type_type TopologyRegistry::id_of(const std::string &name) cons
     throw std::invalid_argument(fmt::format("The requested type \"{}\" did not exist.", name));
 }
 
-readdy::topology_type_type TopologyRegistry::add_type(const std::string &name, const structural_reactions &reactions) {
+readdy::topology_type_type TopologyRegistry::addType(const std::string &name, const structural_reactions &reactions) {
     util::validateTypeName(name);
     using entry_type = type_registry::value_type;
     auto it = std::find_if(_registry.begin(), _registry.end(), [&name](const entry_type &entry) {
@@ -210,82 +210,82 @@ readdy::topology_type_type TopologyRegistry::add_type(const std::string &name, c
     throw std::invalid_argument(fmt::format("The type {} already existed.", name));
 }
 
-void TopologyRegistry::add_structural_reaction(const std::string &type,
-                                               const reactions::StructuralTopologyReaction &reaction) {
-    add_structural_reaction(id_of(type), reaction);
+void TopologyRegistry::addStructuralReaction(const std::string &type,
+                                             const reactions::StructuralTopologyReaction &reaction) {
+    addStructuralReaction(idOf(type), reaction);
 }
 
-void TopologyRegistry::add_structural_reaction(const std::string &type,
-                                               reactions::StructuralTopologyReaction &&reaction) {
-    add_structural_reaction(id_of(type), std::forward<reactions::StructuralTopologyReaction>(reaction));
+void TopologyRegistry::addStructuralReaction(const std::string &type,
+                                             reactions::StructuralTopologyReaction &&reaction) {
+    addStructuralReaction(idOf(type), std::forward<reactions::StructuralTopologyReaction>(reaction));
 }
 
 const TopologyRegistry::structural_reactions &
-TopologyRegistry::structural_reactions_of(const std::string &type) const {
-    return structural_reactions_of(id_of(type));
+TopologyRegistry::structuralReactionsOf(const std::string &type) const {
+    return structuralReactionsOf(idOf(type));
 }
 
 TopologyRegistry::TopologyRegistry(
-        const readdy::model::ParticleTypeRegistry &typeRegistry) : _type_registry(typeRegistry) {}
+        const readdy::model::ParticleTypeRegistry &typeRegistry) : _typeRegistry(typeRegistry) {}
 
 
-void TopologyRegistry::add_spatial_reaction(const std::string &name, const readdy::util::particle_type_pair &types,
-                                            const topology_type_pair &topology_types,
-                                            const readdy::util::particle_type_pair &types_to,
-                                            const topology_type_pair &topology_types_to,
-                                            scalar rate, scalar radius, reactions::STRMode mode) {
+void TopologyRegistry::addSpatialReaction(const std::string &name, const readdy::util::particle_type_pair &types,
+                                          const topology_type_pair &topology_types,
+                                          const readdy::util::particle_type_pair &types_to,
+                                          const topology_type_pair &topology_types_to,
+                                          scalar rate, scalar radius, reactions::STRMode mode) {
     spatial_reaction reaction(name, types, topology_types, types_to, topology_types_to, rate, radius, mode);
-    add_spatial_reaction(std::move(reaction));
+    addSpatialReaction(std::move(reaction));
 }
 
-void TopologyRegistry::add_spatial_reaction(const std::string &descriptor, scalar rate, scalar radius) {
+void TopologyRegistry::addSpatialReaction(const std::string &descriptor, scalar rate, scalar radius) {
     reactions::STRParser parser(*this);
-    add_spatial_reaction(parser.parse(descriptor, rate, radius));
+    addSpatialReaction(parser.parse(descriptor, rate, radius));
 }
 
-void TopologyRegistry::add_spatial_reaction(reactions::SpatialTopologyReaction &&reaction) {
-    validate_spatial_reaction(reaction);
+void TopologyRegistry::addSpatialReaction(reactions::SpatialTopologyReaction &&reaction) {
+    validateSpatialReaction(reaction);
     auto key = std::make_tuple(reaction.type1(), reaction.top_type1(), reaction.type2(), reaction.top_type2());
-    _spatial_reactions[key].push_back(std::move(reaction));
+    _spatialReactions[key].push_back(std::move(reaction));
 }
 
-const TopologyRegistry::spatial_reaction_map &TopologyRegistry::spatial_reaction_registry() const {
-    return _spatial_reactions;
+const TopologyRegistry::spatial_reaction_map &TopologyRegistry::spatialReactionRegistry() const {
+    return _spatialReactions;
 }
 
-void TopologyRegistry::add_spatial_reaction(const std::string &name, const std::string &typeFrom1,
-                                            const std::string &typeFrom2, const std::string &topologyTypeFrom1,
-                                            const std::string &topologyTypeFrom2, const std::string &typeTo1,
-                                            const std::string &typeTo2, const std::string &topologyTypeTo1,
-                                            const std::string &topologyTypeTo2, scalar rate, scalar radius,
-                                            reactions::STRMode mode) {
-    auto type_pair = std::make_tuple(_type_registry.get().id_of(typeFrom1), _type_registry.get().id_of(typeFrom2));
-    auto type_pair_to = std::make_tuple(_type_registry.get().id_of(typeTo1), _type_registry.get().id_of(typeTo2));
-    auto top_pair = std::make_tuple(id_of(topologyTypeFrom1), id_of(topologyTypeFrom2));
-    auto top_pair_to = std::make_tuple(id_of(topologyTypeTo1), id_of(topologyTypeTo2));
-    add_spatial_reaction(name, type_pair, top_pair, type_pair_to, top_pair_to, rate, radius, mode);
+void TopologyRegistry::addSpatialReaction(const std::string &name, const std::string &typeFrom1,
+                                          const std::string &typeFrom2, const std::string &topologyTypeFrom1,
+                                          const std::string &topologyTypeFrom2, const std::string &typeTo1,
+                                          const std::string &typeTo2, const std::string &topologyTypeTo1,
+                                          const std::string &topologyTypeTo2, scalar rate, scalar radius,
+                                          reactions::STRMode mode) {
+    auto type_pair = std::make_tuple(_typeRegistry.get().idOf(typeFrom1), _typeRegistry.get().idOf(typeFrom2));
+    auto type_pair_to = std::make_tuple(_typeRegistry.get().idOf(typeTo1), _typeRegistry.get().idOf(typeTo2));
+    auto top_pair = std::make_tuple(idOf(topologyTypeFrom1), idOf(topologyTypeFrom2));
+    auto top_pair_to = std::make_tuple(idOf(topologyTypeTo1), idOf(topologyTypeTo2));
+    addSpatialReaction(name, type_pair, top_pair, type_pair_to, top_pair_to, rate, radius, mode);
 }
 
 const TopologyRegistry::spatial_reactions &
-TopologyRegistry::spatial_reactions_by_type(particle_type_type t1, topology_type_type tt1,
-                                            particle_type_type t2, topology_type_type tt2) const {
+TopologyRegistry::spatialReactionsByType(particle_type_type t1, topology_type_type tt1,
+                                         particle_type_type t2, topology_type_type tt2) const {
 
-    auto it = _spatial_reactions.find(std::make_tuple(t1, tt1, t2, tt2));
-    if (it != _spatial_reactions.end()) {
+    auto it = _spatialReactions.find(std::make_tuple(t1, tt1, t2, tt2));
+    if (it != _spatialReactions.end()) {
         return it->second;
     }
-    return defaultTopologyReactions;
+    return _defaultTopologyReactions;
 }
 
-bool TopologyRegistry::is_spatial_reaction_type(particle_type_type type) const {
-    return _topology_reaction_types.find(type) != _topology_reaction_types.end();
+bool TopologyRegistry::isSpatialReactionType(particle_type_type type) const {
+    return _topologyReactionTypes.find(type) != _topologyReactionTypes.end();
 }
 
-bool TopologyRegistry::is_spatial_reaction_type(const std::string &name) const {
-    return is_spatial_reaction_type(_type_registry.get().id_of(name));
+bool TopologyRegistry::isSpatialReactionType(const std::string &name) const {
+    return isSpatialReactionType(_typeRegistry.get().idOf(name));
 }
 
-void TopologyRegistry::validate_spatial_reaction(const spatial_reaction &reaction) const {
+void TopologyRegistry::validateSpatialReaction(const spatial_reaction &reaction) const {
     if (reaction.rate() <= 0) {
         throw std::invalid_argument("The rate of an structural topology reaction (" + reaction.name() +
                                     ") should always be positive");
@@ -294,10 +294,10 @@ void TopologyRegistry::validate_spatial_reaction(const spatial_reaction &reactio
         throw std::invalid_argument("The radius of an structural topology reaction("
                                     + reaction.name() + ") should always be positive");
     }
-    auto info1 = _type_registry.get().info_of(reaction.type1());
-    auto info2 = _type_registry.get().info_of(reaction.type2());
-    auto infoTo1 = _type_registry.get().info_of(reaction.type_to1());
-    auto infoTo2 = _type_registry.get().info_of(reaction.type_to2());
+    auto info1 = _typeRegistry.get().infoOf(reaction.type1());
+    auto info2 = _typeRegistry.get().infoOf(reaction.type2());
+    auto infoTo1 = _typeRegistry.get().infoOf(reaction.type_to1());
+    auto infoTo2 = _typeRegistry.get().infoOf(reaction.type_to2());
 
     if (info1.flavor != particleflavor::TOPOLOGY && info2.flavor != particleflavor::TOPOLOGY) {
         throw std::invalid_argument(
@@ -308,14 +308,14 @@ void TopologyRegistry::validate_spatial_reaction(const spatial_reaction &reactio
 
     {
         using tr_entry = spatial_reaction_map::value_type;
-        auto it = std::find_if(_spatial_reactions.begin(), _spatial_reactions.end(),
+        auto it = std::find_if(_spatialReactions.begin(), _spatialReactions.end(),
                                [&reaction](const tr_entry &e) -> bool {
                                    return std::find_if(e.second.begin(), e.second.end(),
                                                        [&reaction](const spatial_reaction &tr) {
                                                            return tr.name() == reaction.name();
                                                        }) != e.second.end();
                                });
-        if (it != _spatial_reactions.end()) {
+        if (it != _spatialReactions.end()) {
             throw std::invalid_argument("An structural topology reaction with the same name (" + reaction.name() +
                                         ") was already registered!");
         }
@@ -350,39 +350,39 @@ void TopologyRegistry::validate_spatial_reaction(const spatial_reaction &reactio
 }
 
 
-api::PotentialConfiguration &TopologyRegistry::potential_configuration() {
-    return potentialConfiguration_;
+api::PotentialConfiguration &TopologyRegistry::potentialConfiguration() {
+    return _potentialConfiguration;
 }
 
-const api::PotentialConfiguration &TopologyRegistry::potential_configuration() const {
-    return potentialConfiguration_;
+const api::PotentialConfiguration &TopologyRegistry::potentialConfiguration() const {
+    return _potentialConfiguration;
 }
 
-void TopologyRegistry::configure_bond_potential(const std::string &type1, const std::string &type2,
-                                                const api::Bond &bond) {
-    potentialConfiguration_.pairPotentials[std::make_tuple(_type_registry.get().id_of(type1),
-                                                           _type_registry.get().id_of(type2))].push_back(bond);
+void TopologyRegistry::configureBondPotential(const std::string &type1, const std::string &type2,
+                                              const api::Bond &bond) {
+    _potentialConfiguration.pairPotentials[std::make_tuple(_typeRegistry.get().idOf(type1),
+                                                           _typeRegistry.get().idOf(type2))].push_back(bond);
 }
 
-void TopologyRegistry::configure_angle_potential(const std::string &type1, const std::string &type2,
-                                                 const std::string &type3, const api::Angle &angle) {
-    potentialConfiguration_.anglePotentials[std::make_tuple(_type_registry.get().id_of(type1),
-                                                            _type_registry.get().id_of(type2),
-                                                            _type_registry.get().id_of(type3))].push_back(angle);
+void TopologyRegistry::configureAnglePotential(const std::string &type1, const std::string &type2,
+                                               const std::string &type3, const api::Angle &angle) {
+    _potentialConfiguration.anglePotentials[std::make_tuple(_typeRegistry.get().idOf(type1),
+                                                            _typeRegistry.get().idOf(type2),
+                                                            _typeRegistry.get().idOf(type3))].push_back(angle);
 }
 
-void TopologyRegistry::configure_torsion_potential(const std::string &type1, const std::string &type2,
-                                                   const std::string &type3, const std::string &type4,
-                                                   const api::TorsionAngle &torsionAngle) {
-    potentialConfiguration_.torsionPotentials[std::make_tuple(_type_registry.get().id_of(type1),
-                                                              _type_registry.get().id_of(type2),
-                                                              _type_registry.get().id_of(type3),
-                                                              _type_registry.get().id_of(type4))].push_back(
+void TopologyRegistry::configureTorsionPotential(const std::string &type1, const std::string &type2,
+                                                 const std::string &type3, const std::string &type4,
+                                                 const api::TorsionAngle &torsionAngle) {
+    _potentialConfiguration.torsionPotentials[std::make_tuple(_typeRegistry.get().idOf(type1),
+                                                              _typeRegistry.get().idOf(type2),
+                                                              _typeRegistry.get().idOf(type3),
+                                                              _typeRegistry.get().idOf(type4))].push_back(
             torsionAngle);
 }
 
-const ParticleTypeRegistry &TopologyRegistry::particle_type_registry() const {
-    return _type_registry.get();
+const ParticleTypeRegistry &TopologyRegistry::particleTypeRegistry() const {
+    return _typeRegistry.get();
 }
 
 }

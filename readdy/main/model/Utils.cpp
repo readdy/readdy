@@ -40,19 +40,19 @@ namespace readdy {
 namespace model {
 namespace util {
 
-scalar  getMaximumDisplacement(KernelContext& context, const scalar  timeStep) {
+scalar  getMaximumDisplacement(Context& context, const scalar  timeStep) {
     context.configure();
 
     scalar  kbt = context.kBT();
 
     scalar  maximum_displacement = 0;
-    for (auto &&pI : context.particle_types().types_flat()) {
-        scalar  D = context.particle_types().diffusion_constant_of(pI);
+    for (auto &&pI : context.particle_types().typesFlat()) {
+        scalar  D = context.particle_types().diffusionConstantOf(pI);
         scalar  fMax = 0;
 
-        for (auto &&pJ : context.particle_types().types_flat()) {
+        for (auto &&pJ : context.particle_types().typesFlat()) {
 
-            for (auto &&pot : context.potentials().potentials_of(pI, pJ)) {
+            for (auto &&pot : context.potentials().potentialsOf(pI, pJ)) {
                 if (pot->getCutoffRadius() > 0) {
                     fMax = std::max(pot->getMaximalForce(kbt), fMax);
                 }
@@ -66,7 +66,7 @@ scalar  getMaximumDisplacement(KernelContext& context, const scalar  timeStep) {
     return maximum_displacement;
 }
 
-scalar  getRecommendedTimeStep(unsigned int N, KernelContext& context) {
+scalar  getRecommendedTimeStep(unsigned int N, Context& context) {
     scalar  tau_R = 0;
 
     context.configure();
@@ -74,47 +74,47 @@ scalar  getRecommendedTimeStep(unsigned int N, KernelContext& context) {
     scalar  kbt = context.kBT();
     scalar  kReactionMax = 0;
 
-    for (auto &&reactionO1 : context.reactions().order1_flat()) {
-        kReactionMax = std::max(kReactionMax, reactionO1->getRate());
+    for (auto &&reactionO1 : context.reactions().order1Flat()) {
+        kReactionMax = std::max(kReactionMax, reactionO1->rate());
     }
-    for (auto &&reactionO2 : context.reactions().order2_flat()) {
-        kReactionMax = std::max(kReactionMax, reactionO2->getRate());
+    for (auto &&reactionO2 : context.reactions().order2Flat()) {
+        kReactionMax = std::max(kReactionMax, reactionO2->rate());
     }
 
     scalar  tDMin = 0;
     std::unordered_map<unsigned int, scalar > fMaxes;
-    for (auto &&pI : context.particle_types().types_flat()) {
-        scalar  D = context.particle_types().diffusion_constant_of(pI);
+    for (auto &&pI : context.particle_types().typesFlat()) {
+        scalar  D = context.particle_types().diffusionConstantOf(pI);
         scalar  tD = 0;
         scalar  xi = 0; // 1/(beta*Fmax)
         scalar  fMax = 0;
         scalar  rMin = std::numeric_limits<scalar >::max();
 
-        for (auto &&reaction : context.reactions().order1_by_type(pI)) {
-            if (reaction->getNProducts() == 2 && reaction->getProductDistance() > 0) {
-                rMin = std::min(rMin, reaction->getProductDistance());
+        for (auto &&reaction : context.reactions().order1ByType(pI)) {
+            if (reaction->nProducts() == 2 && reaction->productDistance() > 0) {
+                rMin = std::min(rMin, reaction->productDistance());
             }
         }
 
-        for (auto &&pot : context.potentials().potentials_of(pI)) {
+        for (auto &&pot : context.potentials().potentialsOf(pI)) {
             fMax = std::max(pot->getMaximalForce(kbt), fMax);
             if (pot->getRelevantLengthScale() > 0) {
                 rMin = std::min(rMin, pot->getRelevantLengthScale());
             }
         }
 
-        for (auto &&pJ : context.particle_types().types_flat()) {
+        for (auto &&pJ : context.particle_types().typesFlat()) {
 
-            for (auto &&reaction : context.reactions().order2_by_type(pI, pJ)) {
-                if (reaction->getEductDistance() > 0) {
-                    rMin = std::min(rMin, reaction->getEductDistance());
+            for (auto &&reaction : context.reactions().order2ByType(pI, pJ)) {
+                if (reaction->eductDistance() > 0) {
+                    rMin = std::min(rMin, reaction->eductDistance());
                 }
-                if (reaction->getNProducts() == 2 && reaction->getProductDistance() > 0) {
-                    rMin = std::min(rMin, reaction->getProductDistance());
+                if (reaction->nProducts() == 2 && reaction->productDistance() > 0) {
+                    rMin = std::min(rMin, reaction->productDistance());
                 }
             }
 
-            for (auto &&pot : context.potentials().potentials_of(pI, pJ)) {
+            for (auto &&pot : context.potentials().potentialsOf(pI, pJ)) {
                 if (pot->getCutoffRadius() > 0) {
                     rMin = std::min(rMin, pot->getCutoffRadius());
                     fMax = std::max(pot->getMaximalForce(kbt), fMax);
@@ -131,7 +131,7 @@ scalar  getRecommendedTimeStep(unsigned int N, KernelContext& context) {
             tD = static_cast<scalar>(.5 * rho * rho / D);
         }
         fMaxes.emplace(pI, fMax);
-        log::trace(" tau for {}: {} ( xi = {}, rho = {})", context.particle_types().name_of(pI), tD, xi, rho);
+        log::trace(" tau for {}: {} ( xi = {}, rho = {})", context.particle_types().nameOf(pI), tD, xi, rho);
         if (tDMin == 0) {
             tDMin = tD;
         } else {
@@ -140,10 +140,10 @@ scalar  getRecommendedTimeStep(unsigned int N, KernelContext& context) {
     }
 
     log::debug("Maximal displacement for particle types per time step (stochastic + deterministic): ");
-    for (auto &&pI : context.particle_types().types_flat()) {
-        scalar  D = context.particle_types().diffusion_constant_of(pI);
+    for (auto &&pI : context.particle_types().typesFlat()) {
+        scalar  D = context.particle_types().diffusionConstantOf(pI);
         scalar  xmax = std::sqrt(2 * D * tDMin) + D * kbt * fMaxes[pI] * tDMin;
-        log::debug("\t - {}: {} + {} = {}" , context.particle_types().name_of(pI), std::sqrt(2 * D * tDMin),
+        log::debug("\t - {}: {} + {} = {}" , context.particle_types().nameOf(pI), std::sqrt(2 * D * tDMin),
                               D * kbt * fMaxes[pI] * tDMin, xmax);
     }
 

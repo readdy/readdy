@@ -61,14 +61,6 @@ void Graph::removeParticle(std::size_t particleIndex) {
     }
 }
 
-void Graph::removeVertex(const std::string &name) {
-    decltype(_vertex_label_mapping.begin()) it;
-    if ((it = _vertex_label_mapping.find(name)) == _vertex_label_mapping.end()) {
-        throw std::invalid_argument("the vertex \"" + name + "\" did not exist!");
-    }
-    removeVertex(it->second);
-}
-
 void Graph::removeNeighborsEdges(vertex_ref vertex) {
     for (auto neighbor : vertex->neighbors()) {
         neighbor->removeNeighbor(vertex);
@@ -229,18 +221,8 @@ void Graph::removeEdge(const edge &edge) {
     removeEdge(std::get<0>(edge), std::get<1>(edge));
 }
 
-const Graph::vertex_label_mapping &Graph::vertexLabelMapping() const {
-    return _vertex_label_mapping;
-}
-
-Graph::vertex_label_mapping &Graph::vertexLabelMapping() {
-    return _vertex_label_mapping;
-}
-
 std::vector<Graph> Graph::connectedComponentsDestructive() {
     std::vector<vertex_list> subVertexLists;
-    std::vector<vertex_label_mapping> subVertexLabelMappings;
-
     {
         std::vector<std::vector<vertex_cref>> components;
 
@@ -251,10 +233,8 @@ std::vector<Graph> Graph::connectedComponentsDestructive() {
                 // got a new component
                 components.emplace_back();
                 subVertexLists.emplace_back();
-                subVertexLabelMappings.emplace_back();
 
                 auto& component = components.back();
-                auto& mapping = subVertexLabelMappings.back();
 
                 std::vector<vertex_ref> unvisitedInComponent;
                 unvisitedInComponent.emplace_back(it);
@@ -291,17 +271,14 @@ std::vector<Graph> Graph::connectedComponentsDestructive() {
     std::vector<Graph> subGraphs;
     subGraphs.reserve(subVertexLists.size());
     {
-        auto it_mappings = subVertexLabelMappings.begin();
-        auto it_subLists = subVertexLists.begin();
-        for(; it_mappings != subVertexLabelMappings.end(); ++it_mappings, ++it_subLists) {
-            subGraphs.emplace_back(std::move(*it_subLists), std::move(*it_mappings));
+        for (auto &subVertexList : subVertexLists) {
+            subGraphs.emplace_back(std::move(subVertexList));
         }
     }
     return std::move(subGraphs);
 }
 
-Graph::Graph(vertex_list vertexList, vertex_label_mapping vertexLabelMapping)
-        : _vertices(std::move(vertexList)), _vertex_label_mapping(std::move(vertexLabelMapping)){}
+Graph::Graph(vertex_list vertexList) : _vertices(std::move(vertexList)) {}
 
 bool Graph::containsEdge(const Graph::cedge &edge) const {
     const auto& v1 = std::get<0>(edge);

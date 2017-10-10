@@ -51,9 +51,9 @@ class TestIOUtils(ReaDDyTestCase):
 
         sim = api.Simulation()
         sim.set_kernel("CPU")
-        sim.register_particle_type("A", 1., 0.)
-        sim.register_particle_type("B", 2., 0.)
-        sim.register_particle_type("C", 3., 0.)
+        sim.register_particle_type("A", 1.)
+        sim.register_particle_type("B", 2.)
+        sim.register_particle_type("C", 3.)
         sim.register_reaction_conversion("mylabel", "A", "B", .00001)
         sim.register_reaction_conversion("A->B", "A", "B", 1.)
         fusion_rate = 0.4
@@ -78,38 +78,37 @@ class TestIOUtils(ReaDDyTestCase):
         np.testing.assert_equal(diff_constants["B"], 2.)
         np.testing.assert_equal(diff_constants["C"], 3.)
 
-    def test_reaction_info_order1(self):
+    def test_reaction_info(self):
         p_types = ioutils.get_particle_types(self.fname)
-        reactions_o1 = ioutils.get_reactions_order1(self.fname)
-        mylabel = get_item("mylabel", reactions_o1)
-        np.testing.assert_equal(mylabel["n_educts"], 1)
-        np.testing.assert_equal(mylabel["n_products"], 1)
-        np.testing.assert_allclose(mylabel["rate"], 0.00001)
-        np.testing.assert_equal(mylabel["educt_types"][0], p_types["A"])
-        np.testing.assert_equal(mylabel["product_types"][0], p_types["B"])
-        atob = get_item("A->B", reactions_o1)
-        np.testing.assert_equal(atob["n_educts"], 1)
-        np.testing.assert_equal(atob["n_products"], 1)
-        np.testing.assert_equal(atob["rate"], 1.)
-        np.testing.assert_equal(atob["educt_types"][0], p_types["A"])
-        np.testing.assert_equal(atob["product_types"][0], p_types["B"])
+        reactions = ioutils.get_reactions(self.fname)
+        self.assertEqual(len(reactions), 3)
 
-    def test_reaction_info_order2(self):
-        p_types = ioutils.get_particle_types(self.fname)
-        reactions_o2 = ioutils.get_reactions_order2(self.fname)
-        fusion = get_item("B+C->A", reactions_o2)
-        np.testing.assert_equal(fusion["n_educts"], 2)
-        np.testing.assert_equal(fusion["n_products"], 1)
-        np.testing.assert_allclose(fusion["rate"], 0.4)
-        np.testing.assert_allclose(fusion["educt_distance"], 0.2)
+        self.assertTrue("mylabel" in reactions)
+        mylabel = reactions["mylabel"]
+        self.assertEqual(mylabel["n_educts"], 1)
+        self.assertEqual(mylabel["n_products"], 1)
+        self.assertAlmostEqual(mylabel["rate"], 0.00001)
+        self.assertEqual(mylabel["educt_types"][0], p_types["A"])
+        self.assertEqual(mylabel["product_types"][0], p_types["B"])
+
+        self.assertTrue("A->B" in reactions)
+        atob = reactions["A->B"]
+        self.assertEqual(atob["n_educts"], 1)
+        self.assertEqual(atob["n_products"], 1)
+        self.assertEqual(atob["rate"], 1.)
+        self.assertEqual(atob["educt_types"][0], p_types["A"])
+        self.assertEqual(atob["product_types"][0], p_types["B"])
+
+        self.assertTrue("B+C->A" in reactions)
+        fusion = reactions["B+C->A"]
+        self.assertEqual(fusion["n_educts"], 2)
+        self.assertEqual(fusion["n_products"], 1)
+        self.assertAlmostEqual(fusion["rate"], 0.4)
+        self.assertAlmostEqual(fusion["educt_distance"], 0.2)
         correct_educts = (fusion["educt_types"][0] == p_types["B"] and fusion["educt_types"][1] == p_types["C"])
         correct_educts = correct_educts or (fusion["educt_types"][1] == p_types["B"] and fusion["educt_types"][0] == p_types["C"])
-        np.testing.assert_(correct_educts)
-        np.testing.assert_equal(fusion["product_types"][0], p_types["A"])
-
-    def test_reaction_info_all(self):
-        reactions_all = ioutils.get_reactions(self.fname)
-        np.testing.assert_equal(len(reactions_all), 3)
+        self.assertTrue(correct_educts)
+        self.assertEqual(fusion["product_types"][0], p_types["A"])
 
 if __name__ == '__main__':
     unittest.main()

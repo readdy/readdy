@@ -40,8 +40,8 @@ namespace top {
 
 GraphTopology::GraphTopology(topology_type_type type,
                              const Topology::particle_indices &particles, const types_vec &types,
-                             const api::PotentialConfiguration& config)
-        : Topology(particles), config(config), _topology_type(type) {
+                             const model::Context& context, const model::StateModel *stateModel)
+        : Topology(particles), _context(context), _topology_type(type), _stateModel(stateModel) {
     assert(types.size() == particles.size());
     std::size_t i = 0;
     for (auto itTypes = types.begin(); itTypes != types.end(); ++itTypes, ++i) {
@@ -51,8 +51,9 @@ GraphTopology::GraphTopology(topology_type_type type,
 
 GraphTopology::GraphTopology(topology_type_type type,
                              Topology::particle_indices &&particles, graph::Graph &&graph,
-                             const api::PotentialConfiguration& config)
-        : Topology(std::move(particles)), config(config), graph_(std::move(graph)), _topology_type(type) {
+                             const model::Context& context, const model::StateModel *stateModel)
+        : Topology(std::move(particles)), _context(context), graph_(std::move(graph)), _topology_type(type),
+          _stateModel(stateModel) {
     if (GraphTopology::graph().vertices().size() != GraphTopology::getNParticles()) {
         log::error("tried creating graph topology with {} vertices but only {} particles.",
                    GraphTopology::graph().vertices().size(), GraphTopology::getNParticles());
@@ -85,12 +86,14 @@ void GraphTopology::configure() {
     std::unordered_map<api::AngleType, std::vector<pot::AngleConfiguration>, readdy::util::hash::EnumClassHash> angles;
     std::unordered_map<api::TorsionType, std::vector<pot::DihedralConfiguration>, readdy::util::hash::EnumClassHash> dihedrals;
 
+    const auto &config = context().topology_registry().potentialConfiguration();
+
     graph_.findNTuples([&](const topology_graph::edge &tuple) {
         auto v1 = std::get<0>(tuple);
         auto v2 = std::get<1>(tuple);
-        auto it = config.get().pairPotentials.find(
+        auto it = config.pairPotentials.find(
                 std::tie(v1->particleType(), v2->particleType()));
-        if (it != config.get().pairPotentials.end()) {
+        if (it != config.pairPotentials.end()) {
             for (const auto &cfg : it->second) {
                 bonds[cfg.type].emplace_back(v1->particleIndex, v2->particleIndex,
                                              cfg.forceConstant, cfg.length);
@@ -100,7 +103,7 @@ void GraphTopology::configure() {
 
             ss << "The edge " << v1->particleIndex;
             ss << " -- " << v2->particleIndex;
-            ss << " has no bond configured! (See KernelContext.configure_bond_potential())";
+            ss << " has no bond configured! (See Context.configure_bond_potential())";
 
             throw std::invalid_argument(ss.str());
         }
@@ -108,10 +111,10 @@ void GraphTopology::configure() {
         const auto &v1 = std::get<0>(triple);
         const auto &v2 = std::get<1>(triple);
         const auto &v3 = std::get<2>(triple);
-        auto it = config.get().anglePotentials.find(std::tie(v1->particleType(), v2->particleType(), v3->particleType()));
-        if (it != config.get().anglePotentials.end()) {
+        auto it = config.anglePotentials.find(std::tie(v1->particleType(), v2->particleType(), v3->particleType()));
+        if (it != config.anglePotentials.end()) {
             for (const auto &cfg : it->second) {
-                angles[cfg.type].emplace_back(v2->particleIndex, v1->particleIndex, v3->particleIndex,
+                angles[cfg.type].emplace_back(v1->particleIndex, v2->particleIndex, v3->particleIndex,
                                               cfg.forceConstant, cfg.equilibriumAngle);
             }
         }
@@ -120,9 +123,9 @@ void GraphTopology::configure() {
         const auto &v2 = std::get<1>(quadruple);
         const auto &v3 = std::get<2>(quadruple);
         const auto &v4 = std::get<3>(quadruple);
-        auto it = config.get().torsionPotentials.find(
+        auto it = config.torsionPotentials.find(
                 std::tie(v1->particleType(), v2->particleType(), v3->particleType(), v4->particleType()));
-        if (it != config.get().torsionPotentials.end()) {
+        if (it != config.torsionPotentials.end()) {
             for (const auto &cfg : it->second) {
                 dihedrals[cfg.type].emplace_back(v1->particleIndex, v2->particleIndex, v3->particleIndex,
                                                  v4->particleIndex, cfg.forceConstant, cfg.multiplicity,
@@ -198,7 +201,7 @@ std::vector<GraphTopology> GraphTopology::connectedComponents() {
             auto it_graphs = subGraphs.begin();
             auto it_particles = subGraphsParticles.begin();
             for(; it_graphs != subGraphs.end(); ++it_graphs, ++it_particles) {
-                components.emplace_back(_topology_type, std::move(*it_particles), std::move(*it_graphs), config);
+                components.emplace_back(_topology_type, std::move(*it_particles), std::move(*it_graphs), _context, _stateModel);
             }
         }
     }
@@ -219,9 +222,9 @@ const GraphTopology::topology_reaction_rate GraphTopology::cumulativeRate() cons
 
 const bool GraphTopology::isNormalParticle(const Kernel &k) const {
     if(getNParticles() == 1){
-        const auto particle_type = k.getKernelStateModel().getParticleType(particles.front());
-        const auto& info = k.getKernelContext().particle_types().info_of(particle_type);
-        return info.flavor != particleflavor::NORMAL;
+        const auto particle_type = k.stateModel().getParticleType(particles.front());
+        const auto& info = k.context().particle_types().infoOf(particle_type);
+        return info.flavor == particleflavor::NORMAL;
     }
     return false;
 }
@@ -295,8 +298,29 @@ graph::Graph::vertex_ref GraphTopology::vertexForParticle(Topology::particle_ind
     return graph_.vertices().end();
 }
 
+const model::Context &GraphTopology::context() const {
+    return _context.get();
+}
+
+std::vector<Particle> GraphTopology::fetchParticles() const {
+    if(!_stateModel) {
+        throw std::logic_error("Cannot fetch particles if no state model was provided!");
+    }
+    return _stateModel->getParticlesForTopology(*this);
+}
+
+Particle GraphTopology::particleForVertex(graph::Graph::vertex_ref vertexRef) const {
+    return particleForVertex(*vertexRef);
+}
+
+Particle GraphTopology::particleForVertex(const vertex &vertex) const {
+    if(!_stateModel) {
+        throw std::logic_error("Cannot fetch particle if not state model was provided!");
+    }
+    return _stateModel->getParticleForIndex(getParticles().at(vertex.particleIndex));
+}
+
 
 }
 }
 }
-

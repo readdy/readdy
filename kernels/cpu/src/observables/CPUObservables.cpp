@@ -143,7 +143,8 @@ CPUNParticles::CPUNParticles(CPUKernel *const kernel, unsigned int stride, std::
 void CPUNParticles::evaluate() {
     std::vector<unsigned long> resultVec = {};
     if (typesToCount.empty()) {
-        resultVec.push_back(kernel->getCPUKernelStateModel().getParticleData()->size());
+        const auto data = kernel->getCPUKernelStateModel().getParticleData();
+        resultVec.push_back(data->size() - data->getNDeactivated());
     } else {
         resultVec.resize(typesToCount.size());
         const auto &pd = kernel->getCPUKernelStateModel().getParticleData();
@@ -215,17 +216,14 @@ CPUReactions::CPUReactions(CPUKernel *const kernel, unsigned int stride)
 void CPUReactions::evaluate() {
     const auto& model = kernel->getCPUKernelStateModel();
     const auto& records = model.reactionRecords();
-    result.clear();
-    result.reserve(records.size());
-    result.insert(result.end(), records.begin(), records.end());
+    result = records;
 }
 
 CPUReactionCounts::CPUReactionCounts(CPUKernel *const kernel, unsigned int stride)
         : ReactionCounts(kernel, stride), kernel(kernel) {}
 
 void CPUReactionCounts::evaluate() {
-    readdy::model::observables::ReactionCounts::initializeCounts(result, kernel->getKernelContext());
-    assignCountsToResult(kernel->getCPUKernelStateModel().reactionCounts(), result);
+    result = kernel->getCPUKernelStateModel().reactionCounts();
 }
 
 }

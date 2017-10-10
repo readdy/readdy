@@ -21,10 +21,13 @@
 
 
 /**
- * << detailed description >>
+ * This header contains definitions for the POD types ReactionInfo and ParticleTypeInfo, which are used to store
+ * defined reactions and particle types in a hdf5 file.
+ * It also contains getter methods for their respective hdf5 compound types as well as helper methods which will
+ * write the simulation setup / the reaction information / the particle type information to file.
  *
  * @file IOUtils.h
- * @brief << brief description >>
+ * @brief Definitions for ReactionInfo, ParticleTypeInfo and hdf5 helper methods.
  * @author clonker
  * @date 10.03.17
  * @copyright GNU Lesser General Public License v3.0
@@ -37,7 +40,7 @@
 #include <h5rd/h5rd.h>
 
 #include <readdy/common/macros.h>
-#include "KernelContext.h"
+#include "Context.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
@@ -45,8 +48,8 @@ NAMESPACE_BEGIN(ioutils)
 
 struct ReactionInfo {
     const char* name {""};
-    std::size_t index {0}; // identify reaction in map of vectors, e.g. for reaction records
-    short id {-1}; // global unique reaction id
+    // std::size_t index {0}; // identify reaction in map of vectors, e.g. for reaction records
+    reactions::Reaction::reaction_id id {0}; // global unique reaction id
     std::size_t n_educts {0};
     std::size_t n_products {0};
     scalar rate {0};
@@ -61,13 +64,12 @@ struct ParticleTypeInfo {
     scalar diffusion_constant;
 };
 
-
 std::tuple<h5rd::NativeCompoundType, h5rd::STDCompoundType> getReactionInfoMemoryType(h5rd::Object::ParentFileRef ref);
 std::tuple<h5rd::NativeCompoundType, h5rd::STDCompoundType> getParticleTypeInfoType(h5rd::Object::ParentFileRef ref);
 
-void writeSimulationSetup(h5rd::Group &group, const KernelContext &context);
-void writeReactionInformation(h5rd::Group &group, const KernelContext &context);
-void writeParticleTypeInformation(h5rd::Group &group, const KernelContext &context);
+void writeSimulationSetup(h5rd::Group &group, const Context &context);
+void writeReactionInformation(h5rd::Group &group, const Context &context);
+void writeParticleTypeInformation(h5rd::Group &group, const Context &context);
 
 NAMESPACE_END(ioutils)
 NAMESPACE_END(model)

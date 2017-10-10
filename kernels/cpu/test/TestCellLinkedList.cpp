@@ -41,11 +41,11 @@ class TestCLLImpl : public ::testing::TestWithParam<const char*> {};
 TEST_P(TestCLLImpl, Insert) {
     using namespace readdy;
 
-    model::KernelContext context;
-    context.particle_types().add("Test", 1., 1.);
-    auto id = context.particle_types().id_of("Test");
+    model::Context context;
+    context.particle_types().add("Test", 1.);
+    auto id = context.particle_types().idOf("Test");
     scalar cutoff = 1;
-    context.reactions().add(std::make_unique<model::reactions::Fusion>("Fusion", id, id, id, 1., cutoff));
+    context.reactions().addFusion("Fusion", id, id, id, 1., cutoff);
     context.boxSize()[0] = 10;
     context.boxSize()[1] = 10;
     context.boxSize()[2] = 10;
@@ -113,11 +113,11 @@ TEST_P(TestCLLImpl, Insert) {
 TEST_P(TestCLLImpl, InsertAndDeactivate) {
     using namespace readdy;
 
-    model::KernelContext context;
-    context.particle_types().add("Test", 1., 1.);
-    auto id = context.particle_types().id_of("Test");
+    model::Context context;
+    context.particle_types().add("Test", 1.);
+    auto id = context.particle_types().idOf("Test");
     scalar cutoff = 1;
-    context.reactions().add(std::make_unique<model::reactions::Fusion>("Fusion", id, id, id, 1., cutoff));
+    context.reactions().addFusion("Fusion", id, id, id, 1., cutoff);
     context.boxSize()[0] = 10;
     context.boxSize()[1] = 10;
     context.boxSize()[2] = 10;
@@ -194,11 +194,11 @@ TEST_P(TestCLLImpl, InsertAndDeactivate) {
 TEST_P(TestCLLImpl, Diffuse) {
     using namespace readdy;
 
-    model::KernelContext context;
-    context.particle_types().add("Test", 1., 1.);
-    auto id = context.particle_types().id_of("Test");
+    model::Context context;
+    context.particle_types().add("Test", 1.);
+    auto id = context.particle_types().idOf("Test");
     scalar cutoff = 1;
-    context.reactions().add(std::make_unique<model::reactions::Fusion>("Fusion", id, id, id, 1., cutoff));
+    context.reactions().addFusion("Fusion", id, id, id, 1., cutoff);
     context.boxSize()[0] = 10;
     context.boxSize()[1] = 10;
     context.boxSize()[2] = 10;

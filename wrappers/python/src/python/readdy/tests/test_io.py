@@ -52,7 +52,7 @@ class TestSchemeApi(ReaDDyTestCase):
         simulation = Simulation()
         simulation.set_kernel("SingleCPU")
         simulation.box_size = common.Vec(5,5,5)
-        simulation.register_particle_type("A", 0.0, 0.0)
+        simulation.register_particle_type("A", 0.0)
         simulation.register_reaction_conversion("A->A", "A", "A", 1.)
 
         def callback(_):
@@ -80,7 +80,7 @@ class TestSchemeApi(ReaDDyTestCase):
         simulation = Simulation()
         simulation.set_kernel("SingleCPU")
         simulation.box_size = common.Vec(5,5,5)
-        simulation.register_particle_type("A", 0.0, 0.0)
+        simulation.register_particle_type("A", 0.0)
 
         def callback(_):
             simulation.add_particle("A", common.Vec(0, 0, 0))
@@ -104,7 +104,7 @@ class TestSchemeApi(ReaDDyTestCase):
         simulation = Simulation()
         simulation.set_kernel("SingleCPU")
         simulation.box_size = common.Vec(5,5,5)
-        simulation.register_particle_type("A", 0.0, 0.0)
+        simulation.register_particle_type("A", 0.0)
 
         def callback(_):
             simulation.add_particle("A", common.Vec(0, 0, 0))

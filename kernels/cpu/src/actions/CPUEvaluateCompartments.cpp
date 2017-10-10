@@ -39,8 +39,8 @@ CPUEvaluateCompartments::CPUEvaluateCompartments(CPUKernel *const kernel) : kern
 
 void CPUEvaluateCompartments::perform(const util::PerformanceNode &node) {
     auto t = node.timeit();
-    const auto &ctx = kernel->getKernelContext();
-    const auto &compartments = ctx.compartments();
+    const auto &ctx = kernel->context();
+    const auto &compartments = ctx.compartments().get();
     for(auto& e : *kernel->getCPUKernelStateModel().getParticleData()) {
         if(!e.deactivated) {
             for (const auto &compartment : compartments) {

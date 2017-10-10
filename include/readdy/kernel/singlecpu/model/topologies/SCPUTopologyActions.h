@@ -51,7 +51,7 @@ class SCPUCalculateHarmonicBondPotential : public readdy::model::top::pot::Calcu
     SCPUParticleData *const data;
 
 public:
-    SCPUCalculateHarmonicBondPotential(const readdy::model::KernelContext *const context,
+    SCPUCalculateHarmonicBondPotential(const readdy::model::Context *const context,
                                        SCPUParticleData *const data,
                                        const harmonic_bond *const potential)
             : CalculateHarmonicBondPotential(context), potential(potential), data(data) {}
@@ -79,7 +79,7 @@ class SCPUCalculateHarmonicAnglePotential : public readdy::model::top::pot::Calc
     const harmonic_angle *const potential;
     SCPUParticleData *const data;
 public:
-    SCPUCalculateHarmonicAnglePotential(const readdy::model::KernelContext *const context, SCPUParticleData *const data,
+    SCPUCalculateHarmonicAnglePotential(const readdy::model::Context *const context, SCPUParticleData *const data,
                                         const harmonic_angle *const potential)
             : CalculateHarmonicAnglePotential(context), potential(potential), data(data) {}
 
@@ -107,7 +107,7 @@ class SCPUCalculateCosineDihedralPotential : public readdy::model::top::pot::Cal
     const cos_dihedral *const potential;
     SCPUParticleData *const data;
 public:
-    SCPUCalculateCosineDihedralPotential(const readdy::model::KernelContext *const context, SCPUParticleData *const data,
+    SCPUCalculateCosineDihedralPotential(const readdy::model::Context *const context, SCPUParticleData *const data,
                                          const cos_dihedral *const pot)
             : CalculateCosineDihedralPotential(context), potential(pot), data(data) {
     }

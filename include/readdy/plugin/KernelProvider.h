@@ -47,12 +47,20 @@ NAMESPACE_BEGIN(plugin)
 class KernelDeleter {
     std::shared_ptr<readdy::util::dll::shared_library> ptr;
 public:
-    // internal kernel
+    /**
+     * Creates a KernelDeleter for an internal kernel (which is already included in the core library)
+     */
     KernelDeleter();
 
-    // external kernel
+    /**
+     * Creates a KernelDeleter for an external kernel (i.e., from a shared library)
+     * @param libPtr pointer to the library
+     */
     explicit KernelDeleter(const std::shared_ptr<readdy::util::dll::shared_library> &libPtr);
 
+    /**
+     * delete that kernel!
+     */
     void operator()(readdy::model::Kernel *);
 };
 
@@ -84,18 +92,33 @@ protected:
     bool isSharedLibrary(const std::string &path) const;
 
 public:
-
+    /**
+     * pointer to a kernel instance equipped with an appropriate deleter
+     */
     using kernel_ptr = std::unique_ptr<model::Kernel, KernelDeleter>;
+    /**
+     * raw pointer to a kernel instance
+     */
     using raw_kernel_ptr = model::Kernel*;
 
-    // prevent that copies can be created
+    /**
+     * no copying
+     */
     KernelProvider(KernelProvider const &) = delete;
 
-    // prevent that copies can be created
+    /**
+     * no copying
+     */
     KernelProvider &operator=(KernelProvider const &) = delete;
 
+    /**
+     * no move
+     */
     KernelProvider(KernelProvider &&) = delete;
 
+    /**
+     * no move
+     */
     KernelProvider &operator=(KernelProvider &&) = delete;
 
 
@@ -114,10 +137,17 @@ public:
     void loadKernelsFromDirectory(const std::string &directory);
 
     /**
-     * Sinking method that allows to move a kernel into the KernelProvider and thus make it available.
+     * Method that returns the currently available kernels. Output may change after a call
+     * to loadKernelsFromDirectory(directory).
      *
-     * @param kernel the kernel that should be moved
-     * @todo update docs
+     * @return the currently available kernels
+     */
+    std::vector<std::string> availableKernels() const;
+
+    /**
+     * Adds a kernel to the provider registry by providing a factory method and a name.
+     * @param name the name
+     * @param creator the factory method
      */
     void add(const std::string &name, const std::function<readdy::model::Kernel *()> &creator);
 
@@ -145,9 +175,19 @@ public:
      */
     static const std::string getDefaultKernelDirectory();
 
+    /**
+     * Create a new kernel instance of specified name.
+     * @param name the kernel name
+     * @return a unique_ptr to the kernel instance, i.e., the caller has ownership
+     */
     kernel_ptr create(const std::string &name) const;
 
 private:
+    /**
+     * loads the name of a kernel that resides in a shared library
+     * @param sharedLib the shared library
+     * @return the kernel name
+     */
     const std::string loadKernelName(const std::string &sharedLib);
 
     struct Impl;

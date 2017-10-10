@@ -48,6 +48,22 @@ def get_particle_types(filename, dset_path="readdy/config/particle_types"):
     return result
 
 
+def get_particle_types_list(fname, dset_path="readdy/config/particle_types"):
+    """Construct a list of type strings for the particle types
+    used in the simulation that created the output file.
+
+    :param filename: the readdy h5 file, containing context info
+    :param dset_path: path to dataset within h5 file containing particle type info
+    :return: list of type strings
+    """
+    result = []
+    with h5py.File(fname, "r") as f:
+        p_types = f[dset_path]
+        for p_type in p_types:
+            result.append(p_type["name"])
+    return result
+
+
 def get_diffusion_constants(filename, dset_path="readdy/config/particle_types"):
     """Construct a dictionary from type-strings to diffusion constants for the particle types
     used in the simulation that created the output file.
@@ -64,46 +80,16 @@ def get_diffusion_constants(filename, dset_path="readdy/config/particle_types"):
     return result
 
 
-def get_reactions_order1(filename, group="readdy/config/registered_reactions"):
-    """Construct a list of first order reactions used in the simulation
-    that created the output file.
+def get_reactions(filename, dset_path="readdy/config/registered_reactions"):
+    """Construct a dictionary where keys are reaction names and value is the corresponding reaction info.
 
     :param filename: the readdy h5 file, containing context info
-    :param group: path to directory within h5 file containing reaction info datasets
-    :return: list of first order reactions
-    """
-    result = []
-    with h5py.File(filename, "r") as f:
-        reactions_dir = f[group]
-        order1_dset = reactions_dir["order1_reactions"]
-        for reaction in order1_dset:
-            result.append(np.copy(reaction))
-    return result
-
-
-def get_reactions_order2(filename, group="readdy/config/registered_reactions"):
-    """Construct a list of second order reactions used in the simulations
-    that created the output file.
-
-    :param filename: the readdy h5 file, containing context info
-    :param group: path to directory within h5 file containing reaction info datasets
-    :return: list of second order reactions
-    """
-    result = []
-    with h5py.File(filename, "r") as f:
-        reactions_dir = f[group]
-        order2_dset = reactions_dir["order2_reactions"]
-        for reaction in order2_dset:
-            result.append(np.copy(reaction))
-    return result
-
-
-def get_reactions(filename, group="readdy/config/registered_reactions"):
-    """Construct a flat list of first and second order reactions.
-
-    :param filename: the readdy h5 file, containing context info
-    :param group: path to directory within h5 file containing reaction info datasets
+    :param dset_path: path to reaction info dataset
     :return: list of reactions
     """
-    result = get_reactions_order1(filename, group=group) + get_reactions_order2(filename, group=group)
+    result = dict()
+    with h5py.File(filename, "r") as f:
+        reactions = f[dset_path]
+        for r in reactions:
+            result[r["name"]] = np.copy(r)
     return result

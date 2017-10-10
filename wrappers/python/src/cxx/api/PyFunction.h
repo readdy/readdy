@@ -65,7 +65,7 @@ protected:
 
 template<typename... Args>
 struct PyFunction<void(Args...)> {
-    PyFunction(pybind11::object object) : py_obj(new pybind11::object(object), [](pybind11::object *o) {
+    explicit PyFunction(pybind11::object object) : py_obj(new pybind11::object(object), [](pybind11::object *o) {
         pybind11::gil_scoped_acquire lock;
         delete o;
     }) {

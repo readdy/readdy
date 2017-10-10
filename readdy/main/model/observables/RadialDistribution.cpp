@@ -59,7 +59,7 @@ RadialDistribution::RadialDistribution(Kernel *const kernel, unsigned int stride
 void RadialDistribution::evaluate() {
     if (binBorders.size() > 1) {
         std::fill(counts.begin(), counts.end(), 0);
-        const auto particles = kernel->getKernelStateModel().getParticles();
+        const auto particles = kernel->stateModel().getParticles();
         auto isInCollection = [](const readdy::model::Particle &p, const std::vector<unsigned int> &collection) {
             return std::find(collection.begin(), collection.end(), p.getType()) != collection.end();
         };
@@ -68,7 +68,7 @@ void RadialDistribution::evaluate() {
                                                       return isInCollection(p, typeCountFrom);
                                                   });
         {
-            const auto &distSquared = kernel->getKernelContext().distSquaredFun();
+            const auto &distSquared = kernel->context().distSquaredFun();
             for (auto &&pFrom : particles) {
                 if (isInCollection(pFrom, typeCountFrom)) {
                     for (auto &&pTo : particles) {
@@ -127,7 +127,6 @@ void RadialDistribution::setBinBorders(const std::vector<scalar> &binBorders) {
     } else {
         log::warn("Argument bin borders' size should be at least two to make sense.");
     }
-
 }
 
 RadialDistribution::RadialDistribution(Kernel *const kernel, unsigned int stride,
@@ -135,23 +134,21 @@ RadialDistribution::RadialDistribution(Kernel *const kernel, unsigned int stride
                                        const std::vector<std::string> &typeCountFrom,
                                        const std::vector<std::string> &typeCountTo, scalar particleToDensity)
         : RadialDistribution(kernel, stride, binBorders,
-                             _internal::util::transformTypes2(typeCountFrom, kernel->getKernelContext()),
-                             _internal::util::transformTypes2(typeCountTo, kernel->getKernelContext()),
+                             _internal::util::transformTypes2(typeCountFrom, kernel->context()),
+                             _internal::util::transformTypes2(typeCountTo, kernel->context()),
                              particleToDensity
 ) {}
 
 void RadialDistribution::initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) {
-    if (!pimpl->writerRadialDistribution) {
-        auto &centers = std::get<0>(result);
-        h5rd::dimensions fs = {flushStride, centers.size()};
-        h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS, centers.size()};
-        const auto path = std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName;
-        auto group = file.createGroup(path);
-        log::debug("created group with path {}", path);
-        group.write("bin_centers", centers);
-        pimpl->writerRadialDistribution = group.createDataSet<scalar>("distribution", fs, dims, {&bloscFilter});
-        pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
-    }
+    auto &centers = std::get<0>(result);
+    h5rd::dimensions fs = {flushStride, centers.size()};
+    h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS, centers.size()};
+    const auto path = std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName;
+    auto group = file.createGroup(path);
+    log::debug("created group with path {}", path);
+    group.write("bin_centers", centers);
+    pimpl->writerRadialDistribution = group.createDataSet<scalar>("distribution", fs, dims, {&bloscFilter});
+    pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
 }
 
 void RadialDistribution::append() {

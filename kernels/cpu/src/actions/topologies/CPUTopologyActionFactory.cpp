@@ -44,7 +44,7 @@ std::unique_ptr<top::pot::CalculateHarmonicBondPotential>
 ctop::CPUTopologyActionFactory::createCalculateHarmonicBondPotential(
         const harmonic_bond *const potential) const {
     return std::make_unique<CPUCalculateHarmonicBondPotential>(
-            &kernel->getKernelContext(), kernel->getCPUKernelStateModel().getParticleData(), potential
+            &kernel->context(), kernel->getCPUKernelStateModel().getParticleData(), potential
     );
 }
 
@@ -52,7 +52,7 @@ std::unique_ptr<top::pot::CalculateHarmonicAnglePotential>
 ctop::CPUTopologyActionFactory::createCalculateHarmonicAnglePotential(
         const harmonic_angle *const potential) const {
     return std::make_unique<CPUCalculateHarmonicAnglePotential>(
-            &kernel->getKernelContext(), kernel->getCPUKernelStateModel().getParticleData(), potential
+            &kernel->context(), kernel->getCPUKernelStateModel().getParticleData(), potential
     );
 }
 
@@ -60,11 +60,11 @@ std::unique_ptr<top::pot::CalculateCosineDihedralPotential>
 ctop::CPUTopologyActionFactory::createCalculateCosineDihedralPotential(
         const cos_dihedral *const potential) const {
     return std::make_unique<CPUCalculateCosineDihedralPotential>(
-            &kernel->getKernelContext(), kernel->getCPUKernelStateModel().getParticleData(), potential
+            &kernel->context(), kernel->getCPUKernelStateModel().getParticleData(), potential
     );
 }
 
-ctop::CPUTopologyActionFactory::operation_ref
+ctop::CPUTopologyActionFactory::action_ref
 ctop::CPUTopologyActionFactory::createChangeParticleType(
         top::GraphTopology *const topology, const vertex &v,
         const readdy::particle_type_type &type_to) const {
@@ -72,10 +72,10 @@ ctop::CPUTopologyActionFactory::createChangeParticleType(
                                                                   topology, v, type_to);
 }
 
-top::reactions::actions::TopologyReactionActionFactory::operation_ref
+top::reactions::actions::TopologyReactionActionFactory::action_ref
 readdy::kernel::cpu::actions::top::CPUTopologyActionFactory::createChangeTopologyType(top::GraphTopology *const topology,
                                                                                     const std::string &type_to) const {
     return std::make_unique<readdy::model::top::reactions::actions::ChangeTopologyType>(
-            topology, kernel->getKernelContext().topology_registry().id_of(type_to)
+            topology, kernel->context().topology_registry().idOf(type_to)
     );
 }

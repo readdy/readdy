@@ -46,12 +46,10 @@ namespace reactions {
 using data_t = data::EntryDataContainer;
 using cpu_kernel = readdy::kernel::cpu::CPUKernel;
 using reaction_type = readdy::model::reactions::ReactionType;
-using ctx_t = std::remove_const<decltype(std::declval<cpu_kernel>().getKernelContext())>::type;
+using ctx_t = std::remove_const<decltype(std::declval<cpu_kernel>().context())>::type;
 using event_t = Event;
 using record_t = readdy::model::reactions::ReactionRecord;
-using reaction_counts_order1_map = readdy::model::observables::ReactionCounts::reaction_counts_order1_map;
-using reaction_counts_order2_map = readdy::model::observables::ReactionCounts::reaction_counts_order2_map;
-using reaction_counts_t = std::pair<reaction_counts_order1_map, reaction_counts_order2_map>;
+using reaction_counts_map = CPUStateModel::reaction_counts_map;
 
 template<bool approximated>
 bool performReactionEvent(const readdy::scalar rate, const readdy::scalar timeStep) {
@@ -70,26 +68,26 @@ inline bool shouldPerformEvent(const readdy::scalar rate, const readdy::scalar t
 data_t::DataUpdate handleEventsGillespie(
         CPUKernel* kernel, readdy::scalar timeStep,
         bool filterEventsInAdvance, bool approximateRate,
-        std::vector<event_t> &&events, std::vector<record_t> *maybeRecords, reaction_counts_t *maybeCounts);
+        std::vector<event_t> &&events, std::vector<record_t> *maybeRecords, reaction_counts_map *maybeCounts);
 
 template<typename ParticleIndexCollection>
 void gatherEvents(CPUKernel *const kernel, const ParticleIndexCollection &particles, const neighbor_list* nl,
                   const data_t *data, readdy::scalar &alpha, std::vector<event_t> &events,
-                  const readdy::model::KernelContext::dist_squared_fun& d2) {
-    const auto& reaction_registry = kernel->getKernelContext().reactions();
+                  const readdy::model::Context::dist_squared_fun& d2) {
+    const auto& reaction_registry = kernel->context().reactions();
     for (const auto index : particles) {
         const auto &entry = data->entry_at(index);
         // this being false should really not happen, though
         if (!entry.deactivated) {
             // order 1
             {
-                const auto &reactions = kernel->getKernelContext().reactions().order1_by_type(entry.type);
+                const auto &reactions = kernel->context().reactions().order1ByType(entry.type);
                 for (auto it = reactions.begin(); it != reactions.end(); ++it) {
-                    const auto rate = (*it)->getRate();
+                    const auto rate = (*it)->rate();
                     if (rate > 0) {
                         alpha += rate;
                         events.emplace_back(
-                                1, (*it)->getNProducts(), index, 0, rate, alpha,
+                                1, (*it)->nProducts(), index, 0, rate, alpha,
                                 static_cast<event_t::reaction_index_type>(it - reactions.begin()),
                                 entry.type, 0);
                     }
@@ -106,17 +104,16 @@ void gatherEvents(CPUKernel *const kernel, const ParticleIndexCollection &partic
                 if (index > idx_neighbor) continue;
                 const auto &neighbor = data->entry_at(idx_neighbor);
                 if (!neighbor.deactivated) {
-                    const auto &reactions = kernel->getKernelContext().reactions().order2_by_type(entry.type,
-                                                                                                  neighbor.type);
+                    const auto &reactions = kernel->context().reactions().order2ByType(entry.type,
+                                                                                       neighbor.type);
                     if (!reactions.empty()) {
                         const auto distSquared = d2(neighbor.pos, entry.pos);
                         for (auto itReactions = reactions.begin(); itReactions < reactions.end(); ++itReactions) {
                             const auto &react = *itReactions;
-                            const auto rate = react->getRate();
-                            if (rate > 0 && distSquared < react->getEductDistanceSquared()) {
+                            const auto rate = react->rate();
+                            if (rate > 0 && distSquared < react->eductDistanceSquared()) {
                                 alpha += rate;
-                                events.emplace_back(2, react->getNProducts(), index, idx_neighbor,
-                                                    rate, alpha,
+                                events.emplace_back(2, react->nProducts(), index, idx_neighbor, rate, alpha,
                                                     static_cast<event_t::reaction_index_type>(itReactions -
                                                                                               reactions.begin()),
                                                     entry.type, neighbor.type);
@@ -132,39 +129,39 @@ void gatherEvents(CPUKernel *const kernel, const ParticleIndexCollection &partic
 }
 
 template<typename Reaction>
-void performReaction(data_t* data, const readdy::model::KernelContext& context, data_t::size_type idx1, data_t::size_type idx2,
+void performReaction(data_t* data, const readdy::model::Context& context, data_t::size_type idx1, data_t::size_type idx2,
                      data_t::EntriesUpdate& newEntries, std::vector<data_t::size_type>& decayedEntries,
                      Reaction* reaction, record_t* record) {
     const auto& pbc = context.applyPBCFun();
     auto& entry1 = data->entry_at(idx1);
     auto& entry2 = data->entry_at(idx2);
     if(record) {
-        record->type = static_cast<int>(reaction->getType());
+        record->type = static_cast<int>(reaction->type());
         record->where = (entry1.pos + entry2.pos) / 2.;
         record->educts[0] = entry1.id;
         record->educts[1] = entry2.id;
         record->types_from[0] = entry1.type;
         record->types_from[1] = entry2.type;
     }
-    switch(reaction->getType()) {
+    switch(reaction->type()) {
         case reaction_type::Decay: {
             decayedEntries.push_back(idx1);
             break;
         }
         case reaction_type::Conversion: {
-            entry1.type = reaction->getProducts()[0];
+            entry1.type = reaction->products()[0];
             entry1.id = readdy::model::Particle::nextId();
             if(record) record->products[0] = entry1.id;
             break;
         }
         case reaction_type::Enzymatic: {
-            if (entry1.type == reaction->getEducts()[1]) {
+            if (entry1.type == reaction->educts()[1]) {
                 // p1 is the catalyst
-                entry2.type = reaction->getProducts()[0];
+                entry2.type = reaction->products()[0];
                 entry2.id = readdy::model::Particle::nextId();
             } else {
                 // p2 is the catalyst
-                entry1.type = reaction->getProducts()[0];
+                entry1.type = reaction->products()[0];
                 entry1.id = readdy::model::Particle::nextId();
             }
             if(record) {
@@ -177,13 +174,13 @@ void performReaction(data_t* data, const readdy::model::KernelContext& context, 
             auto n3 = readdy::model::rnd::normal3<readdy::scalar>(0, 1);
             n3 /= std::sqrt(n3 * n3);
 
-            //readdy::model::Particle p (, reaction->getProducts()[1]);
+            //readdy::model::Particle p (, reaction->products()[1]);
             const auto id = readdy::model::Particle::nextId();
-            newEntries.emplace_back(pbc(entry1.pos - reaction->getWeight2() * reaction->getProductDistance() * n3), reaction->getProducts()[1], id);
+            newEntries.emplace_back(pbc(entry1.pos - reaction->weight2() * reaction->productDistance() * n3), reaction->products()[1], id);
 
-            entry1.type = reaction->getProducts()[0];
+            entry1.type = reaction->products()[0];
             entry1.id = readdy::model::Particle::nextId();
-            data->displace(idx1, reaction->getWeight1() * reaction->getProductDistance() * n3);
+            data->displace(idx1, reaction->weight1() * reaction->productDistance() * n3);
             if(record) {
                 record->products[0] = entry1.id;
                 record->products[1] = id;
@@ -193,12 +190,12 @@ void performReaction(data_t* data, const readdy::model::KernelContext& context, 
         case reaction_type::Fusion: {
             const auto& e1Pos = entry1.pos;
             const auto& e2Pos = entry2.pos;
-            if (reaction->getEducts()[0] == entry1.type) {
-                newEntries.emplace_back(pbc(entry1.pos + reaction->getWeight1() * (e2Pos - e1Pos)),
-                                        reaction->getProducts()[0], readdy::model::Particle::nextId());
+            if (reaction->educts()[0] == entry1.type) {
+                newEntries.emplace_back(pbc(entry1.pos + reaction->weight1() * (e2Pos - e1Pos)),
+                                        reaction->products()[0], readdy::model::Particle::nextId());
             } else {
-                newEntries.emplace_back(pbc(entry1.pos + reaction->getWeight2() * (e2Pos - e1Pos)),
-                                        reaction->getProducts()[0], readdy::model::Particle::nextId());
+                newEntries.emplace_back(pbc(entry1.pos + reaction->weight2() * (e2Pos - e1Pos)),
+                                        reaction->products()[0], readdy::model::Particle::nextId());
             }
             decayedEntries.push_back(idx1);
             decayedEntries.push_back(idx2);

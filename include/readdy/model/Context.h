@@ -25,20 +25,14 @@
  * and periodicity of the simulation box, definitions of particle species and the potentials
  * and reactions affecting them.
  *
- * Reactions and potentials come in two variants:
- *   - Internal, created by the responsible kernel
- *   - External, inserted from the 'outside', e.g. python prototypes
+ * Before the context object can be used in actions belonging to a kernel, the `configure` method has to be called
+ * which will trigger certain rearrangements in the underlying registries.
  *
- * The context registers both of them in separate maps. Before the simulation can start the
- * content of both of these maps is unified into a single map, which is referred to during the actual
- * run of the simulation.
- *
- * @file KernelContext.h
+ * @file Context.h
  * @brief Container class for time independent information of the KernelContext.
  * @author clonker
  * @author chrisfroe
  * @date 18.04.16
- * @todo write docs, is kbt really time indep (or should be treated as such)?
  */
 
 #pragma once
@@ -48,29 +42,23 @@
 #include <vector>
 #include <unordered_set>
 
-#include <json.hpp>
-
 #include <readdy/common/ParticleTypeTuple.h>
-#include <readdy/api/PotentialConfiguration.h>
-#include <readdy/model/potentials/PotentialOrder1.h>
-#include <readdy/model/potentials/PotentialOrder2.h>
-#include <readdy/model/reactions/Reaction.h>
-#include <readdy/model/reactions/ReactionFactory.h>
-#include <readdy/model/reactions/ReactionRegistry.h>
-#include <readdy/model/compartments/Compartment.h>
 #include "ParticleTypeRegistry.h"
+
 #include <readdy/model/potentials/PotentialRegistry.h>
+#include <readdy/model/reactions/ReactionRegistry.h>
 #include <readdy/model/topologies/TopologyRegistry.h>
+#include <readdy/model/compartments/CompartmentRegistry.h>
+#include <readdy/api/KernelConfiguration.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 
-class KernelContext {
+class Context {
 public:
-    using CompartmentRegistry = std::vector<std::unique_ptr<readdy::model::compartments::Compartment>>;
     using BoxSize = std::array<scalar, 3>;
     using PeriodicBoundaryConditions = std::array<bool, 3>;
-    using KernelConfiguration = nlohmann::json;
+    using KernelConfiguration = conf::Configuration;
 
     using fix_pos_fun = std::function<void(Vec3 &)>;
     using pbc_fun = std::function<Vec3(const Vec3 &)>;
@@ -103,16 +91,9 @@ public:
 
     const scalar calculateMaxCutoff() const;
 
-    template<typename T>
-    const short registerCompartment(std::unique_ptr<T> compartment) {
-        // assert to prevent errors already at compile-time
-        static_assert(std::is_base_of<compartments::Compartment, T>::value, "argument must be a compartment");
-        const auto id = compartment->getId();
-        _compartmentRegistry.push_back(std::move(compartment));
-        return id;
-    }
+    compartments::CompartmentRegistry &compartments();
 
-    const CompartmentRegistry &compartments() const;
+    const compartments::CompartmentRegistry &compartments() const;
 
     /**
      * Copy the reactions and potentials of the internal and external registries into the actual registries, which
@@ -173,19 +154,19 @@ public:
     void setKernelConfiguration(const std::string &jsonStr);
 
     // ctor and dtor
-    KernelContext();
+    Context();
 
-    ~KernelContext();
+    ~Context();
 
     // move
-    KernelContext(KernelContext &&rhs) = delete;
+    Context(Context &&rhs) = default;
 
-    KernelContext &operator=(KernelContext &&rhs) = delete;
+    Context &operator=(Context &&rhs) = default;
 
     // copy
-    KernelContext(const KernelContext &rhs) = delete;
+    Context(const Context &rhs) = default;
 
-    KernelContext &operator=(const KernelContext &rhs) = delete;
+    Context &operator=(const Context &rhs) = default;
 
 private:
     void updateFunctions();
@@ -194,7 +175,7 @@ private:
     reactions::ReactionRegistry _reactionRegistry;
     potentials::PotentialRegistry _potentialRegistry;
     top::TopologyRegistry _topologyRegistry;
-    CompartmentRegistry _compartmentRegistry;
+    compartments::CompartmentRegistry _compartmentRegistry;
 
     KernelConfiguration _kernelConfiguration;
 

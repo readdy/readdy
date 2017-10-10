@@ -52,7 +52,7 @@ public:
 
     explicit NLDataContainer(EntryDataContainer *data);
 
-    NLDataContainer(const model::KernelContext &context, const util::thread::Config &threadConfig);
+    NLDataContainer(const model::Context &context, const util::thread::Config &threadConfig);
 
     void reserve(std::size_t n) override;
 

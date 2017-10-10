@@ -56,7 +56,7 @@ AddParticles::AddParticles(Kernel *const kernel, const Particle &particle)
 void AddParticles::perform(const util::PerformanceNode &node) {
     auto t = node.timeit();
     if(kernel != nullptr) {
-        kernel->getKernelStateModel().addParticles(particles);
+        kernel->stateModel().addParticles(particles);
     } else {
         log::critical("Tried to perform {} without providing a valid kernel!", getActionName<AddParticles>());
     }

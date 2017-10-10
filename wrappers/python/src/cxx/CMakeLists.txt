@@ -27,11 +27,14 @@ set(SOURCE_FILES
         ReaddyBinding.cpp
         common/CommonModule.cpp
         common/ExportIO.cpp
+        common/ReadableReactionRecord.h
+        common/ReadableReactionRecord.cpp
         common/SpdlogPythonSink.h
         common/Utils.cpp
         api/ExportObservables.h
         api/ExportSchemeApi.h
         api/ExportTopologies.cpp
+        api/ExportKernelContext.cpp
         api/PyFunction.h
         api/PyPotential.h
         api/PyPotential.cpp

@@ -42,13 +42,13 @@ class TestCompartments : public KernelTest {
 };
 
 TEST_P(TestCompartments, OneCompartmentOneConversionOneParticle) {
-    auto &ctx = kernel->getKernelContext();
-    ctx.particle_types().add("A", 1., 1.);
-    ctx.particle_types().add("B", 1., 1.);
+    auto &ctx = kernel->context();
+    ctx.particle_types().add("A", 1.);
+    ctx.particle_types().add("B", 1.);
     kernel->addParticle("A", readdy::Vec3(1, 0, 2));
 
     std::unordered_map<std::string, std::string> conversionsMap = {{"A", "B"}};
-    kernel->registerCompartment<m::compartments::Sphere>(conversionsMap, "kugelrund", readdy::Vec3(0,0,0), 10., false);
+    ctx.compartments().addSphere(conversionsMap, "kugelrund", readdy::Vec3(0,0,0), 10., false);
 
     std::vector<std::string> typesToCount = {"A", "B"};
     auto &&obs = kernel->createObservable<m::observables::NParticles>(1, typesToCount);
@@ -66,18 +66,18 @@ TEST_P(TestCompartments, OneCompartmentOneConversionOneParticle) {
 
 TEST_P(TestCompartments, TwoCompartments) {
     // two compartments, four species A,B,C and D, in the end there should only be C and D particles
-    auto &ctx = kernel->getKernelContext();
+    auto &ctx = kernel->context();
     ctx.boxSize() = {{10, 10, 10}};
-    ctx.particle_types().add("A", 1., 1.);
-    ctx.particle_types().add("B", 1., 1.);
-    ctx.particle_types().add("C", 1., 1.);
-    ctx.particle_types().add("D", 1., 1.);
+    ctx.particle_types().add("A", 1.);
+    ctx.particle_types().add("B", 1.);
+    ctx.particle_types().add("C", 1.);
+    ctx.particle_types().add("D", 1.);
     auto &&comp = kernel->createAction<m::actions::EvaluateCompartments>();
 
     std::unordered_map<std::string, std::string> conversionsXPos = {{"A", "C"}, {"B", "C"}};
     std::unordered_map<std::string, std::string> conversionsXNeg = {{"A", "D"}, {"B", "D"}};
-    kernel->registerCompartment<m::compartments::Plane>(conversionsXPos, "XPos", readdy::Vec3(1,0,0), 0, true);
-    kernel->registerCompartment<m::compartments::Plane>(conversionsXNeg, "XNeg", readdy::Vec3(-1,0,0), 0, true);
+    ctx.compartments().addPlane(conversionsXPos, "XPos", readdy::Vec3(1,0,0), 0, true);
+    ctx.compartments().addPlane(conversionsXNeg, "XNeg", readdy::Vec3(-1,0,0), 0, true);
 
     for (auto i = 0; i < 100; ++i) {
         kernel->addParticle("A", readdy::model::rnd::normal3<readdy::scalar>());

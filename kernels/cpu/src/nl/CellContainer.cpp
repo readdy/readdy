@@ -91,7 +91,7 @@ const CellContainer::cell_index &CellContainer::contiguous_index() const {
     return _contiguous_index;
 }
 
-CellContainer::CellContainer(DataContainer &data, const readdy::model::KernelContext &context,
+CellContainer::CellContainer(DataContainer &data, const readdy::model::Context &context,
                              const readdy::util::thread::Config &config)
         : _data(data), _context(context), _config(config), _size(context.boxSize()),
           _root_size(context.boxSize()) {}
@@ -172,7 +172,7 @@ const CellContainer::DataContainer &CellContainer::data() const {
     return _data;
 }
 
-const readdy::model::KernelContext &CellContainer::context() const {
+const readdy::model::Context &CellContainer::context() const {
     return _context;
 }
 

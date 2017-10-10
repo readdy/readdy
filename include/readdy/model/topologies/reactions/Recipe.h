@@ -67,6 +67,8 @@ public:
 
     ~Recipe() = default;
 
+    Recipe &changeParticleType(const vertex_ref &ref, const std::string &to);
+
     Recipe &changeParticleType(const vertex_ref &ref, const particle_type_type &to);
 
     Recipe &addEdge(const edge &edge);

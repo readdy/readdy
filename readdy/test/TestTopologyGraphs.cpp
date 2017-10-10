@@ -130,24 +130,24 @@ TEST(TestTopologyGraphs, ConnectedSubComponents) {
 
 TEST(TestTopologyGraphs, TestTopologyWithGraph) {
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
-    auto &ctx = kernel->getKernelContext();
+    auto &ctx = kernel->context();
 
-    ctx.particle_types().add("Topology A", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
-    ctx.particle_types().add("Topology B", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
+    ctx.particle_types().add("Topology A", 1.0, readdy::model::particleflavor::TOPOLOGY);
+    ctx.particle_types().add("Topology B", 1.0, readdy::model::particleflavor::TOPOLOGY);
 
-    ctx.topology_registry().configure_bond_potential("Topology A", "Topology B", {1.0, 1.0});
-    ctx.topology_registry().configure_bond_potential("Topology A", "Topology A", {1.0, 1.0});
-    ctx.topology_registry().configure_angle_potential("Topology B", "Topology A", "Topology A", {1.0, 1.0});
-    ctx.topology_registry().configure_torsion_potential("Topology A", "Topology B", "Topology A", "Topology A",
-                                                        {1.0, 1.0, 3.0});
+    ctx.topology_registry().configureBondPotential("Topology A", "Topology B", {1.0, 1.0});
+    ctx.topology_registry().configureBondPotential("Topology A", "Topology A", {1.0, 1.0});
+    ctx.topology_registry().configureAnglePotential("Topology B", "Topology A", "Topology A", {1.0, 1.0});
+    ctx.topology_registry().configureTorsionPotential("Topology A", "Topology B", "Topology A", "Topology A",
+                                                      {1.0, 1.0, 3.0});
 
     ctx.boxSize() = {{10, 10, 10}};
-    topology_particle_t x_i{-1, 0, 0, ctx.particle_types().id_of("Topology A")};
-    topology_particle_t x_j{0, 0, 0, ctx.particle_types().id_of("Topology A")};
-    topology_particle_t x_k{0, 0, 1, ctx.particle_types().id_of("Topology B")};
-    topology_particle_t x_l{1, .1, 1, ctx.particle_types().id_of("Topology A")};
+    topology_particle_t x_i{-1, 0, 0, ctx.particle_types().idOf("Topology A")};
+    topology_particle_t x_j{0, 0, 0, ctx.particle_types().idOf("Topology A")};
+    topology_particle_t x_k{0, 0, 1, ctx.particle_types().idOf("Topology B")};
+    topology_particle_t x_l{1, .1, 1, ctx.particle_types().idOf("Topology A")};
 
-    auto top = kernel->getKernelStateModel().addTopology(0, {x_i, x_j, x_k, x_l});
+    auto top = kernel->stateModel().addTopology(0, {x_i, x_j, x_k, x_l});
     EXPECT_EQ(top->graph().vertices().size(), 4);
     auto it = top->graph().vertices().begin();
     auto it2 = ++top->graph().vertices().begin();
@@ -247,14 +247,14 @@ TEST(TestTopologyGraphs, TestFindNTuplesInTriangle) {
 }
 
 TEST_P(TestTopologyGraphs, BondedPotential) {
-    auto &ctx = kernel->getKernelContext();
+    auto &ctx = kernel->context();
     auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
-    ctx.particle_types().add("Topology A", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
+    ctx.particle_types().add("Topology A", 1.0, readdy::model::particleflavor::TOPOLOGY);
     ctx.boxSize() = {{10, 10, 10}};
-    ctx.topology_registry().configure_bond_potential("Topology A", "Topology A", {10, 5});
-    topology_particle_t x_i{4, 0, 0, ctx.particle_types().id_of("Topology A")};
-    topology_particle_t x_j{1, 0, 0, ctx.particle_types().id_of("Topology A")};
-    auto top = kernel->getKernelStateModel().addTopology(0, {x_i, x_j});
+    ctx.topology_registry().configureBondPotential("Topology A", "Topology A", {10, 5});
+    topology_particle_t x_i{4, 0, 0, ctx.particle_types().idOf("Topology A")};
+    topology_particle_t x_j{1, 0, 0, ctx.particle_types().idOf("Topology A")};
+    auto top = kernel->stateModel().addTopology(0, {x_i, x_j});
     top->graph().addEdge(top->graph().vertices().begin(), ++top->graph().vertices().begin());
     top->configure();
     auto fObs = kernel->createObservable<readdy::model::observables::Forces>(1);
@@ -276,26 +276,26 @@ TEST_P(TestTopologyGraphs, BondedPotential) {
     EXPECT_EQ(collectedForces.at(0), f1);
     readdy::Vec3 f2{-40., 0, 0};
     EXPECT_EQ(collectedForces.at(1), f2);
-    EXPECT_EQ(kernel->getKernelStateModel().energy(), 40);
+    EXPECT_EQ(kernel->stateModel().energy(), 40);
 }
 
 
 TEST_P(TestTopologyGraphs, MoreComplicatedAnglePotential) {
-    auto &ctx = kernel->getKernelContext();
+    auto &ctx = kernel->context();
     auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
-    ctx.particle_types().add("Topology A", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
+    ctx.particle_types().add("Topology A", 1.0, readdy::model::particleflavor::TOPOLOGY);
     ctx.boxSize() = {{10, 10, 10}};
-    ctx.topology_registry().configure_bond_potential("Topology A", "Topology A", {0., 1.});
-    ctx.topology_registry().configure_angle_potential("Topology A", "Topology A", "Topology A",
-                                                      {1.0, readdy::util::numeric::pi()});
-    topology_particle_t x_i{0.1, 0.1, 0.1, ctx.particle_types().id_of("Topology A")};
-    topology_particle_t x_j{1.0, 0.0, 0.0, ctx.particle_types().id_of("Topology A")};
-    topology_particle_t x_k{1.0, 0.5, -.3, ctx.particle_types().id_of("Topology A")};
-    auto top = kernel->getKernelStateModel().addTopology(0, {x_i, x_j, x_k});
+    ctx.topology_registry().configureBondPotential("Topology A", "Topology A", {0., 1.});
+    ctx.topology_registry().configureAnglePotential("Topology A", "Topology A", "Topology A",
+                                                    {1.0, readdy::util::numeric::pi()});
+    topology_particle_t x_i{0.1, 0.1, 0.1, ctx.particle_types().idOf("Topology A")};
+    topology_particle_t x_j{1.0, 0.0, 0.0, ctx.particle_types().idOf("Topology A")};
+    topology_particle_t x_k{1.0, 0.5, -.3, ctx.particle_types().idOf("Topology A")};
+    auto top = kernel->stateModel().addTopology(0, {x_i, x_j, x_k});
     {
         auto it = top->graph().vertices().begin();
         top->graph().addEdge(std::next(it), it);
-        top->graph().addEdge(it, std::next(it, 2));
+        top->graph().addEdge(std::next(it), std::next(it, 2));
     }
     top->configure();
     auto fObs = kernel->createObservable<readdy::model::observables::Forces>(1);
@@ -314,13 +314,13 @@ TEST_P(TestTopologyGraphs, MoreComplicatedAnglePotential) {
 
     EXPECT_EQ(collectedForces.size(), 3);
     if(kernel->singlePrecision()) {
-        EXPECT_FLOAT_EQ(kernel->getKernelStateModel().energy(), static_cast<readdy::scalar>(2.5871244540347655));
+        EXPECT_FLOAT_EQ(kernel->stateModel().energy(), static_cast<readdy::scalar>(2.5871244540347655));
     } else {
-        EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().energy(), static_cast<readdy::scalar>(2.5871244540347655));
+        EXPECT_DOUBLE_EQ(kernel->stateModel().energy(), static_cast<readdy::scalar>(2.5871244540347655));
     }
-    readdy::Vec3 force_x_i{0.13142034, 3.01536661, -1.83258358};
-    readdy::Vec3 force_x_j{5.32252362, -3.44312692, 1.11964973};
-    readdy::Vec3 force_x_k{-5.45394396, 0.42776031, 0.71293385};
+    readdy::Vec3 force_x_i{-0.13142034, -3.01536661, 1.83258358};
+    readdy::Vec3 force_x_j{-5.32252362, 3.44312692, -1.11964973};
+    readdy::Vec3 force_x_k{5.45394396, -0.42776031, -0.71293385};
     EXPECT_VEC3_NEAR(collectedForces[0], force_x_i, 1e-6);
     EXPECT_VEC3_NEAR(collectedForces[1], force_x_j, 1e-6);
     EXPECT_VEC3_NEAR(collectedForces[2], force_x_k, 1e-6);
@@ -329,15 +329,15 @@ TEST_P(TestTopologyGraphs, MoreComplicatedAnglePotential) {
 
 
 TEST_P(TestTopologyGraphs, DihedralPotentialSteeperAngle) {
-    auto &ctx = kernel->getKernelContext();
+    auto &ctx = kernel->context();
     auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
-    ctx.particle_types().add("Topology A", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
+    ctx.particle_types().add("Topology A", 1.0, readdy::model::particleflavor::TOPOLOGY);
     ctx.boxSize() = {{10, 10, 10}};
-    topology_particle_t x_i{-1, 0, 0, ctx.particle_types().id_of("Topology A")};
-    topology_particle_t x_j{0, 0, 0, ctx.particle_types().id_of("Topology A")};
-    topology_particle_t x_k{0, 0, 1, ctx.particle_types().id_of("Topology A")};
-    topology_particle_t x_l{1, 3, 1, ctx.particle_types().id_of("Topology A")};
-    auto top = kernel->getKernelStateModel().addTopology(0, {x_i, x_j, x_k, x_l});
+    topology_particle_t x_i{-1, 0, 0, ctx.particle_types().idOf("Topology A")};
+    topology_particle_t x_j{0, 0, 0, ctx.particle_types().idOf("Topology A")};
+    topology_particle_t x_k{0, 0, 1, ctx.particle_types().idOf("Topology A")};
+    topology_particle_t x_l{1, 3, 1, ctx.particle_types().idOf("Topology A")};
+    auto top = kernel->stateModel().addTopology(0, {x_i, x_j, x_k, x_l});
     auto it = top->graph().vertices().begin();
     auto it2 = ++top->graph().vertices().begin();
     while(it2 != top->graph().vertices().end()) {
@@ -345,10 +345,10 @@ TEST_P(TestTopologyGraphs, DihedralPotentialSteeperAngle) {
         std::advance(it, 1);
         std::advance(it2, 1);
     }
-    ctx.topology_registry().configure_bond_potential("Topology A", "Topology A", {0., 1.});
-    kernel->getKernelContext().topology_registry().configure_torsion_potential("Topology A", "Topology A", "Topology A",
-                                                                               "Topology A",
-                                                                               {1.0, 3, readdy::util::numeric::pi()});
+    ctx.topology_registry().configureBondPotential("Topology A", "Topology A", {0., 1.});
+    kernel->context().topology_registry().configureTorsionPotential("Topology A", "Topology A", "Topology A",
+                                                                    "Topology A",
+                                                                    {1.0, 3, readdy::util::numeric::pi()});
     top->configure();
     auto fObs = kernel->createObservable<readdy::model::observables::Forces>(1);
     std::vector<readdy::Vec3> collectedForces;
@@ -366,9 +366,9 @@ TEST_P(TestTopologyGraphs, DihedralPotentialSteeperAngle) {
 
     EXPECT_EQ(collectedForces.size(), 4);
     if(kernel->singlePrecision()) {
-        EXPECT_FLOAT_EQ(kernel->getKernelStateModel().energy(), static_cast<readdy::scalar>(1.8221921916437787));
+        EXPECT_FLOAT_EQ(kernel->stateModel().energy(), static_cast<readdy::scalar>(1.8221921916437787));
     } else {
-        EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().energy(), static_cast<readdy::scalar>(1.8221921916437787));
+        EXPECT_DOUBLE_EQ(kernel->stateModel().energy(), static_cast<readdy::scalar>(1.8221921916437787));
     }
     readdy::Vec3 force_x_i{0., 1.70762994, 0.};
     readdy::Vec3 force_x_j{0., -1.70762994, 0.};
@@ -382,10 +382,10 @@ TEST_P(TestTopologyGraphs, DihedralPotentialSteeperAngle) {
 
 TEST(TestTopologyGraphs, TestAppendParticle) {
     using namespace readdy;
-    api::PotentialConfiguration potentialConfiguration;
-    potentialConfiguration.pairPotentials[std::make_tuple(0, 0)].emplace_back();
-    potentialConfiguration.pairPotentials[std::make_tuple(0, 1)].emplace_back();
-    model::top::GraphTopology gt {0, {10, 1, 200}, {0, 0, 0}, potentialConfiguration};
+    model::Context context;
+    context.topology_registry().potentialConfiguration().pairPotentials[std::make_tuple(0, 0)].emplace_back();
+    context.topology_registry().potentialConfiguration().pairPotentials[std::make_tuple(0, 1)].emplace_back();
+    model::top::GraphTopology gt {0, {10, 1, 200}, {0, 0, 0}, context, nullptr};
     {
         auto it = gt.graph().vertices().begin();
         auto it2 = ++gt.graph().vertices().begin();

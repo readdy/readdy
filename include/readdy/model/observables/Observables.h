@@ -25,7 +25,6 @@
  *  - Positions,
  *  - Particles,
  *  - RadialDistribution,
- *  - CenterOfMass,
  *  - HistogramAlongAxis,
  *  - NParticles,
  *  - Forces,
@@ -41,7 +40,6 @@
 
 #pragma once
 
-#include "CenterOfMass.h"
 #include "HistogramAlongAxis.h"
 #include "Particles.h"
 #include "Positions.h"

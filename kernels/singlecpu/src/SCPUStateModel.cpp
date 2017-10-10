@@ -36,25 +36,19 @@ namespace readdy {
 namespace kernel {
 namespace scpu {
 struct SCPUStateModel::Impl {
-    using reaction_counts_order1_map = SCPUStateModel::reaction_counts_order1_map;
-    using reaction_counts_order2_map = SCPUStateModel::reaction_counts_order2_map;
+    using reaction_counts_map = SCPUStateModel::reaction_counts_map;
     scalar currentEnergy = 0;
     model::SCPUParticleData particleData {};
     std::unique_ptr<model::SCPUNeighborList> neighborList;
     SCPUStateModel::topology_action_factory const *topologyActionFactory {nullptr};
-    readdy::model::KernelContext const *context {nullptr};
-    // only filled when readdy::model::KernelContext::recordReactionsWithPositions is true
+    // only filled when readdy::model::Context::recordReactionsWithPositions is true
     std::vector<readdy::model::reactions::ReactionRecord> reactionRecords{};
-    // reaction counts map from particle-type (or type-pair) to vector of count numbers,
-    // the position in the vector corresponds to the reaction index,
-    // i.e. for each particle-type (or type-pair) there is a new reaction index space
-    std::pair<reaction_counts_order1_map, reaction_counts_order2_map> reactionCounts;
+    reaction_counts_map reactionCounts {};
 };
 
-SCPUStateModel::SCPUStateModel(readdy::model::KernelContext const *context, topology_action_factory const *const taf)
-        : pimpl(std::make_unique<SCPUStateModel::Impl>()) {
-    pimpl->neighborList = std::make_unique<model::SCPUNeighborList>(context);
-    pimpl->context = context;
+SCPUStateModel::SCPUStateModel(const readdy::model::Context &context, topology_action_factory const *const taf)
+        : pimpl(std::make_unique<SCPUStateModel::Impl>()), _context(context) {
+    pimpl->neighborList = std::make_unique<model::SCPUNeighborList>(&_context.get());
     pimpl->topologyActionFactory = taf;
 }
 
@@ -125,8 +119,7 @@ readdy::model::top::GraphTopology *const SCPUStateModel::addTopology(topology_ty
         types.push_back(p.getType());
     }
     auto it = _topologies.emplace_back(
-            std::make_unique<topology>(type, std::move(ids), std::move(types),
-                                       pimpl->context->topology_registry().potential_configuration())
+            std::make_unique<topology>(type, std::move(ids), std::move(types), _context.get(), this)
     );
     const auto idx = std::distance(topologies().begin(), it);
     for(const auto p : (*it)->getParticles()) {
@@ -143,11 +136,11 @@ const std::vector<readdy::model::reactions::ReactionRecord> &SCPUStateModel::rea
     return pimpl->reactionRecords;
 }
 
-std::pair<SCPUStateModel::reaction_counts_order1_map, SCPUStateModel::reaction_counts_order2_map> &SCPUStateModel::reactionCounts() {
+SCPUStateModel::reaction_counts_map &SCPUStateModel::reactionCounts() {
     return pimpl->reactionCounts;
 }
 
-const std::pair<SCPUStateModel::reaction_counts_order1_map, SCPUStateModel::reaction_counts_order2_map> &SCPUStateModel::reactionCounts() const {
+const SCPUStateModel::reaction_counts_map &SCPUStateModel::reactionCounts() const {
     return pimpl->reactionCounts;
 }
 
@@ -222,6 +215,26 @@ scalar SCPUStateModel::energy() const {
 
 scalar &SCPUStateModel::energy() {
     return pimpl->currentEnergy;
+}
+
+void SCPUStateModel::resetReactionCounts() {
+    if(!pimpl->reactionCounts.empty()) {
+        for(auto &e : pimpl->reactionCounts) {
+            e.second = 0;
+        }
+    } else {
+        const auto &reactions = _context.get().reactions();
+        for (const auto &entry : reactions.order1()) {
+            for (auto reaction : entry.second) {
+                pimpl->reactionCounts[reaction->id()] = 0;
+            }
+        }
+        for (const auto &entry : reactions.order2()) {
+            for (auto reaction : entry.second) {
+                pimpl->reactionCounts[reaction->id()] = 0;
+            }
+        }
+    }
 }
 
 SCPUStateModel &SCPUStateModel::operator=(SCPUStateModel &&rhs) noexcept = default;

@@ -45,8 +45,8 @@ class PotentialOrder2 : public Potential {
 protected:
     using particle_type_type = readdy::model::Particle::type_type;
 public:
-    PotentialOrder2(const std::string& particleType1, const std::string& particleType2)
-            : Potential(2), particleType1(particleType1), particleType2(particleType2) {}
+    PotentialOrder2(particle_type_type type1, particle_type_type type2)
+            : Potential(2), _particleType1(type1), _particleType2(type2) {}
 
     virtual scalar calculateEnergy(const Vec3 &x_ij) const = 0;
 
@@ -63,12 +63,16 @@ public:
         return os;
     }
 
+    particle_type_type particleType1() const {
+        return _particleType1;
+    }
+
+    particle_type_type particleType2() const {
+        return _particleType2;
+    }
+
 protected:
-    friend class readdy::model::potentials::PotentialRegistry;
-
-    virtual void configureForTypes(const ParticleTypeRegistry*, particle_type_type type1, particle_type_type type2) = 0;
-
-    const std::string particleType1, particleType2;
+    particle_type_type _particleType1, _particleType2;
 };
 
 NAMESPACE_END(potentials)

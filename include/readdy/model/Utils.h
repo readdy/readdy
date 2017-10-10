@@ -21,28 +21,32 @@
 
 
 /**
- * << detailed description >>
+ * This file contains definitions of `getRecommendedTimeStep` and `getMaximumDisplacement` as well as
+ * some utility with respect to validating type names.
  *
- * @file Utils.h
- * @brief << brief description >>
+ * @file readdy/model/Utils.h
+ * @brief Definitions of some utility for the readdy_model target
  * @author clonker
  * @date 17.11.16
  */
 
 #pragma once
-#include <readdy/model/KernelContext.h>
+#include <readdy/model/Context.h>
 #include <readdy/model/observables/Observable.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(util)
 
-scalar getRecommendedTimeStep(unsigned int N, KernelContext&);
-scalar getMaximumDisplacement(KernelContext&, scalar timeStep);
+scalar getRecommendedTimeStep(unsigned int N, Context&);
+scalar getMaximumDisplacement(Context&, scalar timeStep);
 
-constexpr inline std::array<const char*, 7> invalidCharacterSequences() {
-    return {{"[", "]", "(", ")", "->", "--", ":"}};
+constexpr inline std::array<const char*, 8> invalidCharacterSequences() {
+    return {{"[", "]", "(", ")", "->", "--", ":", "+"}};
 };
+
+static constexpr const char arrow[] = "->";
+static constexpr const char bond[] = "--";
 
 void validateTypeName(const std::string &typeName);
 

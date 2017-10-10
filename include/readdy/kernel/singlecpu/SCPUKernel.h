@@ -25,9 +25,13 @@
 //
 
 #pragma once
+
 #include <readdy/model/RandomProvider.h>
 #include <readdy/model/Kernel.h>
 #include <readdy/kernel/singlecpu/SCPUStateModel.h>
+#include <readdy/kernel/singlecpu/observables/SCPUObservableFactory.h>
+#include <readdy/kernel/singlecpu/model/topologies/SCPUTopologyActionFactory.h>
+#include <readdy/kernel/singlecpu/actions/SCPUActionFactory.h>
 
 namespace readdy {
 namespace kernel {
@@ -43,16 +47,15 @@ public:
     ~SCPUKernel() override;
 
     // move
-    SCPUKernel(SCPUKernel &&rhs) noexcept;
+    SCPUKernel(SCPUKernel &&rhs) = default;
 
-    SCPUKernel &operator=(SCPUKernel &&rhs) noexcept;
+    SCPUKernel &operator=(SCPUKernel &&rhs) = default;
 
     // factory method
     static std::unique_ptr<SCPUKernel> create();
 
-    std::vector<std::string> getAvailablePotentials() const override;
-
     const SCPUStateModel &getSCPUKernelStateModel() const;
+
     SCPUStateModel &getSCPUKernelStateModel();
 
     void initialize() override;
@@ -60,24 +63,17 @@ public:
 protected:
     SCPUStateModel &getKernelStateModelInternal() const override;
 
-    readdy::model::KernelContext &getKernelContextInternal() const override;
-
     readdy::model::actions::ActionFactory &getActionFactoryInternal() const override;
-
-    readdy::model::potentials::PotentialFactory &getPotentialFactoryInternal() const override;
-
-    readdy::model::reactions::ReactionFactory &getReactionFactoryInternal() const override;
-
-    readdy::model::compartments::CompartmentFactory &getCompartmentFactoryInternal() const override;
 
     readdy::model::observables::ObservableFactory &getObservableFactoryInternal() const override;
 
     readdy::model::top::TopologyActionFactory *getTopologyActionFactoryInternal() const override;
 
 private:
-
-    struct Impl;
-    std::unique_ptr<readdy::kernel::scpu::SCPUKernel::Impl> pimpl;
+    std::unique_ptr<SCPUStateModel> _model;
+    std::unique_ptr<actions::SCPUActionFactory> _actionFactory;
+    std::unique_ptr<observables::SCPUObservableFactory> _observables;
+    std::unique_ptr<model::top::SCPUTopologyActionFactory> _topologyActionFactory;
 };
 
 }

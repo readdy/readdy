@@ -48,7 +48,7 @@ public:
     using neighbors_type = std::vector<std::size_t>;
     using const_iterator = NeighborListIterator;
 
-    NeighborList(const readdy::model::KernelContext &context,
+    NeighborList(const readdy::model::Context &context,
                  const readdy::util::thread::Config &config) : _context(context), _config(config) {};
 
     virtual ~NeighborList() = default;
@@ -94,7 +94,7 @@ protected:
     scalar _max_cutoff {0};
     scalar _max_cutoff_skin_squared {0};
 
-    std::reference_wrapper<const readdy::model::KernelContext> _context;
+    std::reference_wrapper<const readdy::model::Context> _context;
     std::reference_wrapper<const readdy::util::thread::Config> _config;
 };
 

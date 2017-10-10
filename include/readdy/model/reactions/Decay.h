@@ -37,18 +37,18 @@ NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(reactions)
 
-class Decay : public Reaction<1> {
+class Decay : public Reaction {
 
 public:
-    Decay(const std::string &name, particle_type_type typeFrom, const scalar rate) : Reaction(name, rate, 0, 0, 0) {
-        educts[0] = typeFrom;
+    Decay(const std::string &name, particle_type_type typeFrom, const scalar rate) : Reaction(name, rate, 0, 0, 1, 0) {
+        _educts[0] = typeFrom;
     }
 
-    const unsigned int getTypeFrom() const {
-        return educts[0];
+    const particle_type_type getTypeFrom() const {
+        return _educts[0];
     }
 
-    virtual const ReactionType getType() override {
+    virtual const ReactionType type() const override {
         return ReactionType::Decay;
     }
 };

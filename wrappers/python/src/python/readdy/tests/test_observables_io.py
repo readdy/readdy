@@ -60,7 +60,7 @@ class TestObservablesIO(ReaDDyTestCase):
         sim = Simulation()
         sim.set_kernel("SingleCPU")
         sim.box_size = common.Vec(13, 13, 13)
-        sim.register_particle_type("A", .1, .1)
+        sim.register_particle_type("A", .1)
         sim.add_particle("A", common.Vec(0, 0, 0))
         # every time step, add one particle
         sim.register_observable_n_particles(1, ["A"], lambda n: sim.add_particle("A", common.Vec(1.5, 2.5, 3.5)))
@@ -90,8 +90,8 @@ class TestObservablesIO(ReaDDyTestCase):
         sim = Simulation()
         sim.set_kernel("SingleCPU")
         sim.box_size = common.Vec(13, 13, 13)
-        typeid_A = sim.register_particle_type("A", .1, .1)
-        typeid_B = sim.register_particle_type("B", .1, .1)
+        typeid_A = sim.register_particle_type("A", .1)
+        typeid_B = sim.register_particle_type("B", .1)
         sim.add_particle("A", common.Vec(0, 0, 0))
         sim.add_particle("B", common.Vec(0, 0, 0))
         # every time step, add one particle
@@ -135,9 +135,9 @@ class TestObservablesIO(ReaDDyTestCase):
         simulation.kbt = 2
         simulation.periodic_boundary = [True, True, True]
         simulation.box_size = box_size
-        simulation.register_particle_type("A", .2, 1.)
-        simulation.register_particle_type("B", .2, 1.)
-        simulation.register_potential_harmonic_repulsion("A", "B", 10)
+        simulation.register_particle_type("A", .2)
+        simulation.register_particle_type("B", .2)
+        simulation.register_potential_harmonic_repulsion("A", "B", 10, 2.)
         simulation.add_particle("A", common.Vec(-2.5, 0, 0))
         simulation.add_particle("B", common.Vec(0, 0, 0))
         bin_borders = np.arange(0, 5, .01)
@@ -163,39 +163,6 @@ class TestObservablesIO(ReaDDyTestCase):
                 np.testing.assert_equal(bin_centers, np.array(callback_centers[t]))
                 np.testing.assert_equal(distribution[t], np.array(callback_rdf[t]))
 
-    def test_center_of_mass_observable(self):
-        fname = os.path.join(self.dir, "test_observables_com.h5")
-
-        simulation = Simulation()
-        simulation.set_kernel("SingleCPU")
-
-        box_size = common.Vec(10, 10, 10)
-        simulation.kbt = 2
-        simulation.periodic_boundary = [True, True, True]
-        simulation.box_size = box_size
-        simulation.register_particle_type("A", .2, 1.)
-        simulation.register_particle_type("B", .2, 1.)
-        simulation.add_particle("A", common.Vec(-2.5, 0, 0))
-        simulation.add_particle("B", common.Vec(0, 0, 0))
-        n_time_steps = 50
-        callback_com = []
-
-        def com_callback(vec):
-            callback_com.append(vec)
-
-        handle = simulation.register_observable_center_of_mass(1, ["A", "B"], com_callback)
-        with closing(io.File.create(fname)) as f:
-            handle.enable_write_to_file(f, u"com", 3)
-            simulation.run(n_time_steps, 0.02)
-            handle.flush()
-
-        with h5py.File(fname, "r") as f2:
-            com = f2["readdy/observables/com/data"][:]
-            for t in range(n_time_steps):
-                np.testing.assert_equal(com[t]["x"], callback_com[t][0])
-                np.testing.assert_equal(com[t]["y"], callback_com[t][1])
-                np.testing.assert_equal(com[t]["z"], callback_com[t][2])
-
     def test_histogram_along_axis_observable(self):
         fname = os.path.join(self.dir, "test_observables_hist_along_axis.h5")
 
@@ -206,9 +173,9 @@ class TestObservablesIO(ReaDDyTestCase):
         simulation.kbt = 2
         simulation.periodic_boundary = [True, True, True]
         simulation.box_size = box_size
-        simulation.register_particle_type("A", .2, 1.)
-        simulation.register_particle_type("B", .2, 1.)
-        simulation.register_potential_harmonic_repulsion("A", "B", 10)
+        simulation.register_particle_type("A", .2)
+        simulation.register_particle_type("B", .2)
+        simulation.register_potential_harmonic_repulsion("A", "B", 10, 2.)
         simulation.add_particle("A", common.Vec(-2.5, 0, 0))
         simulation.add_particle("B", common.Vec(0, 0, 0))
         bin_borders = np.arange(0, 5, .01)
@@ -241,8 +208,8 @@ class TestObservablesIO(ReaDDyTestCase):
         simulation.kbt = 2
         simulation.periodic_boundary = [True, True, True]
         simulation.box_size = box_size
-        simulation.register_particle_type("A", .2, 1.)
-        simulation.register_particle_type("B", .2, 1.)
+        simulation.register_particle_type("A", .2)
+        simulation.register_particle_type("B", .2)
         simulation.add_particle("A", common.Vec(-2.5, 0, 0))
         simulation.add_particle("B", common.Vec(0, 0, 0))
         n_time_steps = 50
@@ -282,9 +249,9 @@ class TestObservablesIO(ReaDDyTestCase):
         sim = Simulation()
         sim.set_kernel("CPU")
         sim.box_size = common.Vec(10, 10, 10)
-        sim.register_particle_type("A", .0, 5.0)
-        sim.register_particle_type("B", .0, 6.0)
-        sim.register_particle_type("C", .0, 6.0)
+        sim.register_particle_type("A", .0)
+        sim.register_particle_type("B", .0)
+        sim.register_particle_type("C", .0)
         sim.register_reaction_conversion("mylabel", "A", "B", .00001)
         sim.register_reaction_conversion("A->B", "A", "B", 1.)
         sim.register_reaction_fusion("B+C->A", "B", "C", "A", 1.0, 1.0, .5, .5)
@@ -309,24 +276,23 @@ class TestObservablesIO(ReaDDyTestCase):
             def get_item(name, collection):
                 return next(x for x in collection if x["name"] == name)
 
-            order_1_reactions = data["registered_reactions/order1_reactions"]
+            import readdy.util.io_utils as io_utils
+            reactions = io_utils.get_reactions(fname)
 
-            mylabel_reaction = get_item("mylabel", order_1_reactions)
+            mylabel_reaction = get_item("mylabel", reactions.values())
             np.testing.assert_allclose(mylabel_reaction["rate"], .00001)
             np.testing.assert_equal(mylabel_reaction["n_educts"], 1)
             np.testing.assert_equal(mylabel_reaction["n_products"], 1)
             np.testing.assert_equal(mylabel_reaction["educt_types"], [type_str_to_id["A"], 0])
             np.testing.assert_equal(mylabel_reaction["product_types"], [type_str_to_id["B"], 0])
-            atob_reaction = get_item("A->B", order_1_reactions)
+            atob_reaction = get_item("A->B", reactions.values())
             np.testing.assert_equal(atob_reaction["rate"], 1.)
             np.testing.assert_equal(atob_reaction["n_educts"], 1)
             np.testing.assert_equal(atob_reaction["n_products"], 1)
             np.testing.assert_equal(mylabel_reaction["educt_types"], [type_str_to_id["A"], 0])
             np.testing.assert_equal(mylabel_reaction["product_types"], [type_str_to_id["B"], 0])
 
-            order_2_reactions = data["registered_reactions/order2_reactions"]
-
-            fusion_reaction = get_item("B+C->A", order_2_reactions)
+            fusion_reaction = get_item("B+C->A", reactions.values())
             np.testing.assert_equal(fusion_reaction["rate"], 1.)
             np.testing.assert_equal(fusion_reaction["educt_distance"], 1.)
             np.testing.assert_equal(fusion_reaction["n_educts"], 2)
@@ -341,20 +307,20 @@ class TestObservablesIO(ReaDDyTestCase):
                 np.testing.assert_equal(record["reaction_type"] == 0 or record["reaction_type"] == 1, True)
                 if record["reaction_type"] == 0:
                     np.testing.assert_equal(record["position"], np.array([.0, .0, .0]))
-                    np.testing.assert_equal(record["reaction_index"], 1)
+                    np.testing.assert_equal(record["reaction_id"], atob_reaction["id"])
                 elif record["reaction_type"] == 1:
                     # fusion
                     np.testing.assert_allclose(record["position"], np.array([1.05, 1.0, 1.0]))
-                    np.testing.assert_equal(record["reaction_index"], 0)
+                    np.testing.assert_equal(record["reaction_id"], fusion_reaction["id"])
 
     def test_reaction_counts_observable(self):
         fname = os.path.join(self.dir, "test_observables_particle_reaction_counts.h5")
         sim = Simulation()
         sim.set_kernel("CPU")
         sim.box_size = common.Vec(10, 10, 10)
-        sim.register_particle_type("A", .0, 5.0)
-        sim.register_particle_type("B", .0, 6.0)
-        sim.register_particle_type("C", .0, 6.0)
+        sim.register_particle_type("A", .0)
+        sim.register_particle_type("B", .0)
+        sim.register_particle_type("C", .0)
         sim.register_reaction_conversion("mylabel", "A", "B", .00001)
         sim.register_reaction_conversion("A->B", "A", "B", 1.)
         sim.register_reaction_fusion("B+C->A", "B", "C", "A", 1.0, 1.0, .5, .5)
@@ -368,6 +334,9 @@ class TestObservablesIO(ReaDDyTestCase):
             handle.enable_write_to_file(f, u"reactions", int(3))
             sim.run_scheme_readdy(True).write_config_to_file(f).with_reaction_scheduler("Gillespie").configure_and_run(n_timesteps, 1)
 
+        import readdy.util.io_utils as io_utils
+        reactions = io_utils.get_reactions(fname)
+
         with h5py.File(fname, "r") as f2:
             data = f2["readdy/observables/reactions"]
             time_series = f2["readdy/observables/reactions/time"]
@@ -376,29 +345,25 @@ class TestObservablesIO(ReaDDyTestCase):
             def get_item(name, collection):
                 return next(x for x in collection if x["name"] == name)
 
-            order_1_reactions = data["registered_reactions/order1_reactions"]
-            order_2_reactions = data["registered_reactions/order2_reactions"]
-
-            mylabel_reaction = get_item("mylabel", order_1_reactions)
-            reaction_idx_mylabel = mylabel_reaction["index"]
-            atob_reaction = get_item("A->B", order_1_reactions)
-            reaction_idx_atob = atob_reaction["index"]
+            mylabel_id = get_item("mylabel", reactions.values())["id"]
+            atob_id = get_item("A->B", reactions.values())["id"]
+            fusion_id = get_item("B+C->A", reactions.values())["id"]
 
             # counts of first time step, time is first index
-            np.testing.assert_equal(data["counts/order1/A[id=0]"][0, reaction_idx_mylabel], np.array([0]))
-            np.testing.assert_equal(data["counts/order1/A[id=0]"][0, reaction_idx_atob], np.array([0]))
-            np.testing.assert_equal(data["counts/order2/B[id=1] + C[id=2]"][0, 0], np.array([0]))
+            np.testing.assert_equal(data["counts/"+str(mylabel_id)][0], np.array([0]))
+            np.testing.assert_equal(data["counts/"+str(atob_id)][0], np.array([0]))
+            np.testing.assert_equal(data["counts/"+str(fusion_id)][0], np.array([0]))
             # counts of second time step
-            np.testing.assert_equal(data["counts/order1/A[id=0]"][1, reaction_idx_mylabel], np.array([0]))
-            np.testing.assert_equal(data["counts/order1/A[id=0]"][1, reaction_idx_atob], np.array([1]))
-            np.testing.assert_equal(data["counts/order2/B[id=1] + C[id=2]"][1, 0], np.array([1]))
+            np.testing.assert_equal(data["counts/"+str(mylabel_id)][1], np.array([0]))
+            np.testing.assert_equal(data["counts/"+str(atob_id)][1], np.array([1]))
+            np.testing.assert_equal(data["counts/"+str(fusion_id)][1], np.array([1]))
 
     def test_forces_observable(self):
         fname = os.path.join(self.dir, "test_observables_particle_forces.h5")
         sim = Simulation()
         sim.set_kernel("CPU")
         sim.box_size = common.Vec(13, 13, 13)
-        sim.register_particle_type("A", .1, .1)
+        sim.register_particle_type("A", .1)
         sim.add_particle("A", common.Vec(0, 0, 0))
         # every time step, add one particle
         sim.register_observable_n_particles(1, ["A"], lambda n: sim.add_particle("A", common.Vec(1.5, 2.5, 3.5)))

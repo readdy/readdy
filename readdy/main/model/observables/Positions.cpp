@@ -49,7 +49,7 @@ struct Positions::Impl {
 Positions::Positions(Kernel *const kernel, unsigned int stride,
                      std::vector<std::string> typesToCount) :
         Positions(kernel, stride,
-                  _internal::util::transformTypes2(typesToCount, kernel->getKernelContext())) {}
+                  _internal::util::transformTypes2(typesToCount, kernel->context())) {}
 
 Positions::Positions(Kernel *const kernel, unsigned int stride,
                      std::vector<unsigned int> typesToCount) :
@@ -64,15 +64,13 @@ void Positions::append() {
 Positions::Positions(Kernel *const kernel, unsigned int stride) : Observable(kernel, stride) {}
 
 void Positions::initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) {
-    if (!pimpl->writer) {
-        pimpl->h5types = std::make_unique<util::CompoundH5Types>(util::getVec3Types(file.ref()));
-        h5rd::dimensions fs = {flushStride};
-        h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
-        auto group = file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName);
-        pimpl->writer = group.createVLENDataSet("data", fs, dims, std::get<0>(*pimpl->h5types),
-                                                std::get<1>(*pimpl->h5types));
-        pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
-    }
+    pimpl->h5types = std::make_unique<util::CompoundH5Types>(util::getVec3Types(file.ref()));
+    h5rd::dimensions fs = {flushStride};
+    h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
+    auto group = file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName);
+    pimpl->writer = group.createVLENDataSet("data", fs, dims, std::get<0>(*pimpl->h5types),
+                                            std::get<1>(*pimpl->h5types));
+    pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
 }
 
 void Positions::flush() {

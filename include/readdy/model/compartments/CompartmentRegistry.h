@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          * 
+ * Copyright © 2017 Computational Molecular Biology Group,          * 
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -23,54 +23,51 @@
 /**
  * << detailed description >>
  *
- * @file CenterOfMass.h
+ * @file CompartmentRegistry.h
  * @brief << brief description >>
  * @author clonker
- * @date 13.03.17
+ * @date 20.09.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
 #pragma once
 
-#include <set>
-#include "Observable.h"
+#include <readdy/common/macros.h>
+#include <readdy/model/ParticleTypeRegistry.h>
+#include "Compartment.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(observables)
+NAMESPACE_BEGIN(compartments)
 
-class CenterOfMass : public Observable<Vec3> {
-
+class CompartmentRegistry {
 public:
-    CenterOfMass(Kernel* kernel, unsigned int stride, unsigned int particleType);
 
-    CenterOfMass(Kernel* kernel, unsigned int stride, const std::vector<unsigned int> &particleTypes);
+    explicit CompartmentRegistry(const ParticleTypeRegistry &types);
 
-    CenterOfMass(Kernel* kernel, unsigned int stride, const std::string &particleType);
+    Compartment::id_type addSphere(const Compartment::conversion_map &conversions, const std::string &uniqueName,
+                                   const Vec3 &origin, scalar radius, bool largerOrLess);
 
-    CenterOfMass(Kernel* kernel, unsigned int stride, const std::vector<std::string> &particleType);
+    Compartment::id_type addSphere(const Compartment::label_conversion_map &conversions, const std::string &uniqueName,
+                                   const Vec3 &origin, scalar radius, bool largerOrLess);
 
-    CenterOfMass(const CenterOfMass&) = delete;
-    CenterOfMass& operator=(const CenterOfMass&) = delete;
-    CenterOfMass(CenterOfMass&&) = default;
-    CenterOfMass& operator=(CenterOfMass&&) = delete;
+    Compartment::id_type addPlane(const Compartment::conversion_map &conversions, const std::string &uniqueName,
+                                  const Vec3 &normalCoefficients, scalar distance, bool largerOrLess);
 
-    virtual ~CenterOfMass();
+    Compartment::id_type addPlane(const Compartment::label_conversion_map &conversions, const std::string &uniqueName,
+                                  const Vec3 &normalCoefficients, scalar distance, bool largerOrLess);
 
-    void flush() override;
 
-    void evaluate() override;
+    const std::vector<std::shared_ptr<readdy::model::compartments::Compartment>> &get() const;
 
-protected:
-    void initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) override;
+    std::vector<std::shared_ptr<readdy::model::compartments::Compartment>> &get();
 
-    void append() override;
+private:
+    std::vector<std::shared_ptr<readdy::model::compartments::Compartment>> _compartments;
 
-    struct Impl;
-    std::unique_ptr<Impl> pimpl;
-    std::set<unsigned int> particleTypes;
+    std::reference_wrapper<const ParticleTypeRegistry> _types;
 };
 
-NAMESPACE_END(observables)
+NAMESPACE_END(compartments)
 NAMESPACE_END(model)
 NAMESPACE_END(readdy)

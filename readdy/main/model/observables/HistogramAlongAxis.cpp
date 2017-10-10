@@ -61,21 +61,19 @@ HistogramAlongAxis::HistogramAlongAxis(Kernel *const kernel, unsigned int stride
                                        std::vector<std::string> typesToCount,
                                        unsigned int axis)
         : HistogramAlongAxis(kernel, stride, std::move(binBorders),
-                             _internal::util::transformTypes(typesToCount, kernel->getKernelContext()),
+                             _internal::util::transformTypes(typesToCount, kernel->context()),
                              axis) {
 
 }
 
 void HistogramAlongAxis::initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) {
-    if (!pimpl->dataSet) {
-        const auto size = result.size();
-        h5rd::dimensions fs = {flushStride, size};
-        h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS, size};
-        const auto path = std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName;
-        auto group = file.createGroup(path);
-        pimpl->dataSet = group.createDataSet<scalar>("data", fs, dims, {&bloscFilter});
-        pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
-    }
+    const auto size = result.size();
+    h5rd::dimensions fs = {flushStride, size};
+    h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS, size};
+    const auto path = std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName;
+    auto group = file.createGroup(path);
+    pimpl->dataSet = group.createDataSet<scalar>("data", fs, dims, {&bloscFilter});
+    pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
 }
 
 void HistogramAlongAxis::append() {

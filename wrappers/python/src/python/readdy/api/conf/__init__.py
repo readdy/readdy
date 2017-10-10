@@ -20,15 +20,7 @@
 # <http://www.gnu.org/licenses/>.
 
 """
-Created on 08.09.17
+Created on 26.09.17
 
 @author: clonker
 """
-
-class Observables(object):
-
-    def __init__(self, simulation):
-        self._simulation = simulation
-
-    def rdf(self):
-        pass

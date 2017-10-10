@@ -42,7 +42,8 @@ NAMESPACE_BEGIN(compartments)
 
 class Compartment {
 public:
-    using id = short;
+    using id_type = short;
+    using label_conversion_map = std::unordered_map<std::string, std::string>;
     using conversion_map = std::unordered_map<particle_type_type, particle_type_type>;
 
     Compartment(conversion_map conversions, std::string typeName,
@@ -64,17 +65,17 @@ public:
         return uniqueName;
     }
 
-    const short getId() const {
+    const id_type getId() const {
         return _id;
     }
 
 protected:
-    static id counter;
+    static id_type counter;
 
-    const std::string typeName;
-    const std::string uniqueName;
-    const id _id;
-    const conversion_map conversions;
+    std::string typeName;
+    std::string uniqueName;
+    id_type _id;
+    conversion_map conversions;
 };
 
 NAMESPACE_END(compartments)

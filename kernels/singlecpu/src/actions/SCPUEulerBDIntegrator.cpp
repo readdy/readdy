@@ -41,14 +41,14 @@ SCPUEulerBDIntegrator::SCPUEulerBDIntegrator(SCPUKernel *kernel, scalar timeStep
 
 void SCPUEulerBDIntegrator::perform(const util::PerformanceNode &node) {
     auto t = node.timeit();
-    const auto &context = kernel->getKernelContext();
+    const auto &context = kernel->context();
     const auto &kbt = context.kBT();
     const auto &fixPos = context.fixPositionFun();
     auto& stateModel = kernel->getSCPUKernelStateModel();
     const auto pd = stateModel.getParticleData();
     for(auto& entry : *pd) {
         if(!entry.is_deactivated()) {
-            const scalar D = context.particle_types().diffusion_constant_of(entry.type);
+            const scalar D = context.particle_types().diffusionConstantOf(entry.type);
             const auto randomDisplacement = std::sqrt(2. * D * timeStep) * (readdy::model::rnd::normal3<readdy::scalar>());
             entry.pos += randomDisplacement;
             const auto deterministicDisplacement = entry.force * timeStep * D / kbt;

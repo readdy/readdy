@@ -38,11 +38,11 @@ namespace cpu {
 namespace nl {
 
 CellDecompositionNeighborList::CellDecompositionNeighborList(data::EntryDataContainer *data,
-                                                             const readdy::model::KernelContext &context,
+                                                             const readdy::model::Context &context,
                                                              const readdy::util::thread::Config &config)
         : NeighborList(context, config), _data(data), _cell_container(_data, context, config) {}
 
-CellDecompositionNeighborList::CellDecompositionNeighborList(const readdy::model::KernelContext &context,
+CellDecompositionNeighborList::CellDecompositionNeighborList(const readdy::model::Context &context,
                                                              const readdy::util::thread::Config &config)
         : NeighborList(context, config), _data(context, config), _cell_container(_data, context, config) {}
 

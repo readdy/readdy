@@ -63,4 +63,8 @@ if [ ${err_code} -ne 0 ]; then
     echo "python unit tests failed with ${ret_code}"
 fi
 
+rm -rf ${PREFIX}/bin/runUnitTests
+rm -rf ${PREFIX}/bin/runUnitTests_singlecpu
+rm -rf ${PREFIX}/bin/runUnitTests_cpu
+
 exit ${ret_code}

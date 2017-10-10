@@ -41,21 +41,21 @@ class TestStateModel : public KernelTest {
 };
 
 TEST_P(TestStateModel, CalculateForcesTwoParticles) {
-    m::KernelContext &ctx = kernel->getKernelContext();
-    auto &stateModel = kernel->getKernelStateModel();
+    m::Context &ctx = kernel->context();
+    auto &stateModel = kernel->stateModel();
 
     auto obs = kernel->createObservable<m::observables::Forces>(1);
     auto conn = kernel->connectObservable(obs.get());
     // two A particles with radius 1. -> cutoff 2, distance 1.8 -> r-r_0 = 0.2 -> force = 0.2
-    ctx.particle_types().add("A", 1.0, 1.0);
+    ctx.particle_types().add("A", 1.0);
     ctx.boxSize() = {{4., 4., 4.}};
     ctx.periodicBoundaryConditions() = {{false, false, false}};
 
-    kernel->registerPotential<m::potentials::HarmonicRepulsion>("A", "A", 1.0);
+    kernel->context().potentials().addHarmonicRepulsion("A", "A", 1.0, 2.0);
 
     ctx.configure();
     kernel->initialize();
-    auto typeIdA = ctx.particle_types().id_of("A");
+    auto typeIdA = ctx.particle_types().idOf("A");
     auto twoParticles = std::vector<m::Particle> {m::Particle(0., 0., 0., typeIdA), m::Particle(0., 0., 1.8, typeIdA)};
 
     stateModel.addParticles(twoParticles);
@@ -87,23 +87,22 @@ TEST_P(TestStateModel, CalculateForcesTwoParticles) {
 }
 
 TEST_P(TestStateModel, CalculateForcesRepulsion) {
-    m::KernelContext &ctx = kernel->getKernelContext();
+    m::Context &ctx = kernel->context();
     auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
-    auto &stateModel = kernel->getKernelStateModel();
+    auto &stateModel = kernel->stateModel();
 
     // similar situation as before but now with repulsion between A and B
     auto obs = kernel->createObservable<m::observables::Forces>(1);
     auto conn = kernel->connectObservable(obs.get());
-    ctx.particle_types().add("A", 1.0, 1.0);
-    ctx.particle_types().add("B", 1.0, 2.0);
+    ctx.particle_types().add("A", 1.0);
+    ctx.particle_types().add("B", 1.0);
     ctx.boxSize() = {{10., 10., 10.}};
     ctx.periodicBoundaryConditions() = {{true, true, false}};
-
-    kernel->registerPotential<m::potentials::HarmonicRepulsion>("A", "B", 1.0);
+    ctx.potentials().addHarmonicRepulsion("A", "B", 1.0, 3.0);
 
     ctx.configure();
-    auto typeIdA = ctx.particle_types().id_of("A");
-    auto typeIdB = ctx.particle_types().id_of("B");
+    auto typeIdA = ctx.particle_types().idOf("A");
+    auto typeIdB = ctx.particle_types().idOf("B");
     /**
      * There are 6 particles. 0-2 are A particles. 3-5 are B particles.
      * The second B particle is a bit further away
@@ -203,19 +202,19 @@ TEST_P(TestStateModel, CalculateForcesRepulsion) {
 }
 
 TEST_P(TestStateModel, CalculateForcesNoForces) {
-    m::KernelContext &ctx = kernel->getKernelContext();
-    auto &stateModel = kernel->getKernelStateModel();
+    m::Context &ctx = kernel->context();
+    auto &stateModel = kernel->stateModel();
     auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
     // several particles without potentials -> forces must all be zero
     auto obs = kernel->createObservable<m::observables::Forces>(1);
     auto conn = kernel->connectObservable(obs.get());
-    ctx.particle_types().add("A", 1.0, 1.0);
-    ctx.particle_types().add("B", 1.0, 2.0);
+    ctx.particle_types().add("A", 1.0);
+    ctx.particle_types().add("B", 1.0);
     ctx.boxSize() = {{4., 4., 4.}};
     ctx.periodicBoundaryConditions() = {{false, false, false}};
     ctx.configure();
-    auto typeIdA = ctx.particle_types().id_of("A");
-    auto typeIdB = ctx.particle_types().id_of("B");
+    auto typeIdA = ctx.particle_types().idOf("A");
+    auto typeIdB = ctx.particle_types().idOf("B");
     auto particlesA = std::vector<m::Particle> {
             m::Particle(0, 0, 0, typeIdA), m::Particle(0, 0.8, 0, typeIdA), m::Particle(0.2, 0, -0.2, typeIdA)
     };

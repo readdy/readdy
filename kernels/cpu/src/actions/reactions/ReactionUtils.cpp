@@ -26,6 +26,7 @@
  * @file ReactionUtils.cpp
  * @brief << brief description >>
  * @author clonker
+ * @author chrisfroe
  * @date 20.10.16
  */
 
@@ -39,15 +40,15 @@ namespace reactions {
 
 data_t::DataUpdate handleEventsGillespie(
         CPUKernel *const kernel, scalar timeStep, bool filterEventsInAdvance, bool approximateRate,
-        std::vector<event_t> &&events, std::vector<record_t> *maybeRecords, reaction_counts_t *maybeCounts) {
+        std::vector<event_t> &&events, std::vector<record_t> *maybeRecords, reaction_counts_map *maybeCounts) {
     using rdy_particle_t = readdy::model::Particle;
-    const auto& fixPos = kernel->getKernelContext().fixPositionFun();
+    const auto& fixPos = kernel->context().fixPositionFun();
 
     data_t::EntriesUpdate newParticles{};
     std::vector<data_t::size_type> decayedEntries {};
 
     if(!events.empty()) {
-        const auto &ctx = kernel->getKernelContext();
+        const auto &ctx = kernel->context();
         auto data = kernel->getCPUKernelStateModel().getParticleData();
         /**
          * Handle gathered reaction events
@@ -76,10 +77,10 @@ data_t::DataUpdate handleEventsGillespie(
 
                         auto entry1 = event.idx1;
                         if (event.nEducts == 1) {
-                            auto reaction = ctx.reactions().order1_by_type(event.t1)[event.reactionIdx];
+                            auto reaction = ctx.reactions().order1ByType(event.t1)[event.reactionIndex];
                             if(maybeRecords != nullptr) {
                                 record_t record;
-                                record.reactionIndex = event.reactionIdx;
+                                record.id = reaction->id();
                                 performReaction(data, ctx, entry1, entry1, newParticles, decayedEntries, reaction, &record);
                                 fixPos(record.where);
                                 maybeRecords->push_back(record);
@@ -87,14 +88,14 @@ data_t::DataUpdate handleEventsGillespie(
                                 performReaction(data, ctx, entry1, entry1, newParticles, decayedEntries, reaction, nullptr);
                             }
                             if(maybeCounts != nullptr) {
-                                auto &countsOrder1 = std::get<0>(*maybeCounts);
-                                countsOrder1.at(event.t1).at(event.reactionIdx)++;
+                                auto &counts = *maybeCounts;
+                                counts.at(reaction->id())++;
                             }
                         } else {
-                            auto reaction = ctx.reactions().order2_by_type(event.t1, event.t2)[event.reactionIdx];
+                            auto reaction = ctx.reactions().order2ByType(event.t1, event.t2)[event.reactionIndex];
                             if(maybeRecords != nullptr) {
                                 record_t record;
-                                record.reactionIndex = event.reactionIdx;
+                                record.id = reaction->id();
                                 performReaction(data, ctx, entry1, event.idx2, newParticles, decayedEntries, reaction,
                                                 &record);
                                 fixPos(record.where);
@@ -104,8 +105,8 @@ data_t::DataUpdate handleEventsGillespie(
                                                 nullptr);
                             }
                             if(maybeCounts != nullptr) {
-                                auto &countsOrder2 = std::get<1>(*maybeCounts);
-                                countsOrder2.at(std::tie(event.t1, event.t2)).at(event.reactionIdx)++;
+                                auto &counts = *maybeCounts;
+                                counts.at(reaction->id())++;
                             }
                         }
                     }

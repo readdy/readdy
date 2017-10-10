@@ -31,11 +31,11 @@
 
 #pragma once
 #include <readdy/model/observables/ObservableFactory.h>
-#include <readdy/kernel/singlecpu/SCPUKernel.h>
 
 namespace readdy {
 namespace kernel {
 namespace scpu {
+class SCPUKernel;
 namespace observables {
 
 class SCPUObservableFactory : public readdy::model::observables::ObservableFactory {

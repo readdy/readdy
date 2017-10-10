@@ -1,15 +1,12 @@
 package:
   name: readdy
-  # version: {{ environ.get('GIT_DESCRIBE_TAG', 'dev') }}
-  version: 'dev'
+  version: {{ environ.get('GIT_DESCRIBE_TAG', 'dev') }}
 source:
   path: ../..
 
 build:
-  #number: 0
-  #string: py{{ environ.get('PY_VER').replace('.', '') }}_0
   number: {{ environ.get('GIT_DESCRIBE_NUMBER', 1) }}
-  {% if environ.get('GIT_DESCRIBE_NUMBER', '0') == '0' %}string: py{{ environ.get('PY_VER').replace('.', '') }}_1
+  {% if environ.get('GIT_DESCRIBE_NUMBER', '0') == '0' %}string: py{{ environ.get('PY_VER').replace('.', '') }}_0
   {% else %}string: py{{ environ.get('PY_VER').replace('.', '') }}_{{ environ.get('GIT_BUILD_STR', 'GIT_STUB') }}{% endif %}
   script_env:
     - CXX
@@ -23,14 +20,11 @@ build:
 requirements:
   build:
     - cmake # [not win]
-    - curl
     - python
     - h5py
     - hdf5
     - bzip2
     - numpy
-    - matplotlib
-    - networkx
     - zlib 1.2.*
     - vs2015_runtime  # [win]
 
@@ -38,18 +32,14 @@ requirements:
     - python
     - numpy
     - h5py
+    - progress_reporter
     - hdf5
     - networkx
+    - matplotlib
     - zlib 1.2.*
+    - libgcc
     - vs2015_runtime  # [win]
 
 test:
   requires:
-    - python
-    - numpy
     - nose
-    - h5py
-    - hdf5
-    - matplotlib
-    - networkx
-    - zlib 1.2.*

@@ -44,26 +44,9 @@ struct KernelWrap : public readdy::model::Kernel {
         PYBIND11_OVERLOAD_PURE(readdy::model::actions::ActionFactory &, readdy::model::Kernel, getActionFactoryInternal,);
     }
 
-    virtual readdy::model::KernelStateModel &getKernelStateModelInternal() const override {
+    virtual readdy::model::StateModel &getKernelStateModelInternal() const override {
         py::gil_scoped_acquire gil;
-        PYBIND11_OVERLOAD_PURE(readdy::model::KernelStateModel &, readdy::model::Kernel, getKernelStateModelInternal,);
-    }
-
-    virtual readdy::model::KernelContext &getKernelContextInternal() const override {
-        py::gil_scoped_acquire gil;
-        PYBIND11_OVERLOAD_PURE(readdy::model::KernelContext &, readdy::model::Kernel, getKernelContextInternal,);
-    }
-
-    virtual readdy::model::potentials::PotentialFactory &getPotentialFactoryInternal() const override {
-        py::gil_scoped_acquire gil;
-        PYBIND11_OVERLOAD_PURE(
-                readdy::model::potentials::PotentialFactory &, readdy::model::Kernel, getPotentialFactoryInternal,
-        );
-    }
-
-    virtual readdy::model::reactions::ReactionFactory &getReactionFactoryInternal() const override {
-        py::gil_scoped_acquire gil;
-        PYBIND11_OVERLOAD_PURE(readdy::model::reactions::ReactionFactory &, readdy::model::Kernel, getReactionFactoryInternal,)
+        PYBIND11_OVERLOAD_PURE(readdy::model::StateModel &, readdy::model::Kernel, getKernelStateModelInternal,);
     }
 
 };
@@ -76,34 +59,10 @@ struct SCPUKernelWrap : public readdy::kernel::scpu::SCPUKernel {
                                getKernelStateModelInternal,);
     }
 
-    virtual model::KernelContext &getKernelContextInternal() const override {
-        py::gil_scoped_acquire gil;
-        PYBIND11_OVERLOAD_NAME(model::KernelContext &, readdy::kernel::scpu::SCPUKernel, "get_kernel_context",
-                               getKernelContextInternal,);
-    }
-
     virtual model::actions::ActionFactory &getActionFactoryInternal() const override {
         py::gil_scoped_acquire gil;
         PYBIND11_OVERLOAD_NAME(model::actions::ActionFactory &, readdy::kernel::scpu::SCPUKernel,
                                "get_program_factory", getActionFactoryInternal,);
-    }
-
-    virtual std::vector<std::string> getAvailablePotentials() const override {
-        py::gil_scoped_acquire gil;
-        PYBIND11_OVERLOAD_NAME(std::vector<std::string>, readdy::kernel::scpu::SCPUKernel,
-                               "get_available_potentials", getAvailablePotentials,);
-    }
-
-    virtual model::potentials::PotentialFactory &getPotentialFactoryInternal() const override {
-        py::gil_scoped_acquire gil;
-        PYBIND11_OVERLOAD_NAME(model::potentials::PotentialFactory &, readdy::kernel::scpu::SCPUKernel,
-                               "get_potential_factory", getPotentialFactoryInternal,);
-    }
-
-    virtual model::reactions::ReactionFactory &getReactionFactoryInternal() const override {
-        py::gil_scoped_acquire gil;
-        PYBIND11_OVERLOAD_NAME(model::reactions::ReactionFactory &, readdy::kernel::scpu::SCPUKernel,
-                               "get_reaction_factory", getReactionFactoryInternal,);
     }
 
     virtual model::observables::ObservableFactory &getObservableFactoryInternal() const override {

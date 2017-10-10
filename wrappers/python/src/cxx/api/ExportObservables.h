@@ -34,11 +34,13 @@
 #define READDY_MAIN_EXPORTOBSERVABLES_H
 
 #include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
+#include <pybind11/stl.h>
 #include <readdy/model/observables/Observables.h>
 #include <readdy/api/Simulation.h>
-#include <pybind11/numpy.h>
 #include <readdy/model/observables/io/Trajectory.h>
 #include "PyFunction.h"
+#include "../common/ReadableReactionRecord.h"
 
 namespace py = pybind11;
 using rvp = py::return_value_policy;
@@ -47,16 +49,33 @@ using obs_handle_t = readdy::ObservableHandle;
 
 inline obs_handle_t registerObservable_Reactions(sim &self, unsigned int stride,
                                                  const py::object& callback = py::none()) {
+    self.currentContext().recordReactionsWithPositions() = true;
     if (callback.is_none()) {
         return self.registerObservable<readdy::model::observables::Reactions>(stride);
     } else {
-        auto pyFun = readdy::rpy::PyFunction<void(readdy::model::observables::Reactions::result_type)>(callback);
-        return self.registerObservable<readdy::model::observables::Reactions>(std::move(pyFun), stride);
+        auto internalCallback = [&self, callback](const readdy::model::observables::Reactions::result_type &reactions) mutable {
+            py::gil_scoped_acquire gil;
+            std::vector<rpy::ReadableReactionRecord> converted {};
+            converted.reserve(reactions.size());
+            const auto &reactionRegistry = self.currentContext().reactions();
+            for(const auto &reaction : reactions) {
+                auto name = reactionRegistry.nameOf(reaction.id);
+                converted.emplace_back(rpy::convert(reaction, name));
+            }
+            for(const auto &c : converted) {
+                std::stringstream ss;
+                ss << c;
+
+            }
+            callback(converted);
+        };
+        return self.registerObservable<readdy::model::observables::Reactions>(internalCallback, stride);
     }
 }
 
 inline obs_handle_t registerObservable_ReactionCounts(sim &self, unsigned int stride,
                                                       const py::object& callback = py::none()) {
+    self.currentContext().recordReactionCounts() = true;
     if (callback.is_none()) {
         return self.registerObservable<readdy::model::observables::ReactionCounts>(stride);
     } else {
@@ -67,7 +86,7 @@ inline obs_handle_t registerObservable_ReactionCounts(sim &self, unsigned int st
 
 inline obs_handle_t
 registerObservable_Positions(sim &self, unsigned int stride,
-                             std::vector<std::string> types, const pybind11::object& callbackFun = py::none()) {
+                             const std::vector<std::string> &types, const pybind11::object& callbackFun = py::none()) {
     if (callbackFun.is_none()) {
         return self.registerObservable<readdy::model::observables::Positions>(stride, types);
     } else {
@@ -89,11 +108,11 @@ inline obs_handle_t registerObservable_Particles(sim &self, unsigned int stride,
 
 inline obs_handle_t
 registerObservable_RadialDistribution(sim &self, unsigned int stride, py::array_t<readdy::scalar> &binBorders,
-                                      std::vector<std::string> typeCountFrom, std::vector<std::string> typeCountTo,
+                                      const std::vector<std::string> &typeCountFrom, const std::vector<std::string> &typeCountTo,
                                       readdy::scalar particleToDensity, const pybind11::object& callbackFun = py::none()) {
     const auto info = binBorders.request();
     std::vector<readdy::scalar> binBordersVec{};
-    binBordersVec.reserve(info.shape[0]);
+    binBordersVec.reserve(static_cast<std::size_t>(info.shape[0]));
     const auto data = static_cast<readdy::scalar *>(info.ptr);
     for (auto i = 0; i < info.shape[0]; ++i) binBordersVec.push_back(data[i]);
     if (callbackFun.is_none()) {
@@ -105,19 +124,6 @@ registerObservable_RadialDistribution(sim &self, unsigned int stride, py::array_
                 callbackFun);
         return self.registerObservable<readdy::model::observables::RadialDistribution>(
                 std::move(pyFun), stride, binBordersVec, typeCountFrom, typeCountTo, particleToDensity
-        );
-    }
-}
-
-inline obs_handle_t
-registerObservable_CenterOfMass(sim &self, unsigned int stride, std::vector<std::string> types,
-                                const pybind11::object &callbackFun = py::none()) {
-    if (callbackFun.is_none()) {
-        return self.registerObservable<readdy::model::observables::CenterOfMass>(stride, types);
-    } else {
-        auto pyFun = readdy::rpy::PyFunction<void(readdy::model::observables::CenterOfMass::result_type)>(callbackFun);
-        return self.registerObservable<readdy::model::observables::CenterOfMass>(
-                std::move(pyFun), stride, types
         );
     }
 }
@@ -188,12 +194,12 @@ void exportObservables(py::module &apiModule, py::class_<type_, options...> &sim
 
     using record_t = readdy::model::reactions::ReactionRecord;
     py::class_<record_t>(apiModule, "ReactionRecord")
-            .def_readonly("type", &record_t::type)
-            .def_readonly("educts", &record_t::educts)
-            .def_readonly("products", &record_t::products)
-            .def_readonly("types_from", &record_t::types_from)
-            .def_readonly("where", &record_t::where)
-            .def_readonly("reaction_index", &record_t::reactionIndex)
+            .def_property_readonly("type", [](const record_t &self) { return self.type; })
+            .def_property_readonly("educts", [](const record_t &self) { return self.educts; })
+            .def_property_readonly("products", [](const record_t &self) { return self.products; })
+            .def_property_readonly("types_from", [](const record_t &self) { return self.types_from; })
+            .def_property_readonly("where", [](const record_t &self) { return self.where; })
+            .def_property_readonly("id", [](const record_t &self) { return self.id; })
             .def("__repr__", [](const record_t& self) {
                 std::ostringstream ss;
                 ss << self;
@@ -208,8 +214,6 @@ void exportObservables(py::module &apiModule, py::class_<type_, options...> &sim
                  "particle_to_density"_a, "callback"_a = py::none())
             .def("register_observable_histogram_along_axis", &registerObservable_HistogramAlongAxisObservable,
                  "stride"_a, "bin_borders"_a, "axis"_a, "types"_a, "callback"_a = py::none())
-            .def("register_observable_center_of_mass", &registerObservable_CenterOfMass,
-                 "stride"_a, "types"_a, "callback"_a = py::none())
             .def("register_observable_n_particles", &registerObservable_NParticles,
                  "stride"_a, "types"_a, "callback"_a = py::none())
             .def("register_observable_forces", &registerObservable_ForcesObservable,

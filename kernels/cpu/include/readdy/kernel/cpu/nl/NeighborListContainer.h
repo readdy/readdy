@@ -46,10 +46,10 @@ struct NLContainerConfig {
     using data_container_type = readdy::kernel::cpu::data::DefaultDataContainer;
     using thread_config_type = readdy::util::thread::Config;
 
-    NLContainerConfig(const model::KernelContext &context, const thread_config_type &threads,
+    NLContainerConfig(const model::Context &context, const thread_config_type &threads,
                       const data_container_type &data);
 
-    std::reference_wrapper<const model::KernelContext> context;
+    std::reference_wrapper<const model::Context> context;
     std::reference_wrapper<const data_container_type> data;
     std::reference_wrapper<const thread_config_type> threads;
 };

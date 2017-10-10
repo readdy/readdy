@@ -21,10 +21,14 @@
 
 
 /**
- * << detailed description >>
+ * This header file contains:
+ *     * the `readdy::model::particle_flavor` type which takes values as defined in the `readdy::model::particleflavor`
+ *       namespace
+ *     * the definition of ParticleTypeInfo, backing structure for all particle types
+ *     * the definition of ParticleTypeRegistry, an object managing all particle types for a reaction diffusion system
  *
  * @file ParticleTypeRegistry.h
- * @brief << brief description >>
+ * @brief Header file containing definitions for particle flavors, particle type info and the particle type registry.
  * @author clonker
  * @date 29.03.17
  * @copyright GNU Lesser General Public License v3.0
@@ -33,6 +37,7 @@
 #pragma once
 
 #include <readdy/common/common.h>
+
 #include "Particle.h"
 
 NAMESPACE_BEGIN(readdy)
@@ -57,11 +62,10 @@ NAMESPACE_END(particleflavor)
 struct ParticleTypeInfo {
     std::string name;
     scalar diffusionConstant;
-    scalar radius;
     particle_flavor flavor;
     particle_type_type typeId;
 
-    ParticleTypeInfo(const std::string &name, scalar diffusionConstant, scalar radius,
+    ParticleTypeInfo(const std::string &name, scalar diffusionConstant,
                      particle_flavor flavor, Particle::type_type typeId);
 };
 
@@ -72,48 +76,45 @@ public:
 
     ParticleTypeRegistry() = default;
 
-    ParticleTypeRegistry(const ParticleTypeRegistry &) = delete;
+    ParticleTypeRegistry(const ParticleTypeRegistry &) = default;
 
-    ParticleTypeRegistry &operator=(const ParticleTypeRegistry &) = delete;
+    ParticleTypeRegistry &operator=(const ParticleTypeRegistry &) = default;
 
-    ParticleTypeRegistry(ParticleTypeRegistry &&) = delete;
+    ParticleTypeRegistry(ParticleTypeRegistry &&) = default;
 
-    ParticleTypeRegistry &operator=(ParticleTypeRegistry &&) = delete;
+    ParticleTypeRegistry &operator=(ParticleTypeRegistry &&) = default;
 
     ~ParticleTypeRegistry() = default;
 
-    particle_type_type id_of(const std::string &name) const;
+    particle_type_type idOf(const std::string &name) const;
 
-    void add(const std::string &name, scalar diffusionConst, scalar radius,
-             particle_flavor flavor = particleflavor::NORMAL);
+    particle_type_type operator()(const std::string &name) const;
 
-    const ParticleTypeInfo &info_of(const std::string &name) const;
+    void add(const std::string &name, scalar diffusionConst, particle_flavor flavor = particleflavor::NORMAL);
 
-    const ParticleTypeInfo &info_of(Particle::type_type type) const;
+    const ParticleTypeInfo &infoOf(const std::string &name) const;
 
-    scalar diffusion_constant_of(const std::string &particleType) const;
+    const ParticleTypeInfo &infoOf(Particle::type_type type) const;
 
-    scalar diffusion_constant_of(particle_type_type particleType) const;
+    scalar diffusionConstantOf(const std::string &particleType) const;
 
-    scalar radius_of(const std::string &type) const;
+    scalar diffusionConstantOf(particle_type_type particleType) const;
 
-    scalar radius_of(particle_type_type type) const;
+    const std::size_t &nTypes() const;
 
-    const std::size_t &n_types() const;
+    std::vector<particle_type_type> typesFlat() const;
 
-    std::vector<particle_type_type> types_flat() const;
+    std::string nameOf(particle_type_type id) const;
 
-    std::string name_of(particle_type_type id) const;
+    const type_map &typeMapping() const;
 
-    const type_map &type_mapping() const;
-
-    void debug_output() const;
+    void debugOutput() const;
 
     void configure();
 
 private:
 
-    particle_type_type _id_of(const std::string& name) const;
+    particle_type_type _idOf(const std::string &name) const;
 
     std::size_t n_types_ = 0;
     particle_type_type type_counter_ = 0;

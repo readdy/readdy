@@ -51,17 +51,15 @@ Particles::Particles(Kernel *const kernel, unsigned int stride) : Observable(ker
 
 void Particles::initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) {
     using particle_t = readdy::model::Particle;
-    if (!pimpl->dataSetTypes) {
-        h5rd::dimensions fs = {flushStride};
-        h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
-        auto group = file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName);
-        pimpl->dataSetTypes = group.createVLENDataSet<particle_type_type>("types", fs, dims);
-        pimpl->dataSetIds = group.createVLENDataSet<particle_t::id_type>("ids", fs, dims);
-        pimpl->dataSetPositions = group.createVLENDataSet("positions", fs, dims,
-                                                          h5rd::NativeArrayDataSetType<scalar, 3>(group.parentFile()),
-                                                          h5rd::STDArrayDataSetType<scalar, 3>(group.parentFile()));
-        pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
-    }
+    h5rd::dimensions fs = {flushStride};
+    h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
+    auto group = file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName);
+    pimpl->dataSetTypes = group.createVLENDataSet<particle_type_type>("types", fs, dims);
+    pimpl->dataSetIds = group.createVLENDataSet<particle_t::id_type>("ids", fs, dims);
+    pimpl->dataSetPositions = group.createVLENDataSet("positions", fs, dims,
+                                                      h5rd::NativeArrayDataSetType<scalar, 3>(group.parentFile()),
+                                                      h5rd::STDArrayDataSetType<scalar, 3>(group.parentFile()));
+    pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
 }
 
 void Particles::append() {

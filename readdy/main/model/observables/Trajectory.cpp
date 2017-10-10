@@ -52,9 +52,9 @@ Trajectory::Trajectory(readdy::model::Kernel *const kernel, unsigned int stride)
 
 void Trajectory::evaluate() {
     result.clear();
-    const auto &currentInput = kernel->getKernelStateModel().getParticles();
+    const auto &currentInput = kernel->stateModel().getParticles();
     std::for_each(currentInput.begin(), currentInput.end(), [this](const Particle &p) {
-        result.emplace_back(p, kernel->getKernelContext().particle_types());
+        result.emplace_back(p, kernel->context().particle_types());
     });
 }
 
@@ -66,16 +66,14 @@ void Trajectory::flush() {
 Trajectory::~Trajectory() = default;
 
 void Trajectory::initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) {
-    if (!pimpl->dataSet) {
-        pimpl->h5types = std::make_unique<util::CompoundH5Types>(util::getTrajectoryEntryTypes(file.parentFile()));
-        h5rd::dimensions fs = {flushStride};
-        h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
-        auto group = file.createGroup(
-                std::string(TRAJECTORY_GROUP_PATH + (dataSetName.length() > 0 ? "/" + dataSetName : "")));
-        pimpl->dataSet = group.createVLENDataSet("records", fs, dims,
-                                                 std::get<0>(*pimpl->h5types), std::get<1>(*pimpl->h5types));
-        pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
-    }
+    pimpl->h5types = std::make_unique<util::CompoundH5Types>(util::getTrajectoryEntryTypes(file.parentFile()));
+    h5rd::dimensions fs = {flushStride};
+    h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
+    auto group = file.createGroup(
+            std::string(TRAJECTORY_GROUP_PATH + (dataSetName.length() > 0 ? "/" + dataSetName : "")));
+    pimpl->dataSet = group.createVLENDataSet("records", fs, dims,
+                                             std::get<0>(*pimpl->h5types), std::get<1>(*pimpl->h5types));
+    pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
 }
 
 void Trajectory::append() {
@@ -118,9 +116,9 @@ void FlatTrajectory::initializeDataSet(File &file, const std::string &dataSetNam
 
 void FlatTrajectory::evaluate() {
     result.clear();
-    const auto &currentInput = kernel->getKernelStateModel().getParticles();
+    const auto &currentInput = kernel->stateModel().getParticles();
     std::for_each(currentInput.begin(), currentInput.end(), [this](const Particle &p) {
-        result.emplace_back(p, kernel->getKernelContext().particle_types());
+        result.emplace_back(p, kernel->context().particle_types());
     });
 }
 

@@ -53,7 +53,7 @@ const std::string &Kernel::getName() const {
     return pimpl->name;
 }
 
-Kernel::Kernel(const std::string &name) : pimpl(std::make_unique<Kernel::Impl>()) {
+Kernel::Kernel(const std::string &name) : pimpl(std::make_unique<Kernel::Impl>()), _context{} {
     pimpl->name = name;
     pimpl->observableFactory = std::make_unique<observables::ObservableFactory>(this);
     pimpl->signal = std::make_unique<observables::signal_type>();
@@ -81,19 +81,15 @@ void Kernel::evaluateObservables(time_step_type t) {
     (*pimpl->signal)(t);
 }
 
-std::vector<std::string> Kernel::getAvailablePotentials() const {
-    return std::vector<std::string>();
-}
-
 readdy::model::Particle::id_type Kernel::addParticle(const std::string &type, const Vec3 &pos) {
-    readdy::model::Particle particle {pos[0], pos[1], pos[2], getKernelContext().particle_types().id_of(type)};
-    getKernelStateModel().addParticle(particle);
+    readdy::model::Particle particle {pos[0], pos[1], pos[2], context().particle_types().idOf(type)};
+    stateModel().addParticle(particle);
     return particle.getId();
 }
 
 particle_type_type Kernel::getTypeId(const std::string &name) const {
-    auto findIt = getKernelContext().particle_types().type_mapping().find(name);
-    if (findIt != getKernelContext().particle_types().type_mapping().end()) {
+    auto findIt = context().particle_types().typeMapping().find(name);
+    if (findIt != context().particle_types().typeMapping().end()) {
         return findIt->second;
     }
     log::critical("did not find type id for {}", name);
@@ -101,9 +97,9 @@ particle_type_type Kernel::getTypeId(const std::string &name) const {
 }
 
 particle_type_type Kernel::getTypeIdRequireNormalFlavor(const std::string &name) const {
-    auto findIt = getKernelContext().particle_types().type_mapping().find(name);
-    if (findIt != getKernelContext().particle_types().type_mapping().end()) {
-        const auto &info = getKernelContext().particle_types().info_of(findIt->second);
+    auto findIt = context().particle_types().typeMapping().find(name);
+    if (findIt != context().particle_types().typeMapping().end()) {
+        const auto &info = context().particle_types().infoOf(findIt->second);
         if (info.flavor == particleflavor::NORMAL) {
             return findIt->second;
         }
@@ -114,66 +110,23 @@ particle_type_type Kernel::getTypeIdRequireNormalFlavor(const std::string &name)
     throw std::invalid_argument("did not find type id for " + name);
 }
 
-std::unique_ptr<reactions::Reaction<1>>
-Kernel::createConversionReaction(const std::string &name, const std::string &from, const std::string &to,
-                                 const scalar rate) const {
-    const auto typeFrom = getTypeIdRequireNormalFlavor(from);
-    const auto typeTo = getTypeIdRequireNormalFlavor(to);
-    return getReactionFactory().createReaction<reactions::Conversion>(name, typeFrom, typeTo, rate);
-}
-
-std::unique_ptr<reactions::Reaction<2>>
-Kernel::createFusionReaction(const std::string &name, const std::string &from1, const std::string &from2,
-                             const std::string &to, const scalar rate, const scalar eductDistance,
-                             const scalar weight1, const scalar weight2) const {
-    return getReactionFactory().createReaction<reactions::Fusion>(name, getTypeIdRequireNormalFlavor(from1),
-                                                                  getTypeIdRequireNormalFlavor(from2),
-                                                                  getTypeIdRequireNormalFlavor(to), rate, eductDistance,
-                                                                  weight1, weight2);
-}
-
-std::unique_ptr<reactions::Reaction<2>>
-Kernel::createEnzymaticReaction(const std::string &name, const std::string &catalyst, const std::string &from,
-                                const std::string &to, const scalar rate, const scalar eductDistance) const {
-    return getReactionFactory().createReaction<reactions::Enzymatic>(name, getTypeId(catalyst),
-                                                                     getTypeIdRequireNormalFlavor(from),
-                                                                     getTypeIdRequireNormalFlavor(to), rate,
-                                                                     eductDistance);
-}
-
-std::unique_ptr<reactions::Reaction<1>>
-Kernel::createFissionReaction(const std::string &name, const std::string &from, const std::string &to1,
-                              const std::string &to2, const scalar rate, const scalar productDistance,
-                              const scalar weight1, const scalar weight2) const {
-    return getReactionFactory().createReaction<reactions::Fission>(name, getTypeIdRequireNormalFlavor(from),
-                                                                   getTypeIdRequireNormalFlavor(to1),
-                                                                   getTypeIdRequireNormalFlavor(to2), rate,
-                                                                   productDistance, weight1,
-                                                                   weight2);
-}
-
-std::unique_ptr<reactions::Reaction<1>>
-Kernel::createDecayReaction(const std::string &name, const std::string &type, const scalar rate) const {
-    return getReactionFactory().createReaction<reactions::Decay>(name, getTypeIdRequireNormalFlavor(type), rate);
-}
-
 observables::ObservableFactory &Kernel::getObservableFactoryInternal() const {
     return *pimpl->observableFactory;
 }
 
-const readdy::model::KernelContext &Kernel::getKernelContext() const {
-    return getKernelContextInternal();
+const readdy::model::Context &Kernel::context() const {
+    return _context;
 }
 
-readdy::model::KernelContext &Kernel::getKernelContext() {
-    return getKernelContextInternal();
+readdy::model::Context &Kernel::context() {
+    return _context;
 }
 
-const readdy::model::KernelStateModel &Kernel::getKernelStateModel() const {
+const readdy::model::StateModel &Kernel::stateModel() const {
     return getKernelStateModelInternal();
 }
 
-readdy::model::KernelStateModel &Kernel::getKernelStateModel() {
+readdy::model::StateModel &Kernel::stateModel() {
     return getKernelStateModelInternal();
 }
 
@@ -183,30 +136,6 @@ const readdy::model::actions::ActionFactory &Kernel::getActionFactory() const {
 
 readdy::model::actions::ActionFactory &Kernel::getActionFactory() {
     return getActionFactoryInternal();
-}
-
-const readdy::model::potentials::PotentialFactory &Kernel::getPotentialFactory() const {
-    return getPotentialFactoryInternal();
-}
-
-readdy::model::potentials::PotentialFactory &Kernel::getPotentialFactory() {
-    return getPotentialFactoryInternal();
-}
-
-const readdy::model::reactions::ReactionFactory &Kernel::getReactionFactory() const {
-    return getReactionFactoryInternal();
-}
-
-readdy::model::reactions::ReactionFactory &Kernel::getReactionFactory() {
-    return getReactionFactoryInternal();
-}
-
-const readdy::model::compartments::CompartmentFactory &Kernel::getCompartmentFactory() const {
-    return getCompartmentFactoryInternal();
-}
-
-readdy::model::compartments::CompartmentFactory &Kernel::getCompartmentFactory() {
-    return getCompartmentFactoryInternal();
 }
 
 const readdy::model::observables::ObservableFactory &Kernel::getObservableFactory() const {
@@ -226,7 +155,7 @@ readdy::model::top::TopologyActionFactory *const Kernel::getTopologyActionFactor
 }
 
 TopologyParticle Kernel::createTopologyParticle(const std::string &type, const Vec3 &pos) const {
-    const auto& info = getKernelContext().particle_types().info_of(type);
+    const auto& info = context().particle_types().infoOf(type);
     if(info.flavor != particleflavor::TOPOLOGY) {
         throw std::invalid_argument("You can only create topology particles of a type that is topology flavored.");
     }
@@ -238,14 +167,11 @@ bool Kernel::supportsTopologies() const {
 }
 
 void Kernel::initialize() {
-    getKernelContext().configure(true);
+    context().configure(true);
 }
 
 void Kernel::finalize() {
 }
 
-Kernel &Kernel::operator=(Kernel &&rhs) noexcept = default;
-
-Kernel::Kernel(Kernel &&rhs) noexcept = default;
 }
 }

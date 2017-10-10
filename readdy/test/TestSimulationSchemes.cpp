@@ -104,7 +104,7 @@ TEST_P(TestSchemes, StoppingCriterionSimple) {
 }
 
 TEST_P(TestSchemes, ComplexStoppingCriterion) {
-    simulation.registerParticleType("A", 0., 0.1);
+    simulation.registerParticleType("A", 0.);
     // A -> A + A, with probability = 1 each timestep. After 3 timesteps there will be 8 particles. The counter will be 4 by then.
     simulation.registerFissionReaction("bla", "A", "A", "A", 1000., 0.);
     simulation.addParticle("A", 0, 0, 0);
@@ -126,10 +126,10 @@ TEST_P(TestSchemes, ComplexStoppingCriterion) {
 }
 
 TEST_P(TestSchemes, SkinSizeSanity) {
-    simulation.registerParticleType("A", 1., 1.);
+    simulation.registerParticleType("A", 1.);
     simulation.setBoxSize(10., 10., 10.);
     simulation.setPeriodicBoundary({true, true, true});
-    simulation.registerHarmonicRepulsionPotential("A", "A", 1.);
+    simulation.registerHarmonicRepulsionPotential("A", "A", 1., 2.);
     simulation.addParticle("A", 0., 0., 0.);
     simulation.addParticle("A", 1.5, 0., 0.);
     readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme> configurator = simulation.runScheme(true);

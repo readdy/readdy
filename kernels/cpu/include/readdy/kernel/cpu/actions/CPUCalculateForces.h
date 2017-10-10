@@ -49,7 +49,7 @@ public:
     void perform(const util::PerformanceNode &node) override {
         auto t = node.timeit();
 
-        const auto &context = kernel->getKernelContext();
+        const auto &context = kernel->context();
         const auto &config = kernel->threadConfig();
 
         auto &stateModel = kernel->getCPUKernelStateModel();
@@ -60,8 +60,8 @@ public:
 
         stateModel.energy() = 0;
 
-        const auto &potOrder1 = context.potentials().potentials_order1();
-        const auto &potOrder2 = context.potentials().potentials_order2();
+        const auto &potOrder1 = context.potentials().potentialsOrder1();
+        const auto &potOrder2 = context.potentials().potentialsOrder2();
         if(!potOrder1.empty() || !potOrder2.empty() || !stateModel.topologies().empty()) {
             const auto &d = context.shortestDifferenceFun();
             {
@@ -122,12 +122,12 @@ protected:
 
     static void calculate(std::size_t /*tid*/, data_bounds dataBounds, nl_bounds nlBounds, top_bounds topBounds,
                    std::promise<scalar>& energyPromise, CPUStateModel::data_type* data,
-                   model::top::TopologyActionFactory *taf, const model::KernelContext &context,
+                   model::top::TopologyActionFactory *taf, const model::Context &context,
                    const readdy::util::thread::barrier &barrier) {
         scalar energyUpdate = 0.0;
 
-        const auto &pot1 = context.potentials().potentials_order1();
-        const auto &pot2 = context.potentials().potentials_order2();
+        const auto &pot1 = context.potentials().potentialsOrder1();
+        const auto &pot2 = context.potentials().potentialsOrder2();
         const auto &d = context.shortestDifferenceFun();
 
         {

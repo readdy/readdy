@@ -40,7 +40,7 @@ SCPUCalculateForces::SCPUCalculateForces(SCPUKernel *kernel) : kernel(kernel) {}
 void SCPUCalculateForces::perform(const util::PerformanceNode &node) {
     auto t = node.timeit();
 
-    const auto &context = kernel->getKernelContext();
+    const auto &context = kernel->context();
 
     auto &stateModel = kernel->getSCPUKernelStateModel();
     auto &data = *stateModel.getParticleData();
@@ -52,14 +52,14 @@ void SCPUCalculateForces::perform(const util::PerformanceNode &node) {
         const Vec3 zero{0, 0, 0};
         for (auto &e : data) {
             e.force = zero;
-            for (const auto &po1 : context.potentials().potentials_of(e.type)) {
+            for (const auto &po1 : context.potentials().potentialsOf(e.type)) {
                 po1->calculateForceAndEnergy(e.force, stateModel.energy(), e.position());
             }
         }
     }
 
     // update forces and energy order 2 potentials
-    if(!context.potentials().potentials_order2().empty()) {
+    if(!context.potentials().potentialsOrder2().empty()) {
         const auto &difference = context.shortestDifferenceFun();
         Vec3 forceVec{0, 0, 0};
         for (auto it = neighborList.begin(); it != neighborList.end(); ++it) {
@@ -67,7 +67,7 @@ void SCPUCalculateForces::perform(const util::PerformanceNode &node) {
             auto j = it->idx2;
             auto &entry_i = data.entry_at(i);
             auto &entry_j = data.entry_at(j);
-            const auto &potentials = context.potentials().potentials_of(entry_i.type, entry_j.type);
+            const auto &potentials = context.potentials().potentialsOf(entry_i.type, entry_j.type);
             for (const auto &potential : potentials) {
                 potential->calculateForceAndEnergy(forceVec, stateModel.energy(), difference(entry_i.position(), entry_j.position()));
                 entry_i.force += forceVec;

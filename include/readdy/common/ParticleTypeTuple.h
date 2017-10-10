@@ -21,10 +21,10 @@
 
 
 /**
- * << detailed description >>
+ * Definitions of hashers and equality operators of particle type pairs, triples, quadruples.
  *
  * @file ParticleTypeTuple.h
- * @brief << brief description >>
+ * @brief Definitions of everything particle type tuple related
  * @author clonker
  * @date 20.03.17
  * @copyright GNU Lesser General Public License v3.0
@@ -47,6 +47,11 @@ NAMESPACE_BEGIN(util)
 template<typename T, std::size_t N = std::tuple_size<typename std::remove_reference<T>::type>::value>
 class ForwardBackwardTupleHasher {
 public:
+    /**
+     * Evaluates the hash of tuples independent of their reversedness.
+     * @param tuple the tuple to compare
+     * @return the hash of the reversed tuple if tuple[0] > tuple[-1], otherwise hash of the non-reversed version
+     */
     std::size_t operator()(const T &tuple) const {
         std::size_t seed{0};
         // auto sorted_quadruple = call(sortTypeQuadruple, quadruple);
@@ -61,6 +66,12 @@ public:
 template<typename T>
 class ForwardBackwardTupleEquality {
 public:
+    /**
+     * Evaluates the equality of two tuples independently of their reversedness.
+     * @param lhs the one tuple
+     * @param rhs the other tuple
+     * @return true if lhs == rhs or lhs == reverse(rhs)
+     */
     bool operator()(const T &lhs, const T &rhs) const {
         return lhs == rhs || lhs == reverse(rhs);
     }

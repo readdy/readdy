@@ -22,7 +22,7 @@
 
 /**
  * This header file contains the declarations of all possibly available order 1 potentials. Currently:
- *   - Cube potential
+ *   - Box potential
  *   - Sphere potential
  *
  * @file PotentialsOrder1.h
@@ -32,20 +32,19 @@
  * @date 15.06.16
  */
 
+#pragma once
+
 #include <ostream>
 #include "PotentialOrder1.h"
-
-#pragma once
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(potentials)
 
-class Cube : public PotentialOrder1 {
+class Box : public PotentialOrder1 {
     using super = PotentialOrder1;
 public:
-    Cube(const std::string& particleType, scalar forceConstant, const Vec3& origin, const Vec3& extent,
-                  bool considerParticleRadius = true);
+    Box(particle_type_type particleType, scalar forceConstant, const Vec3& origin, const Vec3& extent);
 
     const Vec3 &getOrigin() const;
 
@@ -53,10 +52,6 @@ public:
 
     scalar getForceConstant() const;
 
-    bool isConsiderParticleRadius() const;
-
-    scalar getParticleRadius() const;
-
     virtual scalar getRelevantLengthScale() const noexcept override;
 
     virtual scalar getMaximalForce(scalar kbt) const noexcept override;
@@ -70,21 +65,15 @@ public:
     std::string describe() const override;
 
 protected:
-    friend class readdy::model::potentials::PotentialRegistry;
-
-    void configureForType(const ParticleTypeRegistry *const registry, const particle_type_type type) override;
-
     const Vec3 origin, extent, min, max;
     const scalar forceConstant;
-    const bool considerParticleRadius;
-    scalar particleRadius;
 };
 
 // @todo modify this, so that you can choose whether the sphere keeps particles in or out
 class SphereIn : public PotentialOrder1 {
     using super = PotentialOrder1;
 public:
-    SphereIn(const std::string& particleType, scalar forceConstant, const Vec3& origin, scalar radius);
+    SphereIn(particle_type_type particleType, scalar forceConstant, const Vec3& origin, scalar radius);
 
     virtual scalar getRelevantLengthScale() const noexcept override;
 
@@ -99,10 +88,6 @@ public:
     std::string describe() const override;
 
 protected:
-    friend class readdy::model::potentials::PotentialRegistry;
-
-    void configureForType(const ParticleTypeRegistry * ctx, particle_type_type type) override;
-
     const Vec3 origin;
     const scalar radius, forceConstant;
 };
@@ -110,7 +95,7 @@ protected:
 class SphereOut : public PotentialOrder1 {
     using super = PotentialOrder1;
 public:
-    SphereOut(const std::string& particleType, scalar forceConstant, const Vec3& origin, scalar radius);
+    SphereOut(particle_type_type particleType, scalar forceConstant, const Vec3& origin, scalar radius);
 
     virtual scalar getRelevantLengthScale() const noexcept override;
 
@@ -124,10 +109,6 @@ public:
 
     std::string describe() const override;
 protected:
-    friend class readdy::model::potentials::PotentialRegistry;
-
-    void configureForType(const ParticleTypeRegistry *ctx, particle_type_type type) override;
-
     const Vec3 origin;
     const scalar radius, forceConstant;
 };
@@ -140,7 +121,7 @@ protected:
 class SphericalBarrier : public PotentialOrder1 {
     using super = PotentialOrder1;
 public:
-    SphericalBarrier(const std::string &particleType, const Vec3 &origin, scalar radius, scalar height, scalar width);
+    SphericalBarrier(particle_type_type particleType, scalar height, scalar width, const Vec3 &origin, scalar radius);
 
     virtual readdy::scalar getRelevantLengthScale() const noexcept override;
 
@@ -155,17 +136,13 @@ public:
     std::string describe() const override;
 
 protected:
-    friend class readdy::model::potentials::PotentialRegistry;
-
-    void configureForType(const ParticleTypeRegistry * ctx, particle_type_type type) override;
-
     const Vec3 origin;
     const readdy::scalar radius, height, width, r1, r2, r3, r4, effectiveForceConstant;
 };
 
 template<typename T>
-const std::string getPotentialName(typename std::enable_if<std::is_base_of<Cube, T>::value>::type * = 0) {
-    return "Cube";
+const std::string getPotentialName(typename std::enable_if<std::is_base_of<Box, T>::value>::type * = 0) {
+    return "Box";
 }
 template<typename T>
 const std::string getPotentialName(typename std::enable_if<std::is_base_of<SphereIn, T>::value>::type* = 0) {

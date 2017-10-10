@@ -46,7 +46,7 @@ using entries_it = CPUStateModel::data_type::Entries::iterator;
 using topologies_it = std::vector<std::unique_ptr<readdy::model::top::GraphTopology>>::const_iterator;
 using pot1Map = readdy::model::potentials::PotentialRegistry::potential_o1_registry;
 using pot2Map = readdy::model::potentials::PotentialRegistry::potential_o2_registry;
-using dist_fun = readdy::model::KernelContext::shortest_dist_fun;
+using dist_fun = readdy::model::Context::shortest_dist_fun;
 
 const std::vector<Vec3> CPUStateModel::getParticlePositions() const {
     const auto data = _neighborList->data();
@@ -86,10 +86,10 @@ void CPUStateModel::removeParticle(const readdy::model::Particle &p) {
     getParticleData()->removeParticle(p);
 }
 
-CPUStateModel::CPUStateModel(readdy::model::KernelContext *const context,
+CPUStateModel::CPUStateModel(const readdy::model::Context &context,
                              readdy::util::thread::Config const *const config,
                              readdy::model::top::TopologyActionFactory const *const taf)
-        : _config(*config), _context(*context), _topologyActionFactory(*taf) {
+        : _config(*config), _context(context), _topologyActionFactory(*taf) {
     _neighborList = std::unique_ptr<neighbor_list>(
             // new nl::CellDecompositionNeighborList(*getParticleData(), *pimpl->context, *config)
             new nl::CompactCLLNeighborList(1, _context.get(), *config)
@@ -135,10 +135,7 @@ CPUStateModel::addTopology(topology_type_type type, const std::vector<readdy::mo
     for (const auto &p : particles) {
         types.push_back(p.getType());
     }
-    auto it = _topologies.push_back(
-            std::make_unique<topology>(type, std::move(ids), std::move(types),
-                                       _context.get().topology_registry().potential_configuration())
-    );
+    auto it = _topologies.push_back(std::make_unique<topology>(type, std::move(ids), std::move(types), _context.get(), this));
     const auto idx = std::distance(topologies().begin(), it);
     for(const auto p : (*it)->getParticles()) {
         getParticleData()->entry_at(p).topology_index = idx;
@@ -158,11 +155,11 @@ readdy::model::Particle CPUStateModel::getParticleForIndex(const std::size_t ind
     return getParticleData()->getParticle(index);
 }
 
-const std::pair<CPUStateModel::reaction_counts_order1_map, CPUStateModel::reaction_counts_order2_map> &CPUStateModel::reactionCounts() const {
+const CPUStateModel::reaction_counts_map &CPUStateModel::reactionCounts() const {
     return _reactionCounts;
 }
 
-std::pair<CPUStateModel::reaction_counts_order1_map, CPUStateModel::reaction_counts_order2_map> &CPUStateModel::reactionCounts() {
+CPUStateModel::reaction_counts_map &CPUStateModel::reactionCounts() {
     return _reactionCounts;
 }
 
@@ -281,6 +278,26 @@ scalar &CPUStateModel::energy() {
 
 scalar CPUStateModel::energy() const {
     return _currentEnergy;
+}
+
+void CPUStateModel::resetReactionCounts() {
+    if(!_reactionCounts.empty()) {
+        for(auto &e : _reactionCounts) {
+            e.second = 0;
+        }
+    } else {
+        const auto &reactions = _context.get().reactions();
+        for (const auto &entry : reactions.order1()) {
+            for (auto reaction : entry.second) {
+                _reactionCounts[reaction->id()] = 0;
+            }
+        }
+        for (const auto &entry : reactions.order2()) {
+            for (auto reaction : entry.second) {
+                _reactionCounts[reaction->id()] = 0;
+            }
+        }
+    }
 }
 
 CPUStateModel::~CPUStateModel() = default;

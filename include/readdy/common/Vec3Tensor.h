@@ -21,10 +21,10 @@
 
 
 /**
- * 3xN matrix.
+ * 3xN tensor.
  *
- * @file Vec3Mat.h
- * @brief Vec3Mat definition file
+ * @file Vec3Tensor.h
+ * @brief Vec3Tensor definition file
  * @author clonker
  * @date 07.02.17
  * @copyright GNU Lesser General Public License v3.0

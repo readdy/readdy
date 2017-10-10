@@ -48,7 +48,7 @@ struct Forces::Impl {
 
 Forces::Forces(Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount)
         : Forces(kernel, stride,
-                 _internal::util::transformTypes2(typesToCount, kernel->getKernelContext())) {}
+                 _internal::util::transformTypes2(typesToCount, kernel->context())) {}
 
 Forces::Forces(Kernel *const kernel, unsigned int stride, std::vector<unsigned int> typesToCount)
         : Observable(kernel, stride), typesToCount(std::move(typesToCount)), pimpl(std::make_unique<Impl>()) {}
@@ -62,16 +62,14 @@ void Forces::flush() {
 }
 
 void Forces::initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) {
-    if (!pimpl->dataSet) {
-        pimpl->h5types = std::make_unique<util::CompoundH5Types>(util::getVec3Types(file.parentFile()));
-        h5rd::dimensions fs = {flushStride};
-        h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
-        auto group = file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName);
-        auto dataSet = group.createVLENDataSet("data", fs, dims,
-                                               std::get<0>(*pimpl->h5types), std::get<1>(*pimpl->h5types));
-        pimpl->dataSet = std::move(dataSet);
-        pimpl->timeSeries = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
-    }
+    pimpl->h5types = std::make_unique<util::CompoundH5Types>(util::getVec3Types(file.parentFile()));
+    h5rd::dimensions fs = {flushStride};
+    h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
+    auto group = file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName);
+    auto dataSet = group.createVLENDataSet("data", fs, dims,
+                                           std::get<0>(*pimpl->h5types), std::get<1>(*pimpl->h5types));
+    pimpl->dataSet = std::move(dataSet);
+    pimpl->timeSeries = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
 }
 
 void Forces::append() {

@@ -39,15 +39,12 @@
 #include <readdy/common/signals.h>
 #include <readdy/model/Plugin.h>
 #include <readdy/model/actions/Action.h>
-#include <readdy/model/KernelStateModel.h>
-#include <readdy/model/KernelContext.h>
+#include <readdy/model/StateModel.h>
+#include <readdy/model/Context.h>
 #include <readdy/model/observables/ObservableFactory.h>
 #include <readdy/model/_internal/ObservableWrapper.h>
-#include <readdy/model/potentials/PotentialFactory.h>
 #include <readdy/model/actions/ActionFactory.h>
-#include <readdy/model/reactions/ReactionFactory.h>
 #include <readdy/model/topologies/TopologyActionFactory.h>
-#include <readdy/model/compartments/CompartmentFactory.h>
 #include <readdy/model/_internal/Util.h>
 
 NAMESPACE_BEGIN(readdy)
@@ -60,7 +57,7 @@ NAMESPACE_END(detail)
 
 /**
  * Base class of kernels.
- * A Kernel is used to execute Programs, i.e., instances of readdy::plugin::Program.
+ * A Kernel is used to execute Actions, i.e., instances of readdy::model::actions::Action.
  * The kernels can be built in or provided by shared libs in directories, which are loaded by the KernelProvider.
  * Each Kernel has a #name by which it can be accessed in the KernelProvider.
  */
@@ -81,9 +78,9 @@ public:
 
     Kernel &operator=(const Kernel &rhs) = delete;
 
-    Kernel(Kernel &&rhs) noexcept;
+    Kernel(Kernel &&rhs) noexcept = default;
 
-    Kernel &operator=(Kernel &&rhs) noexcept;
+    Kernel &operator=(Kernel &&rhs) noexcept = default;
 
     /**
      * This method returns the name of the kernel.
@@ -143,22 +140,6 @@ public:
 
     TopologyParticle createTopologyParticle(const std::string &type, const Vec3 &pos) const;
 
-    virtual std::vector<std::string> getAvailablePotentials() const;
-
-    template<typename T, typename... Args>
-    potentials::Potential::id registerPotential(Args &&... args) {
-        auto pot = getPotentialFactory().createPotential<T>(std::forward<Args>(args)...);
-        return getKernelContext().potentials().add(std::move(pot));
-    }
-
-    template<typename T, typename... Args>
-    compartments::Compartment::id
-    registerCompartment(const std::unordered_map<std::string, std::string> &conversionsMapStr, Args &&... args) {
-        auto conversionsMapInt = _internal::util::transformTypesMap(conversionsMapStr, getKernelContext());
-        auto comp = getCompartmentFactory().createCompartment<T>(conversionsMapInt, std::forward<Args>(args)...);
-        return getKernelContext().registerCompartment(std::move(comp));
-    }
-
     template<typename T, typename Obs1, typename Obs2>
     inline std::unique_ptr<T> createCombinedObservable(Obs1 *obs1, Obs2 *obs2, unsigned int stride = 1) const {
         return getObservableFactory().create(obs1, obs2, stride);
@@ -169,35 +150,7 @@ public:
         return getObservableFactory().create(stride, std::forward<Args>(args)...);
     }
 
-    template<typename T, typename... Args>
-    const short registerReaction(Args &&... args) {
-        return getKernelContext().reactions().add(
-                detail::get_reaction_dispatcher<T, Args...>::impl(this, std::forward<Args>(args)...));
-    }
-
     bool supportsTopologies() const;
-
-    // todo registerConversion -> creates and register with context
-    std::unique_ptr<reactions::Reaction<1>>
-    createConversionReaction(const std::string &name, const std::string &from, const std::string &to,
-                             scalar rate) const;
-
-    std::unique_ptr<reactions::Reaction<2>>
-    createEnzymaticReaction(const std::string &name, const std::string &catalyst, const std::string &from,
-                            const std::string &to, scalar rate, scalar eductDistance) const;
-
-    std::unique_ptr<reactions::Reaction<1>>
-    createFissionReaction(const std::string &name, const std::string &from, const std::string &to1,
-                          const std::string &to2, scalar rate, scalar productDistance,
-                          scalar weight1 = 0.5, scalar weight2 = 0.5) const;
-
-    std::unique_ptr<reactions::Reaction<2>>
-    createFusionReaction(const std::string &name, const std::string &from1, const std::string &from2,
-                         const std::string &to, scalar rate, scalar eductDistance,
-                         scalar weight1 = 0.5, scalar weight2 = 0.5) const;
-
-    std::unique_ptr<reactions::Reaction<1>>
-    createDecayReaction(const std::string &name, const std::string &type, scalar rate) const;
 
     /*
      * 
@@ -205,29 +158,17 @@ public:
      * 
      */
 
-    const readdy::model::KernelStateModel &getKernelStateModel() const;
+    const readdy::model::StateModel &stateModel() const;
 
-    readdy::model::KernelStateModel &getKernelStateModel();
+    readdy::model::StateModel &stateModel();
 
-    const readdy::model::KernelContext &getKernelContext() const;
+    const readdy::model::Context &context() const;
 
-    readdy::model::KernelContext &getKernelContext();
+    readdy::model::Context &context();
 
     const readdy::model::actions::ActionFactory &getActionFactory() const;
 
     readdy::model::actions::ActionFactory &getActionFactory();
-
-    const readdy::model::potentials::PotentialFactory &getPotentialFactory() const;
-
-    readdy::model::potentials::PotentialFactory &getPotentialFactory();
-
-    const readdy::model::reactions::ReactionFactory &getReactionFactory() const;
-
-    readdy::model::reactions::ReactionFactory &getReactionFactory();
-
-    const readdy::model::compartments::CompartmentFactory &getCompartmentFactory() const;
-
-    readdy::model::compartments::CompartmentFactory &getCompartmentFactory();
 
     const readdy::model::observables::ObservableFactory &getObservableFactory() const;
 
@@ -255,67 +196,20 @@ protected:
 
     particle_type_type getTypeIdRequireNormalFlavor(const std::string &) const;
 
-    virtual readdy::model::KernelStateModel &getKernelStateModelInternal() const = 0;
-
-    virtual readdy::model::KernelContext &getKernelContextInternal() const = 0;
+    virtual readdy::model::StateModel &getKernelStateModelInternal() const = 0;
 
     virtual readdy::model::actions::ActionFactory &getActionFactoryInternal() const = 0;
-
-    virtual readdy::model::potentials::PotentialFactory &getPotentialFactoryInternal() const = 0;
-
-    virtual readdy::model::reactions::ReactionFactory &getReactionFactoryInternal() const = 0;
-
-    virtual readdy::model::compartments::CompartmentFactory &getCompartmentFactoryInternal() const = 0;
 
     virtual readdy::model::observables::ObservableFactory &getObservableFactoryInternal() const;
 
     virtual readdy::model::top::TopologyActionFactory *getTopologyActionFactoryInternal() const = 0;
 
 
+    model::Context _context;
+
     struct Impl;
     std::unique_ptr<Impl> pimpl;
 };
-namespace detail {
-template<typename... Args>
-struct get_reaction_dispatcher<readdy::model::reactions::Conversion, Args...> {
-    static std::unique_ptr<readdy::model::reactions::Reaction<1>>
-    impl(const readdy::model::Kernel *const self, Args &&... args) {
-        return self->createConversionReaction(std::forward<Args>(args)...);
-    }
-};
-
-template<typename... Args>
-struct get_reaction_dispatcher<readdy::model::reactions::Enzymatic, Args...> {
-    static std::unique_ptr<readdy::model::reactions::Reaction<2>>
-    impl(const readdy::model::Kernel *const self, Args &&... args) {
-        return self->createEnzymaticReaction(std::forward<Args>(args)...);
-    }
-};
-
-template<typename... Args>
-struct get_reaction_dispatcher<readdy::model::reactions::Fission, Args...> {
-    static std::unique_ptr<readdy::model::reactions::Reaction<1>>
-    impl(const readdy::model::Kernel *const self, Args &&... args) {
-        return self->createFissionReaction(std::forward<Args>(args)...);
-    }
-};
-
-template<typename... Args>
-struct get_reaction_dispatcher<readdy::model::reactions::Fusion, Args...> {
-    static std::unique_ptr<readdy::model::reactions::Reaction<2>>
-    impl(const readdy::model::Kernel *const self, Args &&... args) {
-        return self->createFusionReaction(std::forward<Args>(args)...);
-    }
-};
-
-template<typename... Args>
-struct get_reaction_dispatcher<readdy::model::reactions::Decay, Args...> {
-    static std::unique_ptr<readdy::model::reactions::Reaction<1>>
-    impl(const readdy::model::Kernel *const self, Args &&... args) {
-        return self->createDecayReaction(std::forward<Args>(args)...);
-    }
-};
-}
 
 NAMESPACE_END(model)
 NAMESPACE_END(readdy)

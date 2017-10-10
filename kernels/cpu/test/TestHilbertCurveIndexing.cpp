@@ -66,8 +66,8 @@ TEST(TestCurveIndexing, Cells) {
     auto uniform_real = &readdy::model::rnd::uniform_real<>;
 
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
-    kernel->getKernelContext().boxSize() = {{5, 5, 5}};
-    const auto &simBoxSize = kernel->getKernelContext().boxSize();
+    kernel->context().boxSize() = {{5, 5, 5}};
+    const auto &simBoxSize = kernel->context().boxSize();
 
     // 2x2x2 = 8 boxes
     const std::array<unsigned int, 3> nCells{{2, 2, 2}};

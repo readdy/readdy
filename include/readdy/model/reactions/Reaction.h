@@ -50,116 +50,60 @@ enum class ReactionType { Conversion, Fusion, Fission, Enzymatic, Decay };
 
 std::ostream& operator<<(std::ostream& os, const ReactionType& reactionType);
 
-template<unsigned int N_EDUCTS>
 class Reaction {
-protected:
-    static short counter;
-    using particle_type_type = readdy::model::Particle::type_type;
 public:
-
     using rnd_normal = std::function<Vec3(const scalar, const scalar)>;
-    // static constexpr unsigned int n_educts = N_EDUCTS;
+    using reaction_id = unsigned short;
 
-    Reaction(std::string name, const scalar rate, const scalar eductDistance,
-             const scalar productDistance, const unsigned int n_products) :
-            name(std::move(name)),
-            id(counter++),
-            rate(rate),
-            eductDistance(eductDistance),
-            eductDistanceSquared(eductDistance * eductDistance),
-            productDistance(productDistance),
-            _n_products(n_products) {}
-
-    Reaction(const Reaction&) = default;
-    Reaction& operator=(const Reaction&) = default;
-    Reaction(Reaction&&) = default;
-    Reaction& operator=(Reaction&&) = default;
+    Reaction(std::string name, scalar rate, scalar eductDistance, scalar productDistance, std::uint8_t nEducts,
+             std::uint8_t nProducts);
 
     virtual ~Reaction() = default;
 
-    virtual const ReactionType getType() = 0;
+    virtual const ReactionType type() const = 0;
 
-    const std::string &getName() const {
-        return name;
-    }
+    const std::string &name() const;
 
-    const short getId() const {
-        return id;
-    }
+    const reaction_id id() const;
 
-    const scalar getRate() const {
-        return rate;
-    }
+    const scalar rate() const;
 
-    const unsigned int getNEducts() const {
-        return _n_educts;
-    }
+    std::uint8_t nEducts() const;
 
-    const unsigned int getNProducts() const {
-        return _n_products;
-    }
+    std::uint8_t nProducts() const;
 
-    const scalar getEductDistance() const {
-        return eductDistance;
-    }
+    const scalar eductDistance() const;
 
-    const scalar getEductDistanceSquared() const {
-        return eductDistanceSquared;
-    }
+    const scalar eductDistanceSquared() const;
 
-    const scalar getProductDistance() const {
-        return productDistance;
-    }
+    const scalar productDistance() const;
 
-    friend std::ostream &operator<<(std::ostream &os, const Reaction &reaction) {
-        os << "Reaction(\"" << reaction.name << "\", N_Educts=" << reaction._n_educts << ", N_Products="
-           << reaction._n_products << ", (";
-        for (unsigned int i = 0; i < reaction._n_educts; i++) {
-            if (i > 0) os << ",";
-            os << reaction.educts[i];
-        }
-        os << ") -> (";
-        for (unsigned int i = 0; i < reaction._n_products; i++) {
-            if (i > 0) os << ",";
-            os << reaction.products[i];
-        }
-        os << "), rate=" << reaction.rate << ", eductDist=" << reaction.eductDistance << ", prodDist="
-           << reaction.productDistance << ")";
-        return os;
-    }
+    friend std::ostream &operator<<(std::ostream &os, const Reaction &reaction);
 
-    const std::array<particle_type_type, N_EDUCTS> &getEducts() const {
-        return educts;
-    }
+    const std::array<particle_type_type, 2> &educts() const;
 
-    const std::array<particle_type_type, 2> &getProducts() const {
-        return products;
-    }
+    const std::array<particle_type_type, 2> &products() const;
 
-    const scalar getWeight1() const {
-        return weight1;
-    }
+    const scalar weight1() const;
 
-    const scalar getWeight2() const {
-        return weight2;
-    }
+    const scalar weight2() const;
 
 
 protected:
-    const unsigned int _n_educts = N_EDUCTS;
-    const unsigned int _n_products;
-    std::array<particle_type_type, N_EDUCTS> educts;
-    std::array<particle_type_type, 2> products {{0, 0}};
-    const std::string name;
-    const short id;
-    const scalar rate;
-    const scalar eductDistance, eductDistanceSquared;
-    const scalar productDistance;
+    static reaction_id counter;
 
-    scalar weight1 = .5, weight2 = .5;
+    std::uint8_t _nEducts;
+    std::uint8_t _nProducts;
+    std::array<particle_type_type, 2> _educts {{0, 0}};
+    std::array<particle_type_type, 2> _products {{0, 0}};
+    std::string _name;
+    reaction_id _id;
+    scalar _rate;
+    scalar _eductDistance, _eductDistanceSquared;
+    scalar _productDistance;
+
+    scalar _weight1 = .5, _weight2 = .5;
 };
-
-template<unsigned int N> short Reaction<N>::counter = 0;
 
 NAMESPACE_END(reactions)
 NAMESPACE_END(model)

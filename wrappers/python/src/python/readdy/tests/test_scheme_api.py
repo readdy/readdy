@@ -76,7 +76,7 @@ class TestSchemeApi(ReaDDyTestCase):
     def test_interrupt_simple(self):
         sim = Simulation()
         sim.set_kernel("SingleCPU")
-        sim.register_particle_type("A", 0.1, 0.)
+        sim.register_particle_type("A", 0.1)
         # Define counter as list. This is a workaround because nosetest will complain otherwise.
         counter = [0]
 
@@ -92,7 +92,7 @@ class TestSchemeApi(ReaDDyTestCase):
     def test_interrupt_maxparticles(self):
         sim = Simulation()
         sim.set_kernel("SingleCPU")
-        sim.register_particle_type("A", 0.1, 0.)
+        sim.register_particle_type("A", 0.1)
         sim.add_particle("A", Vec(0, 0, 0))
         sim.register_reaction_fission("bla", "A", "A", "A", 1000., 0., 0.5, 0.5)
         counter = [0]

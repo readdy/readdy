@@ -151,7 +151,7 @@ NLDataContainer::NeighborList &NLDataContainer::neighbors() {
     return _neighbors;
 }
 
-NLDataContainer::NLDataContainer(const model::KernelContext &context, const util::thread::Config &threadConfig)
+NLDataContainer::NLDataContainer(const model::Context &context, const util::thread::Config &threadConfig)
         : DataContainer(context, threadConfig), _neighbors{} {
 }
 

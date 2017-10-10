@@ -33,7 +33,6 @@
 
 #pragma once
 
-#include <readdy/model/KernelContext.h>
 #include <ostream>
 #include "PotentialOrder2.h"
 
@@ -44,11 +43,10 @@ NAMESPACE_BEGIN(potentials)
 class HarmonicRepulsion : public PotentialOrder2 {
     using super = PotentialOrder2;
 public:
-    HarmonicRepulsion(const std::string &type1, const std::string &type2, scalar forceConstant);
+    HarmonicRepulsion(particle_type_type type1, particle_type_type type2,
+                      scalar forceConstant, scalar interactionDistance);
 
-    scalar getSumOfParticleRadii() const;
-
-    scalar getSumOfParticleRadiiSquared() const;
+    scalar interactionDistance() const;
 
     std::string describe() const override;
 
@@ -67,13 +65,9 @@ public:
     scalar getCutoffRadiusSquared() const override;
 
 protected:
-    friend class readdy::model::potentials::PotentialRegistry;
-
-    void configureForTypes(const ParticleTypeRegistry* ctx, particle_type_type type1, particle_type_type type2) override;
-
-    scalar sumOfParticleRadii;
-    scalar sumOfParticleRadiiSquared;
-    const scalar forceConstant;
+    scalar _interactionDistance;
+    scalar _interactionDistanceSquared;
+    scalar _forceConstant;
 };
 
 class WeakInteractionPiecewiseHarmonic : public PotentialOrder2 {
@@ -93,7 +87,7 @@ public:
         const scalar desiredParticleDistance, depthAtDesiredDistance, noInteractionDistance, noInteractionDistanceSquared;
     };
 
-    WeakInteractionPiecewiseHarmonic(const std::string &particleType1, const std::string &particleType2,
+    WeakInteractionPiecewiseHarmonic(particle_type_type type1, particle_type_type type2,
                                      scalar forceConstant, const Configuration &config);
 
     scalar getMaximalForce(scalar kbt) const noexcept override;
@@ -109,10 +103,6 @@ public:
     scalar getCutoffRadiusSquared() const override;
 
 protected:
-    friend class readdy::model::potentials::PotentialRegistry;
-
-    void configureForTypes(const ParticleTypeRegistry* ctx, particle_type_type type1, particle_type_type type2) override;
-
     const Configuration conf;
     const scalar forceConstant;
 };
@@ -145,16 +135,19 @@ public:
      * @param epsilon the well depth
      * @param sigma the distance at which the inter-particle potential is zero
      */
-    LennardJones(const std::string &particleType1, const std::string &particleType2,
+    LennardJones(particle_type_type type1, particle_type_type type2,
                  unsigned int m, unsigned int n, scalar cutoffDistance,
                  bool shift, scalar epsilon, scalar sigma);
 
     std::string describe() const override;
 
-    LennardJones(const LennardJones&) = default;
-    LennardJones& operator=(const LennardJones&) = delete;
-    LennardJones(LennardJones&&) = default;
-    LennardJones& operator=(LennardJones&&) = delete;
+    LennardJones(const LennardJones &) = default;
+
+    LennardJones &operator=(const LennardJones &) = delete;
+
+    LennardJones(LennardJones &&) = default;
+
+    LennardJones &operator=(LennardJones &&) = delete;
 
     ~LennardJones() override;
 
@@ -171,11 +164,7 @@ public:
     scalar getMaximalForce(scalar kbt) const noexcept override;
 
 protected:
-    friend class readdy::model::potentials::PotentialRegistry;
-
     scalar energy(scalar r) const;
-
-    void configureForTypes(const ParticleTypeRegistry* context, particle_type_type type1, particle_type_type type2) override;
 
     scalar m, n;
     scalar cutoffDistance, cutoffDistanceSquared;
@@ -188,13 +177,17 @@ protected:
 class ScreenedElectrostatics : public PotentialOrder2 {
     using super = PotentialOrder2;
 public:
-    ScreenedElectrostatics(const std::string &particleType1, const std::string &particleType2, scalar electrostaticStrength,
-                           scalar inverseScreeningDepth, scalar repulsionStrength, scalar repulsionDistance, unsigned int exponent, scalar cutoff);
+    ScreenedElectrostatics(particle_type_type type1, particle_type_type type2, scalar electrostaticStrength,
+                           scalar inverseScreeningDepth, scalar repulsionStrength, scalar repulsionDistance,
+                           unsigned int exponent, scalar cutoff);
 
-    ScreenedElectrostatics(const ScreenedElectrostatics&) = default;
-    ScreenedElectrostatics& operator=(const ScreenedElectrostatics&) = delete;
-    ScreenedElectrostatics(ScreenedElectrostatics&&) = delete;
-    ScreenedElectrostatics& operator=(ScreenedElectrostatics&&) = delete;
+    ScreenedElectrostatics(const ScreenedElectrostatics &) = default;
+
+    ScreenedElectrostatics &operator=(const ScreenedElectrostatics &) = delete;
+
+    ScreenedElectrostatics(ScreenedElectrostatics &&) = delete;
+
+    ScreenedElectrostatics &operator=(ScreenedElectrostatics &&) = delete;
 
     ~ScreenedElectrostatics() override;
 
@@ -213,10 +206,6 @@ public:
     scalar getMaximalForce(scalar kbt) const noexcept override;
 
 protected:
-    friend class readdy::model::potentials::PotentialRegistry;
-
-    void configureForTypes(const ParticleTypeRegistry* context, particle_type_type type1, particle_type_type type2) override;
-
     scalar electrostaticStrength;
     scalar inverseScreeningDepth;
     scalar repulsionStrength;

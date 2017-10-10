@@ -150,8 +150,6 @@ public:
     SpatialTopologyReaction parse(const std::string &descriptor, scalar rate, scalar radius) const;
 
 private:
-    static constexpr const char arrow[] = "->";
-    static constexpr const char bond[] = "--";
     std::reference_wrapper<const TopologyRegistry> _topology_registry;
 };
 

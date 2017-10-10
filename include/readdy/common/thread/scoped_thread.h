@@ -21,7 +21,7 @@
 
 
 /**
- * @file ScopedThread.h
+ * @file scoped_thread.h
  * @brief ScopedThread header file
  * @author clonker
  * @date 01.08.16
@@ -43,8 +43,11 @@ class scoped_thread {
     std::thread t;
 public:
     /**
-     * Creates a new scoped_thread based on a thread object
-     * @param _t the reference thread
+     * Creates a new scoped_thread
+     * @tparam Function the function type that is executed by the encapsulated thread
+     * @tparam Args argument types to the function
+     * @param fun the function instance that is executed by the encapsulated thread
+     * @param args arguments to that function
      */
     template<typename Function, typename... Args>
     explicit scoped_thread(Function &&fun, Args &&... args)

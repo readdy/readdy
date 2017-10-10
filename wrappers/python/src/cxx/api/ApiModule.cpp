@@ -38,11 +38,13 @@ using sim = readdy::Simulation;
 using kp = readdy::plugin::KernelProvider;
 using vec = readdy::Vec3;
 using pot2 = readdy::rpy::PotentialOrder2Wrapper;
-using model = readdy::model::KernelStateModel;
-using ctx = readdy::model::KernelContext;
+using model = readdy::model::StateModel;
+using ctx = readdy::model::Context;
 using kern = readdy::model::Kernel;
 
 void exportTopologies(py::module &);
+
+void exportKernelContext(py::module &);
 
 void registerPotentialOrder2(sim &self, pot2 *potential) {
     self.registerPotentialOrder2(potential);
@@ -68,6 +70,8 @@ void exportApi(py::module &api) {
     auto topologyModule = api.def_submodule("top");
     exportTopologies(topologyModule);
 
+    exportKernelContext(api);
+
     py::enum_<ParticleTypeFlavor>(api, "ParticleTypeFlavor")
             .value("NORMAL", ParticleTypeFlavor::NORMAL)
             .value("TOPOLOGY", ParticleTypeFlavor::TOPOLOGY)
@@ -85,7 +89,7 @@ void exportApi(py::module &api) {
             .def_property_readonly("single_precision", &sim::singlePrecision)
             .def_property_readonly("double_precision", &sim::doublePrecision)
             .def("register_particle_type",
-                 [](sim &self, const std::string &name, readdy::scalar diffusionCoefficient, readdy::scalar radius,
+                 [](sim &self, const std::string &name, readdy::scalar diffusionCoefficient,
                     ParticleTypeFlavor flavor) {
                      readdy::model::particle_flavor f = [=] {
                          switch (flavor) {
@@ -97,28 +101,34 @@ void exportApi(py::module &api) {
                                  return readdy::model::particleflavor::TOPOLOGY;
                          }
                      }();
-                     return self.registerParticleType(name, diffusionCoefficient, radius, f);
-                 }, "name"_a, "diffusion_coefficient"_a, "radius"_a, "flavor"_a = ParticleTypeFlavor::NORMAL)
+                     return self.registerParticleType(name, diffusionCoefficient, f);
+                 }, "name"_a, "diffusion_coefficient"_a, "flavor"_a = ParticleTypeFlavor::NORMAL)
             .def("add_particle", [](sim &self, const std::string &type, const vec &pos) {
                 self.addParticle(type, pos[0], pos[1], pos[2]);
             }, "type"_a, "pos"_a)
+            .def("add_particles", [](sim &self, const std::string &type, const py::array_t<readdy::scalar> &particles) {
+                auto nParticles = particles.shape(0);
+                for(std::size_t i = 0; i < nParticles; ++i) {
+                    self.addParticle(type, particles.at(i, 0), particles.at(i, 1), particles.at(i, 2));
+                }
+            })
             .def("set_kernel_config", &sim::setKernelConfiguration)
             .def("is_kernel_selected", &sim::isKernelSelected)
             .def("get_selected_kernel_type", &getSelectedKernelType)
             .def("register_potential_order_2", &registerPotentialOrder2, "potential"_a)
             .def("register_potential_harmonic_repulsion", &sim::registerHarmonicRepulsionPotential,
-                 "type_a"_a, "type_b"_a, "force_constant"_a)
+                 "type_a"_a, "type_b"_a, "force_constant"_a, "interaction_distance"_a)
             .def("register_potential_piecewise_weak_interaction",
                  &sim::registerWeakInteractionPiecewiseHarmonicPotential, "type_a"_a, "type_b"_a, "force_constant"_a,
                  "desired_particle_distance"_a, "depth"_a, "no_interaction_distance"_a)
             .def("register_potential_box", &sim::registerBoxPotential, "particle_type"_a, "force_constant"_a,
-                 "origin"_a, "extent"_a, "consider_particle_radius"_a)
+                 "origin"_a, "extent"_a)
             .def("register_potential_sphere_in", &sim::registerSphereInPotential, "particle_type"_a, "force_constant"_a,
                  "origin"_a, "radius"_a)
             .def("register_potential_sphere_out", &sim::registerSphereOutPotential, "particle_type"_a,
                  "force_constant"_a, "origin"_a, "radius"_a)
-            .def("register_potential_spherical_barrier", &sim::registerSphericalBarrier, "particle_type"_a, "origin"_a,
-                 "radius"_a, "height"_a, "width"_a)
+            .def("register_potential_spherical_barrier", &sim::registerSphericalBarrier, "particle_type"_a, "height"_a,
+                 "width"_a, "origin"_a, "radius"_a)
             .def("register_potential_lennard_jones", &sim::registerLennardJonesPotential, "particle_type_a"_a,
                  "particle_type_b"_a, "exponent_m"_a, "exponent_n"_a, "cutoff"_a, "shift"_a, "epsilon"_a, "sigma"_a)
             .def("register_potential_screened_electrostatics", &sim::registerScreenedElectrostaticsPotential,
@@ -143,7 +153,6 @@ void exportApi(py::module &api) {
                  "conversion_map"_a, "name"_a, "origin"_a, "radius"_a, "larger_or_less"_a)
             .def("register_compartment_plane", &sim::registerCompartmentPlane, "conversion_map"_a, "name"_a,
                  "normal_coefficients"_a, "distance_from_plane"_a, "larger_or_less"_a)
-            .def("get_recommended_time_step", &sim::getRecommendedTimeStep, "n"_a)
             .def("kernel_supports_topologies", &sim::kernelSupportsTopologies)
             .def("create_topology_particle", &sim::createTopologyParticle, "type"_a, "position"_a)
             .def("configure_topology_bond_potential", &sim::configureTopologyBondPotential, "type1"_a, "type2"_a,
@@ -161,9 +170,31 @@ void exportApi(py::module &api) {
             .def("add_topology", [](sim &self, const std::string &name,
                                     const std::vector<readdy::model::TopologyParticle> &particles) {
                 return self.addTopology(name, particles);
-            }, rvp::reference, "type"_a, "particles"_a)
+            }, rvp::reference_internal, "type"_a, "particles"_a)
+            .def("add_topology", [](sim &self, const std::string &name, const std::vector<std::string> &types,
+                                    const py::array_t<readdy::scalar> &positions) {
+                auto nParticles = positions.shape(0);
+                auto nTypes = types.size();
+                if(nParticles != nTypes && nTypes != 1) {
+                    throw std::invalid_argument(fmt::format("the number of particles ({}) must be equal to the "
+                                                                    "number of types ({})!", nParticles, nTypes));
+                }
+                std::vector<readdy::model::TopologyParticle> particles;
+                for(std::size_t i = 0; i < nParticles; ++i) {
+                    auto type =  nTypes != 1 ? types[i] : types[0];
+                    particles.push_back(self.createTopologyParticle(type, readdy::Vec3(positions.at(i, 0),
+                                                                                       positions.at(i, 1),
+                                                                                       positions.at(i, 2))));
+                }
+                return self.addTopology(name, particles);
+            }, rvp::reference_internal)
             .def("current_topologies", &sim::currentTopologies)
             .def("set_kernel", static_cast<void (sim::*)(const std::string&)>(&sim::setKernel), "name"_a)
+            .def_property("context", [](sim &self) -> readdy::model::Context & {
+                return self.currentContext();
+            }, [](sim &self, const readdy::model::Context &context) {
+                self.currentContext() = context;
+            })
             .def("run_scheme_readdy", [](sim &self, bool defaults) {
                      return std::make_unique<readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>>(
                              self.runScheme<readdy::api::ReaDDyScheme>(defaults)
@@ -185,10 +216,11 @@ void exportApi(py::module &api) {
 
     py::class_<kp, std::unique_ptr<kp, readdy::util::nodelete>>(api, "KernelProvider")
             .def_static("get", &kp::getInstance, rvp::reference)
-            .def("load_from_dir", &kp::loadKernelsFromDirectory, "directory"_a);
+            .def("load_from_dir", &kp::loadKernelsFromDirectory, "directory"_a)
+            .def("available_kernels", &kp::availableKernels);
 
     py::class_<pot2>(api, "Pot2")
-            .def(py::init<std::string, std::string, py::object, py::object>())
+            .def(py::init<readdy::particle_type_type, readdy::particle_type_type, py::object, py::object>())
             .def("calc_energy", &pot2::calculateEnergy, "x_ij"_a)
             .def("calc_force", &pot2::calculateForce, "force"_a, "x_ij"_a);
 

@@ -38,7 +38,7 @@ namespace readdy {
 namespace log {
 
 std::shared_ptr<spdlog::logger> console() {
-    auto logger = spdlog::get("console");
+    static auto logger = spdlog::get("console");
     if (!logger) {
         spdlog::set_sync_mode();
         logger = spdlog::stdout_color_mt("console");

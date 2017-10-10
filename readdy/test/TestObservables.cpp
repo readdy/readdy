@@ -43,11 +43,11 @@ class TestObservables : public KernelTest {
 
 TEST_P(TestObservables, TestParticlePositions) {
     const unsigned int n_particles = 100;
-    kernel->getKernelContext().particle_types().add("type", 1., 1.);
+    kernel->context().particle_types().add("type", 1.);
     const readdy::scalar  timeStep = 1.0;
-    const auto particleTypeId = kernel->getKernelContext().particle_types().id_of("type");
+    const auto particleTypeId = kernel->context().particle_types().idOf("type");
     const auto particles = std::vector<m::Particle>(n_particles, m::Particle(0, 0, 0, particleTypeId));
-    kernel->getKernelStateModel().addParticles(particles);
+    kernel->stateModel().addParticles(particles);
     auto &&obs = kernel->createObservable<m::observables::Positions>(3);
     auto &&connection = kernel->connectObservable(obs.get());
 
@@ -63,7 +63,7 @@ TEST_P(TestObservables, TestParticlePositions) {
     }
 
     const auto &result = obs->getResult();
-    const auto &&positions = kernel->getKernelStateModel().getParticlePositions();
+    const auto &&positions = kernel->stateModel().getParticlePositions();
     auto it_pos = positions.begin();
     int j = 0;
     for (auto it = result.begin(); it != result.end(); it = std::next(it)) {
@@ -77,15 +77,15 @@ TEST_P(TestObservables, TestParticlePositions) {
 
 TEST_P(TestObservables, TestForcesObservable) {
     // Setup particles
-    kernel->getKernelContext().particle_types().add("A", 42., 1.);
-    kernel->getKernelContext().particle_types().add("B", 1337., 1.);
-    const auto typeIdA = kernel->getKernelContext().particle_types().id_of("A");
-    const auto typeIdB = kernel->getKernelContext().particle_types().id_of("B");
+    kernel->context().particle_types().add("A", 42.);
+    kernel->context().particle_types().add("B", 1337.);
+    const auto typeIdA = kernel->context().particle_types().idOf("A");
+    const auto typeIdB = kernel->context().particle_types().idOf("B");
     const unsigned int n_particles = 2; // There will be 55 Bs
     const auto particlesA = std::vector<m::Particle>(n_particles, m::Particle(0, 0, 0, typeIdA));
     const auto particlesB = std::vector<m::Particle>(n_particles + 5, m::Particle(0, 0, 0, typeIdB));
-    kernel->getKernelStateModel().addParticles(particlesA);
-    kernel->getKernelStateModel().addParticles(particlesB);
+    kernel->stateModel().addParticles(particlesA);
+    kernel->stateModel().addParticles(particlesB);
     {
         // Check if result has correct size
         // Check that empty particleType argument gives correct object, namely all forces
@@ -110,19 +110,19 @@ TEST_P(TestObservables, TestForcesObservable) {
         }
     }
     // Two particles C and C with radius 1 and harmonic repulsion at distance 1.5 -> force = kappa * (radiiSum - 1.5)
-    kernel->getKernelContext().periodicBoundaryConditions() = {{false, false, false}};
-    kernel->getKernelContext().boxSize() = {{5, 5, 5}};
-    kernel->getKernelContext().particle_types().add("C", 1., 1.);
-    const auto typeIdC = kernel->getKernelContext().particle_types().id_of("C");
+    kernel->context().periodicBoundaryConditions() = {{false, false, false}};
+    kernel->context().boxSize() = {{5, 5, 5}};
+    kernel->context().particle_types().add("C", 1.);
+    const auto typeIdC = kernel->context().particle_types().idOf("C");
     const auto particlesC = std::vector<m::Particle>{m::Particle(0, 0, 0, typeIdC), m::Particle(0, -1.5, 0, typeIdC)};
-    kernel->getKernelStateModel().addParticles(particlesC);
+    kernel->stateModel().addParticles(particlesC);
 
-    kernel->registerPotential<readdy::model::potentials::HarmonicRepulsion>("C", "C", 2.0);
+    kernel->context().potentials().addHarmonicRepulsion("C", "C", 2.0, 2.0);
 
     using update_nl = readdy::model::actions::UpdateNeighborList;
     auto &&nl = kernel->createAction<update_nl>();
     auto &&forces = kernel->createAction<readdy::model::actions::CalculateForces>();
-    kernel->getKernelContext().configure();
+    kernel->context().configure();
     kernel->initialize();
     {
         auto obsC = kernel->createObservable<m::observables::Forces>(1, std::vector<std::string>{"C"});
