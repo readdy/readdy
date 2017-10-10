@@ -24,11 +24,13 @@ Created on 26.09.17
 
 @author: clonker
 """
-
+import numpy as _np
 import readdy._internal.readdybinding.api.top as _top
 from readdy._internal.readdybinding.api import AnglePotentialConfiguration as _AnglePotentialConfiguration
 from readdy._internal.readdybinding.api import BondedPotentialConfiguration as _BondedPotentialConfiguration
 from readdy._internal.readdybinding.api import TorsionPotentialConfiguration as _TorsionPotentialConfiguration
+from readdy._internal.readdybinding.api.top import Recipe as _Recipe
+
 
 class TopologyRegistry(object):
     def __init__(self, context_top_registry, units):
@@ -76,7 +78,7 @@ class TopologyRegistry(object):
         """
         if force_constant <= 0:
             raise ValueError("The force constant must be strictly positive.")
-        force_constant = self._units.convert(force_constant, self._units.energy_unit / (self._units.reg.radians**2))
+        force_constant = self._units.convert(force_constant, self._units.energy_unit / (self._units.reg.radians ** 2))
         equilibrium_angle = self._units.convert(equilibrium_angle, self._units.reg.radians)
         cfg = _AnglePotentialConfiguration(force_constant, equilibrium_angle, "harmonic")
         self._registry.configure_angle_potential(type1, type2, type3, cfg)
@@ -99,7 +101,7 @@ class TopologyRegistry(object):
         """
         if force_constant <= 0:
             raise ValueError("The force constant must be strictly positive.")
-        force_constant = self._units.convert(force_constant, self._units.energy_unit / (self._units.reg.radians**2))
+        force_constant = self._units.convert(force_constant, self._units.energy_unit / (self._units.reg.radians ** 2))
         phi0 = self._units.convert(phi0, self._units.reg.radians)
         cfg = _TorsionPotentialConfiguration(force_constant, multiplicity, phi0, "cos_dihedral")
         self._registry.configure_torsion_potential(type1, type2, type3, type4, cfg)
@@ -137,7 +139,7 @@ class TopologyRegistry(object):
         :param rate: a fixed rate [1/time]
         :param radius: the radius [length]
         """
-        rate = self._units.convert(rate, 1/self._units.time_unit)
+        rate = self._units.convert(rate, 1 / self._units.time_unit)
         radius = self._units.convert(radius, self._units.length_unit)
         self._registry.add_spatial_reaction(descriptor, rate, radius)
 
@@ -175,3 +177,21 @@ class TopologyRegistry(object):
         else:
             reaction.create_child_topologies_after_reaction()
         self._registry.add_structural_reaction(topology_type, reaction)
+
+    def add_topology_dissociation(self, topology_type, bond_breaking_rate):
+        """
+        Adds a (structural) topology dissociation reaction to a certain topology type, i.e., with a rate of
+        `n_edges * bond_breaking_rate` an edge will be removed from the graph, possibly yielding sub-topology instances.
+        :param topology_type: the type
+        :param bond_breaking_rate: the rate per edge, assuming that every edge corresponds to exactly one bond
+        """
+        bond_breaking_rate = self._units.convert(bond_breaking_rate, 1 / self._units.time_unit)
+        def rate_function(topology):
+            return bond_breaking_rate * float(len(topology.get_graph().get_edges()))
+
+        def reaction_function(topology):
+            edges = topology.get_graph().get_edges()
+            edge = edges[_np.random.randint(0, len(edges))]
+            return _Recipe(topology).remove_edge(edge)
+
+        self.add_structural_reaction(topology_type, reaction_function, rate_function, False, False)

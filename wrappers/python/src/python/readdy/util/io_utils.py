@@ -42,9 +42,10 @@ def get_particle_types(filename, dset_path="readdy/config/particle_types"):
     """
     result = dict()
     with h5py.File(filename, "r") as f:
-        p_types = f[dset_path]
-        for p_type in p_types:
-            result[p_type["name"]] = p_type["type_id"]
+        if dset_path in f:
+            p_types = f[dset_path]
+            for p_type in p_types:
+                result[p_type["name"]] = p_type["type_id"]
     return result
 
 
@@ -58,9 +59,10 @@ def get_particle_types_list(fname, dset_path="readdy/config/particle_types"):
     """
     result = []
     with h5py.File(fname, "r") as f:
-        p_types = f[dset_path]
-        for p_type in p_types:
-            result.append(p_type["name"])
+        if dset_path in f:
+            p_types = f[dset_path]
+            for p_type in p_types:
+                result.append(p_type["name"])
     return result
 
 
@@ -74,9 +76,10 @@ def get_diffusion_constants(filename, dset_path="readdy/config/particle_types"):
     """
     result = dict()
     with h5py.File(filename, "r") as f:
-        p_types = f[dset_path]
-        for p_type in p_types:
-            result[p_type["name"]] = p_type["diffusion_constant"]
+        if dset_path in f:
+            p_types = f[dset_path]
+            for p_type in p_types:
+                result[p_type["name"]] = p_type["diffusion_constant"]
     return result
 
 
@@ -89,7 +92,8 @@ def get_reactions(filename, dset_path="readdy/config/registered_reactions"):
     """
     result = dict()
     with h5py.File(filename, "r") as f:
-        reactions = f[dset_path]
-        for r in reactions:
-            result[r["name"]] = np.copy(r)
+        if dset_path in f:
+            reactions = f[dset_path]
+            for r in reactions:
+                result[r["name"]] = np.copy(r)
     return result
