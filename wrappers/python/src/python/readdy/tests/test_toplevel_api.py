@@ -220,7 +220,7 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
                 np.testing.assert_equal("A", entry.type)
                 np.testing.assert_equal(idx, entry.t)
 
-    def run_readwrite_test_for(self, kernel, reaction_handler):
+    def _run_readwrite_test_for(self, kernel, reaction_handler):
         traj_fname = os.path.join(self.tempdir, "traj_{}_{}.h5".format(kernel, reaction_handler))
         traj_fname2 = os.path.join(self.tempdir, "traj2_{}_{}.h5".format(kernel, reaction_handler))
 
@@ -304,13 +304,13 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
                 np.testing.assert_equal(len(curr_ids), len(curr_forces))
 
     def test_readwrite_observables_singlecpu_uncontrolled(self):
-        self.run_readwrite_test_for("SingleCPU", "UncontrolledApproximation")
+        self._run_readwrite_test_for("SingleCPU", "UncontrolledApproximation")
 
     def test_readwrite_observables_singlecpu_gillespie(self):
-        self.run_readwrite_test_for("SingleCPU", "Gillespie")
+        self._run_readwrite_test_for("SingleCPU", "Gillespie")
 
     def test_readwrite_observables_cpu_uncontrolled(self):
-        self.run_readwrite_test_for("CPU", "UncontrolledApproximation")
+        self._run_readwrite_test_for("CPU", "UncontrolledApproximation")
 
     def test_readwrite_observables_cpu_gillespie(self):
-        self.run_readwrite_test_for("CPU", "Gillespie")
+        self._run_readwrite_test_for("CPU", "Gillespie")
