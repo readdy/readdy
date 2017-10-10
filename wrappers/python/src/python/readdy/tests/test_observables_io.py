@@ -276,22 +276,23 @@ class TestObservablesIO(ReaDDyTestCase):
             def get_item(name, collection):
                 return next(x for x in collection if x["name"] == name)
 
-            reactions = data["registered_reactions"]
+            import readdy.util.io_utils as io_utils
+            reactions = io_utils.get_reactions(fname)
 
-            mylabel_reaction = get_item("mylabel", reactions)
+            mylabel_reaction = get_item("mylabel", reactions.values())
             np.testing.assert_allclose(mylabel_reaction["rate"], .00001)
             np.testing.assert_equal(mylabel_reaction["n_educts"], 1)
             np.testing.assert_equal(mylabel_reaction["n_products"], 1)
             np.testing.assert_equal(mylabel_reaction["educt_types"], [type_str_to_id["A"], 0])
             np.testing.assert_equal(mylabel_reaction["product_types"], [type_str_to_id["B"], 0])
-            atob_reaction = get_item("A->B", reactions)
+            atob_reaction = get_item("A->B", reactions.values())
             np.testing.assert_equal(atob_reaction["rate"], 1.)
             np.testing.assert_equal(atob_reaction["n_educts"], 1)
             np.testing.assert_equal(atob_reaction["n_products"], 1)
             np.testing.assert_equal(mylabel_reaction["educt_types"], [type_str_to_id["A"], 0])
             np.testing.assert_equal(mylabel_reaction["product_types"], [type_str_to_id["B"], 0])
 
-            fusion_reaction = get_item("B+C->A", reactions)
+            fusion_reaction = get_item("B+C->A", reactions.values())
             np.testing.assert_equal(fusion_reaction["rate"], 1.)
             np.testing.assert_equal(fusion_reaction["educt_distance"], 1.)
             np.testing.assert_equal(fusion_reaction["n_educts"], 2)

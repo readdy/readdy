@@ -87,7 +87,7 @@ class TestIOUtils(ReaDDyTestCase):
         mylabel = reactions["mylabel"]
         self.assertEqual(mylabel["n_educts"], 1)
         self.assertEqual(mylabel["n_products"], 1)
-        self.assertAlmostEquals(mylabel["rate"], 0.00001)
+        self.assertAlmostEqual(mylabel["rate"], 0.00001)
         self.assertEqual(mylabel["educt_types"][0], p_types["A"])
         self.assertEqual(mylabel["product_types"][0], p_types["B"])
 
@@ -103,8 +103,8 @@ class TestIOUtils(ReaDDyTestCase):
         fusion = reactions["B+C->A"]
         self.assertEqual(fusion["n_educts"], 2)
         self.assertEqual(fusion["n_products"], 1)
-        self.assertAlmostEquals(fusion["rate"], 0.4)
-        self.assertAlmostEquals(fusion["educt_distance"], 0.2)
+        self.assertAlmostEqual(fusion["rate"], 0.4)
+        self.assertAlmostEqual(fusion["educt_distance"], 0.2)
         correct_educts = (fusion["educt_types"][0] == p_types["B"] and fusion["educt_types"][1] == p_types["C"])
         correct_educts = correct_educts or (fusion["educt_types"][1] == p_types["B"] and fusion["educt_types"][0] == p_types["C"])
         self.assertTrue(correct_educts)
