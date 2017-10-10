@@ -64,6 +64,8 @@ public:
 
     std::string describe() const override;
 
+    std::string type() const override;
+
 protected:
     const Vec3 origin, extent, min, max;
     const scalar forceConstant;
@@ -87,6 +89,8 @@ public:
 
     std::string describe() const override;
 
+    std::string type() const override;
+
 protected:
     const Vec3 origin;
     const scalar radius, forceConstant;
@@ -108,6 +112,9 @@ public:
     void calculateForceAndEnergy(Vec3 &force, scalar &energy, const Vec3 &position) const override;
 
     std::string describe() const override;
+
+    std::string type() const override;
+
 protected:
     const Vec3 origin;
     const scalar radius, forceConstant;
@@ -134,6 +141,8 @@ public:
     void calculateForceAndEnergy(Vec3 &force, readdy::scalar &energy, const Vec3 &position) const override;
 
     std::string describe() const override;
+
+    std::string type() const override;
 
 protected:
     const Vec3 origin;

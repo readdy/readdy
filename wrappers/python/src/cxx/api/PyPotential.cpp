@@ -69,6 +69,10 @@ std::string PotentialOrder2Wrapper::describe() const {
     return "Python wrapped potential order 2";
 }
 
+std::string PotentialOrder2Wrapper::type() const {
+    return describe();
+}
+
 
 }
 

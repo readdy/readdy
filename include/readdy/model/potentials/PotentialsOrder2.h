@@ -64,6 +64,8 @@ public:
 
     scalar getCutoffRadiusSquared() const override;
 
+    std::string type() const override;
+
 protected:
     scalar _interactionDistance;
     scalar _interactionDistanceSquared;
@@ -101,6 +103,8 @@ public:
     scalar getCutoffRadius() const override;
 
     scalar getCutoffRadiusSquared() const override;
+
+    std::string type() const override;
 
 protected:
     const Configuration conf;
@@ -163,6 +167,8 @@ public:
 
     scalar getMaximalForce(scalar kbt) const noexcept override;
 
+    std::string type() const override;
+
 protected:
     scalar energy(scalar r) const;
 
@@ -204,6 +210,8 @@ public:
     scalar getCutoffRadiusSquared() const override;
 
     scalar getMaximalForce(scalar kbt) const noexcept override;
+
+    std::string type() const override;
 
 protected:
     scalar electrostaticStrength;

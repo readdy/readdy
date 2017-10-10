@@ -152,7 +152,8 @@ class ReactionDiffusionSystem(object):
         The periodic boundary conditions of the system.
 
         If boundaries are set to non-periodic, one has to take care that the particle cannot escape the simulation
-        box, e.g., with a box potential.
+        box, e.g., with a box potential that is inside of the simulation box
+        at least within the directions of non-periodicity.
 
         :return: a list of length 3 containing boolean values indicating whether x-, y-, or z-boundaries are periodic
                  or not

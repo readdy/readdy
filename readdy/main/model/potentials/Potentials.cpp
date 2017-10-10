@@ -131,6 +131,10 @@ std::string Box::describe() const {
     return ss.str();
 }
 
+std::string Box::type() const {
+    return getPotentialName<Box>();
+}
+
 /*
  * Sphere Potentials
  */
@@ -183,6 +187,10 @@ std::string SphereIn::describe() const {
     return ss.str();
 }
 
+std::string SphereIn::type() const {
+    return getPotentialName<SphereIn>();
+}
+
 SphereOut::SphereOut(particle_type_type particleType, scalar forceConstant, const Vec3 &origin, scalar radius)
         : super(particleType), forceConstant(forceConstant), origin(origin), radius(radius) {}
 
@@ -229,6 +237,10 @@ void SphereOut::calculateForceAndEnergy(Vec3 &force, scalar &energy, const Vec3 
         energy += 0.5 * forceConstant * distanceFromSphere * distanceFromSphere;
         force += -1 * forceConstant * distanceFromSphere * difference / distanceFromOrigin;
     }
+}
+
+std::string SphereOut::type() const {
+    return getPotentialName<SphereOut>();
 }
 
 SphericalBarrier::SphericalBarrier(particle_type_type particleType, scalar height, scalar width, const Vec3 &origin, scalar radius)
@@ -314,6 +326,10 @@ std::string SphericalBarrier::describe() const {
     return ss.str();
 }
 
+std::string SphericalBarrier::type() const {
+    return getPotentialName<SphericalBarrier>();
+}
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Potentials order 2
@@ -386,6 +402,10 @@ std::string HarmonicRepulsion::describe() const {
 
 scalar HarmonicRepulsion::interactionDistance() const {
     return _interactionDistance;
+}
+
+std::string HarmonicRepulsion::type() const {
+    return getPotentialName<HarmonicRepulsion>();
 }
 
 /**
@@ -481,6 +501,10 @@ std::string WeakInteractionPiecewiseHarmonic::describe() const {
     return ss.str();
 }
 
+std::string WeakInteractionPiecewiseHarmonic::type() const {
+    return getPotentialName<HarmonicRepulsion>();
+}
+
 WeakInteractionPiecewiseHarmonic::Configuration::Configuration(const scalar  desiredParticleDistance,
                                                                const scalar  depthAtDesiredDistance,
                                                                const scalar  noInteractionDistance)
@@ -547,6 +571,10 @@ std::string LennardJones::describe() const {
     return ss.str();
 }
 
+std::string LennardJones::type() const {
+    return getPotentialName<LennardJones>();
+}
+
 LennardJones::~LennardJones() = default;
 
 
@@ -611,6 +639,10 @@ void ScreenedElectrostatics::calculateForce(Vec3 &force, const Vec3 &x_ij) const
 void ScreenedElectrostatics::calculateForceAndEnergy(Vec3 &force, scalar  &energy, const Vec3 &x_ij) const {
     calculateForce(force, x_ij);
     energy += calculateEnergy(x_ij);
+}
+
+std::string ScreenedElectrostatics::type() const {
+    return getPotentialName<ScreenedElectrostatics>();
 }
 
 ScreenedElectrostatics::~ScreenedElectrostatics() = default;

@@ -113,6 +113,9 @@ TEST_P(TestObservables, TestForcesObservable) {
     kernel->context().periodicBoundaryConditions() = {{false, false, false}};
     kernel->context().boxSize() = {{5, 5, 5}};
     kernel->context().particle_types().add("C", 1.);
+    kernel->context().potentials().addBox("A", .001, {-2.4, -2.4, -2.4}, {4.8, 4.8, 4.8});
+    kernel->context().potentials().addBox("B", .001, {-2.4, -2.4, -2.4}, {4.8, 4.8, 4.8});
+    kernel->context().potentials().addBox("C", .001, {-2.4, -2.4, -2.4}, {4.8, 4.8, 4.8});
     const auto typeIdC = kernel->context().particle_types().idOf("C");
     const auto particlesC = std::vector<m::Particle>{m::Particle(0, 0, 0, typeIdC), m::Particle(0, -1.5, 0, typeIdC)};
     kernel->stateModel().addParticles(particlesC);

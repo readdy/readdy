@@ -67,6 +67,8 @@ public:
 
     virtual std::string describe() const = 0;
 
+    virtual std::string type() const = 0;
+
     friend std::ostream &operator<<(std::ostream &os, const Potential &potential) {
         os << potential.describe();
         return os;

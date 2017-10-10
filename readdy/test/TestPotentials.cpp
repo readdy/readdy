@@ -200,6 +200,7 @@ TEST_P(TestPotentials, ScreenedElectrostatics) {
     ctx.periodicBoundaryConditions() = {{false, false, false}};
     ctx.particle_types().add("A", 1.0);
     ctx.boxSize() = {{10, 10, 10}};
+    ctx.potentials().addBox("A", .001, {-4.9, -4.9, -4.9}, {9.8, 9.8, 9.8});
     // distance of particles is 2.56515106768
     auto id0 = kernel->addParticle("A", {0, 0, 0});
     auto id1 = kernel->addParticle("A", {1.2, 1.5, -1.7});
