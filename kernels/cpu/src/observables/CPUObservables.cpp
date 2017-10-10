@@ -216,16 +216,13 @@ CPUReactions::CPUReactions(CPUKernel *const kernel, unsigned int stride)
 void CPUReactions::evaluate() {
     const auto& model = kernel->getCPUKernelStateModel();
     const auto& records = model.reactionRecords();
-    result.clear();
-    result.reserve(records.size());
-    result.insert(result.end(), records.begin(), records.end());
+    result = records;
 }
 
 CPUReactionCounts::CPUReactionCounts(CPUKernel *const kernel, unsigned int stride)
         : ReactionCounts(kernel, stride), kernel(kernel) {}
 
 void CPUReactionCounts::evaluate() {
-
     result = kernel->getCPUKernelStateModel().reactionCounts();
 }
 

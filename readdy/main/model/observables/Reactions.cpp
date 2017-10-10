@@ -47,7 +47,6 @@ struct Reactions::Impl {
     std::unique_ptr<util::TimeSeriesWriter> time;
     std::unique_ptr<h5rd::Group> group;
     std::unique_ptr<util::CompoundH5Types> h5types;
-    bool firstWrite = true;
 };
 
 Reactions::Reactions(Kernel *const kernel, unsigned int stride)
@@ -60,7 +59,7 @@ void Reactions::flush() {
 }
 
 void Reactions::initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) {
-    pimpl->firstWrite = true;
+    result.clear();
     h5rd::dimensions fs = {flushStride};
     h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
     pimpl->h5types = std::make_unique<util::CompoundH5Types>(util::getReactionRecordTypes(file.ref()));
@@ -73,10 +72,6 @@ void Reactions::initializeDataSet(File &file, const std::string &dataSetName, un
 
 void Reactions::append() {
     pimpl->writer->append({1}, &result);
-    if (pimpl->firstWrite) {
-        pimpl->firstWrite = false;
-        ioutils::writeReactionInformation(*pimpl->group, kernel->context());
-    }
     pimpl->time->append(t_current);
 }
 

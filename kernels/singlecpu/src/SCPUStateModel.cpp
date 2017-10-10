@@ -218,15 +218,21 @@ scalar &SCPUStateModel::energy() {
 }
 
 void SCPUStateModel::resetReactionCounts() {
-    const auto &reactions = _context.get().reactions();
-    for (const auto &pType : reactions.order2()) {
-        for (const auto &reaction : pType.second) {
-            pimpl->reactionCounts[(reaction)->id()] = 0;
+    if(!pimpl->reactionCounts.empty()) {
+        for(auto &e : pimpl->reactionCounts) {
+            e.second = 0;
         }
-    }
-    for (const auto &pType : reactions.order1()) {
-        for (const auto &reaction : pType.second) {
-            pimpl->reactionCounts[(reaction)->id()] = 0;
+    } else {
+        const auto &reactions = _context.get().reactions();
+        for (const auto &entry : reactions.order1()) {
+            for (auto reaction : entry.second) {
+                pimpl->reactionCounts[reaction->id()] = 0;
+            }
+        }
+        for (const auto &entry : reactions.order2()) {
+            for (auto reaction : entry.second) {
+                pimpl->reactionCounts[reaction->id()] = 0;
+            }
         }
     }
 }

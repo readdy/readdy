@@ -414,67 +414,70 @@ ReactionRegistry::addDecay(const std::string &name, particle_type_type type, sca
 
 namespace {
 struct FindId {
-    explicit FindId(std::string name) : name(std::move(name)) {}
+    explicit FindId(std::string name, Reaction::reaction_id &id) : name(std::move(name)), id(id) {}
 
-    std::string name;
-    Reaction::reaction_id id = 0;
-    bool found = false;
+    std::string name {""};
+    std::reference_wrapper<Reaction::reaction_id> id;
+    std::shared_ptr<bool> found = std::make_shared<bool>(false);
 
     template<typename T>
     void operator()(const T &reaction) {
         if (reaction->name() == name) {
-            found = true;
-            id = reaction->id();
+            *found = true;
+            id.get() = reaction->id();
         };
     }
 };
 
 struct FindName {
-    explicit FindName(Reaction::reaction_id id) : id(id) {}
+    explicit FindName(Reaction::reaction_id id, std::string &name) : id(id), name(name) {}
 
-    Reaction::reaction_id id;
-    std::string name = "";
-    bool found = false;
+    Reaction::reaction_id id {0};
+    std::reference_wrapper<std::string> name;
+    std::shared_ptr<bool> found = std::make_shared<bool>(false);
 
     template<typename T>
     void operator()(const T &reaction) {
         if (reaction->id() == id) {
-            found = true;
-            name = reaction->name();
+            *found = true;
+            name.get() = reaction->name();
         };
     }
 };
 }
 
 bool ReactionRegistry::reactionNameExists(const std::string &name) const {
-    FindId findId(name);
+    Reaction::reaction_id id;
+    FindId findId(name, id);
     readdy::util::collections::for_each_value_ref(one_educt_registry_internal, findId);
     readdy::util::collections::for_each_value_ref(one_educt_registry_external, findId);
     readdy::util::collections::for_each_value_ref(two_educts_registry_internal, findId);
     readdy::util::collections::for_each_value_ref(two_educts_registry_external, findId);
-    return findId.found;
+    return *(findId.found);
 }
 
 std::string ReactionRegistry::nameOf(ReactionRegistry::reaction_id id) const {
-    FindName findName(id);
+    std::string name;
+    FindName findName(id, name);
     readdy::util::collections::for_each_value_ref(one_educt_registry_internal, findName);
     readdy::util::collections::for_each_value_ref(one_educt_registry_external, findName);
     readdy::util::collections::for_each_value_ref(two_educts_registry_internal, findName);
     readdy::util::collections::for_each_value_ref(two_educts_registry_external, findName);
-    if (findName.found) {
-        return findName.name;
+    if (*(findName.found)) {
+        return name;
     } else {
         throw std::runtime_error(fmt::format("no reaction with id {} exists", id));
     }
 }
 
 ReactionRegistry::reaction_id ReactionRegistry::idOf(const std::string &name) const {
-    FindId findId(name);
+    Reaction::reaction_id id;
+    FindId findId(name, id);
     readdy::util::collections::for_each_value_ref(one_educt_registry_internal, findId);
     readdy::util::collections::for_each_value_ref(one_educt_registry_external, findId);
     readdy::util::collections::for_each_value_ref(two_educts_registry_internal, findId);
     readdy::util::collections::for_each_value_ref(two_educts_registry_external, findId);
-    if (findId.found) {
+    if (*(findId.found)) {
         return findId.id;
     } else {
         throw std::runtime_error(fmt::format("no reaction with name {} exists", name));

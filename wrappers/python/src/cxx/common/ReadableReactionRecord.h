@@ -38,73 +38,29 @@
 namespace rpy {
 
 struct ReadableReactionRecord {
-    ReadableReactionRecord() : type(""), reaction_label(""), educts(), products(), where() {}
+    ReadableReactionRecord();
+
+    ReadableReactionRecord(const ReadableReactionRecord &) = default;
+
+    ReadableReactionRecord &operator=(const ReadableReactionRecord &) = default;
+
+    ReadableReactionRecord(ReadableReactionRecord &&) = default;
+
+    ReadableReactionRecord &operator=(ReadableReactionRecord &&) = default;
+
+    ~ReadableReactionRecord() = default;
 
     std::string type;
     std::string reaction_label;
     std::vector<readdy::model::Particle::id_type> educts;
     std::vector<readdy::model::Particle::id_type> products;
     readdy::Vec3::data_arr where;
+
+    friend std::ostream &operator<<(std::ostream &os, const ReadableReactionRecord &rrr);
 };
 
-inline ReadableReactionRecord
-convert(const readdy::model::reactions::ReactionRecord &reaction, const char* name) {
-    rpy::ReadableReactionRecord rrr {};
-    rrr.where = reaction.where.data;
-    rrr.reaction_label = name;
-    auto tt = readdy::model::reactions::ReactionType(reaction.type);
-    switch(tt) {
-        case readdy::model::reactions::ReactionType::Conversion:{
-            rrr.educts = {reaction.educts[0]};
-            rrr.products = {reaction.products[0]};
-            rrr.type = "conversion";
-            break;
-        };
-        case readdy::model::reactions::ReactionType::Fusion: {
-            rrr.educts = {reaction.educts[0], reaction.educts[1]};
-            rrr.products = {reaction.products[0]};
-            rrr.type = "fusion";
-            break;
-        };
-        case readdy::model::reactions::ReactionType::Fission: {
-            rrr.educts = {reaction.educts[0]};
-            rrr.products = {reaction.products[0], reaction.products[1]};
-            rrr.type = "fission";
-            break;
-        };
-        case readdy::model::reactions::ReactionType::Enzymatic: {
-            rrr.educts = {reaction.educts[0], reaction.educts[1]};
-            rrr.products = {reaction.products[0], reaction.products[1]};
-            rrr.type = "enzymatic";
-            break;
-        };
-        case readdy::model::reactions::ReactionType::Decay: {
-            rrr.educts = {reaction.educts[0]};
-            rrr.products = {};
-            rrr.type = "decay";
-            break;
-        };
-    }
-    return rrr;
-}
+ReadableReactionRecord convert(const readdy::model::reactions::ReactionRecord &reaction, const std::string &name);
 
-inline std::string repr(const ReadableReactionRecord &rrr) {
-    std::stringstream result;
-
-    result << "Reaction[type=" << rrr.type << ", label="<< rrr.reaction_label << ", educts=[";
-    if(rrr.educts.size() == 1) {
-        result << rrr.educts.at(0) << "]";
-    } else {
-        result << rrr.educts.at(0) << ", " << rrr.educts.at(1) << "]";
-    }
-    result << ", products=[";
-    if(rrr.products.size() == 1) {
-        result << rrr.products.at(0) << "]";
-    } else if (rrr.products.size() == 2){
-        result << rrr.products.at(0) << ", " << rrr.products.at(1) << "]";
-    }
-    result << ", position=(" << rrr.where.at(0) << ", " << rrr.where.at(1) << ", " << rrr.where.at(2) << ")]";
-    return result.str();
-}
+std::string repr(const ReadableReactionRecord &rrr);
 
 }

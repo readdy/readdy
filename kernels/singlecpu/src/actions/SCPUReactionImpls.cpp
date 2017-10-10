@@ -131,7 +131,9 @@ void SCPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
     const auto &ctx = kernel->context();
     const auto &fixPos = ctx.fixPositionFun();
     SCPUStateModel &stateModel = kernel->getSCPUKernelStateModel();
-    if(ctx.recordReactionsWithPositions()) stateModel.reactionRecords().clear();
+    if(ctx.recordReactionsWithPositions()) {
+        stateModel.reactionRecords().clear();
+    }
     if(ctx.recordReactionCounts()) {
         stateModel.resetReactionCounts();
     }
@@ -146,12 +148,14 @@ void SCPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
         scpu_data::new_entries newParticles{};
         std::vector<scpu_data::entry_index> decayedEntries{};
 
+        readdy::model::reactions::Reaction *reaction;
+
         for (auto it = events.begin(); it != events.end(); ++it) {
             auto &event = *it;
             if (event.cumulativeRate == 0) {
                 auto entry1 = event.idx1;
                 if (event.nEducts == 1) {
-                    auto reaction = ctx.reactions().order1ByType(event.t1)[event.reactionIndex];
+                    reaction = ctx.reactions().order1ByType(event.t1)[event.reactionIndex];
                     if(ctx.recordReactionsWithPositions()) {
                         reaction_record record;
                         record.id = reaction->id();
@@ -160,17 +164,13 @@ void SCPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
                     } else {
                         performReaction(data, entry1, entry1, newParticles, decayedEntries, reaction, fixPos, nullptr);
                     }
-                    if(ctx.recordReactionCounts()) {
-                        auto &counts = stateModel.reactionCounts();
-                        counts.at(reaction->id())++;
-                    }
                     for (auto _it2 = it + 1; _it2 != events.end(); ++_it2) {
                         if (_it2->idx1 == entry1 || _it2->idx2 == entry1) {
                             _it2->cumulativeRate = 1;
                         }
                     }
                 } else {
-                    auto reaction = ctx.reactions().order2ByType(event.t1, event.t2)[event.reactionIndex];
+                    reaction = ctx.reactions().order2ByType(event.t1, event.t2)[event.reactionIndex];
                     if(ctx.recordReactionsWithPositions()) {
                         reaction_record record;
                         record.id = reaction->id();
@@ -179,16 +179,16 @@ void SCPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
                     } else {
                         performReaction(data, entry1, event.idx2, newParticles, decayedEntries, reaction, fixPos, nullptr);
                     }
-                    if(ctx.recordReactionCounts()) {
-                        auto &counts = stateModel.reactionCounts();
-                        counts.at(reaction->id())++;
-                    }
                     for (auto _it2 = it + 1; _it2 != events.end(); ++_it2) {
                         if (_it2->idx1 == entry1 || _it2->idx2 == entry1 ||
                             _it2->idx1 == event.idx2 || _it2->idx2 == event.idx2) {
                             _it2->cumulativeRate = 1;
                         }
                     }
+                }
+                // update reaction counts if necessary
+                if(ctx.recordReactionCounts()) {
+                    stateModel.reactionCounts().at(reaction->id())++;
                 }
             }
         }
@@ -306,14 +306,13 @@ scpu_data::entries_update handleEventsGillespie(
                                 record.id = reaction->id();
                                 performReaction(*data, entry1, entry1, newParticles, decayedEntries, reaction, fixPos,
                                                 &record);
-                                model.reactionRecords().push_back(std::move(record));
+                                model.reactionRecords().push_back(record);
                             } else {
                                 performReaction(*data, entry1, entry1, newParticles, decayedEntries, reaction, fixPos,
                                                 nullptr);
                             }
                             if(ctx.recordReactionCounts()) {
-                                auto &counts = model.reactionCounts();
-                                counts.at(reaction->id())++;
+                                model.reactionCounts().at(reaction->id())++;
                             }
                         } else {
                             auto reaction = ctx.reactions().order2ByType(event.t1, event.t2)[event.reactionIndex];
@@ -321,13 +320,12 @@ scpu_data::entries_update handleEventsGillespie(
                                 reaction_record record;
                                 record.id = reaction->id();
                                 performReaction(*data, entry1, event.idx2, newParticles, decayedEntries, reaction, fixPos, &record);
-                                model.reactionRecords().push_back(std::move(record));
+                                model.reactionRecords().push_back(record);
                             } else {
                                 performReaction(*data, entry1, event.idx2, newParticles, decayedEntries, reaction, fixPos, nullptr);
                             }
                             if(ctx.recordReactionCounts()) {
-                                auto &counts = model.reactionCounts();
-                                counts.at(reaction->id())++;
+                                model.reactionCounts().at(reaction->id())++;
                             }
                         }
                     }

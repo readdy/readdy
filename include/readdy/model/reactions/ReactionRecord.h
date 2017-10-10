@@ -46,8 +46,10 @@ struct ReactionRecord {
     std::array<Particle::id_type, 2> products {{0, 0}};
     std::array<Particle::type_type, 2> types_from {{0, 0}};
     Vec3 where {0, 0, 0};
-    // std::size_t reactionIndex {0};
-    readdy::model::reactions::Reaction::reaction_id id {0}; // global unique reaction id
+    /**
+     * unique reaction id
+     */
+    readdy::model::reactions::Reaction::reaction_id id {0};
 
     friend std::ostream &operator<<(std::ostream &os, const ReactionRecord &record);
 };

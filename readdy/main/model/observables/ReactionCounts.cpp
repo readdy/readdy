@@ -32,7 +32,6 @@
 
 #include <readdy/io/BloscFilter.h>
 #include <readdy/model/observables/ReactionCounts.h>
-#include <readdy/model/IOUtils.h>
 #include <readdy/model/Kernel.h>
 #include <readdy/model/observables/io/Types.h>
 #include <readdy/model/observables/io/TimeSeriesWriter.h>
@@ -48,11 +47,10 @@ struct ReactionCounts::Impl {
     std::unique_ptr<h5rd::Group> group;
     data_set_map dataSets;
     std::unique_ptr<util::TimeSeriesWriter> time;
-    bool shouldWrite = false;
     unsigned int flushStride = 0;
     bool firstWrite = true;
     std::function<void(std::unique_ptr<data_set> &)> flushFun = [](std::unique_ptr<data_set> &value) {
-        value->flush();
+        if(value) value->flush();
     };
     io::BloscFilter bloscFilter {};
 };
@@ -78,36 +76,33 @@ void ReactionCounts::initializeDataSet(File &file, const std::string &dataSetNam
     pimpl->firstWrite = true;
     pimpl->group = std::make_unique<h5rd::Group>(
             file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName));
-    pimpl->shouldWrite = true;
     pimpl->flushStride = flushStride;
     pimpl->time = std::make_unique<util::TimeSeriesWriter>(*pimpl->group, flushStride);
 }
 
 void ReactionCounts::append() {
     if (pimpl->firstWrite) {
-        const auto &reactionRegistry = kernel->context().reactions();
-        if (pimpl->shouldWrite) {
-            auto subgroup = pimpl->group->createGroup("counts");
-            for (const auto &reaction : reactionRegistry.order1Flat()) {
-                h5rd::dimensions chunkSize = {pimpl->flushStride};
-                h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
-                auto dset = subgroup.createDataSet<std::size_t>(std::to_string(reaction->id()), chunkSize, dims,
-                                                                     {&pimpl->bloscFilter});
-                pimpl->dataSets.emplace(std::make_pair(reaction->id(), std::move(dset)));
-            }
-            for (const auto &reaction : reactionRegistry.order2Flat()) {
-                h5rd::dimensions chunkSize = {pimpl->flushStride};
-                h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
-                auto dset = subgroup.createDataSet<std::size_t>(std::to_string(reaction->id()), chunkSize, dims,
-                                                                {&pimpl->bloscFilter});
-                pimpl->dataSets.emplace(std::make_pair(reaction->id(), std::move(dset)));
-            }
-        }
-        ioutils::writeReactionInformation(*pimpl->group, kernel->context());
         pimpl->firstWrite = false;
+        const auto &reactionRegistry = kernel->context().reactions();
+        auto subgroup = pimpl->group->createGroup("counts");
+        for (const auto &reaction : reactionRegistry.order1Flat()) {
+            h5rd::dimensions chunkSize = {pimpl->flushStride};
+            h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
+            auto dset = subgroup.createDataSet<std::size_t>(std::to_string(reaction->id()), chunkSize, dims,
+                                                                 {&pimpl->bloscFilter});
+            pimpl->dataSets[reaction->id()] = std::move(dset);
+        }
+        for (const auto &reaction : reactionRegistry.order2Flat()) {
+            h5rd::dimensions chunkSize = {pimpl->flushStride};
+            h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
+            auto dset = subgroup.createDataSet<std::size_t>(std::to_string(reaction->id()), chunkSize, dims,
+                                                            {&pimpl->bloscFilter});
+            pimpl->dataSets[reaction->id()] = std::move(dset);
+        }
     }
     for (const auto &reactionEntry : result) {
-        pimpl->dataSets.at(reactionEntry.first)->append({1}, &(reactionEntry.second));
+        auto copy = reactionEntry.second;
+        pimpl->dataSets.at(reactionEntry.first)->append({1}, &copy);
     }
     pimpl->time->append(t_current);
 }

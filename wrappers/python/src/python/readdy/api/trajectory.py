@@ -27,16 +27,17 @@ Created on 28.09.17
 
 import os as _os
 
-import readdy.util.io_utils as _io_utils
-from readdy._internal.readdybinding.common.util import read_trajectory as _read_trajectory
-from readdy._internal.readdybinding.common.util import read_reaction_observable as _read_reaction_observable
 import h5py as _h5py
+from readdy._internal.readdybinding.common.util import read_reaction_observable as _read_reaction_observable
+from readdy._internal.readdybinding.common.util import read_trajectory as _read_trajectory
+
+import readdy.util.io_utils as _io_utils
 
 
 class ReactionInfo:
     def __init__(self, name, uuid, n_educts, n_products, rate, educt_distance, product_distance, educt_types,
                  product_types, inverse_types_map):
-        self._name = name
+        self._name = str(name)
         self._id = uuid
         self._n_educts = n_educts
         self._n_products = n_products
@@ -245,11 +246,11 @@ class Trajectory(object):
         :return: a tuple of lists, where the first element contains a list of simulation times and the second element
                  contains a list of (N, 3)-shaped arrays, where N is the number of particles in that time step
         """
-        with _h5py.File(self._filename, "r") as f2:
-            if not "readdy/observables/particle_positions/"+data_set_name in f2:
+        with _h5py.File(self._filename, "r") as f:
+            if not "readdy/observables/particle_positions/" + data_set_name in f:
                 raise ValueError("The particle positions observable was not recorded in the file or recorded under a "
                                  "different name!")
-            group = f2["readdy/observables/particle_positions/"+data_set_name]
+            group = f["readdy/observables/particle_positions/" + data_set_name]
             time = group["time"][:]
             data = group["data"][:]
             return time, data
@@ -265,12 +266,12 @@ class Trajectory(object):
                     * the third element contains  a list of lists of unique ids for each particle
                     * the fourth element contains a list of lists of particle positions
         """
-        with _h5py.File(self._filename, "r") as f2:
+        with _h5py.File(self._filename, "r") as f:
             group_path = "readdy/observables/particles/" + data_set_name
-            if not group_path in f2:
+            if not group_path in f:
                 raise ValueError("The particles observable was not recorded in the file or recorded under a different "
                                  "name!")
-            group = f2[group_path]
+            group = f[group_path]
             types = group["types"][:]
             ids = group["ids"][:]
             positions = group["positions"][:]
@@ -284,11 +285,11 @@ class Trajectory(object):
         :return: a tuple of lists containing (simulation time with shape (T,), bin centers with shape (N, ),
                     distribution value with shape (T, N))
         """
-        with _h5py.File(self._filename, "r") as f2:
+        with _h5py.File(self._filename, "r") as f:
             group_path = "readdy/observables/" + data_set_name
-            if not group_path in f2:
+            if not group_path in f:
                 raise ValueError("The rdf observable was not recorded in the file or recorded under a different name!")
-            group = f2[group_path]
+            group = f[group_path]
             time = group["time"][:]
             bin_centers = group["bin_centers"][:]
             distribution = group["distribution"][:]
@@ -302,12 +303,12 @@ class Trajectory(object):
                     each specified type
         """
         group_path = "readdy/observables/" + data_set_name
-        with _h5py.File(self._filename, "r") as f2:
-            if not group_path in f2:
+        with _h5py.File(self._filename, "r") as f:
+            if not group_path in f:
                 raise ValueError("The number of particles observable was not recorded in the file or recorded under a "
                                  "different name!")
-            time = f2[group_path]["time"][:]
-            counts = f2[group_path]["data"][:]
+            time = f[group_path]["time"][:]
+            counts = f[group_path]["data"][:]
             return time, counts
 
     def read_observable_reactions(self, data_set_name="reactions"):
@@ -319,12 +320,31 @@ class Trajectory(object):
         """
         time = None
         group_path = "readdy/observables/" + data_set_name
-        with _h5py.File(self._filename, "r") as f2:
-            if not group_path in f2:
+        with _h5py.File(self._filename, "r") as f:
+            if not group_path in f:
                 raise ValueError("The reactions observable was not recorded in the file or recorded under a "
                                  "different name!")
-            time = f2[group_path]["time"][:]
+            time = f[group_path]["time"][:]
         return time, _read_reaction_observable(self._filename, data_set_name)
+
+    def read_observable_reaction_counts(self, data_set_name="reaction_counts"):
+        """
+        Reads back the output of the "reaction_counts" observable
+        :param data_set_name: The data set name as given in the simulation setup
+        :return:
+        """
+        group_path = "readdy/observables/" + data_set_name
+        with _h5py.File(self._filename, "r") as f:
+            if not group_path in f:
+                raise ValueError("The reaction counts observable was not recorded in the file or recorded under a "
+                                 "different name!")
+            time = f[group_path]["time"][:]
+            counts = {}
+            counts_group = f[group_path]["counts"]
+            for reaction in self.reactions:
+                if str(reaction.reaction_id) in counts_group:
+                    counts[reaction.name] = counts_group[str(reaction.reaction_id)][:]
+            return time, counts
 
     def read_observable_forces(self, data_set_name="forces"):
         """
@@ -341,5 +361,3 @@ class Trajectory(object):
             time = f[group_path]["time"][:]
             forces = f[group_path]["data"][:]
             return time, forces
-
-    # todo reaction counts

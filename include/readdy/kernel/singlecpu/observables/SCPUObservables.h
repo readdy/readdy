@@ -226,11 +226,8 @@ public:
     ~SCPUReactions() override = default;
 
     void evaluate() override {
-        const auto& model = kernel->getSCPUKernelStateModel();
-        const auto& records = model.reactionRecords();
-        result.clear();
-        result.reserve(records.size());
-        result.insert(result.end(), records.begin(), records.end());
+        const auto &records = kernel->getSCPUKernelStateModel().reactionRecords();
+        result = records;
     }
 
 private:

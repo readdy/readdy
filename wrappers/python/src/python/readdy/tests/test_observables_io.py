@@ -333,6 +333,9 @@ class TestObservablesIO(ReaDDyTestCase):
             handle.enable_write_to_file(f, u"reactions", int(3))
             sim.run_scheme_readdy(True).write_config_to_file(f).with_reaction_scheduler("Gillespie").configure_and_run(n_timesteps, 1)
 
+        import readdy.util.io_utils as io_utils
+        reactions = io_utils.get_reactions(fname)
+
         with h5py.File(fname, "r") as f2:
             data = f2["readdy/observables/reactions"]
             time_series = f2["readdy/observables/reactions/time"]
@@ -341,11 +344,9 @@ class TestObservablesIO(ReaDDyTestCase):
             def get_item(name, collection):
                 return next(x for x in collection if x["name"] == name)
 
-            reactions = data["registered_reactions"]
-
-            mylabel_id = get_item("mylabel", reactions)["id"]
-            atob_id = get_item("A->B", reactions)["id"]
-            fusion_id = get_item("B+C->A", reactions)["id"]
+            mylabel_id = get_item("mylabel", reactions.values())["id"]
+            atob_id = get_item("A->B", reactions.values())["id"]
+            fusion_id = get_item("B+C->A", reactions.values())["id"]
 
             # counts of first time step, time is first index
             np.testing.assert_equal(data["counts/"+str(mylabel_id)][0], np.array([0]))

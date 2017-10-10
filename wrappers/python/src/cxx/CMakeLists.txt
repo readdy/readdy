@@ -28,6 +28,7 @@ set(SOURCE_FILES
         common/CommonModule.cpp
         common/ExportIO.cpp
         common/ReadableReactionRecord.h
+        common/ReadableReactionRecord.cpp
         common/SpdlogPythonSink.h
         common/Utils.cpp
         api/ExportObservables.h

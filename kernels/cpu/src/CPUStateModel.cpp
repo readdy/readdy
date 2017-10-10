@@ -281,15 +281,21 @@ scalar CPUStateModel::energy() const {
 }
 
 void CPUStateModel::resetReactionCounts() {
-    const auto &reactions = _context.get().reactions();
-    for (const auto &pType : reactions.order2()) {
-        for (const auto &reaction : pType.second) {
-            _reactionCounts[(reaction)->id()] = 0;
+    if(!_reactionCounts.empty()) {
+        for(auto &e : _reactionCounts) {
+            e.second = 0;
         }
-    }
-    for (const auto &pType : reactions.order1()) {
-        for (const auto &reaction : pType.second) {
-            _reactionCounts[(reaction)->id()] = 0;
+    } else {
+        const auto &reactions = _context.get().reactions();
+        for (const auto &entry : reactions.order1()) {
+            for (auto reaction : entry.second) {
+                _reactionCounts[reaction->id()] = 0;
+            }
+        }
+        for (const auto &entry : reactions.order2()) {
+            for (auto reaction : entry.second) {
+                _reactionCounts[reaction->id()] = 0;
+            }
         }
     }
 }

@@ -47,12 +47,15 @@ class ReactionCounts : public Observable<reactions::reaction_counts_map> {
 public:
     using reaction_counts_map = result_type;
 
-    ReactionCounts(Kernel* kernel, unsigned int stride);
+    ReactionCounts(Kernel *kernel, unsigned int stride);
 
-    ReactionCounts(const ReactionCounts&) = delete;
-    ReactionCounts& operator=(const ReactionCounts&) = delete;
-    ReactionCounts(ReactionCounts&&) = default;
-    ReactionCounts& operator=(ReactionCounts&&) = delete;
+    ReactionCounts(const ReactionCounts &) = delete;
+
+    ReactionCounts &operator=(const ReactionCounts &) = delete;
+
+    ReactionCounts(ReactionCounts &&) = default;
+
+    ReactionCounts &operator=(ReactionCounts &&) = delete;
 
     virtual ~ReactionCounts();
 
@@ -60,7 +63,7 @@ public:
 
 
 protected:
-    void initialize(Kernel* kernel) override;
+    void initialize(Kernel *kernel) override;
 
     void initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) override;
 

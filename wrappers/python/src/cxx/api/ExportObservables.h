@@ -34,9 +34,10 @@
 #define READDY_MAIN_EXPORTOBSERVABLES_H
 
 #include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
+#include <pybind11/stl.h>
 #include <readdy/model/observables/Observables.h>
 #include <readdy/api/Simulation.h>
-#include <pybind11/numpy.h>
 #include <readdy/model/observables/io/Trajectory.h>
 #include "PyFunction.h"
 #include "../common/ReadableReactionRecord.h"
@@ -52,15 +53,21 @@ inline obs_handle_t registerObservable_Reactions(sim &self, unsigned int stride,
     if (callback.is_none()) {
         return self.registerObservable<readdy::model::observables::Reactions>(stride);
     } else {
-        auto pyFun = readdy::rpy::PyFunction<void(std::vector<rpy::ReadableReactionRecord>)>(callback);
-        auto internalCallback = [&self, pyFun](const readdy::model::observables::Reactions::result_type &reactions) mutable {
-            std::vector<rpy::ReadableReactionRecord> converted;
+        auto internalCallback = [&self, callback](const readdy::model::observables::Reactions::result_type &reactions) mutable {
+            py::gil_scoped_acquire gil;
+            std::vector<rpy::ReadableReactionRecord> converted {};
             converted.reserve(reactions.size());
             const auto &reactionRegistry = self.currentContext().reactions();
             for(const auto &reaction : reactions) {
-                converted.push_back(rpy::convert(reaction, reactionRegistry.nameOf(reaction.id).c_str()));
+                auto name = reactionRegistry.nameOf(reaction.id);
+                converted.emplace_back(rpy::convert(reaction, name));
             }
-            pyFun(std::move(converted));
+            for(const auto &c : converted) {
+                std::stringstream ss;
+                ss << c;
+
+            }
+            callback(converted);
         };
         return self.registerObservable<readdy::model::observables::Reactions>(internalCallback, stride);
     }
