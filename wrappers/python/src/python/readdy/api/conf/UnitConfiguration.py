@@ -30,26 +30,62 @@ from . import Q_ as _Q_
 
 
 class UnitConfiguration(object):
-    def __init__(self, length_unit='nanometer', time_unit='nanosecond', energy_unit='kilojoule/mol'):
+    def __init__(self, length_unit='nanometer', time_unit='nanosecond', energy_unit='kilojoule/mol',
+                 temperature_unit='kelvin'):
         self._length_unit = _ureg.parse_units(length_unit)
         self._time_unit = _ureg.parse_units(time_unit)
         self._energy_unit = _ureg.parse_units(energy_unit)
+        self._temperature_unit = _ureg.parse_units(temperature_unit)
+        self._boltzmann = _ureg.parse_units('boltzmann_constant')
+        self._avogadro = _ureg.parse_units('avogadro_number')
 
     @property
     def reg(self):
         return _ureg
 
     @property
+    def boltzmann(self):
+        return self._boltzmann
+
+    @property
+    def avogadro(self):
+        return self._avogadro
+
+    @property
+    def temperature_unit(self):
+        return self._temperature_unit
+
+    @temperature_unit.setter
+    def temperature_unit(self, value):
+        assert isinstance(value, _ureg.Unit), "temperature unit can only be an instance of unit"
+        self._temperature_unit = value
+
+    @property
     def length_unit(self):
         return self._length_unit
+
+    @length_unit.setter
+    def length_unit(self, value):
+        assert isinstance(value, _ureg.Unit), "length unit can only be an instance of unit"
+        self._length_unit = value
 
     @property
     def time_unit(self):
         return self._time_unit
 
+    @time_unit.setter
+    def time_unit(self, value):
+        assert isinstance(value, _ureg.Unit), "time unit can only be an instance of unit"
+        self._time_unit = value
+
     @property
     def energy_unit(self):
         return self._energy_unit
+
+    @energy_unit.setter
+    def energy_unit(self, value):
+        assert isinstance(value, _ureg.Unit), "energy_unit unit can only be an instance of unit"
+        self._energy_unit = value
 
     @property
     def force_constant_unit(self):
@@ -74,6 +110,7 @@ class NoUnitConfiguration(UnitConfiguration):
         super().__init__()
         self._length_unit = 1.
         self._time_unit = 1.
+        self._temperature_unit = 1.
         self._energy_unit = 1.
 
     def convert(self, value, target_units):

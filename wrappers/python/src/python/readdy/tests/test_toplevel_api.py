@@ -39,13 +39,26 @@ class TestTopLevelAPI(ReaDDyTestCase):
     A bunch of sanity checks
     """
 
-    def test_kbt(self):
+    def test_temperature(self):
         rdf = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.])
-        rdf.kbt = 5.
-        np.testing.assert_equal(rdf.kbt, 5. * rdf.energy_unit)
+        rdf.temperature = 293.
+        np.testing.assert_equal(rdf.temperature, 293. * rdf.temperature_unit)
+        np.testing.assert_almost_equal(rdf.kbt.magnitude, (2.4361374086224026 * rdf.energy_unit).magnitude)
+
+    def test_temperature_unitless(self):
+        rdf = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.], unit_system=None)
+        rdf.temperature = 293
+        np.testing.assert_equal(rdf.temperature, 293)
+        np.testing.assert_almost_equal(rdf.kbt, 2.4361374086224026)
+
+    def test_other_units(self):
+        rdf = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.], unit_system={'length_unit': 'kilometer'})
+        rdf = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.], unit_system={'time_unit': 'hour'})
+        rdf = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.], unit_system={'energy_unit': 'kcal/mol'})
+        rdf = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.], unit_system={'temperature_unit': 'rankine'})
 
     def test_box_size(self):
-        rdf = readdy.ReactionDiffusionSystem([1., 2., 3.], length_unit=None, time_unit=None, energy_unit=None)
+        rdf = readdy.ReactionDiffusionSystem([1., 2., 3.], unit_system=None)
         np.testing.assert_equal(rdf.box_size, [1., 2., 3.])
         rdf.box_size = np.array([5., 6., 7.])
         np.testing.assert_equal(rdf.box_size, [5., 6., 7.])

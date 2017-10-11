@@ -44,37 +44,45 @@ __all__ = ['ReactionDiffusionSystem']
 
 
 class ReactionDiffusionSystem(object):
-    def __init__(self, box_size, kbt=None, periodic_boundary_conditions=None,
-                 length_unit='nanometer', time_unit='nanosecond', energy_unit='kilojoule/mol'):
+    def __init__(self, box_size, temperature=None, periodic_boundary_conditions=None, unit_system='default'):
         """
         Constructs a new reaction diffusion system, starting point for all reaction diffusion simulations.
 
-        If all units are empty or None, the system will be completely dimensionless.
+        If the unit_system is set to 'default', the units
+          - nanometer for lengths,
+          - nanosecond for time,
+          - kilojoule/mole for energy,
+          - kelvin for temperature are used.
+        If the unit_system is set to `None`, all units along with the avogadro number and boltzmann constant will be
+        set to 1. except for energy being kJ/mole, effectively yielding a unitless system.
+        If custom units should be used, one can also provide a dictionary containing the keys 'length_unit',
+        'time_unit', 'energy_unit', 'temperature_unit'.
 
         :param box_size: size of the simulation box [length]
-        :param kbt: temperature, per default room temperature in the selected units (2.437 kJ/mol)
+        :param temperature: temperature, per default room temperature in the selected units
         :param periodic_boundary_conditions: periodic boundary conditions, per default all periodic
-        :param length_unit: the length unit to use
-        :param time_unit: the time unit to use
-        :param energy_unit: the energy unit to use
+        :param unit_system: can be set to 'default', None, or dictionary
         """
         self._context = _Context()
-        if not length_unit and not time_unit and not energy_unit:
+        if unit_system is None or not unit_system:
             self._unit_conf = _NoUnitConfiguration()
         else:
-            self._unit_conf = _UnitConfiguration(length_unit, time_unit, energy_unit)
+            args = {}
+            if isinstance(unit_system, dict):
+                args = unit_system
+            self._unit_conf = _UnitConfiguration(**args)
         self._compartment_registry = _CompartmentRegistry(self._context.compartments, self._unit_conf)
         self._topology_registry = _TopologyRegistry(self._context.topologies, self._unit_conf)
         self._potential_registry = _PotentialRegistry(self._context.potentials, self._unit_conf)
         self._reaction_registry = _ReactionRegistry(self._context.reactions, self._unit_conf)
 
-        if kbt is None:
-            kbt = 2.437 * self.units.kilojoule / self.units.mol
+        if temperature is None:
+            temperature = 293. * self.units.kelvin
         if periodic_boundary_conditions is None:
             periodic_boundary_conditions = [True, True, True]
 
         self.box_size = box_size
-        self.kbt = kbt
+        self.temperature = temperature
         self.periodic_boundary_conditions = periodic_boundary_conditions
 
     @property
@@ -112,6 +120,14 @@ class ReactionDiffusionSystem(object):
         return self._unit_conf.time_unit
 
     @property
+    def temperature_unit(self):
+        """
+        Returns the system's temperature unit. This is a property that can only be set in the constructor.
+        :return: the temperature unit
+        """
+        return self._unit_conf.temperature_unit
+
+    @property
     def kbt(self):
         """
         Returns the thermal energy of the system.
@@ -119,14 +135,34 @@ class ReactionDiffusionSystem(object):
         """
         return self._context.kbt * self.energy_unit
 
-    @kbt.setter
-    def kbt(self, value):
+    @property
+    def temperature(self):
+        """
+        Retrieves the set temperature.
+        :return: the temperature [temperature]
+        """
+        kbt = self.kbt
+        if self.temperature_unit != 1.:
+            return (kbt / (self._unit_conf.boltzmann * self._unit_conf.avogadro)).to(self.temperature_unit)
+        else:
+            return (kbt * (self.units.kilojoule / self.units.mole) /
+                    (self.units.boltzmann_constant * self.units.avogadro_number))\
+                .to(self.units.kelvin).magnitude
+
+    @temperature.setter
+    def temperature(self, value):
         """
         Sets the thermal energy of the system.
         :param value: the new thermal energy [energy]
         """
-        value = self._unit_conf.convert(value, self.energy_unit)
-        self._context.kbt = value
+        value = self._unit_conf.convert(value, self.temperature_unit)
+        if self.temperature_unit != 1:
+            kbt = self._unit_conf.convert(value * self.temperature_unit * self._unit_conf.boltzmann
+                                          * self._unit_conf.avogadro, self.energy_unit)
+        else:
+            kbt = (value * self.units.kelvin * self.units.boltzmann_constant * self.units.avogadro_number)\
+                .to(self.units.kilojoule / self.units.mole).magnitude
+        self._context.kbt = kbt
 
     @property
     def box_size(self):

@@ -61,3 +61,7 @@ class TestUnits(ReaDDyTestCase):
         sys = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.])
         angle = 180 * sys.units.degree
         np.testing.assert_equal(np.pi, angle.to(sys.units.radians).magnitude)
+
+    def test_foo(self):
+        conf = UnitConfiguration()
+        print(conf.reg.boltzmann_constant)
