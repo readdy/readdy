@@ -152,8 +152,8 @@ class ReactionDiffusionSystem(object):
     @temperature.setter
     def temperature(self, value):
         """
-        Sets the thermal energy of the system.
-        :param value: the new thermal energy [energy]
+        Sets the temperature of the system.
+        :param value: the new temperature [temperature]
         """
         value = self._unit_conf.convert(value, self.temperature_unit)
         if self.temperature_unit != 1:
