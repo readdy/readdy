@@ -44,24 +44,25 @@ public:
     PotentialOrder2Wrapper(particle_type_type particleType1, particle_type_type particleType2,
                            pybind11::object o1, pybind11::object o2);
 
-    virtual readdy::scalar calculateEnergy(const Vec3 &x_ij) const override;
+    readdy::scalar calculateEnergy(const Vec3 &x_ij) const override;
 
-    virtual void calculateForce(Vec3 &force, const Vec3 &x_ij) const override;
+    void calculateForce(Vec3 &force, const Vec3 &x_ij) const override;
 
-    virtual void calculateForceAndEnergy(Vec3 &force, readdy::scalar &energy, const Vec3 &x_ij) const override;
+    void calculateForceAndEnergy(Vec3 &force, readdy::scalar &energy, const Vec3 &x_ij) const override;
 
-    virtual readdy::scalar getCutoffRadius() const override {
+    readdy::scalar getCutoffRadius() const override {
         // todo!
         return 50;
     }
 
-    virtual readdy::scalar getMaximalForce(readdy::scalar kbt) const noexcept override {
+    readdy::scalar getMaximalForce(readdy::scalar kbt) const noexcept override {
         // todo!
         return 0;
     }
 
-    virtual readdy::scalar getCutoffRadiusSquared() const override;
+    readdy::scalar getCutoffRadiusSquared() const override;
 
+    std::string type() const override;
 
 protected:
     std::shared_ptr<pybind11::object> calcEnergyFun;

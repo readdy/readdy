@@ -29,8 +29,9 @@ Created on 26.09.17
 from readdy.api.utils import vec3_of as _v3_of
 
 class CompartmentRegistry(object):
-    def __init__(self, context_compartments):
+    def __init__(self, context_compartments, units):
         self._compartments = context_compartments
+        self._units = units
 
     def add_sphere(self, conversions, name, origin, radius, larger_or_less=False):
         """
@@ -62,6 +63,8 @@ class CompartmentRegistry(object):
             raise ValueError("radius must be positive")
         if not isinstance(larger_or_less, bool):
             raise ValueError("larger_or_less must be a bool")
+        origin = self._units.convert(origin, self._units.length_unit)
+        radius = self._units.convert(radius, self._units.length_unit)
         self._compartments.add_sphere(conversions, name, _v3_of(origin), radius, larger_or_less)
 
     def add_plane(self, conversions, name, normal_coefficients, distance, larger_or_less=True):
@@ -93,4 +96,6 @@ class CompartmentRegistry(object):
             raise ValueError("distance must be non-negative")
         if not isinstance(larger_or_less, bool):
             raise ValueError("larger_or_less must be a bool")
+        normal_coefficients = self._units.convert(normal_coefficients, self._units.length_unit)
+        distance = self._units.convert(distance, self._units.length_unit)
         self._compartments.add_plane(conversions, name, _v3_of(normal_coefficients), distance, larger_or_less)

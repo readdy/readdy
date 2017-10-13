@@ -29,8 +29,9 @@ import numpy as _np
 from readdy.api.utils import vec3_of as _v3_of
 
 class PotentialRegistry(object):
-    def __init__(self, context_top_registry):
+    def __init__(self, context_top_registry, units):
         self._registry = context_top_registry
+        self._units = units
 
     def add_box(self, particle_type, force_constant, origin, extent):
         """
@@ -39,10 +40,13 @@ class PotentialRegistry(object):
         vertex, respectively.
 
         :param particle_type: the particle type for which the potential is registered
-        :param force_constant: the force constant
-        :param origin: the origin of the box
-        :param extent: the extent of the box
+        :param force_constant: the force constant [energy/length**2]
+        :param origin: the origin of the box [length]
+        :param extent: the extent of the box [length]
         """
+        force_constant = self._units.convert(force_constant, self._units.force_constant_unit)
+        origin = self._units.convert(origin, self._units.length_unit)
+        extent = self._units.convert(extent, self._units.length_unit)
         self._registry.add_box(particle_type, force_constant, _v3_of(origin), _v3_of(extent))
 
     def add_harmonic_repulsion(self, particle_type1, particle_type2, force_constant, interaction_distance):
@@ -53,9 +57,11 @@ class PotentialRegistry(object):
 
         :param particle_type1: first particle type
         :param particle_type2: second particle type
-        :param force_constant: the force constant
-        :param interaction_distance: the interaction distance
+        :param force_constant: the force constant [energy/length**2]
+        :param interaction_distance: the interaction distance [length]
         """
+        force_constant = self._units.convert(force_constant, self._units.force_constant_unit)
+        interaction_distance = self._units.convert(interaction_distance, self._units.length_unit)
         self._registry.add_harmonic_repulsion(particle_type1, particle_type2, force_constant, interaction_distance)
 
     def add_weak_interaction_piecewise_harmonic(self, particle_type1, particle_type2, force_constant, desired_distance,
@@ -68,11 +74,15 @@ class PotentialRegistry(object):
 
         :param particle_type1: first particle type
         :param particle_type2: second particle type
-        :param force_constant: the force constant
-        :param desired_distance: the desired distance, i.e., smallest potential energy
-        :param depth: depth of the potential well
-        :param cutoff: the cutoff radius
+        :param force_constant: the force constant [energy/length**2]
+        :param desired_distance: the desired distance, i.e., smallest potential energy [length]
+        :param depth: depth of the potential well [energy]
+        :param cutoff: the cutoff radius [length]
         """
+        force_constant = self._units.convert(force_constant, self._units.force_constant_unit)
+        desired_distance = self._units.convert(desired_distance, self._units.length_unit)
+        depth = self._units.convert(depth, self._units.energy_unit)
+        cutoff = self._units.convert(cutoff, self._units.length_unit)
         self._registry.add_weak_interaction_piecewise_harmonic(particle_type1, particle_type2, force_constant,
                                                                desired_distance, depth, cutoff)
 
@@ -85,12 +95,15 @@ class PotentialRegistry(object):
         :param particle_type2: second particle type
         :param m: first exponent
         :param n: second exponent
-        :param cutoff: the cutoff radius
+        :param cutoff: the cutoff radius [length]
         :param shift: whether to shift the potential energy
-        :param epsilon: epsilon value
-        :param sigma: sigma value
+        :param epsilon: epsilon value [energy]
+        :param sigma: sigma value [length]
         """
         assert isinstance(shift, bool), "shift can only be bool"
+        cutoff = self._units.convert(cutoff, self._units.length_unit)
+        epsilon = self._units.convert(epsilon, self._units.energy_unit)
+        sigma = self._units.convert(sigma, self._units.length_unit)
         self._registry.add_lennard_jones(particle_type1, particle_type2, m, n, cutoff, shift, epsilon, sigma)
 
     def add_screened_electrostatics(self, particle_type1, particle_type2, electrostatic_strength,
@@ -101,13 +114,19 @@ class PotentialRegistry(object):
 
         :param particle_type1: first particle type
         :param particle_type2: second particle type
-        :param electrostatic_strength: the electrostatic strength
-        :param inverse_screening_depth: the inverse screening depth
-        :param repulsion_strength: the repulsion strength
-        :param repulsion_distance: the repulsion distance
+        :param electrostatic_strength: the electrostatic strength [energy * length]
+        :param inverse_screening_depth: the inverse screening depth [1 / length]
+        :param repulsion_strength: the repulsion strength [energy]
+        :param repulsion_distance: the repulsion distance [length]
         :param exponent: the exponent
-        :param cutoff: the cutoff radius
+        :param cutoff: the cutoff radius [length]
         """
+        electrostatic_strength = self._units.convert(electrostatic_strength,
+                                                     self._units.energy_unit * self._units.length_unit)
+        inverse_screening_depth = self._units.convert(inverse_screening_depth, 1/self._units.length_unit)
+        repulsion_strength = self._units.convert(repulsion_strength, self._units.energy_unit)
+        repulsion_distance = self._units.convert(repulsion_distance, self._units.length_unit)
+        cutoff = self._units.convert(cutoff, self._units.length_unit)
         self._registry.add_screened_electrostatics(particle_type1, particle_type2, electrostatic_strength,
                                                    inverse_screening_depth, repulsion_strength, repulsion_distance,
                                                    exponent, cutoff)
@@ -118,11 +137,14 @@ class PotentialRegistry(object):
         specified sphere.
 
         :param particle_type: the particle type
-        :param force_constant: strength of the potential
-        :param origin: origin of the sphere
-        :param radius: radius of the sphere
+        :param force_constant: strength of the potential [energy/length**2]
+        :param origin: origin of the sphere [length]
+        :param radius: radius of the sphere [length]
         """
         assert radius > 0, "radius has to be positive"
+        force_constant = self._units.convert(force_constant, self._units.force_constant_unit)
+        origin = self._units.convert(origin, self._units.length_unit)
+        radius = self._units.convert(radius, self._units.length_unit)
         self._registry.add_sphere_out(particle_type, force_constant, _v3_of(origin), radius)
 
     def add_sphere_in(self, particle_type, force_constant, origin, radius):
@@ -131,11 +153,14 @@ class PotentialRegistry(object):
         specified sphere.
 
         :param particle_type: the particle type
-        :param force_constant: strength of the potential
-        :param origin: origin of the sphere
-        :param radius: radius of the sphere
+        :param force_constant: strength of the potential [energy/length**2]
+        :param origin: origin of the sphere [length]
+        :param radius: radius of the sphere [length]
         """
         assert radius > 0, "radius has to be positive"
+        force_constant = self._units.convert(force_constant, self._units.force_constant_unit)
+        origin = self._units.convert(origin, self._units.length_unit)
+        radius = self._units.convert(radius, self._units.length_unit)
         self._registry.add_sphere_in(particle_type, force_constant, _v3_of(origin), radius)
 
     def add_spherical_barrier(self, particle_type, height, width, origin, radius):
@@ -146,12 +171,16 @@ class PotentialRegistry(object):
         and differentiable, the force is only continuous and not differentiable.
 
         :param particle_type: the particle type
-        :param height: the height of the barrier
-        :param width: the width of the barrier
-        :param origin: the origin of the sphere
-        :param radius: the radius of the sphere
+        :param height: the height of the barrier [energy]
+        :param width: the width of the barrier [length]
+        :param origin: the origin of the sphere [length]
+        :param radius: the radius of the sphere [length]
         """
         assert radius > 0, "radius has to be positive"
         assert height > 0, "height has to be positive"
         assert width > 0, "width has to be positive"
+        height = self._units.convert(height, self._units.energy_unit)
+        width = self._units.convert(width, self._units.length_unit)
+        origin = self._units.convert(origin, self._units.length_unit)
+        radius = self._units.convert(radius, self._units.length_unit)
         self._registry.add_spherical_barrier(particle_type, height, width, _v3_of(origin), radius)

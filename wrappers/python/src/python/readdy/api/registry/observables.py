@@ -61,7 +61,9 @@ class Observables(object):
             types_count_from = [types_count_from]
         if isinstance(types_count_to, str):
             types_count_to = [types_count_to]
-
+        bin_borders = self._simulation._unit_conf.convert(bin_borders, self._simulation.length_unit)
+        particle_to_density = self._simulation._unit_conf.convert(particle_to_density,
+                                                                  1 / self._simulation.length_unit**3)
         assert all([isinstance(x, str) for x in types_count_from]), \
             "types_count_from={} has an invalid type".format(types_count_from)
         assert all([isinstance(x, str) for x in types_count_to]), \

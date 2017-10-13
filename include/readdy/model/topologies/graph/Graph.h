@@ -109,7 +109,11 @@ public:
     void removeParticle(std::size_t particleIndex);
 
     bool isConnected();
+    
+    std::vector<std::tuple<vertex_ref, vertex_ref>> edges();
 
+    void findEdges(const edge_callback &edgeCallback);
+    
     void findNTuples(const edge_callback &tuple_callback,
                      const path_len_2_callback &triple_callback,
                      const path_len_3_callback &quadruple_callback);

@@ -132,6 +132,7 @@ TEST_F(TestNeighborList, OneDirection) {
     auto &ctx = kernel->context();
     ctx.boxSize() = {{1.2, 1.1, 2.8}};
     ctx.periodicBoundaryConditions() = {{false, false, true}};
+    ctx.potentials().addBox("A", .0, {-.4, -.4, -1.3}, {.4, .4, 1.3});
     ctx.configure(false);
 
     readdy::util::thread::Config conf;

@@ -55,7 +55,7 @@ void writeReactionInformation(h5rd::Group &group, const Context &context) {
                           r->productDistance(), r->educts(), r->products()};
         reactionInfos.push_back(info);
     }
-    {
+    if(!reactionInfos.empty()) {
         auto types = getReactionInfoMemoryType(group.parentFile());
         h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
         h5rd::dimensions extent = {reactionInfos.size()};

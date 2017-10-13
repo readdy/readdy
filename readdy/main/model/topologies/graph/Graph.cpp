@@ -146,6 +146,21 @@ bool Graph::isConnected() {
     return n_visited == _vertices.size();
 }
 
+void Graph::findEdges(const Graph::edge_callback &edgeCallback) {
+    for (auto &v : _vertices) {
+        v.visited = false;
+    }
+    
+    for(auto it = _vertices.begin(); it != _vertices.end(); ++it) {
+        auto &neighbors = it->neighbors();
+        for (auto it_neigh : neighbors) {
+            if(!it_neigh->visited) {
+                edgeCallback(std::tie(it, it_neigh));
+            }
+        }
+    }
+}
+
 void Graph::findNTuples(const edge_callback &tuple_callback,
                         const path_len_2_callback &triple_callback,
                         const path_len_3_callback &quadruple_callback) {
@@ -291,6 +306,14 @@ bool Graph::containsEdge(const Graph::cedge &edge) const {
 
 bool Graph::containsEdge(const Graph::vertex_cref v1, const Graph::vertex_cref v2) const {
     return containsEdge(std::tie(v1, v2));
+}
+
+std::vector<std::tuple<Graph::vertex_ref, Graph::vertex_ref>> Graph::edges() {
+    std::vector<std::tuple<Graph::vertex_ref, Graph::vertex_ref>> result;
+    findEdges([&result](const edge& tup) {
+        result.push_back(tup);
+    });
+    return result;
 }
 
 }

@@ -145,6 +145,15 @@ void exportTopologies(py::module &m) {
                 :param v_index2: index of the second vertex, as in `topology.get_graph().get_vertices()`
                 :return: a reference to this recipe to enable a fluent interface
             )topdoc", "v_index1"_a, "v_index2"_a, py::return_value_policy::reference_internal)
+            .def("remove_edge", [](reaction_recipe &self, graph::edge edge) -> reaction_recipe& {
+                return self.removeEdge(edge);
+            }, R"topdoc(
+                Removes an edge between given vertices. Depending on the configuration of the topology reaction, this
+                can lead to failed states or multiple sub-topologies.
+
+                :param edge: the edge
+                :return: a reference to this recipe to enable a fluent interface
+            )topdoc", "edge"_a, py::return_value_policy::reference_internal)
             .def("separate_vertex", [](reaction_recipe &self, const std::size_t index) -> reaction_recipe& {
                 auto it = self.topology().graph().vertices().begin();
                 std::advance(it, index);
@@ -239,6 +248,13 @@ void exportTopologies(py::module &m) {
 
                 :return: list of vertices
             )topdoc",rvp::reference_internal)
+            .def("get_edges", [](graph &self) -> std::vector<graph::edge> {
+                return self.edges();
+            }, R"topdoc(
+                Yields a list of edges contained in this graph.
+
+                :return: list of edges
+            )topdoc")
             .def("add_edge", [](graph &self, std::size_t v1, std::size_t v2) {
                 if (v1 < self.vertices().size() && v2 < self.vertices().size()) {
                     if(v2 < v1) std::swap(v1, v2);

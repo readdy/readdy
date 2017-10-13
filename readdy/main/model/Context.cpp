@@ -36,6 +36,7 @@
 #include <readdy/common/Utils.h>
 #include <readdy/model/_internal/Util.h>
 #include <readdy/common/boundary_condition_operations.h>
+#include <readdy/model/potentials/PotentialsOrder1.h>
 
 namespace readdy {
 namespace model {
@@ -101,6 +102,8 @@ void Context::configure(bool debugOutput) {
         _reactionRegistry.debugOutput();
         _topologyRegistry.debugOutput();
     }
+
+    validate();
 }
 
 std::tuple<Vec3, Vec3> Context::getBoxBoundingVertices() const {
@@ -272,6 +275,53 @@ const compartments::CompartmentRegistry &Context::compartments() const {
 
 compartments::CompartmentRegistry &Context::compartments() {
     return _compartmentRegistry;
+}
+
+namespace {
+bool boxPotentialValid(const Context &self, potentials::Box *potential) {
+    auto bbox = self.getBoxBoundingVertices();
+    auto pbc = self.periodicBoundaryConditions();
+    bool valid = true;
+    for(std::size_t dim = 0; dim < 3; ++dim) {
+        auto periodic = pbc.at(dim);
+        auto bbox0Pos = std::get<0>(bbox)[dim];
+        auto bbox1Pos = std::get<1>(bbox)[dim];
+        auto potential1Pos = potential->getOrigin()[dim];
+        auto potential2Pos = potential1Pos + potential->getExtent()[dim];
+        if(!periodic) {
+            valid &= bbox0Pos < potential1Pos && bbox1Pos > potential2Pos;
+        }
+    }
+    return valid;
+}
+}
+
+void Context::validate() const {
+    auto periodic = std::accumulate(periodicBoundaryConditions().begin(),
+                                    periodicBoundaryConditions().end(), true, std::logical_and<bool>());
+    if(!periodic) {
+        // check if there are box potentials for each particle type and that these box potentials are valid
+        for(const auto &entry : particle_types().typeMapping()) {
+            auto ptype = entry.second;
+            auto potIt = potentials().potentialsOrder1().find(ptype);
+            bool valid = true;
+            if(potIt != potentials().potentialsOrder1().end()) {
+                bool gotValidBoxPotential = false;
+                for(const auto potPtr : potIt->second) {
+                    if(potPtr->type() == potentials::getPotentialName<potentials::Box>()) {
+                        gotValidBoxPotential |= boxPotentialValid(*this, dynamic_cast<potentials::Box*>(potPtr));
+                    }
+                }
+                valid &= gotValidBoxPotential;
+            } else {
+                valid = false;
+            }
+            if(!valid) {
+                throw std::logic_error(fmt::format("For particle type {} there was no valid box potential in direction "
+                                                           "of the non-periodic boundaries configured.", entry.first));
+            }
+        }
+    }
 }
 
 Context::~Context() = default;

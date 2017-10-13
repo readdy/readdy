@@ -54,6 +54,10 @@ struct NOOPPotentialOrder2 : public readdy::model::potentials::PotentialOrder2 {
         return energy;
     }
 
+    virtual std::string type() const override {
+        return "noop pot";
+    }
+
     virtual void calculateForce(Vec3 &force, const Vec3 &x_ij) const override {
         force[0] = NOOPPotentialOrder2::force;
         force[1] = NOOPPotentialOrder2::force;

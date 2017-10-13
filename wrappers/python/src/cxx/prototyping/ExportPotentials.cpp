@@ -76,6 +76,10 @@ public:
         PYBIND11_OVERLOAD_PURE_NAME(readdy::scalar, rdy_pot1, "get_maximal_force", getMaximalForce, kbt);
     }
 
+    std::string type() const override {
+        return "Python defined potential of order 1";
+    }
+
 };
 
 class PyPotentialO2 : public rdy_pot2 {
@@ -119,6 +123,10 @@ public:
     readdy::scalar getCutoffRadius() const override {
         py::gil_scoped_acquire gil;
         PYBIND11_OVERLOAD_PURE_NAME(readdy::scalar, rdy_pot2, "get_cutoff_radius", getCutoffRadius);
+    }
+
+    std::string type() const override {
+        return "Python defined potential of order 2";
     }
 
 };

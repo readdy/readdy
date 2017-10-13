@@ -28,8 +28,9 @@ Created on 26.09.17
 
 
 class ReactionRegistry(object):
-    def __init__(self, context_reactions):
+    def __init__(self, context_reactions, units):
         self._reactions = context_reactions
+        self._units = units
 
     def add_decay(self, name, particle_type, rate):
         """
@@ -41,7 +42,7 @@ class ReactionRegistry(object):
 
         :param name: label of the reaction
         :param particle_type: the particle type undergoing the reaction
-        :param rate: microscopic/intrinsic reaction rate constant
+        :param rate: microscopic/intrinsic reaction rate constant [1/time]
         """
         if not isinstance(name, str):
             raise ValueError("name must be a string")
@@ -49,6 +50,7 @@ class ReactionRegistry(object):
             raise ValueError("particle_type must be a string")
         if not rate > 0.:
             raise ValueError("the reaction rate must be positive")
+        rate = self._units.convert(rate, self._units.reaction_rate_unit)
         self._reactions.add_decay(name, particle_type, rate)
 
     def add_conversion(self, name, type_from, type_to, rate):
@@ -62,7 +64,7 @@ class ReactionRegistry(object):
         :param name: label of the reactions
         :param type_from: particle type of educt
         :param type_to: particle type of product
-        :param rate: microscopic/intrinsic reaction rate constant
+        :param rate: microscopic/intrinsic reaction rate constant [1/time]
         """
         if not isinstance(name, str):
             raise ValueError("name must be a string")
@@ -72,6 +74,7 @@ class ReactionRegistry(object):
             raise ValueError("type_to must be a string")
         if not rate > 0.:
             raise ValueError("the reaction rate must be positive")
+        rate = self._units.convert(rate, self._units.reaction_rate_unit)
         self._reactions.add_conversion(name, type_from, type_to, rate)
 
     def add_fusion(self, name, type_from1, type_from2, type_to, rate, educt_distance, weight1=0.5, weight2=0.5):
@@ -90,8 +93,8 @@ class ReactionRegistry(object):
         :param type_from1: particle type of first educt
         :param type_from2: particle type of second educt
         :param type_to: particle type of product
-        :param rate: microscopic/intrinsic reaction rate constant
-        :param educt_distance: maximal distance for the reaction to occur
+        :param rate: microscopic/intrinsic reaction rate constant [1/time]
+        :param educt_distance: maximal distance for the reaction to occur [length]
         :param weight1: value between 0 (product placed at educt1) and 1 (product placed at educt2)
         :param weight2: value between 0 (product placed at educt2) and 1 (product placed at educt1)
         """
@@ -111,6 +114,8 @@ class ReactionRegistry(object):
             raise ValueError("weight1 must be in [0,1]")
         if not 0. <= weight2 <= 1.:
             raise ValueError("weight2 must be in [0,1]")
+        rate = self._units.convert(rate, self._units.reaction_rate_unit)
+        educt_distance = self._units.convert(educt_distance, self._units.length_unit)
         self._reactions.add_fusion(name, type_from1, type_from2, type_to, rate, educt_distance, weight1, weight2)
 
     def add_fission(self, name, type_from, type_to1, type_to2, rate, product_distance, weight1=0.5, weight2=0.5):
@@ -129,8 +134,8 @@ class ReactionRegistry(object):
         :param type_from: particle type of educt
         :param type_to1: particle type of first product
         :param type_to2: particle type of second product
-        :param rate: microscopic/intrinsic reaction rate constant
-        :param product_distance: maximal distance at which products will be placed
+        :param rate: microscopic/intrinsic reaction rate constant [1/time]
+        :param product_distance: maximal distance at which products will be placed [length]
         :param weight1: value between 0 (product1 placed at educt) and 1 (product2 placed at educt)
         :param weight2: value between 0 (product2 placed at educt) and 1 (product1 placed at educt)
         """
@@ -150,6 +155,8 @@ class ReactionRegistry(object):
             raise ValueError("weight1 must be in [0,1]")
         if not 0. <= weight2 <= 1.:
             raise ValueError("weight2 must be in [0,1]")
+        rate = self._units.convert(rate, self._units.reaction_rate_unit)
+        product_distance = self._units.convert(product_distance, self._units.length_unit)
         self._reactions.add_fission(name, type_from, type_to1, type_to2, rate, product_distance, weight1, weight2)
 
     def add_enzymatic(self, name, type_catalyst, type_from, type_to, rate, educt_distance):
@@ -166,8 +173,8 @@ class ReactionRegistry(object):
         :param type_catalyst: particle type of catalyst
         :param type_from: particle type of educt
         :param type_to: particle type of product
-        :param rate: microscopic/intrinsic reaction rate constant
-        :param educt_distance: maximal distance for reaction to occur
+        :param rate: microscopic/intrinsic reaction rate constant [1/time]
+        :param educt_distance: maximal distance for reaction to occur [length]
         """
         if not isinstance(name, str):
             raise ValueError("name must be a string")
@@ -181,11 +188,14 @@ class ReactionRegistry(object):
             raise ValueError("reaction rate must be positive")
         if not educt_distance > 0.:
             raise ValueError("educt_distance must be positive")
+        rate = self._units.convert(rate, self._units.reaction_rate_unit)
+        educt_distance = self._units.convert(educt_distance, self._units.length_unit)
         self._reactions.add_enzymatic(name, type_catalyst, type_from, type_to, rate, educt_distance)
 
     def add(self, descriptor, rate):
         """
-        Register a reaction according to the descriptor string.
+        Register a reaction according to the descriptor string. Note that the reaction radius will be interpreted
+        in default units.
 
         Examples:
             A -> 0
@@ -194,7 +204,8 @@ class ReactionRegistry(object):
             C -> A +(2.0) B [0.5, 0.5]
             A +(2.0) C -> B + C
 
-        :param descriptor: the descriptor string
-        :param rate: microscopic/intrinsic reaction rate constant
+        :param descriptor: the descriptor string, default units
+        :param rate: microscopic/intrinsic reaction rate constant [1/time]
         """
+        rate = self._units.convert(rate, self._units.reaction_rate_unit)
         self._reactions.add(descriptor, rate)
