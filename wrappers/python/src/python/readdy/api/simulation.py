@@ -364,7 +364,7 @@ class Simulation(object):
             .include_forces(self.evaluate_forces) \
             .evaluate_topology_reactions(self.evaluate_topology_reactions) \
             .with_reaction_scheduler(self.reaction_handler) \
-            .with_skin_size(self.skin) \
+            .with_skin_size(self.skin.magnitude) \
             .evaluate_observables(self.evaluate_observables)
 
         if self.output_file is not None and len(self.output_file) > 0:
