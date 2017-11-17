@@ -152,23 +152,25 @@ void ReactionRegistry::configure() {
 
 }
 
-void ReactionRegistry::debugOutput() const {
+std::string ReactionRegistry::describe() const {
+    std::string description;
     if (!one_educt_registry.empty()) {
-        log::debug(" - reactions of order 1:");
+        description += " - reactions of order 1:\n";
         for (const auto &entry : one_educt_registry) {
             for (const auto reaction : entry.second) {
-                log::debug("     * reaction {}", *reaction);
+                description += fmt::format("     * reaction {}\n", *reaction);
             }
         }
     }
     if (!two_educts_registry.empty()) {
-        log::debug(" - reactions of order 2:");
+        description += " - reactions of order 2:\n";
         for (const auto &entry : two_educts_registry) {
             for (const auto reaction : entry.second) {
-                log::debug("     * reaction {}", *reaction);
+                description += fmt::format("     * reaction {}\n", *reaction);
             }
         }
     }
+    return description;
 }
 
 const std::size_t &ReactionRegistry::nOrder1() const {

@@ -106,7 +106,7 @@ public:
      * registered reactions and potentials will not take effect. The context is optionally logged in text format.
      * @param debugOutput decide if context information will be logged
      */
-    void configure(bool debugOutput = false);
+    std::string configure(bool debugOutput = false);
 
     /**
      * Returns whether reactions with positions shall be recorded in the state model, then obtainable by

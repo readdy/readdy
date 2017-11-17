@@ -99,9 +99,10 @@ void TopologyRegistry::configure() {
     }
 }
 
-void TopologyRegistry::debugOutput() const {
+std::string TopologyRegistry::describe() const {
+    std::string description;
     if (!_spatialReactions.empty()) {
-        log::debug(" - spatial topology reactions:");
+        description += " - spatial topology reactions:\n";
         for (const auto &entry : _spatialReactions) {
             for (const auto &reaction : entry.second) {
                 auto d = fmt::format(
@@ -111,32 +112,32 @@ void TopologyRegistry::debugOutput() const {
                         _typeRegistry.get().nameOf(reaction.type_to1()), reaction.type_to1(),
                         _typeRegistry.get().nameOf(reaction.type_to2()), reaction.type_to2(),
                         reaction.radius(), reaction.rate());
-                log::debug("     * reaction {}", d);
+                description += fmt::format("     * reaction {}\n", d);
             }
         }
     }
-    log::debug(" - topology types:");
+    description += " - topology types:\n";
     for (const auto &entry : _registry) {
-        log::debug("     * topology type \"{}\" with id {} and {} structural reactions", entry.second.name,
-                   entry.second.type, entry.second.structural_reactions.size());
+        description += fmt::format("     * topology type \"{}\" with id {} and {} structural reactions\n",
+                                   entry.second.name, entry.second.type, entry.second.structural_reactions.size());
     }
 
-    log::debug(" - structural topology reactions:");
+    description += " - structural topology reactions:\n";
     for (const auto &entry : _registry) {
-        log::debug("     - topology type \"{}\" with {} structural reactions:",
-                   entry.second.name, entry.second.structural_reactions.size());
+        description += fmt::format("     - topology type \"{}\" with {} structural reactions:\n",
+                                   entry.second.name, entry.second.structural_reactions.size());
         for (const auto &r : entry.second.structural_reactions) {
-            log::debug("         * reaction with roll_back = {} and create child tops = {}",
-                       r.rolls_back_if_invalid(), r.creates_child_topologies_after_reaction());
+            description += fmt::format("         * reaction with roll_back = {} and create child tops = {}\n",
+                                       r.rolls_back_if_invalid(), r.creates_child_topologies_after_reaction());
         }
     }
 
-    log::debug(" - topology potential configuration:");
-    log::debug("     - bonds ({}):", _potentialConfiguration.pairPotentials.size());
+    description += " - topology potential configuration:\n";
+    description += fmt::format("     - bonds ({}):\n", _potentialConfiguration.pairPotentials.size());
     for (const auto &entry : _potentialConfiguration.pairPotentials) {
-        log::debug("         - Bonds for particle types {} and {}:",
-                   _typeRegistry.get().nameOf(std::get<0>(entry.first)),
-                   _typeRegistry.get().nameOf(std::get<1>(entry.first)));
+        description += fmt::format("         - Bonds for particle types {} and {}:\n",
+                                   _typeRegistry.get().nameOf(std::get<0>(entry.first)),
+                                   _typeRegistry.get().nameOf(std::get<1>(entry.first)));
         auto bondToStr = [](const api::Bond &bond) -> std::string {
             switch (bond.type) {
                 case api::BondType::HARMONIC:
@@ -144,11 +145,11 @@ void TopologyRegistry::debugOutput() const {
             }
         };
         for (const auto &bond : entry.second) {
-            log::debug("             * {} bond with force constant {} and length {}", bondToStr(bond),
-                       bond.forceConstant, bond.length);
+            description += fmt::format("             * {} bond with force constant {} and length {}\n", bondToStr(bond),
+                                       bond.forceConstant, bond.length);
         }
     }
-    log::debug("     - angles ({}):", _potentialConfiguration.anglePotentials.size());
+    description += fmt::format("     - angles ({}):", _potentialConfiguration.anglePotentials.size());
     for (const auto &entry : _potentialConfiguration.anglePotentials) {
         auto angleToStr = [](const api::Angle &angle) -> std::string {
             switch (angle.type) {
@@ -157,11 +158,11 @@ void TopologyRegistry::debugOutput() const {
             }
         };
         for (const auto &angle : entry.second) {
-            log::debug("             * {} angle with force constant {} and equilibrium angle {}",
-                       angleToStr(angle), angle.forceConstant, angle.equilibriumAngle);
+            description += fmt::format("             * {} angle with force constant {} and equilibrium angle {}\n",
+                                       angleToStr(angle), angle.forceConstant, angle.equilibriumAngle);
         }
     }
-    log::debug("     - torsions ({}):", _potentialConfiguration.torsionPotentials.size());
+    description += fmt::format("     - torsions ({}):\n", _potentialConfiguration.torsionPotentials.size());
     for (const auto &entry : _potentialConfiguration.torsionPotentials) {
         auto torsionToStr = [](const api::TorsionAngle &torsion) -> std::string {
             switch (torsion.type) {
@@ -170,10 +171,12 @@ void TopologyRegistry::debugOutput() const {
             }
         };
         for (const auto &dih : entry.second) {
-            log::debug("             * {} with force constant {}, equilibrium angle {} and multiplicity {}",
-                       torsionToStr(dih), dih.forceConstant, dih.phi_0, dih.multiplicity);
+            description += fmt::format(
+                    "             * {} with force constant {}, equilibrium angle {} and multiplicity {}\n",
+                    torsionToStr(dih), dih.forceConstant, dih.phi_0, dih.multiplicity);
         }
     }
+    return description;
 }
 
 const std::string &TopologyRegistry::nameOf(readdy::topology_type_type type) const {

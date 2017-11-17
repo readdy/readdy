@@ -150,7 +150,7 @@ public:
 
     void configure();
 
-    void debugOutput() const;
+    std::string describe() const;
 
 private:
     using potential_o1_registry_internal = std::unordered_map<particle_type_type, pot_ptr_vec1>;

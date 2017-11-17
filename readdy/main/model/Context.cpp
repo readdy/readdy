@@ -77,7 +77,7 @@ const Context::shortest_dist_fun &Context::shortestDifferenceFun() const {
     return _diffFun;
 }
 
-void Context::configure(bool debugOutput) {
+std::string Context::configure(bool debugOutput) {
     updateFunctions();
 
     _particleTypeRegistry.configure();
@@ -88,22 +88,26 @@ void Context::configure(bool debugOutput) {
     /**
      * Info output
      */
+    std::string description;
+    description += "Configured kernel context with:\n";
+    description += "--------------------------------\n";
+    description += fmt::format(" - kBT = {}\n", kBT());
+    description += fmt::format(" - periodic b.c. = ({}, {}, {})\n",
+                               periodicBoundaryConditions()[0],
+                               periodicBoundaryConditions()[1],
+                               periodicBoundaryConditions()[2]);
+    description += fmt::format(" - box size = ({}, {}, {})\n", boxSize()[0], boxSize()[1], boxSize()[2]);
+
+    description += _particleTypeRegistry.describe();
+    description += _potentialRegistry.describe();
+    description += _reactionRegistry.describe();
+    description += _topologyRegistry.describe();
     if (debugOutput) {
-
-        log::debug("Configured kernel context with: ");
-        log::debug("--------------------------------");
-        log::debug(" - kBT = {}", kBT());
-        log::debug(" - periodic b.c. = ({}, {}, {})", periodicBoundaryConditions()[0], periodicBoundaryConditions()[1],
-                   periodicBoundaryConditions()[2]);
-        log::debug(" - box size = ({}, {}, {})", boxSize()[0], boxSize()[1], boxSize()[2]);
-
-        _particleTypeRegistry.debugOutput();
-        _potentialRegistry.debugOutput();
-        _reactionRegistry.debugOutput();
-        _topologyRegistry.debugOutput();
+        log::debug(description);
     }
 
     validate();
+    return description;
 }
 
 std::tuple<Vec3, Vec3> Context::getBoxBoundingVertices() const {
