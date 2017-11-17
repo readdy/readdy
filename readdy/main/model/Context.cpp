@@ -217,6 +217,10 @@ void Context::updateFunctions() {
             }
         }
     }
+    _distFun = [this](const Vec3 &v1, const Vec3 &v2) {
+        const auto dv = _diffFun(v1, v2);
+        return dv * dv;
+    };
 }
 
 const Context::BoxSize &Context::boxSize() const {

@@ -23,6 +23,7 @@
 Created on 08.09.17
 
 @author: clonker
+@author: chrisfroe
 """
 
 import numpy as _np
@@ -76,13 +77,24 @@ class ReactionDiffusionSystem(object):
         self._potential_registry = _PotentialRegistry(self._context.potentials, self._unit_conf)
         self._reaction_registry = _ReactionRegistry(self._context.reactions, self._unit_conf)
 
-        if temperature is None:
+        # @todo clean this up
+        if (temperature is not None) and (unit_system is None):
+            raise ValueError(
+                "Setting the temperature without a unit system is not supported. "
+                "If working without units, set kbt instead."
+            )
+        if (temperature is None) and (unit_system is None):
+            self.kbt = 1.
+        if (temperature is None) and (unit_system is not None):
             temperature = 293. * self.units.kelvin
+            self.temperature = temperature
+        if (temperature is not None) and (unit_system is not None):
+            self.temperature = temperature
+
         if periodic_boundary_conditions is None:
             periodic_boundary_conditions = [True, True, True]
 
         self.box_size = box_size
-        self.temperature = temperature
         self.periodic_boundary_conditions = periodic_boundary_conditions
 
     @property
@@ -134,6 +146,15 @@ class ReactionDiffusionSystem(object):
         :return: the thermal energy [energy]
         """
         return self._context.kbt * self.energy_unit
+
+    @kbt.setter
+    def kbt(self, value):
+        """
+        Sets the thermal energy of the system.
+        :param value: the thermal energy [energy]
+        """
+        value = self._unit_conf.convert(value, self.energy_unit)
+        self._context.kbt = value
 
     @property
     def temperature(self):

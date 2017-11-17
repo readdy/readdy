@@ -20,56 +20,61 @@
 # <http://www.gnu.org/licenses/>.
 
 
-from __future__ import print_function
-from readdy._internal.readdybinding.api import KernelProvider, Simulation
-from readdy._internal.readdybinding.common import Vec
-
+import os
 import numpy as np
-
-from readdy.util import platform_utils
-
 import matplotlib.pyplot as plt
 
-rdf = None
-centers = None
-n_calls = 0
-# T = 200000000
-T = 20000000
+import readdy
 
 
-def rdf_callback(pair):
-    global rdf, centers, n_calls, T
-    if centers is None:
-        centers = pair[0]
-    if rdf is None:
-        rdf = pair[1]
-    else:
-        rdf += pair[1]
-    n_calls += 1
-    if n_calls % 10000 == 0:
-        print("%s" % (10.*float(n_calls)/float(T)))
+def average_across_first_axis(values):
+    n_values = len(values)
+    mean = np.sum(values, axis=0) / n_values  # shape = n_bins
+    difference = values - mean  # broadcasting starts with last axis
+    std_dev = np.sqrt(np.sum(difference * difference, axis=0) / n_values)
+    std_err = np.sqrt(np.sum(difference * difference, axis=0) / n_values ** 2)
+    return mean, std_dev, std_err
+
+
+def plot_boltzmann(force_const, interaction_radius):
+    def potential(r, force_const, interaction_radius):
+        if r < interaction_radius:
+            return 0.5 * force_const * np.power(r - interaction_radius, 2.)
+        else:
+            return 0.
+
+    boltz = lambda r: np.exp(-1. * potential(r, force_const, interaction_radius))
+    r_range = np.linspace(0.1, 2., 100)
+    b_range = np.fromiter(map(boltz, r_range), dtype=float)
+    plt.plot(r_range, b_range, label=r"Boltzmann correlation $$")
 
 
 if __name__ == '__main__':
-    KernelProvider.get().load_from_dir(platform_utils.get_readdy_plugin_dir())
-    simulation = Simulation()
-    simulation.set_kernel("CPU")
+    system = readdy.ReactionDiffusionSystem(
+        box_size=(4, 4, 4), periodic_boundary_conditions=[True, True, True], unit_system=None)
+    system.add_species("A", 1.0)
+    system.add_species("B", 1.0)
+    system.potentials.add_harmonic_repulsion("A", "B", 1., 1.)
 
-    box_size = Vec(10, 10, 10)
-    simulation.kbt = 2
-    simulation.periodic_boundary = [True, True, True]
-    simulation.box_size = box_size
-    simulation.register_particle_type("A", .2, 1.)
-    simulation.register_particle_type("B", .2, 1.)
-    simulation.register_potential_harmonic_repulsion("A", "B", 10)
-    simulation.add_particle("A", Vec(-2.5, 0, 0))
-    simulation.add_particle("B", Vec(0, 0, 0))
+    simulation = system.simulation(kernel="SingleCPU")
 
-    simulation.register_observable_radial_distribution(10, np.arange(0, 5, .01), ["A"], ["B"], 1. / (box_size[0] * box_size[1] * box_size[2]), rdf_callback)
-    simulation.run(T, 0.02)
+    simulation.output_file = "out.h5"
+    simulation.observe.rdf(100, np.linspace(0., 2., 10), ["A"], ["B"], 1. / system.box_volume)
+    simulation.add_particle("A", [0., 0., 0.])
+    simulation.add_particle("B", [0., 0., 1.])
 
-    print("n_calls=%s" % n_calls)
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    ax.plot(centers, rdf / n_calls)
+    if os.path.exists(simulation.output_file):
+        os.remove(simulation.output_file)
+
+    simulation.run(n_steps=10000000, timestep=5e-3)
+
+    traj = readdy.Trajectory(simulation.output_file)
+    rdf_times, bin_centers, rdf_values = traj.read_observable_rdf()
+
+    mean, std_dev, std_err = average_across_first_axis(rdf_values)
+    plt.errorbar(bin_centers, mean, yerr=std_err, label="ReaDDy")
+    plot_boltzmann(1., 1.)
+    plt.legend()
+    plt.xlabel(r"Distance $r$ of A and B")
+    plt.ylabel(r"Radial distribution function $g(r)$")
     plt.show()

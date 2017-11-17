@@ -67,6 +67,19 @@ TEST_F(TestKernelContext, PeriodicBoundary) {
     EXPECT_TRUE(boundary[2]);
 }
 
+TEST_F(TestKernelContext, DistanceFunctions) {
+    m::Context ctx;
+    ctx.periodicBoundaryConditions() = {{true, true, true}};
+    ctx.boxSize() = {{2, 2, 2}};
+    ctx.configure();
+    ctx.boxSize() = {{4, 4, 4}};
+    ctx.configure();
+    auto distSquared = ctx.distSquaredFun();
+    readdy::Vec3 v1(-1.5, -1.5, 0.);
+    readdy::Vec3 v2(+1.5, +1.5, 0.);
+    EXPECT_NEAR(distSquared(v1, v2), 2., 1e-9);
+}
+
 TEST_F(TestKernelContext, BoxSize) {
     m::Context ctx;
     ctx.boxSize() = {{10, 11, 12}};
