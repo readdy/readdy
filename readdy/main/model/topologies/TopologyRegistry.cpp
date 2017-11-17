@@ -149,7 +149,7 @@ std::string TopologyRegistry::describe() const {
                                        bond.forceConstant, bond.length);
         }
     }
-    description += fmt::format("     - angles ({}):", _potentialConfiguration.anglePotentials.size());
+    description += fmt::format("     - angles ({}):\n", _potentialConfiguration.anglePotentials.size());
     for (const auto &entry : _potentialConfiguration.anglePotentials) {
         auto angleToStr = [](const api::Angle &angle) -> std::string {
             switch (angle.type) {

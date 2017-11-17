@@ -133,7 +133,7 @@ TEST_F(TestNeighborList, OneDirection) {
     ctx.boxSize() = {{1.2, 1.1, 2.8}};
     ctx.periodicBoundaryConditions() = {{false, false, true}};
     ctx.potentials().addBox("A", .0, {-.4, -.4, -1.3}, {.4, .4, 1.3});
-    ctx.configure(false);
+    ctx.configure();
 
     readdy::util::thread::Config conf;
     nl_t list(ctx, conf);
@@ -537,7 +537,7 @@ TEST(TestAdaptiveNeighborList, VerletList) {
                                   static_cast<readdy::scalar>(model::rnd::uniform_real(-.5, .5))});
     }
     context.reactions().addFusion("test", "A", "A", "A", .1, .1);
-    context.configure(false);
+    context.configure();
     const auto &d2 = context.distSquaredFun();
     auto data = kernel->getCPUKernelStateModel().getParticleData();
     kernel::cpu::nl::AdaptiveNeighborList neighbor_list{
@@ -583,7 +583,7 @@ TEST(TestAdaptiveNeighborList, AdaptiveUpdating) {
                                   static_cast<readdy::scalar>(model::rnd::uniform_real(-14., 14.))});
     }
     context.reactions().addFusion("test", "V", "V", "V", cutoff, cutoff);
-    context.configure(false);
+    context.configure();
     const auto &d2 = context.distSquaredFun();
     auto data = kernel->getCPUKernelStateModel().getParticleData();
     kernel::cpu::nl::AdaptiveNeighborList neighbor_list{

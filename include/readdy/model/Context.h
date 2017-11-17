@@ -103,10 +103,14 @@ public:
     /**
      * Copy the reactions and potentials of the internal and external registries into the actual registries, which
      * is used during the run of the simulation. This step is necessary before the simulation can start. Otherwise the
-     * registered reactions and potentials will not take effect. The context is optionally logged in text format.
-     * @param debugOutput decide if context information will be logged
+     * registered reactions and potentials will not take effect.
      */
-    std::string configure(bool debugOutput = false);
+    void configure();
+
+    /**
+     * Construct a string that describes the context, i.e. particle types, reactions, potentials and topologies.
+     */
+    std::string describe();
 
     /**
      * Returns whether reactions with positions shall be recorded in the state model, then obtainable by

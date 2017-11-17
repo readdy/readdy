@@ -337,7 +337,7 @@ class Simulation(object):
             particle_types = [particle_types]
         return self._simulation.add_topology(topology_type, particle_types, positions)
 
-    def run(self, n_steps, timestep):
+    def run(self, n_steps, timestep, log_context=True):
         """
         Executes the simulation as configured.
 
@@ -347,6 +347,9 @@ class Simulation(object):
         import os
         from contextlib import closing
         import readdy._internal.readdybinding.common.io as io
+
+        if log_context:
+            print(self._simulation.context.describe())
 
         timestep = self._unit_conf.convert(timestep, self.time_unit)
 
@@ -364,7 +367,7 @@ class Simulation(object):
             .include_forces(self.evaluate_forces) \
             .evaluate_topology_reactions(self.evaluate_topology_reactions) \
             .with_reaction_scheduler(self.reaction_handler) \
-            .with_skin_size(self.skin.magnitude) \
+            .with_skin_size(self._skin) \
             .evaluate_observables(self.evaluate_observables)
 
         if self.output_file is not None and len(self.output_file) > 0:

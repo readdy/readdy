@@ -195,7 +195,8 @@ void exportKernelContext(py::module &module) {
             .def_property_readonly("dist_squared_fun", &KernelContext::distSquaredFun)
             .def_property_readonly("fix_position_fun", &KernelContext::fixPositionFun)
             .def_property_readonly("shortest_difference_fun", &KernelContext::shortestDifferenceFun)
-            .def("configure", &KernelContext::configure, "debug_output"_a = true)
+            .def("configure", &KernelContext::configure)
+            .def("describe", &KernelContext::describe)
             .def("bounding_box_vertices", &KernelContext::getBoxBoundingVertices)
             .def("calculate_max_cutoff", &KernelContext::calculateMaxCutoff)
             .def_property("record_reactions_with_positions",

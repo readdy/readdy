@@ -77,7 +77,7 @@ const Context::shortest_dist_fun &Context::shortestDifferenceFun() const {
     return _diffFun;
 }
 
-std::string Context::configure(bool debugOutput) {
+void Context::configure() {
     updateFunctions();
 
     _particleTypeRegistry.configure();
@@ -85,29 +85,7 @@ std::string Context::configure(bool debugOutput) {
     _reactionRegistry.configure();
     _topologyRegistry.configure();
 
-    /**
-     * Info output
-     */
-    std::string description;
-    description += "Configured kernel context with:\n";
-    description += "--------------------------------\n";
-    description += fmt::format(" - kBT = {}\n", kBT());
-    description += fmt::format(" - periodic b.c. = ({}, {}, {})\n",
-                               periodicBoundaryConditions()[0],
-                               periodicBoundaryConditions()[1],
-                               periodicBoundaryConditions()[2]);
-    description += fmt::format(" - box size = ({}, {}, {})\n", boxSize()[0], boxSize()[1], boxSize()[2]);
-
-    description += _particleTypeRegistry.describe();
-    description += _potentialRegistry.describe();
-    description += _reactionRegistry.describe();
-    description += _topologyRegistry.describe();
-    if (debugOutput) {
-        log::debug(description);
-    }
-
     validate();
-    return description;
 }
 
 std::tuple<Vec3, Vec3> Context::getBoxBoundingVertices() const {
@@ -326,6 +304,25 @@ void Context::validate() const {
             }
         }
     }
+}
+
+std::string Context::describe() {
+    configure();
+    std::string description;
+    description += "Configured kernel context with:\n";
+    description += "--------------------------------\n";
+    description += fmt::format(" - kBT = {}\n", kBT());
+    description += fmt::format(" - periodic b.c. = ({}, {}, {})\n",
+                               periodicBoundaryConditions()[0],
+                               periodicBoundaryConditions()[1],
+                               periodicBoundaryConditions()[2]);
+    description += fmt::format(" - box size = ({}, {}, {})\n", boxSize()[0], boxSize()[1], boxSize()[2]);
+
+    description += _particleTypeRegistry.describe();
+    description += _potentialRegistry.describe();
+    description += _reactionRegistry.describe();
+    description += _topologyRegistry.describe();
+    return description;
 }
 
 Context::~Context() = default;

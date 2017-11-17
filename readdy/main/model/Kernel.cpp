@@ -167,7 +167,8 @@ bool Kernel::supportsTopologies() const {
 }
 
 void Kernel::initialize() {
-    context().configure(true);
+    context().configure();
+    log::debug(context().describe());
 }
 
 void Kernel::finalize() {
