@@ -314,7 +314,7 @@ class Simulation(object):
         Adds particles of a certain type to the simulation box.
 
         :param type: type of the particles
-        :param positions: (3, N)-shaped nd-array of positions [length]
+        :param positions: (N, 3)-shaped nd-array of positions [length]
         """
         assert positions.shape[1] == 3, "shape[1] has to be 3 but was {}".format(positions.shape[1])
         positions = self._unit_conf.convert(positions, self.length_unit)
@@ -328,7 +328,7 @@ class Simulation(object):
         :param topology_type: the topology type
         :param particle_types: either a list of types of length `N` or a single string which is then applied as type
                                for all given positions
-        :param positions: (3, N)-shaped nd-array of positions [length]
+        :param positions: (N, 3)-shaped nd-array of positions [length]
         :return: the topology object
         """
         positions = self._unit_conf.convert(positions, self.length_unit)
@@ -337,18 +337,19 @@ class Simulation(object):
             particle_types = [particle_types]
         return self._simulation.add_topology(topology_type, particle_types, positions)
 
-    def run(self, n_steps, timestep, log_context=True):
+    def run(self, n_steps, timestep, show_system=True):
         """
         Executes the simulation as configured.
 
         :param n_steps: number of steps to perform
         :param timestep: the time step to use [time]
+        :param show_system: determines if system configuration is printed
         """
         import os
         from contextlib import closing
         import readdy._internal.readdybinding.common.io as io
 
-        if log_context:
+        if show_system:
             print(self._simulation.context.describe())
 
         timestep = self._unit_conf.convert(timestep, self.time_unit)

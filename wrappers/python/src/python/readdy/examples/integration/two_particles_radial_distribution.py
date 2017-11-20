@@ -46,7 +46,7 @@ def plot_boltzmann(force_const, interaction_radius):
     boltz = lambda r: np.exp(-1. * potential(r, force_const, interaction_radius))
     r_range = np.linspace(0.1, 2., 100)
     b_range = np.fromiter(map(boltz, r_range), dtype=float)
-    plt.plot(r_range, b_range, label=r"Boltzmann correlation $$")
+    plt.plot(r_range, b_range, label=r"Boltzmann correlation $e^{-\beta U(r)}$")
 
 
 if __name__ == '__main__':
@@ -59,20 +59,20 @@ if __name__ == '__main__':
     simulation = system.simulation(kernel="SingleCPU")
 
     simulation.output_file = "out.h5"
-    simulation.observe.rdf(100, np.linspace(0., 2., 10), ["A"], ["B"], 1. / system.box_volume)
+    simulation.observe.rdf(200, np.linspace(0., 2., 10), ["A"], ["B"], 1. / system.box_volume)
     simulation.add_particle("A", [0., 0., 0.])
     simulation.add_particle("B", [0., 0., 1.])
 
     if os.path.exists(simulation.output_file):
         os.remove(simulation.output_file)
 
-    simulation.run(n_steps=10000000, timestep=5e-3)
+    simulation.run(n_steps=10000000, timestep=2e-3)
 
     traj = readdy.Trajectory(simulation.output_file)
     rdf_times, bin_centers, rdf_values = traj.read_observable_rdf()
 
     mean, std_dev, std_err = average_across_first_axis(rdf_values)
-    plt.errorbar(bin_centers, mean, yerr=std_err, label="ReaDDy")
+    plt.errorbar(bin_centers, mean, yerr=std_err, fmt=".", label="ReaDDy")
     plot_boltzmann(1., 1.)
     plt.legend()
     plt.xlabel(r"Distance $r$ of A and B")
