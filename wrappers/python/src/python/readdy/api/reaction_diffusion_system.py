@@ -54,10 +54,9 @@ class ReactionDiffusionSystem(object):
           - nanosecond for time,
           - kilojoule/mole for energy,
           - kelvin for temperature are used.
-        If the unit_system is set to `None`, all units along with the avogadro number and boltzmann constant will be
-        set to 1. except for energy being kJ/mole, effectively yielding a unitless system.
-        If custom units should be used, one can also provide a dictionary containing the keys 'length_unit',
-        'time_unit', 'energy_unit', 'temperature_unit'.
+        If the unit_system is set to `None`, all values will be interpreted in units of 1. In this case
+        setting or reading the temperature is not supported, as this would require setting a specific value
+        for the Boltzmann constant. Use kbt directly in this case. By default, if unit_system is `None`, then kbt=1.
 
         :param box_size: size of the simulation box [length]
         :param temperature: temperature, per default room temperature in the selected units
@@ -77,7 +76,6 @@ class ReactionDiffusionSystem(object):
         self._potential_registry = _PotentialRegistry(self._context.potentials, self._unit_conf)
         self._reaction_registry = _ReactionRegistry(self._context.reactions, self._unit_conf)
 
-        # @todo clean this up
         if (temperature is not None) and (unit_system is None):
             raise ValueError(
                 "Setting the temperature without a unit system is not supported. "
@@ -160,15 +158,15 @@ class ReactionDiffusionSystem(object):
     def temperature(self):
         """
         Retrieves the set temperature.
+
+        Using the temperature in a unitless system is not supported, as this would require a specific value
         :return: the temperature [temperature]
         """
         kbt = self.kbt
         if self.temperature_unit != 1.:
             return (kbt / (self._unit_conf.boltzmann * self._unit_conf.avogadro)).to(self.temperature_unit)
         else:
-            return (kbt * (self.units.kilojoule / self.units.mole) /
-                    (self.units.boltzmann_constant * self.units.avogadro_number))\
-                .to(self.units.kelvin).magnitude
+            raise ValueError("No temperature unit was set. In a unitless system, refer to kbt instead.")
 
     @temperature.setter
     def temperature(self, value):
@@ -181,8 +179,7 @@ class ReactionDiffusionSystem(object):
             kbt = self._unit_conf.convert(value * self.temperature_unit * self._unit_conf.boltzmann
                                           * self._unit_conf.avogadro, self.energy_unit)
         else:
-            kbt = (value * self.units.kelvin * self.units.boltzmann_constant * self.units.avogadro_number)\
-                .to(self.units.kilojoule / self.units.mole).magnitude
+            raise ValueError("No temperature unit was set. In a unitless system, refer to kbt instead.")
         self._context.kbt = kbt
 
     @property

@@ -51,3 +51,7 @@ class TestToplevelRegistryReactions(ReaDDyTestCase):
 
     def test_add_enzymatic(self):
         self.rds.reactions.add_enzymatic("label", "C", "A", "B", 2.0, 4.0)
+
+    def test_add_invalid_descriptor(self):
+        with self.assertRaises(ValueError):
+            self.rds.reactions.add("enz: A +(1) B -> A + A", 5.)

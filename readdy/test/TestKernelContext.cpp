@@ -280,13 +280,29 @@ TEST_F(TestKernelContext, ReactionDescriptorAddReactions) {
         EXPECT_EQ(r->eductDistance(), 1.5);
         EXPECT_EQ(r->rate(), 6.);
     }
+    {
+        m::Context ctx;
+        auto enzymatic = "eat:B +(1) A -> A + A";
+        prepareCtx(ctx, enzymatic, 7.);
+        const auto &r = ctx.reactions().order2ByName("eat");
+        ASSERT_NE(r, nullptr);
+        EXPECT_EQ(r->type(), m::reactions::ReactionType::Enzymatic);
+        EXPECT_EQ(r->nEducts(), 2);
+        EXPECT_EQ(r->nProducts(), 2);
+        EXPECT_EQ(r->educts()[0], ctx.particle_types().idOf("B"));
+        EXPECT_EQ(r->educts()[1], ctx.particle_types().idOf("A"));
+        EXPECT_EQ(r->products()[0], ctx.particle_types().idOf("A"));
+        EXPECT_EQ(r->products()[1], ctx.particle_types().idOf("A"));
+        EXPECT_EQ(r->eductDistance(), 1.);
+        EXPECT_EQ(r->rate(), 7.);
+    }
 }
 
 TEST_F(TestKernelContext, ReactionDescriptorInvalidInputs) {
     m::Context ctx;
     ctx.particle_types().add("A", 1.);
     ctx.particle_types().add("B", 1.);
-    std::vector<std::string> inv = {"myinvalid: + A -> B", "noarrow: A B", " : Noname ->", "weights: A + A -> A [0.1, ]", "blub: A (3)+ A -> B"};
+    std::vector<std::string> inv = {"myinvalid: + A -> B", "noarrow: A B", " : Noname ->", "weights: A + A -> A [0.1, ]", "blub: A (3)+ A -> B", "eat: A +(1) B -> A + A"};
     for (const auto &i : inv) {
         EXPECT_ANY_THROW(ctx.reactions().add(i, 42.));
     }

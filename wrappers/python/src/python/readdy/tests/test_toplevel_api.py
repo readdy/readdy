@@ -47,9 +47,12 @@ class TestTopLevelAPI(ReaDDyTestCase):
 
     def test_temperature_unitless(self):
         rds = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.], unit_system=None)
-        rds.temperature = 293
-        np.testing.assert_equal(rds.temperature, 293)
-        np.testing.assert_almost_equal(rds.kbt, 2.4361374086224026)
+        rds.kbt = 2.436
+        with self.assertRaises(ValueError):
+            rds.temperature = 300.  # setting temperature without units is not allowed
+        with self.assertRaises(ValueError):
+            print(rds.temperature)  # same goes for reading
+        self.assertEqual(rds.kbt, 2.436)
 
     def test_other_units(self):
         rds = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.], unit_system={'length_unit': 'kilometer'})
