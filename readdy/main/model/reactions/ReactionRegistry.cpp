@@ -153,20 +153,21 @@ void ReactionRegistry::configure() {
 }
 
 std::string ReactionRegistry::describe() const {
+    namespace rus = readdy::util::str;
     std::string description;
     if (!one_educt_registry.empty()) {
-        description += " - reactions of order 1:\n";
+        description += fmt::format(" - reactions of order 1:{}", rus::newline);
         for (const auto &entry : one_educt_registry) {
             for (const auto reaction : entry.second) {
-                description += fmt::format("     * reaction {}\n", *reaction);
+                description += fmt::format("     * reaction {}{}", *reaction, rus::newline);
             }
         }
     }
     if (!two_educts_registry.empty()) {
-        description += " - reactions of order 2:\n";
+        description += fmt::format(" - reactions of order 2:{}", rus::newline);
         for (const auto &entry : two_educts_registry) {
             for (const auto reaction : entry.second) {
-                description += fmt::format("     * reaction {}\n", *reaction);
+                description += fmt::format("     * reaction {}{}", *reaction, rus::newline);
             }
         }
     }

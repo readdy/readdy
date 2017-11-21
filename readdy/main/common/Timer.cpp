@@ -88,7 +88,8 @@ std::string PerformanceNode::describe(const size_t level) const {
     for (auto i = 0; i < level; ++i) {
         s += "\t";
     }
-    s += fmt::format("{}: time {} s, count {}\n", _name, _data.cumulativeTime(), _data.count());
+    s += fmt::format("{}: time {} s, count {}{}", _name, _data.cumulativeTime(), _data.count(),
+                     readdy::util::str::newline);
     for (const auto &c : children) {
         s += c->describe(level + 1);
     }

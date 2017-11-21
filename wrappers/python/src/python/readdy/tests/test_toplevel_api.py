@@ -144,7 +144,7 @@ class TestTopLevelAPI(ReaDDyTestCase):
         simulation.observe.particles(5)
         simulation.observe.reaction_counts(5)
         simulation.observe.reactions(5)
-        simulation.run(10, .1)
+        simulation.run(10, .1, False)
 
     def test_add_particles(self):
         rds = readdy.ReactionDiffusionSystem([10., 10., 10.])
@@ -199,7 +199,7 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
         sim.add_particles("A", np.random.random((100, 3)))
         recorded_positions = []
         sim.observe.particle_positions(1, callback=lambda x: recorded_positions.append(x))
-        sim.run(50, 1e-3)
+        sim.run(50, 1e-3, False)
 
         traj = readdy.Trajectory(traj_fname)
 
@@ -256,10 +256,10 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
         sim.observe.reactions(1, callback=lambda x: reactions.append(x))
         sim.observe.reaction_counts(1)
         sim.observe.forces(1)
-        sim.run(50, 1e-3)
+        sim.run(50, 1e-3, False)
 
         sim.output_file = traj_fname2
-        sim.run(50, 1e-3)
+        sim.run(50, 1e-3, False)
 
         for fname in [traj_fname, traj_fname2]:
             traj = readdy.Trajectory(fname)

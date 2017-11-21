@@ -151,6 +151,8 @@ class ReactionDiffusionSystem(object):
         Sets the thermal energy of the system.
         :param value: the thermal energy [energy]
         """
+        if not isinstance(self._unit_conf, _NoUnitConfiguration):
+            raise ValueError("Setting kbt is only supported in a unitless system. Set the temperature instead.")
         value = self._unit_conf.convert(value, self.energy_unit)
         self._context.kbt = value
 
@@ -158,8 +160,6 @@ class ReactionDiffusionSystem(object):
     def temperature(self):
         """
         Retrieves the set temperature.
-
-        Using the temperature in a unitless system is not supported, as this would require a specific value
         :return: the temperature [temperature]
         """
         kbt = self.kbt
