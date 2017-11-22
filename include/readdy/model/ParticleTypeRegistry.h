@@ -108,7 +108,7 @@ public:
 
     const type_map &typeMapping() const;
 
-    void debugOutput() const;
+    std::string describe() const;
 
     void configure();
 

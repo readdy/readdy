@@ -23,6 +23,7 @@
 #include <readdy/model/potentials/PotentialRegistry.h>
 #include <readdy/common/Utils.h>
 #include <readdy/model/potentials/PotentialsOrder1.h>
+#include <readdy/common/string.h>
 
 /**
  * << detailed description >>
@@ -149,32 +150,35 @@ void PotentialRegistry::configure() {
     });
 }
 
-void PotentialRegistry::debugOutput() const {
+std::string PotentialRegistry::describe() const {
+    namespace rus = readdy::util::str;
     auto find_pot_name = [this](particle_type_type type) -> const std::string {
         for (auto &&t : _types.get().typeMapping()) {
             if (t.second == type) return t.first;
         }
         return "";
     };
+    std::string description;
     if (!potentialsOrder1().empty()) {
-        log::debug(" - potentials of order 1:");
+        description += fmt::format(" - potentials of order 1:{}", rus::newline);
         for (const auto &types : potentialsOrder1()) {
-            log::debug("     * for type {}", find_pot_name(types.first));
+            description += fmt::format("     * for type {}{}", find_pot_name(types.first), rus::newline);
             for (auto pot : types.second) {
-                log::debug("         * {}", pot->describe());
+                description += fmt::format("         * {}{}", pot->describe(), rus::newline);
             }
         }
     }
     if (!potentialsOrder2().empty()) {
-        log::debug(" - potentials of order 2:");
+        description += fmt::format(" - potentials of order 2:{}", rus::newline);
         for (const auto &types : potentialsOrder2()) {
-            log::debug("     * for types {} and {}", find_pot_name(std::get<0>(types.first)),
-                       find_pot_name(std::get<1>(types.first)));
+            description += fmt::format("     * for types {} and {}{}", find_pot_name(std::get<0>(types.first)),
+                                       find_pot_name(std::get<1>(types.first)), rus::newline);
             for (auto pot : types.second) {
-                log::debug("         * {}", pot->describe());
+                description += fmt::format("         * {}{}", pot->describe(), rus::newline);
             }
         }
     }
+    return description;
 }
 
 Potential::id_type PotentialRegistry::addBox(const std::string &particleType, scalar forceConstant, const Vec3 &origin,

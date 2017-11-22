@@ -79,7 +79,7 @@ TEST_P(TestCLLImpl, Insert) {
         nl->data()->addParticle(particle);
     }
 
-    context.configure(false);
+    context.configure();
 
     nl->set_up({});
     nl->update({});
@@ -156,7 +156,7 @@ TEST_P(TestCLLImpl, InsertAndDeactivate) {
         }
     }
 
-    context.configure(false);
+    context.configure();
 
     nl->set_up({});
     nl->update({});
@@ -232,7 +232,7 @@ TEST_P(TestCLLImpl, Diffuse) {
         nl->data()->addParticle(particle);
     }
 
-    context.configure(false);
+    context.configure();
 
     nl->set_up({});
     nl->update({});

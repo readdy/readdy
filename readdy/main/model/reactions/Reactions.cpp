@@ -116,8 +116,8 @@ const scalar Reaction::productDistance() const {
 }
 
 std::ostream &operator<<(std::ostream &os, const Reaction &reaction) {
-    os << "Reaction(\"" << reaction._name << "\", N_Educts=" << reaction._nEducts << ", N_Products="
-       << reaction._nProducts << ", (";
+    os << "Reaction(\"" << reaction._name << "\", N_Educts=" << std::to_string(reaction._nEducts) << ", N_Products="
+       << std::to_string(reaction._nProducts) << ", (";
     for (unsigned int i = 0; i < reaction._nEducts; i++) {
         if (i > 0) os << ",";
         os << reaction._educts[i];

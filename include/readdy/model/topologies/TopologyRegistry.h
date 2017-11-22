@@ -107,7 +107,7 @@ public:
 
     void configure();
 
-    void debugOutput() const;
+    std::string describe() const;
 
     void addSpatialReaction(reactions::SpatialTopologyReaction &&reaction);
 

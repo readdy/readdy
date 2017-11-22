@@ -69,7 +69,7 @@ TEST_P(TestTopologyReactionsExternal, TestTopologyEnzymaticReaction) {
             model::Particle(c_::zero, c_::zero, c_::zero, ctx.particle_types().idOf("A"))
     );
     kernel->context().reactions().addEnzymatic("TopologyEnzymatic", "Topology A", "A", "B", 1.0, 1.0);
-    ctx.configure(false);
+    ctx.configure();
 
     auto particles_beforehand = kernel->stateModel().getParticles();
 

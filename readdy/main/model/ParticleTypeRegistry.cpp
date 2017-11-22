@@ -103,13 +103,17 @@ particle_type_type ParticleTypeRegistry::_idOf(const std::string &name) const {
     return it->second;
 }
 
-void ParticleTypeRegistry::debugOutput() const {
-    log::debug(" - particle types:");
+std::string ParticleTypeRegistry::describe() const {
+    namespace rus = readdy::util::str;
+    std::string description;
+    description += fmt::format(" - particle types:{}", rus::newline);
     for (const auto &entry : particle_info_) {
-        log::debug("     * particle type \"{}\" with D={}, flavor={}, id={}", entry.second.name,
-                   entry.second.diffusionConstant, particleflavor::particle_flavor_to_str(entry.second.flavor),
-                   entry.second.typeId);
+        description += fmt::format("     * particle type \"{}\" with D={}, flavor={}, id={}{}", entry.second.name,
+                                   entry.second.diffusionConstant,
+                                   particleflavor::particle_flavor_to_str(entry.second.flavor), entry.second.typeId,
+                                   rus::newline);
     }
+    return description;
 }
 
 void ParticleTypeRegistry::configure() { /*no op*/ }

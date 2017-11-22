@@ -106,7 +106,7 @@ TEST_P(TestReactions, FusionFissionWeights) {
     context.particle_types().add("F", 0.0);
     context.periodicBoundaryConditions() = {{true, true, true}};
     context.boxSize() = {{20, 20, 20}};
-    context.configure(false);
+    context.configure();
 
     const readdy::scalar weightF {static_cast<readdy::scalar>(0)};
     const readdy::scalar weightA  {static_cast<readdy::scalar>(1.)};

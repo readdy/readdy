@@ -152,23 +152,26 @@ void ReactionRegistry::configure() {
 
 }
 
-void ReactionRegistry::debugOutput() const {
+std::string ReactionRegistry::describe() const {
+    namespace rus = readdy::util::str;
+    std::string description;
     if (!one_educt_registry.empty()) {
-        log::debug(" - reactions of order 1:");
+        description += fmt::format(" - reactions of order 1:{}", rus::newline);
         for (const auto &entry : one_educt_registry) {
             for (const auto reaction : entry.second) {
-                log::debug("     * reaction {}", *reaction);
+                description += fmt::format("     * reaction {}{}", *reaction, rus::newline);
             }
         }
     }
     if (!two_educts_registry.empty()) {
-        log::debug(" - reactions of order 2:");
+        description += fmt::format(" - reactions of order 2:{}", rus::newline);
         for (const auto &entry : two_educts_registry) {
             for (const auto reaction : entry.second) {
-                log::debug("     * reaction {}", *reaction);
+                description += fmt::format("     * reaction {}{}", *reaction, rus::newline);
             }
         }
     }
+    return description;
 }
 
 const std::size_t &ReactionRegistry::nOrder1() const {
@@ -368,7 +371,9 @@ ReactionRegistry::reaction_id ReactionRegistry::add(const std::string &descripto
     {
         if (rhs.empty()) {
             // numberProducts = 0 -> decay
-            assert(numberEducts == 1);
+            if (numberEducts != 1) {
+                throw std::invalid_argument(fmt::format("Left hand side (\"{}\") did not contain one educt", lhs));
+            }
             return addDecay(name, educt1, rate);
         } else {
             auto plusPos = rhs.find('+');
@@ -393,7 +398,11 @@ ReactionRegistry::reaction_id ReactionRegistry::add(const std::string &descripto
                 } else {
                     // enzymatic
                     std::tie(product1, product2, productDistance) = treatSideWithPlus(rhs, plusPos, false);
-                    assert(educt2 == product2);
+                    if (educt2 != product2) {
+                        throw std::invalid_argument(fmt::format(
+                                R"(In enzymatic reaction, educt2 ("{}") and product2 ("{}") have to be equal)",
+                                educt2, product2));
+                    }
                     auto distance = static_cast<scalar>(std::stod(eductDistance));
                     return addEnzymatic(name, educt2, educt1, product1, rate, distance);
                 }

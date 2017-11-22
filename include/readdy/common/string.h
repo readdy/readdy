@@ -80,6 +80,7 @@ static inline std::string trim_copy(std::string s) {
     return s;
 }
 
+static constexpr const char newline[] = "\n";
 
 NAMESPACE_END(str)
 NAMESPACE_END(util)

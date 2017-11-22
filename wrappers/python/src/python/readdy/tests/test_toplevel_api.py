@@ -40,69 +40,72 @@ class TestTopLevelAPI(ReaDDyTestCase):
     """
 
     def test_temperature(self):
-        rdf = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.])
-        rdf.temperature = 293.
-        np.testing.assert_equal(rdf.temperature, 293. * rdf.temperature_unit)
-        np.testing.assert_almost_equal(rdf.kbt.magnitude, (2.4361374086224026 * rdf.energy_unit).magnitude)
+        rds = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.])
+        rds.temperature = 293.
+        np.testing.assert_equal(rds.temperature, 293. * rds.temperature_unit)
+        np.testing.assert_almost_equal(rds.kbt.magnitude, (2.4361374086224026 * rds.energy_unit).magnitude)
 
     def test_temperature_unitless(self):
-        rdf = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.], unit_system=None)
-        rdf.temperature = 293
-        np.testing.assert_equal(rdf.temperature, 293)
-        np.testing.assert_almost_equal(rdf.kbt, 2.4361374086224026)
+        rds = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.], unit_system=None)
+        rds.kbt = 2.436
+        with self.assertRaises(ValueError):
+            rds.temperature = 300.  # setting temperature without units is not allowed
+        with self.assertRaises(ValueError):
+            print(rds.temperature)  # same goes for reading
+        self.assertEqual(rds.kbt, 2.436)
 
     def test_other_units(self):
-        rdf = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.], unit_system={'length_unit': 'kilometer'})
-        rdf = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.], unit_system={'time_unit': 'hour'})
-        rdf = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.], unit_system={'energy_unit': 'kcal/mol'})
-        rdf = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.], unit_system={'temperature_unit': 'rankine'})
+        rds = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.], unit_system={'length_unit': 'kilometer'})
+        rds = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.], unit_system={'time_unit': 'hour'})
+        rds = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.], unit_system={'energy_unit': 'kcal/mol'})
+        rds = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.], unit_system={'temperature_unit': 'rankine'})
 
     def test_box_size(self):
-        rdf = readdy.ReactionDiffusionSystem([1., 2., 3.], unit_system=None)
-        np.testing.assert_equal(rdf.box_size, [1., 2., 3.])
-        rdf.box_size = np.array([5., 6., 7.])
-        np.testing.assert_equal(rdf.box_size, [5., 6., 7.])
-        rdf.box_size = (1., 5., 7.)
-        np.testing.assert_equal(rdf.box_size, [1., 5., 7.])
-        np.testing.assert_equal(rdf.box_volume, 5. * 7.)
+        rds = readdy.ReactionDiffusionSystem([1., 2., 3.], unit_system=None)
+        np.testing.assert_equal(rds.box_size, [1., 2., 3.])
+        rds.box_size = np.array([5., 6., 7.])
+        np.testing.assert_equal(rds.box_size, [5., 6., 7.])
+        rds.box_size = (1., 5., 7.)
+        np.testing.assert_equal(rds.box_size, [1., 5., 7.])
+        np.testing.assert_equal(rds.box_volume, 5. * 7.)
 
     def test_pbc(self):
-        rdf = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.])
-        rdf.periodic_boundary_conditions = True, False, True
-        np.testing.assert_equal(rdf.periodic_boundary_conditions, [True, False, True])
-        rdf.periodic_boundary_conditions = np.array([False, False, True])
-        np.testing.assert_equal(rdf.periodic_boundary_conditions, [False, False, True])
+        rds = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.])
+        rds.periodic_boundary_conditions = True, False, True
+        np.testing.assert_equal(rds.periodic_boundary_conditions, [True, False, True])
+        rds.periodic_boundary_conditions = np.array([False, False, True])
+        np.testing.assert_equal(rds.periodic_boundary_conditions, [False, False, True])
 
     def test_species(self):
-        rdf = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.])
-        rdf.add_species("A", 1.)
-        self.assertTrue("A" in rdf.registered_species())
-        rdf.add_topology_species("Top A", 10.)
-        self.assertTrue("A" in rdf.registered_species() and "Top A" in rdf.registered_species())
+        rds = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.])
+        rds.add_species("A", 1.)
+        self.assertTrue("A" in rds.registered_species())
+        rds.add_topology_species("Top A", 10.)
+        self.assertTrue("A" in rds.registered_species() and "Top A" in rds.registered_species())
 
     def test_topology_potentials(self):
-        rdf = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.])
-        rdf.add_topology_species("A", 1.)
-        rdf.add_topology_species("B", 1.)
-        rdf.add_topology_species("C", 1.)
-        rdf.add_topology_species("D", 1.)
-        rdf.topologies.configure_harmonic_bond("A", "B", 1., 0.)
-        rdf.topologies.configure_harmonic_angle("A", "B", "C", 1., 0.)
-        rdf.topologies.configure_cosine_dihedral("A", "B", "C", "D", 1., 1, 0.)
+        rds = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.])
+        rds.add_topology_species("A", 1.)
+        rds.add_topology_species("B", 1.)
+        rds.add_topology_species("C", 1.)
+        rds.add_topology_species("D", 1.)
+        rds.topologies.configure_harmonic_bond("A", "B", 1., 0.)
+        rds.topologies.configure_harmonic_angle("A", "B", "C", 1., 0.)
+        rds.topologies.configure_cosine_dihedral("A", "B", "C", "D", 1., 1, 0.)
 
     def test_spatial_topology_reactions(self):
-        rdf = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.])
-        rdf.add_topology_species("A", 0.)
-        rdf.topologies.add_type("T1")
-        rdf.topologies.add_type("T2")
-        rdf.topologies.add_type("T3")
-        rdf.topologies.add_spatial_reaction("test_fusion: T1(A)+T2(A) -> T3(A--A)", 1., 1.)
-        rdf.topologies.add_spatial_reaction("test_enzymatic: T1(A)+T2(A) -> T3(A)+T2(A)", 1., 1.)
+        rds = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.])
+        rds.add_topology_species("A", 0.)
+        rds.topologies.add_type("T1")
+        rds.topologies.add_type("T2")
+        rds.topologies.add_type("T3")
+        rds.topologies.add_spatial_reaction("test_fusion: T1(A)+T2(A) -> T3(A--A)", 1., 1.)
+        rds.topologies.add_spatial_reaction("test_enzymatic: T1(A)+T2(A) -> T3(A)+T2(A)", 1., 1.)
 
     def test_structural_topology_reactions(self):
-        rdf = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.])
-        rdf.add_topology_species("foo")
-        rdf.topologies.add_type("foofoo")
+        rds = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.])
+        rds.add_topology_species("foo")
+        rds.topologies.add_type("foofoo")
 
         def reaction_fun(topology):
             return readdy.StructuralReactionRecipe(topology) \
@@ -111,29 +114,29 @@ class TestTopLevelAPI(ReaDDyTestCase):
         def rate_fun(topology):
             return len(topology.particles)
 
-        rdf.topologies.add_structural_reaction("foofoo", reaction_fun, rate_fun)
+        rds.topologies.add_structural_reaction("foofoo", reaction_fun, rate_fun)
 
     def test_potentials(self):
-        rdf = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.])
-        rdf.add_species("A")
-        rdf.potentials.add_box("A", 1.0, [1.0, 1.0, 1.0], [1.0, 1.0, 1.0])
-        rdf.potentials.add_harmonic_repulsion("A", "A", 1.0, 1.0)
-        rdf.potentials.add_lennard_jones("A", "A", 12, 6, 10, True, 1, 1)
-        rdf.potentials.add_screened_electrostatics("A", "A", 10, 10, 10, 10, 10, 10)
-        rdf.potentials.add_sphere_in("A", 10, (10, 10, 10), 1)
-        rdf.potentials.add_sphere_out("A", 10, (10, 10, 10), 1)
-        rdf.potentials.add_spherical_barrier("A", 1, 1, (0, 0, 0), 1)
-        rdf.potentials.add_weak_interaction_piecewise_harmonic("A", "A", 10, 10, 10, 10)
+        rds = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.])
+        rds.add_species("A")
+        rds.potentials.add_box("A", 1.0, [1.0, 1.0, 1.0], [1.0, 1.0, 1.0])
+        rds.potentials.add_harmonic_repulsion("A", "A", 1.0, 1.0)
+        rds.potentials.add_lennard_jones("A", "A", 12, 6, 10, True, 1, 1)
+        rds.potentials.add_screened_electrostatics("A", "A", 10, 10, 10, 10, 10, 10)
+        rds.potentials.add_sphere_in("A", 10, (10, 10, 10), 1)
+        rds.potentials.add_sphere_out("A", 10, (10, 10, 10), 1)
+        rds.potentials.add_spherical_barrier("A", 1, 1, (0, 0, 0), 1)
+        rds.potentials.add_weak_interaction_piecewise_harmonic("A", "A", 10, 10, 10, 10)
 
     def test_simulation(self):
-        rdf = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.])
-        rdf.add_species("A")
-        _ = rdf.simulation("CPU")
+        rds = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.])
+        rds.add_species("A")
+        _ = rds.simulation("CPU")
 
     def test_observables(self):
-        rdf = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.])
-        rdf.add_species("A")
-        simulation = rdf.simulation("CPU")
+        rds = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.])
+        rds.add_species("A")
+        simulation = rds.simulation("CPU")
         simulation.observe.rdf(5, [0., 1., 2.], ["A"], "A", 10)
         simulation.observe.forces(5)
         simulation.observe.number_of_particles(5)
@@ -141,20 +144,20 @@ class TestTopLevelAPI(ReaDDyTestCase):
         simulation.observe.particles(5)
         simulation.observe.reaction_counts(5)
         simulation.observe.reactions(5)
-        simulation.run(10, .1)
+        simulation.run(10, .1, False)
 
     def test_add_particles(self):
-        rdf = readdy.ReactionDiffusionSystem([10., 10., 10.])
-        rdf.add_species("A")
-        sim = rdf.simulation("CPU")
+        rds = readdy.ReactionDiffusionSystem([10., 10., 10.])
+        rds.add_species("A")
+        sim = rds.simulation("CPU")
         sim.add_particles("A", np.random.random((10000, 3)))
 
     def test_add_topology(self):
-        rdf = readdy.ReactionDiffusionSystem([10., 10., 10.])
-        rdf.topologies.add_type("toptype")
-        rdf.add_topology_species("TopA")
-        rdf.add_topology_species("TopB")
-        sim = rdf.simulation(kernel="SingleCPU")
+        rds = readdy.ReactionDiffusionSystem([10., 10., 10.])
+        rds.topologies.add_type("toptype")
+        rds.add_topology_species("TopA")
+        rds.add_topology_species("TopB")
+        sim = rds.simulation(kernel="SingleCPU")
         top1positions = np.random.random((4, 3))
         topology1 = sim.add_topology("toptype", "TopA", top1positions)
         for i, v in enumerate(topology1.get_graph().get_vertices()):
@@ -196,7 +199,7 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
         sim.add_particles("A", np.random.random((100, 3)))
         recorded_positions = []
         sim.observe.particle_positions(1, callback=lambda x: recorded_positions.append(x))
-        sim.run(50, 1e-3)
+        sim.run(50, 1e-3, False)
 
         traj = readdy.Trajectory(traj_fname)
 
@@ -253,10 +256,10 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
         sim.observe.reactions(1, callback=lambda x: reactions.append(x))
         sim.observe.reaction_counts(1)
         sim.observe.forces(1)
-        sim.run(50, 1e-3)
+        sim.run(50, 1e-3, False)
 
         sim.output_file = traj_fname2
-        sim.run(50, 1e-3)
+        sim.run(50, 1e-3, False)
 
         for fname in [traj_fname, traj_fname2]:
             traj = readdy.Trajectory(fname)

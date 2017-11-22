@@ -77,31 +77,13 @@ const Context::shortest_dist_fun &Context::shortestDifferenceFun() const {
     return _diffFun;
 }
 
-void Context::configure(bool debugOutput) {
+void Context::configure() {
     updateFunctions();
 
     _particleTypeRegistry.configure();
     _potentialRegistry.configure();
     _reactionRegistry.configure();
     _topologyRegistry.configure();
-
-    /**
-     * Info output
-     */
-    if (debugOutput) {
-
-        log::debug("Configured kernel context with: ");
-        log::debug("--------------------------------");
-        log::debug(" - kBT = {}", kBT());
-        log::debug(" - periodic b.c. = ({}, {}, {})", periodicBoundaryConditions()[0], periodicBoundaryConditions()[1],
-                   periodicBoundaryConditions()[2]);
-        log::debug(" - box size = ({}, {}, {})", boxSize()[0], boxSize()[1], boxSize()[2]);
-
-        _particleTypeRegistry.debugOutput();
-        _potentialRegistry.debugOutput();
-        _reactionRegistry.debugOutput();
-        _topologyRegistry.debugOutput();
-    }
 
     validate();
 }
@@ -235,6 +217,10 @@ void Context::updateFunctions() {
             }
         }
     }
+    _distFun = [this](const Vec3 &v1, const Vec3 &v2) {
+        const auto dv = _diffFun(v1, v2);
+        return dv * dv;
+    };
 }
 
 const Context::BoxSize &Context::boxSize() const {
@@ -322,6 +308,27 @@ void Context::validate() const {
             }
         }
     }
+}
+
+std::string Context::describe() {
+    namespace rus = readdy::util::str;
+    configure();
+    std::string description;
+    description += fmt::format("Configured kernel context with:{}", rus::newline);
+    description += fmt::format("--------------------------------{}", rus::newline);
+    description += fmt::format(" - kBT = {}{}", kBT(), rus::newline);
+    description += fmt::format(" - periodic b.c. = ({}, {}, {}){}",
+                               periodicBoundaryConditions()[0],
+                               periodicBoundaryConditions()[1],
+                               periodicBoundaryConditions()[2],
+                               rus::newline);
+    description += fmt::format(" - box size = ({}, {}, {}){}", boxSize()[0], boxSize()[1], boxSize()[2], rus::newline);
+
+    description += _particleTypeRegistry.describe();
+    description += _potentialRegistry.describe();
+    description += _reactionRegistry.describe();
+    description += _topologyRegistry.describe();
+    return description;
 }
 
 Context::~Context() = default;
