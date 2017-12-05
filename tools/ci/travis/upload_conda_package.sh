@@ -29,7 +29,7 @@ conda install anaconda-client -qy
 
 tagval=${TRAVIS_TAG:-notag}
 
-if [ "$tagval" != "notag" ]
+if [ "$tagval" == "notag" ]
 then
     echo "uploading dev package"
     anaconda -t $BINSTAR_TOKEN upload -c readdy -u readdy -l dev --force $CONDA_PACKAGE_FILE
