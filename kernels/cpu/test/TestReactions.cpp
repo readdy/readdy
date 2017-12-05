@@ -219,7 +219,7 @@ TEST(CPUTestReactions, TestDecay) {
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
     kernel->context().boxSize() = {{10, 10, 10}};
     kernel->context().particle_types().add("X", .25);
-    kernel->context().reactions().addDecay("X decay", "X", 1);
+    kernel->context().reactions().addDecay("X decay", "X", 1e16);
     kernel->context().reactions().addFission("X fission", "X", "X", "X", .5, .3);
 
     auto &&integrator = kernel->createAction<readdy::model::actions::EulerBDIntegrator>(1);
