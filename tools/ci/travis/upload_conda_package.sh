@@ -35,5 +35,5 @@ then
     anaconda -t $BINSTAR_TOKEN upload -c readdy -u readdy -l dev --force $CONDA_PACKAGE_FILE
 else
     echo "uploading tagged package with tag $tagval"
-    anaconda -t $BINSTAR_TOKEN upload -c readdy -u readdy $CONDA_PACKAGE_FILE
+    anaconda -t $BINSTAR_TOKEN upload -u readdy $CONDA_PACKAGE_FILE
 fi
