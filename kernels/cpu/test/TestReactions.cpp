@@ -278,7 +278,7 @@ TEST(CPUTestReactions, TestGillespieParallel) {
     kernel->context().potentials().addBox("B", .0001, {-4.9, -4.9, -14.9}, {9.8, 9.8, 29.8});
     kernel->context().potentials().addBox("C", .0001, {-4.9, -4.9, -14.9}, {9.8, 9.8, 29.8});
     readdy::scalar reactionRadius = 1.0;
-    kernel->context().reactions().addFusion("annihilation", "A", "A", "A", 1.0, reactionRadius);
+    kernel->context().reactions().addFusion("annihilation", "A", "A", "A", 1e16, reactionRadius);
     kernel->context().reactions().addFusion("very unlikely", "A", "C", "A", std::numeric_limits<readdy::scalar>::min(), reactionRadius);
     kernel->context().reactions().addFusion("dummy reaction", "A", "B", "A", 0.0, reactionRadius);
 
