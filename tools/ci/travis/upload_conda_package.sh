@@ -20,11 +20,20 @@ function set_this_up {
     fi
 }
 
-
 set_this_up
 
 CONDA_PACKAGE_FILE=$(conda build tools/conda-recipe --output)
 echo "found conda package file $CONDA_PACKAGE_FILE"
 
 conda install anaconda-client -qy
-anaconda -t $BINSTAR_TOKEN upload -c readdy -u readdy -l dev --force $CONDA_PACKAGE_FILE
+
+tagval=${TRAVIS_TAG:-notag}
+
+if [ "$tagval" != "notag" ]
+then
+    echo "uploading dev package"
+    anaconda -t $BINSTAR_TOKEN upload -c readdy -u readdy -l dev --force $CONDA_PACKAGE_FILE
+else
+    echo "uploading tagged package with tag $tagval"
+    anaconda -t $BINSTAR_TOKEN upload -c readdy -u readdy $CONDA_PACKAGE_FILE
+fi
