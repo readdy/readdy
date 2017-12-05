@@ -75,7 +75,7 @@ inline bool shouldPerformEvent(const scalar rate, const scalar timestep, bool ap
     return approximated ? performReactionEvent<true>(rate, timestep) : performReactionEvent<false>(rate, timestep);
 }
 
-std::vector<event_t> findEvents(const SCPUKernel *const kernel, scalar dt, bool approximateRate = true) {
+std::vector<event_t> findEvents(const SCPUKernel *const kernel, scalar dt, bool approximateRate = false) {
     std::vector<event_t> eventsUpdate;
     auto &stateModel = kernel->getSCPUKernelStateModel();
     auto &data = *stateModel.getParticleData();
@@ -138,7 +138,7 @@ void SCPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
         stateModel.resetReactionCounts();
     }
     auto &data = *stateModel.getParticleData();
-    auto events = findEvents(kernel, timeStep, true);
+    auto events = findEvents(kernel, timeStep, false);
 
     // shuffle reactions
     std::shuffle(events.begin(), events.end(), std::mt19937(std::random_device()()));
@@ -403,7 +403,7 @@ void SCPUGillespie::perform(const util::PerformanceNode &node) {
     scalar alpha = 0.0;
     std::vector<event_t> events;
     gatherEvents(kernel, *nl, *data, alpha, events, dist);
-    auto particlesUpdate = handleEventsGillespie(kernel, timeStep, false, true, std::move(events));
+    auto particlesUpdate = handleEventsGillespie(kernel, timeStep, false, false, std::move(events));
 
     // update data structure
     data->update(std::move(particlesUpdate));
