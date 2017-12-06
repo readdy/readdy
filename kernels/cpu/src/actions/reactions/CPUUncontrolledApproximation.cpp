@@ -150,8 +150,8 @@ void CPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
             eventFutures.push_back(promises.at(i).get_future());
             n_eventsFutures.push_back(n_events_promises.at(i).get_future());
             auto it_nl_end = it_nl + nlGrainSize;
-            executables.push_back(executor.pack(findEvents, it, it + grainSize, it_nl, it_nl_end, kernel, timeStep, true,
-                                                std::ref(promises.at(i)), std::ref(n_events_promises.at(i))));
+            executables.push_back(executor.pack(findEvents, it, it + grainSize, it_nl, it_nl_end, kernel, timeStep,
+                                                false, std::ref(promises.at(i)), std::ref(n_events_promises.at(i))));
             it += grainSize;
             it_nl = it_nl_end;
         }
@@ -162,8 +162,8 @@ void CPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
             n_eventsFutures.push_back(n_events.get_future());
 
 
-            executables.push_back(executor.pack(findEvents, it, data->cend(), it_nl, nl->cend(), kernel, timeStep, true,
-                                                std::ref(eventPromise), std::ref(n_events)));
+            executables.push_back(executor.pack(findEvents, it, data->cend(), it_nl, nl->cend(), kernel, timeStep,
+                                                false, std::ref(eventPromise), std::ref(n_events)));
         }
         executor.execute_and_wait(std::move(executables));
     }

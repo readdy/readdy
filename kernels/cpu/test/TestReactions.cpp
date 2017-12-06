@@ -219,7 +219,7 @@ TEST(CPUTestReactions, TestDecay) {
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
     kernel->context().boxSize() = {{10, 10, 10}};
     kernel->context().particle_types().add("X", .25);
-    kernel->context().reactions().addDecay("X decay", "X", 1);
+    kernel->context().reactions().addDecay("X decay", "X", 1e16);
     kernel->context().reactions().addFission("X fission", "X", "X", "X", .5, .3);
 
     auto &&integrator = kernel->createAction<readdy::model::actions::EulerBDIntegrator>(1);
@@ -278,7 +278,7 @@ TEST(CPUTestReactions, TestGillespieParallel) {
     kernel->context().potentials().addBox("B", .0001, {-4.9, -4.9, -14.9}, {9.8, 9.8, 29.8});
     kernel->context().potentials().addBox("C", .0001, {-4.9, -4.9, -14.9}, {9.8, 9.8, 29.8});
     readdy::scalar reactionRadius = 1.0;
-    kernel->context().reactions().addFusion("annihilation", "A", "A", "A", 1.0, reactionRadius);
+    kernel->context().reactions().addFusion("annihilation", "A", "A", "A", 1e16, reactionRadius);
     kernel->context().reactions().addFusion("very unlikely", "A", "C", "A", std::numeric_limits<readdy::scalar>::min(), reactionRadius);
     kernel->context().reactions().addFusion("dummy reaction", "A", "B", "A", 0.0, reactionRadius);
 
