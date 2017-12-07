@@ -3,12 +3,13 @@
 set -e -u
 
 function set_this_up {
+    ttagval=${TRAVIS_TAG:-notag}
     if [ "$TRAVIS_PULL_REQUEST" != "false" ]
     then
         echo "This was a pull request, thus dont build docs. Exit."
         exit 0
     fi
-    if [ "$TRAVIS_BRANCH" != "master" ]
+    if [ "$TRAVIS_BRANCH" != "master" ] && [ "$ttagval" == "notag" ]
     then
         echo "This commit was made against the $TRAVIS_BRANCH branch and not the master branch. Exit."
         exit 0
