@@ -133,6 +133,7 @@ void performReaction(data_t* data, const readdy::model::Context& context, data_t
                      data_t::EntriesUpdate& newEntries, std::vector<data_t::size_type>& decayedEntries,
                      Reaction* reaction, record_t* record) {
     const auto& pbc = context.applyPBCFun();
+    const auto &shortestDifferenceFun = context.shortestDifferenceFun();
     auto& entry1 = data->entry_at(idx1);
     auto& entry2 = data->entry_at(idx2);
     if(record) {
@@ -190,11 +191,12 @@ void performReaction(data_t* data, const readdy::model::Context& context, data_t
         case reaction_type::Fusion: {
             const auto& e1Pos = entry1.pos;
             const auto& e2Pos = entry2.pos;
+            const auto difference = shortestDifferenceFun(e1Pos, e2Pos);
             if (reaction->educts()[0] == entry1.type) {
-                newEntries.emplace_back(pbc(entry1.pos + reaction->weight1() * (e2Pos - e1Pos)),
+                newEntries.emplace_back(pbc(entry1.pos + reaction->weight1() * difference),
                                         reaction->products()[0], readdy::model::Particle::nextId());
             } else {
-                newEntries.emplace_back(pbc(entry1.pos + reaction->weight2() * (e2Pos - e1Pos)),
+                newEntries.emplace_back(pbc(entry1.pos + reaction->weight2() * difference),
                                         reaction->products()[0], readdy::model::Particle::nextId());
             }
             decayedEntries.push_back(idx1);

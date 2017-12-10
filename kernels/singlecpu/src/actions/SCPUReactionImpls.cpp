@@ -129,7 +129,6 @@ std::vector<event_t> findEvents(const SCPUKernel *const kernel, scalar dt, bool 
 void SCPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
     auto t = node.timeit();
     const auto &ctx = kernel->context();
-    const auto &fixPos = ctx.fixPositionFun();
     SCPUStateModel &stateModel = kernel->getSCPUKernelStateModel();
     if(ctx.recordReactionsWithPositions()) {
         stateModel.reactionRecords().clear();
@@ -159,10 +158,10 @@ void SCPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
                     if(ctx.recordReactionsWithPositions()) {
                         reaction_record record;
                         record.id = reaction->id();
-                        performReaction(data, entry1, entry1, newParticles, decayedEntries, reaction, fixPos, &record);
+                        performReaction(data, entry1, entry1, newParticles, decayedEntries, reaction, ctx, &record);
                         stateModel.reactionRecords().push_back(record);
                     } else {
-                        performReaction(data, entry1, entry1, newParticles, decayedEntries, reaction, fixPos, nullptr);
+                        performReaction(data, entry1, entry1, newParticles, decayedEntries, reaction, ctx, nullptr);
                     }
                     for (auto _it2 = it + 1; _it2 != events.end(); ++_it2) {
                         if (_it2->idx1 == entry1 || _it2->idx2 == entry1) {
@@ -174,10 +173,10 @@ void SCPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
                     if(ctx.recordReactionsWithPositions()) {
                         reaction_record record;
                         record.id = reaction->id();
-                        performReaction(data, entry1, event.idx2, newParticles, decayedEntries, reaction, fixPos, &record);
+                        performReaction(data, entry1, event.idx2, newParticles, decayedEntries, reaction, ctx, &record);
                         stateModel.reactionRecords().push_back(record);
                     } else {
-                        performReaction(data, entry1, event.idx2, newParticles, decayedEntries, reaction, fixPos, nullptr);
+                        performReaction(data, entry1, event.idx2, newParticles, decayedEntries, reaction, ctx, nullptr);
                     }
                     for (auto _it2 = it + 1; _it2 != events.end(); ++_it2) {
                         if (_it2->idx1 == entry1 || _it2->idx2 == entry1 ||
@@ -271,7 +270,6 @@ scpu_data::entries_update handleEventsGillespie(
 
     if (!events.empty()) {
         const auto &ctx = kernel->context();
-        const auto &fixPos = ctx.fixPositionFun();
         auto &model = kernel->getSCPUKernelStateModel();
         const auto data = kernel->getSCPUKernelStateModel().getParticleData();
         /**
@@ -304,11 +302,11 @@ scpu_data::entries_update handleEventsGillespie(
                             if(ctx.recordReactionsWithPositions()) {
                                 reaction_record record;
                                 record.id = reaction->id();
-                                performReaction(*data, entry1, entry1, newParticles, decayedEntries, reaction, fixPos,
+                                performReaction(*data, entry1, entry1, newParticles, decayedEntries, reaction, ctx,
                                                 &record);
                                 model.reactionRecords().push_back(record);
                             } else {
-                                performReaction(*data, entry1, entry1, newParticles, decayedEntries, reaction, fixPos,
+                                performReaction(*data, entry1, entry1, newParticles, decayedEntries, reaction, ctx,
                                                 nullptr);
                             }
                             if(ctx.recordReactionCounts()) {
@@ -319,10 +317,10 @@ scpu_data::entries_update handleEventsGillespie(
                             if(ctx.recordReactionsWithPositions()) {
                                 reaction_record record;
                                 record.id = reaction->id();
-                                performReaction(*data, entry1, event.idx2, newParticles, decayedEntries, reaction, fixPos, &record);
+                                performReaction(*data, entry1, event.idx2, newParticles, decayedEntries, reaction, ctx, &record);
                                 model.reactionRecords().push_back(record);
                             } else {
-                                performReaction(*data, entry1, event.idx2, newParticles, decayedEntries, reaction, fixPos, nullptr);
+                                performReaction(*data, entry1, event.idx2, newParticles, decayedEntries, reaction, ctx, nullptr);
                             }
                             if(ctx.recordReactionCounts()) {
                                 model.reactionCounts().at(reaction->id())++;
