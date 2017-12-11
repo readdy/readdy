@@ -20,7 +20,7 @@
  ********************************************************************/
 
 
-#include <readdy/kernel/cpu/nl/CellDecompositionNeighborList.h>
+#include <readdy/kernel/cpu_legacy/nl/CellDecompositionNeighborList.h>
 
 /**
  * << detailed description >>

@@ -23,7 +23,7 @@
  * much derived from his work. */
 
 
-#include "readdy/kernel/cpu/util/hilbert.h"
+#include "readdy/kernel/cpu_legacy/util/hilbert.h"
 
 /* implementation of the hilbert functions */
 

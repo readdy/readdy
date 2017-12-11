@@ -29,10 +29,10 @@
  * @date 23.06.16
  */
 
-#include <readdy/kernel/cpu/CPUKernel.h>
-#include <readdy/kernel/cpu/actions/CPUActionFactory.h>
-#include <readdy/kernel/cpu/actions/topologies/CPUTopologyActionFactory.h>
-#include <readdy/kernel/cpu/observables/CPUObservableFactory.h>
+#include <readdy/kernel/cpu_legacy/CPUKernel.h>
+#include <readdy/kernel/cpu_legacy/actions/CPUActionFactory.h>
+#include <readdy/kernel/cpu_legacy/actions/topologies/CPUTopologyActionFactory.h>
+#include <readdy/kernel/cpu_legacy/observables/CPUObservableFactory.h>
 
 namespace readdy {
 namespace kernel {

@@ -29,7 +29,7 @@
  * @date 4/21/17
  */
 
-#include <readdy/kernel/cpu/nl/SubCell.h>
+#include <readdy/kernel/cpu_legacy/nl/SubCell.h>
 
 namespace readdy {
 namespace kernel {

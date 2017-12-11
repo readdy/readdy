@@ -32,7 +32,7 @@
 
 #pragma once
 #include <readdy/model/topologies/TopologyActionFactory.h>
-#include <readdy/kernel/cpu/CPUKernel.h>
+#include <readdy/kernel/cpu_legacy/CPUKernel.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(kernel)

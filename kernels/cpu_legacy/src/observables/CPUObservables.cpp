@@ -33,9 +33,9 @@
 
 #include <readdy/common/thread/scoped_async.h>
 
-#include <readdy/kernel/cpu/observables/CPUObservables.h>
-#include <readdy/kernel/cpu/CPUKernel.h>
-#include <readdy/kernel/cpu/util/config.h>
+#include <readdy/kernel/cpu_legacy/observables/CPUObservables.h>
+#include <readdy/kernel/cpu_legacy/CPUKernel.h>
+#include <readdy/kernel/cpu_legacy/util/config.h>
 
 namespace readdy {
 namespace kernel {

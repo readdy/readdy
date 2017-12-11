@@ -29,7 +29,7 @@
  * @date 9/13/17
  */
 
-#include <readdy/kernel/cpu/nl/CLLNeighborList.h>
+#include <readdy/kernel/cpu_legacy/nl/CLLNeighborList.h>
 
 namespace readdy {
 namespace kernel {

@@ -23,26 +23,47 @@
 /**
  * << detailed description >>
  *
- * @file CPUEulerBDIntegrator.h
+ * @file UpdateNeighborList.h
  * @brief << brief description >>
  * @author clonker
- * @date 07.07.16
+ * @date 13.07.16
  */
 
+
 #pragma once
-#include <readdy/kernel/cpu/CPUKernel.h>
 #include <readdy/model/actions/Actions.h>
+#include <readdy/kernel/cpu_legacy/CPUKernel.h>
+#include <readdy/kernel/cpu_legacy/nl/AdaptiveNeighborList.h>
 
 namespace readdy {
 namespace kernel {
 namespace cpu {
 namespace actions {
-class CPUEulerBDIntegrator : public readdy::model::actions::EulerBDIntegrator {
-
+class CPUUpdateNeighborList : public readdy::model::actions::UpdateNeighborList {
+    using super = readdy::model::actions::UpdateNeighborList;
 public:
-    CPUEulerBDIntegrator(CPUKernel *kernel, readdy::scalar timeStep);
 
-    void perform(const util::PerformanceNode &node) override;
+    CPUUpdateNeighborList(CPUKernel *kernel, super::Operation op, scalar skin) : super(op, skin), kernel(kernel) {}
+
+    void perform(const util::PerformanceNode &node) override {
+        auto t = node.timeit();
+        switch (operation) {
+            case init:
+                kernel->getCPUKernelStateModel().initializeNeighborList(skinSize, node);
+                break;
+            case clear:
+                kernel->getCPUKernelStateModel().clearNeighborList(node);
+                break;
+            case update:
+                kernel->getCPUKernelStateModel().updateNeighborList(node);
+                break;
+        }
+
+    }
+
+    bool supportsSkin() const override {
+        return true;
+    }
 
 private:
     CPUKernel *kernel;

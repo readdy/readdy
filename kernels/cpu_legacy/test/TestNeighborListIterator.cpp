@@ -33,7 +33,7 @@
 #include "gtest/gtest.h"
 
 #include "readdy/common/common.h"
-#include "readdy/kernel/cpu/nl/NeighborListIterator.h"
+#include "readdy/kernel/cpu_legacy/nl/NeighborListIterator.h"
 
 namespace {
 

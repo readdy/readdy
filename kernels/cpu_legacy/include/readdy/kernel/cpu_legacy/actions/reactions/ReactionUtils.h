@@ -32,8 +32,8 @@
 #pragma once
 #include <cmath>
 #include <readdy/model/RandomProvider.h>
-#include <readdy/kernel/cpu/CPUKernel.h>
-#include <readdy/kernel/cpu/nl/AdaptiveNeighborList.h>
+#include <readdy/kernel/cpu_legacy/CPUKernel.h>
+#include <readdy/kernel/cpu_legacy/nl/AdaptiveNeighborList.h>
 #include <readdy/common/logging.h>
 #include "Event.h"
 

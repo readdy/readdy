@@ -31,7 +31,7 @@
 
 #pragma once
 #include <readdy/model/actions/Actions.h>
-#include <readdy/kernel/cpu/CPUKernel.h>
+#include <readdy/kernel/cpu_legacy/CPUKernel.h>
 #include <readdy/common/thread/barrier.h>
 
 namespace readdy {

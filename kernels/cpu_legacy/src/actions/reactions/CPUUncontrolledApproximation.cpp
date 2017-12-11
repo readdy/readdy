@@ -32,10 +32,10 @@
 #include <future>
 #include <random>
 
-#include <readdy/kernel/cpu/actions/reactions/CPUUncontrolledApproximation.h>
-#include <readdy/kernel/cpu/actions/reactions/Event.h>
-#include <readdy/kernel/cpu/actions/reactions/ReactionUtils.h>
-#include <readdy/kernel/cpu/data/DataContainer.h>
+#include <readdy/kernel/cpu_legacy/actions/reactions/CPUUncontrolledApproximation.h>
+#include <readdy/kernel/cpu_legacy/actions/reactions/Event.h>
+#include <readdy/kernel/cpu_legacy/actions/reactions/ReactionUtils.h>
+#include <readdy/kernel/cpu_legacy/data/DataContainer.h>
 
 namespace readdy {
 namespace kernel {

@@ -35,7 +35,7 @@
 #include <readdy/common/macros.h>
 #include <readdy/model/topologies/Topology.h>
 #include <readdy/model/topologies/potentials/TopologyPotentialActions.h>
-#include <readdy/kernel/cpu/data/NLDataContainer.h>
+#include <readdy/kernel/cpu_legacy/data/NLDataContainer.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(kernel)

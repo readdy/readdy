@@ -30,8 +30,8 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#include <readdy/kernel/cpu/actions/topologies/CPUTopologyActionFactory.h>
-#include <readdy/kernel/cpu/actions/topologies/CPUTopologyActions.h>
+#include <readdy/kernel/cpu_legacy/actions/topologies/CPUTopologyActionFactory.h>
+#include <readdy/kernel/cpu_legacy/actions/topologies/CPUTopologyActions.h>
 
 namespace top = readdy::model::top;
 namespace ctop = readdy::kernel::cpu::actions::top;

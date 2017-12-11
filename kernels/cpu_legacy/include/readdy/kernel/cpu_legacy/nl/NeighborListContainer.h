@@ -34,7 +34,7 @@
 
 #include <vector>
 #include <readdy/common/thread/Config.h>
-#include <readdy/kernel/cpu/data/DefaultDataContainer.h>
+#include <readdy/kernel/cpu_legacy/data/DefaultDataContainer.h>
 #include "CellLinkedList.h"
 
 namespace readdy {

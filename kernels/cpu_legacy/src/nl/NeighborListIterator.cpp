@@ -30,7 +30,7 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#include <readdy/kernel/cpu/nl/NeighborList.h>
+#include <readdy/kernel/cpu_legacy/nl/NeighborList.h>
 
 namespace readdy {
 namespace kernel {

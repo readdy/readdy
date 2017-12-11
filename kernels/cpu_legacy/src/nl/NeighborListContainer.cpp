@@ -31,7 +31,7 @@
  */
 
 
-#include <readdy/kernel/cpu/nl/NeighborListContainer.h>
+#include <readdy/kernel/cpu_legacy/nl/NeighborListContainer.h>
 
 namespace readdy {
 namespace kernel {

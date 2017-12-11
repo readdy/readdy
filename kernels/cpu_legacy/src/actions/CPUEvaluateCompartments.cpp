@@ -27,8 +27,8 @@
  * @date 18.10.16
  */
 
-#include <readdy/kernel/cpu/actions/CPUEvaluateCompartments.h>
-#include <readdy/kernel/cpu/data/NLDataContainer.h>
+#include <readdy/kernel/cpu_legacy/actions/CPUEvaluateCompartments.h>
+#include <readdy/kernel/cpu_legacy/data/NLDataContainer.h>
 
 namespace readdy {
 namespace kernel {

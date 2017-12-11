@@ -30,7 +30,7 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#include <readdy/kernel/cpu/data/DefaultDataContainer.h>
+#include <readdy/kernel/cpu_legacy/data/DefaultDataContainer.h>
 
 namespace readdy {
 namespace kernel {

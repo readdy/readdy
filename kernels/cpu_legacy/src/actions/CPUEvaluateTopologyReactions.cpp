@@ -30,8 +30,8 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#include <readdy/kernel/cpu/actions/CPUEvaluateTopologyReactions.h>
-#include <readdy/kernel/cpu/nl/AdaptiveNeighborList.h>
+#include <readdy/kernel/cpu_legacy/actions/CPUEvaluateTopologyReactions.h>
+#include <readdy/kernel/cpu_legacy/nl/AdaptiveNeighborList.h>
 
 namespace readdy {
 namespace kernel {

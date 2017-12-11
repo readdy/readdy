@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2016 Computational Molecular Biology Group,          * 
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -21,40 +21,36 @@
 
 
 /**
+ * << detailed description >>
  *
- *
- * @file NeighborList.h
- * @brief 
+ * @file CellDecompositionNeighborList.h
+ * @brief << brief description >>
  * @author clonker
- * @date 4/21/17
+ * @date 01.09.17
+ * @copyright GNU Lesser General Public License v3.0
  */
+
 #pragma once
 
-#include <readdy/kernel/cpu/util/config.h>
+#include <readdy/kernel/cpu_legacy/util/config.h>
 
-#include <readdy/kernel/cpu/data/NLDataContainer.h>
-
+#include "NeighborList.h"
 #include "CellContainer.h"
 #include "SubCell.h"
-#include "NeighborList.h"
 
 namespace readdy {
 namespace kernel {
 namespace cpu {
 namespace nl {
 
-class AdaptiveNeighborList : public NeighborList{
+class CellDecompositionNeighborList : public NeighborList {
 public:
-    using skin_size_t = scalar;
-    using data_type = data::NLDataContainer;
 
-    AdaptiveNeighborList(data::EntryDataContainer *data, const readdy::model::Context &context, const readdy::util::thread::Config &config,
-                         bool hilbert_sort = true);
+    CellDecompositionNeighborList(data::EntryDataContainer *data, const readdy::model::Context &context,
+                                  const readdy::util::thread::Config &config);
 
-    AdaptiveNeighborList(const readdy::model::Context &context, const readdy::util::thread::Config &config,
-                         bool hilbert_sort = true);
-
-    ~AdaptiveNeighborList() = default;
+    CellDecompositionNeighborList(const readdy::model::Context &context,
+                                  const readdy::util::thread::Config &config);
 
     bool is_adaptive() const override;
 
@@ -64,50 +60,28 @@ public:
 
     void clear(const util::PerformanceNode &node) override;
 
+    void updateData(DataUpdate &&update) override;
+
+    void fill_container();
+
     std::size_t size() const override;
 
-    void clear_cells();
+    void fill_verlet_list();
 
-    const readdy::util::thread::Config& config() const;
-
-    const CellContainer& cell_container() const;
-
-    bool& performs_hilbert_sort();
-
-    const bool& performs_hilbert_sort() const;
-
-    void sort_by_hilbert_curve();
-
-    void updateData(data_type::DataUpdate &&update) override;
+    void fill_cell_verlet_list(const CellContainer::sub_cell &sub_cell);
 
     virtual const_iterator cbegin() const override;
 
     virtual const_iterator cend() const override;
 
+    const data::EntryDataContainer *data() const override;
+
     data::EntryDataContainer *data() override;
 
-    const data::EntryDataContainer * data() const override;
-
-    const data::NLDataContainer &nlData() const;
-
 private:
-
-    void fill_container();
-
-    /**
-     * should be called once containers are all valid / filled
-     */
-    void fill_verlet_list();
-
-    void fill_cell_verlet_list(const CellContainer::sub_cell &sub_cell, bool reset_displacement);
-
-    void handle_dirty_cells();
-
-    bool _hilbert_sort {true};
     bool _is_set_up {false};
 
     data::NLDataContainer _data;
-
     CellContainer _cell_container;
 };
 

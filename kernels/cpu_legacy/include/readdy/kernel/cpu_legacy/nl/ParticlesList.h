@@ -33,7 +33,7 @@
 #pragma once
 
 #include <vector>
-#include <readdy/kernel/cpu/data/DefaultDataContainer.h>
+#include <readdy/kernel/cpu_legacy/data/DefaultDataContainer.h>
 
 namespace readdy {
 namespace kernel {

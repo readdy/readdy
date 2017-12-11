@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          * 
+ * Copyright © 2016 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -23,66 +23,43 @@
 /**
  * << detailed description >>
  *
- * @file CellDecompositionNeighborList.h
+ * @file CPUProgramFactory.h
  * @brief << brief description >>
  * @author clonker
- * @date 01.09.17
- * @copyright GNU Lesser General Public License v3.0
+ * @date 23.06.16
  */
 
 #pragma once
-
-#include <readdy/kernel/cpu/util/config.h>
-
-#include "NeighborList.h"
-#include "CellContainer.h"
-#include "SubCell.h"
+#include <readdy/kernel/cpu_legacy/CPUKernel.h>
 
 namespace readdy {
 namespace kernel {
 namespace cpu {
-namespace nl {
-
-class CellDecompositionNeighborList : public NeighborList {
+namespace actions {
+class CPUActionFactory : public readdy::model::actions::ActionFactory {
+    CPUKernel *const kernel;
 public:
+    explicit CPUActionFactory(CPUKernel* kernel);
 
-    CellDecompositionNeighborList(data::EntryDataContainer *data, const readdy::model::Context &context,
-                                  const readdy::util::thread::Config &config);
+protected:
+    readdy::model::actions::AddParticles *createAddParticles(const std::vector<readdy::model::Particle> &particles) const override;
 
-    CellDecompositionNeighborList(const readdy::model::Context &context,
-                                  const readdy::util::thread::Config &config);
+    readdy::model::actions::EulerBDIntegrator *createEulerBDIntegrator(readdy::scalar timeStep) const override;
 
-    bool is_adaptive() const override;
+    readdy::model::actions::CalculateForces *createCalculateForces() const override;
 
-    void set_up(const util::PerformanceNode &node) override;
+    readdy::model::actions::UpdateNeighborList *
+    createUpdateNeighborList(readdy::model::actions::UpdateNeighborList::Operation operation, readdy::scalar skinSize) const override;
 
-    void update(const util::PerformanceNode &node) override;
+    readdy::model::actions::EvaluateCompartments *createEvaluateCompartments() const override;
 
-    void clear(const util::PerformanceNode &node) override;
+    readdy::model::actions::reactions::UncontrolledApproximation *
+    createUncontrolledApproximation(readdy::scalar timeStep) const override;
 
-    void updateData(DataUpdate &&update) override;
+    readdy::model::actions::reactions::Gillespie *createGillespie(readdy::scalar timeStep) const override;
 
-    void fill_container();
-
-    std::size_t size() const override;
-
-    void fill_verlet_list();
-
-    void fill_cell_verlet_list(const CellContainer::sub_cell &sub_cell);
-
-    virtual const_iterator cbegin() const override;
-
-    virtual const_iterator cend() const override;
-
-    const data::EntryDataContainer *data() const override;
-
-    data::EntryDataContainer *data() override;
-
-private:
-    bool _is_set_up {false};
-
-    data::NLDataContainer _data;
-    CellContainer _cell_container;
+    readdy::model::actions::top::EvaluateTopologyReactions *
+    createEvaluateTopologyReactions(readdy::scalar timeStep) const override;
 };
 
 }

@@ -29,9 +29,9 @@
  * @date 21.07.16
  */
 
-#include <readdy/kernel/cpu/observables/CPUObservableFactory.h>
-#include <readdy/kernel/cpu/CPUKernel.h>
-#include <readdy/kernel/cpu/observables/CPUObservables.h>
+#include <readdy/kernel/cpu_legacy/observables/CPUObservableFactory.h>
+#include <readdy/kernel/cpu_legacy/CPUKernel.h>
+#include <readdy/kernel/cpu_legacy/observables/CPUObservables.h>
 #include <readdy/kernel/singlecpu/observables/SCPUObservables.h>
 #include <readdy/kernel/singlecpu/observables/SCPUAggregators.h>
 

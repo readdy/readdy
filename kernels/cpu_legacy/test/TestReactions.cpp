@@ -32,11 +32,11 @@
 #include <gtest/gtest.h>
 #include <readdy/model/Kernel.h>
 #include <readdy/plugin/KernelProvider.h>
-#include <readdy/kernel/cpu/CPUKernel.h>
-#include <readdy/kernel/cpu/actions/reactions/ReactionUtils.h>
+#include <readdy/kernel/cpu_legacy/CPUKernel.h>
+#include <readdy/kernel/cpu_legacy/actions/reactions/ReactionUtils.h>
 #include <readdy/testing/Utils.h>
 #include <readdy/testing/FloatingPoints.h>
-#include <readdy/kernel/cpu/actions/reactions/CPUGillespie.h>
+#include <readdy/kernel/cpu_legacy/actions/reactions/CPUGillespie.h>
 #include <readdy/model/reactions/Fusion.h>
 #include <readdy/model/reactions/Fission.h>
 #include <readdy/model/reactions/Decay.h>

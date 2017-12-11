@@ -29,8 +29,8 @@
  * @date 07.07.16
  */
 
-#include <readdy/kernel/cpu/actions/CPUEulerBDIntegrator.h>
-#include <readdy/kernel/cpu/data/NLDataContainer.h>
+#include <readdy/kernel/cpu_legacy/actions/CPUEulerBDIntegrator.h>
+#include <readdy/kernel/cpu_legacy/data/NLDataContainer.h>
 
 namespace readdy {
 namespace kernel {

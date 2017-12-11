@@ -30,7 +30,7 @@
  * @date 20.10.16
  */
 
-#include <readdy/kernel/cpu/actions/reactions/ReactionUtils.h>
+#include <readdy/kernel/cpu_legacy/actions/reactions/ReactionUtils.h>
 
 namespace readdy {
 namespace kernel {

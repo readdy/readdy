@@ -23,45 +23,30 @@
 /**
  * << detailed description >>
  *
- * @file CPUProgramFactory.h
+ * @file CPUEulerBDIntegrator.h
  * @brief << brief description >>
  * @author clonker
- * @date 23.06.16
+ * @date 07.07.16
  */
 
 #pragma once
-#include <readdy/kernel/cpu/CPUKernel.h>
+#include <readdy/kernel/cpu_legacy/CPUKernel.h>
+#include <readdy/model/actions/Actions.h>
 
 namespace readdy {
 namespace kernel {
 namespace cpu {
 namespace actions {
-class CPUActionFactory : public readdy::model::actions::ActionFactory {
-    CPUKernel *const kernel;
+class CPUEulerBDIntegrator : public readdy::model::actions::EulerBDIntegrator {
+
 public:
-    explicit CPUActionFactory(CPUKernel* kernel);
+    CPUEulerBDIntegrator(CPUKernel *kernel, readdy::scalar timeStep);
 
-protected:
-    readdy::model::actions::AddParticles *createAddParticles(const std::vector<readdy::model::Particle> &particles) const override;
+    void perform(const util::PerformanceNode &node) override;
 
-    readdy::model::actions::EulerBDIntegrator *createEulerBDIntegrator(readdy::scalar timeStep) const override;
-
-    readdy::model::actions::CalculateForces *createCalculateForces() const override;
-
-    readdy::model::actions::UpdateNeighborList *
-    createUpdateNeighborList(readdy::model::actions::UpdateNeighborList::Operation operation, readdy::scalar skinSize) const override;
-
-    readdy::model::actions::EvaluateCompartments *createEvaluateCompartments() const override;
-
-    readdy::model::actions::reactions::UncontrolledApproximation *
-    createUncontrolledApproximation(readdy::scalar timeStep) const override;
-
-    readdy::model::actions::reactions::Gillespie *createGillespie(readdy::scalar timeStep) const override;
-
-    readdy::model::actions::top::EvaluateTopologyReactions *
-    createEvaluateTopologyReactions(readdy::scalar timeStep) const override;
+private:
+    CPUKernel *kernel;
 };
-
 }
 }
 }

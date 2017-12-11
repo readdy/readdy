@@ -23,16 +23,14 @@
 /**
  * << detailed description >>
  *
- * @file Gillespie.h
+ * @file UncontrolledApproximation.h
  * @brief << brief description >>
  * @author clonker
  * @date 20.10.16
  */
 
 #pragma once
-#include <readdy/kernel/cpu/CPUKernel.h>
-#include <readdy/common/range.h>
-#include "ReactionUtils.h"
+#include <readdy/kernel/cpu_legacy/CPUKernel.h>
 
 namespace readdy {
 namespace kernel {
@@ -40,16 +38,29 @@ namespace cpu {
 namespace actions {
 namespace reactions {
 
-class CPUGillespie : public readdy::model::actions::reactions::Gillespie {
-    using event_t = Event;
-    using reaction_idx_t = event_t::index_type;
-    using super = readdy::model::actions::reactions::Gillespie;
-
+class CPUUncontrolledApproximation : public readdy::model::actions::reactions::UncontrolledApproximation {
+    using super = readdy::model::actions::reactions::UncontrolledApproximation;
 public:
-
-    CPUGillespie(CPUKernel* kernel, readdy::scalar timeStep);
+    CPUUncontrolledApproximation(CPUKernel* kernel, readdy::scalar timeStep);
 
     void perform(const util::PerformanceNode &node) override;
+
+    void registerReactionScheme_11(const std::string &reactionName, reaction_11 fun) override {
+        throw std::runtime_error("not supported for cpu kernel thus far");
+    }
+
+    void registerReactionScheme_12(const std::string &reactionName, reaction_12 fun) override {
+        throw std::runtime_error("not supported for cpu kernel thus far");
+    }
+
+    void registerReactionScheme_21(const std::string &reactionName, reaction_21 fun) override {
+        throw std::runtime_error("not supported for cpu kernel thus far");
+
+    }
+
+    void registerReactionScheme_22(const std::string &reactionName, reaction_22 fun) override {
+        throw std::runtime_error("not supported for cpu kernel thus far");
+    }
 
 protected:
     CPUKernel *const kernel;

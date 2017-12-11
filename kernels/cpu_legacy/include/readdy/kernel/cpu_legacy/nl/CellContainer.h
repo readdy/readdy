@@ -38,7 +38,7 @@
 #include <readdy/common/Index.h>
 #include <readdy/model/Context.h>
 
-#include <readdy/kernel/cpu/data/NLDataContainer.h>
+#include <readdy/kernel/cpu_legacy/data/NLDataContainer.h>
 
 #include "ParticlesList.h"
 

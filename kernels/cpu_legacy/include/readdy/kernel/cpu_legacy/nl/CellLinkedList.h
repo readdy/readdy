@@ -38,7 +38,7 @@
 #include <readdy/model/Context.h>
 #include <readdy/common/Timer.h>
 #include <readdy/common/thread/atomic.h>
-#include <readdy/kernel/cpu/data/NLDataContainer.h>
+#include <readdy/kernel/cpu_legacy/data/NLDataContainer.h>
 
 namespace readdy {
 namespace kernel {

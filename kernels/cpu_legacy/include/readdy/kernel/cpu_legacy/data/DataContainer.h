@@ -36,7 +36,7 @@
 #include <readdy/model/Context.h>
 #include <readdy/common/thread/Config.h>
 #include <readdy/common/signals.h>
-#include <readdy/kernel/cpu/util/hilbert.h>
+#include <readdy/kernel/cpu_legacy/util/hilbert.h>
 #include <readdy/common/Utils.h>
 
 namespace readdy {

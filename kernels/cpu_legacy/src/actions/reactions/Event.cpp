@@ -29,7 +29,7 @@
  * @date 28.10.16
  */
 
-#include <readdy/kernel/cpu/actions/reactions/Event.h>
+#include <readdy/kernel/cpu_legacy/actions/reactions/Event.h>
 
 namespace readdy {
 namespace kernel {

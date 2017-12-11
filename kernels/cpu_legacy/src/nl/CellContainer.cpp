@@ -33,9 +33,9 @@
 #include <atomic>
 
 #include <readdy/common/numeric.h>
-#include <readdy/kernel/cpu/nl/CellContainer.h>
-#include <readdy/kernel/cpu/nl/SubCell.h>
-#include <readdy/kernel/cpu/util/config.h>
+#include <readdy/kernel/cpu_legacy/nl/CellContainer.h>
+#include <readdy/kernel/cpu_legacy/nl/SubCell.h>
+#include <readdy/kernel/cpu_legacy/util/config.h>
 #include <readdy/common/thread/barrier.h>
 
 namespace readdy {

@@ -31,7 +31,7 @@
 
 #pragma once
 #include <readdy/model/observables/Observables.h>
-#include <readdy/kernel/cpu/data/NLDataContainer.h>
+#include <readdy/kernel/cpu_legacy/data/NLDataContainer.h>
 
 namespace readdy {
 namespace kernel {

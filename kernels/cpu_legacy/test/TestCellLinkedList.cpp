@@ -32,7 +32,7 @@
 
 #include <gtest/gtest.h>
 
-#include "readdy/kernel/cpu/nl/CLLNeighborList.h"
+#include "readdy/kernel/cpu_legacy/nl/CLLNeighborList.h"
 
 namespace {
 

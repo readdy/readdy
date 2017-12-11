@@ -36,9 +36,9 @@
 
 #include <gtest/gtest.h>
 #include <readdy/api/SimulationScheme.h>
-#include <readdy/kernel/cpu/CPUKernel.h>
-#include <readdy/kernel/cpu/nl/AdaptiveNeighborList.h>
-#include <readdy/kernel/cpu/nl/CellDecompositionNeighborList.h>
+#include <readdy/kernel/cpu_legacy/CPUKernel.h>
+#include <readdy/kernel/cpu_legacy/nl/AdaptiveNeighborList.h>
+#include <readdy/kernel/cpu_legacy/nl/CellDecompositionNeighborList.h>
 #include <readdy/testing/NOOPPotential.h>
 
 

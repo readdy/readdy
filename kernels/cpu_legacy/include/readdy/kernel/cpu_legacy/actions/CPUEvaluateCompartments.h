@@ -29,7 +29,7 @@
 
 #pragma once
 #include <readdy/kernel/singlecpu/actions/SCPUEvaluateCompartments.h>
-#include <readdy/kernel/cpu/CPUKernel.h>
+#include <readdy/kernel/cpu_legacy/CPUKernel.h>
 
 namespace readdy {
 namespace kernel {

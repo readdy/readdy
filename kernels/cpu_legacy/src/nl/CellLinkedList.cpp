@@ -30,7 +30,7 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#include <readdy/kernel/cpu/nl/CellLinkedList.h>
+#include <readdy/kernel/cpu_legacy/nl/CellLinkedList.h>
 #include <readdy/common/numeric.h>
 
 namespace readdy {

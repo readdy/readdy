@@ -34,7 +34,7 @@
 
 #include <readdy/common/common.h>
 #include <readdy/common/Timer.h>
-#include <readdy/kernel/cpu/data/NLDataContainer.h>
+#include <readdy/kernel/cpu_legacy/data/NLDataContainer.h>
 #include "NeighborListIterator.h"
 
 namespace readdy {

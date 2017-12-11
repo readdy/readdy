@@ -28,7 +28,7 @@
  * @author clonker
  * @date 20.10.16
  */
-#include <readdy/kernel/cpu/actions/reactions/CPUGillespie.h>
+#include <readdy/kernel/cpu_legacy/actions/reactions/CPUGillespie.h>
 
 
 namespace readdy {

@@ -36,11 +36,11 @@
 #include <readdy/common/thread/Config.h>
 #include <readdy/model/reactions/ReactionRecord.h>
 #include <readdy/model/observables/ReactionCounts.h>
-#include <readdy/kernel/cpu/util/config.h>
+#include <readdy/kernel/cpu_legacy/util/config.h>
 #include <readdy/common/index_persistent_vector.h>
 #include <readdy/common/Timer.h>
 #include <readdy/api/KernelConfiguration.h>
-#include <readdy/kernel/cpu/data/DefaultDataContainer.h>
+#include <readdy/kernel/cpu_legacy/data/DefaultDataContainer.h>
 
 namespace readdy {
 namespace kernel {

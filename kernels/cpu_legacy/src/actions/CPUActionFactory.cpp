@@ -29,14 +29,14 @@
  * @date 23.06.16
  */
 
-#include <readdy/kernel/cpu/actions/CPUActionFactory.h>
-#include <readdy/kernel/cpu/actions/CPUEulerBDIntegrator.h>
-#include <readdy/kernel/cpu/actions/CPUUpdateNeighborList.h>
-#include <readdy/kernel/cpu/actions/CPUCalculateForces.h>
-#include <readdy/kernel/cpu/actions/CPUEvaluateCompartments.h>
-#include <readdy/kernel/cpu/actions/reactions/CPUGillespie.h>
-#include <readdy/kernel/cpu/actions/reactions/CPUUncontrolledApproximation.h>
-#include <readdy/kernel/cpu/actions/CPUEvaluateTopologyReactions.h>
+#include <readdy/kernel/cpu_legacy/actions/CPUActionFactory.h>
+#include <readdy/kernel/cpu_legacy/actions/CPUEulerBDIntegrator.h>
+#include <readdy/kernel/cpu_legacy/actions/CPUUpdateNeighborList.h>
+#include <readdy/kernel/cpu_legacy/actions/CPUCalculateForces.h>
+#include <readdy/kernel/cpu_legacy/actions/CPUEvaluateCompartments.h>
+#include <readdy/kernel/cpu_legacy/actions/reactions/CPUGillespie.h>
+#include <readdy/kernel/cpu_legacy/actions/reactions/CPUUncontrolledApproximation.h>
+#include <readdy/kernel/cpu_legacy/actions/CPUEvaluateTopologyReactions.h>
 
 namespace core_p = readdy::model::actions;
 

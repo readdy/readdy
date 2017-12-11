@@ -30,11 +30,11 @@
  */
 
 #include <future>
-#include <readdy/kernel/cpu/CPUStateModel.h>
+#include <readdy/kernel/cpu_legacy/CPUStateModel.h>
 #include <readdy/common/thread/barrier.h>
-#include <readdy/kernel/cpu/nl/AdaptiveNeighborList.h>
-#include <readdy/kernel/cpu/nl/CellDecompositionNeighborList.h>
-#include <readdy/kernel/cpu/nl/CLLNeighborList.h>
+#include <readdy/kernel/cpu_legacy/nl/AdaptiveNeighborList.h>
+#include <readdy/kernel/cpu_legacy/nl/CellDecompositionNeighborList.h>
+#include <readdy/kernel/cpu_legacy/nl/CLLNeighborList.h>
 
 namespace readdy {
 namespace kernel {
