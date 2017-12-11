@@ -100,11 +100,11 @@ void from_json(const json &j, Configuration &conf) {
 }
 
 void to_json(json &j, const Configuration &conf) {
-    j = json {{"CPU", conf.cpu}};
+    j = json {{"CPU_Legacy", conf.cpu}};
 }
 void from_json(const json &j, Configuration &conf) {
-    if(j.find("CPU") != j.end()) {
-        conf.cpu = j.at("CPU").get<cpu::Configuration>();
+    if(j.find("CPU_Legacy") != j.end()) {
+        conf.cpu = j.at("CPU_Legacy").get<cpu::Configuration>();
     }
 
 }

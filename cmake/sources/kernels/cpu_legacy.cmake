@@ -20,8 +20,8 @@
 #####################################################################
 
 
-SET(SOURCES_DIR "${READDY_GLOBAL_DIR}/kernels/cpu/src")
-SET(CPU_INCLUDE_DIR "${READDY_GLOBAL_DIR}/kernels/cpu/include")
+SET(SOURCES_DIR "${READDY_GLOBAL_DIR}/kernels/cpu_legacy/src")
+SET(CPU_INCLUDE_DIR "${READDY_GLOBAL_DIR}/kernels/cpu_legacy/include")
 
 # --- main sources ---
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/CPUKernel.cpp")

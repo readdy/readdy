@@ -37,7 +37,7 @@
 namespace readdy {
 namespace kernel {
 namespace cpu {
-const std::string CPUKernel::name = "CPU";
+const std::string CPUKernel::name = "CPU_Legacy";
 
 struct CPUKernel::Impl {
     std::unique_ptr<actions::CPUActionFactory> actionFactory;

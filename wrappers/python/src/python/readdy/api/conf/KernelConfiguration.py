@@ -31,7 +31,7 @@ class NOOPKernelConfiguration(object):
         return ""
 
 
-class CPUKernelConfiguration(object):
+class CPULegacyKernelConfiguration(object):
     def __init__(self):
         self._n_threads = -1
         self._thread_mode = "pool"
@@ -81,7 +81,7 @@ class CPUKernelConfiguration(object):
 
     def to_json(self):
         import json
-        return json.dumps({"CPU": {
+        return json.dumps({"CPU_Legacy": {
             "neighbor_list": {
                 "cll_radius": self.cell_linked_list_radius,
                 "type": "{}".format(self.neighbor_list)

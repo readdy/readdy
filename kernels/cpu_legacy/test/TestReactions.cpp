@@ -216,7 +216,7 @@ TEST(CPUTestReactions, TestDecay) {
     using conversion_t = readdy::model::reactions::Conversion;
     using death_t = readdy::model::reactions::Decay;
     using particle_t = readdy::model::Particle;
-    auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
+    auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU_Legacy");
     kernel->context().boxSize() = {{10, 10, 10}};
     kernel->context().particle_types().add("X", .25);
     kernel->context().reactions().addDecay("X decay", "X", 1e16);

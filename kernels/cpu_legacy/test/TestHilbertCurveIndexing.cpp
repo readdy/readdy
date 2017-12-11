@@ -65,7 +65,7 @@ TEST(TestCurveIndexing, Cells) {
 
     auto uniform_real = &readdy::model::rnd::uniform_real<>;
 
-    auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
+    auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU_Legacy");
     kernel->context().boxSize() = {{5, 5, 5}};
     const auto &simBoxSize = kernel->context().boxSize();
 
