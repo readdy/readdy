@@ -47,7 +47,9 @@ using reaction_record = readdy::model::reactions::ReactionRecord;
 template<typename Reaction>
 void performReaction(
         scpu_data &data, scpu_data::entry_index idx1, scpu_data::entry_index idx2, scpu_data::new_entries &newEntries,
-        std::vector<scpu_data::entry_index> &decayedEntries, Reaction *reaction, const fix_pos &fixPos, reaction_record* record) {
+        std::vector<scpu_data::entry_index> &decayedEntries, Reaction *reaction, const readdy::model::Context& context, reaction_record* record) {
+    const auto& fixPos = context.fixPositionFun();
+    const auto& shortestDifferenceFun = context.shortestDifferenceFun();
     auto& entry1 = data.entry_at(idx1);
     auto& entry2 = data.entry_at(idx2);
     if(record) {
@@ -92,6 +94,7 @@ void performReaction(
 
             readdy::model::Particle p(entry1.position() - reaction->weight2() * reaction->productDistance() * n3,
                                       reaction->products()[1]);
+            fixPos(p.getPos());
             newEntries.emplace_back(p);
 
             entry1.type = reaction->products()[0];
@@ -107,10 +110,11 @@ void performReaction(
         case reaction_type::Fusion: {
             const auto e1Pos = data.entry_at(idx1).pos;
             const auto e2Pos = data.entry_at(idx2).pos;
+            const auto difference = shortestDifferenceFun(e1Pos, e2Pos);
             if (reaction->educts()[0] == entry1.type) {
-                entry1.pos += reaction->weight1() * (e2Pos - e1Pos);
+                entry1.pos += reaction->weight1() * difference;
             } else {
-                entry1.pos += reaction->weight2() * (e2Pos - e1Pos);
+                entry1.pos += reaction->weight2() * difference;
             }
             fixPos(entry1.pos);
             entry1.type = reaction->products()[0];

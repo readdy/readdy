@@ -148,6 +148,58 @@ TEST_P(TestReactions, FusionFissionWeights) {
     }
 }
 
+TEST_P(TestReactions, FusionThroughBoundary) {
+    auto &ctx = kernel->context();
+    ctx.boxSize() = {{10, 10, 10}};
+    ctx.periodicBoundaryConditions() = {true, true, true};
+    ctx.particle_types().add("A", 0.);
+    ctx.reactions().add("fus: A +(2) A -> A", 1e16);
+
+    auto &&neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>();
+    auto &&reactions = kernel->createAction<readdy::model::actions::reactions::UncontrolledApproximation>(1);
+    // resulting particle should be at 4.9
+    kernel->stateModel().addParticle({4.5, 4.5, 4.5, ctx.particle_types().idOf("A")});
+    kernel->stateModel().addParticle({-4.7, -4.7, -4.7, ctx.particle_types().idOf("A")});
+    kernel->context().configure();
+    neighborList->perform();
+    reactions->perform();
+
+    const auto particles = kernel->stateModel().getParticles();
+    EXPECT_EQ(particles.size(), 1);
+    const auto &pos = particles[0].getPos();
+    EXPECT_NEAR(pos.x, 4.9, 0.00001);
+    EXPECT_NEAR(pos.y, 4.9, 0.00001);
+    EXPECT_NEAR(pos.z, 4.9, 0.00001);
+}
+
+TEST_P(TestReactions, FissionNearBoundary) {
+    auto &ctx = kernel->context();
+    ctx.boxSize() = {{10, 10, 10}};
+    ctx.periodicBoundaryConditions() = {true, true, true};
+    ctx.particle_types().add("A", 0.);
+    ctx.reactions().add("fus: A -> A +(2) A", 1e16);
+
+    auto &&neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>();
+    auto &&reactions = kernel->createAction<readdy::model::actions::reactions::UncontrolledApproximation>(1);
+    // one product will be in negative-x halfspace, the other in positive-x halfspace
+    kernel->stateModel().addParticle({-4.9999999, 0, 0, ctx.particle_types().idOf("A")});
+    kernel->context().configure();
+    neighborList->perform();
+    reactions->perform();
+
+    const auto particles = kernel->stateModel().getParticles();
+    EXPECT_EQ(particles.size(), 2);
+    const auto &pos1 = particles[0].getPos();
+    const auto &pos2 = particles[1].getPos();
+    std::cout << "pos1.x" << pos1.x << std::endl;
+    std::cout << "pos2.x" << pos2.x << std::endl;
+    if (pos1.x <= 0.) {
+        EXPECT_GT(pos2.x, 0.);
+    } else if (pos1.x >= 0.) {
+        EXPECT_LT(pos2.x, 0.);
+    }
+}
+
 /*
  * @todo this is rather an integration test that should be separated from the rest
  * TEST_P(TestReactions, ConstantNumberOfParticles) {
