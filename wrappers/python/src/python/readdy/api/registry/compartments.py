@@ -55,6 +55,8 @@ class CompartmentRegistry(object):
         :param radius: radius of the sphere
         :param larger_or_less: determines if the compartment is outside/True or inside/False of the sphere
         """
+        origin = self._units.convert(origin, self._units.length_unit)
+        radius = self._units.convert(radius, self._units.length_unit)
         if not isinstance(conversions, dict) or len(conversions) == 0:
             raise ValueError("conversions must be a dictionary with at least one entry")
         if not isinstance(name, str):
@@ -63,8 +65,6 @@ class CompartmentRegistry(object):
             raise ValueError("radius must be positive")
         if not isinstance(larger_or_less, bool):
             raise ValueError("larger_or_less must be a bool")
-        origin = self._units.convert(origin, self._units.length_unit)
-        radius = self._units.convert(radius, self._units.length_unit)
         self._compartments.add_sphere(conversions, name, _v3_of(origin), radius, larger_or_less)
 
     def add_plane(self, conversions, name, normal_coefficients, distance, larger_or_less=True):
@@ -88,6 +88,8 @@ class CompartmentRegistry(object):
         :param distance: shorted distance of the plane from the origin (0,0,0) according to Hesse normal form
         :param larger_or_less: determines if the compartment is where the normal points/True or on the other side/False
         """
+        normal_coefficients = self._units.convert(normal_coefficients, self._units.length_unit)
+        distance = self._units.convert(distance, self._units.length_unit)
         if not isinstance(conversions, dict) or len(conversions) == 0:
             raise ValueError("conversions must be a dictionary with at least one entry")
         if not isinstance(name, str):
@@ -96,6 +98,4 @@ class CompartmentRegistry(object):
             raise ValueError("distance must be non-negative")
         if not isinstance(larger_or_less, bool):
             raise ValueError("larger_or_less must be a bool")
-        normal_coefficients = self._units.convert(normal_coefficients, self._units.length_unit)
-        distance = self._units.convert(distance, self._units.length_unit)
         self._compartments.add_plane(conversions, name, _v3_of(normal_coefficients), distance, larger_or_less)

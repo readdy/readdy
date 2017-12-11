@@ -32,6 +32,7 @@ import numpy as np
 
 import readdy
 from readdy.util.testing_utils import ReaDDyTestCase
+ut = readdy.units
 
 
 class TestTopLevelAPI(ReaDDyTestCase):
@@ -120,13 +121,29 @@ class TestTopLevelAPI(ReaDDyTestCase):
         rds = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.])
         rds.add_species("A")
         rds.potentials.add_box("A", 1.0, [1.0, 1.0, 1.0], [1.0, 1.0, 1.0])
+        rds.potentials.add_box("A", 1.0 * ut.joule / ut.mol / (ut.meter ** 2), np.array([1.0, 1.0, 1.0]) * ut.meter,
+                               np.array([1.0, 1.0, 1.0]) * ut.meter)
         rds.potentials.add_harmonic_repulsion("A", "A", 1.0, 1.0)
+        rds.potentials.add_harmonic_repulsion("A", "A", 1.0 * ut.joule / ut.mol / (ut.meter ** 2), 1.0 * ut.meter)
         rds.potentials.add_lennard_jones("A", "A", 12, 6, 10, True, 1, 1)
+        rds.potentials.add_lennard_jones("A", "A", 12, 6, 10 * ut.nanometer, True, 1 * ut.joule / ut.mol,
+                                         1 * ut.nanometer)
         rds.potentials.add_screened_electrostatics("A", "A", 10, 10, 10, 10, 10, 10)
+        rds.potentials.add_screened_electrostatics("A", "A", 10 * ut.joule / ut.mol * ut.meter, 10 / ut.meter,
+                                                   10 * ut.joule / ut.mol, 10 * ut.meter, 10, 10 * ut.meter)
         rds.potentials.add_sphere_in("A", 10, (10, 10, 10), 1)
+        rds.potentials.add_sphere_in("A", 10 * ut.joule / ut.mol / (ut.kilometer ** 2),
+                                     np.array([10, 10, 10]) * ut.nanometer, 1 * ut.picometer)
         rds.potentials.add_sphere_out("A", 10, (10, 10, 10), 1)
+        rds.potentials.add_sphere_out("A", 10 * ut.joule / ut.mol / (ut.kilometer ** 2),
+                                      np.array([10, 10, 10]) * ut.nanometer, 1 * ut.picometer)
         rds.potentials.add_spherical_barrier("A", 1, 1, (0, 0, 0), 1)
+        rds.potentials.add_spherical_barrier("A", 1 * ut.kilojoule / ut.mole, 1 * ut.meter,
+                                             np.array([0, 0, 0]) * ut.meter, 1 * ut.meter)
         rds.potentials.add_weak_interaction_piecewise_harmonic("A", "A", 10, 10, 10, 10)
+        rds.potentials.add_weak_interaction_piecewise_harmonic("A", "A", 10 * ut.joule / ut.mol / (ut.meter ** 2),
+                                                               10 * ut.nanometer, 10 * ut.joule / ut.mol,
+                                                               10 * ut.nanometer)
 
     def test_simulation(self):
         rds = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.])
@@ -144,7 +161,7 @@ class TestTopLevelAPI(ReaDDyTestCase):
         simulation.observe.particles(5)
         simulation.observe.reaction_counts(5)
         simulation.observe.reactions(5)
-        simulation.run(10, .1, False)
+        simulation.run(10, .1 * ut.nanosecond, False)
 
     def test_add_particles(self):
         rds = readdy.ReactionDiffusionSystem([10., 10., 10.])

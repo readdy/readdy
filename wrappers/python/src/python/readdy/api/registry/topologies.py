@@ -54,12 +54,12 @@ class TopologyRegistry(object):
         :param force_constant: the force constant [energy/length**2]
         :param length: length of the harmonic bond [length]
         """
+        force_constant = self._units.convert(force_constant, self._units.force_constant_unit)
+        length = self._units.convert(length, self._units.length_unit)
         if force_constant <= 0:
             raise ValueError("The force constant must be strictly positive.")
         if length < 0:
             raise ValueError("The length must be non-negative.")
-        force_constant = self._units.convert(force_constant, self._units.force_constant_unit)
-        length = self._units.convert(length, self._units.length_unit)
         cfg = _BondedPotentialConfiguration(force_constant, length, "harmonic")
         self._registry.configure_bond_potential(type1, type2, cfg)
 
@@ -76,9 +76,9 @@ class TopologyRegistry(object):
         :param force_constant: the force constant [energy/angle**2]
         :param equilibrium_angle: the equilibrium angle [angle]
         """
+        force_constant = self._units.convert(force_constant, self._units.energy_unit / (self._units.reg.radians ** 2))
         if force_constant <= 0:
             raise ValueError("The force constant must be strictly positive.")
-        force_constant = self._units.convert(force_constant, self._units.energy_unit / (self._units.reg.radians ** 2))
         equilibrium_angle = self._units.convert(equilibrium_angle, self._units.reg.radians)
         cfg = _AnglePotentialConfiguration(force_constant, equilibrium_angle, "harmonic")
         self._registry.configure_angle_potential(type1, type2, type3, cfg)
@@ -99,9 +99,9 @@ class TopologyRegistry(object):
         :param multiplicity: the multiplicity
         :param phi0: the equilibrium angle [angle]
         """
+        force_constant = self._units.convert(force_constant, self._units.energy_unit / (self._units.reg.radians ** 2))
         if force_constant <= 0:
             raise ValueError("The force constant must be strictly positive.")
-        force_constant = self._units.convert(force_constant, self._units.energy_unit / (self._units.reg.radians ** 2))
         phi0 = self._units.convert(phi0, self._units.reg.radians)
         cfg = _TorsionPotentialConfiguration(force_constant, multiplicity, phi0, "cos_dihedral")
         self._registry.configure_torsion_potential(type1, type2, type3, type4, cfg)

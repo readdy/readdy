@@ -48,9 +48,9 @@ class ReactionRegistry(object):
             raise ValueError("name must be a string")
         if not isinstance(particle_type, str):
             raise ValueError("particle_type must be a string")
+        rate = self._units.convert(rate, self._units.reaction_rate_unit)
         if not rate > 0.:
             raise ValueError("the reaction rate must be positive")
-        rate = self._units.convert(rate, self._units.reaction_rate_unit)
         self._reactions.add_decay(name, particle_type, rate)
 
     def add_conversion(self, name, type_from, type_to, rate):
@@ -72,9 +72,9 @@ class ReactionRegistry(object):
             raise ValueError("type_from must be a string")
         if not isinstance(type_to, str):
             raise ValueError("type_to must be a string")
+        rate = self._units.convert(rate, self._units.reaction_rate_unit)
         if not rate > 0.:
             raise ValueError("the reaction rate must be positive")
-        rate = self._units.convert(rate, self._units.reaction_rate_unit)
         self._reactions.add_conversion(name, type_from, type_to, rate)
 
     def add_fusion(self, name, type_from1, type_from2, type_to, rate, educt_distance, weight1=0.5, weight2=0.5):
@@ -106,16 +106,16 @@ class ReactionRegistry(object):
             raise ValueError("type_from2 must be string")
         if not isinstance(type_to, str):
             raise ValueError("type_to must be string")
-        if not rate > 0.:
-            raise ValueError("reaction rate must be positive")
-        if not educt_distance > 0.:
-            raise ValueError("educt_distance must be positive")
         if not 0. <= weight1 <= 1.:
             raise ValueError("weight1 must be in [0,1]")
         if not 0. <= weight2 <= 1.:
             raise ValueError("weight2 must be in [0,1]")
         rate = self._units.convert(rate, self._units.reaction_rate_unit)
         educt_distance = self._units.convert(educt_distance, self._units.length_unit)
+        if not rate > 0.:
+            raise ValueError("reaction rate must be positive")
+        if not educt_distance > 0.:
+            raise ValueError("educt_distance must be positive")
         self._reactions.add_fusion(name, type_from1, type_from2, type_to, rate, educt_distance, weight1, weight2)
 
     def add_fission(self, name, type_from, type_to1, type_to2, rate, product_distance, weight1=0.5, weight2=0.5):
@@ -147,16 +147,16 @@ class ReactionRegistry(object):
             raise ValueError("type_to1 must be string")
         if not isinstance(type_to2, str):
             raise ValueError("type_to2 must be string")
-        if not rate > 0.:
-            raise ValueError("reaction rate must be positive")
-        if not product_distance > 0.:
-            raise ValueError("product_distance must be positive")
         if not 0. <= weight1 <= 1.:
             raise ValueError("weight1 must be in [0,1]")
         if not 0. <= weight2 <= 1.:
             raise ValueError("weight2 must be in [0,1]")
         rate = self._units.convert(rate, self._units.reaction_rate_unit)
         product_distance = self._units.convert(product_distance, self._units.length_unit)
+        if not rate > 0.:
+            raise ValueError("reaction rate must be positive")
+        if not product_distance > 0.:
+            raise ValueError("product_distance must be positive")
         self._reactions.add_fission(name, type_from, type_to1, type_to2, rate, product_distance, weight1, weight2)
 
     def add_enzymatic(self, name, type_catalyst, type_from, type_to, rate, educt_distance):
@@ -184,12 +184,12 @@ class ReactionRegistry(object):
             raise ValueError("type_from must be string")
         if not isinstance(type_to, str):
             raise ValueError("type_to must be string")
+        rate = self._units.convert(rate, self._units.reaction_rate_unit)
+        educt_distance = self._units.convert(educt_distance, self._units.length_unit)
         if not rate > 0.:
             raise ValueError("reaction rate must be positive")
         if not educt_distance > 0.:
             raise ValueError("educt_distance must be positive")
-        rate = self._units.convert(rate, self._units.reaction_rate_unit)
-        educt_distance = self._units.convert(educt_distance, self._units.length_unit)
         self._reactions.add_enzymatic(name, type_catalyst, type_from, type_to, rate, educt_distance)
 
     def add(self, descriptor, rate):
