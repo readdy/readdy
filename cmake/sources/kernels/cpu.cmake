@@ -20,34 +20,27 @@
 #####################################################################
 
 
-PROJECT(readdy_kernel_cpu C CXX)
+SET(SOURCES_DIR "${READDY_GLOBAL_DIR}/kernels/cpu/src")
+SET(CPU_INCLUDE_DIR "${READDY_GLOBAL_DIR}/kernels/cpu/include")
 
-# sources and headers
-INCLUDE("${READDY_GLOBAL_DIR}/cmake/sources/kernels/cpu.cmake")
+# --- main sources ---
+LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/CPUKernel.cpp")
+LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/CPUStateModel.cpp")
+LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/data/DefaultDataContainer.cpp")
+LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/data/NLDataContainer.cpp")
+LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/observables/CPUObservableFactory.cpp")
+LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/observables/CPUObservables.cpp")
 
-# create library
-ADD_LIBRARY(${PROJECT_NAME} SHARED ${CPU_SOURCES} ${READDY_INCLUDE_DIRS} ${CPU_INCLUDE_DIR})
+# --- neighbor list ---
+LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/nl/CellLinkedList.cpp")
 
-# includes
-TARGET_INCLUDE_DIRECTORIES(${PROJECT_NAME} PUBLIC ${READDY_INCLUDE_DIRS} ${CPU_INCLUDE_DIR})
-
-# link
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${CMAKE_DL_LIBS} readdy)
-
-SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES
-        POSITION_INDEPENDENT_CODE ON
-        LINK_FLAGS "${EXTRA_LINK_FLAGS}"
-        COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}"
-        ARCHIVE_OUTPUT_DIRECTORY "${READDY_PLUGIN_OUTPUT_DIRECTORY}"
-        LIBRARY_OUTPUT_DIRECTORY "${READDY_PLUGIN_OUTPUT_DIRECTORY}"
-        LINKER_LANGUAGE CXX)
-
-INSTALL(TARGETS ${PROJECT_NAME}
-        RUNTIME DESTINATION readdy/readdy_plugins
-        LIBRARY DESTINATION readdy/readdy_plugins
-        ARCHIVE DESTINATION readdy/readdy_plugins
-        )
-
-IF (READDY_CREATE_TEST_TARGET)
-    ADD_SUBDIRECTORY(test)
-ENDIF()
+# --- actions ---
+LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/CPUActionFactory.cpp")
+LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/CPUEulerBDIntegrator.cpp")
+LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/CPUEvaluateCompartments.cpp")
+LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/CPUEvaluateTopologyReactions.cpp")
+LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/reactions/ReactionUtils.cpp")
+LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/reactions/Event.cpp")
+LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/reactions/CPUUncontrolledApproximation.cpp")
+LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/reactions/CPUGillespie.cpp")
+LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/topologies/CPUTopologyActionFactory.cpp")
