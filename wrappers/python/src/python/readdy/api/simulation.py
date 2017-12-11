@@ -353,6 +353,7 @@ class Simulation(object):
             print(self._simulation.context.describe())
 
         timestep = self._unit_conf.convert(timestep, self.time_unit)
+        assert timestep > 0.
 
         if self.output_file is not None and len(self.output_file) > 0 and os.path.exists(self.output_file):
             raise ValueError("Output file already existed: {}".format(self.output_file))

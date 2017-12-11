@@ -141,10 +141,10 @@ class PotentialRegistry(object):
         :param origin: origin of the sphere [length]
         :param radius: radius of the sphere [length]
         """
-        assert radius > 0, "radius has to be positive"
         force_constant = self._units.convert(force_constant, self._units.force_constant_unit)
         origin = self._units.convert(origin, self._units.length_unit)
         radius = self._units.convert(radius, self._units.length_unit)
+        assert radius > 0, "radius has to be positive"
         self._registry.add_sphere_out(particle_type, force_constant, _v3_of(origin), radius)
 
     def add_sphere_in(self, particle_type, force_constant, origin, radius):
@@ -157,10 +157,10 @@ class PotentialRegistry(object):
         :param origin: origin of the sphere [length]
         :param radius: radius of the sphere [length]
         """
-        assert radius > 0, "radius has to be positive"
         force_constant = self._units.convert(force_constant, self._units.force_constant_unit)
         origin = self._units.convert(origin, self._units.length_unit)
         radius = self._units.convert(radius, self._units.length_unit)
+        assert radius > 0, "radius has to be positive"
         self._registry.add_sphere_in(particle_type, force_constant, _v3_of(origin), radius)
 
     def add_spherical_barrier(self, particle_type, height, width, origin, radius):
@@ -176,11 +176,11 @@ class PotentialRegistry(object):
         :param origin: the origin of the sphere [length]
         :param radius: the radius of the sphere [length]
         """
-        assert radius > 0, "radius has to be positive"
-        assert height > 0, "height has to be positive"
-        assert width > 0, "width has to be positive"
         height = self._units.convert(height, self._units.energy_unit)
         width = self._units.convert(width, self._units.length_unit)
         origin = self._units.convert(origin, self._units.length_unit)
         radius = self._units.convert(radius, self._units.length_unit)
+        assert radius > 0, "radius has to be positive"
+        assert height > 0, "height has to be positive"
+        assert width > 0, "width has to be positive"
         self._registry.add_spherical_barrier(particle_type, height, width, _v3_of(origin), radius)
