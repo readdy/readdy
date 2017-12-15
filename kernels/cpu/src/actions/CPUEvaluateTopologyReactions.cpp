@@ -260,20 +260,21 @@ CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReacti
             const auto &topologies = kernel->getCPUKernelStateModel().topologies();
 
             if(!top_registry.spatialReactionRegistry().empty()) {
-                for (const auto &it : nl) {
-                    const auto &entry = data.entry_at(it.current_particle());
-                    if(!entry.deactivated && top_registry.isSpatialReactionType(entry.type)) {
-                        for (auto neighborIdx : it) {
-                            const auto &neighbor = data.entry_at(neighborIdx);
-                            if((entry.topology_index < 0 && neighbor.topology_index < 0) 
-                               || (neighbor.topology_index >= 0 && it.current_particle() > neighborIdx)) {
+                for(std::size_t cell = 0; cell < nl.nCells(); ++cell) {
+                    for(auto pairIt = nl.cellNeighborsBegin(cell); pairIt != nl.cellNeighborsEnd(cell); ++pairIt) {
+                        auto pair = *pairIt;
+                        const auto &entry = data.entry_at(std::get<0>(pair));
+                        const auto &neighbor = data.entry_at(std::get<1>(pair));
+                        if(!entry.deactivated && top_registry.isSpatialReactionType(entry.type)) {
+                            if((entry.topology_index < 0 && neighbor.topology_index < 0)
+                               || (neighbor.topology_index >= 0 && std::get<0>(pair) > std::get<1>(pair))) {
                                 // use symmetry or skip entirely
                                 continue;
                             }
 
                             topology_type_type tt1 = entry.topology_index >= 0 ? topologies.at(static_cast<std::size_t>(entry.topology_index))->type() : static_cast<topology_type_type>(-1);
                             topology_type_type tt2 = neighbor.topology_index >= 0 ? topologies.at(static_cast<std::size_t>(neighbor.topology_index))->type() : static_cast<topology_type_type>(-1);
-                            
+
                             const auto distSquared = d2(entry.pos, neighbor.pos);
                             std::size_t reaction_index = 0;
                             const auto &otherTop = neighbor.topology_index >= 0 ?
@@ -295,23 +296,23 @@ CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReacti
                                         event.topology_idx = static_cast<std::size_t>(entry.topology_index);
                                         event.t1 = entry.type;
                                         event.t2 = neighbor.type;
-                                        event.idx1 = it.current_particle();
-                                        event.idx2 = neighborIdx;
+                                        event.idx1 = std::get<0>(pair);
+                                        event.idx2 = std::get<1>(pair);
                                     } else if (entry.topology_index < 0 && neighbor.topology_index >= 0) {
                                         // neighbor is a topology, entry an ordinary particle
                                         event.topology_idx = static_cast<std::size_t>(neighbor.topology_index);
                                         event.t1 = neighbor.type;
                                         event.t2 = entry.type;
-                                        event.idx1 = neighborIdx;
-                                        event.idx2 = it.current_particle();
+                                        event.idx1 = std::get<1>(pair);
+                                        event.idx2 = std::get<0>(pair);
                                     } else if (entry.topology_index >= 0 && neighbor.topology_index >= 0) {
                                         // this is a topology-topology fusion
                                         event.topology_idx = static_cast<std::size_t>(entry.topology_index);
                                         event.topology_idx2 = static_cast<std::size_t>(neighbor.topology_index);
                                         event.t1 = entry.type;
                                         event.t2 = neighbor.type;
-                                        event.idx1 = it.current_particle();
-                                        event.idx2 = neighborIdx;
+                                        event.idx1 = std::get<0>(pair);
+                                        event.idx2 = std::get<1>(pair);
                                     } else {
                                         log::critical("got no topology for topology-fusion");
                                     }
@@ -325,6 +326,7 @@ CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReacti
                         }
                     }
                 }
+
             }
         }
     }

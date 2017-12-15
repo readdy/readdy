@@ -46,7 +46,7 @@ namespace reactions {
 using data_t = data::EntryDataContainer;
 using event_t = Event;
 using data_iter_t = data_t::const_iterator;
-using neighbor_list_iter_t = neighbor_list::const_iterator;
+using neighbor_list = nl::CompactCellLinkedList;
 using entry_type = data_t::Entries::value_type;
 
 using event_future_t = std::future<std::vector<event_t>>;
@@ -57,9 +57,9 @@ CPUUncontrolledApproximation::CPUUncontrolledApproximation(CPUKernel *const kern
 
 }
 
-void findEvents(std::size_t /*tid*/, data_iter_t begin, data_iter_t end, neighbor_list_iter_t nl_begin, neighbor_list_iter_t nl_end,
-                const CPUKernel *const kernel, scalar dt, bool approximateRate, event_promise_t &events,
-                std::promise<std::size_t> &n_events) {
+void findEvents(std::size_t /*tid*/, data_iter_t begin, data_iter_t end, neighbor_list::iterator_bounds nlBounds,
+                const CPUKernel *const kernel, scalar dt, bool approximateRate, const neighbor_list &nl,
+                event_promise_t &events, std::promise<std::size_t> &n_events) {
     std::vector<event_t> eventsUpdate;
     const auto &data = *kernel->getCPUKernelStateModel().getParticleData();
     const auto &d2 = kernel->context().distSquaredFun();
@@ -83,26 +83,24 @@ void findEvents(std::size_t /*tid*/, data_iter_t begin, data_iter_t end, neighbo
             }
         }
     }
-    for(auto nit = nl_begin; nit != nl_end; ++nit) {
-        const auto &entry = data.entry_at(nit->current_particle());
-        if(!entry.deactivated) {
-            for(auto neighborIdx : *nit) {
-                const auto &neighbor = data.entry_at(neighborIdx);
-                if(nit->current_particle() > neighborIdx) continue;
-                if(!neighbor.deactivated) {
-                    const auto &reactions = kernel->context().reactions().order2ByType(entry.type, neighbor.type);
-                    if (!reactions.empty()) {
-                        const auto distSquared = d2(neighbor.pos, entry.pos);
-                        for (auto it_reactions = reactions.begin(); it_reactions < reactions.end(); ++it_reactions) {
-                            const auto &react = *it_reactions;
-                            const auto rate = react->rate();
-                            if (rate > 0 && distSquared < react->eductDistanceSquared()
-                                && shouldPerformEvent(rate, dt, approximateRate)) {
-                                const auto reaction_index = static_cast<event_t::reaction_index_type>(it_reactions -
-                                                                                                      reactions.begin());
-                                eventsUpdate.emplace_back(2, react->nProducts(), nit->current_particle(), neighborIdx, rate, 0,
-                                                          reaction_index, entry.type, neighbor.type);
-                            }
+    for(auto cell = std::get<0>(nlBounds); cell != std::get<1>(nlBounds); ++cell) {
+        for(auto pairIt = nl.cellNeighborsEnd(**cell); pairIt != nl.cellNeighborsEnd(**cell); ++pairIt) {
+            auto pair = *pairIt;
+            const auto &entry = data.entry_at(std::get<0>(pair));
+            const auto &neighbor = data.entry_at(std::get<1>(pair));
+            if(!entry.deactivated && !neighbor.deactivated) {
+                const auto &reactions = kernel->context().reactions().order2ByType(entry.type, neighbor.type);
+                if (!reactions.empty()) {
+                    const auto distSquared = d2(neighbor.pos, entry.pos);
+                    for (auto it_reactions = reactions.begin(); it_reactions < reactions.end(); ++it_reactions) {
+                        const auto &react = *it_reactions;
+                        const auto rate = react->rate();
+                        if (rate > 0 && distSquared < react->eductDistanceSquared()
+                            && shouldPerformEvent(rate, dt, approximateRate)) {
+                            const auto reaction_index = static_cast<event_t::reaction_index_type>(it_reactions -
+                                                                                                  reactions.begin());
+                            eventsUpdate.emplace_back(2, react->nProducts(), std::get<0>(pair), std::get<1>(pair),
+                                                      rate, 0, reaction_index, entry.type, neighbor.type);
                         }
                     }
                 }
@@ -120,7 +118,7 @@ void CPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
     const auto &fixPos = ctx.fixPositionFun();
     auto &stateModel = kernel->getCPUKernelStateModel();
     auto nl = stateModel.getNeighborList();
-    auto data = nl->data();
+    auto &data = nl->data();
 
     if (ctx.recordReactionsWithPositions()) {
         kernel->getCPUKernelStateModel().reactionRecords().clear();
@@ -141,17 +139,18 @@ void CPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
         std::vector<std::function<void(std::size_t)>> executables;
         executables.reserve(kernel->getNThreads());
 
-        const std::size_t grainSize = data->size() / kernel->getNThreads();
-        std::size_t nlGrainSize = nl->size() / kernel->getNThreads();
+        const std::size_t grainSize = data.size() / kernel->getNThreads();
+        std::size_t nlGrainSize = nl->nCells() / kernel->getNThreads();
 
-        auto it = data->cbegin();
-        auto it_nl = nl->cbegin();
+        auto it = data.cbegin();
+        auto it_nl = nl->head().cbegin();
         for (unsigned int i = 0; i < kernel->getNThreads() - 1; ++i) {
             eventFutures.push_back(promises.at(i).get_future());
             n_eventsFutures.push_back(n_events_promises.at(i).get_future());
             auto it_nl_end = it_nl + nlGrainSize;
-            executables.push_back(executor.pack(findEvents, it, it + grainSize, it_nl, it_nl_end, kernel, timeStep,
-                                                false, std::ref(promises.at(i)), std::ref(n_events_promises.at(i))));
+            executables.push_back(executor.pack(findEvents, it, it + grainSize, std::make_tuple(it_nl, it_nl_end),
+                                                kernel, timeStep, false, std::cref(*nl),
+                                                std::ref(promises.at(i)), std::ref(n_events_promises.at(i))));
             it += grainSize;
             it_nl = it_nl_end;
         }
@@ -162,8 +161,9 @@ void CPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
             n_eventsFutures.push_back(n_events.get_future());
 
 
-            executables.push_back(executor.pack(findEvents, it, data->cend(), it_nl, nl->cend(), kernel, timeStep,
-                                                false, std::ref(eventPromise), std::ref(n_events)));
+            executables.push_back(executor.pack(findEvents, it, data.cend(), std::make_tuple(it_nl, nl->head().cend()),
+                                                kernel, timeStep, false, std::cref(*nl),
+                                                std::ref(eventPromise), std::ref(n_events)));
         }
         executor.execute_and_wait(std::move(executables));
     }
@@ -202,11 +202,11 @@ void CPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
                     if (ctx.recordReactionsWithPositions()) {
                         record_t record;
                         record.id = reaction->id();
-                        performReaction(data, ctx, entry1, entry1, newParticles, decayedEntries, reaction, &record);
+                        performReaction(&data, ctx, entry1, entry1, newParticles, decayedEntries, reaction, &record);
                         fixPos(record.where);
                         kernel->getCPUKernelStateModel().reactionRecords().push_back(record);
                     } else {
-                        performReaction(data, ctx, entry1, entry1, newParticles, decayedEntries, reaction, nullptr);
+                        performReaction(&data, ctx, entry1, entry1, newParticles, decayedEntries, reaction, nullptr);
                     }
                     if (ctx.recordReactionCounts()) {
                         auto &counts = stateModel.reactionCounts();
@@ -222,11 +222,11 @@ void CPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
                     if (ctx.recordReactionsWithPositions()) {
                         record_t record;
                         record.id = reaction->id();
-                        performReaction(data, ctx, entry1, event.idx2, newParticles, decayedEntries, reaction, &record);
+                        performReaction(&data, ctx, entry1, event.idx2, newParticles, decayedEntries, reaction, &record);
                         fixPos(record.where);
                         kernel->getCPUKernelStateModel().reactionRecords().push_back(record);
                     } else {
-                        performReaction(data, ctx, entry1, event.idx2, newParticles, decayedEntries, reaction, nullptr);
+                        performReaction(&data, ctx, entry1, event.idx2, newParticles, decayedEntries, reaction, nullptr);
                     }
                     if (ctx.recordReactionCounts()) {
                         auto &counts = stateModel.reactionCounts();
@@ -241,8 +241,7 @@ void CPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
                 }
             }
         }
-
-        nl->updateData(std::make_pair(std::move(newParticles), std::move(decayedEntries)));
+        data.update(std::make_pair(std::move(newParticles), std::move(decayedEntries)));
     }
 }
 }

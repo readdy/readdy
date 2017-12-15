@@ -156,61 +156,24 @@ protected:
             //
             // 2nd order potentials
             //
-            for(auto cell = std::get<0>(nlBounds); cell != std::get<1>(nlBounds); ++cell) {
-                auto pptr = (**cell).load();
-                while (pptr != 0) {
-                    auto pidx = pptr - 1;
-                    const auto &entry = data->entry_at(pidx);
-                    if(!entry.deactivated) {
-                        {
-                            auto ppptr = (**cell).load();
-                            while (ppptr != 0) {
-                                auto ppidx = ppptr - 1;
-                                if (ppidx != pidx) {
-                                    const auto &pp = data->entry_at(ppidx);
-                                    if (!pp.deactivated) {
-                                        f(entry, pp);
-                                    }
-                                }
-                                ppptr = nl.list().at(ppptr);
-                            }
-                        }
+            if(!pot2.empty()) {
+                for(auto cell = std::get<0>(nlBounds); cell != std::get<1>(nlBounds); ++cell) {
+                    for(auto pairIt = nl.cellNeighborsEnd(**cell); pairIt != nl.cellNeighborsEnd(**cell); ++pairIt) {
+                        auto pair = *pairIt;
+                        auto &entry = data->entry_at(std::get<0>(pair));
+                        auto &neighbor = data->entry_at(std::get<1>(pair));
+                        if (!entry.deactivated && !neighbor.deactivated) {
+                            auto &force = entry.force;
+                            const auto &myPos = entry.pos;
 
-                        for (auto itNeighborCell = neighborsBegin(cellIndex);
-                             itNeighborCell != neighborsEnd(cellIndex); ++itNeighborCell) {
-
-                            auto nptr = (*_head.at(*itNeighborCell)).load();
-                            while (nptr != 0) {
-                                auto nidx = nptr - 1;
-
-                                const auto &neighbor = data.entry_at(nidx);
-                                if (!neighbor.deactivated) {
-                                    f(entry, neighbor);
-                                }
-
-                                nptr = _list.at(nptr);
-                            }
-                        }
-                    }
-                    pptr = _list.at(pptr);
-                }
-
-                auto &entry = data->entry_at(cell->current_particle());
-                if (!entry.deactivated) {
-                    auto &force = entry.force;
-                    const auto &myPos = entry.pos;
-
-                    //
-                    // 2nd order potentials
-                    //
-                    scalar mySecondOrderEnergy = 0.;
-                    if(!pot2.empty()) {
-                        for(const auto nidx : *cell) {
-                            auto &neighborEntry = data->entry_at(nidx);
-                            if(!neighborEntry.deactivated) {
-                                auto potit = pot2.find(std::tie(entry.type, neighborEntry.type));
+                            //
+                            // 2nd order potentials
+                            //
+                            scalar mySecondOrderEnergy = 0.;
+                            if(!pot2.empty()) {
+                                auto potit = pot2.find(std::tie(entry.type, neighbor.type));
                                 if (potit != pot2.end()) {
-                                    auto x_ij = d(myPos, neighborEntry.pos);
+                                    auto x_ij = d(myPos, neighbor.pos);
                                     auto distSquared = x_ij * x_ij;
                                     for (const auto &potential : potit->second) {
                                         if (distSquared < potential->getCutoffRadiusSquared()) {
@@ -222,13 +185,15 @@ protected:
                                     }
                                 }
                             }
+                            // The contribution of second order potentials must be halved since we parallelize over particles.
+                            // Thus every particle pair potential is seen twice
+                            energyUpdate += 0.5 * mySecondOrderEnergy;
                         }
                     }
-                    // The contribution of second order potentials must be halved since we parallelize over particles.
-                    // Thus every particle pair potential is seen twice
-                    energyUpdate += 0.5 * mySecondOrderEnergy;
+
                 }
             }
+
         }
 
         barrier.wait();

@@ -37,7 +37,6 @@
 #include <gtest/gtest.h>
 #include <readdy/api/SimulationScheme.h>
 #include <readdy/kernel/cpu/CPUKernel.h>
-#include <readdy/kernel/cpu/nl/CellDecompositionNeighborList.h>
 #include <readdy/testing/NOOPPotential.h>
 
 
@@ -47,7 +46,6 @@ namespace m = readdy::model;
 namespace {
 
 using data_t = cpu::data::NLDataContainer;
-using nl_t = cpu::cell_decomposition_neighbor_list;
 
 struct TestNeighborList : ::testing::Test {
 

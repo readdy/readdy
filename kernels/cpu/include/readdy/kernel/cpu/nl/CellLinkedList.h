@@ -107,6 +107,7 @@ protected:
 };
 
 class BoxIterator;
+class NeighborsIterator;
 
 class CompactCellLinkedList : public CellLinkedList {
 public:
@@ -115,6 +116,8 @@ public:
     using LIST = std::vector<std::size_t>;
     using entry_cref = const data_type::entry_type&;
     using pair_callback = std::function<void(entry_cref, entry_cref)>;
+
+    using iterator_bounds = std::tuple<HEAD::const_iterator, HEAD::const_iterator>;
 
     CompactCellLinkedList(data_type &data, const readdy::model::Context &context,
                           const util::thread::Config &config);
@@ -133,7 +136,11 @@ public:
 
     BoxIterator cellParticlesBegin(std::size_t cellIndex) const;
 
-    BoxIterator cellParticlesEnd(std::size_t cellIndex) const;
+    BoxIterator cellParticlesEnd(std::size_t /*cellIndex*/) const;
+
+    NeighborsIterator cellNeighborsBegin(std::size_t cellIndex) const;
+
+    NeighborsIterator cellNeighborsEnd(std::size_t cellIndex) const;
 
     size_t nParticles(std::size_t cellIndex) const override;
 
@@ -148,6 +155,8 @@ public:
     void forEachParticlePair(const pair_callback &f) const;
 
     void forEachParticlePairParallel(const pair_callback &f) const;
+
+    std::size_t nCells() const;
 
 protected:
     void setUpBins(const util::PerformanceNode &node) override;
@@ -165,8 +174,7 @@ protected:
 
 class BoxIterator {
 
-    using entry_ref = CompactCellLinkedList::data_type::entry_type;
-    using Alloc = std::allocator<entry_ref>;
+    using Alloc = std::allocator<std::size_t>;
 
 public:
 
@@ -177,8 +185,7 @@ public:
     using iterator_category = std::forward_iterator_tag;
     using size_type = CompactCellLinkedList::LIST::size_type;
 
-    BoxIterator(const CompactCellLinkedList::data_type *data, const CompactCellLinkedList::LIST &list,
-                std::size_t state);
+    BoxIterator(const CompactCellLinkedList &ccll, std::size_t state);
 
     BoxIterator(const BoxIterator&) = default;
     BoxIterator &operator=(const BoxIterator &) = default;
@@ -188,23 +195,19 @@ public:
 
     BoxIterator &operator++();
 
-    reference operator*() const;
-
-    pointer operator->() const;
+    value_type operator*() const;
 
     bool operator==(const BoxIterator &rhs) const;
 
     bool operator!=(const BoxIterator &rhs) const;
 
 private:
-    const CompactCellLinkedList::data_type *_data;
-    std::reference_wrapper<const CompactCellLinkedList::LIST> _list;
+    std::reference_wrapper<const CompactCellLinkedList> _ccll;
     std::size_t _state;
 };
 
 class NeighborsIterator {
-    using entry_ref = CompactCellLinkedList::data_type::entry_type;
-    using Alloc = std::allocator<std::tuple<entry_ref, entry_ref>>;
+    using Alloc = std::allocator<std::tuple<std::size_t, std::size_t>>;
 public:
 
     using difference_type = typename Alloc::difference_type;
@@ -214,20 +217,36 @@ public:
     using iterator_category = std::forward_iterator_tag;
     using size_type = std::size_t;
 
-    NeighborsIterator(const CompactCellLinkedList &ccll, std::size_t cell, const std::size_t *cellAt, std::size_t state);
+    /**
+     * Iterator that will iterate over all particles of the specified cell times all "neighboring" particles (i.e.,
+     * one through its own cell (cellAt==nullptr) and then through the neighboring cells).
+     * @param ccll the cell linked list this iterator belongs to
+     * @param cell the cell
+     * @param cellAt the cell in the "neighboring cells" iteration, nullptr if own cell
+     * @param state the state of this cell
+     * @param stateNeigh the state of the neighboring iterator
+     */
+    NeighborsIterator(const CompactCellLinkedList &ccll, std::size_t cell, const std::size_t *cellAt,
+                      std::size_t state, std::size_t stateNeigh);
 
     NeighborsIterator &operator++();
 
-    reference operator*() const;
+    value_type operator*() const;
+
+    bool operator==(const NeighborsIterator &rhs) const;
+
+    bool operator!=(const NeighborsIterator &rhs) const;
 
 private:
-    std::size_t _state;
+    std::size_t _state, _stateNeigh, _cell;
     const std::size_t *_cellAt;
     const std::size_t *_neighborCellsBegin;
     const std::size_t *_neighborCellsEnd;
 
-    BoxIterator _inner_state;
-    BoxIterator _inner_state_end;
+    BoxIterator _outerState;
+    BoxIterator _outerStateEnd;
+    BoxIterator _innerState;
+    BoxIterator _innerStateEnd;
     std::reference_wrapper<const CompactCellLinkedList> _ccll;
 };
 
