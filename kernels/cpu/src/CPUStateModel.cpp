@@ -88,9 +88,8 @@ CPUStateModel::CPUStateModel(const readdy::model::Context &context,
                              readdy::util::thread::Config const *const config,
                              readdy::model::top::TopologyActionFactory const *const taf)
         : _config(*config), _context(context), _topologyActionFactory(*taf) {
-    _neighborList = std::unique_ptr<neighbor_list>(
-            new nl::CompactCellLinkedList(*_data, _context.get(), *config)
-    );
+    _data = std::make_unique<data::DefaultDataContainer>(context, *config);
+    _neighborList = std::make_unique<neighbor_list>(*_data, _context.get(), *config);
     _reorderConnection = std::make_unique<readdy::signals::scoped_connection>(
             getParticleData()->registerReorderEventListener([this](const std::vector<std::size_t> &indices) -> void {
                 for (auto &top : _topologies) {

@@ -84,6 +84,8 @@ public:
 
     const data_type &data() const;
 
+    scalar maxCutoff() const;
+
 protected:
     virtual void setUpBins(const util::PerformanceNode &node) = 0;
 
@@ -107,6 +109,7 @@ protected:
 };
 
 class BoxIterator;
+class MacroBoxIterator;
 class NeighborsIterator;
 
 class CompactCellLinkedList : public CellLinkedList {
@@ -138,6 +141,10 @@ public:
 
     BoxIterator cellParticlesEnd(std::size_t /*cellIndex*/) const;
 
+    MacroBoxIterator macroCellParticlesBegin(std::size_t cellIndex) const;
+
+    MacroBoxIterator macroCellParticlesEnd(std::size_t cellIndex) const;
+
     NeighborsIterator cellNeighborsBegin(std::size_t cellIndex) const;
 
     NeighborsIterator cellNeighborsEnd(std::size_t cellIndex) const;
@@ -158,6 +165,8 @@ public:
 
     std::size_t nCells() const;
 
+    bool cellEmpty(std::size_t index) const;
+
 protected:
     void setUpBins(const util::PerformanceNode &node) override;
 
@@ -174,14 +183,14 @@ protected:
 
 class BoxIterator {
 
-    using Alloc = std::allocator<std::size_t>;
+    using alloc = std::allocator<std::size_t>;
 
 public:
 
-    using difference_type = typename Alloc::difference_type;
-    using value_type = typename Alloc::value_type;
-    using reference = typename Alloc::const_reference;
-    using pointer = typename Alloc::const_pointer;
+    using difference_type = typename alloc::difference_type;
+    using value_type = typename alloc::value_type;
+    using reference = typename alloc::const_reference;
+    using pointer = typename alloc::const_pointer;
     using iterator_category = std::forward_iterator_tag;
     using size_type = CompactCellLinkedList::LIST::size_type;
 
@@ -204,6 +213,47 @@ public:
 private:
     std::reference_wrapper<const CompactCellLinkedList> _ccll;
     std::size_t _state;
+};
+
+class MacroBoxIterator {
+    using alloc = std::allocator<std::size_t>;
+public:
+    using difference_type = typename alloc::difference_type;
+    using value_type = typename alloc::value_type;
+    using reference = typename alloc::const_reference;
+    using pointer = typename alloc::const_pointer;
+    using iterator_category = std::forward_iterator_tag;
+    using size_type = CompactCellLinkedList::LIST::size_type;
+
+    MacroBoxIterator(const CompactCellLinkedList &ccll, std::size_t centerCell, const std::size_t *currentCell,
+                     bool end=false);
+
+    MacroBoxIterator &operator++();
+
+    reference operator*() const;
+
+    pointer operator->() const;
+
+    bool operator==(const MacroBoxIterator &rhs) const;
+    bool operator!=(const MacroBoxIterator &rhs) const;
+
+private:
+
+    const std::size_t *getCurrentCell(const std::size_t *initial) const;
+
+    BoxIterator getCurrentBoxIterator() const;
+
+    const std::size_t *_neighborCellsBegin;
+    const std::size_t *_neighborCellsEnd;
+
+    std::reference_wrapper<const CompactCellLinkedList> _ccll;
+    std::size_t _centerCell;
+
+    const std::size_t *_currentCell;
+    BoxIterator _currentBoxIt;
+    BoxIterator _currentBoxEnd;
+
+    value_type _state;
 };
 
 class NeighborsIterator {
@@ -231,7 +281,7 @@ public:
 
     NeighborsIterator &operator++();
 
-    value_type operator*() const;
+    reference operator*() const;
 
     bool operator==(const NeighborsIterator &rhs) const;
 
@@ -242,6 +292,8 @@ private:
     const std::size_t *_cellAt;
     const std::size_t *_neighborCellsBegin;
     const std::size_t *_neighborCellsEnd;
+
+    value_type _currentValue;
 
     BoxIterator _outerState;
     BoxIterator _outerStateEnd;
