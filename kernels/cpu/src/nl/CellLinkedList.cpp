@@ -441,16 +441,11 @@ BoxIterator CompactCellLinkedList::cellParticlesEnd(std::size_t) const {
 
 NeighborsIterator CompactCellLinkedList::cellNeighborsBegin(std::size_t cellIndex) const {
     auto ix = (*_head.at(cellIndex)).load();
-    if(ix > 0) {
-        std::size_t nix = _list.at(ix);
-        return {*this, cellIndex, nullptr, ix, nix};
-    } else {
-        return {*this, cellIndex, nullptr, 0, 0};
-    }
+    return {*this, cellIndex, ix};
 }
 
 NeighborsIterator CompactCellLinkedList::cellNeighborsEnd(std::size_t cellIndex) const {
-    return {*this, cellIndex, neighborsEnd(cellIndex), 0, 0};
+    return {*this, cellIndex, 0};
 }
 
 std::size_t CompactCellLinkedList::nCells() const {
@@ -461,8 +456,8 @@ bool CompactCellLinkedList::cellEmpty(std::size_t index) const {
     return (*_head.at(index)).load() == 0;
 }
 
-MacroBoxIterator CompactCellLinkedList::macroCellParticlesBegin(std::size_t cellIndex) const {
-    return {*this, cellIndex, nullptr};
+MacroBoxIterator CompactCellLinkedList::macroCellParticlesBegin(std::size_t cellIndex, int skip) const {
+    return {*this, cellIndex, nullptr, false, skip};
 }
 
 MacroBoxIterator CompactCellLinkedList::macroCellParticlesEnd(std::size_t cellIndex) const {
@@ -492,8 +487,8 @@ bool BoxIterator::operator!=(const BoxIterator &rhs) const {
 }
 
 MacroBoxIterator::MacroBoxIterator(const CompactCellLinkedList &ccll, std::size_t centerCell, 
-                                   const std::size_t *currentCell, bool end)
-        : _ccll(ccll), _centerCell(centerCell),
+                                   const std::size_t *currentCell, bool end, int skip)
+        : _ccll(ccll), _centerCell(centerCell), _skip(skip),
           _neighborCellsBegin(ccll.neighborsBegin(centerCell)), _neighborCellsEnd(ccll.neighborsEnd(centerCell)),
           _currentCell(getCurrentCell(currentCell)),
           _currentBoxIt(getCurrentBoxIterator()), _currentBoxEnd(ccll, 0) {
@@ -520,6 +515,7 @@ MacroBoxIterator &MacroBoxIterator::operator++() {
     }
     if(_currentBoxIt != _currentBoxEnd) {
         _state = *_currentBoxIt;
+        if(_state == _skip) this->operator++();
     }
     return *this;
 }
@@ -568,109 +564,15 @@ bool MacroBoxIterator::operator!=(const MacroBoxIterator &rhs) const {
 }
 
 
-NeighborsIterator::NeighborsIterator(const CompactCellLinkedList &ccll, std::size_t cell, const std::size_t *cellAt,
-                                     std::size_t state, std::size_t stateNeigh)
-        : _ccll(ccll), _state(state), _stateNeigh(stateNeigh), _cellAt(cellAt), _cell(cell),
-          _innerState(ccll, stateNeigh), _outerState(ccll, state), _innerStateEnd(ccll, 0),
-          _outerStateEnd(ccll.cellParticlesEnd(cell)) {
-    _neighborCellsBegin = _ccll.get().neighborsBegin(cell);
-    _neighborCellsEnd = _ccll.get().neighborsEnd(cell);
-
-    // this deals with the special case of no neighboring cells
-    if(_neighborCellsBegin == _neighborCellsEnd) {
-        _neighborCellsBegin = nullptr;
-        _neighborCellsEnd = nullptr;
-    }
-
-    if(_innerState != _innerStateEnd && _outerState != _outerStateEnd) {
-        _currentValue = std::make_tuple(*_outerState, *_innerState);
-    } else {
-        if(_outerState == _outerStateEnd) {
-            _innerState = _innerStateEnd;
-            _outerState = _outerStateEnd;
-        } else {
-            // inner state is at end
-            if(_cellAt == nullptr) {
-                _cellAt = _neighborCellsBegin;
-            }
-            if(_cellAt != nullptr) {
-                ++_cellAt;
-            }
-            while(_cellAt != _neighborCellsEnd && _ccll.get().cellEmpty(*_cellAt)) {
-                ++_cellAt;
-            }
-            if(_cellAt != _neighborCellsEnd) {
-                _innerState = _ccll.get().cellParticlesBegin(*_cellAt);
-            } else {
-                _innerState = _innerStateEnd;
-                _outerState = _outerStateEnd;
-            }
-        }
-    }
+NeighborsIterator::NeighborsIterator(const CompactCellLinkedList &ccll, std::size_t cell, std::size_t state)
+        : _ccll(ccll),  _cell(cell), _innerIterator(ccll, state) {
+    _currentValue = *_innerIterator;
 }
 
 NeighborsIterator &NeighborsIterator::operator++() {
     // the outer loop through all particles of the inner cell
-    if(_cellAt == _neighborCellsEnd && _innerState == _innerStateEnd) {
-        // the last cell has been reached, begin anew with the next particle in the own cell
-        ++_outerState;
-        _cellAt = nullptr;
-        if(_outerState != _outerStateEnd) {
-            _innerState = _ccll.get().cellParticlesBegin(_cell);
-        } else {
-            // once the end is reached, simply set inner state to end
-            _innerState = _innerStateEnd;
-        }
-    } else if(_cellAt == nullptr) {
-        // we are inside "own" cell, so check if we have ourself as particle in the inner state or need to advance
-        // the neighboring cell
-        ++_innerState;
-        if(_innerState != _innerStateEnd && _innerState == _outerState) {
-            // inner and outer point to the same particle, skip
-            ++_innerState;
-        }
-
-        if(_innerState == _innerStateEnd) {
-            // the end is reached, proceed (if available) to next cell
-            if(_neighborCellsBegin != nullptr) {
-                _cellAt = _neighborCellsBegin;
-                while(_cellAt != _neighborCellsEnd && _ccll.get().cellEmpty(*_cellAt)) {
-                    ++_cellAt;
-                }
-                if(_cellAt != _neighborCellsEnd) {
-                    _innerState = _ccll.get().cellParticlesBegin(*_cellAt);
-                } else {
-                    ++_outerState;
-                    if(_outerState != _outerStateEnd) {
-                        _cellAt = nullptr;
-                        _innerState = _ccll.get().cellParticlesBegin(_cell);
-                    } else {
-                        _innerState = _innerStateEnd;
-                    }
-                }
-            }
-        }
-    } else {
-        // we are in one of the surrounding cells so the particle pointed to by outerState cannot be in here
-        ++_innerState;
-
-        if(_innerState == _innerStateEnd) {
-            // proceed to next cell
-            ++_cellAt;
-            while(_cellAt != _neighborCellsEnd && _ccll.get().cellEmpty(*_cellAt)) {
-                ++_cellAt;
-            }
-            if(_cellAt != _neighborCellsEnd) {
-                _innerState = _ccll.get().cellParticlesBegin(*_cellAt);
-                _innerStateEnd = _ccll.get().cellParticlesEnd(*_cellAt);
-            } else {
-                _innerState = {_ccll.get(), 0};
-            }
-        }
-    }
-    if(_innerState != _innerStateEnd && _outerState != _outerStateEnd) {
-        _currentValue = std::make_tuple(*_outerState, *_innerState);
-    }
+    ++_innerIterator;
+    _currentValue = *_innerIterator;
     return *this;
 }
 
@@ -679,11 +581,19 @@ NeighborsIterator::reference NeighborsIterator::operator*() const {
 }
 
 bool NeighborsIterator::operator==(const NeighborsIterator &rhs) const {
-    return _outerState == rhs._outerState && _innerState == rhs._innerState;
+    return _innerIterator == rhs._innerIterator;
 }
 
 bool NeighborsIterator::operator!=(const NeighborsIterator &rhs) const {
     return !(*this == rhs);
+}
+
+MacroBoxIterator NeighborsIterator::neighborsBegin() const {
+    return {_ccll.get(), _cell, nullptr, false, static_cast<int>(_currentValue)};
+}
+
+MacroBoxIterator NeighborsIterator::neighborsEnd() const {
+    return {_ccll.get(), 0, nullptr, true};
 }
 
 

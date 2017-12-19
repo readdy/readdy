@@ -141,7 +141,7 @@ public:
 
     BoxIterator cellParticlesEnd(std::size_t /*cellIndex*/) const;
 
-    MacroBoxIterator macroCellParticlesBegin(std::size_t cellIndex) const;
+    MacroBoxIterator macroCellParticlesBegin(std::size_t cellIndex, int skip=-1) const;
 
     MacroBoxIterator macroCellParticlesEnd(std::size_t cellIndex) const;
 
@@ -226,7 +226,7 @@ public:
     using size_type = CompactCellLinkedList::LIST::size_type;
 
     MacroBoxIterator(const CompactCellLinkedList &ccll, std::size_t centerCell, const std::size_t *currentCell,
-                     bool end=false);
+                     bool end=false, int skip=-1);
 
     MacroBoxIterator &operator++();
 
@@ -254,10 +254,12 @@ private:
     BoxIterator _currentBoxEnd;
 
     value_type _state;
+
+    int _skip;
 };
 
 class NeighborsIterator {
-    using Alloc = std::allocator<std::tuple<std::size_t, std::size_t>>;
+    using Alloc = std::allocator<std::size_t>;
 public:
 
     using difference_type = typename Alloc::difference_type;
@@ -276,8 +278,7 @@ public:
      * @param state the state of this cell
      * @param stateNeigh the state of the neighboring iterator
      */
-    NeighborsIterator(const CompactCellLinkedList &ccll, std::size_t cell, const std::size_t *cellAt,
-                      std::size_t state, std::size_t stateNeigh);
+    NeighborsIterator(const CompactCellLinkedList &ccll, std::size_t cell, std::size_t state);
 
     NeighborsIterator &operator++();
 
@@ -287,18 +288,17 @@ public:
 
     bool operator!=(const NeighborsIterator &rhs) const;
 
+    MacroBoxIterator neighborsBegin() const;
+
+    MacroBoxIterator neighborsEnd() const;
+
 private:
-    std::size_t _state, _stateNeigh, _cell;
-    const std::size_t *_cellAt;
-    const std::size_t *_neighborCellsBegin;
-    const std::size_t *_neighborCellsEnd;
+    std::size_t _cell;
 
     value_type _currentValue;
 
-    BoxIterator _outerState;
-    BoxIterator _outerStateEnd;
-    BoxIterator _innerState;
-    BoxIterator _innerStateEnd;
+    BoxIterator _innerIterator;
+
     std::reference_wrapper<const CompactCellLinkedList> _ccll;
 };
 
