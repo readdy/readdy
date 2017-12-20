@@ -85,26 +85,33 @@ void findEvents(std::size_t /*tid*/, data_iter_t begin, data_iter_t end, neighbo
     }
     for(auto cell = std::get<0>(nlBounds); cell != std::get<1>(nlBounds); ++cell) {
         for(auto pairIt = nl.cellNeighborsEnd(**cell); pairIt != nl.cellNeighborsEnd(**cell); ++pairIt) {
-            auto pair = *pairIt;
-            const auto &entry = data.entry_at(std::get<0>(pair));
-            const auto &neighbor = data.entry_at(std::get<1>(pair));
-            if(!entry.deactivated && !neighbor.deactivated) {
-                const auto &reactions = kernel->context().reactions().order2ByType(entry.type, neighbor.type);
-                if (!reactions.empty()) {
-                    const auto distSquared = d2(neighbor.pos, entry.pos);
-                    for (auto it_reactions = reactions.begin(); it_reactions < reactions.end(); ++it_reactions) {
-                        const auto &react = *it_reactions;
-                        const auto rate = react->rate();
-                        if (rate > 0 && distSquared < react->eductDistanceSquared()
-                            && shouldPerformEvent(rate, dt, approximateRate)) {
-                            const auto reaction_index = static_cast<event_t::reaction_index_type>(it_reactions -
-                                                                                                  reactions.begin());
-                            eventsUpdate.emplace_back(2, react->nProducts(), std::get<0>(pair), std::get<1>(pair),
-                                                      rate, 0, reaction_index, entry.type, neighbor.type);
+            const auto &entry = data.entry_at(*pairIt);
+            if(entry.deactivated) {
+                log::critical("deactivated entry in uncontrolled approximation!");
+                continue;
+            }
+            for(auto itNeighbors = pairIt.neighborsBegin(); itNeighbors != pairIt.neighborsEnd(); ++itNeighbors) {
+                const auto &neighbor = data.entry_at(*itNeighbors);
+                if(!neighbor.deactivated) {
+                    const auto &reactions = kernel->context().reactions().order2ByType(entry.type, neighbor.type);
+                    if (!reactions.empty()) {
+                        const auto distSquared = d2(neighbor.pos, entry.pos);
+                        for (auto it_reactions = reactions.begin(); it_reactions < reactions.end(); ++it_reactions) {
+                            const auto &react = *it_reactions;
+                            const auto rate = react->rate();
+                            if (rate > 0 && distSquared < react->eductDistanceSquared()
+                                && shouldPerformEvent(rate, dt, approximateRate)) {
+                                const auto reaction_index = static_cast<event_t::reaction_index_type>(it_reactions -
+                                                                                                      reactions.begin());
+                                eventsUpdate.emplace_back(2, react->nProducts(), *pairIt, *itNeighbors,
+                                                          rate, 0, reaction_index, entry.type, neighbor.type);
+                            }
                         }
                     }
                 }
+
             }
+
         }
     }
 

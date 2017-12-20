@@ -167,6 +167,8 @@ public:
 
     bool cellEmpty(std::size_t index) const;
 
+    std::size_t cellOfParticle(std::size_t index) const;
+
 protected:
     void setUpBins(const util::PerformanceNode &node) override;
 
@@ -283,6 +285,8 @@ public:
     NeighborsIterator &operator++();
 
     reference operator*() const;
+
+    reference currentParticle() const;
 
     bool operator==(const NeighborsIterator &rhs) const;
 

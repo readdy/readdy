@@ -224,7 +224,7 @@ std::size_t CompactCellLinkedList::nParticles(std::size_t cellIndex) const {
 template<>
 void CompactCellLinkedList::fillBins<true>(const util::PerformanceNode &node) {
     auto t = node.timeit();
-    auto boxSize = _context.get().boxSize();
+    const auto &boxSize = _context.get().boxSize();
     std::size_t pidx = 1;
     for (const auto &entry : _data.get()) {
         if (!entry.deactivated) {
@@ -242,7 +242,7 @@ void CompactCellLinkedList::fillBins<true>(const util::PerformanceNode &node) {
 template<>
 void CompactCellLinkedList::fillBins<false>(const util::PerformanceNode &node) {
     auto t = node.timeit();
-    auto boxSize = _context.get().boxSize();
+    const auto &boxSize = _context.get().boxSize();
     const auto &data = _data.get();
     const auto grainSize = data.size() / _config.get().nThreads();
     const auto &executor = *_config.get().executor();
@@ -464,6 +464,18 @@ MacroBoxIterator CompactCellLinkedList::macroCellParticlesEnd(std::size_t cellIn
     return {*this, cellIndex, nullptr, true};
 }
 
+std::size_t CompactCellLinkedList::cellOfParticle(std::size_t index) const {
+    const auto &entry = data().entry_at(index);
+    if(entry.deactivated) {
+        throw std::invalid_argument("requested deactivated entry");
+    }
+    const auto &boxSize = _context.get().boxSize();
+    const auto i = static_cast<std::size_t>(std::floor((entry.pos.x + .5 * boxSize[0]) / _cellSize.x));
+    const auto j = static_cast<std::size_t>(std::floor((entry.pos.y + .5 * boxSize[1]) / _cellSize.y));
+    const auto k = static_cast<std::size_t>(std::floor((entry.pos.z + .5 * boxSize[2]) / _cellSize.z));
+    return _cellIndex(i, j, k);
+}
+
 BoxIterator::BoxIterator(const CompactCellLinkedList &ccll, std::size_t state)
         : _ccll(ccll), _state(state) { }
 
@@ -495,6 +507,9 @@ MacroBoxIterator::MacroBoxIterator(const CompactCellLinkedList &ccll, std::size_
     
     if(_currentCell != _neighborCellsEnd && !end) {
         _state = *_currentBoxIt;
+        if(_state == _skip) {
+            this->operator++();
+        }
     } else {
         _state = 0;
         _currentBoxIt = _currentBoxEnd;
@@ -594,6 +609,10 @@ MacroBoxIterator NeighborsIterator::neighborsBegin() const {
 
 MacroBoxIterator NeighborsIterator::neighborsEnd() const {
     return {_ccll.get(), 0, nullptr, true};
+}
+
+const size_t &NeighborsIterator::currentParticle() const {
+    return _currentValue;
 }
 
 

@@ -98,32 +98,38 @@ void gatherEvents(CPUKernel *const kernel, const ParticleIndexCollection &partic
 
     // order 2
     for(std::size_t cell = 0; cell < nl->nCells(); ++cell) {
-        for(auto neighborsIt = nl->cellNeighborsBegin(cell); neighborsIt != nl->cellNeighborsEnd(cell); ++neighborsIt) {
-            auto pair = *neighborsIt;
-            auto idx1 = std::get<0>(pair);
-            auto idx2 = std::get<1>(pair);
-            if(idx1 > idx2) continue;
+        for(auto cellIt = nl->cellNeighborsBegin(cell); cellIt != nl->cellNeighborsEnd(cell); ++cellIt) {
+            const auto &idx1 = *cellIt;
             const auto &entry = data->entry_at(idx1);
-            const auto &neighbor = data->entry_at(idx2);
-            if(!entry.deactivated && !neighbor.deactivated) {
-                const auto &reactions = kernel->context().reactions().order2ByType(entry.type, neighbor.type);
-                if (!reactions.empty()) {
-                    const auto distSquared = d2(neighbor.pos, entry.pos);
-                    for (auto itReactions = reactions.begin(); itReactions < reactions.end(); ++itReactions) {
-                        const auto &react = *itReactions;
-                        const auto rate = react->rate();
-                        if (rate > 0 && distSquared < react->eductDistanceSquared()) {
-                            alpha += rate;
-                            events.emplace_back(2, react->nProducts(), idx1, idx2, rate, alpha,
-                                                static_cast<event_t::reaction_index_type>(itReactions -
-                                                                                          reactions.begin()),
-                                                entry.type, neighbor.type);
+            if(entry.deactivated) {
+                log::critical("deactivated entry in neighbor list!");
+                continue;
+            }
+            for (auto itNeighbors = cellIt.neighborsBegin(); itNeighbors != cellIt.neighborsEnd(); ++itNeighbors) {
+                const auto& idx2 = *itNeighbors;
+                if(idx1 > idx2) continue;
+                const auto &neighbor = data->entry_at(idx2);
+                if(!neighbor.deactivated) {
+                    const auto &reactions = kernel->context().reactions().order2ByType(entry.type, neighbor.type);
+                    if (!reactions.empty()) {
+                        const auto distSquared = d2(neighbor.pos, entry.pos);
+                        for (auto itReactions = reactions.begin(); itReactions < reactions.end(); ++itReactions) {
+                            const auto &react = *itReactions;
+                            const auto rate = react->rate();
+                            if (rate > 0 && distSquared < react->eductDistanceSquared()) {
+                                alpha += rate;
+                                events.emplace_back(2, react->nProducts(), idx1, idx2, rate, alpha,
+                                                    static_cast<event_t::reaction_index_type>(itReactions -
+                                                                                              reactions.begin()),
+                                                    entry.type, neighbor.type);
+                            }
                         }
                     }
+                } else {
+                    log::critical("deactivated entry in neighbor list!");
                 }
-            } else {
-                log::critical("deactivated entry in neighbor list!");
             }
+
         }
     }
 }

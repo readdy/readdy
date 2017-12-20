@@ -54,7 +54,7 @@ class CPUStateModel : public readdy::model::StateModel {
 
 public:
 
-    using data_type = readdy::kernel::cpu::data::EntryDataContainer;
+    using data_type = readdy::kernel::cpu::data::DefaultDataContainer;
     using particle_type = readdy::model::Particle;
     using reaction_counts_map = readdy::model::reactions::reaction_counts_map;
 

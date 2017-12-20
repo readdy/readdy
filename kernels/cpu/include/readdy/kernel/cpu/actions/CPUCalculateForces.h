@@ -40,7 +40,7 @@ namespace cpu {
 namespace actions {
 class CPUCalculateForces : public readdy::model::actions::CalculateForces {
     using data_bounds = std::tuple<data::EntryDataContainer::iterator, data::EntryDataContainer::iterator>;
-    using nl_bounds = std::tuple<nl::CompactCellLinkedList::HEAD::const_iterator, nl::CompactCellLinkedList::HEAD::const_iterator>;
+    using nl_bounds = std::tuple<std::size_t, std::size_t>;
     using top_bounds = std::tuple<CPUStateModel::topologies_vec::const_iterator, CPUStateModel::topologies_vec::const_iterator>;
 public:
 
@@ -70,12 +70,12 @@ public:
                 std::vector<std::promise<scalar>> promises(config.nThreads());
                 {
                     const std::size_t grainSize = data->size() / config.nThreads();
-                    const std::size_t grainSizeNeighborList = neighborList->head().size() / config.nThreads();
+                    const std::size_t grainSizeNeighborList = neighborList->nCells() / config.nThreads();
                     const std::size_t grainSizeTopologies = topologies.size() / config.nThreads();
                     auto it_data = data->begin();
                     auto it_data_end = data->end();
-                    auto it_nl = neighborList->head().begin();
-                    auto it_nl_end = neighborList->head().end();
+                    std::size_t it_nl = 0;
+                    auto it_nl_end = neighborList->nCells();
                     auto it_tops = topologies.cbegin();
                     auto it_tops_end = topologies.cend();
                     const readdy::util::thread::barrier barrier{config.nThreads()};
@@ -157,38 +157,42 @@ protected:
             // 2nd order potentials
             //
             if(!pot2.empty()) {
-                for(auto cell = std::get<0>(nlBounds); cell != std::get<1>(nlBounds); ++cell) {
-                    for(auto pairIt = nl.cellNeighborsEnd(**cell); pairIt != nl.cellNeighborsEnd(**cell); ++pairIt) {
-                        auto pair = *pairIt;
-                        auto &entry = data->entry_at(std::get<0>(pair));
-                        auto &neighbor = data->entry_at(std::get<1>(pair));
-                        if (!entry.deactivated && !neighbor.deactivated) {
-                            auto &force = entry.force;
-                            const auto &myPos = entry.pos;
+                for(auto cell = std::get<0>(nlBounds); cell < std::get<1>(nlBounds); ++cell) {
+                    for(auto pairIt = nl.cellNeighborsBegin(cell); pairIt != nl.cellNeighborsEnd(cell); ++pairIt) {
+                        const auto &particleIndex = pairIt.currentParticle();
+                        auto &entry = data->entry_at(particleIndex);
+                        if(entry.deactivated) {
+                            log::critical("deactivated particle in neighbor list!");
+                            continue;
+                        }
+                        for(auto itNeighbors = pairIt.neighborsBegin(); itNeighbors != pairIt.neighborsEnd();
+                            ++itNeighbors) {
+                            auto &neighbor = data->entry_at(*itNeighbors);
+                            if (!neighbor.deactivated) {
+                                auto &force = entry.force;
+                                const auto &myPos = entry.pos;
 
-                            //
-                            // 2nd order potentials
-                            //
-                            scalar mySecondOrderEnergy = 0.;
-                            if(!pot2.empty()) {
+                                //
+                                // 2nd order potentials
+                                //
+                                scalar mySecondOrderEnergy = 0.;
                                 auto potit = pot2.find(std::tie(entry.type, neighbor.type));
                                 if (potit != pot2.end()) {
                                     auto x_ij = d(myPos, neighbor.pos);
-                                    auto distSquared = x_ij * x_ij;
                                     for (const auto &potential : potit->second) {
-                                        if (distSquared < potential->getCutoffRadiusSquared()) {
-                                            Vec3 forceUpdate {0, 0, 0};
-                                            potential->calculateForceAndEnergy(forceUpdate, mySecondOrderEnergy, x_ij);
-                                            force += forceUpdate;
-                                            // log::warn("applying 2nd order potential to particles {} and {} of types {} and {} with resulting force {}", it->current_particle(), nidx, entry.type, neighborEntry.type, forceUpdate);
-                                        }
+                                        Vec3 forceUpdate {0, 0, 0};
+                                        potential->calculateForceAndEnergy(forceUpdate, mySecondOrderEnergy, x_ij);
+                                        force += forceUpdate;
                                     }
                                 }
+                                // The contribution of second order potentials must be halved since we parallelize over particles.
+                                // Thus every particle pair potential is seen twice
+                                energyUpdate += 0.5 * mySecondOrderEnergy;
+                            } else {
+                                log::critical("disabled neighbour, pun intended");
                             }
-                            // The contribution of second order potentials must be halved since we parallelize over particles.
-                            // Thus every particle pair potential is seen twice
-                            energyUpdate += 0.5 * mySecondOrderEnergy;
                         }
+
                     }
 
                 }
