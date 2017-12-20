@@ -120,7 +120,7 @@ public:
     using entry_cref = const data_type::entry_type&;
     using pair_callback = std::function<void(entry_cref, entry_cref)>;
 
-    using iterator_bounds = std::tuple<HEAD::const_iterator, HEAD::const_iterator>;
+    using iterator_bounds = std::tuple<std::size_t, std::size_t>;
 
     CompactCellLinkedList(data_type &data, const readdy::model::Context &context,
                           const util::thread::Config &config);

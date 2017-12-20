@@ -84,7 +84,7 @@ void findEvents(std::size_t /*tid*/, data_iter_t begin, data_iter_t end, neighbo
         }
     }
     for(auto cell = std::get<0>(nlBounds); cell != std::get<1>(nlBounds); ++cell) {
-        for(auto pairIt = nl.cellNeighborsEnd(**cell); pairIt != nl.cellNeighborsEnd(**cell); ++pairIt) {
+        for(auto pairIt = nl.cellNeighborsBegin(cell); pairIt != nl.cellNeighborsEnd(cell); ++pairIt) {
             const auto &entry = data.entry_at(*pairIt);
             if(entry.deactivated) {
                 log::critical("deactivated entry in uncontrolled approximation!");
@@ -150,7 +150,7 @@ void CPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
         std::size_t nlGrainSize = nl->nCells() / kernel->getNThreads();
 
         auto it = data.cbegin();
-        auto it_nl = nl->head().cbegin();
+        std::size_t it_nl = 0;
         for (unsigned int i = 0; i < kernel->getNThreads() - 1; ++i) {
             eventFutures.push_back(promises.at(i).get_future());
             n_eventsFutures.push_back(n_events_promises.at(i).get_future());
@@ -168,7 +168,7 @@ void CPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
             n_eventsFutures.push_back(n_events.get_future());
 
 
-            executables.push_back(executor.pack(findEvents, it, data.cend(), std::make_tuple(it_nl, nl->head().cend()),
+            executables.push_back(executor.pack(findEvents, it, data.cend(), std::make_tuple(it_nl, nl->nCells()),
                                                 kernel, timeStep, false, std::cref(*nl),
                                                 std::ref(eventPromise), std::ref(n_events)));
         }
