@@ -36,6 +36,7 @@ libraries/external
 # Output directory and build dirs
 build
 bin/*
+docs/sphinx/build
 
 # python build temporaries
 *.egg-info

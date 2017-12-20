@@ -16,8 +16,8 @@ addons:
     sources:
     - ubuntu-toolchain-r-test
     packages:
-    - g++-5
-    - gcc-5
+    - g++-7
+    - gcc-7
     - doxygen
     - graphviz
 
@@ -45,7 +45,7 @@ before_install:
 - tools/ci/travis/install_miniconda.sh
 
 install:
-- if [ "$CXX" = "g++" ]; then export CXX="/usr/lib/ccache/g++-5" CC="/usr/lib/ccache/gcc-5"; fi
+- if [ "$CXX" = "g++" ]; then export CXX="/usr/bin/g++-7" CC="/usr/bin/gcc-7"; fi
 - if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then export BUILD_TYPE="RelWithDebInfo"; else export BUILD_TYPE="Release"; fi
 
 script:

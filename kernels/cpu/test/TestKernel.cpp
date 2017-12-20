@@ -37,7 +37,7 @@
 namespace {
 
 TEST(CPUTestKernel, TestKernelLoad) {
-    auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU_Legacy");
+    auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
 
     kernel->context().boxSize() = {{10, 10, 10}};
     kernel->context().particle_types().add("X", .55);
