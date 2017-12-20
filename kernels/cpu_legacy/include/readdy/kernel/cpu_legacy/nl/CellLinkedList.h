@@ -42,12 +42,12 @@
 
 namespace readdy {
 namespace kernel {
-namespace cpu {
+namespace cpu_legacy {
 namespace nl {
 
 class CellLinkedList {
 public:
-    using data_type = readdy::kernel::cpu::data::DefaultDataContainer;
+    using data_type = readdy::kernel::cpu_legacy::data::DefaultDataContainer;
 
     CellLinkedList(data_type &data, const readdy::model::Context &context,
                    const readdy::util::thread::Config &config);

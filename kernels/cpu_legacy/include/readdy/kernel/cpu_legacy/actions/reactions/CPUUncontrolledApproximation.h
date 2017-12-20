@@ -30,18 +30,18 @@
  */
 
 #pragma once
-#include <readdy/kernel/cpu_legacy/CPUKernel.h>
+#include <readdy/kernel/cpu_legacy/CPULegacyKernel.h>
 
 namespace readdy {
 namespace kernel {
-namespace cpu {
+namespace cpu_legacy {
 namespace actions {
 namespace reactions {
 
 class CPUUncontrolledApproximation : public readdy::model::actions::reactions::UncontrolledApproximation {
     using super = readdy::model::actions::reactions::UncontrolledApproximation;
 public:
-    CPUUncontrolledApproximation(CPUKernel* kernel, readdy::scalar timeStep);
+    CPUUncontrolledApproximation(CPULegacyKernel* kernel, readdy::scalar timeStep);
 
     void perform(const util::PerformanceNode &node) override;
 
@@ -63,7 +63,7 @@ public:
     }
 
 protected:
-    CPUKernel *const kernel;
+    CPULegacyKernel *const kernel;
 };
 }
 }

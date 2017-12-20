@@ -23,23 +23,23 @@
 /**
  * << detailed description >>
  *
- * @file CPUKernel.cpp
+ * @file CPULegacyKernel.cpp
  * @brief << brief description >>
  * @author clonker
  * @date 23.06.16
  */
 
-#include <readdy/kernel/cpu_legacy/CPUKernel.h>
+#include <readdy/kernel/cpu_legacy/CPULegacyKernel.h>
 #include <readdy/kernel/cpu_legacy/actions/CPUActionFactory.h>
 #include <readdy/kernel/cpu_legacy/actions/topologies/CPUTopologyActionFactory.h>
 #include <readdy/kernel/cpu_legacy/observables/CPUObservableFactory.h>
 
 namespace readdy {
 namespace kernel {
-namespace cpu {
-const std::string CPUKernel::name = "CPU_Legacy";
+namespace cpu_legacy {
+const std::string CPULegacyKernel::name = "CPU_Legacy";
 
-struct CPUKernel::Impl {
+struct CPULegacyKernel::Impl {
     std::unique_ptr<actions::CPUActionFactory> actionFactory;
     std::unique_ptr<observables::CPUObservableFactory> observableFactory;
     std::unique_ptr<CPUStateModel> stateModel;
@@ -47,62 +47,62 @@ struct CPUKernel::Impl {
     std::unique_ptr<readdy::model::top::TopologyActionFactory> topologyActionFactory;
 };
 
-readdy::model::Kernel *CPUKernel::create() {
-    return new CPUKernel();
+readdy::model::Kernel *CPULegacyKernel::create() {
+    return new CPULegacyKernel();
 }
 
-CPUKernel::CPUKernel() : readdy::model::Kernel(name), pimpl(std::make_unique<Impl>()) {
+CPULegacyKernel::CPULegacyKernel() : readdy::model::Kernel(name), pimpl(std::make_unique<Impl>()) {
     pimpl->config = std::make_unique<readdy::util::thread::Config>();
     pimpl->config->setMode(readdy::util::thread::ThreadMode::pool);
 
     pimpl->actionFactory = std::make_unique<actions::CPUActionFactory>(this);
-    pimpl->topologyActionFactory = std::make_unique<readdy::kernel::cpu::actions::top::CPUTopologyActionFactory>(this);
+    pimpl->topologyActionFactory = std::make_unique<actions::top::CPUTopologyActionFactory>(this);
     pimpl->stateModel = std::make_unique<CPUStateModel>(_context, pimpl->config.get(),
                                                         pimpl->topologyActionFactory.get());
     pimpl->observableFactory = std::make_unique<observables::CPUObservableFactory>(this);
 }
 
-CPUStateModel &CPUKernel::getKernelStateModelInternal() const {
+CPUStateModel &CPULegacyKernel::getKernelStateModelInternal() const {
     return *pimpl->stateModel;
 }
 
-readdy::model::observables::ObservableFactory &CPUKernel::getObservableFactoryInternal() const {
+readdy::model::observables::ObservableFactory &CPULegacyKernel::getObservableFactoryInternal() const {
     return *pimpl->observableFactory;
 }
 
-unsigned long CPUKernel::getNThreads() const {
+unsigned long CPULegacyKernel::getNThreads() const {
     return pimpl->config->nThreads();
 }
 
-void CPUKernel::setNThreads(readdy::util::thread::Config::n_threads_type n) {
+void CPULegacyKernel::setNThreads(readdy::util::thread::Config::n_threads_type n) {
     pimpl->config->setNThreads(n);
 }
 
-readdy::model::actions::ActionFactory &CPUKernel::getActionFactoryInternal() const {
+readdy::model::actions::ActionFactory &CPULegacyKernel::getActionFactoryInternal() const {
     return *pimpl->actionFactory;
 }
 
-readdy::model::top::TopologyActionFactory *CPUKernel::getTopologyActionFactoryInternal() const {
+readdy::model::top::TopologyActionFactory *CPULegacyKernel::getTopologyActionFactoryInternal() const {
     return pimpl->topologyActionFactory.get();
 }
 
-const CPUStateModel &CPUKernel::getCPUKernelStateModel() const {
+const CPUStateModel &CPULegacyKernel::getCPULegacyKernelStateModel() const {
     return getKernelStateModelInternal();
 }
 
-CPUStateModel &CPUKernel::getCPUKernelStateModel() {
+CPUStateModel &CPULegacyKernel::getCPULegacyKernelStateModel() {
     return getKernelStateModelInternal();
 }
 
-const readdy::util::thread::Config &CPUKernel::threadConfig() const {
+const readdy::util::thread::Config &CPULegacyKernel::threadConfig() const {
     return *pimpl->config;
 }
 
-readdy::util::thread::Config &CPUKernel::threadConfig() {
+readdy::util::thread::Config &CPULegacyKernel::threadConfig() {
     return *pimpl->config;
 }
 
-void CPUKernel::initialize() {
+void CPULegacyKernel::initialize() {
     readdy::model::Kernel::initialize();
 
     const auto &fullConfiguration = context().kernelConfiguration();
@@ -117,26 +117,26 @@ void CPUKernel::initialize() {
     }
     {
         // state model config
-        getCPUKernelStateModel().configure(configuration);
+        getCPULegacyKernelStateModel().configure(configuration);
     }
-    for (auto &top : getCPUKernelStateModel().topologies()) {
+    for (auto &top : getCPULegacyKernelStateModel().topologies()) {
         top->configure();
         top->updateReactionRates(context().topology_registry().structuralReactionsOf(top->type()));
     }
-    getCPUKernelStateModel().reactionRecords().clear();
-    getCPUKernelStateModel().resetReactionCounts();
+    getCPULegacyKernelStateModel().reactionRecords().clear();
+    getCPULegacyKernelStateModel().resetReactionCounts();
 }
 
-void CPUKernel::finalize() {
+void CPULegacyKernel::finalize() {
     readdy::model::Kernel::finalize();
     threadConfig().setMode(readdy::util::thread::ThreadMode::inactive);
 }
 
-const readdy::util::thread::executor_base &CPUKernel::executor() const {
+const readdy::util::thread::executor_base &CPULegacyKernel::executor() const {
     return *threadConfig().executor();
 }
 
-CPUKernel::~CPUKernel() = default;
+CPULegacyKernel::~CPULegacyKernel() = default;
 
 }
 }
@@ -144,9 +144,9 @@ CPUKernel::~CPUKernel() = default;
 
 
 const char *name() {
-    return readdy::kernel::cpu::CPUKernel::name.c_str();
+    return readdy::kernel::cpu_legacy::CPULegacyKernel::name.c_str();
 }
 
 readdy::model::Kernel *createKernel() {
-    return readdy::kernel::cpu::CPUKernel::create();
+    return readdy::kernel::cpu_legacy::CPULegacyKernel::create();
 }

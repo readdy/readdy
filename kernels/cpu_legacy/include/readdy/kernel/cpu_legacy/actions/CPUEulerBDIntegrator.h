@@ -30,22 +30,22 @@
  */
 
 #pragma once
-#include <readdy/kernel/cpu_legacy/CPUKernel.h>
+#include <readdy/kernel/cpu_legacy/CPULegacyKernel.h>
 #include <readdy/model/actions/Actions.h>
 
 namespace readdy {
 namespace kernel {
-namespace cpu {
+namespace cpu_legacy {
 namespace actions {
 class CPUEulerBDIntegrator : public readdy::model::actions::EulerBDIntegrator {
 
 public:
-    CPUEulerBDIntegrator(CPUKernel *kernel, readdy::scalar timeStep);
+    CPUEulerBDIntegrator(CPULegacyKernel *kernel, readdy::scalar timeStep);
 
     void perform(const util::PerformanceNode &node) override;
 
 private:
-    CPUKernel *kernel;
+    CPULegacyKernel *kernel;
 };
 }
 }

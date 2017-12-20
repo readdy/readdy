@@ -38,7 +38,7 @@
 
 namespace readdy {
 namespace kernel {
-namespace cpu {
+namespace cpu_legacy {
 
 namespace thd = readdy::util::thread;
 

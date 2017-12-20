@@ -32,30 +32,30 @@
 
 #pragma once
 #include <readdy/model/actions/Actions.h>
-#include <readdy/kernel/cpu_legacy/CPUKernel.h>
+#include <readdy/kernel/cpu_legacy/CPULegacyKernel.h>
 #include <readdy/kernel/cpu_legacy/nl/AdaptiveNeighborList.h>
 
 namespace readdy {
 namespace kernel {
-namespace cpu {
+namespace cpu_legacy {
 namespace actions {
 class CPUUpdateNeighborList : public readdy::model::actions::UpdateNeighborList {
     using super = readdy::model::actions::UpdateNeighborList;
 public:
 
-    CPUUpdateNeighborList(CPUKernel *kernel, super::Operation op, scalar skin) : super(op, skin), kernel(kernel) {}
+    CPUUpdateNeighborList(CPULegacyKernel *kernel, super::Operation op, scalar skin) : super(op, skin), kernel(kernel) {}
 
     void perform(const util::PerformanceNode &node) override {
         auto t = node.timeit();
         switch (operation) {
             case init:
-                kernel->getCPUKernelStateModel().initializeNeighborList(skinSize, node);
+                kernel->getCPULegacyKernelStateModel().initializeNeighborList(skinSize, node);
                 break;
             case clear:
-                kernel->getCPUKernelStateModel().clearNeighborList(node);
+                kernel->getCPULegacyKernelStateModel().clearNeighborList(node);
                 break;
             case update:
-                kernel->getCPUKernelStateModel().updateNeighborList(node);
+                kernel->getCPULegacyKernelStateModel().updateNeighborList(node);
                 break;
         }
 
@@ -66,7 +66,7 @@ public:
     }
 
 private:
-    CPUKernel *kernel;
+    CPULegacyKernel *kernel;
 };
 }
 }

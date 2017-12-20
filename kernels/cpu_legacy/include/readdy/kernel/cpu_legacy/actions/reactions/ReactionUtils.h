@@ -32,19 +32,19 @@
 #pragma once
 #include <cmath>
 #include <readdy/model/RandomProvider.h>
-#include <readdy/kernel/cpu_legacy/CPUKernel.h>
+#include <readdy/kernel/cpu_legacy/CPULegacyKernel.h>
 #include <readdy/kernel/cpu_legacy/nl/AdaptiveNeighborList.h>
 #include <readdy/common/logging.h>
 #include "Event.h"
 
 namespace readdy {
 namespace kernel {
-namespace cpu {
+namespace cpu_legacy {
 namespace actions {
 namespace reactions {
 
 using data_t = data::EntryDataContainer;
-using cpu_kernel = readdy::kernel::cpu::CPUKernel;
+using cpu_kernel = CPULegacyKernel;
 using reaction_type = readdy::model::reactions::ReactionType;
 using ctx_t = std::remove_const<decltype(std::declval<cpu_kernel>().context())>::type;
 using event_t = Event;
@@ -66,12 +66,12 @@ inline bool shouldPerformEvent(const readdy::scalar rate, const readdy::scalar t
 }
 
 data_t::DataUpdate handleEventsGillespie(
-        CPUKernel* kernel, readdy::scalar timeStep,
+        CPULegacyKernel* kernel, readdy::scalar timeStep,
         bool filterEventsInAdvance, bool approximateRate,
         std::vector<event_t> &&events, std::vector<record_t> *maybeRecords, reaction_counts_map *maybeCounts);
 
 template<typename ParticleIndexCollection>
-void gatherEvents(CPUKernel *const kernel, const ParticleIndexCollection &particles, const neighbor_list* nl,
+void gatherEvents(CPULegacyKernel *const kernel, const ParticleIndexCollection &particles, const neighbor_list* nl,
                   const data_t *data, readdy::scalar &alpha, std::vector<event_t> &events,
                   const readdy::model::Context::dist_squared_fun& d2) {
     const auto& reaction_registry = kernel->context().reactions();

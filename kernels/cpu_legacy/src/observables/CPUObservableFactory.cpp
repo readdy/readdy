@@ -30,16 +30,16 @@
  */
 
 #include <readdy/kernel/cpu_legacy/observables/CPUObservableFactory.h>
-#include <readdy/kernel/cpu_legacy/CPUKernel.h>
+#include <readdy/kernel/cpu_legacy/CPULegacyKernel.h>
 #include <readdy/kernel/cpu_legacy/observables/CPUObservables.h>
 #include <readdy/kernel/singlecpu/observables/SCPUObservables.h>
 #include <readdy/kernel/singlecpu/observables/SCPUAggregators.h>
 
 namespace readdy {
 namespace kernel {
-namespace cpu {
+namespace cpu_legacy {
 namespace observables {
-CPUObservableFactory::CPUObservableFactory(CPUKernel *const kernel) : readdy::model::observables::ObservableFactory(kernel),
+CPUObservableFactory::CPUObservableFactory(CPULegacyKernel *const kernel) : readdy::model::observables::ObservableFactory(kernel),
                                                                 kernel(kernel) {
 }
 
@@ -68,7 +68,7 @@ CPUObservableFactory::createPositions(unsigned int stride, std::vector<std::stri
 readdy::model::observables::RadialDistribution *
 CPUObservableFactory::createRadialDistribution(unsigned int stride, std::vector<scalar> binBorders, std::vector<std::string> typeCountFrom,
                                                std::vector<std::string> typeCountTo, scalar particleToDensity) const {
-    return new readdy::kernel::scpu::observables::SCPURadialDistribution<CPUKernel>(kernel, stride, binBorders, typeCountFrom, typeCountTo,
+    return new readdy::kernel::scpu::observables::SCPURadialDistribution<CPULegacyKernel>(kernel, stride, binBorders, typeCountFrom, typeCountTo,
                                                                                                particleToDensity);
 }
 
@@ -79,7 +79,7 @@ readdy::model::observables::Particles *CPUObservableFactory::createParticles(uns
 readdy::model::observables::MeanSquaredDisplacement *
 CPUObservableFactory::createMeanSquaredDisplacement(unsigned int stride, std::vector<std::string> typesToCount,
                                                     readdy::model::observables::Particles *particlesObservable) const {
-    return new readdy::kernel::scpu::observables::SCPUMeanSquaredDisplacement<CPUKernel>(kernel, stride, typesToCount, particlesObservable);
+    return new readdy::kernel::scpu::observables::SCPUMeanSquaredDisplacement<CPULegacyKernel>(kernel, stride, typesToCount, particlesObservable);
 }
 
 readdy::model::observables::Reactions *CPUObservableFactory::createReactions(unsigned int stride) const {

@@ -35,14 +35,14 @@
 
 namespace readdy {
 namespace kernel {
-namespace cpu {
-class CPUKernel;
+namespace cpu_legacy {
+class CPULegacyKernel;
 namespace observables {
 
 class CPUObservableFactory : public readdy::model::observables::ObservableFactory {
 
 public:
-    CPUObservableFactory(CPUKernel* kernel);
+    CPUObservableFactory(CPULegacyKernel* kernel);
 
     readdy::model::observables::NParticles *
     createNParticles(unsigned int stride, std::vector<std::string> typesToCount = {}) const override;
@@ -74,7 +74,7 @@ public:
     readdy::model::observables::ReactionCounts *createReactionCounts(unsigned int stride) const override;
 
 private:
-    CPUKernel *const kernel;
+    CPULegacyKernel *const kernel;
 };
 
 }

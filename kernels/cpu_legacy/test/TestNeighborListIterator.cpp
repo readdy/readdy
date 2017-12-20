@@ -46,8 +46,8 @@ TEST(TestNeighborListIterator, Adaptive) {
     adaptive_data.emplace_back();
     adaptive_data.emplace_back(std::vector<std::size_t>{5_z});
 
-    kernel::cpu::nl::NeighborListIterator itBegins(adaptive_data.begin(), adaptive_data.end(), true);
-    kernel::cpu::nl::NeighborListIterator itEnds (adaptive_data.end(), adaptive_data.end(), true);
+    kernel::cpu_legacy::nl::NeighborListIterator itBegins(adaptive_data.begin(), adaptive_data.end(), true);
+    kernel::cpu_legacy::nl::NeighborListIterator itEnds (adaptive_data.end(), adaptive_data.end(), true);
 
     auto it_proper = adaptive_data.begin();
 
@@ -63,8 +63,8 @@ TEST(TestNeighborListIterator, EmptyStatic) {
     using namespace readdy;
     std::vector<std::vector<std::size_t>> static_data;
 
-    auto itBegins = kernel::cpu::nl::NeighborListIterator(static_data.begin(), static_data.end(), false);
-    auto itEnds = kernel::cpu::nl::NeighborListIterator(static_data.end(), static_data.end(), false);
+    auto itBegins = kernel::cpu_legacy::nl::NeighborListIterator(static_data.begin(), static_data.end(), false);
+    auto itEnds = kernel::cpu_legacy::nl::NeighborListIterator(static_data.end(), static_data.end(), false);
 
     ASSERT_EQ(itBegins, itEnds);
 }
@@ -73,8 +73,8 @@ TEST(TestNeighborListIterator, EmptyDynamic) {
     using namespace readdy;
     std::vector<std::vector<std::size_t>> dynamic_data;
 
-    auto itBegins = kernel::cpu::nl::NeighborListIterator(dynamic_data.begin(), dynamic_data.end(), true);
-    auto itEnds = kernel::cpu::nl::NeighborListIterator(dynamic_data.end(), dynamic_data.end(), true);
+    auto itBegins = kernel::cpu_legacy::nl::NeighborListIterator(dynamic_data.begin(), dynamic_data.end(), true);
+    auto itEnds = kernel::cpu_legacy::nl::NeighborListIterator(dynamic_data.end(), dynamic_data.end(), true);
 
     ASSERT_EQ(itBegins, itEnds);
 }
@@ -83,8 +83,8 @@ TEST(TestNeighborListIterator, AlmostEmptyStatic) {
     using namespace readdy;
     std::vector<std::vector<std::size_t>> static_data {{}, {}, {}, {0_z, 0_z, 1_z, 3_z, 4_z, 0_z, 2_z}, {}, {}};
 
-    auto itBegins = kernel::cpu::nl::NeighborListIterator(static_data.begin(), static_data.end(), false);
-    auto itEnds = kernel::cpu::nl::NeighborListIterator(static_data.end(), static_data.end(), false);
+    auto itBegins = kernel::cpu_legacy::nl::NeighborListIterator(static_data.begin(), static_data.end(), false);
+    auto itEnds = kernel::cpu_legacy::nl::NeighborListIterator(static_data.end(), static_data.end(), false);
 
     for(auto it = itBegins; it != itEnds; ++it) {
         EXPECT_TRUE(it->current_particle() == 0 || it->current_particle() == 1);
@@ -115,8 +115,8 @@ TEST(TestNeighborListIterator, Static) {
     static_data.emplace_back();
     static_data.emplace_back();
 
-    kernel::cpu::nl::NeighborListIterator itBegins (static_data.begin(), static_data.end(), false);
-    kernel::cpu::nl::NeighborListIterator itEnds (static_data.end(), static_data.end(), false);
+    kernel::cpu_legacy::nl::NeighborListIterator itBegins (static_data.begin(), static_data.end(), false);
+    kernel::cpu_legacy::nl::NeighborListIterator itEnds (static_data.end(), static_data.end(), false);
 
     std::vector<std::size_t> expectedNNeighbors {0_z, 1_z, 3_z, 1_z, 0_z, 2_z};
     std::vector<std::vector<std::size_t>> expectedNeighbors {
@@ -140,8 +140,8 @@ TEST(TestNeighborListIterator, Static) {
     }
 
     {
-        auto itBeginsDynamic = kernel::cpu::nl::NeighborListIterator(expectedNeighbors.begin(), expectedNeighbors.end(), true);
-        auto itEndsDynamic = kernel::cpu::nl::NeighborListIterator(expectedNeighbors.end(), expectedNeighbors.end(), true);
+        auto itBeginsDynamic = kernel::cpu_legacy::nl::NeighborListIterator(expectedNeighbors.begin(), expectedNeighbors.end(), true);
+        auto itEndsDynamic = kernel::cpu_legacy::nl::NeighborListIterator(expectedNeighbors.end(), expectedNeighbors.end(), true);
 
         auto itStatic = itBegins;
         const auto &itDynamic = itBeginsDynamic;

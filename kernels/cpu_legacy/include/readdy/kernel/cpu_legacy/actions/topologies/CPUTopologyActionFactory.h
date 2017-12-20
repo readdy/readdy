@@ -32,20 +32,20 @@
 
 #pragma once
 #include <readdy/model/topologies/TopologyActionFactory.h>
-#include <readdy/kernel/cpu_legacy/CPUKernel.h>
+#include <readdy/kernel/cpu_legacy/CPULegacyKernel.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(kernel)
-NAMESPACE_BEGIN(cpu)
+NAMESPACE_BEGIN(cpu_legacy)
 NAMESPACE_BEGIN(actions)
 NAMESPACE_BEGIN(top)
 
 namespace top = readdy::model::top;
 
 class CPUTopologyActionFactory : public readdy::model::top::TopologyActionFactory {
-    CPUKernel *const kernel;
+    CPULegacyKernel *const kernel;
 public:
-    explicit CPUTopologyActionFactory(CPUKernel* kernel);
+    explicit CPUTopologyActionFactory(CPULegacyKernel* kernel);
 
     std::unique_ptr<top::pot::CalculateHarmonicBondPotential>
     createCalculateHarmonicBondPotential(const harmonic_bond* potential) const override;
@@ -66,6 +66,6 @@ public:
 
 NAMESPACE_END(top)
 NAMESPACE_END(actions)
-NAMESPACE_END(cpu)
+NAMESPACE_END(cpu_legacy)
 NAMESPACE_END(kernel)
 NAMESPACE_END(readdy)

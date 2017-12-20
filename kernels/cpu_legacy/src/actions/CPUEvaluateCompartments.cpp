@@ -32,16 +32,16 @@
 
 namespace readdy {
 namespace kernel {
-namespace cpu {
+namespace cpu_legacy {
 namespace actions {
 
-CPUEvaluateCompartments::CPUEvaluateCompartments(CPUKernel *const kernel) : kernel(kernel) {}
+CPUEvaluateCompartments::CPUEvaluateCompartments(CPULegacyKernel *const kernel) : kernel(kernel) {}
 
 void CPUEvaluateCompartments::perform(const util::PerformanceNode &node) {
     auto t = node.timeit();
     const auto &ctx = kernel->context();
     const auto &compartments = ctx.compartments().get();
-    for(auto& e : *kernel->getCPUKernelStateModel().getParticleData()) {
+    for(auto& e : *kernel->getCPULegacyKernelStateModel().getParticleData()) {
         if(!e.deactivated) {
             for (const auto &compartment : compartments) {
                 if (compartment->isContained(e.pos)) {

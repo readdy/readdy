@@ -23,7 +23,7 @@
 /**
  * << detailed description >>
  *
- * @file CPUKernelTest.cpp.cpp
+ * @file CPULegacyKernelTest.cpp.cpp
  * @brief << brief description >>
  * @author clonker
  * @date 23.06.16

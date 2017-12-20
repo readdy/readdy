@@ -30,13 +30,13 @@
  */
 
 #include <gtest/gtest.h>
-#include <readdy/kernel/cpu_legacy/CPUKernel.h>
+#include <readdy/kernel/cpu_legacy/CPULegacyKernel.h>
 #include <readdy/kernel/cpu_legacy/nl/AdaptiveNeighborList.h>
 
 namespace {
 
 TEST(TestParallelGillespie, Sanity) {
-    readdy::kernel::cpu::CPUKernel kernel;
+    readdy::kernel::cpu_legacy::CPULegacyKernel kernel;
     kernel.context().boxSize() = {{10, 10, 11}};
     kernel.context().particle_types().add("A", 10.0);
     kernel.context().reactions().addFusion("Fusion", "A", "A", "A", 10, 1.0);
@@ -50,7 +50,7 @@ TEST(TestParallelGillespie, Sanity) {
     }
     kernel.context().configure();
     kernel.initialize();
-    kernel.getCPUKernelStateModel().initializeNeighborList(0.);
+    kernel.getCPULegacyKernelStateModel().initializeNeighborList(0.);
 
     auto prog = kernel.createAction<readdy::model::actions::reactions::Gillespie>(1);
     prog->perform();

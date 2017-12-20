@@ -80,7 +80,7 @@ void CPUGillespieParallel::perform(const util::PerformanceNode &node) {
             return;
         }
         if (ctx.recordReactionCounts()) {
-            auto &stateModel = kernel->getCPUKernelStateModel();
+            auto &stateModel = kernel->getCPULegacyKernelStateModel();
             readdy::model::observables::ReactionCounts::initializeCounts(stateModel.reactionCounts(), ctx);
         }
     }
@@ -160,7 +160,7 @@ void CPUGillespieParallel::setupBoxes() {
 
 void CPUGillespieParallel::fillBoxes() {
     std::for_each(boxes.begin(), boxes.end(), [](SlicedBox &box) { box.particleIndices.clear(); });
-    const auto particleData = kernel->getCPUKernelStateModel().getParticleData();
+    const auto particleData = kernel->getCPULegacyKernelStateModel().getParticleData();
     const auto simBoxSize = kernel->getKernelContext().boxSize();
     const auto nBoxes = boxes.size();
     std::size_t idx = 0;
@@ -245,7 +245,7 @@ void CPUGillespieParallel::handleBoxReactions() {
     std::vector<std::future<scpu_data::entries_update>> newParticles;
     std::vector<std::future<std::vector<reaction_record>>> records;
     std::vector<std::future<reaction_counts_t>> counts;*/
-    auto &stateModel = kernel->getCPUKernelStateModel();
+    auto &stateModel = kernel->getCPULegacyKernelStateModel();
     std::vector<std::promise<std::set<data_t::size_type>>> updates_promises(kernel->getNThreads());
     std::vector<std::promise<data_t::DataUpdate>> newParticles_promises(kernel->getNThreads());
     std::vector<std::promise<std::vector<record_t>>> records_promises(kernel->getNThreads());
@@ -307,7 +307,7 @@ void CPUGillespieParallel::handleBoxReactions() {
                 attainedRecords.push_back(std::move(future.get_future().get()));
                 totalRecordSize += attainedRecords.back().size();
             }
-            auto &modelRecords = kernel->getCPUKernelStateModel().reactionRecords();
+            auto &modelRecords = kernel->getCPULegacyKernelStateModel().reactionRecords();
             modelRecords.clear();
             modelRecords.reserve(totalRecordSize);
             for (const auto &r : attainedRecords) {

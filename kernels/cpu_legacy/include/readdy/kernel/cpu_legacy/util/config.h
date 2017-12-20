@@ -34,17 +34,17 @@
 
 namespace readdy {
 namespace kernel {
-namespace cpu {
-class CPUKernel;
+namespace cpu_legacy {
+class CPULegacyKernel;
 namespace nl {
 class AdaptiveNeighborList;
 class CellDecompositionNeighborList;
 class ContiguousCLLNeighborList;
 class NeighborList;
 }
-using neighbor_list = readdy::kernel::cpu::nl::NeighborList;
-using adaptive_neighbor_list = readdy::kernel::cpu::nl::AdaptiveNeighborList;
-using cell_decomposition_neighbor_list = readdy::kernel::cpu::nl::CellDecompositionNeighborList;
+using neighbor_list = readdy::kernel::cpu_legacy::nl::NeighborList;
+using adaptive_neighbor_list = readdy::kernel::cpu_legacy::nl::AdaptiveNeighborList;
+using cell_decomposition_neighbor_list = readdy::kernel::cpu_legacy::nl::CellDecompositionNeighborList;
 }
 }
 }

@@ -34,14 +34,14 @@
 
 namespace readdy {
 namespace kernel {
-namespace cpu {
+namespace cpu_legacy {
 namespace actions {
 
 namespace rnd = readdy::model::rnd;
 
 void CPUEulerBDIntegrator::perform(const util::PerformanceNode &node) {
     auto t = node.timeit();
-    auto data = kernel->getCPUKernelStateModel().getParticleData();
+    auto data = kernel->getCPULegacyKernelStateModel().getParticleData();
     const auto size = data->size();
 
     const auto &context = kernel->context();
@@ -84,7 +84,7 @@ void CPUEulerBDIntegrator::perform(const util::PerformanceNode &node) {
 
 }
 
-CPUEulerBDIntegrator::CPUEulerBDIntegrator(CPUKernel *kernel, scalar timeStep)
+CPUEulerBDIntegrator::CPUEulerBDIntegrator(CPULegacyKernel *kernel, scalar timeStep)
         : readdy::model::actions::EulerBDIntegrator(timeStep), kernel(kernel) {}
 
 }

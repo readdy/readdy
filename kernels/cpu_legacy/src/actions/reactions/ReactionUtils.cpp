@@ -34,12 +34,12 @@
 
 namespace readdy {
 namespace kernel {
-namespace cpu {
+namespace cpu_legacy {
 namespace actions {
 namespace reactions {
 
 data_t::DataUpdate handleEventsGillespie(
-        CPUKernel *const kernel, scalar timeStep, bool filterEventsInAdvance, bool approximateRate,
+        CPULegacyKernel *const kernel, scalar timeStep, bool filterEventsInAdvance, bool approximateRate,
         std::vector<event_t> &&events, std::vector<record_t> *maybeRecords, reaction_counts_map *maybeCounts) {
     using rdy_particle_t = readdy::model::Particle;
     const auto& fixPos = kernel->context().fixPositionFun();
@@ -49,7 +49,7 @@ data_t::DataUpdate handleEventsGillespie(
 
     if(!events.empty()) {
         const auto &ctx = kernel->context();
-        auto data = kernel->getCPUKernelStateModel().getParticleData();
+        auto data = kernel->getCPULegacyKernelStateModel().getParticleData();
         /**
          * Handle gathered reaction events
          */

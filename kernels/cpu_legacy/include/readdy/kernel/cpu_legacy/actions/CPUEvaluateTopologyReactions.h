@@ -34,18 +34,18 @@
 
 
 #include <readdy/model/actions/Actions.h>
-#include "../CPUKernel.h"
+#include "../CPULegacyKernel.h"
 
 namespace readdy {
 namespace kernel {
-namespace cpu {
+namespace cpu_legacy {
 namespace actions {
 namespace top {
 
 class CPUEvaluateTopologyReactions : public readdy::model::actions::top::EvaluateTopologyReactions {
     using rate_t = readdy::model::top::GraphTopology::topology_reaction_rate;
 public:
-    CPUEvaluateTopologyReactions(CPUKernel* kernel, readdy::scalar timeStep);
+    CPUEvaluateTopologyReactions(CPULegacyKernel* kernel, readdy::scalar timeStep);
 
     void perform(const util::PerformanceNode &node) override;
 
@@ -56,7 +56,7 @@ private:
 
     using topology_reaction_events = std::vector<TREvent>;
 
-    CPUKernel *const kernel;
+    CPULegacyKernel *const kernel;
 
     topology_reaction_events gatherEvents();
 

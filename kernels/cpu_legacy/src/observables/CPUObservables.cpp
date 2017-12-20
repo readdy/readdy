@@ -34,21 +34,21 @@
 #include <readdy/common/thread/scoped_async.h>
 
 #include <readdy/kernel/cpu_legacy/observables/CPUObservables.h>
-#include <readdy/kernel/cpu_legacy/CPUKernel.h>
+#include <readdy/kernel/cpu_legacy/CPULegacyKernel.h>
 #include <readdy/kernel/cpu_legacy/util/config.h>
 
 namespace readdy {
 namespace kernel {
-namespace cpu {
+namespace cpu_legacy {
 namespace observables {
 
-CPUPositions::CPUPositions(CPUKernel *const kernel, unsigned int stride,
+CPUPositions::CPUPositions(CPULegacyKernel *const kernel, unsigned int stride,
                            const std::vector<std::string> &typesToCount) :
         readdy::model::observables::Positions(kernel, stride, typesToCount), kernel(kernel) {}
 
 void CPUPositions::evaluate() {
     result.clear();
-    auto &stateModel = kernel->getCPUKernelStateModel();
+    auto &stateModel = kernel->getCPULegacyKernelStateModel();
     const auto &pd = stateModel.getParticleData();
     if (typesToCount.empty()) {
         result = stateModel.getParticlePositions();
@@ -62,7 +62,7 @@ void CPUPositions::evaluate() {
     }
 }
 
-CPUHistogramAlongAxis::CPUHistogramAlongAxis(CPUKernel *const kernel, unsigned int stride,
+CPUHistogramAlongAxis::CPUHistogramAlongAxis(CPULegacyKernel *const kernel, unsigned int stride,
                                              const std::vector<scalar> &binBorders,
                                              const std::vector<std::string> &typesToCount, unsigned int axis)
         : readdy::model::observables::HistogramAlongAxis(kernel, stride, binBorders, typesToCount, axis),
@@ -71,7 +71,7 @@ CPUHistogramAlongAxis::CPUHistogramAlongAxis(CPUKernel *const kernel, unsigned i
 }
 
 void CPUHistogramAlongAxis::evaluate() {
-    using Iter = readdy::kernel::cpu::CPUStateModel::data_type::const_iterator;
+    using Iter = CPUStateModel::data_type::const_iterator;
 
     std::fill(result.begin(), result.end(), 0);
 
@@ -79,7 +79,7 @@ void CPUHistogramAlongAxis::evaluate() {
     const auto typesToCount = this->typesToCount;
     const auto resultSize = result.size();
     const auto axis = this->axis;
-    const auto data = kernel->getCPUKernelStateModel().getParticleData();
+    const auto data = kernel->getCPULegacyKernelStateModel().getParticleData();
 
     std::vector<std::future<result_type>> updates;
     updates.reserve(kernel->getNThreads());
@@ -136,18 +136,18 @@ void CPUHistogramAlongAxis::evaluate() {
 }
 
 
-CPUNParticles::CPUNParticles(CPUKernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount)
+CPUNParticles::CPUNParticles(CPULegacyKernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount)
         : readdy::model::observables::NParticles(kernel, stride, std::move(typesToCount)),
           kernel(kernel) {}
 
 void CPUNParticles::evaluate() {
     std::vector<unsigned long> resultVec = {};
     if (typesToCount.empty()) {
-        const auto data = kernel->getCPUKernelStateModel().getParticleData();
+        const auto data = kernel->getCPULegacyKernelStateModel().getParticleData();
         resultVec.push_back(data->size() - data->getNDeactivated());
     } else {
         resultVec.resize(typesToCount.size());
-        const auto &pd = kernel->getCPUKernelStateModel().getParticleData();
+        const auto &pd = kernel->getCPULegacyKernelStateModel().getParticleData();
         for (const auto &e : *pd) {
             if (!e.deactivated) {
                 auto typeIt = std::find(typesToCount.begin(), typesToCount.end(), e.type);
@@ -160,13 +160,13 @@ void CPUNParticles::evaluate() {
     result = std::move(resultVec);
 }
 
-CPUForces::CPUForces(CPUKernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount) :
+CPUForces::CPUForces(CPULegacyKernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount) :
         readdy::model::observables::Forces(kernel, stride, std::move(typesToCount)),
         kernel(kernel) {}
 
 void CPUForces::evaluate() {
     result.clear();
-    const auto &pd = kernel->getCPUKernelStateModel().getParticleData();
+    const auto &pd = kernel->getCPULegacyKernelStateModel().getParticleData();
     if (typesToCount.empty()) {
         result.reserve(pd->size());
     }
@@ -187,7 +187,7 @@ void CPUForces::evaluate() {
 }
 
 
-CPUParticles::CPUParticles(CPUKernel *const kernel, unsigned int stride)
+CPUParticles::CPUParticles(CPULegacyKernel *const kernel, unsigned int stride)
         : readdy::model::observables::Particles(kernel, stride), kernel(kernel) {}
 
 void CPUParticles::evaluate() {
@@ -197,7 +197,7 @@ void CPUParticles::evaluate() {
     resultTypes.clear();
     resultIds.clear();
     resultPositions.clear();
-    const auto &particleData = kernel->getCPUKernelStateModel().getParticleData();
+    const auto &particleData = kernel->getCPULegacyKernelStateModel().getParticleData();
     resultTypes.reserve(particleData->size());
     resultIds.reserve(particleData->size());
     resultPositions.reserve(particleData->size());
@@ -210,20 +210,20 @@ void CPUParticles::evaluate() {
     }
 }
 
-CPUReactions::CPUReactions(CPUKernel *const kernel, unsigned int stride)
+CPUReactions::CPUReactions(CPULegacyKernel *const kernel, unsigned int stride)
         : Reactions(kernel, stride), kernel(kernel) {}
 
 void CPUReactions::evaluate() {
-    const auto& model = kernel->getCPUKernelStateModel();
+    const auto& model = kernel->getCPULegacyKernelStateModel();
     const auto& records = model.reactionRecords();
     result = records;
 }
 
-CPUReactionCounts::CPUReactionCounts(CPUKernel *const kernel, unsigned int stride)
+CPUReactionCounts::CPUReactionCounts(CPULegacyKernel *const kernel, unsigned int stride)
         : ReactionCounts(kernel, stride), kernel(kernel) {}
 
 void CPUReactionCounts::evaluate() {
-    result = kernel->getCPUKernelStateModel().reactionCounts();
+    result = kernel->getCPULegacyKernelStateModel().reactionCounts();
 }
 
 }

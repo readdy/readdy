@@ -36,28 +36,28 @@
 
 #include <gtest/gtest.h>
 #include <readdy/api/SimulationScheme.h>
-#include <readdy/kernel/cpu_legacy/CPUKernel.h>
+#include <readdy/kernel/cpu_legacy/CPULegacyKernel.h>
 #include <readdy/kernel/cpu_legacy/nl/AdaptiveNeighborList.h>
 #include <readdy/kernel/cpu_legacy/nl/CellDecompositionNeighborList.h>
 #include <readdy/testing/NOOPPotential.h>
 
 
-namespace cpu = readdy::kernel::cpu;
+namespace cpu_legacy = readdy::kernel::cpu_legacy;
 namespace m = readdy::model;
 
 namespace {
 
-using data_t = cpu::data::NLDataContainer;
-using nl_t = cpu::cell_decomposition_neighbor_list;
+using data_t = cpu_legacy::data::NLDataContainer;
+using nl_t = cpu_legacy::cell_decomposition_neighbor_list;
 
 struct TestNeighborList : ::testing::Test {
 
-    std::unique_ptr<cpu::CPUKernel> kernel;
+    std::unique_ptr<cpu_legacy::CPULegacyKernel> kernel;
     readdy::particle_type_type typeIdA;
 
     std::unique_ptr<readdy::testing::NOOPPotentialOrder2> noop;
 
-    TestNeighborList() : kernel(std::make_unique<cpu::CPUKernel>()) {
+    TestNeighborList() : kernel(std::make_unique<cpu_legacy::CPULegacyKernel>()) {
         auto &ctx = kernel->context();
         ctx.particle_types().add("A", 1.);
         auto a_id = ctx.particle_types()("A");
@@ -74,7 +74,7 @@ struct TestNeighborList : ::testing::Test {
 
 class TestNeighborListImpl : public ::testing::TestWithParam<const char*> {};
 
-auto isPairInList = [](readdy::kernel::cpu::nl::NeighborList *pairs, std::size_t idx1, std::size_t idx2) {
+auto isPairInList = [](readdy::kernel::cpu_legacy::nl::NeighborList *pairs, std::size_t idx1, std::size_t idx2) {
     bool foundOneDirection {false};
     bool foundOtherDirection {false};
     for(auto it : *pairs) {
@@ -90,7 +90,7 @@ auto isPairInList = [](readdy::kernel::cpu::nl::NeighborList *pairs, std::size_t
     return false;
 };
 
-auto isIdPairInList = [](nl_t *pairs, readdy::kernel::cpu::data::EntryDataContainer *data, std::size_t id1, std::size_t id2) {
+auto isIdPairInList = [](nl_t *pairs, readdy::kernel::cpu_legacy::data::EntryDataContainer *data, std::size_t id1, std::size_t id2) {
     return isPairInList(pairs, data->getIndexForId(id1), data->getIndexForId(id2));
 };
 
@@ -187,13 +187,13 @@ TEST_F(TestNeighborList, AllNeighborsInCutoffSphere) {
 
 TEST(TestAdaptiveNeighborList, CellContainerSanity) {
     using namespace readdy;
-    std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
+    std::unique_ptr<kernel::cpu_legacy::CPULegacyKernel> kernel = std::make_unique<kernel::cpu_legacy::CPULegacyKernel>();
 
     auto &context = kernel->context();
     context.boxSize() = {{10, 10, 10}};
 
-    auto data = cpu::data::NLDataContainer(kernel->getCPUKernelStateModel().getParticleData());
-    kernel::cpu::nl::CellContainer cellContainer{
+    auto data = cpu_legacy::data::NLDataContainer(kernel->getCPULegacyKernelStateModel().getParticleData());
+    kernel::cpu_legacy::nl::CellContainer cellContainer{
             data,
             context,
             kernel->threadConfig()};
@@ -216,15 +216,15 @@ TEST(TestAdaptiveNeighborList, CellContainerSanity) {
 
 TEST(TestAdaptiveNeighborList, FirstLevelNeighborshipPeriodic) {
     using namespace readdy;
-    std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
+    std::unique_ptr<kernel::cpu_legacy::CPULegacyKernel> kernel = std::make_unique<kernel::cpu_legacy::CPULegacyKernel>();
 
     auto &context = kernel->context();
     context.periodicBoundaryConditions() = {{true, true, true}};
     context.boxSize() = {{10, 10, 10}};
     context.configure();
 
-    auto data = data_t(kernel->getCPUKernelStateModel().getParticleData());
-    kernel::cpu::nl::CellContainer cellContainer{
+    auto data = data_t(kernel->getCPULegacyKernelStateModel().getParticleData());
+    kernel::cpu_legacy::nl::CellContainer cellContainer{
             data,
             context,
             kernel->threadConfig()};
@@ -278,14 +278,14 @@ TEST(TestAdaptiveNeighborList, FirstLevelNeighborshipPeriodic) {
 
 TEST(TestAdaptiveNeighborList, FirstLevelNeighborshipNotPeriodic) {
     using namespace readdy;
-    std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
+    std::unique_ptr<kernel::cpu_legacy::CPULegacyKernel> kernel = std::make_unique<kernel::cpu_legacy::CPULegacyKernel>();
 
     auto &context = kernel->context();
     context.periodicBoundaryConditions() = {{false, false, false}};
     context.boxSize() = {{10, 10, 10}};
 
-    auto data = data_t(kernel->getCPUKernelStateModel().getParticleData());
-    kernel::cpu::nl::CellContainer cellContainer{
+    auto data = data_t(kernel->getCPULegacyKernelStateModel().getParticleData());
+    kernel::cpu_legacy::nl::CellContainer cellContainer{
             data,
             context,
             kernel->threadConfig()};
@@ -334,15 +334,15 @@ TEST(TestAdaptiveNeighborList, FirstLevelNeighborshipNotPeriodic) {
 
 TEST(TestAdaptiveNeighborList, PartiallyPeriodicTube) {
     using namespace readdy;
-    std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
+    std::unique_ptr<kernel::cpu_legacy::CPULegacyKernel> kernel = std::make_unique<kernel::cpu_legacy::CPULegacyKernel>();
 
     auto &context = kernel->context();
     context.periodicBoundaryConditions() = {{false, true, true}};
     context.boxSize() = {{5, 1, 1.1}};
     context.configure();
 
-    auto data = data_t(kernel->getCPUKernelStateModel().getParticleData());
-    kernel::cpu::nl::CellContainer cellContainer{
+    auto data = data_t(kernel->getCPULegacyKernelStateModel().getParticleData());
+    kernel::cpu_legacy::nl::CellContainer cellContainer{
             data,
             context,
             kernel->threadConfig()};
@@ -386,15 +386,15 @@ TEST(TestAdaptiveNeighborList, PositionToCell) {
                                        {0,  0,  0},
                                        {-5, -5, -5}};
 
-    std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
+    std::unique_ptr<kernel::cpu_legacy::CPULegacyKernel> kernel = std::make_unique<kernel::cpu_legacy::CPULegacyKernel>();
 
     auto &context = kernel->context();
     context.periodicBoundaryConditions() = {{true, true, true}};
     context.boxSize() = {{10, 10, 10}};
     context.configure();
 
-    auto data = data_t(kernel->getCPUKernelStateModel().getParticleData());
-    kernel::cpu::nl::CellContainer cellContainer{
+    auto data = data_t(kernel->getCPULegacyKernelStateModel().getParticleData());
+    kernel::cpu_legacy::nl::CellContainer cellContainer{
             data,
             context,
             kernel->threadConfig()};
@@ -417,8 +417,8 @@ TEST(TestAdaptiveNeighborList, SetUpNeighborList) {
     using namespace readdy;
     
 
-    std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
-    auto data = kernel->getCPUKernelStateModel().getParticleData();
+    std::unique_ptr<kernel::cpu_legacy::CPULegacyKernel> kernel = std::make_unique<kernel::cpu_legacy::CPULegacyKernel>();
+    auto data = kernel->getCPULegacyKernelStateModel().getParticleData();
     auto &context = kernel->context();
     const auto &pbc = context.applyPBCFun();
 
@@ -434,7 +434,7 @@ TEST(TestAdaptiveNeighborList, SetUpNeighborList) {
         kernel->addParticle("A", pbc(n3(0, 10)));
     }
 
-    kernel::cpu::nl::AdaptiveNeighborList neighbor_list{
+    kernel::cpu_legacy::nl::AdaptiveNeighborList neighbor_list{
             data,
             kernel->context(),
             kernel->threadConfig()
@@ -453,7 +453,7 @@ TEST(TestAdaptiveNeighborList, SetUpNeighborList) {
 TEST(TestAdaptiveNeighborList, HilbertSort) {
     using namespace readdy;
 
-    std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
+    std::unique_ptr<kernel::cpu_legacy::CPULegacyKernel> kernel = std::make_unique<kernel::cpu_legacy::CPULegacyKernel>();
     auto &context = kernel->context();
     context.boxSize() = {{1, 1, 1}};
     context.particle_types().add("A", 1.0);
@@ -467,7 +467,7 @@ TEST(TestAdaptiveNeighborList, HilbertSort) {
             }
         }
     }
-    auto &data = *kernel->getCPUKernelStateModel().getParticleData();
+    auto &data = *kernel->getCPULegacyKernelStateModel().getParticleData();
     ASSERT_EQ(data.size(), i);
     data.hilbertSort(.01);
     ASSERT_EQ(data.getNDeactivated(), 0);
@@ -526,7 +526,7 @@ TEST(TestAdaptiveNeighborList, HilbertSort) {
 TEST(TestAdaptiveNeighborList, VerletList) {
     using namespace readdy;
 
-    std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
+    std::unique_ptr<kernel::cpu_legacy::CPULegacyKernel> kernel = std::make_unique<kernel::cpu_legacy::CPULegacyKernel>();
     auto &context = kernel->context();
     context.boxSize() = {{1, 1, 1}};
     context.particle_types().add("A", 1.0);
@@ -539,8 +539,8 @@ TEST(TestAdaptiveNeighborList, VerletList) {
     context.reactions().addFusion("test", "A", "A", "A", .1, .1);
     context.configure();
     const auto &d2 = context.distSquaredFun();
-    auto data = kernel->getCPUKernelStateModel().getParticleData();
-    kernel::cpu::nl::AdaptiveNeighborList neighbor_list{
+    auto data = kernel->getCPULegacyKernelStateModel().getParticleData();
+    kernel::cpu_legacy::nl::AdaptiveNeighborList neighbor_list{
             data,
             kernel->context(),
             kernel->threadConfig()
@@ -568,7 +568,7 @@ TEST(TestAdaptiveNeighborList, VerletList) {
 TEST(TestAdaptiveNeighborList, AdaptiveUpdating) {
     using namespace readdy;
     
-    std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
+    std::unique_ptr<kernel::cpu_legacy::CPULegacyKernel> kernel = std::make_unique<kernel::cpu_legacy::CPULegacyKernel>();
     auto &context = kernel->context();
     context.boxSize() = {{28, 28, 28}};
     context.particle_types().add("A", .1);
@@ -585,8 +585,8 @@ TEST(TestAdaptiveNeighborList, AdaptiveUpdating) {
     context.reactions().addFusion("test", "V", "V", "V", cutoff, cutoff);
     context.configure();
     const auto &d2 = context.distSquaredFun();
-    auto data = kernel->getCPUKernelStateModel().getParticleData();
-    kernel::cpu::nl::AdaptiveNeighborList neighbor_list{
+    auto data = kernel->getCPULegacyKernelStateModel().getParticleData();
+    kernel::cpu_legacy::nl::AdaptiveNeighborList neighbor_list{
             data,
             kernel->context(),
             kernel->threadConfig(),
@@ -643,7 +643,7 @@ TEST(TestAdaptiveNeighborList, AdaptiveUpdating) {
 
 TEST_P(TestNeighborListImpl, DiffusionAndReaction) {
     using namespace readdy;
-    std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
+    std::unique_ptr<kernel::cpu_legacy::CPULegacyKernel> kernel = std::make_unique<kernel::cpu_legacy::CPULegacyKernel>();
 
     // A is absorbed and created by F, while the number of F stays constant, this test spans multiple timesteps
     kernel->context().particle_types().add("A", 0.05);
@@ -686,7 +686,7 @@ TEST_P(TestNeighborListImpl, DiffusionAndReaction) {
 
 TEST_P(TestNeighborListImpl, Diffusion) {
     using namespace readdy;
-    std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
+    std::unique_ptr<kernel::cpu_legacy::CPULegacyKernel> kernel = std::make_unique<kernel::cpu_legacy::CPULegacyKernel>();
 
     // A is absorbed and created by F, while the number of F stays constant, this test spans multiple timesteps
     auto& context = kernel->context();
@@ -717,7 +717,7 @@ TEST_P(TestNeighborListImpl, Diffusion) {
     obs->setCallback(
             [&](const readdy::model::observables::NParticles::result_type &) {
                 const auto &d2 = context.distSquaredFun();
-                const auto neighbor_list = kernel->getCPUKernelStateModel().getNeighborList();
+                const auto neighbor_list = kernel->getCPULegacyKernelStateModel().getNeighborList();
 
                 for(auto it = neighbor_list->begin(); it != neighbor_list->end(); ++it) {
                     const auto &entry = neighbor_list->data()->entry_at(it->current_particle());

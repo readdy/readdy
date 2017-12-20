@@ -32,7 +32,7 @@
 #include <gtest/gtest.h>
 #include <readdy/model/Kernel.h>
 #include <readdy/plugin/KernelProvider.h>
-#include <readdy/kernel/cpu_legacy/CPUKernel.h>
+#include <readdy/kernel/cpu_legacy/CPULegacyKernel.h>
 #include <readdy/kernel/cpu_legacy/actions/reactions/ReactionUtils.h>
 #include <readdy/testing/Utils.h>
 #include <readdy/testing/FloatingPoints.h>
@@ -43,10 +43,10 @@
 #include <readdy/model/reactions/Enzymatic.h>
 #include <readdy/model/reactions/Conversion.h>
 
-namespace reac = readdy::kernel::cpu::actions::reactions;
+namespace reac = readdy::kernel::cpu_legacy::actions::reactions;
 
 struct fix_n_threads {
-    fix_n_threads(readdy::kernel::cpu::CPUKernel *const kernel, unsigned int n)
+    fix_n_threads(readdy::kernel::cpu_legacy::CPULegacyKernel *const kernel, unsigned int n)
             : oldValue(static_cast<unsigned int>(kernel->getNThreads())), kernel(kernel) {
         kernel->setNThreads(n);
     }
@@ -57,7 +57,7 @@ struct fix_n_threads {
 
 private:
     const unsigned int oldValue;
-    readdy::kernel::cpu::CPUKernel *const kernel;
+    readdy::kernel::cpu_legacy::CPULegacyKernel *const kernel;
 };
 
 TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
@@ -67,8 +67,8 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
     using conversion_t = readdy::model::reactions::Conversion;
     using death_t = readdy::model::reactions::Decay;
     using particle_t = readdy::model::Particle;
-    using data_t = readdy::kernel::cpu::data::NLDataContainer;
-    auto kernel = std::make_unique<readdy::kernel::cpu::CPUKernel>();
+    using data_t = readdy::kernel::cpu_legacy::data::NLDataContainer;
+    auto kernel = std::make_unique<readdy::kernel::cpu_legacy::CPULegacyKernel>();
     kernel->context().periodicBoundaryConditions() = {{false, false, false}};
     kernel->context().boxSize() = {{100, 100, 100}};
     const auto diff = kernel->context().shortestDifferenceFun();
@@ -267,7 +267,7 @@ TEST(CPUTestReactions, TestGillespieParallel) {
     using conversion_t = readdy::model::reactions::Conversion;
     using death_t = readdy::model::reactions::Decay;
     using particle_t = readdy::model::Particle;
-    auto kernel = std::make_unique<readdy::kernel::cpu::CPUKernel>();
+    auto kernel = std::make_unique<readdy::kernel::cpu_legacy::CPULegacyKernel>();
     kernel->context().boxSize() = {{10, 10, 30}};
     kernel->context().periodicBoundaryConditions() = {{true, true, false}};
 
@@ -309,7 +309,7 @@ TEST(CPUTestReactions, TestGillespieParallel) {
         fix_n_threads n_threads{kernel.get(), 2};
         EXPECT_EQ(2, kernel->getNThreads());
         auto &&neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>();
-        std::unique_ptr<readdy::kernel::cpu::actions::reactions::CPUGillespie> reactions = readdy::util::static_unique_ptr_cast_no_del<readdy::kernel::cpu::actions::reactions::CPUGillespie>(
+        std::unique_ptr<readdy::kernel::cpu_legacy::actions::reactions::CPUGillespie> reactions = readdy::util::static_unique_ptr_cast_no_del<readdy::kernel::cpu_legacy::actions::reactions::CPUGillespie>(
                 kernel->createAction<readdy::model::actions::reactions::Gillespie>(1)
         );
         neighborList->perform();

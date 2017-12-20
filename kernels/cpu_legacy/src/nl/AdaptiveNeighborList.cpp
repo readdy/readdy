@@ -34,7 +34,7 @@
 
 namespace readdy {
 namespace kernel {
-namespace cpu {
+namespace cpu_legacy {
 namespace nl {
 
 AdaptiveNeighborList::AdaptiveNeighborList(data::EntryDataContainer *data,

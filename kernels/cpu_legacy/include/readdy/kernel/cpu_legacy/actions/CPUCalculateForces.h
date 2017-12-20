@@ -31,12 +31,12 @@
 
 #pragma once
 #include <readdy/model/actions/Actions.h>
-#include <readdy/kernel/cpu_legacy/CPUKernel.h>
+#include <readdy/kernel/cpu_legacy/CPULegacyKernel.h>
 #include <readdy/common/thread/barrier.h>
 
 namespace readdy {
 namespace kernel {
-namespace cpu {
+namespace cpu_legacy {
 namespace actions {
 class CPUCalculateForces : public readdy::model::actions::CalculateForces {
     using data_bounds = std::tuple<data::EntryDataContainer::iterator, data::EntryDataContainer::iterator>;
@@ -44,7 +44,7 @@ class CPUCalculateForces : public readdy::model::actions::CalculateForces {
     using top_bounds = std::tuple<CPUStateModel::topologies_vec::const_iterator, CPUStateModel::topologies_vec::const_iterator>;
 public:
 
-    explicit CPUCalculateForces(CPUKernel* kernel) : kernel(kernel) {}
+    explicit CPUCalculateForces(CPULegacyKernel* kernel) : kernel(kernel) {}
 
     void perform(const util::PerformanceNode &node) override {
         auto t = node.timeit();
@@ -52,7 +52,7 @@ public:
         const auto &context = kernel->context();
         const auto &config = kernel->threadConfig();
 
-        auto &stateModel = kernel->getCPUKernelStateModel();
+        auto &stateModel = kernel->getCPULegacyKernelStateModel();
         auto neighborList = stateModel.getNeighborList();
         auto data = neighborList->data();
         auto taf = kernel->getTopologyActionFactory();
@@ -222,7 +222,7 @@ protected:
         energyPromise.set_value(energyUpdate);
     }
 
-    CPUKernel *const kernel;
+    CPULegacyKernel *const kernel;
 };
 }
 }

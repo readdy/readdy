@@ -34,7 +34,7 @@
 
 namespace readdy {
 namespace kernel {
-namespace cpu {
+namespace cpu_legacy {
 namespace data {
 
 DefaultDataContainer::DefaultDataContainer(const readdy::model::Context &context, const util::thread::Config &threadConfig)

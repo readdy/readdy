@@ -33,11 +33,11 @@
 
 namespace readdy {
 namespace kernel {
-namespace cpu {
+namespace cpu_legacy {
 namespace actions {
 namespace reactions {
 
-CPUGillespie::CPUGillespie(CPUKernel *const kernel, scalar timeStep) : super(timeStep), kernel(kernel) {}
+CPUGillespie::CPUGillespie(CPULegacyKernel *const kernel, scalar timeStep) : super(timeStep), kernel(kernel) {}
 
 void CPUGillespie::perform(const util::PerformanceNode &node) {
     auto t = node.timeit();
@@ -45,7 +45,7 @@ void CPUGillespie::perform(const util::PerformanceNode &node) {
     if(ctx.reactions().nOrder1() == 0 && ctx.reactions().nOrder2() == 0) {
         return;
     }
-    auto &stateModel = kernel->getCPUKernelStateModel();
+    auto &stateModel = kernel->getCPULegacyKernelStateModel();
     auto data = stateModel.getParticleData();
     const auto &dist = ctx.distSquaredFun();
     const auto &fixPos = ctx.fixPositionFun();

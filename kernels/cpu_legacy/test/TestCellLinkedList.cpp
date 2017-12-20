@@ -56,11 +56,11 @@ TEST_P(TestCLLImpl, Insert) {
 
     util::thread::Config config;
 
-    kernel::cpu::nl::NeighborList *nl;
+    kernel::cpu_legacy::nl::NeighborList *nl;
     
-    kernel::cpu::nl::CompactCLLNeighborList ccll_nl (1, context, config);
-    kernel::cpu::nl::DynamicCLLNeighborList dcll_nl (context, config);
-    kernel::cpu::nl::ContiguousCLLNeighborList contiguous_cll_nl (1, context, config);
+    kernel::cpu_legacy::nl::CompactCLLNeighborList ccll_nl (1, context, config);
+    kernel::cpu_legacy::nl::DynamicCLLNeighborList dcll_nl (context, config);
+    kernel::cpu_legacy::nl::ContiguousCLLNeighborList contiguous_cll_nl (1, context, config);
     
     if(std::string(GetParam()) == "DynamicCLL") {
         nl = &dcll_nl;
@@ -127,11 +127,11 @@ TEST_P(TestCLLImpl, InsertAndDeactivate) {
     context.periodicBoundaryConditions()[2] = periodic;
 
     util::thread::Config config;
-    kernel::cpu::nl::NeighborList *nl;
+    kernel::cpu_legacy::nl::NeighborList *nl;
 
-    kernel::cpu::nl::CompactCLLNeighborList ccll_nl (1, context, config);
-    kernel::cpu::nl::DynamicCLLNeighborList dcll_nl (context, config);
-    kernel::cpu::nl::ContiguousCLLNeighborList contiguous_cll_nl (1, context, config);
+    kernel::cpu_legacy::nl::CompactCLLNeighborList ccll_nl (1, context, config);
+    kernel::cpu_legacy::nl::DynamicCLLNeighborList dcll_nl (context, config);
+    kernel::cpu_legacy::nl::ContiguousCLLNeighborList contiguous_cll_nl (1, context, config);
 
     if(std::string(GetParam()) == "DynamicCLL") {
         nl = &dcll_nl;
@@ -208,11 +208,11 @@ TEST_P(TestCLLImpl, Diffuse) {
     context.periodicBoundaryConditions()[2] = periodic;
 
     util::thread::Config config;
-    kernel::cpu::nl::NeighborList *nl;
+    kernel::cpu_legacy::nl::NeighborList *nl;
 
-    kernel::cpu::nl::CompactCLLNeighborList ccll_nl (1, context, config);
-    kernel::cpu::nl::DynamicCLLNeighborList dcll_nl (context, config);
-    kernel::cpu::nl::ContiguousCLLNeighborList contiguous_cll_nl (1, context, config);
+    kernel::cpu_legacy::nl::CompactCLLNeighborList ccll_nl (1, context, config);
+    kernel::cpu_legacy::nl::DynamicCLLNeighborList dcll_nl (context, config);
+    kernel::cpu_legacy::nl::ContiguousCLLNeighborList contiguous_cll_nl (1, context, config);
 
     if(std::string(GetParam()) == "DynamicCLL") {
         nl = &dcll_nl;

@@ -39,7 +39,7 @@
 
 namespace readdy {
 namespace kernel {
-namespace cpu {
+namespace cpu_legacy {
 namespace actions {
 namespace reactions {
 
@@ -52,16 +52,16 @@ using entry_type = data_t::Entries::value_type;
 using event_future_t = std::future<std::vector<event_t>>;
 using event_promise_t = std::promise<std::vector<event_t>>;
 
-CPUUncontrolledApproximation::CPUUncontrolledApproximation(CPUKernel *const kernel, scalar timeStep)
+CPUUncontrolledApproximation::CPUUncontrolledApproximation(CPULegacyKernel *const kernel, scalar timeStep)
         : super(timeStep), kernel(kernel) {
 
 }
 
 void findEvents(std::size_t /*tid*/, data_iter_t begin, data_iter_t end, neighbor_list_iter_t nl_begin, neighbor_list_iter_t nl_end,
-                const CPUKernel *const kernel, scalar dt, bool approximateRate, event_promise_t &events,
+                const CPULegacyKernel *const kernel, scalar dt, bool approximateRate, event_promise_t &events,
                 std::promise<std::size_t> &n_events) {
     std::vector<event_t> eventsUpdate;
-    const auto &data = *kernel->getCPUKernelStateModel().getParticleData();
+    const auto &data = *kernel->getCPULegacyKernelStateModel().getParticleData();
     const auto &d2 = kernel->context().distSquaredFun();
     auto index = static_cast<std::size_t>(std::distance(data.begin(), begin));
     for (auto it = begin; it != end; ++it, ++index) {
@@ -118,12 +118,12 @@ void CPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
     auto t = node.timeit();
     const auto &ctx = kernel->context();
     const auto &fixPos = ctx.fixPositionFun();
-    auto &stateModel = kernel->getCPUKernelStateModel();
+    auto &stateModel = kernel->getCPULegacyKernelStateModel();
     auto nl = stateModel.getNeighborList();
     auto data = nl->data();
 
     if (ctx.recordReactionsWithPositions()) {
-        kernel->getCPUKernelStateModel().reactionRecords().clear();
+        kernel->getCPULegacyKernelStateModel().reactionRecords().clear();
     }
     if (ctx.recordReactionCounts()) {
         stateModel.resetReactionCounts();
@@ -204,7 +204,7 @@ void CPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
                         record.id = reaction->id();
                         performReaction(data, ctx, entry1, entry1, newParticles, decayedEntries, reaction, &record);
                         fixPos(record.where);
-                        kernel->getCPUKernelStateModel().reactionRecords().push_back(record);
+                        kernel->getCPULegacyKernelStateModel().reactionRecords().push_back(record);
                     } else {
                         performReaction(data, ctx, entry1, entry1, newParticles, decayedEntries, reaction, nullptr);
                     }
@@ -224,7 +224,7 @@ void CPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
                         record.id = reaction->id();
                         performReaction(data, ctx, entry1, event.idx2, newParticles, decayedEntries, reaction, &record);
                         fixPos(record.where);
-                        kernel->getCPUKernelStateModel().reactionRecords().push_back(record);
+                        kernel->getCPULegacyKernelStateModel().reactionRecords().push_back(record);
                     } else {
                         performReaction(data, ctx, entry1, event.idx2, newParticles, decayedEntries, reaction, nullptr);
                     }

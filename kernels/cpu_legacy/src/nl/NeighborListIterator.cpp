@@ -34,7 +34,7 @@
 
 namespace readdy {
 namespace kernel {
-namespace cpu {
+namespace cpu_legacy {
 namespace nl {
 
 const IteratorState::size_type *IteratorState::begin() const {

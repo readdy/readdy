@@ -37,13 +37,13 @@
 
 namespace readdy {
 namespace kernel {
-namespace cpu {
+namespace cpu_legacy {
 namespace data {
 
 class NLDataContainer;
 
 class DefaultDataContainer : public EntryDataContainer {
-    using super = DataContainer<readdy::kernel::cpu::data::Entry>;
+    using super = DataContainer<Entry>;
     friend class NLDataContainer;
 public:
 

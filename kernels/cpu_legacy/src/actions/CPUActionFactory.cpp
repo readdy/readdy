@@ -42,9 +42,9 @@ namespace core_p = readdy::model::actions;
 
 namespace readdy {
 namespace kernel {
-namespace cpu {
+namespace cpu_legacy {
 namespace actions {
-CPUActionFactory::CPUActionFactory(CPUKernel *const kernel) : kernel(kernel) { }
+CPUActionFactory::CPUActionFactory(CPULegacyKernel *const kernel) : kernel(kernel) { }
 
 core_p::EulerBDIntegrator *CPUActionFactory::createEulerBDIntegrator(scalar timeStep) const {
     return new CPUEulerBDIntegrator(kernel, timeStep);

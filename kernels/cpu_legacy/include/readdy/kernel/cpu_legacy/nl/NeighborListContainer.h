@@ -39,11 +39,11 @@
 
 namespace readdy {
 namespace kernel {
-namespace cpu {
+namespace cpu_legacy {
 namespace nl {
 
 struct NLContainerConfig {
-    using data_container_type = readdy::kernel::cpu::data::DefaultDataContainer;
+    using data_container_type = data::DefaultDataContainer;
     using thread_config_type = readdy::util::thread::Config;
 
     NLContainerConfig(const model::Context &context, const thread_config_type &threads,

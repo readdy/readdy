@@ -30,16 +30,16 @@
  */
 
 #pragma once
-#include <readdy/kernel/cpu_legacy/CPUKernel.h>
+#include <readdy/kernel/cpu_legacy/CPULegacyKernel.h>
 
 namespace readdy {
 namespace kernel {
-namespace cpu {
+namespace cpu_legacy {
 namespace actions {
 class CPUActionFactory : public readdy::model::actions::ActionFactory {
-    CPUKernel *const kernel;
+    CPULegacyKernel *const kernel;
 public:
-    explicit CPUActionFactory(CPUKernel* kernel);
+    explicit CPUActionFactory(CPULegacyKernel* kernel);
 
 protected:
     readdy::model::actions::AddParticles *createAddParticles(const std::vector<readdy::model::Particle> &particles) const override;

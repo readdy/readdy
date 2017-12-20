@@ -23,7 +23,7 @@
 /**
  * << detailed description >>
  *
- * @file CPUKernel.h
+ * @file CPULegacyKernel.h
  * @brief << brief description >>
  * @author clonker
  * @date 23.06.16
@@ -40,24 +40,24 @@
 
 namespace readdy {
 namespace kernel {
-namespace cpu {
+namespace cpu_legacy {
 
 
-class CPUKernel : public readdy::model::Kernel {
+class CPULegacyKernel : public readdy::model::Kernel {
 public:
     static const std::string name;
 
-    CPUKernel();
+    CPULegacyKernel();
 
-    ~CPUKernel() override;
+    ~CPULegacyKernel() override;
 
-    CPUKernel(const CPUKernel &) = delete;
+    CPULegacyKernel(const CPULegacyKernel &) = delete;
 
-    CPUKernel &operator=(const CPUKernel &) = delete;
+    CPULegacyKernel &operator=(const CPULegacyKernel &) = delete;
 
-    CPUKernel(CPUKernel &&) = delete;
+    CPULegacyKernel(CPULegacyKernel &&) = delete;
 
-    CPUKernel &operator=(CPUKernel &&) = delete;
+    CPULegacyKernel &operator=(CPULegacyKernel &&) = delete;
 
     // factory method
     static readdy::model::Kernel *create();
@@ -66,9 +66,9 @@ public:
 
     void setNThreads(readdy::util::thread::Config::n_threads_type n);
 
-    const CPUStateModel &getCPUKernelStateModel() const;
+    const CPUStateModel &getCPULegacyKernelStateModel() const;
 
-    CPUStateModel &getCPUKernelStateModel();
+    CPUStateModel &getCPULegacyKernelStateModel();
 
     const readdy::util::thread::Config &threadConfig() const;
 

@@ -29,21 +29,21 @@
 
 #pragma once
 #include <readdy/kernel/singlecpu/actions/SCPUEvaluateCompartments.h>
-#include <readdy/kernel/cpu_legacy/CPUKernel.h>
+#include <readdy/kernel/cpu_legacy/CPULegacyKernel.h>
 
 namespace readdy {
 namespace kernel {
-namespace cpu {
+namespace cpu_legacy {
 namespace actions {
 
 class CPUEvaluateCompartments : public readdy::model::actions::EvaluateCompartments {
 public:
-    explicit CPUEvaluateCompartments(CPUKernel* kernel);
+    explicit CPUEvaluateCompartments(CPULegacyKernel* kernel);
 
     void perform(const util::PerformanceNode &node) override;
 
 protected:
-    CPUKernel *const kernel;
+    CPULegacyKernel *const kernel;
 };
 
 }
