@@ -145,6 +145,7 @@ private:
     std::reference_wrapper<const readdy::model::Context> _context;
     std::unique_ptr<data::DefaultDataContainer> _data;
     std::unique_ptr<neighbor_list> _neighborList;
+    neighbor_list::cell_radius_type _neighborListCellRadius {1};
     std::unique_ptr<readdy::signals::scoped_connection> _reorderConnection;
     std::reference_wrapper<const readdy::model::top::TopologyActionFactory> _topologyActionFactory;
     std::vector<readdy::model::reactions::ReactionRecord> _reactionRecords{};

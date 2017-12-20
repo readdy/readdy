@@ -48,11 +48,12 @@ namespace nl {
 class CellLinkedList {
 public:
     using data_type = readdy::kernel::cpu::data::DefaultDataContainer;
+    using cell_radius_type = std::uint8_t;
 
     CellLinkedList(data_type &data, const readdy::model::Context &context,
                    const readdy::util::thread::Config &config);
 
-    void setUp(scalar skin, std::uint8_t radius, const util::PerformanceNode &node);
+    void setUp(scalar skin, cell_radius_type radius, const util::PerformanceNode &node);
 
     virtual void update(const util::PerformanceNode &node) = 0;
     

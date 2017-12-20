@@ -67,7 +67,7 @@ public:
     CPUStateModel(CPUStateModel&&) = delete;
     CPUStateModel& operator=(CPUStateModel&&) = delete;
 
-    void configure(const readdy::conf::cpu::Configuration &configuration);
+    void configure(const readdy::conf::cpu_legacy::Configuration &configuration);
 
     const std::vector<Vec3> getParticlePositions() const override;
 

@@ -43,7 +43,7 @@ CellLinkedList::CellLinkedList(data_type &data, const readdy::model::Context &co
         : _data(data), _context(context), _config(config) {}
 
 
-void CellLinkedList::setUp(scalar skin, std::uint8_t radius, const util::PerformanceNode &node) {
+void CellLinkedList::setUp(scalar skin, cell_radius_type radius, const util::PerformanceNode &node) {
     if(!_is_set_up || _skin != skin || _radius != radius) {
         auto t = node.timeit();
 

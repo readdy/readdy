@@ -45,7 +45,7 @@ TEST(TestParallelGillespie, Sanity) {
     kernel.addParticle("A", {-5, .2, 0});
     {
         readdy::conf::Configuration conf;
-        conf.cpu.neighborList.type = "Adaptive";
+        conf.cpuLegacy.neighborList.type = "Adaptive";
         kernel.context().kernelConfiguration() = conf;
     }
     kernel.context().configure();

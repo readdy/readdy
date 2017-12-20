@@ -112,9 +112,11 @@ void CPUKernel::initialize() {
     {
         // thread config
         if (configuration.threadConfig.nThreads > 0) {
-            threadConfig().setNThreads(static_cast<unsigned int>(configuration.threadConfig.nThreads));
+            threadConfig().setNThreads(
+                    static_cast<util::thread::Config::n_threads_type>(configuration.threadConfig.nThreads)
+            );
         }
-        threadConfig().setMode(configuration.threadConfig.threadMode);
+        threadConfig().setMode(util::thread::ThreadMode::pool);
     }
     {
         // state model config

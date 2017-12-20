@@ -20,7 +20,7 @@
 #####################################################################
 
 
-PROJECT(runUnitTests_cpu)
+PROJECT(runUnitTests_cpu_legacy)
 
 FIND_PACKAGE(Threads REQUIRED)
 

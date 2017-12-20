@@ -652,7 +652,7 @@ TEST_P(TestNeighborListImpl, DiffusionAndReaction) {
     kernel->context().periodicBoundaryConditions() = {{true, true, true}};
     kernel->context().boxSize() = {{100, 10, 10}};
     readdy::conf::Configuration conf {};
-    conf.cpu.neighborList.type = GetParam();
+    conf.cpuLegacy.neighborList.type = GetParam();
     kernel->context().kernelConfiguration() = conf;
 
     const auto weightF = static_cast<readdy::scalar>(0.);
@@ -703,7 +703,7 @@ TEST_P(TestNeighborListImpl, Diffusion) {
 
     {
         readdy::conf::Configuration conf{};
-        conf.cpu.neighborList.type = GetParam();
+        conf.cpuLegacy.neighborList.type = GetParam();
         kernel->context().kernelConfiguration() = conf;
     }
 

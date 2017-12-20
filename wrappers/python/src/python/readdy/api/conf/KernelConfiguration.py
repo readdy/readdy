@@ -31,6 +31,42 @@ class NOOPKernelConfiguration(object):
         return ""
 
 
+class CPUKernelConfiguration(object):
+    def __init__(self):
+        self._n_threads = -1
+        self._cll_radius = 1
+
+    @property
+    def n_threads(self):
+        return self._n_threads
+
+    @n_threads.setter
+    def n_threads(self, value):
+        self._n_threads = value
+
+    @property
+    def cell_linked_list_radius(self):
+        return self._cll_radius
+
+    @cell_linked_list_radius.setter
+    def cell_linked_list_radius(self, value):
+        if value <= 0:
+            raise ValueError("Only strictly positive cell linked list radii permitted!")
+        self._cll_radius = value
+
+    def to_json(self):
+        import json
+        return json.dumps({"CPU": {
+            "neighbor_list": {
+                "cll_radius": self.cell_linked_list_radius,
+            },
+            "thread_config": {
+                "n_threads": self.n_threads,
+            }
+        }
+        })
+
+
 class CPULegacyKernelConfiguration(object):
     def __init__(self):
         self._n_threads = -1

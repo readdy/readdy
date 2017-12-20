@@ -237,7 +237,7 @@ void CPUStateModel::initializeNeighborList(scalar skin, const util::PerformanceN
     _neighborList->set_up(node.subnode("set_up"));
 }
 
-void CPUStateModel::configure(const readdy::conf::cpu::Configuration &configuration) {
+void CPUStateModel::configure(const readdy::conf::cpu_legacy::Configuration &configuration) {
     const auto& nl = configuration.neighborList;
 
     if(nl.type == "CellDecomposition") {

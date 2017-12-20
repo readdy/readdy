@@ -36,6 +36,42 @@ namespace conf {
 
 namespace cpu {
 void to_json(json &j, const NeighborList &nl) {
+    j = json{{"cll_radius", nl.cll_radius}};
+}
+
+void from_json(const json &j, NeighborList &nl) {
+    nl.cll_radius = j.at("cll_radius").get<std::uint8_t>();
+}
+
+void to_json(json &j, const ThreadConfig &nl) {
+    j = json{{"n_threads", nl.nThreads}};
+}
+
+void from_json(const json &j, ThreadConfig &nl) {
+    if (j.find("n_threads") != j.end()) nl.nThreads = j.at("n_threads").get<int>();
+}
+
+void to_json(json &j, const Configuration &conf) {
+    j = json {{"neighbor_list", conf.neighborList},
+              {"thread_config", conf.threadConfig}};
+}
+
+void from_json(const json &j, Configuration &conf) {
+    if (j.find("neighbor_list") != j.end()) {
+        conf.neighborList = j.at("neighbor_list").get<NeighborList>();
+    } else {
+        conf.neighborList = {};
+    }
+    if (j.find("thread_config") != j.end()) {
+        conf.threadConfig = j.at("thread_config").get<ThreadConfig>();
+    } else {
+        conf.threadConfig = {};
+    }
+}
+}
+
+namespace cpu_legacy {
+void to_json(json &j, const NeighborList &nl) {
     j = json{{"type",       nl.type},
              {"cll_radius", nl.cll_radius}};
 }
@@ -100,11 +136,13 @@ void from_json(const json &j, Configuration &conf) {
 }
 
 void to_json(json &j, const Configuration &conf) {
-    j = json {{"CPU_Legacy", conf.cpu}};
+    j = json {{"CPU", conf.cpu},
+              {"CPU_Legacy", conf.cpuLegacy}};
 }
 void from_json(const json &j, Configuration &conf) {
     if(j.find("CPU_Legacy") != j.end()) {
-        conf.cpu = j.at("CPU_Legacy").get<cpu::Configuration>();
+        conf.cpuLegacy = j.at("CPU_Legacy").get<cpu_legacy::Configuration>();
+        conf.cpu = j.at("CPU").get<cpu::Configuration>();
     }
 
 }

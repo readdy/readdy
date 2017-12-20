@@ -107,7 +107,7 @@ void CPUKernel::initialize() {
 
     const auto &fullConfiguration = context().kernelConfiguration();
 
-    const auto &configuration = fullConfiguration.cpu;
+    const auto &configuration = fullConfiguration.cpuLegacy;
     {
         // thread config
         if (configuration.threadConfig.nThreads > 0) {

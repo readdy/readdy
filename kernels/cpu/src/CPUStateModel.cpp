@@ -228,12 +228,12 @@ void CPUStateModel::initializeNeighborList(scalar skin) {
 }
 
 void CPUStateModel::initializeNeighborList(scalar skin, const util::PerformanceNode &node) {
-    // todo: CLL radius!
-    _neighborList->setUp(skin, 1, node.subnode("set_up"));
+    _neighborList->setUp(skin, _neighborListCellRadius, node.subnode("set_up"));
 }
 
 void CPUStateModel::configure(const readdy::conf::cpu::Configuration &configuration) {
     const auto& nl = configuration.neighborList;
+    _neighborListCellRadius = nl.cll_radius;
 }
 
 scalar &CPUStateModel::energy() {
