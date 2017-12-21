@@ -28,7 +28,7 @@ Created on 26.09.17
 
 class NOOPKernelConfiguration(object):
     def to_json(self):
-        return ""
+        return "{}"
 
 
 class CPUKernelConfiguration(object):

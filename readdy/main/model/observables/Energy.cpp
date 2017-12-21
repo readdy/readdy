@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          * 
+ * Copyright © 2017 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -23,52 +23,53 @@
 /**
  * << detailed description >>
  *
- * @file NParticles.h
+ * @file Energy.cpp
  * @brief << brief description >>
  * @author clonker
- * @date 13.03.17
- * @copyright GNU Lesser General Public License v3.0
+ * @date 12/21/17
  */
 
-#pragma once
+#include "readdy/model/Kernel.h"
+#include <readdy/model/observables/io/TimeSeriesWriter.h>
+#include <readdy/model/observables/io/Types.h>
+#include "readdy/model/observables/Energy.h"
 
-#include <readdy/common/macros.h>
-#include <vector>
-#include "Observable.h"
+namespace readdy {
+namespace model {
+namespace observables {
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(observables)
-
-class NParticles : public Observable<std::vector<unsigned long>> {
-
-public:
-    NParticles(Kernel* kernel, unsigned int stride);
-
-    NParticles(Kernel* kernel, unsigned int stride, std::vector<std::string> typesToCount);
-
-    NParticles(Kernel* kernel, unsigned int stride, std::vector<unsigned int> typesToCount);
-
-    NParticles(const NParticles&) = delete;
-    NParticles& operator=(const NParticles&) = delete;
-    NParticles(NParticles&&) = default;
-    NParticles& operator=(NParticles&&) = delete;
-
-    void flush() override;
-
-    virtual ~NParticles();
-
-protected:
-    struct Impl;
-    std::unique_ptr<Impl> pimpl;
-
-    void initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) override;
-
-    void append() override;
-
-    std::vector<unsigned int> typesToCount;
+struct Energy::Impl {
+    std::unique_ptr<h5rd::DataSet> ds{nullptr};
+    std::unique_ptr<util::TimeSeriesWriter> time{nullptr};
+    io::BloscFilter bloscFilter{};
 };
 
-NAMESPACE_END(observables)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+Energy::Energy(Kernel *kernel, unsigned int stride) : Observable(kernel, stride), pimpl(std::make_unique<Impl>()) {}
+
+void Energy::flush() {
+    if (pimpl->ds) pimpl->ds->flush();
+    if (pimpl->time) pimpl->time->flush();
+}
+
+void Energy::initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) {
+    h5rd::dimensions fs = {flushStride};
+    h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
+    auto group = file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName);
+    pimpl->ds = group.createDataSet<std::size_t>("data", fs, dims, {&pimpl->bloscFilter});
+    pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
+}
+
+void Energy::append() {
+    pimpl->ds->append({1}, &result);
+    pimpl->time->append(t_current);
+}
+
+void Energy::evaluate() {
+    result = kernel->stateModel().energy();
+}
+
+Energy::~Energy() = default;
+
+}
+}
+}

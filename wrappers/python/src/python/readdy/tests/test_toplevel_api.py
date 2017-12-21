@@ -273,6 +273,7 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
         sim.observe.reactions(1, callback=lambda x: reactions.append(x))
         sim.observe.reaction_counts(1)
         sim.observe.forces(1)
+        sim.observe.energy(1)
         sim.run(50, 1e-3, False)
 
         sim.output_file = traj_fname2
@@ -307,6 +308,10 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
             time, forces = traj.read_observable_forces()
             np.testing.assert_equal(len(time), 51)
             np.testing.assert_equal(len(forces), 51)
+
+            time, energy = traj.read_observable_energy()
+            np.testing.assert_equal(len(time), 51)
+            np.testing.assert_equal(len(energy), 51)
 
             time, counts = traj.read_observable_reaction_counts()
             np.testing.assert_equal(len(time), 51)

@@ -346,6 +346,22 @@ class Trajectory(object):
                     counts[reaction.name] = counts_group[str(reaction.reaction_id)][:]
             return time, counts
 
+    def read_observable_energy(self, data_set_name="energy"):
+        """
+        Reads back the output of the "energy" observable.
+        :param data_set_name: The data set name as given in the simulation setup
+        :return: a tuple which contains an array corresponding to the time as first entry and a list of scalars
+                 representing the system's potential energy per time step
+        """
+        group_path = "readdy/observables/" + data_set_name
+        with _h5py.File(self._filename, "r") as f:
+            if not group_path in f:
+                raise ValueError("The energy observable was not recorded in the file or recorded under a "
+                                 "different name!")
+            time = f[group_path]["time"][:]
+            energy = f[group_path]["data"][:]
+            return time, energy
+
     def read_observable_forces(self, data_set_name="forces"):
         """
         Reads back the output of the "forces" observable.

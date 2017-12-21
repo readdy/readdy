@@ -361,6 +361,8 @@ class Simulation(object):
         if self.output_file is not None and len(self.output_file) > 0 and os.path.exists(self.output_file):
             raise ValueError("Output file already existed: {}".format(self.output_file))
 
+        self._simulation.set_kernel_config(self.kernel_configuration.to_json())
+
         if self.simulation_scheme == 'ReaDDyScheme':
             conf = self._simulation.run_scheme_readdy(False)
         elif self.simulation_scheme == 'AdvancedScheme':
