@@ -33,7 +33,6 @@
 #include <cmath>
 #include <readdy/model/RandomProvider.h>
 #include <readdy/kernel/cpu/CPUKernel.h>
-#include <readdy/kernel/cpu/nl/AdaptiveNeighborList.h>
 #include <readdy/common/logging.h>
 #include "Event.h"
 
@@ -50,6 +49,7 @@ using ctx_t = std::remove_const<decltype(std::declval<cpu_kernel>().context())>:
 using event_t = Event;
 using record_t = readdy::model::reactions::ReactionRecord;
 using reaction_counts_map = CPUStateModel::reaction_counts_map;
+using neighbor_list = nl::CompactCellLinkedList;
 
 template<bool approximated>
 bool performReactionEvent(const readdy::scalar rate, const readdy::scalar timeStep) {
@@ -95,17 +95,22 @@ void gatherEvents(CPUKernel *const kernel, const ParticleIndexCollection &partic
             }
         }
     }
+
     // order 2
-    for (auto it : *nl) {
-        auto index = it.current_particle();
-        const auto &entry = data->entry_at(index);
-        if(!entry.deactivated) {
-            for (auto idx_neighbor : it) {
-                if (index > idx_neighbor) continue;
-                const auto &neighbor = data->entry_at(idx_neighbor);
-                if (!neighbor.deactivated) {
-                    const auto &reactions = kernel->context().reactions().order2ByType(entry.type,
-                                                                                       neighbor.type);
+    for(std::size_t cell = 0; cell < nl->nCells(); ++cell) {
+        for(auto cellIt = nl->cellNeighborsBegin(cell); cellIt != nl->cellNeighborsEnd(cell); ++cellIt) {
+            const auto &idx1 = *cellIt;
+            const auto &entry = data->entry_at(idx1);
+            if(entry.deactivated) {
+                log::critical("deactivated entry in neighbor list!");
+                continue;
+            }
+            for (auto itNeighbors = cellIt.neighborsBegin(); itNeighbors != cellIt.neighborsEnd(); ++itNeighbors) {
+                const auto& idx2 = *itNeighbors;
+                if(idx1 > idx2) continue;
+                const auto &neighbor = data->entry_at(idx2);
+                if(!neighbor.deactivated) {
+                    const auto &reactions = kernel->context().reactions().order2ByType(entry.type, neighbor.type);
                     if (!reactions.empty()) {
                         const auto distSquared = d2(neighbor.pos, entry.pos);
                         for (auto itReactions = reactions.begin(); itReactions < reactions.end(); ++itReactions) {
@@ -113,7 +118,7 @@ void gatherEvents(CPUKernel *const kernel, const ParticleIndexCollection &partic
                             const auto rate = react->rate();
                             if (rate > 0 && distSquared < react->eductDistanceSquared()) {
                                 alpha += rate;
-                                events.emplace_back(2, react->nProducts(), index, idx_neighbor, rate, alpha,
+                                events.emplace_back(2, react->nProducts(), idx1, idx2, rate, alpha,
                                                     static_cast<event_t::reaction_index_type>(itReactions -
                                                                                               reactions.begin()),
                                                     entry.type, neighbor.type);
@@ -124,6 +129,7 @@ void gatherEvents(CPUKernel *const kernel, const ParticleIndexCollection &partic
                     log::critical("deactivated entry in neighbor list!");
                 }
             }
+
         }
     }
 }

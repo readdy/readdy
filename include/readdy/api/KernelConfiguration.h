@@ -43,7 +43,83 @@ using json = nlohmann::json;
 
 NAMESPACE_BEGIN(cpu)
 /**
- * Struct with configuration attributes for the CPU neighbor list implementations
+ * Struct with configuration attributes for the CPU legacy neighbor list implementations
+ */
+struct NeighborList {
+    /**
+     * The radius in the box space of cell-linked lists to consider as neighboring cells. A larger value can 
+     * drastically increase memory requirements.
+     */
+    std::uint8_t cll_radius {1};
+};
+/**
+ * Json serialization of NeighborList config struct
+ * @param j the json object
+ * @param nl the configurational object
+ */
+void to_json(json &j, const NeighborList &nl);
+/**
+ * Json deserialization to NeighborList config struct
+ * @param j the json object
+ * @param nl the configurational object
+ */
+void from_json(const json &j, NeighborList &nl);
+
+/**
+ * Struct with configuration members that are used to parameterize the threading behavoir of the CPU kernel.
+ */
+struct ThreadConfig {
+    /**
+     * Number of threads to use. If set to -1, this amounts to:
+     *     * 4 * n_cores in case of a RELEASE build
+     *     * n_cores in case of a DEBUG build
+     *     * the value of the environment variable READDY_N_CORES, if set (superseeds the other two options)
+     */
+    int nThreads {-1};
+};
+/**
+ * Json serialization of ThreadConfig
+ * @param j the json object
+ * @param nl the config
+ */
+void to_json(json &j, const ThreadConfig &nl);
+/**
+ * Json deserialization to ThreadConfig
+ * @param j the json object
+ * @param nl the config
+ */
+void from_json(const json &j, ThreadConfig &nl);
+
+/**
+ * Struct that contains configuration information for the CPU kernel.
+ */
+struct Configuration {
+    /**
+     * Configuration of the neighbor list
+     */
+    NeighborList neighborList {};
+    /**
+     * Configuration of the threading behavior
+     */
+    ThreadConfig threadConfig {};
+};
+/**
+ * Json serialization of ThreadConfig
+ * @param j the json object
+ * @param conf the config
+ */
+void to_json(json &j, const Configuration &conf);
+/**
+ * Json deserialization of ThreadConfig
+ * @param j the json object
+ * @param conf the config
+ */
+void from_json(const json &j, Configuration &conf);
+NAMESPACE_END(cpu)
+
+NAMESPACE_BEGIN(cpu_legacy)
+/**
+ * Struct with configuration attributes for the CPU legacy neighbor list implementations
  */
 struct NeighborList {
     /**
@@ -135,7 +211,7 @@ void to_json(json &j, const Configuration &conf);
  */
 void from_json(const json &j, Configuration &conf);
 
-NAMESPACE_END(cpu)
+NAMESPACE_END(cpu_legacy)
 
 NAMESPACE_BEGIN(scpu)
 /**
@@ -158,6 +234,10 @@ struct Configuration {
      * Configuration for the CPU kernel
      */
     cpu::Configuration cpu;
+    /**
+     * Configuration for the CPU Legacy kernel
+     */
+    cpu_legacy::Configuration cpuLegacy;
 };
 /**
  * Json serialization of the Configuration

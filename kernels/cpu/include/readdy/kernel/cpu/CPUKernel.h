@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2017 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -26,22 +26,17 @@
  * @file CPUKernel.h
  * @brief << brief description >>
  * @author clonker
- * @date 23.06.16
+ * @date 12/11/17
  */
-
 
 #pragma once
 
 #include <readdy/model/Kernel.h>
-#include <readdy/common/dll.h>
-#include <readdy/common/thread/ctpl.h>
-#include <readdy/common/thread/executor.h>
 #include "CPUStateModel.h"
 
 namespace readdy {
 namespace kernel {
 namespace cpu {
-
 
 class CPUKernel : public readdy::model::Kernel {
 public:

@@ -55,6 +55,18 @@ if [ ${err_code} -ne 0 ]; then
     fi
 fi
 
+echo "calling c++ cpu legacy unit tests"
+runUnitTests_cpu_legacy
+err_code=$?
+if [ ${err_code} -ne 0 ]; then
+    ret_code=${err_code}
+    echo "cpu legacy unit tests failed with ${ret_code}"
+    if [ $(uname) = "Linux" ]; then
+        echo "re-running with logbt"
+        ./logbt runUnitTests_cpu_legacy
+    fi
+fi
+
 echo "calling python unit tests"
 nosetests readdy -s -vv --with-doctest --doctest-options=+NORMALIZE_WHITESPACE,+ELLIPSIS
 err_code=$?
@@ -66,5 +78,6 @@ fi
 rm -rf ${PREFIX}/bin/runUnitTests
 rm -rf ${PREFIX}/bin/runUnitTests_singlecpu
 rm -rf ${PREFIX}/bin/runUnitTests_cpu
+rm -rf ${PREFIX}/bin/runUnitTests_cpu_legacy
 
 exit ${ret_code}

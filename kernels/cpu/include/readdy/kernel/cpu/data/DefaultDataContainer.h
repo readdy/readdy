@@ -47,6 +47,8 @@ class DefaultDataContainer : public EntryDataContainer {
     friend class NLDataContainer;
 public:
 
+    using entry_type = typename super::Entries::value_type;
+
     explicit DefaultDataContainer(EntryDataContainer *entryDataContainer);
 
     DefaultDataContainer(const model::Context &context, const util::thread::Config &threadConfig);

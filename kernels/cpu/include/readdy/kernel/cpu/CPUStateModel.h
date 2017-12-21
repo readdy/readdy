@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2017 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -26,21 +26,26 @@
  * @file CPUStateModel.h
  * @brief << brief description >>
  * @author clonker
- * @date 13.07.16
+ * @date 12/11/17
  */
 
+
+
 #pragma once
+
+#include <readdy/model/StateModel.h>
+
 
 #include <readdy/model/StateModel.h>
 #include <readdy/model/Context.h>
 #include <readdy/common/thread/Config.h>
 #include <readdy/model/reactions/ReactionRecord.h>
 #include <readdy/model/observables/ReactionCounts.h>
-#include <readdy/kernel/cpu/util/config.h>
 #include <readdy/common/index_persistent_vector.h>
 #include <readdy/common/Timer.h>
 #include <readdy/api/KernelConfiguration.h>
 #include <readdy/kernel/cpu/data/DefaultDataContainer.h>
+#include <readdy/kernel/cpu/nl/CellLinkedList.h>
 
 namespace readdy {
 namespace kernel {
@@ -49,13 +54,14 @@ class CPUStateModel : public readdy::model::StateModel {
 
 public:
 
-    using data_type = readdy::kernel::cpu::data::EntryDataContainer;
+    using data_type = readdy::kernel::cpu::data::DefaultDataContainer;
     using particle_type = readdy::model::Particle;
     using reaction_counts_map = readdy::model::reactions::reaction_counts_map;
 
     using topology = readdy::model::top::GraphTopology;
     using topology_ref = std::unique_ptr<topology>;
     using topologies_vec = readdy::util::index_persistent_vector<topology_ref>;
+    using neighbor_list = nl::CompactCellLinkedList;
 
     CPUStateModel(const readdy::model::Context &context, readdy::util::thread::Config const* config,
                   readdy::model::top::TopologyActionFactory const* taf);
@@ -137,7 +143,9 @@ public:
 private:
     std::reference_wrapper<const readdy::util::thread::Config> _config;
     std::reference_wrapper<const readdy::model::Context> _context;
+    std::unique_ptr<data::DefaultDataContainer> _data;
     std::unique_ptr<neighbor_list> _neighborList;
+    neighbor_list::cell_radius_type _neighborListCellRadius {1};
     std::unique_ptr<readdy::signals::scoped_connection> _reorderConnection;
     std::reference_wrapper<const readdy::model::top::TopologyActionFactory> _topologyActionFactory;
     std::vector<readdy::model::reactions::ReactionRecord> _reactionRecords{};

@@ -46,7 +46,7 @@ namespace cpu {
 namespace actions {
 CPUActionFactory::CPUActionFactory(CPUKernel *const kernel) : kernel(kernel) { }
 
-core_p::EulerBDIntegrator *CPUActionFactory::createEulerBDIntegrator(scalar timeStep) const {
+core_p::EulerBDIntegrator *CPUActionFactory::createEulerBDIntegrator(readdy::scalar timeStep) const {
     return new CPUEulerBDIntegrator(kernel, timeStep);
 }
 

@@ -35,7 +35,8 @@
 #include <readdy/common/macros.h>
 #include <readdy/model/topologies/Topology.h>
 #include <readdy/model/topologies/potentials/TopologyPotentialActions.h>
-#include <readdy/kernel/cpu/data/NLDataContainer.h>
+#include <readdy/kernel/cpu/CPUStateModel.h>
+#include <readdy/model/topologies/GraphTopology.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(kernel)
@@ -49,28 +50,11 @@ class CPUCalculateHarmonicBondPotential : public readdy::model::top::pot::Calcul
     CPUStateModel::data_type *const data;
 
 public:
-    CPUCalculateHarmonicBondPotential(const readdy::model::Context *const context,
-                                      CPUStateModel::data_type *const data,
-                                      const harmonic_bond *const potential)
-            : CalculateHarmonicBondPotential(context), potential(potential), data(data) {}
+    CPUCalculateHarmonicBondPotential(const readdy::model::Context *context,
+                                      CPUStateModel::data_type *data,
+                                      const harmonic_bond *potential);
 
-    readdy::scalar perform(const readdy::model::top::Topology* const topology) override {
-        scalar energy = 0;
-        const auto &particleIndices = topology->getParticles();
-        const auto &d = context->shortestDifferenceFun();
-        for (const auto &bond : potential->getBonds()) {
-            Vec3 forceUpdate{0, 0, 0};
-            auto &e1 = data->entry_at(particleIndices.at(bond.idx1));
-            auto &e2 = data->entry_at(particleIndices.at(bond.idx2));
-            const auto x_ij = d(e1.pos, e2.pos);
-            potential->calculateForce(forceUpdate, x_ij, bond);
-            e1.force += forceUpdate;
-            e2.force += -1 * forceUpdate;
-            energy += potential->calculateEnergy(x_ij, bond);
-        }
-        return energy;
-    }
-
+    readdy::scalar perform(const readdy::model::top::Topology *topology) override;
 };
 
 
@@ -78,57 +62,21 @@ class CPUCalculateHarmonicAnglePotential : public readdy::model::top::pot::Calcu
     const harmonic_angle *const potential;
     CPUStateModel::data_type *const data;
 public:
-    CPUCalculateHarmonicAnglePotential(const readdy::model::Context *const context, CPUStateModel::data_type *const data,
-                                       const harmonic_angle *const potential)
-            : CalculateHarmonicAnglePotential(context), potential(potential), data(data) {}
+    CPUCalculateHarmonicAnglePotential(const readdy::model::Context *context, CPUStateModel::data_type *data,
+                                       const harmonic_angle *potential);
 
-    readdy::scalar perform(const readdy::model::top::Topology* const topology) override {
-        scalar energy = 0;
-        const auto &particleIndices = topology->getParticles();
-        const auto &d = context->shortestDifferenceFun();
-
-
-        for (const auto &angle : potential->getAngles()) {
-            auto &e1 = data->entry_at(particleIndices.at(angle.idx1));
-            auto &e2 = data->entry_at(particleIndices.at(angle.idx2));
-            auto &e3 = data->entry_at(particleIndices.at(angle.idx3));
-            const auto x_ji = d(e2.pos, e1.pos);
-            const auto x_jk = d(e2.pos, e3.pos);
-            energy += potential->calculateEnergy(x_ji, x_jk, angle);
-            potential->calculateForce(e1.force, e2.force, e3.force, x_ji, x_jk, angle);
-        }
-        return energy;
-    }
+    readdy::scalar perform(const readdy::model::top::Topology *topology) override;
 };
 
 class CPUCalculateCosineDihedralPotential : public readdy::model::top::pot::CalculateCosineDihedralPotential {
     const cos_dihedral *const potential;
     CPUStateModel::data_type *const data;
 public:
-    CPUCalculateCosineDihedralPotential(const readdy::model::Context *const context,
-                                        CPUStateModel::data_type *const data,
-                                        const cos_dihedral *const pot)
-            : CalculateCosineDihedralPotential(context), potential(pot), data(data) {
-    }
+    CPUCalculateCosineDihedralPotential(const readdy::model::Context *context,
+                                        CPUStateModel::data_type *data,
+                                        const cos_dihedral *pot);
 
-    readdy::scalar perform(const readdy::model::top::Topology* const topology) override {
-        scalar energy = 0;
-        const auto &particleIndices = topology->getParticles();
-        const auto &d = context->shortestDifferenceFun();
-
-        for (const auto &dih : potential->getDihedrals()) {
-            auto &e_i = data->entry_at(particleIndices.at(dih.idx1));
-            auto &e_j = data->entry_at(particleIndices.at(dih.idx2));
-            auto &e_k = data->entry_at(particleIndices.at(dih.idx3));
-            auto &e_l = data->entry_at(particleIndices.at(dih.idx4));
-            const auto x_ji = d(e_j.pos, e_i.pos);
-            const auto x_kj = d(e_k.pos, e_j.pos);
-            const auto x_kl = d(e_k.pos, e_l.pos);
-            energy += potential->calculateEnergy(x_ji, x_kj, x_kl, dih);
-            potential->calculateForce(e_i.force, e_j.force, e_k.force, e_l.force, x_ji, x_kj, x_kl, dih);
-        }
-        return energy;
-    }
+    readdy::scalar perform(const readdy::model::top::Topology *topology) override;
 };
 
 NAMESPACE_BEGIN(reactions)
@@ -137,18 +85,12 @@ NAMESPACE_BEGIN(op)
 class CPUChangeParticleType : public readdy::model::top::reactions::actions::ChangeParticleType {
     CPUStateModel::data_type *const data;
 public:
-    CPUChangeParticleType(CPUStateModel::data_type *const data, top::GraphTopology *const topology, const vertex &v,
-                          const particle_type_type &type_to) : ChangeParticleType(topology, v, type_to), data(data) {}
+    CPUChangeParticleType(CPUStateModel::data_type *data, model::top::GraphTopology *topology, const vertex &v,
+                          const particle_type_type &type_to);
 
-    void execute() override {
-        const auto idx = topology->getParticles().at(_vertex->particleIndex);
-        _vertex->setParticleType(previous_type);
-        std::swap(data->entry_at(idx).type, previous_type);
-    }
+    void execute() override;
 
-    void undo() override {
-        execute();
-    }
+    void undo() override;
 
 };
 

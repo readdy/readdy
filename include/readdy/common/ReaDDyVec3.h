@@ -100,7 +100,11 @@ public:
 };
 
 inline readdy::scalar operator*(const ReaDDyVec3 &lhs, const ReaDDyVec3 &rhs) {
-    return lhs[0] * rhs[0] + lhs[1] * rhs[1] + lhs[2] * rhs[2];
+    readdy::scalar result {0};
+    for(auto i=0; i < 3; ++i) {
+        result += lhs[i]*rhs[i];
+    }
+    return result;
 }
 
 inline ReaDDyVec3 operator*(const ReaDDyVec3 &lhs, const readdy::scalar rhs) {

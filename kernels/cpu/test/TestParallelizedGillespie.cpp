@@ -31,7 +31,6 @@
 
 #include <gtest/gtest.h>
 #include <readdy/kernel/cpu/CPUKernel.h>
-#include <readdy/kernel/cpu/nl/AdaptiveNeighborList.h>
 
 namespace {
 
@@ -43,11 +42,6 @@ TEST(TestParallelGillespie, Sanity) {
     kernel.addParticle("A", {-5, .2, -5.5});
     kernel.addParticle("A", {-5, .2, 5.5});
     kernel.addParticle("A", {-5, .2, 0});
-    {
-        readdy::conf::Configuration conf;
-        conf.cpu.neighborList.type = "Adaptive";
-        kernel.context().kernelConfiguration() = conf;
-    }
     kernel.context().configure();
     kernel.initialize();
     kernel.getCPUKernelStateModel().initializeNeighborList(0.);

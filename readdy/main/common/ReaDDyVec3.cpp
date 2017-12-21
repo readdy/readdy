@@ -36,23 +36,17 @@
 namespace readdy {
 namespace _internal {
 ReaDDyVec3 &ReaDDyVec3::operator+=(const ReaDDyVec3 &rhs) {
-    x += rhs.x;
-    y += rhs.y;
-    z += rhs.z;
+    for(auto i=0; i < 3; ++i) { data[i] += rhs[i]; }
     return *this;
 }
 
 ReaDDyVec3 &ReaDDyVec3::operator*=(const scalar a) {
-    x *= a;
-    y *= a;
-    z *= a;
+    for(auto i=0; i < 3; ++i) { data[i] *= a; }
     return *this;
 }
 
 ReaDDyVec3 &ReaDDyVec3::operator/=(const scalar a) {
-    x /= a;
-    y /= a;
-    z /= a;
+    for(auto i=0; i < 3; ++i) { data[i] /= a; }
     return *this;
 }
 
@@ -75,11 +69,15 @@ ReaDDyVec3::ReaDDyVec3() : ReaDDyVec3(0, 0, 0) {
 }
 
 bool ReaDDyVec3::operator==(const ReaDDyVec3 &rhs) const {
-    return data[0] == rhs[0] && data[1] == rhs[1] && data[2] == rhs[2];
+    bool result {true};
+    for(auto i=0; i < 3; ++i) { result &= data[i] == rhs[i]; }
+    return result;
 }
 
 bool operator<=(const ReaDDyVec3 &lhs, const ReaDDyVec3 &rhs) {
-    return lhs[0] <= rhs[0] && lhs[1] <= rhs[1] && lhs[2] <= rhs[2];
+    bool result {true};
+    for(auto i=0; i < 3; ++i) { result &= lhs[i] <= rhs[i]; }
+    return result;
 }
 
 bool operator>(const ReaDDyVec3 &lhs, const ReaDDyVec3 &rhs) {
@@ -87,7 +85,9 @@ bool operator>(const ReaDDyVec3 &lhs, const ReaDDyVec3 &rhs) {
 }
 
 bool operator>=(const ReaDDyVec3 &lhs, const ReaDDyVec3 &rhs) {
-    return lhs.data[0] >= rhs.data[0] && lhs.data[1] >= rhs.data[1] && lhs.data[2] >= rhs.data[2];
+    bool result {true};
+    for(auto i=0; i < 3; ++i) { result &= lhs[i] >= rhs[i]; }
+    return result;
 }
 
 bool operator<(const ReaDDyVec3 &lhs, const ReaDDyVec3 &rhs) {
@@ -95,7 +95,9 @@ bool operator<(const ReaDDyVec3 &lhs, const ReaDDyVec3 &rhs) {
 }
 
 bool ReaDDyVec3::operator!=(const ReaDDyVec3 &rhs) const {
-    return !(data[0] == rhs[0] && data[1] == rhs[1] && data[2] == rhs[2]);
+    bool result {true};
+    for(auto i=0; i < 3; ++i) { result &= data[i] != rhs[i]; }
+    return result;
 }
 
 ReaDDyVec3 operator+(const ReaDDyVec3 &lhs, const ReaDDyVec3 &rhs) {
@@ -136,20 +138,22 @@ scalar ReaDDyVec3::norm() const {
 }
 
 scalar ReaDDyVec3::normSquared() const {
-    return data[0] * data[0] + data[1] * data[1] + data[2] * data[2];
+    scalar result {0};
+    for(auto i=0; i < 3; ++i) { result += data[i]*data[i]; }
+    return result;
 }
 
 ReaDDyVec3 &ReaDDyVec3::invertElementWise() {
-    data[0] = static_cast<scalar>(1.) / data[0];
-    data[1] = static_cast<scalar>(1.) / data[1];
-    data[2] = static_cast<scalar>(1.) / data[2];
+    for(auto i=0; i < 3; ++i) {
+        data[i] = static_cast<scalar>(1.) / data[i];
+    }
     return *this;
 }
 
 ReaDDyVec3 &ReaDDyVec3::operator-=(const ReaDDyVec3 &rhs) {
-    data[0] -= rhs.data[0];
-    data[1] -= rhs.data[1];
-    data[2] -= rhs.data[2];
+    for(auto i=0; i < 3; ++i) {
+        data[i] -= rhs.data[i];
+    }
     return *this;
 }
 

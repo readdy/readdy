@@ -132,8 +132,10 @@ TEST_P(TestTopologyReactionsExternal, TestGetTopologyForParticleDecay) {
     sim.setPeriodicBoundary({{true, true, true}});
     sim.setBoxSize(100, 100, 100);
     sim.registerTopologyType("TA");
-    auto topAId = sim.registerParticleType("Topology A", 10., model::particleflavor::TOPOLOGY);
-    auto aId = sim.registerParticleType("A", 10.);
+    //auto topAId = sim.registerParticleType("Topology A", 10., model::particleflavor::TOPOLOGY);
+    //auto aId = sim.registerParticleType("A", 10.);
+    auto topAId = sim.currentContext().particle_types().idOf("Topology A");
+    auto aId = sim.currentContext().particle_types().idOf("A");
     sim.configureTopologyBondPotential("Topology A", "Topology A", 10, 1);
 
     std::vector<model::TopologyParticle> topologyParticles;

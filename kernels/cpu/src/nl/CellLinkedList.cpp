@@ -43,7 +43,7 @@ CellLinkedList::CellLinkedList(data_type &data, const readdy::model::Context &co
         : _data(data), _context(context), _config(config) {}
 
 
-void CellLinkedList::setUp(scalar skin, std::uint8_t radius, const util::PerformanceNode &node) {
+void CellLinkedList::setUp(scalar skin, cell_radius_type radius, const util::PerformanceNode &node) {
     if(!_is_set_up || _skin != skin || _radius != radius) {
         auto t = node.timeit();
 
@@ -169,183 +169,17 @@ std::size_t CellLinkedList::nNeighbors(std::size_t cellIndex) const {
     return _cellNeighborsContent.at(_cellNeighbors(cellIndex, 0_z));
 }
 
-
-ContiguousCellLinkedList::ContiguousCellLinkedList(data_type &data, const readdy::model::Context &context,
-                                                   const util::thread::Config &config)
-        : CellLinkedList(data, context, config) {}
-
-void ContiguousCellLinkedList::initializeBinsStructure() {
-    _binsIndex = util::Index2D(_cellIndex.size(), 1+_maxParticlesPerCell);
-    _bins.resize(0);
-    _bins.resize(_binsIndex.size());
+CellLinkedList::data_type &CellLinkedList::data() {
+    return _data.get();
 }
 
-void ContiguousCellLinkedList::setUpBins(const util::PerformanceNode &node) {
-    auto t = node.timeit();
-    if(_maxParticlesPerCell == 0) {
-        // assume uniform distribution
-        auto nParticles = static_cast<scalar>(_data.get().size() - _data.get().getNDeactivated());
-        _maxParticlesPerCell = std::max(1_z, static_cast<std::size_t>(std::ceil(1.5 * nParticles / _context.get().boxVolume())));
-    }
-    initializeBinsStructure();
-    fillBins(node.subnode("fillBins"));
+const CellLinkedList::data_type &CellLinkedList::data() const {
+    return _data.get();
 }
 
-void ContiguousCellLinkedList::fillBins(const util::PerformanceNode &node) {
-    auto t = node.timeit();
-    auto boxSize = _context.get().boxSize();
-    std::size_t maxParticlesPerCell = 0;
-    do {
-        if(maxParticlesPerCell != 0)  {
-            _maxParticlesPerCell = maxParticlesPerCell;
-            initializeBinsStructure();
-        }
-        bool abort = false;
-        std::size_t pidx = 0;
-        for (const auto &entry : _data.get()) {
-            if (!entry.deactivated) {
-                const auto i = static_cast<std::size_t>(std::floor((entry.pos.x + .5 * boxSize[0]) / _cellSize.x));
-                const auto j = static_cast<std::size_t>(std::floor((entry.pos.y + .5 * boxSize[1]) / _cellSize.y));
-                const auto k = static_cast<std::size_t>(std::floor((entry.pos.z + .5 * boxSize[2]) / _cellSize.z));
-                const auto boxIdx = _cellIndex(i, j, k);
-                auto &size = _bins.at(_binsIndex(boxIdx, 0_z));
-                size++;
-                if (size > maxParticlesPerCell) {
-                    maxParticlesPerCell = size;
-                    abort = maxParticlesPerCell > _maxParticlesPerCell;
-                }
-                if (!abort) {
-                    _bins.at(_binsIndex(boxIdx, size)) = pidx;
-                }
-            }
-            ++pidx;
-        }
-        if(abort) {
-            log::info("increasing max particles per cell to {}", maxParticlesPerCell);
-        }
-    } while(maxParticlesPerCell > _maxParticlesPerCell);
+scalar CellLinkedList::maxCutoff() const {
+    return _max_cutoff;
 }
-
-void ContiguousCellLinkedList::update(const util::PerformanceNode &node) {
-    if(_max_cutoff > 0) {
-        auto t = node.timeit();
-        for (std::size_t box = 0; box < _cellIndex.size(); ++box) {
-            _bins.at(_binsIndex(box, 0_z)) = 0;
-        }
-        fillBins(node.subnode("fillBins"));
-    }
-}
-
-void ContiguousCellLinkedList::clear() {
-    _bins.clear();
-}
-
-const std::vector<std::size_t> &ContiguousCellLinkedList::bins() const {
-    return _bins;
-}
-
-const util::Index2D &ContiguousCellLinkedList::binsIndex() const {
-    return _binsIndex;
-}
-
-std::size_t *ContiguousCellLinkedList::particlesBegin(std::size_t cellIndex) {
-    const auto beginIndex = _binsIndex(cellIndex, 1_z);
-    return &_bins.at(beginIndex);
-}
-
-const std::size_t *ContiguousCellLinkedList::particlesBegin(std::size_t cellIndex) const {
-    const auto beginIndex = _binsIndex(cellIndex, 1_z);
-    return &_bins.at(beginIndex);
-}
-
-std::size_t *ContiguousCellLinkedList::particlesEnd(std::size_t cellIndex) {
-    return particlesBegin(cellIndex) + nParticles(cellIndex);
-}
-
-const std::size_t *ContiguousCellLinkedList::particlesEnd(std::size_t cellIndex) const {
-    return particlesBegin(cellIndex) + nParticles(cellIndex);
-}
-
-std::size_t ContiguousCellLinkedList::nParticles(std::size_t cellIndex) const {
-    return _bins.at(_binsIndex(cellIndex, 0_z));
-}
-
-
-DynamicCellLinkedList::DynamicCellLinkedList(data_type &data, const readdy::model::Context &context,
-                                             const util::thread::Config &config)
-        : CellLinkedList(data, context, config) {}
-
-void DynamicCellLinkedList::setUpBins(const util::PerformanceNode &node) {
-    if(_max_cutoff > 0) {
-        auto t = node.timeit();
-        {
-            auto tt = node.subnode("allocate").timeit();
-            _bins.resize(0);
-            _bins.resize(_cellIndex.size());
-            auto nParticles = static_cast<scalar>(_data.get().size() - _data.get().getNDeactivated());
-            auto estimatedParticlesPerCell = static_cast<std::size_t>(std::ceil(
-                    1.5 * nParticles / _context.get().boxVolume()));
-            std::for_each(_bins.begin(), _bins.end(), [estimatedParticlesPerCell](std::vector<std::size_t> &bin) {
-                bin.reserve(estimatedParticlesPerCell);
-            });
-        }
-        fillBins(node.subnode("fillBins"));
-    }
-}
-
-void DynamicCellLinkedList::fillBins(const util::PerformanceNode &node) {
-    auto t = node.timeit();
-    auto boxSize = _context.get().boxSize();
-    std::size_t pidx = 0;
-    for (const auto &entry : _data.get()) {
-        if (!entry.deactivated) {
-            const auto i = static_cast<std::size_t>(std::floor((entry.pos.x + .5 * boxSize[0]) / _cellSize.x));
-            const auto j = static_cast<std::size_t>(std::floor((entry.pos.y + .5 * boxSize[1]) / _cellSize.y));
-            const auto k = static_cast<std::size_t>(std::floor((entry.pos.z + .5 * boxSize[2]) / _cellSize.z));
-            const auto boxIdx = _cellIndex(i, j, k);
-            _bins.at(boxIdx).push_back(pidx);
-        }
-        ++pidx;
-    }
-}
-
-void DynamicCellLinkedList::update(const util::PerformanceNode &node) {
-    if(_max_cutoff > 0) {
-        auto t = node.timeit();
-        {
-            auto tt = node.subnode("clear").timeit();
-            std::for_each(_bins.begin(), _bins.end(), [](std::vector<std::size_t> &bin) {
-                bin.resize(0);
-            });
-        }
-        fillBins(node.subnode("fillBins"));
-    }
-}
-
-void DynamicCellLinkedList::clear() {
-    _bins.resize(0);
-}
-
-std::size_t *DynamicCellLinkedList::particlesBegin(std::size_t cellIndex) {
-    return &*_bins.at(cellIndex).begin();
-}
-
-const std::size_t *DynamicCellLinkedList::particlesBegin(std::size_t cellIndex) const {
-    return &*_bins.at(cellIndex).begin();
-}
-
-std::size_t *DynamicCellLinkedList::particlesEnd(std::size_t cellIndex) {
-    return &*_bins.at(cellIndex).end();
-}
-
-const std::size_t *DynamicCellLinkedList::particlesEnd(std::size_t cellIndex) const {
-    return &*_bins.at(cellIndex).end();
-}
-
-std::size_t DynamicCellLinkedList::nParticles(std::size_t cellIndex) const {
-    return _bins.at(cellIndex).size();
-}
-
 
 CompactCellLinkedList::CompactCellLinkedList(data_type &data, const readdy::model::Context &context,
                                              const util::thread::Config &config) : CellLinkedList(data, context,
@@ -390,7 +224,7 @@ std::size_t CompactCellLinkedList::nParticles(std::size_t cellIndex) const {
 template<>
 void CompactCellLinkedList::fillBins<true>(const util::PerformanceNode &node) {
     auto t = node.timeit();
-    auto boxSize = _context.get().boxSize();
+    const auto &boxSize = _context.get().boxSize();
     std::size_t pidx = 1;
     for (const auto &entry : _data.get()) {
         if (!entry.deactivated) {
@@ -408,7 +242,7 @@ void CompactCellLinkedList::fillBins<true>(const util::PerformanceNode &node) {
 template<>
 void CompactCellLinkedList::fillBins<false>(const util::PerformanceNode &node) {
     auto t = node.timeit();
-    auto boxSize = _context.get().boxSize();
+    const auto &boxSize = _context.get().boxSize();
     const auto &data = _data.get();
     const auto grainSize = data.size() / _config.get().nThreads();
     const auto &executor = *_config.get().executor();
@@ -486,8 +320,303 @@ const bool &CompactCellLinkedList::serial() const {
     return _serial;
 }
 
-}
-}
-}
+void CompactCellLinkedList::forEachParticlePair(const pair_callback &f) const {
+    const auto &cix = cellIndex();
+    const auto &data = _data.get();
+
+    for (std::size_t cellIndex = 0; cellIndex < cix.size(); ++cellIndex) {
+
+        auto pptr = (*_head.at(cellIndex)).load();
+        while (pptr != 0) {
+            auto pidx = pptr - 1;
+            const auto &entry = data.entry_at(pidx);
+            if(!entry.deactivated) {
+                {
+                    auto ppptr = (*_head.at(cellIndex)).load();
+                    while (ppptr != 0) {
+                        auto ppidx = ppptr - 1;
+                        if (ppidx != pidx) {
+                            const auto &pp = data.entry_at(ppidx);
+                            if (!pp.deactivated) {
+                                f(entry, pp);
+                            }
+                        }
+                        ppptr = _list.at(ppptr);
+                    }
+                }
+
+                for (auto itNeighborCell = neighborsBegin(cellIndex);
+                     itNeighborCell != neighborsEnd(cellIndex); ++itNeighborCell) {
+
+                    auto nptr = (*_head.at(*itNeighborCell)).load();
+                    while (nptr != 0) {
+                        auto nidx = nptr - 1;
+
+                        const auto &neighbor = data.entry_at(nidx);
+                        if (!neighbor.deactivated) {
+                            f(entry, neighbor);
+                        }
+
+                        nptr = _list.at(nptr);
+                    }
+                }
+            }
+            pptr = _list.at(pptr);
+        }
+    }
 }
 
+void CompactCellLinkedList::forEachParticlePairParallel(const pair_callback &f) const {
+    const auto &cix = cellIndex();
+    const auto &data = _data.get();
+
+
+    const auto grainSize = cix.size() / _config.get().nThreads();
+    auto worker = [this, cix, &data, &f](std::size_t tid, std::size_t begin, std::size_t end) {
+        const auto &head = this->head();
+        const auto &list = this->list();
+        for (std::size_t cellIndex = begin; cellIndex < end; ++cellIndex) {
+
+            auto pptr = (*head.at(cellIndex)).load();
+            while (pptr != 0) {
+                auto pidx = pptr - 1;
+                const auto &entry = data.entry_at(pidx);
+                if(!entry.deactivated) {
+                    {
+                        auto ppptr = (*head.at(cellIndex)).load();
+                        while (ppptr != 0) {
+                            auto ppidx = ppptr - 1;
+                            if (ppidx != pidx) {
+                                const auto &pp = data.entry_at(ppidx);
+                                if (!pp.deactivated) {
+                                    f(entry, pp);
+                                }
+                            }
+                            ppptr = list.at(ppptr);
+                        }
+                    }
+
+                    for (auto itNeighborCell = neighborsBegin(cellIndex);
+                         itNeighborCell != neighborsEnd(cellIndex); ++itNeighborCell) {
+
+                        auto nptr = (*head.at(*itNeighborCell)).load();
+                        while (nptr != 0) {
+                            auto nidx = nptr - 1;
+
+                            const auto &neighbor = data.entry_at(nidx);
+                            if (!neighbor.deactivated) {
+                                f(entry, neighbor);
+                            }
+
+                            nptr = list.at(nptr);
+                        }
+                    }
+                }
+                pptr = list.at(pptr);
+            }
+        }
+    };
+    {
+        const auto &executor = *_config.get().executor();
+        std::vector<std::function<void(std::size_t)>> executables;
+        executables.reserve(_config.get().nThreads());
+        auto it = 0_z;
+        for (int i = 0; i < _config.get().nThreads() - 1; ++i) {
+            executables.push_back(executor.pack(worker, it, it + grainSize));
+            it += grainSize;
+        }
+        executables.push_back(executor.pack(worker, it, cix.size()));
+        executor.execute_and_wait(std::move(executables));
+    }
+}
+
+BoxIterator CompactCellLinkedList::cellParticlesBegin(std::size_t cellIndex) const {
+    auto head = (*_head.at(cellIndex)).load();
+    return {*this, head};
+}
+
+BoxIterator CompactCellLinkedList::cellParticlesEnd(std::size_t) const {
+    return {*this, 0};
+}
+
+NeighborsIterator CompactCellLinkedList::cellNeighborsBegin(std::size_t cellIndex) const {
+    auto ix = (*_head.at(cellIndex)).load();
+    return {*this, cellIndex, ix};
+}
+
+NeighborsIterator CompactCellLinkedList::cellNeighborsEnd(std::size_t cellIndex) const {
+    return {*this, cellIndex, 0};
+}
+
+std::size_t CompactCellLinkedList::nCells() const {
+    return _head.size();
+}
+
+bool CompactCellLinkedList::cellEmpty(std::size_t index) const {
+    return (*_head.at(index)).load() == 0;
+}
+
+MacroBoxIterator CompactCellLinkedList::macroCellParticlesBegin(std::size_t cellIndex, int skip) const {
+    return {*this, cellIndex, nullptr, false, skip};
+}
+
+MacroBoxIterator CompactCellLinkedList::macroCellParticlesEnd(std::size_t cellIndex) const {
+    return {*this, cellIndex, nullptr, true};
+}
+
+std::size_t CompactCellLinkedList::cellOfParticle(std::size_t index) const {
+    const auto &entry = data().entry_at(index);
+    if(entry.deactivated) {
+        throw std::invalid_argument("requested deactivated entry");
+    }
+    const auto &boxSize = _context.get().boxSize();
+    const auto i = static_cast<std::size_t>(std::floor((entry.pos.x + .5 * boxSize[0]) / _cellSize.x));
+    const auto j = static_cast<std::size_t>(std::floor((entry.pos.y + .5 * boxSize[1]) / _cellSize.y));
+    const auto k = static_cast<std::size_t>(std::floor((entry.pos.z + .5 * boxSize[2]) / _cellSize.z));
+    return _cellIndex(i, j, k);
+}
+
+BoxIterator::BoxIterator(const CompactCellLinkedList &ccll, std::size_t state)
+        : _ccll(ccll), _state(state) { }
+
+BoxIterator &BoxIterator::operator++() {
+    if (_state != 0) {
+        _state = _ccll.get().list().at(_state);
+    }
+    return *this;
+}
+
+BoxIterator::value_type BoxIterator::operator*() const  {
+    return _state - 1;
+}
+
+bool BoxIterator::operator==(const BoxIterator &rhs) const {
+    return _state == rhs._state;
+}
+
+bool BoxIterator::operator!=(const BoxIterator &rhs) const {
+    return !(*this == rhs);
+}
+
+MacroBoxIterator::MacroBoxIterator(const CompactCellLinkedList &ccll, std::size_t centerCell, 
+                                   const std::size_t *currentCell, bool end, int skip)
+        : _ccll(ccll), _centerCell(centerCell), _skip(skip),
+          _neighborCellsBegin(ccll.neighborsBegin(centerCell)), _neighborCellsEnd(ccll.neighborsEnd(centerCell)),
+          _currentCell(getCurrentCell(currentCell)),
+          _currentBoxIt(getCurrentBoxIterator()), _currentBoxEnd(ccll, 0) {
+    
+    if(_currentCell != _neighborCellsEnd && !end) {
+        _state = *_currentBoxIt;
+        if(_state == _skip) {
+            this->operator++();
+        }
+    } else {
+        _state = 0;
+        _currentBoxIt = _currentBoxEnd;
+    }
+}
+
+MacroBoxIterator &MacroBoxIterator::operator++() {
+    ++_currentBoxIt;
+    if(_currentBoxIt == _currentBoxEnd) {
+        if(_currentCell != _neighborCellsEnd) {
+            if(*_currentCell == _centerCell) {
+                _currentCell = getCurrentCell(_neighborCellsBegin);
+            } else {
+                _currentCell = getCurrentCell(_currentCell+1);
+            }
+        }
+        _currentBoxIt = getCurrentBoxIterator();
+    }
+    if(_currentBoxIt != _currentBoxEnd) {
+        _state = *_currentBoxIt;
+        if(_state == _skip) this->operator++();
+    }
+    return *this;
+}
+
+const std::size_t *MacroBoxIterator::getCurrentCell(const std::size_t *initial) const {
+    if(initial == nullptr) initial = &_centerCell;
+    const auto &ccll = _ccll.get();
+    auto result = initial;
+    if(ccll.cellEmpty(*result)) {
+        if(*result == _centerCell) {
+            result = _neighborCellsBegin;
+        } else if (result != _neighborCellsEnd) {
+            result = initial+1;
+        }
+        while(result != _neighborCellsEnd && ccll.cellEmpty(*result)) {
+            ++result;
+        }
+    }
+    return result;
+}
+
+BoxIterator MacroBoxIterator::getCurrentBoxIterator() const {
+    const auto &ccll = _ccll.get();
+    if(_currentCell != _neighborCellsEnd) {
+        const auto head = (*ccll.head().at(*_currentCell)).load();
+        return {ccll, head};
+    } else {
+        return {ccll, 0};
+    }
+}
+
+const size_t &MacroBoxIterator::operator*() const {
+    return _state;
+}
+
+MacroBoxIterator::pointer MacroBoxIterator::operator->() const {
+    return &_state;
+}
+
+bool MacroBoxIterator::operator==(const MacroBoxIterator &rhs) const {
+    return _currentBoxIt == rhs._currentBoxIt;
+}
+
+bool MacroBoxIterator::operator!=(const MacroBoxIterator &rhs) const {
+    return _currentBoxIt != rhs._currentBoxIt;
+}
+
+
+NeighborsIterator::NeighborsIterator(const CompactCellLinkedList &ccll, std::size_t cell, std::size_t state)
+        : _ccll(ccll),  _cell(cell), _innerIterator(ccll, state) {
+    _currentValue = *_innerIterator;
+}
+
+NeighborsIterator &NeighborsIterator::operator++() {
+    // the outer loop through all particles of the inner cell
+    ++_innerIterator;
+    _currentValue = *_innerIterator;
+    return *this;
+}
+
+NeighborsIterator::reference NeighborsIterator::operator*() const {
+    return _currentValue;
+}
+
+bool NeighborsIterator::operator==(const NeighborsIterator &rhs) const {
+    return _innerIterator == rhs._innerIterator;
+}
+
+bool NeighborsIterator::operator!=(const NeighborsIterator &rhs) const {
+    return !(*this == rhs);
+}
+
+MacroBoxIterator NeighborsIterator::neighborsBegin() const {
+    return {_ccll.get(), _cell, nullptr, false, static_cast<int>(_currentValue)};
+}
+
+MacroBoxIterator NeighborsIterator::neighborsEnd() const {
+    return {_ccll.get(), 0, nullptr, true};
+}
+
+const size_t &NeighborsIterator::currentParticle() const {
+    return _currentValue;
+}
+
+
+}
+}
+}
+}

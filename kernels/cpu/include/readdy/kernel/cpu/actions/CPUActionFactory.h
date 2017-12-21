@@ -30,7 +30,7 @@
  */
 
 #pragma once
-#include <readdy/kernel/cpu/CPUKernel.h>
+#include "../CPUKernel.h"
 
 namespace readdy {
 namespace kernel {
@@ -39,17 +39,19 @@ namespace actions {
 class CPUActionFactory : public readdy::model::actions::ActionFactory {
     CPUKernel *const kernel;
 public:
-    explicit CPUActionFactory(CPUKernel* kernel);
+    explicit CPUActionFactory(CPUKernel *kernel);
 
 protected:
-    readdy::model::actions::AddParticles *createAddParticles(const std::vector<readdy::model::Particle> &particles) const override;
+    readdy::model::actions::AddParticles *
+    createAddParticles(const std::vector<readdy::model::Particle> &particles) const override;
 
     readdy::model::actions::EulerBDIntegrator *createEulerBDIntegrator(readdy::scalar timeStep) const override;
 
     readdy::model::actions::CalculateForces *createCalculateForces() const override;
 
     readdy::model::actions::UpdateNeighborList *
-    createUpdateNeighborList(readdy::model::actions::UpdateNeighborList::Operation operation, readdy::scalar skinSize) const override;
+    createUpdateNeighborList(readdy::model::actions::UpdateNeighborList::Operation operation,
+                             readdy::scalar skinSize) const override;
 
     readdy::model::actions::EvaluateCompartments *createEvaluateCompartments() const override;
 

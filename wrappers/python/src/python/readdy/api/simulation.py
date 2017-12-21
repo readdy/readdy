@@ -24,6 +24,7 @@ Created on 08.09.17
 
 @author: clonker
 """
+from readdy.api.conf.KernelConfiguration import CPULegacyKernelConfiguration as _CPULegacyKernelConfiguration
 from readdy.api.conf.KernelConfiguration import CPUKernelConfiguration as _CPUKernelConfiguration
 from readdy.api.conf.KernelConfiguration import NOOPKernelConfiguration as _NOOPKernelConfiguration
 from readdy.api.registry.observables import Observables as _Observables
@@ -74,7 +75,9 @@ class Simulation(object):
 
         self._progress = None
 
-        if kernel == "CPU":
+        if kernel == "CPU_Legacy":
+            self._kernel_configuration = _CPULegacyKernelConfiguration()
+        elif kernel == "CPU":
             self._kernel_configuration = _CPUKernelConfiguration()
         else:
             self._kernel_configuration = _NOOPKernelConfiguration()

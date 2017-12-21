@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2017 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -26,25 +26,26 @@
  * @file CPUKernel.cpp
  * @brief << brief description >>
  * @author clonker
- * @date 23.06.16
+ * @date 12/11/17
  */
 
 #include <readdy/kernel/cpu/CPUKernel.h>
 #include <readdy/kernel/cpu/actions/CPUActionFactory.h>
-#include <readdy/kernel/cpu/actions/topologies/CPUTopologyActionFactory.h>
 #include <readdy/kernel/cpu/observables/CPUObservableFactory.h>
+#include <readdy/kernel/cpu/actions/topologies/CPUTopologyActionFactory.h>
 
 namespace readdy {
 namespace kernel {
 namespace cpu {
+
 const std::string CPUKernel::name = "CPU";
 
 struct CPUKernel::Impl {
-    std::unique_ptr<actions::CPUActionFactory> actionFactory;
-    std::unique_ptr<observables::CPUObservableFactory> observableFactory;
-    std::unique_ptr<CPUStateModel> stateModel;
-    std::unique_ptr<readdy::util::thread::Config> config;
-    std::unique_ptr<readdy::model::top::TopologyActionFactory> topologyActionFactory;
+    std::unique_ptr <actions::CPUActionFactory> actionFactory;
+    std::unique_ptr <observables::CPUObservableFactory> observableFactory;
+    std::unique_ptr <CPUStateModel> stateModel;
+    std::unique_ptr <readdy::util::thread::Config> config;
+    std::unique_ptr <readdy::model::top::TopologyActionFactory> topologyActionFactory;
 };
 
 readdy::model::Kernel *CPUKernel::create() {
@@ -56,7 +57,7 @@ CPUKernel::CPUKernel() : readdy::model::Kernel(name), pimpl(std::make_unique<Imp
     pimpl->config->setMode(readdy::util::thread::ThreadMode::pool);
 
     pimpl->actionFactory = std::make_unique<actions::CPUActionFactory>(this);
-    pimpl->topologyActionFactory = std::make_unique<readdy::kernel::cpu::actions::top::CPUTopologyActionFactory>(this);
+    pimpl->topologyActionFactory = std::make_unique<actions::top::CPUTopologyActionFactory>(this);
     pimpl->stateModel = std::make_unique<CPUStateModel>(_context, pimpl->config.get(),
                                                         pimpl->topologyActionFactory.get());
     pimpl->observableFactory = std::make_unique<observables::CPUObservableFactory>(this);
@@ -111,9 +112,11 @@ void CPUKernel::initialize() {
     {
         // thread config
         if (configuration.threadConfig.nThreads > 0) {
-            threadConfig().setNThreads(static_cast<unsigned int>(configuration.threadConfig.nThreads));
+            threadConfig().setNThreads(
+                    static_cast<util::thread::Config::n_threads_type>(configuration.threadConfig.nThreads)
+            );
         }
-        threadConfig().setMode(configuration.threadConfig.threadMode);
+        threadConfig().setMode(util::thread::ThreadMode::pool);
     }
     {
         // state model config
@@ -141,7 +144,6 @@ CPUKernel::~CPUKernel() = default;
 }
 }
 }
-
 
 const char *name() {
     return readdy::kernel::cpu::CPUKernel::name.c_str();

@@ -86,21 +86,23 @@ class PotentialRegistry(object):
         self._registry.add_weak_interaction_piecewise_harmonic(particle_type1, particle_type2, force_constant,
                                                                desired_distance, depth, cutoff)
 
-    def add_lennard_jones(self, particle_type1, particle_type2, m, n, cutoff, shift, epsilon, sigma):
+    def add_lennard_jones(self, particle_type1, particle_type2, epsilon, sigma, cutoff=None, m=12, n=6, shift=True):
         """
         Adds a m-n-LJ potential with specified cutoff, epsilon, and sigma. `shift` is bool and denotes whether the
         potential energy should be shifted to bridge the gap at `cutoff`.
 
         :param particle_type1: first particle type
         :param particle_type2: second particle type
-        :param m: first exponent
-        :param n: second exponent
-        :param cutoff: the cutoff radius [length]
-        :param shift: whether to shift the potential energy
         :param epsilon: epsilon value [energy]
         :param sigma: sigma value [length]
+        :param cutoff: the cutoff radius [length], default value results in 2.5*sigma
+        :param m: first exponent, default=12
+        :param n: second exponent, default=6
+        :param shift: whether to shift the potential energy, default=True
         """
         assert isinstance(shift, bool), "shift can only be bool"
+        if cutoff is None:
+            cutoff = 2.5*sigma
         cutoff = self._units.convert(cutoff, self._units.length_unit)
         epsilon = self._units.convert(epsilon, self._units.energy_unit)
         sigma = self._units.convert(sigma, self._units.length_unit)

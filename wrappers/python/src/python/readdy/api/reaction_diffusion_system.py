@@ -311,3 +311,6 @@ class ReactionDiffusionSystem(object):
         return _Simulation(kernel, self._context, self._unit_conf, output_file=output_file, integrator=integrator,
                            reaction_handler=reaction_handler, evaluate_topology_reactions=evaluate_topology_reactions,
                            evaluate_forces=evaluate_forces, evaluate_observables=evaluate_observables, skin=skin)
+
+    def __str__(self):
+        return self._context.describe()

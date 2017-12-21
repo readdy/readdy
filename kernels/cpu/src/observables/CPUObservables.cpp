@@ -35,7 +35,6 @@
 
 #include <readdy/kernel/cpu/observables/CPUObservables.h>
 #include <readdy/kernel/cpu/CPUKernel.h>
-#include <readdy/kernel/cpu/util/config.h>
 
 namespace readdy {
 namespace kernel {

@@ -125,9 +125,9 @@ class TestTopLevelAPI(ReaDDyTestCase):
                                np.array([1.0, 1.0, 1.0]) * ut.meter)
         rds.potentials.add_harmonic_repulsion("A", "A", 1.0, 1.0)
         rds.potentials.add_harmonic_repulsion("A", "A", 1.0 * ut.joule / ut.mol / (ut.meter ** 2), 1.0 * ut.meter)
-        rds.potentials.add_lennard_jones("A", "A", 12, 6, 10, True, 1, 1)
-        rds.potentials.add_lennard_jones("A", "A", 12, 6, 10 * ut.nanometer, True, 1 * ut.joule / ut.mol,
-                                         1 * ut.nanometer)
+        rds.potentials.add_lennard_jones("A", "A", 1, 1, cutoff=10)
+        rds.potentials.add_lennard_jones("A", "A", 1 * ut.joule / ut.mol, 1 * ut.nanometer, m=12, n=6,
+                                         cutoff=10 * ut.nanometer)
         rds.potentials.add_screened_electrostatics("A", "A", 10, 10, 10, 10, 10, 10)
         rds.potentials.add_screened_electrostatics("A", "A", 10 * ut.joule / ut.mol * ut.meter, 10 / ut.meter,
                                                    10 * ut.joule / ut.mol, 10 * ut.meter, 10, 10 * ut.meter)

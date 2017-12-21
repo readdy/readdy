@@ -28,7 +28,6 @@
  */
 
 #include <readdy/kernel/cpu/actions/CPUEvaluateCompartments.h>
-#include <readdy/kernel/cpu/data/NLDataContainer.h>
 
 namespace readdy {
 namespace kernel {

@@ -38,7 +38,7 @@
 #include <readdy/model/Context.h>
 #include <readdy/common/Timer.h>
 #include <readdy/common/thread/atomic.h>
-#include <readdy/kernel/cpu/data/NLDataContainer.h>
+#include <readdy/kernel/cpu/data/DefaultDataContainer.h>
 
 namespace readdy {
 namespace kernel {
@@ -48,11 +48,12 @@ namespace nl {
 class CellLinkedList {
 public:
     using data_type = readdy::kernel::cpu::data::DefaultDataContainer;
+    using cell_radius_type = std::uint8_t;
 
     CellLinkedList(data_type &data, const readdy::model::Context &context,
                    const readdy::util::thread::Config &config);
 
-    void setUp(scalar skin, std::uint8_t radius, const util::PerformanceNode &node);
+    void setUp(scalar skin, cell_radius_type radius, const util::PerformanceNode &node);
 
     virtual void update(const util::PerformanceNode &node) = 0;
     
@@ -80,6 +81,12 @@ public:
 
     std::size_t nNeighbors(std::size_t cellIndex) const;
 
+    data_type &data();
+
+    const data_type &data() const;
+
+    scalar maxCutoff() const;
+
 protected:
     virtual void setUpBins(const util::PerformanceNode &node) = 0;
 
@@ -102,46 +109,19 @@ protected:
     std::reference_wrapper<const readdy::util::thread::Config> _config;
 };
 
-class ContiguousCellLinkedList : public CellLinkedList {
-public:
-    ContiguousCellLinkedList(data_type &data, const readdy::model::Context &context,
-                             const util::thread::Config &config);
-    void update(const util::PerformanceNode &node) override;
-
-    void clear() override;
-    
-    const std::vector<std::size_t> &bins() const;
-    
-    const util::Index2D &binsIndex() const;
-
-    std::size_t *particlesBegin(std::size_t cellIndex) override;
-
-    const std::size_t *particlesBegin(std::size_t cellIndex) const override;
-
-    std::size_t *particlesEnd(std::size_t cellIndex) override;
-
-    const std::size_t *particlesEnd(std::size_t cellIndex) const override;
-
-    size_t nParticles(std::size_t cellIndex) const override;
-
-protected:
-    void initializeBinsStructure();
-
-    void fillBins(const util::PerformanceNode &node);
-
-    void setUpBins(const util::PerformanceNode &node) override;
-
-private:
-    std::size_t _maxParticlesPerCell {0};
-    util::Index2D _binsIndex;
-    std::vector<std::size_t> _bins;
-};
+class BoxIterator;
+class MacroBoxIterator;
+class NeighborsIterator;
 
 class CompactCellLinkedList : public CellLinkedList {
 public:
 
     using HEAD = std::vector<util::thread::copyable_atomic<std::size_t>>;
     using LIST = std::vector<std::size_t>;
+    using entry_cref = const data_type::entry_type&;
+    using pair_callback = std::function<void(entry_cref, entry_cref)>;
+
+    using iterator_bounds = std::tuple<std::size_t, std::size_t>;
 
     CompactCellLinkedList(data_type &data, const readdy::model::Context &context,
                           const util::thread::Config &config);
@@ -158,6 +138,18 @@ public:
 
     const size_t *particlesEnd(std::size_t cellIndex) const override;
 
+    BoxIterator cellParticlesBegin(std::size_t cellIndex) const;
+
+    BoxIterator cellParticlesEnd(std::size_t /*cellIndex*/) const;
+
+    MacroBoxIterator macroCellParticlesBegin(std::size_t cellIndex, int skip=-1) const;
+
+    MacroBoxIterator macroCellParticlesEnd(std::size_t cellIndex) const;
+
+    NeighborsIterator cellNeighborsBegin(std::size_t cellIndex) const;
+
+    NeighborsIterator cellNeighborsEnd(std::size_t cellIndex) const;
+
     size_t nParticles(std::size_t cellIndex) const override;
 
     const HEAD &head() const;
@@ -167,6 +159,16 @@ public:
     bool &serial();
 
     const bool &serial() const;
+
+    void forEachParticlePair(const pair_callback &f) const;
+
+    void forEachParticlePairParallel(const pair_callback &f) const;
+
+    std::size_t nCells() const;
+
+    bool cellEmpty(std::size_t index) const;
+
+    std::size_t cellOfParticle(std::size_t index) const;
 
 protected:
     void setUpBins(const util::PerformanceNode &node) override;
@@ -179,37 +181,132 @@ protected:
     LIST _list;
 
     bool _serial {false};
+
 };
 
-class DynamicCellLinkedList : public CellLinkedList {
+class BoxIterator {
+
+    using alloc = std::allocator<std::size_t>;
+
 public:
-    using Bins = std::vector<std::vector<std::size_t>>;
 
-    DynamicCellLinkedList(data_type &data, const readdy::model::Context &context,
-                          const util::thread::Config &config);
+    using difference_type = typename alloc::difference_type;
+    using value_type = typename alloc::value_type;
+    using reference = typename alloc::const_reference;
+    using pointer = typename alloc::const_pointer;
+    using iterator_category = std::forward_iterator_tag;
+    using size_type = CompactCellLinkedList::LIST::size_type;
 
-    void update(const util::PerformanceNode &node) override;
+    BoxIterator(const CompactCellLinkedList &ccll, std::size_t state);
 
-    void clear() override;
+    BoxIterator(const BoxIterator&) = default;
+    BoxIterator &operator=(const BoxIterator &) = default;
+    BoxIterator(BoxIterator &&) = default;
+    BoxIterator &operator=(BoxIterator &&) = default;
+    ~BoxIterator() = default;
 
-    std::size_t *particlesBegin(std::size_t cellIndex) override;
+    BoxIterator &operator++();
 
-    const std::size_t *particlesBegin(std::size_t cellIndex) const override;
+    value_type operator*() const;
 
-    std::size_t *particlesEnd(std::size_t cellIndex) override;
+    bool operator==(const BoxIterator &rhs) const;
 
-    const std::size_t *particlesEnd(std::size_t cellIndex) const override;
-
-    std::size_t nParticles(std::size_t cellIndex) const override;
-
-protected:
-    void setUpBins(const util::PerformanceNode &node) override;
-
-    void fillBins(const util::PerformanceNode &node);
+    bool operator!=(const BoxIterator &rhs) const;
 
 private:
-    Bins _bins;
+    std::reference_wrapper<const CompactCellLinkedList> _ccll;
+    std::size_t _state;
 };
+
+class MacroBoxIterator {
+    using alloc = std::allocator<std::size_t>;
+public:
+    using difference_type = typename alloc::difference_type;
+    using value_type = typename alloc::value_type;
+    using reference = typename alloc::const_reference;
+    using pointer = typename alloc::const_pointer;
+    using iterator_category = std::forward_iterator_tag;
+    using size_type = CompactCellLinkedList::LIST::size_type;
+
+    MacroBoxIterator(const CompactCellLinkedList &ccll, std::size_t centerCell, const std::size_t *currentCell,
+                     bool end=false, int skip=-1);
+
+    MacroBoxIterator &operator++();
+
+    reference operator*() const;
+
+    pointer operator->() const;
+
+    bool operator==(const MacroBoxIterator &rhs) const;
+    bool operator!=(const MacroBoxIterator &rhs) const;
+
+private:
+
+    const std::size_t *getCurrentCell(const std::size_t *initial) const;
+
+    BoxIterator getCurrentBoxIterator() const;
+
+    const std::size_t *_neighborCellsBegin;
+    const std::size_t *_neighborCellsEnd;
+
+    std::reference_wrapper<const CompactCellLinkedList> _ccll;
+    std::size_t _centerCell;
+
+    const std::size_t *_currentCell;
+    BoxIterator _currentBoxIt;
+    BoxIterator _currentBoxEnd;
+
+    value_type _state;
+
+    int _skip;
+};
+
+class NeighborsIterator {
+    using Alloc = std::allocator<std::size_t>;
+public:
+
+    using difference_type = typename Alloc::difference_type;
+    using value_type = typename Alloc::value_type;
+    using reference = typename Alloc::const_reference;
+    using pointer = typename Alloc::const_pointer;
+    using iterator_category = std::forward_iterator_tag;
+    using size_type = std::size_t;
+
+    /**
+     * Iterator that will iterate over all particles of the specified cell times all "neighboring" particles (i.e.,
+     * one through its own cell (cellAt==nullptr) and then through the neighboring cells).
+     * @param ccll the cell linked list this iterator belongs to
+     * @param cell the cell
+     * @param cellAt the cell in the "neighboring cells" iteration, nullptr if own cell
+     * @param state the state of this cell
+     * @param stateNeigh the state of the neighboring iterator
+     */
+    NeighborsIterator(const CompactCellLinkedList &ccll, std::size_t cell, std::size_t state);
+
+    NeighborsIterator &operator++();
+
+    reference operator*() const;
+
+    reference currentParticle() const;
+
+    bool operator==(const NeighborsIterator &rhs) const;
+
+    bool operator!=(const NeighborsIterator &rhs) const;
+
+    MacroBoxIterator neighborsBegin() const;
+
+    MacroBoxIterator neighborsEnd() const;
+
+private:
+    std::size_t _cell;
+
+    value_type _currentValue;
+
+    BoxIterator _innerIterator;
+
+    std::reference_wrapper<const CompactCellLinkedList> _ccll;
+};
+
 
 }
 }

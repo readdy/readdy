@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2017 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -26,15 +26,13 @@
  * @file CPUStateModel.cpp
  * @brief << brief description >>
  * @author clonker
- * @date 13.07.16
+ * @date 12/11/17
  */
+
 
 #include <future>
 #include <readdy/kernel/cpu/CPUStateModel.h>
 #include <readdy/common/thread/barrier.h>
-#include <readdy/kernel/cpu/nl/AdaptiveNeighborList.h>
-#include <readdy/kernel/cpu/nl/CellDecompositionNeighborList.h>
-#include <readdy/kernel/cpu/nl/CLLNeighborList.h>
 
 namespace readdy {
 namespace kernel {
@@ -49,7 +47,7 @@ using pot2Map = readdy::model::potentials::PotentialRegistry::potential_o2_regis
 using dist_fun = readdy::model::Context::shortest_dist_fun;
 
 const std::vector<Vec3> CPUStateModel::getParticlePositions() const {
-    const auto data = _neighborList->data();
+    const auto data = getParticleData();
     std::vector<Vec3> target{};
     target.reserve(data->size());
     for (const auto &entry : *data) {
@@ -59,7 +57,7 @@ const std::vector<Vec3> CPUStateModel::getParticlePositions() const {
 }
 
 const std::vector<readdy::model::Particle> CPUStateModel::getParticles() const {
-    const auto data = _neighborList->data();
+    const auto data = getParticleData();
     std::vector<readdy::model::Particle> result;
     result.reserve(data->size());
     for (const auto &entry : *data) {
@@ -90,11 +88,8 @@ CPUStateModel::CPUStateModel(const readdy::model::Context &context,
                              readdy::util::thread::Config const *const config,
                              readdy::model::top::TopologyActionFactory const *const taf)
         : _config(*config), _context(context), _topologyActionFactory(*taf) {
-    _neighborList = std::unique_ptr<neighbor_list>(
-            // new nl::CellDecompositionNeighborList(*getParticleData(), *pimpl->context, *config)
-            new nl::CompactCLLNeighborList(1, _context.get(), *config)
-            //new nl::DynamicCLLNeighborList(*pimpl->context, *config)
-    );
+    _data = std::make_unique<data::DefaultDataContainer>(context, *config);
+    _neighborList = std::make_unique<neighbor_list>(*_data, _context.get(), *config);
     _reorderConnection = std::make_unique<readdy::signals::scoped_connection>(
             getParticleData()->registerReorderEventListener([this](const std::vector<std::size_t> &indices) -> void {
                 for (auto &top : _topologies) {
@@ -104,14 +99,14 @@ CPUStateModel::CPUStateModel(const readdy::model::Context &context,
 }
 
 CPUStateModel::data_type const *const CPUStateModel::getParticleData() const {
-    return _neighborList->data();
+    return _data.get();
 }
 
 CPUStateModel::data_type *const CPUStateModel::getParticleData() {
-    return _neighborList->data();
+    return _data.get();
 }
 
-neighbor_list const *const CPUStateModel::getNeighborList() const {
+CPUStateModel::neighbor_list const *const CPUStateModel::getNeighborList() const {
     return _neighborList.get();
 }
 
@@ -123,7 +118,7 @@ void CPUStateModel::removeAllParticles() {
     getParticleData()->clear();
 }
 
-neighbor_list *const CPUStateModel::getNeighborList() {
+CPUStateModel::neighbor_list *const CPUStateModel::getNeighborList() {
     return _neighborList.get();
 }
 
@@ -225,7 +220,7 @@ void CPUStateModel::updateNeighborList(const util::PerformanceNode &node) {
 }
 
 void CPUStateModel::clearNeighborList(const util::PerformanceNode &node) {
-    _neighborList->clear(node.subnode("clear"));
+    _neighborList->clear();
 }
 
 void CPUStateModel::initializeNeighborList(scalar skin) {
@@ -233,43 +228,12 @@ void CPUStateModel::initializeNeighborList(scalar skin) {
 }
 
 void CPUStateModel::initializeNeighborList(scalar skin, const util::PerformanceNode &node) {
-    _neighborList->skin() = skin;
-    _neighborList->set_up(node.subnode("set_up"));
+    _neighborList->setUp(skin, _neighborListCellRadius, node.subnode("set_up"));
 }
 
 void CPUStateModel::configure(const readdy::conf::cpu::Configuration &configuration) {
     const auto& nl = configuration.neighborList;
-
-    if(nl.type == "CellDecomposition") {
-        _neighborList = std::unique_ptr<neighbor_list>(
-                new nl::CellDecompositionNeighborList(getParticleData(), _context.get(), _config.get())
-        );
-        log::debug("Using CPU/CellDecomposition neighborList");
-    } else if(nl.type == "ContiguousCLL") {
-        _neighborList = std::unique_ptr<neighbor_list>(
-                new nl::ContiguousCLLNeighborList(getParticleData(), nl.cll_radius, _context.get(), _config.get())
-        );
-        log::debug("Using CPU/ContiguousCLL neighbor list with radius {}.", nl.cll_radius);
-    } else if (nl.type == "DynamicCLL") {
-        _neighborList = std::unique_ptr<neighbor_list>(
-                new nl::DynamicCLLNeighborList(getParticleData(), _context.get(), _config.get())
-        );
-        log::debug("Using CPU/DynamicCLL neighbor list.");
-    } else if (nl.type == "Adaptive") {
-        _neighborList = std::unique_ptr<neighbor_list>(
-                new nl::AdaptiveNeighborList(getParticleData(), _context.get(), _config.get())
-        );
-        log::debug("Using CPU/Adaptive neighbor list.");
-    } else if (nl.type == "CompactCLL") {
-        _neighborList = std::unique_ptr<neighbor_list>(
-                new nl::CompactCLLNeighborList(getParticleData(), nl.cll_radius, _context.get(), _config.get())
-        );
-        log::debug("Using CPU/CompactCLL neighbor list with radius {}.", nl.cll_radius);
-    } else {
-        throw std::invalid_argument(fmt::format(
-                R"(In configuration /CPU/NeighborList only "{}", "{}", "{}", or "{}" are valid but not {}.)",
-                "CellDecomposition", "ContiguousCLL", "DynamicCLL", "Adaptive", nl.type));
-    }
+    _neighborListCellRadius = nl.cll_radius;
 }
 
 scalar &CPUStateModel::energy() {

@@ -191,8 +191,6 @@ TEST_P(TestReactions, FissionNearBoundary) {
     EXPECT_EQ(particles.size(), 2);
     const auto &pos1 = particles[0].getPos();
     const auto &pos2 = particles[1].getPos();
-    std::cout << "pos1.x" << pos1.x << std::endl;
-    std::cout << "pos2.x" << pos2.x << std::endl;
     if (pos1.x <= 0.) {
         EXPECT_GT(pos2.x, 0.);
     } else if (pos1.x >= 0.) {

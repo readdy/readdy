@@ -30,7 +30,6 @@
  */
 
 #include <readdy/kernel/cpu/actions/CPUEulerBDIntegrator.h>
-#include <readdy/kernel/cpu/data/NLDataContainer.h>
 
 namespace readdy {
 namespace kernel {
@@ -39,7 +38,7 @@ namespace actions {
 
 namespace rnd = readdy::model::rnd;
 
-void CPUEulerBDIntegrator::perform(const util::PerformanceNode &node) {
+void CPUEulerBDIntegrator::perform(const readdy::util::PerformanceNode &node) {
     auto t = node.timeit();
     auto data = kernel->getCPUKernelStateModel().getParticleData();
     const auto size = data->size();
