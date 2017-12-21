@@ -179,10 +179,13 @@ protected:
                                 auto potit = pot2.find(std::tie(entry.type, neighbor.type));
                                 if (potit != pot2.end()) {
                                     auto x_ij = d(myPos, neighbor.pos);
+                                    auto distSquared = x_ij * x_ij;
                                     for (const auto &potential : potit->second) {
-                                        Vec3 forceUpdate {0, 0, 0};
-                                        potential->calculateForceAndEnergy(forceUpdate, mySecondOrderEnergy, x_ij);
-                                        force += forceUpdate;
+                                        if (distSquared < potential->getCutoffRadiusSquared()) {
+                                            Vec3 forceUpdate{0, 0, 0};
+                                            potential->calculateForceAndEnergy(forceUpdate, mySecondOrderEnergy, x_ij);
+                                            force += forceUpdate;
+                                        }
                                     }
                                 }
                                 // The contribution of second order potentials must be halved since we parallelize over particles.

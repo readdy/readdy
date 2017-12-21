@@ -142,6 +142,8 @@ void to_json(json &j, const Configuration &conf) {
 void from_json(const json &j, Configuration &conf) {
     if(j.find("CPU_Legacy") != j.end()) {
         conf.cpuLegacy = j.at("CPU_Legacy").get<cpu_legacy::Configuration>();
+    }
+    if(j.find("CPU") != j.end()) {
         conf.cpu = j.at("CPU").get<cpu::Configuration>();
     }
 
