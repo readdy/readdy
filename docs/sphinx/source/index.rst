@@ -1,20 +1,13 @@
-.. readdy documentation master file, created by
-   sphinx-quickstart on Wed Dec 20 11:31:28 2017.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+.. readdy documentation master file:
 
-Welcome to readdy's documentation!
-==================================
+=======================
+Reference documentation
+=======================
+
+Here you can find the reference documentation for the methods that are available in system and simulation.
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   readdy
