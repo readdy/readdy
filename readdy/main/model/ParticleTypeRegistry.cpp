@@ -79,6 +79,17 @@ scalar ParticleTypeRegistry::diffusionConstantOf(const std::string &particleType
 
 void ParticleTypeRegistry::add(const std::string &name, const scalar diffusionConst, const particle_flavor flavor) {
     util::validateTypeName(name);
+    {
+        if(diffusionConst < 0) {
+            throw std::invalid_argument("The diffusion constant must not be negative");
+        }
+        // check if name already exists
+        for(const auto &e : particle_info_) {
+            if(e.second.name == name) {
+                throw std::invalid_argument(fmt::format("A particle type with name {} already exists.", name));
+            }
+        }
+    }
     particle_type_type t_id = type_counter_++;
     type_mapping_.emplace(name, t_id);
     particle_info_.emplace(std::make_pair(t_id, ParticleTypeInfo{name, diffusionConst, flavor, t_id}));
