@@ -30,7 +30,6 @@
  */
 
 #include <readdy/kernel/cpu/actions/CPUEulerBDIntegrator.h>
-#include <readdy/kernel/cpu/data/NLDataContainer.h>
 
 namespace readdy {
 namespace kernel {
