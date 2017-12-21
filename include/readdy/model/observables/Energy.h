@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2017 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -21,31 +21,51 @@
 
 
 /**
- * Header file containing definitions for various observables. Currently:
- *  - Positions,
- *  - Particles,
- *  - RadialDistribution,
- *  - HistogramAlongAxis,
- *  - NParticles,
- *  - Forces,
- *  - Reactions,
- *  - ReactionCounts
- *
- * @file Observables.h
- * @brief Header file combining definitions for various observables.
+ * @file Energy.h
+ * @brief Definitions of the energy observable
  * @author clonker
- * @date 26.04.16
- * @todo for demonstration purposes, add a more meaningful combiner observable, such as velocity
+ * @date 12/21/17
  */
+
 
 #pragma once
 
-#include "HistogramAlongAxis.h"
-#include "Particles.h"
-#include "Positions.h"
-#include "RadialDistribution.h"
-#include "Forces.h"
-#include "NParticles.h"
-#include "Reactions.h"
-#include "ReactionCounts.h"
-#include "Energy.h"
+
+#include <readdy/common/common.h>
+#include "Observable.h"
+
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
+NAMESPACE_BEGIN(observables)
+
+class Energy : public Observable<scalar> {
+public:
+    Energy(Kernel *kernel, unsigned int stride);
+
+    Energy(const Energy &) = delete;
+
+    Energy &operator=(const Energy &) = delete;
+
+    Energy(Energy &&) = delete;
+
+    Energy &operator=(Energy &&) = delete;
+
+    ~Energy() override;
+
+    void flush() override;
+
+    void evaluate() override;
+
+private:
+    struct Impl;
+    std::unique_ptr<Impl> pimpl;
+
+    void initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) override;
+
+    void append() override;
+
+};
+
+NAMESPACE_END(observables)
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)

@@ -173,6 +173,15 @@ inline obs_handle_t registerObservable_ForcesObservable(sim &self, unsigned int 
     }
 }
 
+inline obs_handle_t registerObservable_Energy(sim &self, unsigned int stride, const py::object &callbackFun = py::none()) {
+    if(callbackFun.is_none()) {
+        return self.registerObservable<readdy::model::observables::Energy>(stride);
+    } else {
+        auto pyFun = readdy::rpy::PyFunction<void(readdy::model::observables::Energy::result_type)>(callbackFun);
+        return self.registerObservable<readdy::model::observables::Energy>(std::move(pyFun), stride);
+    }
+}
+
 inline obs_handle_t registerObservable_Trajectory(sim& self, unsigned int stride) {
     return self.registerObservable<readdy::model::observables::Trajectory>(stride);
 }
@@ -218,6 +227,7 @@ void exportObservables(py::module &apiModule, py::class_<type_, options...> &sim
                  "stride"_a, "types"_a, "callback"_a = py::none())
             .def("register_observable_forces", &registerObservable_ForcesObservable,
                  "stride"_a, "types"_a, "callback"_a = py::none())
+            .def("register_observable_energy", &registerObservable_Energy, "stride"_a, "callback"_a = py::none())
             .def("register_observable_reactions", &registerObservable_Reactions, "stride"_a, "callback"_a = py::none())
             .def("register_observable_reaction_counts", &registerObservable_ReactionCounts,
                  "stride"_a, "callback"_a = py::none())

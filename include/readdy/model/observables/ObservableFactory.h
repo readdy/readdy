@@ -34,7 +34,6 @@
 
 #include <string>
 #include <unordered_map>
-#include <readdy/model/observables/Observable.h>
 #include <readdy/common/Utils.h>
 #include <readdy/model/observables/Observables.h>
 #include "Aggregators.h"
@@ -59,6 +58,10 @@ public:
     inline std::unique_ptr<R> create(unsigned int stride, Args &&... args) const {
         return std::unique_ptr<R>(
                 ObservableFactory::get_dispatcher<R, Args...>::impl(this, stride, std::forward<Args>(args)...));
+    }
+
+    Energy* createEnergy(unsigned int stride) {
+        return new Energy(kernel, stride);
     }
 
     virtual HistogramAlongAxis* createHistogramAlongAxis(unsigned int stride, std::vector<scalar> binBorders,

@@ -147,6 +147,23 @@ class Observables(object):
         if name is not None and chunk_size is not None:
             self._observable_handles.append((name, chunk_size, handle))
 
+    def energy(self, stride, callback=None, save='default'):
+        """
+        Records the potential energy of the system.
+
+        :param stride: skip `stride` time steps before evaluating the observable again
+        :param callback: callback function that has as argument a scalar value representing the potential energy
+        :param save: dictionary containing `name` and `chunk_size` or None to not save the observable to file
+        """
+        if isinstance(save, str) and save == 'default':
+            save = {"name": "energy", "chunk_size": 100}
+
+        handle = self._sim.register_observable_energy(stride, callback)
+
+        name, chunk_size = _parse_save_args(save)
+        if name is not None and chunk_size is not None:
+            self._observable_handles.append((name, chunk_size, handle))
+
     def forces(self, stride, types=None, callback=None, save='default'):
         """
         Records the forces acting on particles.
