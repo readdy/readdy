@@ -61,18 +61,19 @@ void SCPUCalculateForces::perform(const util::PerformanceNode &node) {
     // update forces and energy order 2 potentials
     if(!context.potentials().potentialsOrder2().empty()) {
         const auto &difference = context.shortestDifferenceFun();
-        Vec3 forceVec{0, 0, 0};
         for (auto it = neighborList.begin(); it != neighborList.end(); ++it) {
             auto i = it->idx1;
             auto j = it->idx2;
             auto &entry_i = data.entry_at(i);
             auto &entry_j = data.entry_at(j);
             const auto &potentials = context.potentials().potentialsOf(entry_i.type, entry_j.type);
+            Vec3 forceVec{0, 0, 0};
+            const auto &x_ij = difference(entry_i.position(), entry_j.position());
             for (const auto &potential : potentials) {
-                potential->calculateForceAndEnergy(forceVec, stateModel.energy(), difference(entry_i.position(), entry_j.position()));
-                entry_i.force += forceVec;
-                entry_j.force += -1 * forceVec;
+                potential->calculateForceAndEnergy(forceVec, stateModel.energy(), x_ij);
             }
+            entry_i.force += forceVec;
+            entry_j.force += -1 * forceVec;
         }
     }
     // update forces and energy for topologies
