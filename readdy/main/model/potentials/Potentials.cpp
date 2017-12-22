@@ -368,9 +368,9 @@ void HarmonicRepulsion::calculateForce(Vec3 &force, const Vec3 &x_ij) const {
     auto squared = x_ij * x_ij;
     if (squared < _interactionDistanceSquared && squared > 0) {
         squared = std::sqrt(squared);
-        force = (getForceConstant() * (squared - _interactionDistance)) / squared * x_ij;
+        force += (getForceConstant() * (squared - _interactionDistance)) / squared * x_ij;
     } else {
-        force = {0, 0, 0};
+        // nothing happens
     }
 }
 
@@ -379,9 +379,9 @@ void HarmonicRepulsion::calculateForceAndEnergy(Vec3 &force, scalar &energy, con
     if (squared < _interactionDistanceSquared && squared > 0) {
         squared = std::sqrt(squared);
         energy += 0.5 * getForceConstant() * std::pow(squared - _interactionDistance, 2);
-        force = (getForceConstant() * (squared - _interactionDistance)) / squared * x_ij;
+        force += (getForceConstant() * (squared - _interactionDistance)) / squared * x_ij;
     } else {
-        force = {0, 0, 0};
+        // nothing happens
     }
 }
 
@@ -474,9 +474,9 @@ void WeakInteractionPiecewiseHarmonic::calculateForce(Vec3 &force, const Vec3 &x
         }
     }
     if (dist > 0 && factor != 0) {
-        force = factor * x_ij / dist;
+        force += factor * x_ij / dist;
     } else {
-        force = {0, 0, 0};
+        // nothing happens
     }
 }
 
@@ -536,8 +536,9 @@ scalar  LennardJones::calculateEnergy(const Vec3 &x_ij) const {
 
 void LennardJones::calculateForce(Vec3 &force, const Vec3 &x_ij) const {
     const auto norm = x_ij.norm();
-    if(norm <= cutoffDistance) {
-        force -= k * ( 1 / (sigma * sigma)) * (m * std::pow(sigma / norm, m + 2) - n * std::pow(sigma / norm, n + 2)) *
+    if (norm <= cutoffDistance) {
+        force += -1. * k * (1 / (sigma * sigma)) *
+                 (m * std::pow(sigma / norm, m + 2) - n * std::pow(sigma / norm, n + 2)) *
                  x_ij;
     }
 }
@@ -555,7 +556,7 @@ scalar LennardJones::getCutoffRadiusSquared() const {
     return cutoffDistanceSquared;
 }
 
-scalar LennardJones::energy(scalar  r) const {
+scalar LennardJones::energy(scalar r) const {
     return k * (std::pow(sigma / r, m) - std::pow(sigma / r, n));
 }
 

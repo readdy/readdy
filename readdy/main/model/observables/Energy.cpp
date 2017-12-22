@@ -55,7 +55,7 @@ void Energy::initializeDataSet(File &file, const std::string &dataSetName, unsig
     h5rd::dimensions fs = {flushStride};
     h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
     auto group = file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName);
-    pimpl->ds = group.createDataSet<std::size_t>("data", fs, dims, {&pimpl->bloscFilter});
+    pimpl->ds = group.createDataSet<scalar>("data", fs, dims, {&pimpl->bloscFilter});
     pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
 }
 

@@ -145,6 +145,9 @@ TEST_P(TestPotentials, TestLennardJonesRepellent) {
     auto id0 = kernel->addParticle("A", {0, 0, 0});
     auto id1 = kernel->addParticle("A", {0, 0, .09});
 
+    auto id2 = kernel->addParticle("A", {2, 0, 0});
+    auto id3 = kernel->addParticle("A", {2, 0, .09});
+
     // the potential has exponents 3 and 2, a cutoff distance of 1.0, does not shift the energy, a well depth
     // of 1.0 and a zero-interaction distance of 0.1 (particle distance < sigma ==> repellent)
     kernel->context().potentials().addLennardJones("A", "A", 3, 2, 1.0, false, 1.0, .1);
@@ -179,18 +182,26 @@ TEST_P(TestPotentials, TestLennardJonesRepellent) {
     kernel->evaluateObservables(1);
 
     // the reference values were calculated numerically
-    EXPECT_NEAR(kernel->stateModel().energy(), static_cast<readdy::scalar>(0.925925925926), 1e-6);
+    EXPECT_NEAR(kernel->stateModel().energy(), static_cast<readdy::scalar>(2.0 * 0.925925925926), 1e-6);
     auto id0Idx = std::find(ids.begin(), ids.end(), id0) - ids.begin();
     auto id1Idx = std::find(ids.begin(), ids.end(), id1) - ids.begin();
+    auto id2Idx = std::find(ids.begin(), ids.end(), id2) - ids.begin();
+    auto id3Idx = std::find(ids.begin(), ids.end(), id3) - ids.begin();
     readdy::Vec3 forceOnParticle0 {0, 0, static_cast<readdy::scalar>(-123.45679012)};
     readdy::Vec3 forceOnParticle1 {0, 0, static_cast<readdy::scalar>(123.45679012)};
+    readdy::Vec3 forceOnParticle2 {0, 0, static_cast<readdy::scalar>(-123.45679012)};
+    readdy::Vec3 forceOnParticle3 {0, 0, static_cast<readdy::scalar>(123.45679012)};
 
     if(kernel->singlePrecision()) {
         EXPECT_VEC3_NEAR(collectedForces[id0Idx], forceOnParticle0, 1e-4);
         EXPECT_VEC3_NEAR(collectedForces[id1Idx], forceOnParticle1, 1e-4);
+        EXPECT_VEC3_NEAR(collectedForces[id2Idx], forceOnParticle2, 1e-4);
+        EXPECT_VEC3_NEAR(collectedForces[id3Idx], forceOnParticle3, 1e-4);
     } else {
         EXPECT_VEC3_NEAR(collectedForces[id0Idx], forceOnParticle0, 1e-6);
         EXPECT_VEC3_NEAR(collectedForces[id1Idx], forceOnParticle1, 1e-6);
+        EXPECT_VEC3_NEAR(collectedForces[id2Idx], forceOnParticle2, 1e-6);
+        EXPECT_VEC3_NEAR(collectedForces[id3Idx], forceOnParticle3, 1e-6);
     }
 }
 
