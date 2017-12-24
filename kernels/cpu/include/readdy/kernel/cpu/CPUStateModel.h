@@ -128,7 +128,7 @@ public:
     data_type *const getParticleData() {
         return &_data.get();
     };
-    
+
     neighbor_list const *const getNeighborList() const {
         return _neighborList.get();
 

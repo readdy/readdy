@@ -62,6 +62,29 @@ public:
     // factory method
     static readdy::model::Kernel *create();
 
+    const CPUStateModel &getCPUKernelStateModel() const {
+        return _stateModel;
+    };
+
+    CPUStateModel &getCPUKernelStateModel() {
+        return _stateModel;
+    };
+
+    const model::StateModel &stateModel() const override {
+        return _stateModel;
+    };
+
+    model::StateModel &stateModel() override {
+        return _stateModel;
+    };
+
+    const model::actions::ActionFactory &getActionFactory() const override {
+        return _actions;
+    };
+
+    model::actions::ActionFactory &getActionFactory() override {
+        return _actions;
+    };
     void setNThreads(std::uint32_t n) {
         _pool.resize(n);
     };
