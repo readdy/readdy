@@ -32,6 +32,7 @@ LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/observables/CPUObservables.cpp")
 
 # --- neighbor list ---
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/nl/CellLinkedList.cpp")
+LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/nl/ContiguousCellLinkedList.cpp")
 
 # --- actions ---
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/CPUActionFactory.cpp")

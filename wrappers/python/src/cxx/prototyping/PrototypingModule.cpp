@@ -37,8 +37,6 @@ namespace py = pybind11;
 
 using rvp = py::return_value_policy;
 
-void exportActions(py::module &);
-
 void exportModelClasses(py::module &);
 
 void exportPotentials(py::module &);
@@ -53,7 +51,6 @@ using core_action_factory = readdy::model::actions::ActionFactory;
 using core_action_t = readdy::model::actions::Action;
 
 void exportPrototyping(py::module& proto) {
-    exportActions(proto);
     exportModelClasses(proto);
     exportPotentials(proto);
 

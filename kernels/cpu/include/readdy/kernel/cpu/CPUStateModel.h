@@ -79,58 +79,107 @@ public:
 
     const std::vector<particle_type> getParticles() const override;
 
-    void initializeNeighborList(scalar skin, const util::PerformanceNode &node);
+    void initializeNeighborList(scalar skin, const util::PerformanceNode &node) {
+        _neighborList->setUp(skin, _neighborListCellRadius, node.subnode("set_up"));
+    };
 
-    void initializeNeighborList(scalar skin) override;
+    void initializeNeighborList(scalar skin) override {
+        initializeNeighborList(skin, {});
+    };
 
-    void updateNeighborList(const util::PerformanceNode &node);
+    void updateNeighborList(const util::PerformanceNode &node) {
+        _neighborList->update(node.subnode("update"));
+    };
 
-    void updateNeighborList() override;
+    void updateNeighborList() override {
+        updateNeighborList({});
+    };
 
-    void addParticle(const particle_type &p) override;
+    void addParticle(const particle_type &p) override {
+        getParticleData()->addParticle(p);
+    };
 
-    void addParticles(const std::vector<particle_type> &p) override;
+    void addParticles(const std::vector<particle_type> &p) override {
+        getParticleData()->addParticles(p);
+    };
 
-    void removeParticle(const particle_type &p) override;
+    void removeParticle(const particle_type &p) override {
+        getParticleData()->removeParticle(p);
+    };
 
-    void removeAllParticles() override;
+    void removeAllParticles() override {
+        getParticleData()->clear();
+    };
 
-    scalar energy() const override;
+    scalar energy() const override {
+        return _currentEnergy;
+    };
 
-    scalar &energy() override;
+    scalar &energy() override {
+        return _currentEnergy;
+    };
 
-    data_type const *const getParticleData() const;
+    data_type const *const getParticleData() const {
+        return &_data.get();
+    };
 
-    data_type *const getParticleData();
+    data_type *const getParticleData() {
+        return &_data.get();
+    };
+    
+    neighbor_list const *const getNeighborList() const {
+        return _neighborList.get();
 
-    neighbor_list const *const getNeighborList() const;
+    };
 
-    neighbor_list *const getNeighborList();
+    neighbor_list *const getNeighborList() {
+        return _neighborList.get();
+    };
 
-    void clearNeighborList() override;
+    void clearNeighborList() override {
+        clearNeighborList({});
+    };
 
-    void clearNeighborList(const util::PerformanceNode &node);
+    void clearNeighborList(const util::PerformanceNode &node) {
+        _neighborList->clear();
+    };
 
     readdy::model::top::GraphTopology *const
     addTopology(topology_type_type type, const std::vector<readdy::model::TopologyParticle> &particles) override;
 
-    std::vector<readdy::model::reactions::ReactionRecord> &reactionRecords();
+    std::vector<readdy::model::reactions::ReactionRecord> &reactionRecords() {
+        return _reactionRecords;
+    };
 
-    const std::vector<readdy::model::reactions::ReactionRecord> &reactionRecords() const;
+    const std::vector<readdy::model::reactions::ReactionRecord> &reactionRecords() const {
+        return _reactionRecords;
+    };
 
-    const reaction_counts_map & reactionCounts() const;
+    const reaction_counts_map & reactionCounts() const {
+        return _reactionCounts;
+    };
 
-    reaction_counts_map &reactionCounts();
+    reaction_counts_map &reactionCounts() {
+        return _reactionCounts;
+    };
 
     void resetReactionCounts();
 
-    particle_type getParticleForIndex(std::size_t index) const override;
+    particle_type getParticleForIndex(std::size_t index) const override {
+        return _data.get().getParticle(index);
+    };
 
-    particle_type_type getParticleType(std::size_t index) const override;
+    particle_type_type getParticleType(std::size_t index) const override {
+        return _data.get().entry_at(index).type;
+    };
 
-    const topologies_vec &topologies() const;
+    const topologies_vec &topologies() const {
+        return _topologies;
+    };
 
-    topologies_vec &topologies();
+    topologies_vec &topologies() {
+        return _topologies;
+    };
 
     void insert_topology(topology&& top);
 

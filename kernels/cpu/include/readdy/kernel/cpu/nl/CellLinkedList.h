@@ -87,6 +87,8 @@ public:
 
     scalar maxCutoff() const;
 
+    std::size_t cellOfParticle(std::size_t index) const;
+
 protected:
     virtual void setUpBins(const util::PerformanceNode &node) = 0;
 
@@ -167,9 +169,6 @@ public:
     std::size_t nCells() const;
 
     bool cellEmpty(std::size_t index) const;
-
-    std::size_t cellOfParticle(std::size_t index) const;
-
 protected:
     void setUpBins(const util::PerformanceNode &node) override;
 

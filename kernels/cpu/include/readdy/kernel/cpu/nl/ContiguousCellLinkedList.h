@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2017 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -23,33 +23,62 @@
 /**
  * << detailed description >>
  *
- * @file ActionWrap.h
+ * @file ContiguousCellLinkedList.h
  * @brief << brief description >>
  * @author clonker
- * @date 08.08.16
+ * @date 12/24/17
  */
 
-#ifndef READDY_MAIN_ACTIONWRAP_H
-#define READDY_MAIN_ACTIONWRAP_H
 
-#include <readdy/model/actions/Action.h>
-#include <pybind11/pybind11.h>
+#pragma once
 
-namespace py = pybind11;
+#include "CellLinkedList.h"
 
 namespace readdy {
-namespace rpy {
-class PyAction : public readdy::model::actions::Action {
-    using super = readdy::model::actions::Action;
+namespace kernel {
+namespace cpu {
+namespace nl {
+
+class ContiguousCellLinkedList : public CellLinkedList {
 public:
-    using super::Action;
 
-    virtual void perform(const util::PerformanceNode &node) override {
-        py::gil_scoped_acquire gil;
-        PYBIND11_OVERLOAD_PURE(void, readdy::model::actions::Action, perform,)
-    }
+    using count_type = std::size_t;
+    using block_n_particles_type = std::vector<util::thread::copyable_atomic<std::size_t>>;
+
+    ContiguousCellLinkedList(data_type &data, const readdy::model::Context &context,
+                             const util::thread::Config &config);
+
+    void update(const util::PerformanceNode &node) override;
+
+    void clear() override;
+
+    const std::vector<std::size_t> &bins() const;
+
+    const util::Index2D &binsIndex() const;
+
+    std::size_t *particlesBegin(std::size_t cellIndex) override;
+
+    const std::size_t *particlesBegin(std::size_t cellIndex) const override;
+
+    std::size_t *particlesEnd(std::size_t cellIndex) override;
+
+    const std::size_t *particlesEnd(std::size_t cellIndex) const override;
+
+    size_t nParticles(std::size_t cellIndex) const override;
+
+protected:
+    void fillBins(const util::PerformanceNode &node);
+
+private:
+
+    count_type getMaxCounts(const util::PerformanceNode &node);
+
+    util::Index2D _binsIndex;
+    std::vector<std::size_t> _bins;
+    block_n_particles_type _blockNParticles;
 };
-}
-}
 
-#endif //READDY_MAIN_ACTIONWRAP_H
+}
+}
+}
+}

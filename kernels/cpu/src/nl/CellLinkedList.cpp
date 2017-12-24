@@ -181,19 +181,22 @@ scalar CellLinkedList::maxCutoff() const {
     return _max_cutoff;
 }
 
+std::size_t CellLinkedList::cellOfParticle(std::size_t index) const {
+    const auto &entry = data().entry_at(index);
+    if(entry.deactivated) {
+        throw std::invalid_argument("requested deactivated entry");
+    }
+    const auto &boxSize = _context.get().boxSize();
+    const auto i = static_cast<std::size_t>(std::floor((entry.pos.x + .5 * boxSize[0]) / _cellSize.x));
+    const auto j = static_cast<std::size_t>(std::floor((entry.pos.y + .5 * boxSize[1]) / _cellSize.y));
+    const auto k = static_cast<std::size_t>(std::floor((entry.pos.z + .5 * boxSize[2]) / _cellSize.z));
+    return _cellIndex(i, j, k);
+}
+
 CompactCellLinkedList::CompactCellLinkedList(data_type &data, const readdy::model::Context &context,
                                              const util::thread::Config &config) : CellLinkedList(data, context,
                                                                                                   config) {}
 
-void CompactCellLinkedList::update(const util::PerformanceNode &node) {
-    auto t = node.timeit();
-    setUpBins(node.subnode("setUpBins"));
-}
-
-void CompactCellLinkedList::clear() {
-    _head.resize(0);
-    _list.resize(0);
-}
 
 std::size_t *CompactCellLinkedList::particlesBegin(std::size_t /*cellIndex*/) {
     throw std::logic_error("no particlesBegin for CompactCLL");
@@ -464,16 +467,14 @@ MacroBoxIterator CompactCellLinkedList::macroCellParticlesEnd(std::size_t cellIn
     return {*this, cellIndex, nullptr, true};
 }
 
-std::size_t CompactCellLinkedList::cellOfParticle(std::size_t index) const {
-    const auto &entry = data().entry_at(index);
-    if(entry.deactivated) {
-        throw std::invalid_argument("requested deactivated entry");
-    }
-    const auto &boxSize = _context.get().boxSize();
-    const auto i = static_cast<std::size_t>(std::floor((entry.pos.x + .5 * boxSize[0]) / _cellSize.x));
-    const auto j = static_cast<std::size_t>(std::floor((entry.pos.y + .5 * boxSize[1]) / _cellSize.y));
-    const auto k = static_cast<std::size_t>(std::floor((entry.pos.z + .5 * boxSize[2]) / _cellSize.z));
-    return _cellIndex(i, j, k);
+void CompactCellLinkedList::update(const util::PerformanceNode &node) {
+    auto t = node.timeit();
+    setUpBins(node.subnode("setUpBins"));
+}
+
+void CompactCellLinkedList::clear() {
+    _head.resize(0);
+    _list.resize(0);
 }
 
 BoxIterator::BoxIterator(const CompactCellLinkedList &ccll, std::size_t state)
