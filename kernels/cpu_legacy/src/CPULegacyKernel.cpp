@@ -66,24 +66,12 @@ CPUStateModel &CPULegacyKernel::getKernelStateModelInternal() const {
     return *pimpl->stateModel;
 }
 
-readdy::model::observables::ObservableFactory &CPULegacyKernel::getObservableFactoryInternal() const {
-    return *pimpl->observableFactory;
-}
-
 unsigned long CPULegacyKernel::getNThreads() const {
     return pimpl->config->nThreads();
 }
 
 void CPULegacyKernel::setNThreads(readdy::util::thread::Config::n_threads_type n) {
     pimpl->config->setNThreads(n);
-}
-
-readdy::model::actions::ActionFactory &CPULegacyKernel::getActionFactoryInternal() const {
-    return *pimpl->actionFactory;
-}
-
-readdy::model::top::TopologyActionFactory *CPULegacyKernel::getTopologyActionFactoryInternal() const {
-    return pimpl->topologyActionFactory.get();
 }
 
 const CPUStateModel &CPULegacyKernel::getCPULegacyKernelStateModel() const {
@@ -134,6 +122,38 @@ void CPULegacyKernel::finalize() {
 
 const readdy::util::thread::executor_base &CPULegacyKernel::executor() const {
     return *threadConfig().executor();
+}
+
+const model::StateModel &CPULegacyKernel::stateModel() const {
+    return *pimpl->stateModel;
+}
+
+model::StateModel &CPULegacyKernel::stateModel() {
+    return *pimpl->stateModel;
+}
+
+const model::actions::ActionFactory &CPULegacyKernel::getActionFactory() const {
+    return *pimpl->actionFactory;
+}
+
+model::actions::ActionFactory &CPULegacyKernel::getActionFactory() {
+    return *pimpl->actionFactory;
+}
+
+const model::top::TopologyActionFactory *const CPULegacyKernel::getTopologyActionFactory() const {
+    return pimpl->topologyActionFactory.get();
+}
+
+model::top::TopologyActionFactory *const CPULegacyKernel::getTopologyActionFactory() {
+    return pimpl->topologyActionFactory.get();
+}
+
+const model::observables::ObservableFactory &CPULegacyKernel::getObservableFactory() const {
+    return *pimpl->observableFactory;
+}
+
+model::observables::ObservableFactory &CPULegacyKernel::getObservableFactory() {
+    return *pimpl->observableFactory;
 }
 
 CPULegacyKernel::~CPULegacyKernel() = default;

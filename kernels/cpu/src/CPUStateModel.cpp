@@ -84,12 +84,11 @@ void CPUStateModel::removeParticle(const readdy::model::Particle &p) {
     getParticleData()->removeParticle(p);
 }
 
-CPUStateModel::CPUStateModel(const readdy::model::Context &context,
+CPUStateModel::CPUStateModel(data_type &data, const readdy::model::Context &context,
                              readdy::util::thread::Config const *const config,
                              readdy::model::top::TopologyActionFactory const *const taf)
-        : _config(*config), _context(context), _topologyActionFactory(*taf) {
-    _data = std::make_unique<data::DefaultDataContainer>(context, *config);
-    _neighborList = std::make_unique<neighbor_list>(*_data, _context.get(), *config);
+        : _config(*config), _context(context), _topologyActionFactory(*taf), _data(data) {
+    _neighborList = std::make_unique<neighbor_list>(_data.get(), _context.get(), *config);
     _reorderConnection = std::make_unique<readdy::signals::scoped_connection>(
             getParticleData()->registerReorderEventListener([this](const std::vector<std::size_t> &indices) -> void {
                 for (auto &top : _topologies) {
@@ -99,11 +98,11 @@ CPUStateModel::CPUStateModel(const readdy::model::Context &context,
 }
 
 CPUStateModel::data_type const *const CPUStateModel::getParticleData() const {
-    return _data.get();
+    return &_data.get();
 }
 
 CPUStateModel::data_type *const CPUStateModel::getParticleData() {
-    return _data.get();
+    return &_data.get();
 }
 
 CPUStateModel::neighbor_list const *const CPUStateModel::getNeighborList() const {

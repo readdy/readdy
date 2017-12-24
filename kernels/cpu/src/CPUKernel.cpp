@@ -30,9 +30,7 @@
  */
 
 #include <readdy/kernel/cpu/CPUKernel.h>
-#include <readdy/kernel/cpu/actions/CPUActionFactory.h>
-#include <readdy/kernel/cpu/observables/CPUObservableFactory.h>
-#include <readdy/kernel/cpu/actions/topologies/CPUTopologyActionFactory.h>
+
 
 namespace readdy {
 namespace kernel {
@@ -40,67 +38,14 @@ namespace cpu {
 
 const std::string CPUKernel::name = "CPU";
 
-struct CPUKernel::Impl {
-    std::unique_ptr <actions::CPUActionFactory> actionFactory;
-    std::unique_ptr <observables::CPUObservableFactory> observableFactory;
-    std::unique_ptr <CPUStateModel> stateModel;
-    std::unique_ptr <readdy::util::thread::Config> config;
-    std::unique_ptr <readdy::model::top::TopologyActionFactory> topologyActionFactory;
-};
-
 readdy::model::Kernel *CPUKernel::create() {
     return new CPUKernel();
 }
 
-CPUKernel::CPUKernel() : readdy::model::Kernel(name), pimpl(std::make_unique<Impl>()) {
-    pimpl->config = std::make_unique<readdy::util::thread::Config>();
-    pimpl->config->setMode(readdy::util::thread::ThreadMode::pool);
-
-    pimpl->actionFactory = std::make_unique<actions::CPUActionFactory>(this);
-    pimpl->topologyActionFactory = std::make_unique<actions::top::CPUTopologyActionFactory>(this);
-    pimpl->stateModel = std::make_unique<CPUStateModel>(_context, pimpl->config.get(),
-                                                        pimpl->topologyActionFactory.get());
-    pimpl->observableFactory = std::make_unique<observables::CPUObservableFactory>(this);
-}
-
-CPUStateModel &CPUKernel::getKernelStateModelInternal() const {
-    return *pimpl->stateModel;
-}
-
-readdy::model::observables::ObservableFactory &CPUKernel::getObservableFactoryInternal() const {
-    return *pimpl->observableFactory;
-}
-
-unsigned long CPUKernel::getNThreads() const {
-    return pimpl->config->nThreads();
-}
-
-void CPUKernel::setNThreads(readdy::util::thread::Config::n_threads_type n) {
-    pimpl->config->setNThreads(n);
-}
-
-readdy::model::actions::ActionFactory &CPUKernel::getActionFactoryInternal() const {
-    return *pimpl->actionFactory;
-}
-
-readdy::model::top::TopologyActionFactory *CPUKernel::getTopologyActionFactoryInternal() const {
-    return pimpl->topologyActionFactory.get();
-}
-
-const CPUStateModel &CPUKernel::getCPUKernelStateModel() const {
-    return getKernelStateModelInternal();
-}
-
-CPUStateModel &CPUKernel::getCPUKernelStateModel() {
-    return getKernelStateModelInternal();
-}
-
-const readdy::util::thread::Config &CPUKernel::threadConfig() const {
-    return *pimpl->config;
-}
-
-readdy::util::thread::Config &CPUKernel::threadConfig() {
-    return *pimpl->config;
+CPUKernel::CPUKernel() : readdy::model::Kernel(name), _config(), _data(_context, _config), _actions(this),
+                         _observables(this), _topologyActionFactory(_context, _data),
+                         _stateModel(_data, _context, &_config, &_topologyActionFactory){
+    _config.setMode(readdy::util::thread::ThreadMode::pool);
 }
 
 void CPUKernel::initialize() {
@@ -112,34 +57,26 @@ void CPUKernel::initialize() {
     {
         // thread config
         if (configuration.threadConfig.nThreads > 0) {
-            threadConfig().setNThreads(
-                    static_cast<util::thread::Config::n_threads_type>(configuration.threadConfig.nThreads)
-            );
+            threadConfig().setNThreads(static_cast<unsigned int>(configuration.threadConfig.nThreads));
         }
         threadConfig().setMode(util::thread::ThreadMode::pool);
     }
     {
         // state model config
-        getCPUKernelStateModel().configure(configuration);
+        _stateModel.configure(configuration);
     }
-    for (auto &top : getCPUKernelStateModel().topologies()) {
+    for (auto &top : _stateModel.topologies()) {
         top->configure();
         top->updateReactionRates(context().topology_registry().structuralReactionsOf(top->type()));
     }
-    getCPUKernelStateModel().reactionRecords().clear();
-    getCPUKernelStateModel().resetReactionCounts();
+    _stateModel.reactionRecords().clear();
+    _stateModel.resetReactionCounts();
 }
 
 void CPUKernel::finalize() {
     readdy::model::Kernel::finalize();
     threadConfig().setMode(readdy::util::thread::ThreadMode::inactive);
 }
-
-const readdy::util::thread::executor_base &CPUKernel::executor() const {
-    return *threadConfig().executor();
-}
-
-CPUKernel::~CPUKernel() = default;
 
 }
 }

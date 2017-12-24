@@ -69,13 +69,16 @@ class FakeActionFactory : public readdy::model::actions::ActionFactory {
 class KernelMock : public readdy::model::Kernel {
 
 public:
-    KernelMock(const std::string &name) : Kernel(name) {}
+    explicit KernelMock(const std::string &name) : Kernel(name) {}
 
-    MOCK_CONST_METHOD0(getActionFactoryInternal, readdy::model::actions::ActionFactory & (void));
+    MOCK_METHOD0(getActionFactory, readdy::model::actions::ActionFactory &(void));
+    MOCK_CONST_METHOD0(getActionFactory, const readdy::model::actions::ActionFactory & (void));
 
-    MOCK_CONST_METHOD0(getKernelStateModelInternal, readdy::model::StateModel & (void));
+    MOCK_METHOD0(stateModel, readdy::model::StateModel &(void));
+    MOCK_CONST_METHOD0(stateModel, const readdy::model::StateModel & (void));
 
-    MOCK_CONST_METHOD0(getTopologyActionFactoryInternal, readdy::model::top::TopologyActionFactory* (void));
+    MOCK_METHOD0(getTopologyActionFactory, readdy::model::top::TopologyActionFactory*const (void));
+    MOCK_CONST_METHOD0(getTopologyActionFactory, const readdy::model::top::TopologyActionFactory*const (void));
 };
 }
 }

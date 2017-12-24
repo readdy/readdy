@@ -36,6 +36,7 @@
 
 #include <map>
 #include <iostream>
+#include <utility>
 #include <readdy/common/signals.h>
 #include <readdy/model/Plugin.h>
 #include <readdy/model/actions/Action.h>
@@ -67,27 +68,25 @@ public:
     /**
      * Constructs a kernel with a given name.
      */
-    explicit Kernel(const std::string &name);
+    explicit Kernel(std::string name) :_name(std::move(name)), _observableFactory(this), _signal() {};
 
     /**
      * The kernel destructor.
      */
-    ~Kernel() override;
+    ~Kernel() override = default;
 
     Kernel(const Kernel &rhs) = delete;
 
     Kernel &operator=(const Kernel &rhs) = delete;
-
-    Kernel(Kernel &&rhs) noexcept = default;
-
-    Kernel &operator=(Kernel &&rhs) noexcept = default;
 
     /**
      * This method returns the name of the kernel.
      *
      * @return The name
      */
-    const std::string &getName() const override;
+    const std::string &getName() const override {
+        return _name;
+    };
 
     template<typename ActionType, typename... Args>
     std::unique_ptr<ActionType> createAction(Args &&... args) const {
@@ -109,18 +108,29 @@ public:
      *
      * @return A connection object that, once deleted, releases the connection of the observable.
      */
-    virtual readdy::signals::scoped_connection connectObservable(observables::ObservableBase *observable);
+    virtual readdy::signals::scoped_connection connectObservable(observables::ObservableBase *observable) {
+        observable->initialize(this);
+        return _signal.connect_scoped([observable](const time_step_type t) {
+            observable->callback(t);
+        });
+    };
 
     /**
      * Evaluates all observables.
      */
-    virtual void evaluateObservables(time_step_type t);
+    virtual void evaluateObservables(time_step_type t) {
+        _signal(t);
+    };
 
     /**
      * Registers an observable to the kernel signal.
      */
     virtual std::tuple<std::unique_ptr<observables::ObservableWrapper>, readdy::signals::scoped_connection>
-    registerObservable(const observables::observable_type &observable, unsigned int stride);
+    registerObservable(const observables::observable_type &observable, unsigned int stride) {
+        auto &&wrap = std::make_unique<observables::ObservableWrapper>(this, observable, stride);
+        auto &&connection = connectObservable(wrap.get());
+        return std::make_tuple(std::move(wrap), std::move(connection));
+    };
 
 
     /**
@@ -136,13 +146,23 @@ public:
     /**
      * Adds a particle of the type "type" at position "pos".
      */
-    readdy::model::Particle::id_type addParticle(const std::string &type, const Vec3 &pos);
+    readdy::model::Particle::id_type addParticle(const std::string &type, const Vec3 &pos) {
+        readdy::model::Particle particle {pos[0], pos[1], pos[2], context().particle_types().idOf(type)};
+        stateModel().addParticle(particle);
+        return particle.getId();
+    };
 
-    TopologyParticle createTopologyParticle(const std::string &type, const Vec3 &pos) const;
+    TopologyParticle createTopologyParticle(const std::string &type, const Vec3 &pos) const {
+        const auto& info = context().particle_types().infoOf(type);
+        if(info.flavor != particleflavor::TOPOLOGY) {
+            throw std::invalid_argument("You can only create topology particles of a type that is topology flavored.");
+        }
+        return TopologyParticle(pos, info.typeId);
+    };
 
     template<typename T, typename Obs1, typename Obs2>
     inline std::unique_ptr<T> createCombinedObservable(Obs1 *obs1, Obs2 *obs2, unsigned int stride = 1) const {
-        return getObservableFactory().create(obs1, obs2, stride);
+        return _observableFactory.create(obs1, obs2, stride);
     }
 
     template<typename R, typename... Args>
@@ -150,7 +170,9 @@ public:
         return getObservableFactory().create(stride, std::forward<Args>(args)...);
     }
 
-    bool supportsTopologies() const;
+    bool supportsTopologies() const {
+        return getTopologyActionFactory() != nullptr;
+    };
 
     /*
      * 
@@ -158,29 +180,40 @@ public:
      * 
      */
 
-    const readdy::model::StateModel &stateModel() const;
+    virtual const readdy::model::StateModel &stateModel() const = 0;
 
-    readdy::model::StateModel &stateModel();
+    virtual readdy::model::StateModel &stateModel() = 0;
 
-    const readdy::model::Context &context() const;
+    const readdy::model::Context &context() const {
+        return _context;
+    };
 
-    readdy::model::Context &context();
+    readdy::model::Context &context() {
+        return _context;
+    };
 
-    const readdy::model::actions::ActionFactory &getActionFactory() const;
+    virtual const readdy::model::actions::ActionFactory &getActionFactory() const = 0;
 
-    readdy::model::actions::ActionFactory &getActionFactory();
+    virtual readdy::model::actions::ActionFactory &getActionFactory() = 0;
 
-    const readdy::model::observables::ObservableFactory &getObservableFactory() const;
+    virtual const readdy::model::observables::ObservableFactory &getObservableFactory() const {
+        return _observableFactory;
+    };
 
-    readdy::model::observables::ObservableFactory &getObservableFactory();
+    virtual readdy::model::observables::ObservableFactory &getObservableFactory() {
+        return _observableFactory;
+    };
 
-    const readdy::model::top::TopologyActionFactory *const getTopologyActionFactory() const;
+    virtual const readdy::model::top::TopologyActionFactory *const getTopologyActionFactory() const = 0;
 
-    readdy::model::top::TopologyActionFactory *const getTopologyActionFactory();
+    virtual readdy::model::top::TopologyActionFactory *const getTopologyActionFactory() = 0;
 
-    virtual void initialize();
+    virtual void initialize() {
+        context().configure();
+        log::debug(context().describe());
+    };
 
-    virtual void finalize();
+    virtual void finalize() {};
 
     bool singlePrecision() const noexcept {
         return readdy::single_precision;
@@ -192,23 +225,10 @@ public:
 
 protected:
 
-    particle_type_type getTypeId(const std::string& name) const;
-
-    particle_type_type getTypeIdRequireNormalFlavor(const std::string &) const;
-
-    virtual readdy::model::StateModel &getKernelStateModelInternal() const = 0;
-
-    virtual readdy::model::actions::ActionFactory &getActionFactoryInternal() const = 0;
-
-    virtual readdy::model::observables::ObservableFactory &getObservableFactoryInternal() const;
-
-    virtual readdy::model::top::TopologyActionFactory *getTopologyActionFactoryInternal() const = 0;
-
-
     model::Context _context;
-
-    struct Impl;
-    std::unique_ptr<Impl> pimpl;
+    std::string _name;
+    observables::signal_type _signal;
+    observables::ObservableFactory _observableFactory;
 };
 
 NAMESPACE_END(model)

@@ -32,7 +32,11 @@
 #pragma once
 
 #include <readdy/model/Kernel.h>
+
 #include "CPUStateModel.h"
+#include "observables/CPUObservableFactory.h"
+#include "actions/CPUActionFactory.h"
+#include "actions/topologies/CPUTopologyActionFactory.h"
 
 namespace readdy {
 namespace kernel {
@@ -44,7 +48,7 @@ public:
 
     CPUKernel();
 
-    ~CPUKernel() override;
+    ~CPUKernel() override = default;
 
     CPUKernel(const CPUKernel &) = delete;
 
@@ -57,19 +61,65 @@ public:
     // factory method
     static readdy::model::Kernel *create();
 
-    unsigned long getNThreads() const;
+    unsigned long getNThreads() const {
+        return _config.nThreads();
+    };
 
-    void setNThreads(readdy::util::thread::Config::n_threads_type n);
+    void setNThreads(readdy::util::thread::Config::n_threads_type n) {
+        _config.setNThreads(n);
+    };
 
-    const CPUStateModel &getCPUKernelStateModel() const;
+    const CPUStateModel &getCPUKernelStateModel() const {
+        return _stateModel;
+    };
 
-    CPUStateModel &getCPUKernelStateModel();
+    CPUStateModel &getCPUKernelStateModel() {
+        return _stateModel;
+    };
 
-    const readdy::util::thread::Config &threadConfig() const;
+    const model::StateModel &stateModel() const override {
+        return _stateModel;
+    };
 
-    readdy::util::thread::Config &threadConfig();
+    model::StateModel &stateModel() override {
+        return _stateModel;
+    };
 
-    const readdy::util::thread::executor_base &executor() const;
+    const model::actions::ActionFactory &getActionFactory() const override {
+        return _actions;
+    };
+
+    model::actions::ActionFactory &getActionFactory() override {
+        return _actions;
+    };
+
+    const model::top::TopologyActionFactory *const getTopologyActionFactory() const override {
+        return &_topologyActionFactory;
+    };
+
+    model::top::TopologyActionFactory *const getTopologyActionFactory() override {
+        return &_topologyActionFactory;
+    };
+
+    const readdy::util::thread::Config &threadConfig() const {
+        return _config;
+    };
+
+    readdy::util::thread::Config &threadConfig() {
+        return _config;
+    };
+
+    const readdy::util::thread::executor_base &executor() const {
+        return *threadConfig().executor();
+    };
+
+    const model::observables::ObservableFactory &getObservableFactory() const override {
+        return _observables;
+    };
+
+    model::observables::ObservableFactory &getObservableFactory() override {
+        return _observables;
+    };
 
     void initialize() override;
 
@@ -77,16 +127,13 @@ public:
 
 protected:
 
-    readdy::model::observables::ObservableFactory &getObservableFactoryInternal() const override;
+    readdy::util::thread::Config _config;
+    CPUStateModel::data_type _data;
+    actions::CPUActionFactory _actions;
+    observables::CPUObservableFactory _observables;
+    actions::top::CPUTopologyActionFactory _topologyActionFactory;
+    CPUStateModel _stateModel;
 
-    CPUStateModel &getKernelStateModelInternal() const override;
-
-    readdy::model::actions::ActionFactory &getActionFactoryInternal() const override;
-
-    readdy::model::top::TopologyActionFactory *getTopologyActionFactoryInternal() const override;
-
-    struct Impl;
-    std::unique_ptr<Impl> pimpl;
 };
 
 }

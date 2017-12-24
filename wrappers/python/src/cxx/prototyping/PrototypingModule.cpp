@@ -30,12 +30,8 @@
  */
 
 #include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-#include <pybind11/functional.h>
 
 #include <readdy/kernel/singlecpu/SCPUKernel.h>
-#include "KernelWrap.h"
-#include "../api/PyFunction.h"
 
 namespace py = pybind11;
 
@@ -53,7 +49,6 @@ using model = scpu::SCPUStateModel;
 using scpu_kernel_t = scpu::SCPUKernel;
 
 using core_kernel_t = readdy::model::Kernel;
-using core_kernel_wrap_t = readdy::rpy::KernelWrap;
 using core_action_factory = readdy::model::actions::ActionFactory;
 using core_action_t = readdy::model::actions::Action;
 

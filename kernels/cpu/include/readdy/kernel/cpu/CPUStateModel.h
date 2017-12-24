@@ -63,7 +63,7 @@ public:
     using topologies_vec = readdy::util::index_persistent_vector<topology_ref>;
     using neighbor_list = nl::CompactCellLinkedList;
 
-    CPUStateModel(const readdy::model::Context &context, readdy::util::thread::Config const* config,
+    CPUStateModel(data_type &data, const readdy::model::Context &context, readdy::util::thread::Config const* config,
                   readdy::model::top::TopologyActionFactory const* taf);
 
     ~CPUStateModel() override;
@@ -143,7 +143,7 @@ public:
 private:
     std::reference_wrapper<const readdy::util::thread::Config> _config;
     std::reference_wrapper<const readdy::model::Context> _context;
-    std::unique_ptr<data::DefaultDataContainer> _data;
+    std::reference_wrapper<data_type> _data;
     std::unique_ptr<neighbor_list> _neighborList;
     neighbor_list::cell_radius_type _neighborListCellRadius {1};
     std::unique_ptr<readdy::signals::scoped_connection> _reorderConnection;

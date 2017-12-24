@@ -32,6 +32,8 @@
 #pragma once
 #include <array>
 #include <cmath>
+#include <string>
+#include <ostream>
 #include <readdy/common/common.h>
 
 NAMESPACE_BEGIN(readdy)
@@ -47,55 +49,131 @@ public:
         data_arr data;
     };
 
-    ReaDDyVec3();
+    ReaDDyVec3() : ReaDDyVec3(0, 0, 0) { };
 
-    ReaDDyVec3(scalar x, scalar y, scalar z);
+    ReaDDyVec3(scalar x, scalar y, scalar z) : x(x), y(y), z(z) {};
 
-    explicit ReaDDyVec3(const data_arr &xyz);
+    explicit ReaDDyVec3(const data_arr &xyz) : data(xyz) {};
 
-    ReaDDyVec3 &operator+=(const ReaDDyVec3 &rhs);
+    ReaDDyVec3 &operator+=(const ReaDDyVec3 &rhs) {
+        for(auto i=0; i < 3; ++i) { data[i] += rhs[i]; }
+        return *this;
+    };
 
-    ReaDDyVec3 &operator-=(const ReaDDyVec3 &rhs);
+    ReaDDyVec3 &operator-=(const ReaDDyVec3 &rhs) {
+        for(auto i=0; i < 3; ++i) {
+            data[i] -= rhs.data[i];
+        }
+        return *this;
+    };
 
-    ReaDDyVec3 &operator*=(scalar a);
+    ReaDDyVec3 &operator*=(scalar a) {
+        for(auto i=0; i < 3; ++i) { data[i] *= a; }
+        return *this;
+    };
 
-    ReaDDyVec3 &operator/=(scalar a);
+    ReaDDyVec3 &operator/=(scalar a) {
+        for(auto i=0; i < 3; ++i) { data[i] /= a; }
+        return *this;
+    };
 
-    ReaDDyVec3 cross(const ReaDDyVec3&) const;
+    ReaDDyVec3 cross(const ReaDDyVec3 &other) const {
+        return {
+                data[1] * other.data[2] - data[2] * other.data[1],
+                data[2] * other.data[0] - data[0] * other.data[2],
+                data[0] * other.data[1] - data[1] * other.data[0]
+        };
+    };
 
-    scalar norm() const;
+    scalar norm() const {
+        return std::sqrt(normSquared());
+    };
 
-    scalar normSquared() const;
+    scalar normSquared() const {
+        scalar result {0};
+        for(auto i=0; i < 3; ++i) { result += data[i]*data[i]; }
+        return result;
+    };
 
-    scalar operator[](unsigned int i) const;
+    scalar operator[](unsigned int i) const {
+        return data[i];
+    };
 
-    scalar &operator[](unsigned int i);
+    scalar &operator[](unsigned int i) {
+        return data[i];
+    };
 
-    ReaDDyVec3& invertElementWise();
+    ReaDDyVec3& invertElementWise() {
+        for(auto i=0; i < 3; ++i) {
+            data[i] = static_cast<scalar>(1.) / data[i];
+        }
+        return *this;
+    };
 
-    bool operator==(const ReaDDyVec3 &rhs) const;
+    bool operator==(const ReaDDyVec3 &rhs) const {
+        bool result {true};
+        for(auto i=0; i < 3; ++i) { result &= data[i] == rhs[i]; }
+        return result;
+    };
 
-    bool operator!=(const ReaDDyVec3 &rhs) const;
+    bool operator!=(const ReaDDyVec3 &rhs) const {
+        bool result {true};
+        for(auto i=0; i < 3; ++i) { result &= data[i] != rhs[i]; }
+        return result;
+    };
 
-    friend std::ostream &operator<<(std::ostream &, const ReaDDyVec3 &);
+    friend std::ostream &operator<<(std::ostream &os, const ReaDDyVec3 &vec) {
+        os << "ReaDDyVec3(" << vec[0] << ", " << vec[1] << ", " << vec[2] << ")";
+        return os;
+    };
 
-    friend ReaDDyVec3 operator+(const ReaDDyVec3 &lhs, const ReaDDyVec3 &rhs);
+    friend ReaDDyVec3 operator+(const ReaDDyVec3 &lhs, const ReaDDyVec3 &rhs) {
+        auto result = ReaDDyVec3(lhs);
+        result += rhs;
+        return result;
+    };
 
-    friend ReaDDyVec3 operator+(const ReaDDyVec3 &lhs, scalar rhs);
+    friend ReaDDyVec3 operator+(const ReaDDyVec3 &lhs, scalar rhs) {
+        auto copy = ReaDDyVec3(lhs);
+        for(auto i=0U; i < 3; ++i) copy[i] += rhs;
+        return copy;
+    };
 
-    friend ReaDDyVec3 operator-(const ReaDDyVec3 &lhs, const ReaDDyVec3 &rhs);
+    friend ReaDDyVec3 operator-(const ReaDDyVec3 &lhs, const ReaDDyVec3 &rhs) {
+        auto copy = ReaDDyVec3(lhs);
+        copy -= rhs;
+        return copy;
+    };
 
-    friend ReaDDyVec3 operator-(const ReaDDyVec3 &lhs, scalar rhs);
+    friend ReaDDyVec3 operator-(const ReaDDyVec3 &lhs, scalar rhs) {
+        return lhs + (-1 * rhs);
+    };
 
-    friend ReaDDyVec3 operator/(const ReaDDyVec3 &lhs, scalar rhs);
+    friend ReaDDyVec3 operator/(const ReaDDyVec3 &lhs, scalar rhs) {
+        auto copy = ReaDDyVec3(lhs);
+        for(auto i=0U; i < 3; ++i) copy[i] /= rhs;
+        return copy;
+    };
 
-    friend bool operator>=(const ReaDDyVec3 &lhs, const ReaDDyVec3 &rhs);
+    friend bool operator>=(const ReaDDyVec3 &lhs, const ReaDDyVec3 &rhs) {
+        bool result {true};
+        for(auto i=0; i < 3; ++i) { result &= lhs[i] >= rhs[i]; }
+        return result;
+    };
 
-    friend bool operator<=(const ReaDDyVec3 &lhs, const ReaDDyVec3 &rhs);
+    friend bool operator<=(const ReaDDyVec3 &lhs, const ReaDDyVec3 &rhs) {
+        bool result {true};
+        for(auto i=0; i < 3; ++i) { result &= lhs[i] <= rhs[i]; }
+        return result;
+    };
 
-    friend bool operator>(const ReaDDyVec3 &lhs, const ReaDDyVec3 &rhs);
+    friend bool operator>(const ReaDDyVec3 &lhs, const ReaDDyVec3 &rhs) {
+        return !(lhs <= rhs);
+    };
 
-    friend bool operator<(const ReaDDyVec3 &lhs, const ReaDDyVec3 &rhs);
+    friend bool operator<(const ReaDDyVec3 &lhs, const ReaDDyVec3 &rhs) {
+        return !(lhs >= rhs);
+    };
 
 };
 

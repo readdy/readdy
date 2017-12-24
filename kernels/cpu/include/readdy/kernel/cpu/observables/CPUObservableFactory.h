@@ -42,7 +42,7 @@ namespace observables {
 class CPUObservableFactory : public readdy::model::observables::ObservableFactory {
 
 public:
-    CPUObservableFactory(CPUKernel* kernel);
+    explicit CPUObservableFactory(CPUKernel* kernel);
 
     readdy::model::observables::NParticles *
     createNParticles(unsigned int stride, std::vector<std::string> typesToCount = {}) const override;
