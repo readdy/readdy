@@ -47,6 +47,9 @@ void ContiguousCellLinkedList::fillBins(const util::PerformanceNode &node) {
     std::for_each(_blockNParticles.begin(), _blockNParticles.end(), [](auto &x) { *x = 0; });
 
     auto maxParticlesPerCell = getMaxCounts(node.subnode("getMaxCounts"));
+    if(maxParticlesPerCell == 0) {
+        _binsIndex = util::Index2D(nCells, 0_z);
+    }
     _binsIndex = util::Index2D(nCells, maxParticlesPerCell);
     _bins.resize(0);
     _bins.resize(_binsIndex.size());
@@ -108,23 +111,15 @@ ContiguousCellLinkedList::count_type ContiguousCellLinkedList::getMaxCounts(cons
     const auto &cellIndex = _cellIndex;
     auto nCells = cellIndex.size();
 
-
-    std::vector<count_type> blockCounts;
-    {
-        // initialize blockCounts
-        blockCounts.resize(nCells);
-    }
-
-    std::vector<std::future<std::vector<count_type>>> updates;
-    updates.reserve(_config.get().nThreads());
+    block_n_particles_type blockNParticles;
+    blockNParticles.resize(nCells);
+    std::for_each(blockNParticles.begin(), blockNParticles.end(), [](auto &x) { *x = 0; });
 
     {
-        auto worker = [&data, cellIndex, cellSize, boxSize, nCells]
-                (std::size_t tid, std::size_t begin_pidx, std::size_t end_pidx, auto &promise) {
+        auto worker = [&data, cellIndex, cellSize, boxSize, nCells, &blockNParticles]
+                (std::size_t tid, std::size_t begin_pidx, std::size_t end_pidx) {
             std::vector<count_type> cellCounts;
             cellCounts.resize(nCells);
-
-            count_type localMax{0};
 
             auto it = data.begin() + begin_pidx;
             while (it != data.begin() + end_pidx) {
@@ -133,39 +128,28 @@ ContiguousCellLinkedList::count_type ContiguousCellLinkedList::getMaxCounts(cons
                     const auto i = static_cast<std::size_t>(std::floor((entry.pos.x + .5 * boxSize[0]) / cellSize.x));
                     const auto j = static_cast<std::size_t>(std::floor((entry.pos.y + .5 * boxSize[1]) / cellSize.y));
                     const auto k = static_cast<std::size_t>(std::floor((entry.pos.z + .5 * boxSize[2]) / cellSize.z));
-                    const auto cix = cellIndex(i, j, k);
-                    ++cellCounts.at(cix);
-                    localMax = std::max(localMax, cellCounts.at(cix));
+                    (*blockNParticles.at(cellIndex(i, j, k)))++;
                 }
                 ++it;
             }
 
-            promise.set_value(std::move(cellCounts));
-
         };
 
-        std::vector<std::promise<std::vector<count_type>>> promises;
-        promises.resize(_config.get().nThreads());
         std::vector<std::function<void(std::size_t)>> executables;
         executables.reserve(_config.get().nThreads());
         auto it = 0_z;
         for (std::size_t i = 0; i < _config.get().nThreads() - 1; ++i) {
-            updates.push_back(promises.at(i).get_future());
-            executables.push_back(executor.pack(worker, it, it + grainSize, std::ref(promises.at(i))));
+            executables.push_back(executor.pack(worker, it, it + grainSize));
             it += grainSize;
         }
-        updates.push_back(promises.back().get_future());
-        executables.push_back(executor.pack(worker, it, data.size(), std::ref(promises.back())));
+        executables.push_back(executor.pack(worker, it, data.size()));
         executor.execute_and_wait(std::move(executables));
     }
 
-    for(auto &update : updates) {
-        auto counts = update.get();
-        std::transform(blockCounts.begin(), blockCounts.end(), counts.begin(), blockCounts.begin(), std::plus<>());
-    }
-    auto maxCounts = *std::max_element(blockCounts.begin(), blockCounts.end());
-    log::debug("found cell with {} particles", maxCounts);
-    return maxCounts;
+    auto maxCounts = *std::max_element(blockNParticles.begin(), blockNParticles.end(),
+                                       [](const auto& n1, const auto &n2) -> bool { return *n1 < *n2; });
+    log::debug("found cell with {} particles", *maxCounts);
+    return *maxCounts;
 }
 
 }

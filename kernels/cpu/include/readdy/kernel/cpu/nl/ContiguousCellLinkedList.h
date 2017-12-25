@@ -69,19 +69,19 @@ public:
     };
 
     std::size_t *particlesBegin(std::size_t cellIndex) override {
-        return &_bins.at(_binsIndex(cellIndex, 0_z));
+        return !_bins.empty() ? &_bins.at(_binsIndex(cellIndex, 0_z)) : nullptr;
     }
 
     const std::size_t *particlesBegin(std::size_t cellIndex) const override {
-        return &_bins.at(_binsIndex(cellIndex, 0_z));
+        return !_bins.empty() ? &_bins.at(_binsIndex(cellIndex, 0_z)) : nullptr;
     };
 
     std::size_t *particlesEnd(std::size_t cellIndex) override {
-        return particlesBegin(cellIndex) + nParticles(cellIndex);
+        return !_bins.empty() ? particlesBegin(cellIndex) + nParticles(cellIndex) : nullptr;
     };
 
     const std::size_t *particlesEnd(std::size_t cellIndex) const override {
-        return particlesBegin(cellIndex) + nParticles(cellIndex);
+        return !_bins.empty() ? particlesBegin(cellIndex) + nParticles(cellIndex) : nullptr;
     };
 
     size_t nParticles(std::size_t cellIndex) const override {

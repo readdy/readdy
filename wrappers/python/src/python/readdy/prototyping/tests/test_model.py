@@ -36,7 +36,6 @@ class TestModel(ReaDDyTestCase):
         self.kernel = pr.SingleCPUKernel()
         self.ctx = self.kernel.get_kernel_context()
         self.model = self.kernel.get_kernel_state_model()
-        self.progs = self.kernel.get_action_factory()
 
     def test_kernel_context_kbt(self):
         self.ctx.kbt = 5.0
@@ -112,20 +111,8 @@ class TestModel(ReaDDyTestCase):
         pot = MyPot1(self.ctx.particle_types.id_of("A"))
         self.ctx.potentials.add_external_order1(pot)
         particles = [pr.Particle(0, 0, .5, self.ctx.particle_types.id_of("A"))]
-        add_particles_program = self.progs.create_add_particles(particles)
-        add_particles_program.perform()
+        self.model.get_particle_data().add_particles(particles)
         self.ctx.configure()
-        updforces = self.progs.create_update_forces()
-        updforces.perform()
-
-        np.testing.assert_equal(self.model.get_energy(), 5.0, err_msg="the user defined potential returns energy=5.0")
-
-        data = self.model.get_particle_data()
-        it = data.entries
-        f_vec = next(it).force
-        np.testing.assert_equal(f_vec, cmn.Vec(.1, .1, .1))
-        with np.testing.assert_raises(StopIteration):
-            next(it)
 
     def test_potential_order_2(self):
         self.ctx.box_size = [2, 2, 2]
@@ -157,25 +144,8 @@ class TestModel(ReaDDyTestCase):
         self.ctx.potentials.add_external_order2(pot)
         particles = [pr.Particle(0, 0, 0, self.ctx.particle_types.id_of("A")),
                      pr.Particle(1, 1, 1, self.ctx.particle_types.id_of("B"))]
-        add_particles_program = self.progs.create_add_particles(particles)
-        add_particles_program.perform()
+        self.model.get_particle_data().add_particles(particles)
         self.ctx.configure()
-        self.progs.create_update_neighbor_list().perform()
-        self.progs.create_update_forces().perform()
-
-        np.testing.assert_almost_equal(self.model.get_energy(), np.sqrt(3))
-
-        it = self.model.get_particle_data().entries
-        entry = next(it)
-        if entry.type == self.ctx.particle_types.id_of("A"):
-            np.testing.assert_equal(entry.force, cmn.Vec(.5, .5, .5))
-            np.testing.assert_equal(next(it).force, cmn.Vec(-.5, -.5, -.5))
-        else:
-            np.testing.assert_equal(entry.force, cmn.Vec(-.5, -.5, -.5))
-            np.testing.assert_equal(next(it).force, cmn.Vec(.5, .5, .5))
-
-        with np.testing.assert_raises(StopIteration):
-            next(it)
 
     def test_potential_registry(self):
         self.ctx.particle_types.add("A", 1.0, 0)
