@@ -102,6 +102,7 @@ TEST(TestNeighborListIterator, BoxIteratorEmptyBox) {
     context.configure();
 
     ccll.setUp(0, 1, {});
+    ccll.update({});
 
     {
         std::size_t nNonemptyCells {0};

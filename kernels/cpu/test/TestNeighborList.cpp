@@ -271,22 +271,21 @@ TEST(TestNeighborListImpl, Diffusion) {
                 const auto neighbor_list = kernel->getCPUKernelStateModel().getNeighborList();
 
                 for(std::size_t cell = 0; cell < neighbor_list->nCells(); ++cell) {
-                    for(auto it = neighbor_list->cellNeighborsBegin(cell); it != neighbor_list->cellNeighborsEnd(cell);
-                        ++it) {
-                        const auto &entry = neighbor_list->data().entry_at(it.currentParticle());
+                    for(auto itParticle = neighbor_list->particlesBegin(cell); itParticle <= neighbor_list->particlesEnd(cell); ++itParticle) {
+                        const auto &entry = neighbor_list->data().entry_at(*itParticle);
                         ASSERT_FALSE(entry.deactivated);
 
                         std::vector<std::size_t> neighbors;
-                        for (auto itNeigh = it.neighborsBegin(); itNeigh != it.neighborsEnd(); ++itNeigh) {
-                            const auto &neighborEntry = neighbor_list->data().entry_at(*itNeigh);
+                        neighbor_list->forEachNeighbor(*itParticle, [&](auto neighborIdx) {
+                            const auto &neighborEntry = neighbor_list->data().entry_at(neighborIdx);
                             ASSERT_FALSE(neighborEntry.deactivated);
-                            neighbors.push_back(*itNeigh);
-                        }
+                            neighbors.push_back(neighborIdx);
+                        });
 
                         std::size_t pidx = 0;
                         for(const auto &e : neighbor_list->data()) {
                             ASSERT_FALSE(e.deactivated);
-                            if (pidx != it.currentParticle() && d2(entry.pos, e.pos) < cutoff * cutoff) {
+                            if (pidx != *itParticle && d2(entry.pos, e.pos) < cutoff * cutoff) {
                                 ASSERT_TRUE(std::find(neighbors.begin(), neighbors.end(), pidx) != neighbors.end());
                             }
                             ++pidx;

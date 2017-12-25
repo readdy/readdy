@@ -46,7 +46,8 @@ namespace reactions {
 using data_t = data::EntryDataContainer;
 using event_t = Event;
 using data_iter_t = data_t::const_iterator;
-using neighbor_list = nl::CompactCellLinkedList;
+using neighbor_list = CPUStateModel::neighbor_list;
+using nl_bounds = std::tuple<std::size_t, std::size_t>;
 using entry_type = data_t::Entries::value_type;
 
 using event_future_t = std::future<std::vector<event_t>>;
@@ -57,7 +58,7 @@ CPUUncontrolledApproximation::CPUUncontrolledApproximation(CPUKernel *const kern
 
 }
 
-void findEvents(std::size_t /*tid*/, data_iter_t begin, data_iter_t end, neighbor_list::iterator_bounds nlBounds,
+void findEvents(std::size_t /*tid*/, data_iter_t begin, data_iter_t end, nl_bounds nlBounds,
                 const CPUKernel *const kernel, scalar dt, bool approximateRate, const neighbor_list &nl,
                 event_promise_t &events, std::promise<std::size_t> &n_events) {
     std::vector<event_t> eventsUpdate;
@@ -84,14 +85,15 @@ void findEvents(std::size_t /*tid*/, data_iter_t begin, data_iter_t end, neighbo
         }
     }
     for(auto cell = std::get<0>(nlBounds); cell != std::get<1>(nlBounds); ++cell) {
-        for(auto pairIt = nl.cellNeighborsBegin(cell); pairIt != nl.cellNeighborsEnd(cell); ++pairIt) {
-            const auto &entry = data.entry_at(*pairIt);
+        for(auto particleIt = nl.particlesBegin(cell); particleIt != nl.particlesEnd(cell); ++particleIt) {
+            const auto &entry = data.entry_at(*particleIt);
             if(entry.deactivated) {
                 log::critical("deactivated entry in uncontrolled approximation!");
                 continue;
             }
-            for(auto itNeighbors = pairIt.neighborsBegin(); itNeighbors != pairIt.neighborsEnd(); ++itNeighbors) {
-                const auto &neighbor = data.entry_at(*itNeighbors);
+
+            nl.forEachNeighbor(*particleIt, cell, [&](const auto neighborIdx) {
+                const auto &neighbor = data.entry_at(neighborIdx);
                 if(!neighbor.deactivated) {
                     const auto &reactions = kernel->context().reactions().order2ByType(entry.type, neighbor.type);
                     if (!reactions.empty()) {
@@ -103,15 +105,13 @@ void findEvents(std::size_t /*tid*/, data_iter_t begin, data_iter_t end, neighbo
                                 && shouldPerformEvent(rate, dt, approximateRate)) {
                                 const auto reaction_index = static_cast<event_t::reaction_index_type>(it_reactions -
                                                                                                       reactions.begin());
-                                eventsUpdate.emplace_back(2, react->nProducts(), *pairIt, *itNeighbors,
+                                eventsUpdate.emplace_back(2, react->nProducts(), *particleIt, neighborIdx,
                                                           rate, 0, reaction_index, entry.type, neighbor.type);
                             }
                         }
                     }
                 }
-
-            }
-
+            });
         }
     }
 

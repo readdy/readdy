@@ -46,6 +46,7 @@
 #include <readdy/api/KernelConfiguration.h>
 #include <readdy/kernel/cpu/data/DefaultDataContainer.h>
 #include <readdy/kernel/cpu/nl/CellLinkedList.h>
+#include <readdy/kernel/cpu/nl/ContiguousCellLinkedList.h>
 
 namespace readdy {
 namespace kernel {
@@ -61,7 +62,7 @@ public:
     using topology = readdy::model::top::GraphTopology;
     using topology_ref = std::unique_ptr<topology>;
     using topologies_vec = readdy::util::index_persistent_vector<topology_ref>;
-    using neighbor_list = nl::CompactCellLinkedList;
+    using neighbor_list = nl::ContiguousCellLinkedList;
 
     CPUStateModel(data_type &data, const readdy::model::Context &context, readdy::util::thread::Config const* config,
                   readdy::model::top::TopologyActionFactory const* taf);
@@ -81,6 +82,7 @@ public:
 
     void initializeNeighborList(scalar skin, const util::PerformanceNode &node) {
         _neighborList->setUp(skin, _neighborListCellRadius, node.subnode("set_up"));
+        _neighborList->update(node.subnode("update"));
     };
 
     void initializeNeighborList(scalar skin) override {

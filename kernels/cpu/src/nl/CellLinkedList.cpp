@@ -376,7 +376,8 @@ void CompactCellLinkedList::forEachParticlePairParallel(const pair_callback &f) 
 }
 
 BoxIterator CompactCellLinkedList::cellParticlesBegin(std::size_t cellIndex) const {
-
+    auto head = (*_head.at(cellIndex)).load();
+    return {*this, head};
 }
 
 BoxIterator CompactCellLinkedList::cellParticlesEnd(std::size_t) const {

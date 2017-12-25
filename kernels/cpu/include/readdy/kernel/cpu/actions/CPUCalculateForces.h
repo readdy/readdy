@@ -158,16 +158,15 @@ protected:
             //
             if(!pot2.empty()) {
                 for(auto cell = std::get<0>(nlBounds); cell < std::get<1>(nlBounds); ++cell) {
-                    for(auto pairIt = nl.cellNeighborsBegin(cell); pairIt != nl.cellNeighborsEnd(cell); ++pairIt) {
-                        const auto &particleIndex = pairIt.currentParticle();
-                        auto &entry = data->entry_at(particleIndex);
+                    for(auto particleIt = nl.particlesBegin(cell); particleIt != nl.particlesEnd(cell); ++particleIt) {
+                        auto &entry = data->entry_at(*particleIt);
                         if(entry.deactivated) {
                             log::critical("deactivated particle in neighbor list!");
                             continue;
                         }
-                        for(auto itNeighbors = pairIt.neighborsBegin(); itNeighbors != pairIt.neighborsEnd();
-                            ++itNeighbors) {
-                            auto &neighbor = data->entry_at(*itNeighbors);
+
+                        nl.forEachNeighbor(*particleIt, cell, [&](auto neighborIndex) {
+                            auto &neighbor = data->entry_at(neighborIndex);
                             if (!neighbor.deactivated) {
                                 auto &force = entry.force;
                                 const auto &myPos = entry.pos;
@@ -192,10 +191,9 @@ protected:
                                 // Thus every particle pair potential is seen twice
                                 energyUpdate += 0.5 * mySecondOrderEnergy;
                             } else {
-                                log::critical("disabled neighbour, pun intended");
+                                log::critical("disabled neighbour");
                             }
-                        }
-
+                        });
                     }
 
                 }

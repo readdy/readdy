@@ -50,7 +50,6 @@ void ContiguousCellLinkedList::fillBins(const util::PerformanceNode &node) {
     _binsIndex = util::Index2D(nCells, maxParticlesPerCell);
     _bins.resize(0);
     _bins.resize(_binsIndex.size());
-    std::for_each(_bins.begin(), _bins.end(), [](auto &x) { x = -1; });
 
     auto boxSize = _context.get().boxSize();
 
@@ -61,7 +60,8 @@ void ContiguousCellLinkedList::fillBins(const util::PerformanceNode &node) {
         const auto &cellIndex = _cellIndex;
         auto &bins = _bins;
         const auto &binsIndex = _binsIndex;
-        auto worker = [&data, &blockNParticles, &bins, cellIndex, cellSize, boxSize, nCells, binsIndex]
+        auto worker =
+                [&data, &blockNParticles, &bins, cellIndex, cellSize, boxSize, nCells, binsIndex, maxParticlesPerCell]
                 (std::size_t tid, std::size_t begin_pidx, std::size_t end_pidx) {
             std::vector<count_type> cellCounts;
             cellCounts.resize(nCells);
@@ -127,7 +127,6 @@ ContiguousCellLinkedList::count_type ContiguousCellLinkedList::getMaxCounts(cons
             count_type localMax{0};
 
             auto it = data.begin() + begin_pidx;
-            auto pidx = begin_pidx;
             while (it != data.begin() + end_pidx) {
                 const auto &entry = *it;
                 if (!entry.deactivated) {
@@ -138,7 +137,6 @@ ContiguousCellLinkedList::count_type ContiguousCellLinkedList::getMaxCounts(cons
                     ++cellCounts.at(cix);
                     localMax = std::max(localMax, cellCounts.at(cix));
                 }
-                ++pidx;
                 ++it;
             }
 

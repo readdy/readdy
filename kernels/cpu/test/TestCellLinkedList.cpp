@@ -275,57 +275,99 @@ TEST_P(TestCLL, Diffuse) {
     util::thread::Config config;
 
     kernel::cpu::data::DefaultDataContainer data (context, config);
-    kernel::cpu::nl::CompactCellLinkedList nl(data, context, config);
 
     auto n_particles = 1000;
     for(int i = 0; i < n_particles; ++i) {
         model::Particle particle(model::rnd::uniform_real<scalar>(-5, 5),
                                  model::rnd::uniform_real<scalar>(-5, 5),
                                  model::rnd::uniform_real<scalar>(-5, 5), id);
-        nl.data().addParticle(particle);
+        data.addParticle(particle);
     }
 
     context.configure();
 
-    nl.setUp(0, 3, {});
-    nl.update({});
-
-    std::size_t n_steps = 3;
-
-    for(std::size_t t = 0; t < n_steps; ++t) {
-        for (std::size_t i = 0; i < n_particles; ++i) {
-            nl.data().displace(i, 2. * model::rnd::normal3<readdy::scalar>(0, 1));
-        }
-
+    if (cllName() == "CompactCLL") {
+        kernel::cpu::nl::CompactCellLinkedList nl(data, context, config);
+        nl.setUp(0, cllRadius(), {});
         nl.update({});
 
-        const auto &d2 = context.distSquaredFun();
+        std::size_t n_steps = 3;
+        for(std::size_t t = 0; t < n_steps; ++t) {
+            for (std::size_t i = 0; i < n_particles; ++i) {
+                nl.data().displace(i, 2. * model::rnd::normal3<readdy::scalar>(0, 1));
+            }
 
-        for(std::size_t cell = 0; cell < nl.nCells(); ++cell) {
-            for (auto it = nl.cellNeighborsBegin(cell); it != nl.cellNeighborsEnd(cell); ++it) {
-                const auto &entry = nl.data().entry_at(it.currentParticle());
-                ASSERT_FALSE(entry.deactivated);
-                std::vector<std::size_t> neighbors;
-                for (auto itNeigh = it.neighborsBegin(); itNeigh != it.neighborsEnd(); ++itNeigh) {
-                    const auto &neighborEntry = nl.data().entry_at(*itNeigh);
-                    ASSERT_FALSE(neighborEntry.deactivated);
-                    neighbors.push_back(*itNeigh);
-                }
+            nl.update({});
 
-                // check for every particle that is closer than cutoff*cutoff that it is in "neighbors" vector
-                std::size_t pidx = 0;
-                for (const auto &e : nl.data()) {
-                    if (!e.deactivated) {
-                        if (pidx != it.currentParticle() && d2(entry.pos, e.pos) < cutoff * cutoff) {
-                            ASSERT_TRUE(std::find(neighbors.begin(), neighbors.end(), pidx) != neighbors.end());
-                        }
+            const auto &d2 = context.distSquaredFun();
+
+            for(std::size_t cell = 0; cell < nl.nCells(); ++cell) {
+                for (auto it = nl.cellNeighborsBegin(cell); it != nl.cellNeighborsEnd(cell); ++it) {
+                    const auto &entry = nl.data().entry_at(it.currentParticle());
+                    ASSERT_FALSE(entry.deactivated);
+                    std::vector<std::size_t> neighbors;
+                    for (auto itNeigh = it.neighborsBegin(); itNeigh != it.neighborsEnd(); ++itNeigh) {
+                        const auto &neighborEntry = nl.data().entry_at(*itNeigh);
+                        ASSERT_FALSE(neighborEntry.deactivated);
+                        neighbors.push_back(*itNeigh);
                     }
-                    ++pidx;
-                }
 
+                    // check for every particle that is closer than cutoff*cutoff that it is in "neighbors" vector
+                    std::size_t pidx = 0;
+                    for (const auto &e : nl.data()) {
+                        if (!e.deactivated) {
+                            if (pidx != it.currentParticle() && d2(entry.pos, e.pos) < cutoff * cutoff) {
+                                ASSERT_TRUE(std::find(neighbors.begin(), neighbors.end(), pidx) != neighbors.end());
+                            }
+                        }
+                        ++pidx;
+                    }
+
+                }
+            }
+        }
+    } else if(cllName() == "ContiguousCLL") {
+        kernel::cpu::nl::ContiguousCellLinkedList nl(data, context, config);
+        nl.setUp(0, cllRadius(), {});
+        nl.update({});
+
+        std::size_t n_steps = 3;
+        for(std::size_t t = 0; t < n_steps; ++t) {
+            for (std::size_t i = 0; i < n_particles; ++i) {
+                nl.data().displace(i, 2. * model::rnd::normal3<readdy::scalar>(0, 1));
+            }
+
+            nl.update({});
+
+            const auto &d2 = context.distSquaredFun();
+
+            for(std::size_t cell = 0; cell < nl.nCells(); ++cell) {
+                for(auto itParticle = nl.particlesBegin(cell); itParticle != nl.particlesEnd(cell); ++itParticle) {
+                    const auto &entry = nl.data().entry_at(*itParticle);
+                    ASSERT_FALSE(entry.deactivated);
+                    std::vector<std::size_t> neighbors;
+                    nl.forEachNeighbor(*itParticle, [&](auto neighborIdx) {
+                        const auto &neighborEntry = nl.data().entry_at(neighborIdx);
+                        ASSERT_FALSE(neighborEntry.deactivated);
+                        neighbors.push_back(neighborIdx);
+                    });
+
+                    // check for every particle that is closer than cutoff*cutoff that it is in "neighbors" vector
+                    std::size_t pidx = 0;
+                    for (const auto &e : nl.data()) {
+                        if (!e.deactivated) {
+                            if (pidx != *itParticle && d2(entry.pos, e.pos) < cutoff * cutoff) {
+                                ASSERT_NE(std::find(neighbors.begin(), neighbors.end(), pidx), neighbors.end());
+                            }
+                        }
+                        ++pidx;
+                    }
+
+                }
             }
         }
     }
+
 }
 
 }
