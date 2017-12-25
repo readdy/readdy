@@ -48,25 +48,65 @@ public:
     ContiguousCellLinkedList(data_type &data, const readdy::model::Context &context,
                              const util::thread::Config &config);
 
-    void update(const util::PerformanceNode &node) override;
+public:
 
-    void clear() override;
+    void update(const util::PerformanceNode &node) override {
+        if (_max_cutoff > 0) {
+            fillBins(node);
+        }
+    };
 
-    const std::vector<std::size_t> &bins() const;
+    void clear() override {
+        _bins.clear();
+    };
 
-    const util::Index2D &binsIndex() const;
+    const std::vector<std::size_t> &bins() const {
+        return _bins;
+    };
 
-    std::size_t *particlesBegin(std::size_t cellIndex) override;
+    const util::Index2D &binsIndex() const {
+        return _binsIndex;
+    };
 
-    const std::size_t *particlesBegin(std::size_t cellIndex) const override;
+    std::size_t *particlesBegin(std::size_t cellIndex) override {
+        return &_bins.at(_binsIndex(cellIndex, 0_z));
+    }
 
-    std::size_t *particlesEnd(std::size_t cellIndex) override;
+    const std::size_t *particlesBegin(std::size_t cellIndex) const override {
+        return &_bins.at(_binsIndex(cellIndex, 0_z));
+    };
 
-    const std::size_t *particlesEnd(std::size_t cellIndex) const override;
+    std::size_t *particlesEnd(std::size_t cellIndex) override {
+        return particlesBegin(cellIndex) + nParticles(cellIndex);
+    };
 
-    size_t nParticles(std::size_t cellIndex) const override;
+    const std::size_t *particlesEnd(std::size_t cellIndex) const override {
+        return particlesBegin(cellIndex) + nParticles(cellIndex);
+    };
+
+    size_t nParticles(std::size_t cellIndex) const override {
+        return (*_blockNParticles.at(cellIndex)).load();
+    };
+
+    template<typename Function>
+    void forEachNeighbor(std::size_t particle, const Function &function) const {
+        forEachNeighbor(particle, cellOfParticle(particle), function);
+    }
+
+    template<typename Function>
+    void forEachNeighbor(std::size_t particle, std::size_t cell, const Function& function) const {
+        std::for_each(particlesBegin(cell), particlesEnd(cell), [&function, particle](auto x) {
+            if(x != particle) function(x);
+        });
+        for(auto itNeighCell = neighborsBegin(cell); itNeighCell != neighborsEnd(cell); ++itNeighCell) {
+            std::for_each(particlesBegin(*itNeighCell), particlesEnd(*itNeighCell), function);
+        }
+    }
 
 protected:
+
+    void setUpBins(const util::PerformanceNode &node) override { };
+
     void fillBins(const util::PerformanceNode &node);
 
 private:

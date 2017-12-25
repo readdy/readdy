@@ -59,11 +59,17 @@ public:
     
     virtual void clear() = 0;
     
-    const util::Index3D &cellIndex() const;
+    const util::Index3D &cellIndex() const {
+        return _cellIndex;
+    };
     
-    const util::Index2D &neighborIndex() const;
+    const util::Index2D &neighborIndex() const {
+        return _cellNeighbors;
+    };
     
-    const std::vector<std::size_t> &neighbors() const;
+    const std::vector<std::size_t> &neighbors() const {
+        return _cellNeighborsContent;
+    };
     
     virtual std::size_t *particlesBegin(std::size_t cellIndex) = 0;
     virtual const std::size_t *particlesBegin(std::size_t cellIndex) const = 0;
@@ -73,21 +79,53 @@ public:
 
     virtual std::size_t nParticles(std::size_t cellIndex) const = 0;
 
-    std::size_t *neighborsBegin(std::size_t cellIndex);
-    const std::size_t *neighborsBegin(std::size_t cellIndex) const;
+    std::size_t *neighborsBegin(std::size_t cellIndex) {
+        auto beginIdx = _cellNeighbors(cellIndex, 1_z);
+        return &_cellNeighborsContent.at(beginIdx);
+    };
+    const std::size_t *neighborsBegin(std::size_t cellIndex) const {
+        auto beginIdx = _cellNeighbors(cellIndex, 1_z);
+        return &_cellNeighborsContent.at(beginIdx);
+    };
 
-    std::size_t *neighborsEnd(std::size_t cellIndex);
-    const std::size_t *neighborsEnd(std::size_t cellIndex) const;
+    std::size_t *neighborsEnd(std::size_t cellIndex) {
+        return neighborsBegin(cellIndex) + nNeighbors(cellIndex);
+    };
+    const std::size_t *neighborsEnd(std::size_t cellIndex) const {
+        return neighborsBegin(cellIndex) + nNeighbors(cellIndex);
+    };
 
-    std::size_t nNeighbors(std::size_t cellIndex) const;
+    std::size_t nNeighbors(std::size_t cellIndex) const {
+        return _cellNeighborsContent.at(_cellNeighbors(cellIndex, 0_z));
+    };
 
-    data_type &data();
+    data_type &data() {
+        return _data.get();
+    };
 
-    const data_type &data() const;
+    const data_type &data() const {
+        return _data.get();
+    };
 
-    scalar maxCutoff() const;
+    scalar maxCutoff() const {
+        return _max_cutoff;
+    };
 
-    std::size_t cellOfParticle(std::size_t index) const;
+    std::size_t cellOfParticle(std::size_t index) const {
+        const auto &entry = data().entry_at(index);
+        if(entry.deactivated) {
+            throw std::invalid_argument("requested deactivated entry");
+        }
+        const auto &boxSize = _context.get().boxSize();
+        const auto i = static_cast<std::size_t>(std::floor((entry.pos.x + .5 * boxSize[0]) / _cellSize.x));
+        const auto j = static_cast<std::size_t>(std::floor((entry.pos.y + .5 * boxSize[1]) / _cellSize.y));
+        const auto k = static_cast<std::size_t>(std::floor((entry.pos.z + .5 * boxSize[2]) / _cellSize.z));
+        return _cellIndex(i, j, k);
+    };
+
+    std::size_t nCells() const {
+        return _cellIndex.size();
+    };
 
 protected:
     virtual void setUpBins(const util::PerformanceNode &node) = 0;
@@ -165,8 +203,6 @@ public:
     void forEachParticlePair(const pair_callback &f) const;
 
     void forEachParticlePairParallel(const pair_callback &f) const;
-
-    std::size_t nCells() const;
 
     bool cellEmpty(std::size_t index) const;
 protected:

@@ -135,64 +135,6 @@ void CellLinkedList::setUp(scalar skin, cell_radius_type radius, const util::Per
     }
 }
 
-const util::Index3D &CellLinkedList::cellIndex() const {
-    return _cellIndex;
-}
-
-const util::Index2D &CellLinkedList::neighborIndex() const {
-    return _cellNeighbors;
-}
-
-const std::vector<std::size_t> &CellLinkedList::neighbors() const {
-    return _cellNeighborsContent;
-}
-
-std::size_t *CellLinkedList::neighborsBegin(std::size_t cellIndex) {
-    auto beginIdx = _cellNeighbors(cellIndex, 1_z);
-    return &_cellNeighborsContent.at(beginIdx);
-}
-
-const std::size_t *CellLinkedList::neighborsBegin(std::size_t cellIndex) const {
-    auto beginIdx = _cellNeighbors(cellIndex, 1_z);
-    return &_cellNeighborsContent.at(beginIdx);
-}
-
-std::size_t *CellLinkedList::neighborsEnd(std::size_t cellIndex) {
-    return neighborsBegin(cellIndex) + nNeighbors(cellIndex);
-}
-
-const std::size_t *CellLinkedList::neighborsEnd(std::size_t cellIndex) const {
-    return neighborsBegin(cellIndex) + nNeighbors(cellIndex);
-}
-
-std::size_t CellLinkedList::nNeighbors(std::size_t cellIndex) const {
-    return _cellNeighborsContent.at(_cellNeighbors(cellIndex, 0_z));
-}
-
-CellLinkedList::data_type &CellLinkedList::data() {
-    return _data.get();
-}
-
-const CellLinkedList::data_type &CellLinkedList::data() const {
-    return _data.get();
-}
-
-scalar CellLinkedList::maxCutoff() const {
-    return _max_cutoff;
-}
-
-std::size_t CellLinkedList::cellOfParticle(std::size_t index) const {
-    const auto &entry = data().entry_at(index);
-    if(entry.deactivated) {
-        throw std::invalid_argument("requested deactivated entry");
-    }
-    const auto &boxSize = _context.get().boxSize();
-    const auto i = static_cast<std::size_t>(std::floor((entry.pos.x + .5 * boxSize[0]) / _cellSize.x));
-    const auto j = static_cast<std::size_t>(std::floor((entry.pos.y + .5 * boxSize[1]) / _cellSize.y));
-    const auto k = static_cast<std::size_t>(std::floor((entry.pos.z + .5 * boxSize[2]) / _cellSize.z));
-    return _cellIndex(i, j, k);
-}
-
 CompactCellLinkedList::CompactCellLinkedList(data_type &data, const readdy::model::Context &context,
                                              const util::thread::Config &config) : CellLinkedList(data, context,
                                                                                                   config) {}
@@ -434,8 +376,7 @@ void CompactCellLinkedList::forEachParticlePairParallel(const pair_callback &f) 
 }
 
 BoxIterator CompactCellLinkedList::cellParticlesBegin(std::size_t cellIndex) const {
-    auto head = (*_head.at(cellIndex)).load();
-    return {*this, head};
+
 }
 
 BoxIterator CompactCellLinkedList::cellParticlesEnd(std::size_t) const {
@@ -449,10 +390,6 @@ NeighborsIterator CompactCellLinkedList::cellNeighborsBegin(std::size_t cellInde
 
 NeighborsIterator CompactCellLinkedList::cellNeighborsEnd(std::size_t cellIndex) const {
     return {*this, cellIndex, 0};
-}
-
-std::size_t CompactCellLinkedList::nCells() const {
-    return _head.size();
 }
 
 bool CompactCellLinkedList::cellEmpty(std::size_t index) const {
