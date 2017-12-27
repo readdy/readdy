@@ -2,15 +2,20 @@
 
 set +e
 
-if [ $(uname) = "Linux" ]; then
-    echo "installing logbt"
-    mkdir ./mason/
-    curl -sSfL https://github.com/mapbox/mason/archive/v0.2.0.tar.gz | tar --gunzip --extract --strip-components=1 --directory=./mason/
-    ./mason/mason install gdb 7.12
-    export PATH=$(./mason/mason prefix gdb 7.12)/bin:${PATH}
-    curl -sSfL https://github.com/mapbox/logbt/archive/v1.6.0.tar.gz | tar --gunzip --extract --strip-components=2 --exclude="*md" --exclude="test*" --directory=.
-    sudo bash -c "echo '/tmp/logbt-coredumps/core.%p.%E' > /proc/sys/kernel/core_pattern"
-fi
+installed_logbt=0
+
+function install_logbt {
+    if [ $(uname) = "Linux" ]; then
+        installed_logbt=1
+        echo "installing logbt"
+        mkdir ./mason/
+        curl -sSfL https://github.com/mapbox/mason/archive/v0.2.0.tar.gz | tar --gunzip --extract --strip-components=1 --directory=./mason/
+        ./mason/mason install gdb 7.12
+        export PATH=$(./mason/mason prefix gdb 7.12)/bin:${PATH}
+        curl -sSfL https://github.com/mapbox/logbt/archive/v1.6.0.tar.gz | tar --gunzip --extract --strip-components=2 --exclude="*md" --exclude="test*" --directory=.
+        sudo bash -c "echo '/tmp/logbt-coredumps/core.%p.%E' > /proc/sys/kernel/core_pattern"
+    fi
+}
 
 # overall return code
 ret_code=0
@@ -27,6 +32,7 @@ if [ ${err_code} -ne 0 ]; then
     echo "core unit tests failed with ${ret_code}"
     if [ $(uname) = "Linux" ]; then
         echo "re-running with logbt"
+        install_logbt
         ./logbt runUnitTests
     fi
 fi
@@ -39,6 +45,7 @@ if [ ${err_code} -ne 0 ]; then
     echo "singlecpu unit tests failed with ${ret_code}"
     if [ $(uname) = "Linux" ]; then
         echo "re-running with logbt"
+        install_logbt
         ./logbt runUnitTests_singlecpu
     fi
 fi
@@ -51,6 +58,7 @@ if [ ${err_code} -ne 0 ]; then
     echo "cpu unit tests failed with ${ret_code}"
     if [ $(uname) = "Linux" ]; then
         echo "re-running with logbt"
+        install_logbt
         ./logbt runUnitTests_cpu
     fi
 fi
@@ -63,6 +71,7 @@ if [ ${err_code} -ne 0 ]; then
     echo "cpu legacy unit tests failed with ${ret_code}"
     if [ $(uname) = "Linux" ]; then
         echo "re-running with logbt"
+        install_logbt
         ./logbt runUnitTests_cpu_legacy
     fi
 fi
