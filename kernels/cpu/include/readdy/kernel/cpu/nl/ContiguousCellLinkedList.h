@@ -68,23 +68,23 @@ public:
         return _binsIndex;
     };
 
-    std::size_t *particlesBegin(std::size_t cellIndex) override {
+    std::size_t *particlesBegin(std::size_t cellIndex) {
         return !_bins.empty() ? &_bins.at(_binsIndex(cellIndex, 0_z)) : nullptr;
     }
 
-    const std::size_t *particlesBegin(std::size_t cellIndex) const override {
+    const std::size_t *particlesBegin(std::size_t cellIndex) const {
         return !_bins.empty() ? &_bins.at(_binsIndex(cellIndex, 0_z)) : nullptr;
     };
 
-    std::size_t *particlesEnd(std::size_t cellIndex) override {
+    std::size_t *particlesEnd(std::size_t cellIndex) {
         return !_bins.empty() ? particlesBegin(cellIndex) + nParticles(cellIndex) : nullptr;
     };
 
-    const std::size_t *particlesEnd(std::size_t cellIndex) const override {
+    const std::size_t *particlesEnd(std::size_t cellIndex) const {
         return !_bins.empty() ? particlesBegin(cellIndex) + nParticles(cellIndex) : nullptr;
     };
 
-    size_t nParticles(std::size_t cellIndex) const override {
+    size_t nParticles(std::size_t cellIndex) const {
         return (*_blockNParticles.at(cellIndex)).load();
     };
 

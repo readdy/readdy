@@ -49,14 +49,68 @@ public:
     }
 };
 
+template<typename CLL>
+void insertTestImpl(readdy::kernel::cpu::data::DefaultDataContainer &data, readdy::model::Context &context,
+                    readdy::util::thread::Config &config, std::uint8_t radius) {
+    using namespace readdy;
+
+    const auto &d2 = context.distSquaredFun();
+
+    std::vector<model::Particle::id_type> particleIds;
+    std::for_each(data.begin(), data.end(), [&] (const auto &entry){ particleIds.push_back(entry.id); });
+    scalar cutoff = 1;
+    CLL ccll(data, context, config);
+    ccll.setUp(0, radius, {});
+    ccll.update({});
+
+    {
+        std::size_t pidx{0};
+        for (const auto &e : data) {
+            if (!e.deactivated) {
+                auto cell = ccll.cellOfParticle(pidx);
+                auto foundIt = std::find(ccll.particlesBegin(cell), ccll.particlesEnd(cell), pidx);
+                ASSERT_NE(foundIt, ccll.particlesEnd(cell)) << "Did not find particle " << pidx
+                                                            << " in cell " << cell;
+            }
+            ++pidx;
+        }
+    }
+
+    for (std::size_t cell = 0; cell < ccll.nCells(); ++cell) {
+        for(auto itParticle = ccll.particlesBegin(cell); itParticle != ccll.particlesEnd(cell); ++itParticle) {
+            const auto &entry = ccll.data().entry_at(*itParticle);
+
+            auto foundIt = std::find(particleIds.begin(), particleIds.end(), entry.id);
+            ASSERT_NE(foundIt, particleIds.end());
+            particleIds.erase(foundIt);
+
+            std::vector<std::size_t> neighbors;
+            ccll.forEachNeighbor(*itParticle, [&neighbors](auto neighbor) {
+                neighbors.push_back(neighbor);
+            });
+
+            std::size_t pidx = 0;
+            for (const auto &e : data) {
+                if (pidx != *itParticle && d2(entry.pos, e.pos) < cutoff * cutoff) {
+                    ASSERT_TRUE(std::find(neighbors.begin(), neighbors.end(), pidx) != neighbors.end());
+                }
+                ++pidx;
+            }
+
+        }
+    }
+
+    ASSERT_TRUE(particleIds.empty());
+
+}
+
 TEST_P(TestCLL, Insert) {
     using namespace readdy;
 
     model::Context context;
     context.particle_types().add("Test", 1.);
     auto id = context.particle_types().idOf("Test");
-    scalar cutoff = 1;
-    context.reactions().addFusion("Fusion", id, id, id, 1., cutoff);
+    context.reactions().addFusion("Fusion", id, id, id, 1., 1.);
     context.boxSize()[0] = 10;
     context.boxSize()[1] = 10;
     context.boxSize()[2] = 10;
@@ -64,6 +118,8 @@ TEST_P(TestCLL, Insert) {
     context.periodicBoundaryConditions()[0] = periodic;
     context.periodicBoundaryConditions()[1] = periodic;
     context.periodicBoundaryConditions()[2] = periodic;
+
+    context.configure();
 
     util::thread::Config config;
 
@@ -76,87 +132,15 @@ TEST_P(TestCLL, Insert) {
         data.addParticle(particle);
     }
 
-    std::vector<model::Particle::id_type> particleIds;
-    std::for_each(data.begin(), data.end(), [&] (const auto &entry){ particleIds.push_back(entry.id); });
-
-    context.configure();
-    const auto &d2 = context.distSquaredFun();
-
     if(cllName() == "CompactCLL") {
-        kernel::cpu::nl::CompactCellLinkedList ccll(data, context, config);
-        ccll.setUp(0, cllRadius(), {});
-        ccll.update({});
-
-        for (std::size_t cell = 0; cell < ccll.nCells(); ++cell) {
-            for (auto it = ccll.cellNeighborsBegin(cell); it != ccll.cellNeighborsEnd(cell); ++it) {
-                const auto &entry = ccll.data().entry_at(it.currentParticle());
-                auto foundIt = std::find(particleIds.begin(), particleIds.end(), entry.id);
-                ASSERT_NE(foundIt, particleIds.end());
-                particleIds.erase(foundIt);
-                std::vector<std::size_t> neighbors;
-                for (auto itNeigh = it.neighborsBegin(); itNeigh != it.neighborsEnd(); ++itNeigh) {
-                    const auto &neighborEntry = ccll.data().entry_at(*itNeigh);
-                    neighbors.push_back(*itNeigh);
-                }
-
-                // check for every particle that is closer than cutoff*cutoff that it is in "neighbors" vector
-                std::size_t pidx = 0;
-                for (const auto &e : ccll.data()) {
-                    if (pidx != it.currentParticle() && d2(entry.pos, e.pos) < cutoff * cutoff) {
-                        ASSERT_TRUE(std::find(neighbors.begin(), neighbors.end(), pidx) != neighbors.end());
-                    }
-                    ++pidx;
-                }
-
-            }
-        }
+        insertTestImpl<kernel::cpu::nl::CompactCellLinkedList>(data, context, config, cllRadius());
     } else if(cllName() == "ContiguousCLL") {
-        kernel::cpu::nl::ContiguousCellLinkedList ccll(data, context, config);
-        ccll.setUp(0, cllRadius(), {});
-        ccll.update({});
-
-        {
-            std::size_t pidx{0};
-            for (const auto &e : data) {
-                if (!e.deactivated) {
-                    auto cell = ccll.cellOfParticle(pidx);
-                    auto foundIt = std::find(ccll.particlesBegin(cell), ccll.particlesEnd(cell), pidx);
-                    ASSERT_NE(foundIt, ccll.particlesEnd(cell)) << "Did not find particle " << pidx
-                                                                << " in cell " << cell;
-                }
-                ++pidx;
-            }
-        }
-
-        for (std::size_t cell = 0; cell < ccll.nCells(); ++cell) {
-            for(auto itParticle = ccll.particlesBegin(cell); itParticle != ccll.particlesEnd(cell); ++itParticle) {
-                const auto &entry = ccll.data().entry_at(*itParticle);
-
-                auto foundIt = std::find(particleIds.begin(), particleIds.end(), entry.id);
-                ASSERT_NE(foundIt, particleIds.end());
-                particleIds.erase(foundIt);
-
-                std::vector<std::size_t> neighbors;
-                ccll.forEachNeighbor(*itParticle, [&neighbors](auto neighbor) {
-                    neighbors.push_back(neighbor);
-                });
-
-                std::size_t pidx = 0;
-                for (const auto &e : data) {
-                    if (pidx != *itParticle && d2(entry.pos, e.pos) < cutoff * cutoff) {
-                        ASSERT_TRUE(std::find(neighbors.begin(), neighbors.end(), pidx) != neighbors.end());
-                    }
-                    ++pidx;
-                }
-
-            }
-        }
-
+        insertTestImpl<kernel::cpu::nl::ContiguousCellLinkedList>(data, context, config, cllRadius());
     }
-    ASSERT_TRUE(particleIds.empty());
 }
 
-TEST_P(TestCLL, InsertAndDeactivate) {
+template<typename CLL>
+void insertAndDearviateTestImpl(std::uint8_t radius) {
     using namespace readdy;
 
     model::Context context;
@@ -192,71 +176,54 @@ TEST_P(TestCLL, InsertAndDeactivate) {
     }
 
     context.configure();
+
     const auto &d2 = context.distSquaredFun();
 
+    CLL nl(data, context, config);
+    nl.setUp(0, radius, {});
+    nl.update({});
+
+    for (std::size_t cell = 0; cell < nl.nCells(); ++cell) {
+        for (auto itParticle = nl.particlesBegin(cell); itParticle != nl.particlesEnd(cell); ++itParticle) {
+            const auto &entry = nl.data().entry_at(*itParticle);
+            ASSERT_FALSE(entry.deactivated);
+            std::vector<std::size_t> neighbors;
+
+            nl.forEachNeighbor(*itParticle, [&](auto neighbor) {
+                const auto &neighborEntry = nl.data().entry_at(neighbor);
+                ASSERT_FALSE(neighborEntry.deactivated);
+                neighbors.push_back(neighbor);
+            });
+
+            // check for every particle that is closer than cutoff*cutoff that it is in "neighbors" vector
+            std::size_t pidx = 0;
+            for (const auto &e : nl.data()) {
+                if (!e.deactivated) {
+                    if (pidx != *itParticle && d2(entry.pos, e.pos) < cutoff * cutoff) {
+                        ASSERT_TRUE(std::find(neighbors.begin(), neighbors.end(), pidx) != neighbors.end());
+                    }
+                }
+                ++pidx;
+            }
+
+        }
+    }
+
+}
+
+TEST_P(TestCLL, InsertAndDeactivate) {
+    using namespace readdy;
+
     if(cllName() == "CompactCLL") {
-        kernel::cpu::nl::CompactCellLinkedList nl(data, context, config);
-        nl.setUp(0, cllRadius(), {});
-        nl.update({});
-
-        for (std::size_t cell = 0; cell < nl.nCells(); ++cell) {
-            for (auto it = nl.cellNeighborsBegin(cell); it != nl.cellNeighborsEnd(cell); ++it) {
-                const auto &entry = nl.data().entry_at(it.currentParticle());
-                ASSERT_FALSE(entry.deactivated);
-                std::vector<std::size_t> neighbors;
-                for (auto itNeigh = it.neighborsBegin(); itNeigh != it.neighborsEnd(); ++itNeigh) {
-                    const auto &neighborEntry = nl.data().entry_at(*itNeigh);
-                    ASSERT_FALSE(neighborEntry.deactivated);
-                    neighbors.push_back(*itNeigh);
-                }
-
-                // check for every particle that is closer than cutoff*cutoff that it is in "neighbors" vector
-                std::size_t pidx = 0;
-                for (const auto &e : nl.data()) {
-                    if (!e.deactivated) {
-                        if (pidx != it.currentParticle() && d2(entry.pos, e.pos) < cutoff * cutoff) {
-                            ASSERT_TRUE(std::find(neighbors.begin(), neighbors.end(), pidx) != neighbors.end());
-                        }
-                    }
-                    ++pidx;
-                }
-
-            }
-        }
+        insertAndDearviateTestImpl<kernel::cpu::nl::CompactCellLinkedList>(cllRadius());
     } else if(cllName() == "ContiguousCLL") {
-        kernel::cpu::nl::ContiguousCellLinkedList nl(data, context, config);
-        nl.setUp(0, cllRadius(), {});
-        nl.update({});
-
-        for (std::size_t cell = 0; cell < nl.nCells(); ++cell) {
-            for (auto itParticle = nl.particlesBegin(cell); itParticle != nl.particlesEnd(cell); ++itParticle) {
-                const auto &entry = nl.data().entry_at(*itParticle);
-                ASSERT_FALSE(entry.deactivated);
-                std::vector<std::size_t> neighbors;
-
-                nl.forEachNeighbor(*itParticle, [&](auto neighbor) {
-                    const auto &neighborEntry = nl.data().entry_at(neighbor);
-                    ASSERT_FALSE(neighborEntry.deactivated);
-                    neighbors.push_back(neighbor);
-                });
-
-                // check for every particle that is closer than cutoff*cutoff that it is in "neighbors" vector
-                std::size_t pidx = 0;
-                for (const auto &e : nl.data()) {
-                    if (!e.deactivated) {
-                        if (pidx != *itParticle && d2(entry.pos, e.pos) < cutoff * cutoff) {
-                            ASSERT_TRUE(std::find(neighbors.begin(), neighbors.end(), pidx) != neighbors.end());
-                        }
-                    }
-                    ++pidx;
-                }
-
-            }
-        }
+        insertAndDearviateTestImpl<kernel::cpu::nl::ContiguousCellLinkedList>(cllRadius());
     }
 }
 
-TEST_P(TestCLL, Diffuse) {
+
+template<typename CLL>
+void diffuseTestImpl(std::uint8_t radius) {
     using namespace readdy;
 
     model::Context context;
@@ -286,88 +253,53 @@ TEST_P(TestCLL, Diffuse) {
 
     context.configure();
 
-    if (cllName() == "CompactCLL") {
-        kernel::cpu::nl::CompactCellLinkedList nl(data, context, config);
-        nl.setUp(0, cllRadius(), {});
-        nl.update({});
+    CLL nl(data, context, config);
+    nl.setUp(0, radius, {});
+    nl.update({});
 
-        std::size_t n_steps = 3;
-        for(std::size_t t = 0; t < n_steps; ++t) {
-            for (std::size_t i = 0; i < n_particles; ++i) {
-                nl.data().displace(i, 2. * model::rnd::normal3<readdy::scalar>(0, 1));
-            }
-
-            nl.update({});
-
-            const auto &d2 = context.distSquaredFun();
-
-            for(std::size_t cell = 0; cell < nl.nCells(); ++cell) {
-                for (auto it = nl.cellNeighborsBegin(cell); it != nl.cellNeighborsEnd(cell); ++it) {
-                    const auto &entry = nl.data().entry_at(it.currentParticle());
-                    ASSERT_FALSE(entry.deactivated);
-                    std::vector<std::size_t> neighbors;
-                    for (auto itNeigh = it.neighborsBegin(); itNeigh != it.neighborsEnd(); ++itNeigh) {
-                        const auto &neighborEntry = nl.data().entry_at(*itNeigh);
-                        ASSERT_FALSE(neighborEntry.deactivated);
-                        neighbors.push_back(*itNeigh);
-                    }
-
-                    // check for every particle that is closer than cutoff*cutoff that it is in "neighbors" vector
-                    std::size_t pidx = 0;
-                    for (const auto &e : nl.data()) {
-                        if (!e.deactivated) {
-                            if (pidx != it.currentParticle() && d2(entry.pos, e.pos) < cutoff * cutoff) {
-                                ASSERT_TRUE(std::find(neighbors.begin(), neighbors.end(), pidx) != neighbors.end());
-                            }
-                        }
-                        ++pidx;
-                    }
-
-                }
-            }
+    std::size_t n_steps = 3;
+    for(std::size_t t = 0; t < n_steps; ++t) {
+        for (std::size_t i = 0; i < n_particles; ++i) {
+            nl.data().displace(i, 2. * model::rnd::normal3<readdy::scalar>(0, 1));
         }
-    } else if(cllName() == "ContiguousCLL") {
-        kernel::cpu::nl::ContiguousCellLinkedList nl(data, context, config);
-        nl.setUp(0, cllRadius(), {});
+
         nl.update({});
 
-        std::size_t n_steps = 3;
-        for(std::size_t t = 0; t < n_steps; ++t) {
-            for (std::size_t i = 0; i < n_particles; ++i) {
-                nl.data().displace(i, 2. * model::rnd::normal3<readdy::scalar>(0, 1));
-            }
+        const auto &d2 = context.distSquaredFun();
 
-            nl.update({});
+        for(std::size_t cell = 0; cell < nl.nCells(); ++cell) {
+            for(auto itParticle = nl.particlesBegin(cell); itParticle != nl.particlesEnd(cell); ++itParticle) {
+                const auto &entry = nl.data().entry_at(*itParticle);
+                ASSERT_FALSE(entry.deactivated);
+                std::vector<std::size_t> neighbors;
+                nl.forEachNeighbor(*itParticle, [&](auto neighborIdx) {
+                    const auto &neighborEntry = nl.data().entry_at(neighborIdx);
+                    ASSERT_FALSE(neighborEntry.deactivated);
+                    neighbors.push_back(neighborIdx);
+                });
 
-            const auto &d2 = context.distSquaredFun();
-
-            for(std::size_t cell = 0; cell < nl.nCells(); ++cell) {
-                for(auto itParticle = nl.particlesBegin(cell); itParticle != nl.particlesEnd(cell); ++itParticle) {
-                    const auto &entry = nl.data().entry_at(*itParticle);
-                    ASSERT_FALSE(entry.deactivated);
-                    std::vector<std::size_t> neighbors;
-                    nl.forEachNeighbor(*itParticle, [&](auto neighborIdx) {
-                        const auto &neighborEntry = nl.data().entry_at(neighborIdx);
-                        ASSERT_FALSE(neighborEntry.deactivated);
-                        neighbors.push_back(neighborIdx);
-                    });
-
-                    // check for every particle that is closer than cutoff*cutoff that it is in "neighbors" vector
-                    std::size_t pidx = 0;
-                    for (const auto &e : nl.data()) {
-                        if (!e.deactivated) {
-                            if (pidx != *itParticle && d2(entry.pos, e.pos) < cutoff * cutoff) {
-                                ASSERT_NE(std::find(neighbors.begin(), neighbors.end(), pidx), neighbors.end());
-                            }
+                // check for every particle that is closer than cutoff*cutoff that it is in "neighbors" vector
+                std::size_t pidx = 0;
+                for (const auto &e : nl.data()) {
+                    if (!e.deactivated) {
+                        if (pidx != *itParticle && d2(entry.pos, e.pos) < cutoff * cutoff) {
+                            ASSERT_NE(std::find(neighbors.begin(), neighbors.end(), pidx), neighbors.end());
                         }
-                        ++pidx;
                     }
-
+                    ++pidx;
                 }
+
             }
         }
     }
+}
 
+TEST_P(TestCLL, Diffuse) {
+    if (cllName() == "CompactCLL") {
+        diffuseTestImpl<readdy::kernel::cpu::nl::CompactCellLinkedList>(cllRadius());
+    } else if(cllName() == "ContiguousCLL") {
+        diffuseTestImpl<readdy::kernel::cpu::nl::ContiguousCellLinkedList>(cllRadius());
+    }
 }
 
 }

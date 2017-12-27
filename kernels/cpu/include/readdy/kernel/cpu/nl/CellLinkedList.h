@@ -71,14 +71,6 @@ public:
         return _cellNeighborsContent;
     };
     
-    virtual std::size_t *particlesBegin(std::size_t cellIndex) = 0;
-    virtual const std::size_t *particlesBegin(std::size_t cellIndex) const = 0;
-    
-    virtual std::size_t *particlesEnd(std::size_t cellIndex) = 0;
-    virtual const std::size_t *particlesEnd(std::size_t cellIndex) const = 0;
-
-    virtual std::size_t nParticles(std::size_t cellIndex) const = 0;
-
     std::size_t *neighborsBegin(std::size_t cellIndex) {
         auto beginIdx = _cellNeighbors(cellIndex, 1_z);
         return &_cellNeighborsContent.at(beginIdx);
@@ -166,21 +158,23 @@ public:
     CompactCellLinkedList(data_type &data, const readdy::model::Context &context,
                           const util::thread::Config &config);
 
-    void update(const util::PerformanceNode &node) override;
+    void update(const util::PerformanceNode &node) override {
+        auto t = node.timeit();
+        setUpBins(node.subnode("setUpBins"));
+    };
 
-    void clear() override;
+    void clear() override {
+        _head.resize(0);
+        _list.resize(0);
+    };
 
-    size_t *particlesBegin(std::size_t cellIndex) override;
+    BoxIterator particlesBegin(std::size_t cellIndex);
 
-    const size_t *particlesBegin(std::size_t cellIndex) const override;
+    BoxIterator particlesBegin(std::size_t cellIndex) const;
 
-    size_t *particlesEnd(std::size_t cellIndex) override;
+    BoxIterator particlesEnd(std::size_t cellIndex);
 
-    const size_t *particlesEnd(std::size_t cellIndex) const override;
-
-    BoxIterator cellParticlesBegin(std::size_t cellIndex) const;
-
-    BoxIterator cellParticlesEnd(std::size_t /*cellIndex*/) const;
+    BoxIterator particlesEnd(std::size_t cellIndex) const;
 
     MacroBoxIterator macroCellParticlesBegin(std::size_t cellIndex, int skip=-1) const;
 
@@ -190,21 +184,40 @@ public:
 
     NeighborsIterator cellNeighborsEnd(std::size_t cellIndex) const;
 
-    size_t nParticles(std::size_t cellIndex) const override;
+    const HEAD &head() const {
+        return _head;
+    };
 
-    const HEAD &head() const;
+    const LIST &list() const {
+        return _list;
+    };
 
-    const LIST &list() const;
+    bool &serial() {
+        return _serial;
+    };
 
-    bool &serial();
+    const bool &serial() const {
+        return _serial;
+    };
 
-    const bool &serial() const;
+    template<typename Function>
+    void forEachNeighbor(std::size_t particle, const Function &function) const {
+        forEachNeighbor(particle, cellOfParticle(particle), function);
+    }
 
-    void forEachParticlePair(const pair_callback &f) const;
+    template<typename Function>
+    void forEachNeighbor(std::size_t particle, std::size_t cell, const Function& function) const {
+        std::for_each(particlesBegin(cell), particlesEnd(cell), [&function, particle](auto x) {
+            if(x != particle) function(x);
+        });
+        for(auto itNeighCell = neighborsBegin(cell); itNeighCell != neighborsEnd(cell); ++itNeighCell) {
+            std::for_each(particlesBegin(*itNeighCell), particlesEnd(*itNeighCell), function);
+        }
+    }
 
-    void forEachParticlePairParallel(const pair_callback &f) const;
-
-    bool cellEmpty(std::size_t index) const;
+    bool cellEmpty(std::size_t index) const {
+        return (*_head.at(index)).load() == 0;
+    };
 protected:
     void setUpBins(const util::PerformanceNode &node) override;
 
@@ -252,6 +265,22 @@ private:
     std::reference_wrapper<const CompactCellLinkedList> _ccll;
     std::size_t _state;
 };
+
+inline BoxIterator CompactCellLinkedList::particlesBegin(std::size_t cellIndex) {
+    return {*this, (*_head.at(cellIndex)).load()};
+}
+
+inline BoxIterator CompactCellLinkedList::particlesBegin(std::size_t cellIndex) const {
+    return {*this, (*_head.at(cellIndex)).load()};
+}
+
+inline BoxIterator CompactCellLinkedList::particlesEnd(std::size_t /*cellIndex*/) const {
+    return {*this, 0};
+}
+
+inline BoxIterator CompactCellLinkedList::particlesEnd(std::size_t /*cellIndex*/) {
+    return {*this, 0};
+}
 
 class MacroBoxIterator {
     using alloc = std::allocator<std::size_t>;
@@ -342,6 +371,21 @@ private:
     std::reference_wrapper<const CompactCellLinkedList> _ccll;
 };
 
+inline MacroBoxIterator CompactCellLinkedList::macroCellParticlesBegin(std::size_t cellIndex, int skip) const {
+    return {*this, cellIndex, nullptr, false, skip};
+}
+
+inline MacroBoxIterator CompactCellLinkedList::macroCellParticlesEnd(std::size_t cellIndex) const {
+    return {*this, cellIndex, nullptr, true};
+}
+
+inline NeighborsIterator CompactCellLinkedList::cellNeighborsBegin(std::size_t cellIndex) const {
+    return {*this, cellIndex, (*_head.at(cellIndex)).load()};
+}
+
+inline NeighborsIterator CompactCellLinkedList::cellNeighborsEnd(std::size_t cellIndex) const {
+    return {*this, cellIndex, 0};
+}
 
 }
 }

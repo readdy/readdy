@@ -80,7 +80,7 @@ TEST(TestNeighborListIterator, BoxIterator) {
     ASSERT_NE(it, ccll.head().end());
 
     auto cell = static_cast<std::size_t>(std::distance(ccll.head().begin(), it));
-    for(auto boxIt = ccll.cellParticlesBegin(cell); boxIt != ccll.cellParticlesEnd(cell); ++boxIt) {
+    for(auto boxIt = ccll.particlesBegin(cell); boxIt != ccll.particlesEnd(cell); ++boxIt) {
         auto idIt = std::find(ids.begin(), ids.end(), data.entry_at(*boxIt).id);
         ASSERT_NE(idIt, ids.end());
         ids.erase(idIt);
@@ -116,7 +116,7 @@ TEST(TestNeighborListIterator, BoxIteratorEmptyBox) {
 
     // some random cell
     auto cell = 1_z;
-    ASSERT_EQ(ccll.cellParticlesBegin(cell), ccll.cellParticlesEnd(cell));
+    ASSERT_EQ(ccll.particlesBegin(cell), ccll.particlesEnd(cell));
 }
 
 TEST(TestNeighborListIterator, MacroBoxIteratorEmptySurroundingBoxes) {
