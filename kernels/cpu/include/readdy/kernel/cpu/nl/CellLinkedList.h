@@ -206,14 +206,7 @@ public:
     }
 
     template<typename Function>
-    void forEachNeighbor(std::size_t particle, std::size_t cell, const Function& function) const {
-        std::for_each(particlesBegin(cell), particlesEnd(cell), [&function, particle](auto x) {
-            if(x != particle) function(x);
-        });
-        for(auto itNeighCell = neighborsBegin(cell); itNeighCell != neighborsEnd(cell); ++itNeighCell) {
-            std::for_each(particlesBegin(*itNeighCell), particlesEnd(*itNeighCell), function);
-        }
-    }
+    void forEachNeighbor(std::size_t particle, std::size_t cell, const Function& function) const;
 
     bool cellEmpty(std::size_t index) const {
         return (*_head.at(index)).load() == 0;
@@ -405,6 +398,17 @@ inline NeighborsIterator CompactCellLinkedList::cellNeighborsBegin(std::size_t c
 
 inline NeighborsIterator CompactCellLinkedList::cellNeighborsEnd(std::size_t cellIndex) const {
     return {*this, cellIndex, 0};
+}
+
+template<typename Function>
+inline void CompactCellLinkedList::forEachNeighbor(std::size_t particle, std::size_t cell,
+                                                   const Function &function) const {
+    std::for_each(particlesBegin(cell), particlesEnd(cell), [&function, particle](auto x) {
+        if(x != particle) function(x);
+    });
+    for(auto itNeighCell = neighborsBegin(cell); itNeighCell != neighborsEnd(cell); ++itNeighCell) {
+        std::for_each(particlesBegin(*itNeighCell), particlesEnd(*itNeighCell), function);
+    }
 }
 
 }
