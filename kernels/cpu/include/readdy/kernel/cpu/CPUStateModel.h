@@ -62,7 +62,7 @@ public:
     using topology = readdy::model::top::GraphTopology;
     using topology_ref = std::unique_ptr<topology>;
     using topologies_vec = readdy::util::index_persistent_vector<topology_ref>;
-    using neighbor_list = nl::ContiguousCellLinkedList;
+    using neighbor_list = nl::CompactCellLinkedList;
 
     CPUStateModel(data_type &data, const readdy::model::Context &context, readdy::util::thread::Config const* config,
                   readdy::model::top::TopologyActionFactory const* taf);

@@ -221,30 +221,7 @@ void CompactCellLinkedList::setUpBins(const util::PerformanceNode &node) {
         }
     }
 }
-
-BoxIterator::BoxIterator(const CompactCellLinkedList &ccll, std::size_t state)
-        : _ccll(ccll), _state(state) { }
-
-BoxIterator &BoxIterator::operator++() {
-    if (_state != 0) {
-        _state = _ccll.get().list().at(_state);
-    }
-    return *this;
-}
-
-BoxIterator::value_type BoxIterator::operator*() const  {
-    return _state - 1;
-}
-
-bool BoxIterator::operator==(const BoxIterator &rhs) const {
-    return _state == rhs._state;
-}
-
-bool BoxIterator::operator!=(const BoxIterator &rhs) const {
-    return !(*this == rhs);
-}
-
-MacroBoxIterator::MacroBoxIterator(const CompactCellLinkedList &ccll, std::size_t centerCell, 
+MacroBoxIterator::MacroBoxIterator(const CompactCellLinkedList &ccll, std::size_t centerCell,
                                    const std::size_t *currentCell, bool end, int skip)
         : _ccll(ccll), _centerCell(centerCell), _skip(skip),
           _neighborCellsBegin(ccll.neighborsBegin(centerCell)), _neighborCellsEnd(ccll.neighborsEnd(centerCell)),

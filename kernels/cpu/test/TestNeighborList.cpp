@@ -271,7 +271,8 @@ TEST(TestNeighborListImpl, Diffusion) {
                 const auto neighbor_list = kernel->getCPUKernelStateModel().getNeighborList();
 
                 for(std::size_t cell = 0; cell < neighbor_list->nCells(); ++cell) {
-                    for(auto itParticle = neighbor_list->particlesBegin(cell); itParticle <= neighbor_list->particlesEnd(cell); ++itParticle) {
+                    for(auto itParticle = neighbor_list->particlesBegin(cell);
+                        itParticle != neighbor_list->particlesEnd(cell); ++itParticle) {
                         const auto &entry = neighbor_list->data().entry_at(*itParticle);
                         ASSERT_FALSE(entry.deactivated);
 

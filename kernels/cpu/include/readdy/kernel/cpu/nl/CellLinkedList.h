@@ -245,7 +245,7 @@ public:
     using iterator_category = std::forward_iterator_tag;
     using size_type = CompactCellLinkedList::LIST::size_type;
 
-    BoxIterator(const CompactCellLinkedList &ccll, std::size_t state);
+    BoxIterator(const CompactCellLinkedList &ccll, std::size_t state) : _ccll(ccll), _state(state), _val(state-1) { };
 
     BoxIterator(const BoxIterator&) = default;
     BoxIterator &operator=(const BoxIterator &) = default;
@@ -253,17 +253,37 @@ public:
     BoxIterator &operator=(BoxIterator &&) = default;
     ~BoxIterator() = default;
 
-    BoxIterator &operator++();
+    BoxIterator operator++(int) {
+        BoxIterator tmp(*this);
+        operator++();
+        return tmp;
+    };
 
-    value_type operator*() const;
+    pointer operator->() const {
+        return &_val;
+    }
 
-    bool operator==(const BoxIterator &rhs) const;
+    BoxIterator &operator++() {
+        _state = _ccll.get().list().at(_state);
+        _val = _state -1;
+        return *this;
+    };
 
-    bool operator!=(const BoxIterator &rhs) const;
+    value_type operator*() const {
+        return _val;
+    };
+
+    bool operator==(const BoxIterator &rhs) const {
+        return _state == rhs._state;
+    };
+
+    bool operator!=(const BoxIterator &rhs) const {
+        return _state != rhs._state;
+    };
 
 private:
     std::reference_wrapper<const CompactCellLinkedList> _ccll;
-    std::size_t _state;
+    std::size_t _state, _val;
 };
 
 inline BoxIterator CompactCellLinkedList::particlesBegin(std::size_t cellIndex) {
