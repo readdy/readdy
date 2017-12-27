@@ -74,47 +74,27 @@ class TestNeighborListImpl : public ::testing::TestWithParam<const char*> {};
 using nl_t = readdy::kernel::cpu::nl::CompactCellLinkedList;
 
 auto isPairInList = [](nl_t *pairs, std::size_t idx1, std::size_t idx2) {
-    /*std::cout << "got HEAD:" << std::endl;
-    std::stringstream ss;
-    for(const auto &a : pairs->head()) {
-        ss << (*a).load() << ", ";
-    }
-    std::cout << ss.str() << std::endl;*/
     bool foundOneDirection {false};
     bool foundOtherDirection {false};
     {
-        auto cix = pairs->cellOfParticle(idx1);
-        for (auto it = pairs->cellNeighborsBegin(cix); it != pairs->cellNeighborsEnd(cix); ++it) {
-            if(*it == idx1) {
-                foundOneDirection = std::find(it.neighborsBegin(), it.neighborsEnd(), idx2) != it.neighborsEnd();
-            }
-        }
+        pairs->forEachNeighbor(idx1, [&](auto neighborIdx) {
+           if(neighborIdx == idx2) {
+               foundOneDirection = true;
+           }
+        });
     }
     {
-        auto cix = pairs->cellOfParticle(idx2);
-        for (auto it = pairs->cellNeighborsBegin(cix); it != pairs->cellNeighborsEnd(cix); ++it) {
-            if(*it == idx2) {
-                foundOtherDirection = std::find(it.neighborsBegin(), it.neighborsEnd(), idx1) != it.neighborsEnd();
+        pairs->forEachNeighbor(idx2, [&](auto neighborIdx) {
+            if(neighborIdx == idx1) {
+                foundOtherDirection = true;
             }
-        }
+        });
     }
     return foundOneDirection && foundOtherDirection;
 };
 
 auto isIdPairInList = [](nl_t *pairs, readdy::kernel::cpu::data::DefaultDataContainer &data, std::size_t id1, std::size_t id2) {
     return isPairInList(pairs, data.getIndexForId(id1), data.getIndexForId(id2));
-};
-
-auto getNumberPairs = [](nl_t &pairs) {
-    std::size_t n = 0;
-    for(std::size_t cell = 0; cell < pairs.nCells(); ++cell) {
-        for(auto it = pairs.cellNeighborsBegin(cell); it != pairs.cellNeighborsEnd(cell); ++it) {
-            for(auto it2 = it.neighborsBegin(); it2 != it.neighborsEnd(); ++it2) {
-                ++n;
-            }
-        }
-    }
-    return n;
 };
 
 TEST_F(TestNeighborList, ThreeBoxesNonPeriodic) {
@@ -137,8 +117,6 @@ TEST_F(TestNeighborList, ThreeBoxesNonPeriodic) {
     data.addParticles(particles);
     list.setUp(0, 1, {});
 
-    auto sum = getNumberPairs(list);
-    EXPECT_EQ(sum, 2);
     EXPECT_TRUE(isPairInList(&list, 0, 1));
     EXPECT_TRUE(isPairInList(&list, 1, 0));
 }
@@ -164,8 +142,6 @@ TEST_F(TestNeighborList, OneDirection) {
 
     list.setUp(0, 8, {});
 
-    auto sum = getNumberPairs(list);
-    EXPECT_LE(4, sum);
     EXPECT_TRUE(isIdPairInList(&list, data, ids.at(0), ids.at(2)));
     EXPECT_TRUE(isIdPairInList(&list, data, ids.at(2), ids.at(0)));
     EXPECT_TRUE(isIdPairInList(&list, data, ids.at(1), ids.at(2)));
@@ -190,8 +166,6 @@ TEST_F(TestNeighborList, AllNeighborsInCutoffSphere) {
 
     data.addParticles(particles);
     list.setUp(0,1,{});
-    auto sum = getNumberPairs(list);
-    EXPECT_EQ(sum, 30);
     for (size_t i = 0; i < 6; ++i) {
         for (size_t j = i + 1; j < 6; ++j) {
             EXPECT_TRUE(isPairInList(&list, i, j)) << "Particles " << i << " and " << j << " were not neighbors.";

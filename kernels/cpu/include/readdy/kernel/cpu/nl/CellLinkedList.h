@@ -176,14 +176,6 @@ public:
 
     BoxIterator particlesEnd(std::size_t cellIndex) const;
 
-    MacroBoxIterator macroCellParticlesBegin(std::size_t cellIndex, int skip=-1) const;
-
-    MacroBoxIterator macroCellParticlesEnd(std::size_t cellIndex) const;
-
-    NeighborsIterator cellNeighborsBegin(std::size_t cellIndex) const;
-
-    NeighborsIterator cellNeighborsEnd(std::size_t cellIndex) const;
-
     const HEAD &head() const {
         return _head;
     };
@@ -295,110 +287,6 @@ inline BoxIterator CompactCellLinkedList::particlesEnd(std::size_t /*cellIndex*/
     return {*this, 0};
 }
 
-class MacroBoxIterator {
-    using alloc = std::allocator<std::size_t>;
-public:
-    using difference_type = typename alloc::difference_type;
-    using value_type = typename alloc::value_type;
-    using reference = typename alloc::const_reference;
-    using pointer = typename alloc::const_pointer;
-    using iterator_category = std::forward_iterator_tag;
-    using size_type = CompactCellLinkedList::LIST::size_type;
-
-    MacroBoxIterator(const CompactCellLinkedList &ccll, std::size_t centerCell, const std::size_t *currentCell,
-                     bool end=false, int skip=-1);
-
-    MacroBoxIterator &operator++();
-
-    reference operator*() const;
-
-    pointer operator->() const;
-
-    bool operator==(const MacroBoxIterator &rhs) const;
-    bool operator!=(const MacroBoxIterator &rhs) const;
-
-private:
-
-    const std::size_t *getCurrentCell(const std::size_t *initial) const;
-
-    BoxIterator getCurrentBoxIterator() const;
-
-    const std::size_t *_neighborCellsBegin;
-    const std::size_t *_neighborCellsEnd;
-
-    std::reference_wrapper<const CompactCellLinkedList> _ccll;
-    std::size_t _centerCell;
-
-    const std::size_t *_currentCell;
-    BoxIterator _currentBoxIt;
-    BoxIterator _currentBoxEnd;
-
-    value_type _state;
-
-    int _skip;
-};
-
-class NeighborsIterator {
-    using Alloc = std::allocator<std::size_t>;
-public:
-
-    using difference_type = typename Alloc::difference_type;
-    using value_type = typename Alloc::value_type;
-    using reference = typename Alloc::const_reference;
-    using pointer = typename Alloc::const_pointer;
-    using iterator_category = std::forward_iterator_tag;
-    using size_type = std::size_t;
-
-    /**
-     * Iterator that will iterate over all particles of the specified cell times all "neighboring" particles (i.e.,
-     * one through its own cell (cellAt==nullptr) and then through the neighboring cells).
-     * @param ccll the cell linked list this iterator belongs to
-     * @param cell the cell
-     * @param cellAt the cell in the "neighboring cells" iteration, nullptr if own cell
-     * @param state the state of this cell
-     * @param stateNeigh the state of the neighboring iterator
-     */
-    NeighborsIterator(const CompactCellLinkedList &ccll, std::size_t cell, std::size_t state);
-
-    NeighborsIterator &operator++();
-
-    reference operator*() const;
-
-    reference currentParticle() const;
-
-    bool operator==(const NeighborsIterator &rhs) const;
-
-    bool operator!=(const NeighborsIterator &rhs) const;
-
-    MacroBoxIterator neighborsBegin() const;
-
-    MacroBoxIterator neighborsEnd() const;
-
-private:
-    std::size_t _cell;
-
-    value_type _currentValue;
-
-    BoxIterator _innerIterator;
-
-    std::reference_wrapper<const CompactCellLinkedList> _ccll;
-};
-
-inline MacroBoxIterator CompactCellLinkedList::macroCellParticlesBegin(std::size_t cellIndex, int skip) const {
-    return {*this, cellIndex, nullptr, false, skip};
-}
-
-inline MacroBoxIterator CompactCellLinkedList::macroCellParticlesEnd(std::size_t cellIndex) const {
-    return {*this, cellIndex, nullptr, true};
-}
-
-inline NeighborsIterator CompactCellLinkedList::cellNeighborsBegin(std::size_t cellIndex) const {
-    return {*this, cellIndex, (*_head.at(cellIndex)).load()};
-}
-
-inline NeighborsIterator CompactCellLinkedList::cellNeighborsEnd(std::size_t cellIndex) const {
-    return {*this, cellIndex, 0};
-}
 
 template<typename Function>
 inline void CompactCellLinkedList::forEachNeighbor(std::size_t particle, std::size_t cell,
