@@ -23,7 +23,7 @@ function set_this_up {
 
 set_this_up
 
-CONDA_PACKAGE_FILE=$(conda build tools/conda-recipe --output)
+CONDA_PACKAGE_FILE=$(conda build tools/conda-recipe --output --quiet)
 echo "found conda package file $CONDA_PACKAGE_FILE"
 
 conda install anaconda-client -qy
