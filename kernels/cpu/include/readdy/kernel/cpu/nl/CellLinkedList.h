@@ -233,9 +233,9 @@ public:
     BoxIterator(const CompactCellLinkedList &ccll, std::size_t state) : _ccll(ccll), _state(state), _val(state-1) { };
 
     BoxIterator(const BoxIterator&) = default;
-    BoxIterator &operator=(const BoxIterator &) = default;
+    BoxIterator &operator=(const BoxIterator &) = delete;
     BoxIterator(BoxIterator &&) = default;
-    BoxIterator &operator=(BoxIterator &&) = default;
+    BoxIterator &operator=(BoxIterator &&) = delete;
     ~BoxIterator() = default;
 
     BoxIterator operator++(int) {
@@ -249,7 +249,7 @@ public:
     }
 
     BoxIterator &operator++() {
-        _state = _ccll.get().list().at(_state);
+        _state = _ccll.list().at(_state);
         _val = _state -1;
         return *this;
     };
@@ -267,7 +267,7 @@ public:
     };
 
 private:
-    std::reference_wrapper<const CompactCellLinkedList> _ccll;
+    const CompactCellLinkedList& _ccll;
     std::size_t _state, _val;
 };
 

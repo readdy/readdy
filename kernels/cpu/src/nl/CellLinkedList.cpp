@@ -160,6 +160,17 @@ void CompactCellLinkedList::fillBins<true>(const util::PerformanceNode &node) {
 template<>
 void CompactCellLinkedList::fillBins<false>(const util::PerformanceNode &node) {
     auto t = node.timeit();
+
+    {
+        auto thilb = node.subnode("hilbert").timeit();
+        static int i = 0;
+        if(i % 100 == 0) {
+            _data.get().hilbertSort(_max_cutoff + _skin);
+            i = 0;
+        }
+        ++i;
+    }
+
     const auto &boxSize = _context.get().boxSize();
     const auto &data = _data.get();
     const auto grainSize = data.size() / _config.get().nThreads();

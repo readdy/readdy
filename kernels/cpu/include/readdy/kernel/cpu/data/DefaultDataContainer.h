@@ -33,6 +33,7 @@
 #pragma once
 
 #include <readdy/model/Particle.h>
+#include <readdy/kernel/cpu/util/hilbert.h>
 #include "DataContainer.h"
 
 namespace readdy {
@@ -65,6 +66,61 @@ public:
     std::vector<size_type> update(DataUpdate &&update) override;
 
     void displace(size_type entry, const Particle::pos_type &delta) override;
+
+    void hilbertSort(scalar gridWidth) {
+        if(!empty()) {
+            using indices_it = std::vector<std::size_t>::iterator;
+            std::vector<std::size_t> hilbert_indices;
+            std::vector<std::size_t> indices(size());
+
+            const auto grainSize = size() / _threadConfig.get().nThreads();
+            std::iota(indices.begin(), indices.end(), 0);
+            hilbert_indices.resize(size());
+
+            auto worker = [&](std::size_t, const_iterator begin, const_iterator end, indices_it hilbert_begin) {
+                {
+                    auto it = begin;
+                    auto hilbert_it = hilbert_begin;
+                    for (; it != end; ++it, ++hilbert_it) {
+                        if (!it->deactivated) {
+                            const auto integer_coordinates = project(it->pos, gridWidth);
+                            *hilbert_it = 1 + static_cast<std::size_t>(hilbert_c2i(3, CHAR_BIT, integer_coordinates.data()));
+                        } else {
+                            *hilbert_it = 0;
+                        }
+                    }
+                }
+            };
+            {
+                std::vector<std::function<void(std::size_t)>> executables;
+                executables.reserve(_threadConfig.get().nThreads());
+                const auto& executor = *_threadConfig.get().executor();
+                auto data_it = begin();
+                auto hilberts_it = hilbert_indices.begin();
+                for (std::size_t i = 0; i < _threadConfig.get().nThreads() - 1; ++i) {
+                    executables.push_back(executor.pack(worker, data_it, data_it + grainSize, hilberts_it));
+                    data_it += grainSize;
+                    hilberts_it += grainSize;
+                }
+                executables.push_back(executor.pack(worker, data_it, end(), hilberts_it));
+                executor.execute_and_wait(std::move(executables));
+            }
+            {
+                std::sort(indices.begin(), indices.end(),
+                          [&hilbert_indices](std::size_t i, std::size_t j) -> bool {
+                              return hilbert_indices[i] < hilbert_indices[j];
+                          });
+            }
+
+            blanks_moved_to_front();
+            std::vector<std::size_t> inverseIndices(indices.size());
+            for(std::size_t i = 0; i < indices.size(); ++i) {
+                inverseIndices[indices[i]] = i;
+            }
+            reorderSignal->fire_signal(inverseIndices);
+            readdy::util::collections::reorder_destructive(inverseIndices.begin(), inverseIndices.end(), begin());
+        }
+    };
 
 };
 
