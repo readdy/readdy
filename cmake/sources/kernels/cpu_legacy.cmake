@@ -53,6 +53,3 @@ LIST(APPEND CPU_LEGACY_SOURCES "${SOURCES_DIR}/actions/reactions/CPUGillespie.cp
 #LIST(APPEND CPU_LEGACY_SOURCES "${SOURCES_DIR}/actions/reactions/CPUGillespieParallel.cpp")
 #LIST(APPEND CPU_LEGACY_SOURCES "${SOURCES_DIR}/actions/reactions/NextSubvolumesReactionScheduler.cpp")
 LIST(APPEND CPU_LEGACY_SOURCES "${SOURCES_DIR}/actions/topologies/CPUTopologyActionFactory.cpp")
-
-# --- c sources ---
-LIST(APPEND CPU_LEGACY_SOURCES "${SOURCES_DIR}/util/hilbert.c")

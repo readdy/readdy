@@ -45,6 +45,3 @@ LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/reactions/CPUUncontrolledApproxi
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/reactions/CPUGillespie.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/topologies/CPUTopologyActions.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/topologies/CPUTopologyActionFactory.cpp")
-
-# --- c sources ---
-LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/util/hilbert.c")

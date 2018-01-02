@@ -248,6 +248,8 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
     SET(BUILD_BENCHMARKS OFF CACHE BOOL "")
     ADD_SUBDIRECTORY(libraries/c-blosc)
 
+    add_subdirectory(libraries/hilbert)
+
     IF(READDY_BUILD_SHARED_COMBINED)
         INCLUDE(cmake/sources/sources_common.cmake)
         INCLUDE(cmake/sources/sources_io.cmake)

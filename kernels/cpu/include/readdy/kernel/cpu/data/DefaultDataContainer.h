@@ -33,7 +33,7 @@
 #pragma once
 
 #include <readdy/model/Particle.h>
-#include <readdy/kernel/cpu/util/hilbert.h>
+#include <hilbert.h>
 #include "DataContainer.h"
 
 namespace readdy {

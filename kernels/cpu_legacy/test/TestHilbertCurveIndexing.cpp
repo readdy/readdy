@@ -31,7 +31,7 @@
 
 #include "gtest/gtest.h"
 
-#include <readdy/kernel/cpu_legacy/util/hilbert.h>
+#include <hilbert.h>
 #include <readdy/plugin/KernelProvider.h>
 
 namespace {
