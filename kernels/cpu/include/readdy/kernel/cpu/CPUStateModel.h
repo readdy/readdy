@@ -64,7 +64,7 @@ public:
     using topologies_vec = readdy::util::index_persistent_vector<topology_ref>;
     using neighbor_list = nl::CompactCellLinkedList;
 
-    CPUStateModel(data_type &data, const readdy::model::Context &context, readdy::util::thread::Config const* config,
+    CPUStateModel(data_type &data, const readdy::model::Context &context, thread_pool &pool,
                   readdy::model::top::TopologyActionFactory const* taf);
 
     ~CPUStateModel() override;
@@ -192,7 +192,7 @@ public:
     readdy::model::top::GraphTopology *getTopologyForParticle(readdy::model::top::Topology::particle_index particle) override;
 
 private:
-    std::reference_wrapper<const readdy::util::thread::Config> _config;
+    std::reference_wrapper<thread_pool> _pool;
     std::reference_wrapper<const readdy::model::Context> _context;
     std::reference_wrapper<data_type> _data;
     std::unique_ptr<neighbor_list> _neighborList;

@@ -45,8 +45,7 @@ public:
     using count_type = std::size_t;
     using block_n_particles_type = std::vector<util::thread::copyable_atomic<std::size_t>>;
 
-    ContiguousCellLinkedList(data_type &data, const readdy::model::Context &context,
-                             const util::thread::Config &config);
+    ContiguousCellLinkedList(data_type &data, const readdy::model::Context &context, thread_pool &pool);
 
 public:
 

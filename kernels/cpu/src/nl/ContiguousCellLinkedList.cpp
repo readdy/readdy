@@ -36,8 +36,8 @@ namespace cpu {
 namespace nl {
 
 ContiguousCellLinkedList::ContiguousCellLinkedList(data_type &data, const readdy::model::Context &context,
-                                                   const util::thread::Config &config)
-        : CellLinkedList(data, context, config) {}
+                                                   thread_pool &pool)
+        : CellLinkedList(data, context, pool) {}
 
 void ContiguousCellLinkedList::fillBins(const util::PerformanceNode &node) {
     auto t = node.timeit();
@@ -85,17 +85,19 @@ void ContiguousCellLinkedList::fillBins(const util::PerformanceNode &node) {
             }
         };
 
-        const auto grainSize = data.size() / _config.get().nThreads();
-        const auto &executor = *_config.get().executor();
-        std::vector<std::function<void(std::size_t)>> executables;
-        executables.reserve(_config.get().nThreads());
+        auto &pool = _pool.get();
+        std::vector<util::thread::joining_future<void>> futures;
+        futures.reserve(pool.size());
+        const auto grainSize = data.size() / pool.size();
         auto it = 0_z;
-        for (std::size_t i = 0; i < _config.get().nThreads() - 1; ++i) {
-            executables.push_back(executor.pack(worker, it, it + grainSize));
-            it += grainSize;
+        for (std::size_t i = 0; i < pool.size()-1; ++i) {
+            auto itNext = it + grainSize;
+            if(it != itNext) {
+                futures.emplace_back(pool.push(worker, it, itNext));
+            }
+            it = itNext;
         }
-        executables.push_back(executor.pack(worker, it, data.size()));
-        executor.execute_and_wait(std::move(executables));
+        if(it != data.size()) futures.emplace_back(pool.push(worker, it, data.size()));
     }
 
 }
@@ -105,8 +107,8 @@ ContiguousCellLinkedList::count_type ContiguousCellLinkedList::getMaxCounts(cons
 
     const auto &boxSize = _context.get().boxSize();
     const auto &data = _data.get();
-    const auto grainSize = data.size() / _config.get().nThreads();
-    const auto &executor = *_config.get().executor();
+    auto &pool = _pool.get();
+    const auto grainSize = data.size() / pool.size();
     const auto cellSize = _cellSize;
     const auto &cellIndex = _cellIndex;
     auto nCells = cellIndex.size();
@@ -135,15 +137,19 @@ ContiguousCellLinkedList::count_type ContiguousCellLinkedList::getMaxCounts(cons
 
         };
 
-        std::vector<std::function<void(std::size_t)>> executables;
-        executables.reserve(_config.get().nThreads());
+        std::vector<util::thread::joining_future<void>> futures;
+        futures.reserve(pool.size());
         auto it = 0_z;
-        for (std::size_t i = 0; i < _config.get().nThreads() - 1; ++i) {
-            executables.push_back(executor.pack(worker, it, it + grainSize));
-            it += grainSize;
+        for (std::size_t i = 0; i < pool.size()-1; ++i) {
+            auto itNext = it + grainSize;
+            if(it != itNext) {
+                futures.emplace_back(pool.push(worker, it, itNext));
+            }
+            it = itNext;
         }
-        executables.push_back(executor.pack(worker, it, data.size()));
-        executor.execute_and_wait(std::move(executables));
+        if(it != data.size()) {
+            futures.emplace_back(pool.push(worker, it, data.size()));
+        }
     }
 
     auto maxCounts = *std::max_element(blockNParticles.begin(), blockNParticles.end(),

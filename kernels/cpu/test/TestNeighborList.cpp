@@ -103,9 +103,9 @@ TEST_F(TestNeighborList, ThreeBoxesNonPeriodic) {
     ctx.boxSize() = {{1.5, 4, 1.5}};
     ctx.periodicBoundaryConditions() = {{false, false, false}};
 
-    readdy::util::thread::Config conf;
+    readdy::kernel::cpu::thread_pool pool (readdy::readdy_default_n_threads());
 
-    nl_t list(*kernel->getCPUKernelStateModel().getParticleData(), ctx, conf);
+    nl_t list(*kernel->getCPUKernelStateModel().getParticleData(), ctx, pool);
 
     auto &data = list.data();
 
@@ -129,8 +129,8 @@ TEST_F(TestNeighborList, OneDirection) {
     ctx.potentials().addBox("A", .0, {-.4, -.4, -1.3}, {.4, .4, 1.3});
     ctx.configure();
 
-    readdy::util::thread::Config conf;
-    nl_t list(*kernel->getCPUKernelStateModel().getParticleData(), ctx, conf);
+    readdy::kernel::cpu::thread_pool pool (readdy::readdy_default_n_threads());
+    nl_t list(*kernel->getCPUKernelStateModel().getParticleData(), ctx, pool);
     // Add three particles, one of which is in the neighborhood of the other two
     const auto particles = std::vector<m::Particle>{
             m::Particle(0, 0, -1.1, typeIdA), m::Particle(0, 0, .4, typeIdA), m::Particle(0, 0, 1.1, typeIdA)
@@ -155,8 +155,8 @@ TEST_F(TestNeighborList, AllNeighborsInCutoffSphere) {
     auto &ctx = kernel->context();
     ctx.boxSize() = {{4, 4, 4}};
     ctx.periodicBoundaryConditions() = {{true, true, true}};
-    readdy::util::thread::Config conf;
-    nl_t list(*kernel->getCPUKernelStateModel().getParticleData(), ctx, conf);
+    readdy::kernel::cpu::thread_pool pool (readdy::readdy_default_n_threads());
+    nl_t list(*kernel->getCPUKernelStateModel().getParticleData(), ctx, pool);
     auto &data = list.data();
     // Create a few particles. In this box setup, all particles are neighbors.
     const auto particles = std::vector<m::Particle>{

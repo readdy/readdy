@@ -70,12 +70,19 @@ void from_json(const json &j, NeighborList &nl);
  */
 struct ThreadConfig {
     /**
-     * Number of threads to use. If set to -1, this amounts to:
+     * Number of threads to use. Per default:
      *     * 4 * n_cores in case of a RELEASE build
      *     * n_cores in case of a DEBUG build
      *     * the value of the environment variable READDY_N_CORES, if set (superseeds the other two options)
      */
     int nThreads {-1};
+
+    int getNThreads() const {
+        if(nThreads >= 0) {
+            return nThreads;
+        }
+        return readdy_default_n_threads();
+    }
 };
 /**
  * Json serialization of ThreadConfig

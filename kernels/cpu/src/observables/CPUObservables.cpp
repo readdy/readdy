@@ -104,33 +104,31 @@ void CPUHistogramAlongAxis::evaluate() {
     {
         const std::size_t grainSize = data->size() / kernel->getNThreads();
 
-        std::vector<std::function<void(std::size_t)>> executables;
-        executables.reserve(kernel->getNThreads());
         std::vector<std::promise<result_type>> promises;
         promises.resize(kernel->getNThreads());
 
-        const auto& executor = kernel->executor();
+        auto &pool = kernel->pool();
 
         auto workIter = data->cbegin();
         for (unsigned int i = 0; i < kernel->getNThreads() - 1; ++i) {
             updates.push_back(promises.at(i).get_future());
-            executables.push_back(executor.pack(worker, workIter, workIter + grainSize, std::ref(promises.at(i))));
+            pool.push(worker, workIter, workIter + grainSize, std::ref(promises.at(i)));
             workIter += grainSize;
         }
         auto& promise = promises.back();
         updates.push_back(promise.get_future());
-        executables.push_back(executor.pack(worker, workIter, data->cend(), std::ref(promise)));
+        pool.push(worker, workIter, data->cend(), std::ref(promise));
 
-        executor.execute_and_wait(std::move(executables));
-    }
 
-    for (auto &update : updates) {
-        auto vec = std::move(update.get());
-        auto it1 = vec.begin();
-        auto it2 = result.begin();
-        for (; it1 != vec.end(); ++it1, ++it2) {
-            *it2 += *it1;
+        for (auto &update : updates) {
+            auto vec = std::move(update.get());
+            auto it1 = vec.begin();
+            auto it2 = result.begin();
+            for (; it1 != vec.end(); ++it1, ++it2) {
+                *it2 += *it1;
+            }
         }
+
     }
 }
 

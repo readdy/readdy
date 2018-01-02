@@ -71,11 +71,10 @@ class thread_pool {
 
 public:
 
-    thread_pool() { this->init(); }
+    thread_pool() : thread_pool(0) {  }
 
-    thread_pool(int nThreads) {
-        this->init();
-        this->resize(nThreads);
+    explicit thread_pool(int nThreads) : nWaiting(0), isStop(false), isDone(false) {
+        this->resize(static_cast<std::size_t>(nThreads));
     }
 
     // the destructor waits for all the functions in the queue to be finished
@@ -84,7 +83,7 @@ public:
     }
 
     // get the number of running threads in the pool
-    int size() { return static_cast<int>(this->threads.size()); }
+    std::size_t size() const { return this->threads.size(); }
 
     // number of idle threads
     int n_idle() { return this->nWaiting; }
@@ -94,9 +93,9 @@ public:
     // change the number of threads in the pool
     // should be called from one thread, otherwise be careful to not interleave, also with this->stop()
     // nThreads must be >= 0
-    void resize(int nThreads) {
+    void resize(std::size_t nThreads) {
         if (!this->isStop && !this->isDone) {
-            int oldNThreads = static_cast<int>(this->threads.size());
+            auto oldNThreads = static_cast<int>(this->threads.size());
             if (oldNThreads <= nThreads) {  // if the number of threads is increased
                 this->threads.resize(nThreads);
                 this->flags.resize(nThreads);
@@ -163,9 +162,11 @@ public:
             std::unique_lock<std::mutex> lock(this->mutex);
             this->cv.notify_all();  // stop all waiting threads
         }
-        for (int i = 0; i < static_cast<int>(this->threads.size()); ++i) {  // wait for the computing threads to finish
-            if (this->threads[i]->joinable())
-                this->threads[i]->join();
+        for (auto &thread : this->threads) {
+            // wait for the computing threads to finish
+            if (thread->joinable()) {
+                thread->join();
+            }
         }
         // if there were no threads in the pool but some functors in the queue, the functors are not deleted by the threads
         // therefore delete them here
@@ -211,7 +212,7 @@ private:
 
     void set_thread(int i) {
         std::shared_ptr<std::atomic<bool>> flag(this->flags[i]); // a copy of the shared ptr to the flag
-        auto f = [this, i, flag/* a copy of the shared ptr to the flag */]() {
+        auto f = [this, i, flag/* a copy of the shared ptr to the flag */]() -> void {
             std::atomic<bool> &_flag = *flag;
             std::function<void(int id)> *_f;
             bool isPop = this->q.pop(_f);
@@ -237,13 +238,7 @@ private:
                     return;  // if the queue is empty and this->isDone == true or *flag then return
             }
         };
-        this->threads[i].reset(new std::thread(f)); // compiler may not support std::make_unique()
-    }
-
-    void init() {
-        this->nWaiting = 0;
-        this->isStop = false;
-        this->isDone = false;
+        this->threads[i] = std::make_unique<std::thread>(f);
     }
 
     std::vector<std::unique_ptr<std::thread>> threads;

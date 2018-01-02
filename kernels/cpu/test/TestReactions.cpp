@@ -81,7 +81,7 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
         conversion_t conversion("A->B", 0, 1, 1);
         particle_t p_A{0, 0, 0, 0};
 
-        data_t data {kernel->context(), kernel->threadConfig()};
+        data_t data {kernel->context(), kernel->pool()};
         data.addParticles({p_A});
 
         data_t::EntriesUpdate newParticles{};
@@ -95,7 +95,7 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
 
     // test fusion
     {
-        data_t data {kernel->context(), kernel->threadConfig()};
+        data_t data {kernel->context(), kernel->pool()};
 
         data_t::EntriesUpdate newParticles{};
         std::vector<data_t::size_type> decayedEntries {};
@@ -121,7 +121,7 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
 
     // fission
     {
-        data_t data {kernel->context(), kernel->threadConfig()};
+        data_t data {kernel->context(), kernel->pool()};
 
         data_t::EntriesUpdate newParticles{};
         std::vector<data_t::size_type> decayedEntries {};
@@ -150,7 +150,7 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
 
     // enzymatic 1
     {
-        data_t data{kernel->context(), kernel->threadConfig()};
+        data_t data{kernel->context(), kernel->pool()};
 
         data_t::EntriesUpdate newParticles{};
         std::vector<data_t::size_type > decayedEntries{};
@@ -179,7 +179,7 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
     }
     // enzymatic 2
     {
-        data_t data{kernel->context(), kernel->threadConfig()};
+        data_t data{kernel->context(), kernel->pool()};
 
         data_t::EntriesUpdate newParticles{};
         std::vector<data_t::size_type> decayedEntries{};

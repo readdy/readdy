@@ -34,6 +34,7 @@
 
 #include <readdy/model/Particle.h>
 #include <hilbert.h>
+#include <readdy/kernel/cpu/pool.h>
 #include "DataContainer.h"
 
 namespace readdy {
@@ -52,9 +53,11 @@ public:
 
     explicit DefaultDataContainer(EntryDataContainer *entryDataContainer);
 
-    DefaultDataContainer(const model::Context &context, const util::thread::Config &threadConfig);
+    DefaultDataContainer(const model::Context &context, thread_pool &pool);
 
-    void reserve(std::size_t n) override;
+    void reserve(std::size_t n) override {
+        _entries.reserve(n);
+    };
 
     size_type addEntry(Entry &&entry) override;
 
@@ -65,7 +68,11 @@ public:
 
     std::vector<size_type> update(DataUpdate &&update) override;
 
-    void displace(size_type entry, const Particle::pos_type &delta) override;
+    void displace(size_type index, const Particle::pos_type &delta) override {
+        auto &entry = _entries.at(index);
+        entry.pos += delta;
+        _context.get().fixPositionFun()(entry.pos);
+    };
 
     void hilbertSort(scalar gridWidth) {
         if(!empty()) {
@@ -73,7 +80,7 @@ public:
             std::vector<std::size_t> hilbert_indices;
             std::vector<std::size_t> indices(size());
 
-            const auto grainSize = size() / _threadConfig.get().nThreads();
+            const auto grainSize = size() / _pool.get().size();
             std::iota(indices.begin(), indices.end(), 0);
             hilbert_indices.resize(size());
 
@@ -92,18 +99,16 @@ public:
                 }
             };
             {
-                std::vector<std::function<void(std::size_t)>> executables;
-                executables.reserve(_threadConfig.get().nThreads());
-                const auto& executor = *_threadConfig.get().executor();
+                std::vector<util::thread::joining_future<void>> futures;
+                futures.reserve(_pool.get().size());
                 auto data_it = begin();
                 auto hilberts_it = hilbert_indices.begin();
-                for (std::size_t i = 0; i < _threadConfig.get().nThreads() - 1; ++i) {
-                    executables.push_back(executor.pack(worker, data_it, data_it + grainSize, hilberts_it));
+                for (std::size_t i = 0; i < _pool.get().size() - 1; ++i) {
+                    futures.emplace_back(_pool.get().push(worker, data_it, data_it + grainSize, hilberts_it));
                     data_it += grainSize;
                     hilberts_it += grainSize;
                 }
-                executables.push_back(executor.pack(worker, data_it, end(), hilberts_it));
-                executor.execute_and_wait(std::move(executables));
+                futures.emplace_back(_pool.get().push(worker, data_it, end(), hilberts_it));
             }
             {
                 std::sort(indices.begin(), indices.end(),

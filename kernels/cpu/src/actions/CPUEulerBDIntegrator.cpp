@@ -48,7 +48,7 @@ void CPUEulerBDIntegrator::perform(const readdy::util::PerformanceNode &node) {
 
     const auto dt = timeStep;
 
-    auto worker = [&context, data, dt](std::size_t id, std::size_t beginIdx,  iter_t entry_begin, iter_t entry_end)  {
+    auto worker = [&context, data, dt](std::size_t, std::size_t beginIdx, iter_t entry_begin, iter_t entry_end)  {
         const auto &fixPos = context.fixPositionFun();
         const auto kbt = context.kBT();
         std::size_t idx = beginIdx;
@@ -62,9 +62,11 @@ void CPUEulerBDIntegrator::perform(const readdy::util::PerformanceNode &node) {
         }
     };
 
-    auto work_iter = data->begin();
+    std::vector<util::thread::joining_future<void>> waitingFutures;
+    waitingFutures.reserve(kernel->getNThreads());
+    auto &pool  = kernel->pool();
     {
-        auto& executor = kernel->executor();
+        auto it = data->begin();
         std::vector<std::function<void(std::size_t)>> executables;
         executables.reserve(kernel->getNThreads());
 
@@ -72,13 +74,17 @@ void CPUEulerBDIntegrator::perform(const readdy::util::PerformanceNode &node) {
         const std::size_t grainSize = size / granularity;
 
         std::size_t idx = 0;
-        for (unsigned int i = 0; i < granularity - 1; ++i) {
-            executables.push_back(executor.pack(worker, idx, work_iter, work_iter+grainSize));
-            work_iter += grainSize;
+        for (auto i = 0_z; i < granularity-1; ++i) {
+            auto itNext = it + grainSize;
+            if(it != itNext) {
+                waitingFutures.emplace_back(pool.push(worker, idx, it, itNext));
+            }
+            it = itNext;
             idx += grainSize;
         }
-        executables.push_back(executor.pack(worker, idx, work_iter, data->end()));
-        executor.execute_and_wait(std::move(executables));
+        if(it != data->end()) {
+            waitingFutures.emplace_back(pool.push(worker, idx, it, data->end()));
+        }
     }
 
 }

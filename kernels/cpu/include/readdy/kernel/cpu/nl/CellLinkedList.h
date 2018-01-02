@@ -34,7 +34,6 @@
 
 #include <cstddef>
 #include <readdy/common/Index.h>
-#include <readdy/common/thread/Config.h>
 #include <readdy/model/Context.h>
 #include <readdy/common/Timer.h>
 #include <readdy/common/thread/atomic.h>
@@ -51,30 +50,31 @@ public:
     using cell_radius_type = std::uint8_t;
 
     CellLinkedList(data_type &data, const readdy::model::Context &context,
-                   const readdy::util::thread::Config &config);
+                   thread_pool &pool);
 
     void setUp(scalar skin, cell_radius_type radius, const util::PerformanceNode &node);
 
     virtual void update(const util::PerformanceNode &node) = 0;
-    
+
     virtual void clear() = 0;
-    
+
     const util::Index3D &cellIndex() const {
         return _cellIndex;
     };
-    
+
     const util::Index2D &neighborIndex() const {
         return _cellNeighbors;
     };
-    
+
     const std::vector<std::size_t> &neighbors() const {
         return _cellNeighborsContent;
     };
-    
+
     std::size_t *neighborsBegin(std::size_t cellIndex) {
         auto beginIdx = _cellNeighbors(cellIndex, 1_z);
         return &_cellNeighborsContent.at(beginIdx);
     };
+
     const std::size_t *neighborsBegin(std::size_t cellIndex) const {
         auto beginIdx = _cellNeighbors(cellIndex, 1_z);
         return &_cellNeighborsContent.at(beginIdx);
@@ -83,6 +83,7 @@ public:
     std::size_t *neighborsEnd(std::size_t cellIndex) {
         return neighborsBegin(cellIndex) + nNeighbors(cellIndex);
     };
+
     const std::size_t *neighborsEnd(std::size_t cellIndex) const {
         return neighborsBegin(cellIndex) + nNeighbors(cellIndex);
     };
@@ -105,7 +106,7 @@ public:
 
     std::size_t cellOfParticle(std::size_t index) const {
         const auto &entry = data().entry_at(index);
-        if(entry.deactivated) {
+        if (entry.deactivated) {
             throw std::invalid_argument("requested deactivated entry");
         }
         const auto &boxSize = _context.get().boxSize();
@@ -122,13 +123,13 @@ public:
 protected:
     virtual void setUpBins(const util::PerformanceNode &node) = 0;
 
-    bool _is_set_up {false};
+    bool _is_set_up{false};
 
-    scalar _skin {0};
-    scalar _max_cutoff {0};
+    scalar _skin{0};
+    scalar _max_cutoff{0};
     std::uint8_t _radius;
 
-    Vec3 _cellSize {0, 0, 0};
+    Vec3 _cellSize{0, 0, 0};
 
     util::Index3D _cellIndex;
     // index of size (n_cells x (1 + nAdjacentCells)), where the first element tells how many adj cells are stored
@@ -138,11 +139,13 @@ protected:
 
     std::reference_wrapper<data_type> _data;
     std::reference_wrapper<const readdy::model::Context> _context;
-    std::reference_wrapper<const readdy::util::thread::Config> _config;
+    std::reference_wrapper<thread_pool> _pool;
 };
 
 class BoxIterator;
+
 class MacroBoxIterator;
+
 class NeighborsIterator;
 
 class CompactCellLinkedList : public CellLinkedList {
@@ -150,13 +153,13 @@ public:
 
     using HEAD = std::vector<util::thread::copyable_atomic<std::size_t>>;
     using LIST = std::vector<std::size_t>;
-    using entry_cref = const data_type::entry_type&;
+    using entry_cref = const data_type::entry_type &;
     using pair_callback = std::function<void(entry_cref, entry_cref)>;
 
     using iterator_bounds = std::tuple<std::size_t, std::size_t>;
 
     CompactCellLinkedList(data_type &data, const readdy::model::Context &context,
-                          const util::thread::Config &config);
+                          thread_pool &pool);
 
     void update(const util::PerformanceNode &node) override {
         auto t = node.timeit();
@@ -198,7 +201,7 @@ public:
     }
 
     template<typename Function>
-    void forEachNeighbor(std::size_t particle, std::size_t cell, const Function& function) const;
+    void forEachNeighbor(std::size_t particle, std::size_t cell, const Function &function) const;
 
     bool cellEmpty(std::size_t index) const {
         return (*_head.at(index)).load() == 0;
@@ -213,7 +216,7 @@ protected:
     // particles, 1-indexed
     LIST _list;
 
-    bool _serial {false};
+    bool _serial{false};
 
 };
 
@@ -230,12 +233,16 @@ public:
     using iterator_category = std::forward_iterator_tag;
     using size_type = CompactCellLinkedList::LIST::size_type;
 
-    BoxIterator(const CompactCellLinkedList &ccll, std::size_t state) : _ccll(ccll), _state(state), _val(state-1) { };
+    BoxIterator(const CompactCellLinkedList &ccll, std::size_t state) : _ccll(ccll), _state(state), _val(state - 1) {};
 
-    BoxIterator(const BoxIterator&) = default;
+    BoxIterator(const BoxIterator &) = default;
+
     BoxIterator &operator=(const BoxIterator &) = delete;
+
     BoxIterator(BoxIterator &&) = default;
+
     BoxIterator &operator=(BoxIterator &&) = delete;
+
     ~BoxIterator() = default;
 
     BoxIterator operator++(int) {
@@ -250,7 +257,7 @@ public:
 
     BoxIterator &operator++() {
         _state = _ccll.list().at(_state);
-        _val = _state -1;
+        _val = _state - 1;
         return *this;
     };
 
@@ -267,7 +274,7 @@ public:
     };
 
 private:
-    const CompactCellLinkedList& _ccll;
+    const CompactCellLinkedList &_ccll;
     std::size_t _state, _val;
 };
 
@@ -292,9 +299,9 @@ template<typename Function>
 inline void CompactCellLinkedList::forEachNeighbor(std::size_t particle, std::size_t cell,
                                                    const Function &function) const {
     std::for_each(particlesBegin(cell), particlesEnd(cell), [&function, particle](auto x) {
-        if(x != particle) function(x);
+        if (x != particle) function(x);
     });
-    for(auto itNeighCell = neighborsBegin(cell); itNeighCell != neighborsEnd(cell); ++itNeighCell) {
+    for (auto itNeighCell = neighborsBegin(cell); itNeighCell != neighborsEnd(cell); ++itNeighCell) {
         std::for_each(particlesBegin(*itNeighCell), particlesEnd(*itNeighCell), function);
     }
 }

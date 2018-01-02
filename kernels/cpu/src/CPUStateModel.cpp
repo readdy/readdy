@@ -69,10 +69,10 @@ const std::vector<readdy::model::Particle> CPUStateModel::getParticles() const {
 }
 
 CPUStateModel::CPUStateModel(data_type &data, const readdy::model::Context &context,
-                             readdy::util::thread::Config const *const config,
+                             thread_pool &pool,
                              readdy::model::top::TopologyActionFactory const *const taf)
-        : _config(*config), _context(context), _topologyActionFactory(*taf), _data(data) {
-    _neighborList = std::make_unique<neighbor_list>(_data.get(), _context.get(), *config);
+        : _pool(pool), _context(context), _topologyActionFactory(*taf), _data(data) {
+    _neighborList = std::make_unique<neighbor_list>(_data.get(), _context.get(), _pool.get());
     _reorderConnection = std::make_unique<readdy::signals::scoped_connection>(
             getParticleData()->registerReorderEventListener([this](const std::vector<std::size_t> &indices) -> void {
                 for (auto &top : _topologies) {

@@ -48,7 +48,11 @@ void to_json(json &j, const ThreadConfig &nl) {
 }
 
 void from_json(const json &j, ThreadConfig &nl) {
-    if (j.find("n_threads") != j.end()) nl.nThreads = j.at("n_threads").get<int>();
+    if (j.find("n_threads") != j.end()) {
+        nl.nThreads = j.at("n_threads").get<int>();
+    } else {
+        nl.nThreads = readdy_default_n_threads();
+    }
 }
 
 void to_json(json &j, const Configuration &conf) {

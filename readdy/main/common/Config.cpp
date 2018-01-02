@@ -44,35 +44,7 @@ namespace readdy {
 namespace util {
 namespace thread {
 
-Config::Config() {
-#ifdef READDY_DEBUG
-    m_nThreads = std::max(std::thread::hardware_concurrency(), 1u);
-#else
-    // magic number 4 to enable some load balancing
-    m_nThreads = std::max(4*std::thread::hardware_concurrency(), 1u);
-#endif
-
-    const char *env = std::getenv("READDY_N_CORES");
-    if (env != nullptr) {
-        m_nThreads = static_cast<n_threads_type>(std::stol(env));
-        log::debug("Using {} threads (set by environment variable READDY_N_CORES)", m_nThreads);
-    }
-    update();
-}
-
-Config::n_threads_type Config::nThreads() const {
-    return m_nThreads;
-}
-
-void Config::setNThreads(const Config::n_threads_type n) {
-    m_nThreads = n;
-    update();
-}
-
-void Config::setMode(ThreadMode mode) {
-    _mode = mode;
-    update();
-}
+Config::Config() : Config(ThreadMode::std_thread) {}
 
 void Config::update() {
     using pool_executor = readdy::util::thread::executor<readdy::util::thread::executor_type::pool>;
@@ -116,8 +88,8 @@ void Config::update() {
     }
 }
 
-const executor_base *const Config::executor() const {
-    return _executor.get();
+Config::Config(ThreadMode mode) : _mode(mode), m_nThreads(readdy_default_n_threads()) {
+    update();
 }
 
 }

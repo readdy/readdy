@@ -42,11 +42,10 @@ readdy::model::Kernel *CPUKernel::create() {
     return new CPUKernel();
 }
 
-CPUKernel::CPUKernel() : readdy::model::Kernel(name), _config(), _data(_context, _config), _actions(this),
+CPUKernel::CPUKernel() : readdy::model::Kernel(name), _pool(readdy_default_n_threads()),
+                         _data(_context, _pool), _actions(this),
                          _observables(this), _topologyActionFactory(_context, _data),
-                         _stateModel(_data, _context, &_config, &_topologyActionFactory){
-    _config.setMode(readdy::util::thread::ThreadMode::pool);
-}
+                         _stateModel(_data, _context, _pool, &_topologyActionFactory){}
 
 void CPUKernel::initialize() {
     readdy::model::Kernel::initialize();
@@ -54,13 +53,8 @@ void CPUKernel::initialize() {
     const auto &fullConfiguration = context().kernelConfiguration();
 
     const auto &configuration = fullConfiguration.cpu;
-    {
-        // thread config
-        if (configuration.threadConfig.nThreads > 0) {
-            threadConfig().setNThreads(static_cast<unsigned int>(configuration.threadConfig.nThreads));
-        }
-        threadConfig().setMode(util::thread::ThreadMode::pool);
-    }
+    // thread config
+    setNThreads(static_cast<std::uint32_t>(configuration.threadConfig.getNThreads()));
     {
         // state model config
         _stateModel.configure(configuration);
@@ -75,7 +69,7 @@ void CPUKernel::initialize() {
 
 void CPUKernel::finalize() {
     readdy::model::Kernel::finalize();
-    threadConfig().setMode(readdy::util::thread::ThreadMode::inactive);
+    //_pool.stop();
 }
 
 }

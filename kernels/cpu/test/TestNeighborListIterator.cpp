@@ -38,9 +38,10 @@ namespace {
 TEST(TestNeighborListIterator, BoxIterator) {
     using namespace readdy;
     model::Context context;
-    util::thread::Config config;
-    kernel::cpu::data::DefaultDataContainer data (context, config);
-    kernel::cpu::nl::CompactCellLinkedList ccll(data, context, config);
+
+    kernel::cpu::thread_pool pool (readdy_default_n_threads());
+    kernel::cpu::data::DefaultDataContainer data (context, pool);
+    kernel::cpu::nl::CompactCellLinkedList ccll(data, context, pool);
 
     context.particle_types().add("A", 1.0);
     context.reactions().addFusion("fusion", "A", "A", "A", 1.0, 1.0);
@@ -92,9 +93,9 @@ TEST(TestNeighborListIterator, BoxIterator) {
 TEST(TestNeighborListIterator, BoxIteratorEmptyBox) {
     using namespace readdy;
     model::Context context;
-    util::thread::Config config;
-    kernel::cpu::data::DefaultDataContainer data (context, config);
-    kernel::cpu::nl::CompactCellLinkedList ccll(data, context, config);
+    kernel::cpu::thread_pool pool (readdy_default_n_threads());
+    kernel::cpu::data::DefaultDataContainer data (context, pool);
+    kernel::cpu::nl::CompactCellLinkedList ccll(data, context, pool);
 
     context.particle_types().add("A", 1.0);
     context.reactions().addFusion("fusion", "A", "A", "A", 1.0, 1.0);

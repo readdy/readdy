@@ -39,20 +39,20 @@ namespace cpu {
 namespace nl {
 
 CellLinkedList::CellLinkedList(data_type &data, const readdy::model::Context &context,
-                               const readdy::util::thread::Config &config)
-        : _data(data), _context(context), _config(config) {}
+                               thread_pool &pool)
+        : _data(data), _context(context), _pool(pool) {}
 
 
 void CellLinkedList::setUp(scalar skin, cell_radius_type radius, const util::PerformanceNode &node) {
-    if(!_is_set_up || _skin != skin || _radius != radius) {
+    if (!_is_set_up || _skin != skin || _radius != radius) {
         auto t = node.timeit();
 
         _skin = skin;
         _radius = radius;
         _max_cutoff = _context.get().calculateMaxCutoff();
-        if(_max_cutoff > 0) {
+        if (_max_cutoff > 0) {
             auto size = _context.get().boxSize();
-            auto desiredWidth = static_cast<scalar>((_max_cutoff + _skin)/static_cast<scalar>(radius));
+            auto desiredWidth = static_cast<scalar>((_max_cutoff + _skin) / static_cast<scalar>(radius));
             std::array<std::size_t, 3> dims{};
             for (int i = 0; i < 3; ++i) {
                 dims[i] = static_cast<unsigned int>(std::max(1., std::floor(size[i] / desiredWidth)));
@@ -90,17 +90,17 @@ void CellLinkedList::setUp(scalar skin, cell_radius_type radius, const util::Per
                                         for (int kk = k - r; kk <= k + r; ++kk) {
                                             if (ii == i && jj == j && kk == k) continue;
                                             auto adj_x = ii;
-                                            if(pbc[0]) {
+                                            if (pbc[0]) {
                                                 auto cix = static_cast<int>(_cellIndex[0]);
                                                 adj_x = (adj_x % cix + cix) % cix;
                                             }
                                             auto adj_y = jj;
-                                            if(pbc[1]) {
+                                            if (pbc[1]) {
                                                 auto cix = static_cast<int>(_cellIndex[1]);
                                                 adj_y = (adj_y % cix + cix) % cix;
                                             }
                                             auto adj_z = kk;
-                                            if(pbc[2]) {
+                                            if (pbc[2]) {
                                                 auto cix = static_cast<int>(_cellIndex[2]);
                                                 adj_z = (adj_z % cix + cix) % cix;
                                             }
@@ -136,8 +136,7 @@ void CellLinkedList::setUp(scalar skin, cell_radius_type radius, const util::Per
 }
 
 CompactCellLinkedList::CompactCellLinkedList(data_type &data, const readdy::model::Context &context,
-                                             const util::thread::Config &config) : CellLinkedList(data, context,
-                                                                                                  config) {}
+                                             thread_pool &pool) : CellLinkedList(data, context, pool) {}
 
 template<>
 void CompactCellLinkedList::fillBins<true>(const util::PerformanceNode &node) {
@@ -161,7 +160,7 @@ template<>
 void CompactCellLinkedList::fillBins<false>(const util::PerformanceNode &node) {
     auto t = node.timeit();
 
-    {
+    {/*
         auto thilb = node.subnode("hilbert").timeit();
         static int i = 0;
         if(i % 100 == 0) {
@@ -169,12 +168,11 @@ void CompactCellLinkedList::fillBins<false>(const util::PerformanceNode &node) {
             i = 0;
         }
         ++i;
-    }
+    */}
 
     const auto &boxSize = _context.get().boxSize();
     const auto &data = _data.get();
-    const auto grainSize = data.size() / _config.get().nThreads();
-    const auto &executor = *_config.get().executor();
+    const auto grainSize = data.size() / _pool.get().size();
     const auto cellSize = _cellSize;
     const auto &cellIndex = _cellIndex;
 
@@ -185,7 +183,7 @@ void CompactCellLinkedList::fillBins<false>(const util::PerformanceNode &node) {
             (std::size_t tid, std::size_t begin_pidx, std::size_t end_pidx) {
         auto it = data.begin() + begin_pidx - 1;
         auto pidx = begin_pidx;
-        while(it != data.begin() + end_pidx - 1) {
+        while (it != data.begin() + end_pidx - 1) {
             const auto &entry = *it;
             if (!entry.deactivated) {
                 const auto i = static_cast<std::size_t>(std::floor((entry.pos.x + .5 * boxSize[0]) / cellSize.x));
@@ -195,7 +193,7 @@ void CompactCellLinkedList::fillBins<false>(const util::PerformanceNode &node) {
                 auto &atomic = *head.at(cix);
                 // perform CAS
                 auto currentHead = atomic.load();
-                while(!atomic.compare_exchange_weak(currentHead, pidx)) {}
+                while (!atomic.compare_exchange_weak(currentHead, pidx)) {}
                 list[pidx] = currentHead;
             }
             ++pidx;
@@ -203,19 +201,19 @@ void CompactCellLinkedList::fillBins<false>(const util::PerformanceNode &node) {
         }
     };
 
-    std::vector<std::function<void(std::size_t)>> executables;
-    executables.reserve(_config.get().nThreads());
+    std::vector<util::thread::joining_future<void>> futures;
+    futures.reserve(_pool.get().size());
     auto it = 1_z;
-    for (int i = 0; i < _config.get().nThreads() - 1; ++i) {
-        executables.push_back(executor.pack(worker, it, it + grainSize));
-        it += grainSize;
+    for (auto i = 0_z; i < _pool.get().size() - 1; ++i) {
+        auto itNext = it + grainSize;
+        if(it != itNext) futures.emplace_back(_pool.get().push(worker, it, itNext));
+        it = itNext;
     }
-    executables.push_back(executor.pack(worker, it, data.size()+1));
-    executor.execute_and_wait(std::move(executables));
+    futures.emplace_back(_pool.get().push(worker, it, _data.get().size()+1));
 }
 
 void CompactCellLinkedList::setUpBins(const util::PerformanceNode &node) {
-    if(_max_cutoff > 0) {
+    if (_max_cutoff > 0) {
         auto t = node.timeit();
         {
             auto tt = node.subnode("allocate").timeit();
@@ -225,7 +223,7 @@ void CompactCellLinkedList::setUpBins(const util::PerformanceNode &node) {
             _list.resize(0);
             _list.resize(nParticles + 1);
         }
-        if(_serial) {
+        if (_serial) {
             fillBins<true>(node.subnode("fillBins serial"));
         } else {
             fillBins<false>(node.subnode("fillBins parallel"));

@@ -33,6 +33,7 @@
 
 #include <readdy/model/Kernel.h>
 
+#include "pool.h"
 #include "CPUStateModel.h"
 #include "observables/CPUObservableFactory.h"
 #include "actions/CPUActionFactory.h"
@@ -61,13 +62,13 @@ public:
     // factory method
     static readdy::model::Kernel *create();
 
-    unsigned long getNThreads() const {
-        return _config.nThreads();
+    void setNThreads(std::uint32_t n) {
+        _pool.resize(n);
     };
 
-    void setNThreads(readdy::util::thread::Config::n_threads_type n) {
-        _config.setNThreads(n);
-    };
+    std::size_t getNThreads() {
+        return static_cast<std::size_t>(_pool.size());
+    }
 
     const CPUStateModel &getCPUKernelStateModel() const {
         return _stateModel;
@@ -101,18 +102,6 @@ public:
         return &_topologyActionFactory;
     };
 
-    const readdy::util::thread::Config &threadConfig() const {
-        return _config;
-    };
-
-    readdy::util::thread::Config &threadConfig() {
-        return _config;
-    };
-
-    const readdy::util::thread::executor_base &executor() const {
-        return *threadConfig().executor();
-    };
-
     const model::observables::ObservableFactory &getObservableFactory() const override {
         return _observables;
     };
@@ -125,15 +114,22 @@ public:
 
     void finalize() override;
 
+    thread_pool &pool() {
+        return _pool;
+    }
+
+    const thread_pool &pool() const {
+        return _pool;
+    }
+
 protected:
 
-    readdy::util::thread::Config _config;
     CPUStateModel::data_type _data;
     actions::CPUActionFactory _actions;
     observables::CPUObservableFactory _observables;
     actions::top::CPUTopologyActionFactory _topologyActionFactory;
     CPUStateModel _stateModel;
-
+    thread_pool _pool;
 };
 
 }

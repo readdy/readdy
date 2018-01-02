@@ -51,7 +51,7 @@ public:
 
 template<typename CLL>
 void insertTestImpl(readdy::kernel::cpu::data::DefaultDataContainer &data, readdy::model::Context &context,
-                    readdy::util::thread::Config &config, std::uint8_t radius) {
+                    readdy::kernel::cpu::thread_pool &pool, std::uint8_t radius) {
     using namespace readdy;
 
     const auto &d2 = context.distSquaredFun();
@@ -59,7 +59,7 @@ void insertTestImpl(readdy::kernel::cpu::data::DefaultDataContainer &data, readd
     std::vector<model::Particle::id_type> particleIds;
     std::for_each(data.begin(), data.end(), [&] (const auto &entry){ particleIds.push_back(entry.id); });
     scalar cutoff = 1;
-    CLL ccll(data, context, config);
+    CLL ccll(data, context, pool);
     ccll.setUp(0, radius, {});
     ccll.update({});
 
@@ -121,9 +121,9 @@ TEST_P(TestCLL, Insert) {
 
     context.configure();
 
-    util::thread::Config config;
+    kernel::cpu::thread_pool pool (readdy_default_n_threads());
 
-    kernel::cpu::data::DefaultDataContainer data (context, config);
+    kernel::cpu::data::DefaultDataContainer data (context, pool);
 
     for(int i = 0; i < 1000; ++i) {
         model::Particle particle(model::rnd::uniform_real<scalar>(-5, 5), 
@@ -133,9 +133,9 @@ TEST_P(TestCLL, Insert) {
     }
 
     if(cllName() == "CompactCLL") {
-        insertTestImpl<kernel::cpu::nl::CompactCellLinkedList>(data, context, config, cllRadius());
+        insertTestImpl<kernel::cpu::nl::CompactCellLinkedList>(data, context, pool, cllRadius());
     } else if(cllName() == "ContiguousCLL") {
-        insertTestImpl<kernel::cpu::nl::ContiguousCellLinkedList>(data, context, config, cllRadius());
+        insertTestImpl<kernel::cpu::nl::ContiguousCellLinkedList>(data, context, pool, cllRadius());
     }
 }
 
@@ -156,9 +156,9 @@ void insertAndDearviateTestImpl(std::uint8_t radius) {
     context.periodicBoundaryConditions()[1] = periodic;
     context.periodicBoundaryConditions()[2] = periodic;
 
-    util::thread::Config config;
+    kernel::cpu::thread_pool pool (readdy_default_n_threads());
 
-    kernel::cpu::data::DefaultDataContainer data (context, config);
+    kernel::cpu::data::DefaultDataContainer data (context, pool);
 
     auto n_particles = 1000;
     for(int i = 0; i < n_particles; ++i) {
@@ -179,7 +179,7 @@ void insertAndDearviateTestImpl(std::uint8_t radius) {
 
     const auto &d2 = context.distSquaredFun();
 
-    CLL nl(data, context, config);
+    CLL nl(data, context, pool);
     nl.setUp(0, radius, {});
     nl.update({});
 
@@ -239,9 +239,9 @@ void diffuseTestImpl(std::uint8_t radius) {
     context.periodicBoundaryConditions()[1] = periodic;
     context.periodicBoundaryConditions()[2] = periodic;
 
-    util::thread::Config config;
+    kernel::cpu::thread_pool pool (readdy_default_n_threads());
 
-    kernel::cpu::data::DefaultDataContainer data (context, config);
+    kernel::cpu::data::DefaultDataContainer data (context, pool);
 
     auto n_particles = 1000;
     for(int i = 0; i < n_particles; ++i) {
@@ -253,7 +253,7 @@ void diffuseTestImpl(std::uint8_t radius) {
 
     context.configure();
 
-    CLL nl(data, context, config);
+    CLL nl(data, context, pool);
     nl.setUp(0, radius, {});
     nl.update({});
 

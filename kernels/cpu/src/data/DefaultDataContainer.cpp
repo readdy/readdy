@@ -37,19 +37,15 @@ namespace kernel {
 namespace cpu {
 namespace data {
 
-DefaultDataContainer::DefaultDataContainer(const readdy::model::Context &context, const util::thread::Config &threadConfig)
-        : DataContainer(context, threadConfig) {}
+DefaultDataContainer::DefaultDataContainer(const readdy::model::Context &context, thread_pool &pool)
+        : DataContainer(context, pool) {}
 
 DefaultDataContainer::DefaultDataContainer(EntryDataContainer *entryDataContainer)
-        : DataContainer(entryDataContainer->context(), entryDataContainer->threadConfig()) {
+        : DataContainer(entryDataContainer->context(), entryDataContainer->pool()) {
     _entries = entryDataContainer->entries();
     //_entries.insert(_entries.end(), entryDataContainer.entries().begin(), entryDataContainer.entries().end());
     _blanks = entryDataContainer->blanks();
     // _blanks.insert(_blanks.end(), entryDataContainer.blanks().begin(), entryDataContainer.blanks().end());
-}
-
-void DefaultDataContainer::reserve(std::size_t n) {
-    _entries.reserve(n);
 }
 
 DefaultDataContainer::size_type DefaultDataContainer::addEntry(Entry &&entry) {
@@ -113,14 +109,6 @@ std::vector<DefaultDataContainer::size_type> DefaultDataContainer::update(DataUp
     }
     return {};
 }
-
-void DefaultDataContainer::displace(size_type index, const Particle::pos_type &delta) {
-    auto &entry = _entries.at(index);
-    entry.pos += delta;
-    _context.get().fixPositionFun()(entry.pos);
-}
-
-
 
 }
 }
