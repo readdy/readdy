@@ -30,11 +30,13 @@
  */
 
 #pragma once
-#include "../CPUKernel.h"
+
+#include <readdy/model/actions/ActionFactory.h>
 
 namespace readdy {
 namespace kernel {
 namespace cpu {
+class CPUKernel;
 namespace actions {
 class CPUActionFactory : public readdy::model::actions::ActionFactory {
     CPUKernel *const kernel;

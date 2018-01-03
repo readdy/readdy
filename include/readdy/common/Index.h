@@ -173,15 +173,18 @@ public:
     template<typename... Ix>
     constexpr value_type operator()(Ix &&... ix) const {
         static_assert(sizeof...(ix) == Dims, "wrong input dim");
-        std::array<typename detail::variadic_first<Ix...>::type, Dims> indices { std::forward<Ix>(ix)... };
-        std::size_t result = 0;
-        auto prefactor = n_elems / _size[0];
-        for(std::size_t d = 0; d < Dims-1; ++d) {
-            result += prefactor * indices[d];
-            prefactor /= _size[d+1];
+        /*if(n_elems > 0)*/ {
+            std::array<typename detail::variadic_first<Ix...>::type, Dims> indices{std::forward<Ix>(ix)...};
+            std::size_t result = 0;
+            auto prefactor = n_elems / _size[0];
+            for (std::size_t d = 0; d < Dims - 1; ++d) {
+                result += prefactor * indices[d];
+                prefactor /= _size[d + 1];
+            }
+            result += indices[Dims - 1];
+            return result;
         }
-        result += indices[Dims-1];
-        return result;
+        return 0;
     }
 
     /**

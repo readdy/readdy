@@ -70,4 +70,20 @@ NAMESPACE_END(c_)
 
 using File = h5rd::File;
 
+inline auto readdy_default_n_threads() -> decltype(std::thread::hardware_concurrency()) {
+    using return_type = decltype(std::thread::hardware_concurrency());
+#ifdef READDY_DEBUG
+    return_type m_nThreads = std::max(std::thread::hardware_concurrency(), 1u);
+#else
+    // magic number 4 to enable some load balancing
+    return_type m_nThreads = std::max(4*std::thread::hardware_concurrency(), 1u);
+#endif
+    const char *env = std::getenv("READDY_N_CORES");
+    if (env != nullptr) {
+        m_nThreads = static_cast<decltype(m_nThreads)>(std::stol(env));
+        log::debug("Using {} threads (set by environment variable READDY_N_CORES)", m_nThreads);
+    }
+    return m_nThreads;
+}
+
 NAMESPACE_END(readdy)

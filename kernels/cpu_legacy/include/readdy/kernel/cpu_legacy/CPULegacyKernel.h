@@ -80,15 +80,26 @@ public:
 
     void finalize() override;
 
+    const model::StateModel &stateModel() const override;
+
+    model::StateModel &stateModel() override;
+
+    const model::actions::ActionFactory &getActionFactory() const override;
+
+    model::actions::ActionFactory &getActionFactory() override;
+
+    const model::top::TopologyActionFactory *const getTopologyActionFactory() const override;
+
+    model::top::TopologyActionFactory *const getTopologyActionFactory() override;
+
+    const model::observables::ObservableFactory &getObservableFactory() const override;
+
+    model::observables::ObservableFactory &getObservableFactory() override;
+
 protected:
 
-    readdy::model::observables::ObservableFactory &getObservableFactoryInternal() const override;
 
-    CPUStateModel &getKernelStateModelInternal() const override;
-
-    readdy::model::actions::ActionFactory &getActionFactoryInternal() const override;
-
-    readdy::model::top::TopologyActionFactory *getTopologyActionFactoryInternal() const override;
+    CPUStateModel &getKernelStateModelInternal() const;
 
     struct Impl;
     std::unique_ptr<Impl> pimpl;

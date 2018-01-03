@@ -30,6 +30,7 @@
  */
 
 #pragma once
+
 #include <readdy/model/actions/Actions.h>
 #include <readdy/kernel/cpu/CPUKernel.h>
 #include <readdy/common/thread/barrier.h>
@@ -44,193 +45,25 @@ class CPUCalculateForces : public readdy::model::actions::CalculateForces {
     using top_bounds = std::tuple<CPUStateModel::topologies_vec::const_iterator, CPUStateModel::topologies_vec::const_iterator>;
 public:
 
-    explicit CPUCalculateForces(CPUKernel* kernel) : kernel(kernel) {}
+    explicit CPUCalculateForces(CPUKernel *kernel) : kernel(kernel) {}
 
-    void perform(const util::PerformanceNode &node) override {
-        auto t = node.timeit();
-
-        const auto &context = kernel->context();
-        const auto &config = kernel->threadConfig();
-
-        auto &stateModel = kernel->getCPUKernelStateModel();
-        auto neighborList = stateModel.getNeighborList();
-        auto data = stateModel.getParticleData();
-        auto taf = kernel->getTopologyActionFactory();
-        auto &topologies = stateModel.topologies();
-
-        stateModel.energy() = 0;
-
-        const auto &potOrder1 = context.potentials().potentialsOrder1();
-        const auto &potOrder2 = context.potentials().potentialsOrder2();
-        if(!potOrder1.empty() || !potOrder2.empty() || !stateModel.topologies().empty()) {
-            const auto &d = context.shortestDifferenceFun();
-            {
-                //std::vector<std::future<scalar>> energyFutures;
-                //energyFutures.reserve(config->nThreads());
-                std::vector<std::promise<scalar>> promises(config.nThreads());
-                {
-                    const std::size_t grainSize = data->size() / config.nThreads();
-                    const std::size_t grainSizeNeighborList = neighborList->nCells() / config.nThreads();
-                    const std::size_t grainSizeTopologies = topologies.size() / config.nThreads();
-                    auto it_data = data->begin();
-                    auto it_data_end = data->end();
-                    std::size_t it_nl = 0;
-                    auto it_nl_end = neighborList->nCells();
-                    auto it_tops = topologies.cbegin();
-                    auto it_tops_end = topologies.cend();
-                    const readdy::util::thread::barrier barrier{config.nThreads()};
-
-                    const auto &executor = *config.executor();
-                    std::vector<std::function<void(std::size_t)>> executables;
-                    executables.reserve(config.nThreads());
-
-                    for (std::size_t i = 0; i < config.nThreads() - 1; ++i) {
-                        //energyFutures.push_back(promises[i].get_future());
-                        //ForcesThreadArgs args (, std::cref(barrier));
-                        auto dataBounds = std::make_tuple(it_data, it_data + grainSize);
-                        auto nlBounds = std::make_tuple(it_nl, it_nl + grainSizeNeighborList);
-                        auto topBounds = std::make_tuple(it_tops, it_tops + grainSizeTopologies);
-                        executables.push_back(executor.pack(calculate, dataBounds, nlBounds, topBounds,
-                                                            std::ref(promises.at(i)), data, std::cref(*neighborList),
-                                                            taf, std::cref(context), std::cref(barrier)));
-                        it_data = std::get<1>(dataBounds);
-                        it_nl = std::get<1>(nlBounds);
-                        it_tops = std::get<1>(topBounds);
-                    }
-                    {
-                        std::promise<scalar> &lastPromise = promises.back();
-                        //energyFutures.push_back(lastPromise.get_future());
-                        //ForcesThreadArgs args (, std::cref(barrier));
-                        auto dataBounds = std::make_tuple(it_data, it_data_end);
-                        auto nlBounds = std::make_tuple(it_nl, it_nl_end);
-                        auto topBounds = std::make_tuple(it_tops, it_tops_end);
-                        executables.push_back(executor.pack(calculate, dataBounds, nlBounds, topBounds,
-                                                            std::ref(lastPromise), data, std::cref(*neighborList),
-                                                            taf, std::cref(context), std::cref(barrier)));
-                    }
-                    executor.execute_and_wait(std::move(executables));
-                }
-                for (auto &f : promises) {
-                    stateModel.energy() += f.get_future().get();
-                }
-            }
-        }
-    }
+    void perform(const util::PerformanceNode &node) override;
 
 protected:
 
-    static void calculate(std::size_t /*tid*/, data_bounds dataBounds, nl_bounds nlBounds, top_bounds topBounds,
-                          std::promise<scalar>& energyPromise, CPUStateModel::data_type* data,
-                          const CPUStateModel::neighbor_list &nl,
-                          model::top::TopologyActionFactory *taf, const model::Context &context,
-                          const readdy::util::thread::barrier &barrier) {
-        scalar energyUpdate = 0.0;
+    static void calculate_order2(std::size_t, nl_bounds nlBounds, CPUStateModel::data_type *data,
+                                 const CPUStateModel::neighbor_list &nl, std::promise<scalar> &energyPromise,
+                                 model::potentials::PotentialRegistry::potential_o2_registry pot2,
+                                 model::Context::shortest_dist_fun d);
 
-        const auto &pot1 = context.potentials().potentialsOrder1();
-        const auto &pot2 = context.potentials().potentialsOrder2();
-        const auto &d = context.shortestDifferenceFun();
+    static void calculate_topologies(std::size_t /*tid*/, top_bounds topBounds, model::top::TopologyActionFactory *taf,
+                                     std::promise<scalar> &energyPromise);
 
-        {
-            //
-            // 1st order potentials
-            //
-            for (auto it = std::get<0>(dataBounds); it != std::get<1>(dataBounds); ++it) {
-                auto &entry = *it;
-                if (!entry.deactivated) {
-                    auto &force = entry.force;
-                    force = {c_::zero, c_::zero, c_::zero};
-                    const auto &myPos = entry.pos;
-                    auto find_it = pot1.find(entry.type);
-                    if (find_it != pot1.end()) {
-                        for (const auto &potential : find_it->second) {
-                            potential->calculateForceAndEnergy(force, energyUpdate, myPos);
-                        }
-                    }
-                }
-            }
-        }
 
-        barrier.wait();
-
-        {
-            //
-            // 2nd order potentials
-            //
-            if(!pot2.empty()) {
-                for(auto cell = std::get<0>(nlBounds); cell < std::get<1>(nlBounds); ++cell) {
-                    for(auto pairIt = nl.cellNeighborsBegin(cell); pairIt != nl.cellNeighborsEnd(cell); ++pairIt) {
-                        const auto &particleIndex = pairIt.currentParticle();
-                        auto &entry = data->entry_at(particleIndex);
-                        if(entry.deactivated) {
-                            log::critical("deactivated particle in neighbor list!");
-                            continue;
-                        }
-                        for(auto itNeighbors = pairIt.neighborsBegin(); itNeighbors != pairIt.neighborsEnd();
-                            ++itNeighbors) {
-                            auto &neighbor = data->entry_at(*itNeighbors);
-                            if (!neighbor.deactivated) {
-                                auto &force = entry.force;
-                                const auto &myPos = entry.pos;
-
-                                //
-                                // 2nd order potentials
-                                //
-                                scalar mySecondOrderEnergy = 0.;
-                                auto potit = pot2.find(std::tie(entry.type, neighbor.type));
-                                if (potit != pot2.end()) {
-                                    auto x_ij = d(myPos, neighbor.pos);
-                                    auto distSquared = x_ij * x_ij;
-                                    for (const auto &potential : potit->second) {
-                                        if (distSquared < potential->getCutoffRadiusSquared()) {
-                                            Vec3 forceUpdate{0, 0, 0};
-                                            potential->calculateForceAndEnergy(forceUpdate, mySecondOrderEnergy, x_ij);
-                                            force += forceUpdate;
-                                        }
-                                    }
-                                }
-                                // The contribution of second order potentials must be halved since we parallelize over particles.
-                                // Thus every particle pair potential is seen twice
-                                energyUpdate += 0.5 * mySecondOrderEnergy;
-                            } else {
-                                log::critical("disabled neighbour, pun intended");
-                            }
-                        }
-
-                    }
-
-                }
-            }
-
-        }
-
-        barrier.wait();
-
-        {
-            //
-            // external potentials
-            //
-
-            for(auto it = std::get<0>(topBounds); it != std::get<1>(topBounds); ++it) {
-                const auto &top = *it;
-                if(!top->isDeactivated()) {
-                    for (const auto &bondedPot : top->getBondedPotentials()) {
-                        auto energy = bondedPot->createForceAndEnergyAction(taf)->perform(top.get());
-                        energyUpdate += energy;
-                    }
-                    for (const auto &anglePot : top->getAnglePotentials()) {
-                        auto energy = anglePot->createForceAndEnergyAction(taf)->perform(top.get());
-                        energyUpdate += energy;
-                    }
-                    for (const auto &torsionPot : top->getTorsionPotentials()) {
-                        auto energy = torsionPot->createForceAndEnergyAction(taf)->perform(top.get());
-                        energyUpdate += energy;
-                    }
-                }
-            }
-        }
-
-        energyPromise.set_value(energyUpdate);
-    }
+    static void calculate_order1(std::size_t /*tid*/, data_bounds dataBounds,
+                                 std::promise<scalar> &energyPromise, CPUStateModel::data_type *data,
+                                 model::potentials::PotentialRegistry::potential_o1_registry pot1,
+                                 model::Context::shortest_dist_fun d);
 
     CPUKernel *const kernel;
 };

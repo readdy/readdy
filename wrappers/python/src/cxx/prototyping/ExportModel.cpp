@@ -42,10 +42,8 @@
 #include <readdy/model/reactions/Fission.h>
 #include <readdy/model/reactions/Fusion.h>
 #include <readdy/model/reactions/Decay.h>
-#include "ModelWrap.h"
 
 namespace py = pybind11;
-namespace rpy = readdy::rpy;
 
 using rvp = py::return_value_policy;
 
@@ -53,7 +51,6 @@ using context = readdy::model::Context;
 using particle_t = readdy::model::Particle;
 
 using model_t = readdy::kernel::scpu::SCPUStateModel;
-using model_wrap = readdy::rpy::Model;
 
 using scpu_neighbor_list = readdy::kernel::scpu::model::SCPUNeighborList;
 using scpu_nl_box = readdy::kernel::scpu::model::Box;
@@ -76,7 +73,7 @@ void exportModelClasses(py::module &proto) {
             .def(py::self == py::self)
             .def(py::self != py::self);
 
-    py::class_ <model_t, model_wrap> model(proto, "Model");
+    py::class_ <model_t> model(proto, "Model");
     model
             .def(py::init<const context&, readdy::model::top::TopologyActionFactory *>())
             .def("remove_particle", &model_t::removeParticle)

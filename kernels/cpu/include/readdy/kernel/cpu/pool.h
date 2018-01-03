@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2018 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -23,33 +23,23 @@
 /**
  * << detailed description >>
  *
- * @file ActionWrap.h
+ * @file pool.h
  * @brief << brief description >>
  * @author clonker
- * @date 08.08.16
+ * @date 1/2/18
  */
 
-#ifndef READDY_MAIN_ACTIONWRAP_H
-#define READDY_MAIN_ACTIONWRAP_H
 
-#include <readdy/model/actions/Action.h>
-#include <pybind11/pybind11.h>
+#pragma once
 
-namespace py = pybind11;
+#include <readdy/common/thread/ctpl.h>
 
 namespace readdy {
-namespace rpy {
-class PyAction : public readdy::model::actions::Action {
-    using super = readdy::model::actions::Action;
-public:
-    using super::Action;
+namespace kernel {
+namespace cpu {
 
-    virtual void perform(const util::PerformanceNode &node) override {
-        py::gil_scoped_acquire gil;
-        PYBIND11_OVERLOAD_PURE(void, readdy::model::actions::Action, perform,)
-    }
-};
+using thread_pool = ctpl::thread_pool;
+
 }
 }
-
-#endif //READDY_MAIN_ACTIONWRAP_H
+}

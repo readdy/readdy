@@ -32,7 +32,7 @@
 
 #pragma once
 #include <readdy/model/topologies/TopologyActionFactory.h>
-#include <readdy/kernel/cpu/CPUKernel.h>
+#include <readdy/kernel/cpu/data/DefaultDataContainer.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(kernel)
@@ -43,9 +43,9 @@ NAMESPACE_BEGIN(top)
 namespace top = readdy::model::top;
 
 class CPUTopologyActionFactory : public readdy::model::top::TopologyActionFactory {
-    CPUKernel *const kernel;
 public:
-    explicit CPUTopologyActionFactory(CPUKernel* kernel);
+    explicit CPUTopologyActionFactory(const model::Context &context, data::DefaultDataContainer &data)
+            : _context(context), _data(data) {};
 
     std::unique_ptr<top::pot::CalculateHarmonicBondPotential>
     createCalculateHarmonicBondPotential(const harmonic_bond* potential) const override;
@@ -56,12 +56,14 @@ public:
     std::unique_ptr<top::pot::CalculateCosineDihedralPotential>
     createCalculateCosineDihedralPotential(const cos_dihedral *potential) const override;
 
-    action_ref
-    createChangeParticleType(top::GraphTopology* topology, const vertex &v,
-                             const particle_type_type &type_to) const override;
+    action_ref createChangeParticleType(top::GraphTopology* topology, const vertex &v,
+                                        const particle_type_type &type_to) const override;
 
-    virtual action_ref
-    createChangeTopologyType(top::GraphTopology *const topology, const std::string &type_to) const override;
+    action_ref createChangeTopologyType(top::GraphTopology *topology, const std::string &type_to) const override;
+
+private:
+    std::reference_wrapper<const model::Context> _context;
+    std::reference_wrapper<data::DefaultDataContainer> _data;
 };
 
 NAMESPACE_END(top)

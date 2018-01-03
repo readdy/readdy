@@ -40,6 +40,16 @@ namespace detail {
 template<typename T>
 class Queue {
 public:
+
+    template<typename Iterator>
+    bool pushAll(Iterator begin, Iterator end) {
+        std::unique_lock<std::mutex> lock(this->mutex);
+        std::for_each(begin, end, [this](const auto &val) {
+            this->q.push(val);
+        });
+        return true;
+    }
+
     bool push(T const &value) {
         std::unique_lock<std::mutex> lock(this->mutex);
         this->q.push(value);
@@ -71,11 +81,10 @@ class thread_pool {
 
 public:
 
-    thread_pool() { this->init(); }
+    thread_pool() : thread_pool(0) {  }
 
-    thread_pool(int nThreads) {
-        this->init();
-        this->resize(nThreads);
+    explicit thread_pool(int nThreads) : nWaiting(0), isStop(false), isDone(false) {
+        this->resize(static_cast<std::size_t>(nThreads));
     }
 
     // the destructor waits for all the functions in the queue to be finished
@@ -84,7 +93,7 @@ public:
     }
 
     // get the number of running threads in the pool
-    int size() { return static_cast<int>(this->threads.size()); }
+    std::size_t size() const { return this->threads.size(); }
 
     // number of idle threads
     int n_idle() { return this->nWaiting; }
@@ -94,9 +103,9 @@ public:
     // change the number of threads in the pool
     // should be called from one thread, otherwise be careful to not interleave, also with this->stop()
     // nThreads must be >= 0
-    void resize(int nThreads) {
+    void resize(std::size_t nThreads) {
         if (!this->isStop && !this->isDone) {
-            int oldNThreads = static_cast<int>(this->threads.size());
+            auto oldNThreads = static_cast<int>(this->threads.size());
             if (oldNThreads <= nThreads) {  // if the number of threads is increased
                 this->threads.resize(nThreads);
                 this->flags.resize(nThreads);
@@ -142,6 +151,11 @@ public:
         return f;
     }
 
+    template<typename F, typename... Args>
+    auto pack(F &&f, Args &&... args) const -> std::function<decltype(f(0, args...))(std::size_t)> {
+        return std::bind(std::forward<F>(f), std::placeholders::_1, std::forward<Args>(args)...);
+    }
+
     // wait for all computing threads to finish and stop all threads
     // may be called asynchronously to not pause the calling thread while waiting
     // if isWait == true, all the functions in the queue are run, otherwise the queue is cleared without running the functions
@@ -150,7 +164,7 @@ public:
             if (this->isStop)
                 return;
             this->isStop = true;
-            for (int i = 0, n = this->size(); i < n; ++i) {
+            for (int i = 0, n = static_cast<int>(this->size()); i < n; ++i) {
                 *this->flags[i] = true;  // command the threads to stop
             }
             this->clear_queue();  // empty the queue
@@ -163,15 +177,41 @@ public:
             std::unique_lock<std::mutex> lock(this->mutex);
             this->cv.notify_all();  // stop all waiting threads
         }
-        for (int i = 0; i < static_cast<int>(this->threads.size()); ++i) {  // wait for the computing threads to finish
-            if (this->threads[i]->joinable())
-                this->threads[i]->join();
+        for (auto &thread : this->threads) {
+            // wait for the computing threads to finish
+            if (thread->joinable()) {
+                thread->join();
+            }
         }
         // if there were no threads in the pool but some functors in the queue, the functors are not deleted by the threads
         // therefore delete them here
         this->clear_queue();
         this->threads.clear();
         this->flags.clear();
+    }
+
+    template<typename F>
+    auto pushAll(std::vector<F> &&funs) -> std::vector<std::future<decltype(std::declval<F>()(0))>> {
+        using ResultVec = std::vector<std::future<decltype(std::declval<F>()(0))>>;
+        ResultVec vec;
+        vec.reserve(funs.size());
+
+        std::vector<std::function<void(int)>*> internalFunctions;
+        internalFunctions.reserve(funs.size());
+
+        for(auto &&f : funs) {
+            auto pck = std::make_shared<std::packaged_task<decltype(f(0))(int)>>(std::forward<F>(f));
+            auto _f = new std::function<void(int id)>([pck](int id) {
+                (*pck)(id);
+            });
+            internalFunctions.push_back(_f);
+            vec.push_back(pck->get_future());
+        }
+
+        this->q.pushAll(internalFunctions.begin(), internalFunctions.end());
+        std::unique_lock<std::mutex> lock(this->mutex);
+        for(auto i=0U; i < funs.size(); ++i) this->cv.notify_one();
+        return vec;
     }
 
     template<typename F, typename... Rest>
@@ -211,7 +251,7 @@ private:
 
     void set_thread(int i) {
         std::shared_ptr<std::atomic<bool>> flag(this->flags[i]); // a copy of the shared ptr to the flag
-        auto f = [this, i, flag/* a copy of the shared ptr to the flag */]() {
+        auto f = [this, i, flag/* a copy of the shared ptr to the flag */]() -> void {
             std::atomic<bool> &_flag = *flag;
             std::function<void(int id)> *_f;
             bool isPop = this->q.pop(_f);
@@ -237,13 +277,7 @@ private:
                     return;  // if the queue is empty and this->isDone == true or *flag then return
             }
         };
-        this->threads[i].reset(new std::thread(f)); // compiler may not support std::make_unique()
-    }
-
-    void init() {
-        this->nWaiting = 0;
-        this->isStop = false;
-        this->isDone = false;
+        this->threads[i] = std::make_unique<std::thread>(f);
     }
 
     std::vector<std::unique_ptr<std::thread>> threads;

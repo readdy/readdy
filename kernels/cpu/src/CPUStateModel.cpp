@@ -68,58 +68,17 @@ const std::vector<readdy::model::Particle> CPUStateModel::getParticles() const {
     return result;
 }
 
-void CPUStateModel::updateNeighborList() {
-    updateNeighborList({});
-}
-
-void CPUStateModel::addParticle(const readdy::model::Particle &p) {
-    getParticleData()->addParticle(p);
-}
-
-void CPUStateModel::addParticles(const std::vector<readdy::model::Particle> &p) {
-    getParticleData()->addParticles(p);
-}
-
-void CPUStateModel::removeParticle(const readdy::model::Particle &p) {
-    getParticleData()->removeParticle(p);
-}
-
-CPUStateModel::CPUStateModel(const readdy::model::Context &context,
-                             readdy::util::thread::Config const *const config,
+CPUStateModel::CPUStateModel(data_type &data, const readdy::model::Context &context,
+                             thread_pool &pool,
                              readdy::model::top::TopologyActionFactory const *const taf)
-        : _config(*config), _context(context), _topologyActionFactory(*taf) {
-    _data = std::make_unique<data::DefaultDataContainer>(context, *config);
-    _neighborList = std::make_unique<neighbor_list>(*_data, _context.get(), *config);
+        : _pool(pool), _context(context), _topologyActionFactory(*taf), _data(data) {
+    _neighborList = std::make_unique<neighbor_list>(_data.get(), _context.get(), _pool.get());
     _reorderConnection = std::make_unique<readdy::signals::scoped_connection>(
             getParticleData()->registerReorderEventListener([this](const std::vector<std::size_t> &indices) -> void {
                 for (auto &top : _topologies) {
                     if(!top->isDeactivated()) top->permuteIndices(indices);
                 }
             }));
-}
-
-CPUStateModel::data_type const *const CPUStateModel::getParticleData() const {
-    return _data.get();
-}
-
-CPUStateModel::data_type *const CPUStateModel::getParticleData() {
-    return _data.get();
-}
-
-CPUStateModel::neighbor_list const *const CPUStateModel::getNeighborList() const {
-    return _neighborList.get();
-}
-
-void CPUStateModel::clearNeighborList() {
-    clearNeighborList({});
-}
-
-void CPUStateModel::removeAllParticles() {
-    getParticleData()->clear();
-}
-
-CPUStateModel::neighbor_list *const CPUStateModel::getNeighborList() {
-    return _neighborList.get();
 }
 
 readdy::model::top::GraphTopology *const
@@ -138,34 +97,6 @@ CPUStateModel::addTopology(topology_type_type type, const std::vector<readdy::mo
     return it->get();
 }
 
-std::vector<readdy::model::reactions::ReactionRecord> &CPUStateModel::reactionRecords() {
-    return _reactionRecords;
-}
-
-const std::vector<readdy::model::reactions::ReactionRecord> &CPUStateModel::reactionRecords() const {
-    return _reactionRecords;
-}
-
-readdy::model::Particle CPUStateModel::getParticleForIndex(const std::size_t index) const {
-    return getParticleData()->getParticle(index);
-}
-
-const CPUStateModel::reaction_counts_map &CPUStateModel::reactionCounts() const {
-    return _reactionCounts;
-}
-
-CPUStateModel::reaction_counts_map &CPUStateModel::reactionCounts() {
-    return _reactionCounts;
-}
-
-const CPUStateModel::topologies_vec &CPUStateModel::topologies() const {
-    return _topologies;
-}
-
-CPUStateModel::topologies_vec &CPUStateModel::topologies() {
-    return _topologies;
-}
-
 std::vector<readdy::model::top::GraphTopology*> CPUStateModel::getTopologies() {
     std::vector<readdy::model::top::GraphTopology*> result;
     result.reserve(_topologies.size() - _topologies.n_deactivated());
@@ -175,10 +106,6 @@ std::vector<readdy::model::top::GraphTopology*> CPUStateModel::getTopologies() {
         }
     }
     return result;
-}
-
-particle_type_type CPUStateModel::getParticleType(const std::size_t index) const {
-    return getParticleData()->entry_at(index).type;
 }
 
 const readdy::model::top::GraphTopology *CPUStateModel::getTopologyForParticle(readdy::model::top::Topology::particle_index particle) const {
@@ -215,33 +142,9 @@ void CPUStateModel::insert_topology(CPUStateModel::topology &&top) {
     });
 }
 
-void CPUStateModel::updateNeighborList(const util::PerformanceNode &node) {
-    _neighborList->update(node.subnode("update"));
-}
-
-void CPUStateModel::clearNeighborList(const util::PerformanceNode &node) {
-    _neighborList->clear();
-}
-
-void CPUStateModel::initializeNeighborList(scalar skin) {
-    initializeNeighborList(skin, {});
-}
-
-void CPUStateModel::initializeNeighborList(scalar skin, const util::PerformanceNode &node) {
-    _neighborList->setUp(skin, _neighborListCellRadius, node.subnode("set_up"));
-}
-
 void CPUStateModel::configure(const readdy::conf::cpu::Configuration &configuration) {
     const auto& nl = configuration.neighborList;
     _neighborListCellRadius = nl.cll_radius;
-}
-
-scalar &CPUStateModel::energy() {
-    return _currentEnergy;
-}
-
-scalar CPUStateModel::energy() const {
-    return _currentEnergy;
 }
 
 void CPUStateModel::resetReactionCounts() {

@@ -61,6 +61,11 @@ struct Config {
      * constructs a new config (should only be performed by the kernels)
      */
     Config();
+     /**
+      * constructs a new config with a certain mode
+      * @param mode the mode
+      */
+    Config(ThreadMode mode);
 
     /**
      * Returns the number of threads. Defaults to:
@@ -68,24 +73,34 @@ struct Config {
      *  - 4 * hardware_concurrency() otherwise
      * @return the number of threads
      */
-    n_threads_type nThreads() const;
+    n_threads_type nThreads() const {
+        return m_nThreads;
+    };
 
     /**
      * Set the number of threads to be used
      */
-    void setNThreads(n_threads_type n);
+    void setNThreads(n_threads_type n) {
+        m_nThreads = n;
+        update();
+    };
 
     /**
      * Sets the threading mode.
      * @param mode the mode
      */
-    void setMode(ThreadMode mode);
+    void setMode(ThreadMode mode) {
+        _mode = mode;
+        update();
+    };
 
     /**
      * Yields a pointer to the executor selected by the threading mode.
      * @return a pointer to the configured executor
      */
-    const executor_base *const executor() const;
+    const executor_base *const executor() const {
+        return _executor.get();
+    };
 
 private:
     n_threads_type m_nThreads;

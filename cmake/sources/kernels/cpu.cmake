@@ -32,10 +32,12 @@ LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/observables/CPUObservables.cpp")
 
 # --- neighbor list ---
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/nl/CellLinkedList.cpp")
+LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/nl/ContiguousCellLinkedList.cpp")
 
 # --- actions ---
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/CPUActionFactory.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/CPUEulerBDIntegrator.cpp")
+LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/CPUCalculateForces.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/CPUEvaluateCompartments.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/CPUEvaluateTopologyReactions.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/reactions/ReactionUtils.cpp")

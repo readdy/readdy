@@ -74,29 +74,21 @@ class TestNeighborListImpl : public ::testing::TestWithParam<const char*> {};
 using nl_t = readdy::kernel::cpu::nl::CompactCellLinkedList;
 
 auto isPairInList = [](nl_t *pairs, std::size_t idx1, std::size_t idx2) {
-    /*std::cout << "got HEAD:" << std::endl;
-    std::stringstream ss;
-    for(const auto &a : pairs->head()) {
-        ss << (*a).load() << ", ";
-    }
-    std::cout << ss.str() << std::endl;*/
     bool foundOneDirection {false};
     bool foundOtherDirection {false};
     {
-        auto cix = pairs->cellOfParticle(idx1);
-        for (auto it = pairs->cellNeighborsBegin(cix); it != pairs->cellNeighborsEnd(cix); ++it) {
-            if(*it == idx1) {
-                foundOneDirection = std::find(it.neighborsBegin(), it.neighborsEnd(), idx2) != it.neighborsEnd();
-            }
-        }
+        pairs->forEachNeighbor(idx1, [&](auto neighborIdx) {
+           if(neighborIdx == idx2) {
+               foundOneDirection = true;
+           }
+        });
     }
     {
-        auto cix = pairs->cellOfParticle(idx2);
-        for (auto it = pairs->cellNeighborsBegin(cix); it != pairs->cellNeighborsEnd(cix); ++it) {
-            if(*it == idx2) {
-                foundOtherDirection = std::find(it.neighborsBegin(), it.neighborsEnd(), idx1) != it.neighborsEnd();
+        pairs->forEachNeighbor(idx2, [&](auto neighborIdx) {
+            if(neighborIdx == idx1) {
+                foundOtherDirection = true;
             }
-        }
+        });
     }
     return foundOneDirection && foundOtherDirection;
 };
@@ -105,27 +97,15 @@ auto isIdPairInList = [](nl_t *pairs, readdy::kernel::cpu::data::DefaultDataCont
     return isPairInList(pairs, data.getIndexForId(id1), data.getIndexForId(id2));
 };
 
-auto getNumberPairs = [](nl_t &pairs) {
-    std::size_t n = 0;
-    for(std::size_t cell = 0; cell < pairs.nCells(); ++cell) {
-        for(auto it = pairs.cellNeighborsBegin(cell); it != pairs.cellNeighborsEnd(cell); ++it) {
-            for(auto it2 = it.neighborsBegin(); it2 != it.neighborsEnd(); ++it2) {
-                ++n;
-            }
-        }
-    }
-    return n;
-};
-
 TEST_F(TestNeighborList, ThreeBoxesNonPeriodic) {
     // maxcutoff is 1.2, system is 1.5 x 4 x 1.5, non-periodic, three cells
     auto &ctx = kernel->context();
     ctx.boxSize() = {{1.5, 4, 1.5}};
     ctx.periodicBoundaryConditions() = {{false, false, false}};
 
-    readdy::util::thread::Config conf;
+    readdy::kernel::cpu::thread_pool pool (readdy::readdy_default_n_threads());
 
-    nl_t list(*kernel->getCPUKernelStateModel().getParticleData(), ctx, conf);
+    nl_t list(*kernel->getCPUKernelStateModel().getParticleData(), ctx, pool);
 
     auto &data = list.data();
 
@@ -137,8 +117,6 @@ TEST_F(TestNeighborList, ThreeBoxesNonPeriodic) {
     data.addParticles(particles);
     list.setUp(0, 1, {});
 
-    auto sum = getNumberPairs(list);
-    EXPECT_EQ(sum, 2);
     EXPECT_TRUE(isPairInList(&list, 0, 1));
     EXPECT_TRUE(isPairInList(&list, 1, 0));
 }
@@ -151,8 +129,8 @@ TEST_F(TestNeighborList, OneDirection) {
     ctx.potentials().addBox("A", .0, {-.4, -.4, -1.3}, {.4, .4, 1.3});
     ctx.configure();
 
-    readdy::util::thread::Config conf;
-    nl_t list(*kernel->getCPUKernelStateModel().getParticleData(), ctx, conf);
+    readdy::kernel::cpu::thread_pool pool (readdy::readdy_default_n_threads());
+    nl_t list(*kernel->getCPUKernelStateModel().getParticleData(), ctx, pool);
     // Add three particles, one of which is in the neighborhood of the other two
     const auto particles = std::vector<m::Particle>{
             m::Particle(0, 0, -1.1, typeIdA), m::Particle(0, 0, .4, typeIdA), m::Particle(0, 0, 1.1, typeIdA)
@@ -164,8 +142,6 @@ TEST_F(TestNeighborList, OneDirection) {
 
     list.setUp(0, 8, {});
 
-    auto sum = getNumberPairs(list);
-    EXPECT_LE(4, sum);
     EXPECT_TRUE(isIdPairInList(&list, data, ids.at(0), ids.at(2)));
     EXPECT_TRUE(isIdPairInList(&list, data, ids.at(2), ids.at(0)));
     EXPECT_TRUE(isIdPairInList(&list, data, ids.at(1), ids.at(2)));
@@ -179,8 +155,8 @@ TEST_F(TestNeighborList, AllNeighborsInCutoffSphere) {
     auto &ctx = kernel->context();
     ctx.boxSize() = {{4, 4, 4}};
     ctx.periodicBoundaryConditions() = {{true, true, true}};
-    readdy::util::thread::Config conf;
-    nl_t list(*kernel->getCPUKernelStateModel().getParticleData(), ctx, conf);
+    readdy::kernel::cpu::thread_pool pool (readdy::readdy_default_n_threads());
+    nl_t list(*kernel->getCPUKernelStateModel().getParticleData(), ctx, pool);
     auto &data = list.data();
     // Create a few particles. In this box setup, all particles are neighbors.
     const auto particles = std::vector<m::Particle>{
@@ -190,8 +166,6 @@ TEST_F(TestNeighborList, AllNeighborsInCutoffSphere) {
 
     data.addParticles(particles);
     list.setUp(0,1,{});
-    auto sum = getNumberPairs(list);
-    EXPECT_EQ(sum, 30);
     for (size_t i = 0; i < 6; ++i) {
         for (size_t j = i + 1; j < 6; ++j) {
             EXPECT_TRUE(isPairInList(&list, i, j)) << "Particles " << i << " and " << j << " were not neighbors.";
@@ -271,22 +245,22 @@ TEST(TestNeighborListImpl, Diffusion) {
                 const auto neighbor_list = kernel->getCPUKernelStateModel().getNeighborList();
 
                 for(std::size_t cell = 0; cell < neighbor_list->nCells(); ++cell) {
-                    for(auto it = neighbor_list->cellNeighborsBegin(cell); it != neighbor_list->cellNeighborsEnd(cell);
-                        ++it) {
-                        const auto &entry = neighbor_list->data().entry_at(it.currentParticle());
+                    for(auto itParticle = neighbor_list->particlesBegin(cell);
+                        itParticle != neighbor_list->particlesEnd(cell); ++itParticle) {
+                        const auto &entry = neighbor_list->data().entry_at(*itParticle);
                         ASSERT_FALSE(entry.deactivated);
 
                         std::vector<std::size_t> neighbors;
-                        for (auto itNeigh = it.neighborsBegin(); itNeigh != it.neighborsEnd(); ++itNeigh) {
-                            const auto &neighborEntry = neighbor_list->data().entry_at(*itNeigh);
+                        neighbor_list->forEachNeighbor(*itParticle, [&](auto neighborIdx) {
+                            const auto &neighborEntry = neighbor_list->data().entry_at(neighborIdx);
                             ASSERT_FALSE(neighborEntry.deactivated);
-                            neighbors.push_back(*itNeigh);
-                        }
+                            neighbors.push_back(neighborIdx);
+                        });
 
                         std::size_t pidx = 0;
                         for(const auto &e : neighbor_list->data()) {
                             ASSERT_FALSE(e.deactivated);
-                            if (pidx != it.currentParticle() && d2(entry.pos, e.pos) < cutoff * cutoff) {
+                            if (pidx != *itParticle && d2(entry.pos, e.pos) < cutoff * cutoff) {
                                 ASSERT_TRUE(std::find(neighbors.begin(), neighbors.end(), pidx) != neighbors.end());
                             }
                             ++pidx;

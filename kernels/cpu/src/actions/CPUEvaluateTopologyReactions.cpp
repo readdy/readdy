@@ -260,17 +260,16 @@ CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReacti
             const auto &topologies = kernel->getCPUKernelStateModel().topologies();
 
             for (std::size_t cell = 0; cell < nl.nCells(); ++cell) {
-                for (auto it = nl.cellNeighborsBegin(cell); it != nl.cellNeighborsEnd(cell); ++it) {
-                    const auto &entry = data.entry_at(it.currentParticle());
+                for(auto itParticle = nl.particlesBegin(cell); itParticle != nl.particlesEnd(cell); ++itParticle) {
+                    const auto &entry = data.entry_at(*itParticle);
                     if (!entry.deactivated && top_registry.isSpatialReactionType(entry.type)) {
-                        for(auto neighborIt = it.neighborsBegin(); neighborIt != it.neighborsEnd(); ++neighborIt) {
-                            const auto &neighbor = data.entry_at(*neighborIt);
+                        nl.forEachNeighbor(*itParticle, cell, [&](auto neighborIndex) {
+                            const auto &neighbor = data.entry_at(neighborIndex);
                             if ((entry.topology_index < 0 && neighbor.topology_index < 0)
-                                || (neighbor.topology_index >= 0 && it.currentParticle() > *neighborIt)) {
+                                || (neighbor.topology_index >= 0 && *itParticle > neighborIndex)) {
                                 // use symmetry or skip entirely
-                                continue;
+                                return;
                             }
-
                             topology_type_type tt1 = entry.topology_index >= 0 ? topologies.at(
                                     static_cast<std::size_t>(entry.topology_index))->type()
                                                                                : static_cast<topology_type_type>(-1);
@@ -301,23 +300,23 @@ CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReacti
                                         event.topology_idx = static_cast<std::size_t>(entry.topology_index);
                                         event.t1 = entry.type;
                                         event.t2 = neighbor.type;
-                                        event.idx1 = it.currentParticle();
-                                        event.idx2 = *neighborIt;
+                                        event.idx1 = *itParticle;
+                                        event.idx2 = neighborIndex;
                                     } else if (entry.topology_index < 0 && neighbor.topology_index >= 0) {
                                         // neighbor is a topology, entry an ordinary particle
                                         event.topology_idx = static_cast<std::size_t>(neighbor.topology_index);
                                         event.t1 = neighbor.type;
                                         event.t2 = entry.type;
-                                        event.idx1 = *neighborIt;
-                                        event.idx2 = it.currentParticle();
+                                        event.idx1 = neighborIndex;
+                                        event.idx2 = *itParticle;
                                     } else if (entry.topology_index >= 0 && neighbor.topology_index >= 0) {
                                         // this is a topology-topology fusion
                                         event.topology_idx = static_cast<std::size_t>(entry.topology_index);
                                         event.topology_idx2 = static_cast<std::size_t>(neighbor.topology_index);
                                         event.t1 = entry.type;
                                         event.t2 = neighbor.type;
-                                        event.idx1 = it.currentParticle();
-                                        event.idx2 = *neighborIt;
+                                        event.idx1 = *itParticle;
+                                        event.idx2 = neighborIndex;
                                     } else {
                                         log::critical("got no topology for topology-fusion");
                                     }
@@ -328,7 +327,7 @@ CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReacti
                                 }
                                 ++reaction_index;
                             }
-                        }
+                        });
                     }
                 }
             }

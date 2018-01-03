@@ -60,8 +60,8 @@ public:
     using iterator = typename Entries::iterator;
     using const_iterator = typename Entries::const_iterator;
 
-    DataContainer(const readdy::model::Context &context, const readdy::util::thread::Config &threadConfig)
-            : _context(context), _threadConfig(threadConfig), reorderSignal(std::make_shared<ReorderSignal>()) {};
+    DataContainer(const readdy::model::Context &context, thread_pool &pool)
+            : _context(context), _pool(pool), reorderSignal(std::make_shared<ReorderSignal>()) {};
 
     virtual ~DataContainer() = default;
 
@@ -224,11 +224,11 @@ public:
         return _context.get();
     }
 
-    const readdy::util::thread::Config &threadConfig() const {
-        return _threadConfig.get();
+    auto &pool() {
+        return _pool.get();
     }
 
-    const Entries &entries() const {
+    const auto &entries() const {
         return _entries;
     }
 
@@ -238,7 +238,7 @@ public:
 
 protected:
     std::reference_wrapper<const readdy::model::Context> _context;
-    std::reference_wrapper<const readdy::util::thread::Config> _threadConfig;
+    std::reference_wrapper<thread_pool> _pool;
 
     std::vector<size_type> _blanks {};
     Entries _entries {};

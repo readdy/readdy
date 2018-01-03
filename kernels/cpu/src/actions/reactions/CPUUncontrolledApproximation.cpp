@@ -46,7 +46,8 @@ namespace reactions {
 using data_t = data::EntryDataContainer;
 using event_t = Event;
 using data_iter_t = data_t::const_iterator;
-using neighbor_list = nl::CompactCellLinkedList;
+using neighbor_list = CPUStateModel::neighbor_list;
+using nl_bounds = std::tuple<std::size_t, std::size_t>;
 using entry_type = data_t::Entries::value_type;
 
 using event_future_t = std::future<std::vector<event_t>>;
@@ -57,7 +58,7 @@ CPUUncontrolledApproximation::CPUUncontrolledApproximation(CPUKernel *const kern
 
 }
 
-void findEvents(std::size_t /*tid*/, data_iter_t begin, data_iter_t end, neighbor_list::iterator_bounds nlBounds,
+void findEvents(std::size_t /*tid*/, data_iter_t begin, data_iter_t end, nl_bounds nlBounds,
                 const CPUKernel *const kernel, scalar dt, bool approximateRate, const neighbor_list &nl,
                 event_promise_t &events, std::promise<std::size_t> &n_events) {
     std::vector<event_t> eventsUpdate;
@@ -84,14 +85,15 @@ void findEvents(std::size_t /*tid*/, data_iter_t begin, data_iter_t end, neighbo
         }
     }
     for(auto cell = std::get<0>(nlBounds); cell != std::get<1>(nlBounds); ++cell) {
-        for(auto pairIt = nl.cellNeighborsBegin(cell); pairIt != nl.cellNeighborsEnd(cell); ++pairIt) {
-            const auto &entry = data.entry_at(*pairIt);
+        for(auto particleIt = nl.particlesBegin(cell); particleIt != nl.particlesEnd(cell); ++particleIt) {
+            const auto &entry = data.entry_at(*particleIt);
             if(entry.deactivated) {
                 log::critical("deactivated entry in uncontrolled approximation!");
                 continue;
             }
-            for(auto itNeighbors = pairIt.neighborsBegin(); itNeighbors != pairIt.neighborsEnd(); ++itNeighbors) {
-                const auto &neighbor = data.entry_at(*itNeighbors);
+
+            nl.forEachNeighbor(*particleIt, cell, [&](const auto neighborIdx) {
+                const auto &neighbor = data.entry_at(neighborIdx);
                 if(!neighbor.deactivated) {
                     const auto &reactions = kernel->context().reactions().order2ByType(entry.type, neighbor.type);
                     if (!reactions.empty()) {
@@ -103,15 +105,13 @@ void findEvents(std::size_t /*tid*/, data_iter_t begin, data_iter_t end, neighbo
                                 && shouldPerformEvent(rate, dt, approximateRate)) {
                                 const auto reaction_index = static_cast<event_t::reaction_index_type>(it_reactions -
                                                                                                       reactions.begin());
-                                eventsUpdate.emplace_back(2, react->nProducts(), *pairIt, *itNeighbors,
+                                eventsUpdate.emplace_back(2, react->nProducts(), *particleIt, neighborIdx,
                                                           rate, 0, reaction_index, entry.type, neighbor.type);
                             }
                         }
                     }
                 }
-
-            }
-
+            });
         }
     }
 
@@ -135,56 +135,46 @@ void CPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
     }
 
     // gather events
-    std::vector<std::future<std::size_t>> n_eventsFutures;
     std::vector<std::promise<std::size_t>> n_events_promises(kernel->getNThreads());
-    std::vector<event_future_t> eventFutures;
     std::vector<event_promise_t> promises(kernel->getNThreads());
     {
 
-        const auto &executor = kernel->executor();
+        auto &pool = kernel->pool();
 
         std::vector<std::function<void(std::size_t)>> executables;
         executables.reserve(kernel->getNThreads());
 
-        const std::size_t grainSize = data.size() / kernel->getNThreads();
+        std::size_t grainSize = data.size() / kernel->getNThreads();
         std::size_t nlGrainSize = nl->nCells() / kernel->getNThreads();
 
         auto it = data.cbegin();
         std::size_t it_nl = 0;
-        for (unsigned int i = 0; i < kernel->getNThreads() - 1; ++i) {
-            eventFutures.push_back(promises.at(i).get_future());
-            n_eventsFutures.push_back(n_events_promises.at(i).get_future());
-            auto it_nl_end = it_nl + nlGrainSize;
-            executables.push_back(executor.pack(findEvents, it, it + grainSize, std::make_tuple(it_nl, it_nl_end),
-                                                kernel, timeStep, false, std::cref(*nl),
-                                                std::ref(promises.at(i)), std::ref(n_events_promises.at(i))));
-            it += grainSize;
-            it_nl = it_nl_end;
-        }
-        {
-            auto &eventPromise = promises.back();
-            eventFutures.push_back(eventPromise.get_future());
-            auto &n_events = n_events_promises.back();
-            n_eventsFutures.push_back(n_events.get_future());
+        for (auto i = 0U; i < kernel->getNThreads()-1 ; ++i) {
+            auto itNext = std::min(it+grainSize, data.cend());
 
+            auto nlNext = std::min(it_nl + nlGrainSize, nl->nCells());
+            auto bounds_nl = std::make_tuple(it_nl, nlNext);
 
-            executables.push_back(executor.pack(findEvents, it, data.cend(), std::make_tuple(it_nl, nl->nCells()),
-                                                kernel, timeStep, false, std::cref(*nl),
-                                                std::ref(eventPromise), std::ref(n_events)));
+            pool.push(findEvents, it, itNext, bounds_nl, kernel, timeStep, false, std::cref(*nl),
+                      std::ref(promises.at(i)), std::ref(n_events_promises.at(i)));
+
+            it = itNext;
+            it_nl = nlNext;
         }
-        executor.execute_and_wait(std::move(executables));
+        pool.push(findEvents, it, data.cend(), std::make_tuple(it_nl, nl->nCells()), kernel, timeStep, false,
+                  std::cref(*nl), std::ref(promises.back()), std::ref(n_events_promises.back()));
     }
 
     // collect events
     std::vector<event_t> events;
     {
         std::size_t n_events = 0;
-        for (auto &&f : n_eventsFutures) {
-            n_events += f.get();
+        for (auto &&f : n_events_promises) {
+            n_events += f.get_future().get();
         }
         events.reserve(n_events);
-        for (auto &&f : eventFutures) {
-            auto eventUpdate = std::move(f.get());
+        for (auto &&f : promises) {
+            auto eventUpdate = std::move(f.get_future().get());
             auto mBegin = std::make_move_iterator(eventUpdate.begin());
             auto mEnd = std::make_move_iterator(eventUpdate.end());
             events.insert(events.end(), mBegin, mEnd);

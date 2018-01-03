@@ -46,34 +46,56 @@ public:
 
     ~SCPUKernel() override;
 
-    // move
-    SCPUKernel(SCPUKernel &&rhs) = default;
-
-    SCPUKernel &operator=(SCPUKernel &&rhs) = default;
-
     // factory method
     static std::unique_ptr<SCPUKernel> create();
 
-    const SCPUStateModel &getSCPUKernelStateModel() const;
+    const SCPUStateModel &getSCPUKernelStateModel() const {
+        return _model;
+    };
 
-    SCPUStateModel &getSCPUKernelStateModel();
+    SCPUStateModel &getSCPUKernelStateModel() {
+        return _model;
+    };
 
     void initialize() override;
 
-protected:
-    SCPUStateModel &getKernelStateModelInternal() const override;
+    const readdy::model::observables::ObservableFactory &getObservableFactory() const override {
+        return _observables;
+    };
 
-    readdy::model::actions::ActionFactory &getActionFactoryInternal() const override;
+    readdy::model::observables::ObservableFactory &getObservableFactory() override {
+        return _observables;
+    };
 
-    readdy::model::observables::ObservableFactory &getObservableFactoryInternal() const override;
+    const readdy::model::actions::ActionFactory &getActionFactory() const override {
+        return _actionFactory;
+    };
 
-    readdy::model::top::TopologyActionFactory *getTopologyActionFactoryInternal() const override;
+    readdy::model::actions::ActionFactory &getActionFactory() override {
+        return _actionFactory;
+    };
+
+    const readdy::model::top::TopologyActionFactory *const getTopologyActionFactory() const override {
+        return &_topologyActionFactory;
+    };
+
+    readdy::model::top::TopologyActionFactory *const getTopologyActionFactory() override {
+        return &_topologyActionFactory;
+    };
+
+    const readdy::model::StateModel &stateModel() const override {
+        return _model;
+    };
+
+    readdy::model::StateModel &stateModel() override {
+        return _model;
+    };
 
 private:
-    std::unique_ptr<SCPUStateModel> _model;
-    std::unique_ptr<actions::SCPUActionFactory> _actionFactory;
-    std::unique_ptr<observables::SCPUObservableFactory> _observables;
-    std::unique_ptr<model::top::SCPUTopologyActionFactory> _topologyActionFactory;
+    model::top::SCPUTopologyActionFactory _topologyActionFactory;
+    SCPUStateModel _model;
+    actions::SCPUActionFactory _actionFactory;
+    observables::SCPUObservableFactory _observables;
 };
 
 }

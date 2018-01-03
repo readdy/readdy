@@ -31,12 +31,8 @@ namespace kernel {
 namespace scpu {
 const std::string SCPUKernel::name = "SingleCPU";
 
-SCPUKernel::SCPUKernel() : readdy::model::Kernel(name) {
-    _actionFactory = std::make_unique<actions::SCPUActionFactory>(this);
-    _topologyActionFactory = std::make_unique<model::top::SCPUTopologyActionFactory>(this);
-    _model = std::make_unique<SCPUStateModel>(_context, _topologyActionFactory.get());
-    _observables = std::make_unique<observables::SCPUObservableFactory>(this);
-}
+SCPUKernel::SCPUKernel() : readdy::model::Kernel(name), _actionFactory(this), _topologyActionFactory(this),
+                           _model(_context, &_topologyActionFactory), _observables(this) {}
 
 /**
  * factory method
@@ -49,30 +45,6 @@ std::unique_ptr<SCPUKernel> SCPUKernel::create() {
  * Destructor: default
  */
 SCPUKernel::~SCPUKernel() = default;
-
-SCPUStateModel &SCPUKernel::getKernelStateModelInternal() const {
-    return *_model;
-}
-
-readdy::model::actions::ActionFactory &SCPUKernel::getActionFactoryInternal() const {
-    return *_actionFactory;
-}
-
-readdy::model::observables::ObservableFactory &SCPUKernel::getObservableFactoryInternal() const {
-    return *_observables;
-}
-
-readdy::model::top::TopologyActionFactory *SCPUKernel::getTopologyActionFactoryInternal() const {
-    return _topologyActionFactory.get();
-}
-
-const SCPUStateModel &SCPUKernel::getSCPUKernelStateModel() const {
-    return getKernelStateModelInternal();
-}
-
-SCPUStateModel &SCPUKernel::getSCPUKernelStateModel() {
-    return getKernelStateModelInternal();
-}
 
 void SCPUKernel::initialize() {
     readdy::model::Kernel::initialize();
