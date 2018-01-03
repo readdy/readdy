@@ -40,6 +40,16 @@ namespace detail {
 template<typename T>
 class Queue {
 public:
+
+    template<typename Iterator>
+    bool pushAll(Iterator begin, Iterator end) {
+        std::unique_lock<std::mutex> lock(this->mutex);
+        std::for_each(begin, end, [this](const auto &val) {
+            this->q.push(val);
+        });
+        return true;
+    }
+
     bool push(T const &value) {
         std::unique_lock<std::mutex> lock(this->mutex);
         this->q.push(value);
@@ -141,6 +151,11 @@ public:
         return f;
     }
 
+    template<typename F, typename... Args>
+    auto pack(F &&f, Args &&... args) const -> std::function<decltype(f(0, args...))(std::size_t)> {
+        return std::bind(std::forward<F>(f), std::placeholders::_1, std::forward<Args>(args)...);
+    }
+
     // wait for all computing threads to finish and stop all threads
     // may be called asynchronously to not pause the calling thread while waiting
     // if isWait == true, all the functions in the queue are run, otherwise the queue is cleared without running the functions
@@ -149,7 +164,7 @@ public:
             if (this->isStop)
                 return;
             this->isStop = true;
-            for (int i = 0, n = this->size(); i < n; ++i) {
+            for (int i = 0, n = static_cast<int>(this->size()); i < n; ++i) {
                 *this->flags[i] = true;  // command the threads to stop
             }
             this->clear_queue();  // empty the queue
@@ -173,6 +188,30 @@ public:
         this->clear_queue();
         this->threads.clear();
         this->flags.clear();
+    }
+
+    template<typename F>
+    auto pushAll(std::vector<F> &&funs) -> std::vector<std::future<decltype(std::declval<F>()(0))>> {
+        using ResultVec = std::vector<std::future<decltype(std::declval<F>()(0))>>;
+        ResultVec vec;
+        vec.reserve(funs.size());
+
+        std::vector<std::function<void(int)>*> internalFunctions;
+        internalFunctions.reserve(funs.size());
+
+        for(auto &&f : funs) {
+            auto pck = std::make_shared<std::packaged_task<decltype(f(0))(int)>>(std::forward<F>(f));
+            auto _f = new std::function<void(int id)>([pck](int id) {
+                (*pck)(id);
+            });
+            internalFunctions.push_back(_f);
+            vec.push_back(pck->get_future());
+        }
+
+        this->q.pushAll(internalFunctions.begin(), internalFunctions.end());
+        std::unique_lock<std::mutex> lock(this->mutex);
+        for(auto i=0U; i < funs.size(); ++i) this->cv.notify_one();
+        return vec;
     }
 
     template<typename F, typename... Rest>
