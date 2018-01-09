@@ -51,7 +51,35 @@ struct ReactionRecord {
      */
     readdy::model::reactions::Reaction::reaction_id id {0};
 
-    friend std::ostream &operator<<(std::ostream &os, const ReactionRecord &record);
+    friend std::ostream &operator<<(std::ostream &os, const ReactionRecord &record) {
+        auto type = ReactionType(record.type);
+        os << "ReactionRecord[type: " << type;
+        switch (type) {
+            case ReactionType::Decay:{
+                os << ", educt: " << record.educts[0];
+                break;
+            }
+            case ReactionType::Conversion: {
+                os << ", educt: " << record.educts[0] << ", product: " << record.products[0];
+                break;
+            }
+            case ReactionType::Fusion: {
+                os << ", educts: [" << record.educts[0] << "," << record.educts[1] << "], product: " << record.products[0];
+                break;
+            }
+            case ReactionType::Fission: {
+                os << ", educt: " << record.educts[0] << ", products: [" << record.products[0] << "," << record.products[1] << "]";
+                break;
+            }
+            case ReactionType::Enzymatic: {
+                os << ", educts: [" << record.educts[0] << "," << record.educts[1] << "]";
+                os << ", products: [" << record.products[0] << "," << record.products[1] << "]";
+                break;
+            }
+        }
+        os << ", location: " << record.where << "]";
+        return os;
+    };
 };
 
 using reaction_counts_map = std::unordered_map<reactions::Reaction::reaction_id, std::size_t>;

@@ -45,9 +45,9 @@ NAMESPACE_BEGIN(top)
 namespace top = readdy::model::top;
 
 class SCPUTopologyActionFactory : public top::TopologyActionFactory {
-    const SCPUKernel *const kernel;
+    SCPUKernel *const kernel;
 public:
-    explicit SCPUTopologyActionFactory(const SCPUKernel* kernel);
+    explicit SCPUTopologyActionFactory(SCPUKernel* kernel);
 
     std::unique_ptr<top::pot::CalculateHarmonicBondPotential>
     createCalculateHarmonicBondPotential(const harmonic_bond * potential) const override;

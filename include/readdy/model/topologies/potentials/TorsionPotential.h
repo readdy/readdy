@@ -34,6 +34,7 @@
 #include <cstddef>
 #include <tuple>
 #include <vector>
+#include <readdy/common/numeric.h>
 #include "TopologyPotential.h"
 
 NAMESPACE_BEGIN(readdy)
@@ -43,13 +44,20 @@ NAMESPACE_BEGIN(pot)
 
 class TorsionPotential : public TopologyPotential {
 public:
-    TorsionPotential();
+    TorsionPotential() = default;
+
     virtual ~TorsionPotential() = default;
 };
 
 struct DihedralConfiguration {
     DihedralConfiguration(size_t idx1, size_t idx2, size_t idx3, size_t idx4, scalar forceConstant, scalar multiplicity,
-             scalar equilibriumAngle);
+             scalar equilibriumAngle)   : idx1(idx1), idx2(idx2), idx3(idx3), idx4(idx4), forceConstant(forceConstant),
+                                          phi_0(equilibriumAngle), multiplicity(multiplicity) {
+        if (equilibriumAngle > readdy::util::numeric::pi() || equilibriumAngle < -readdy::util::numeric::pi()) {
+            throw std::invalid_argument("the equilibrium angle should be within [-pi, pi], but was "
+                                        + std::to_string(equilibriumAngle));
+        }
+    }
 
     std::size_t idx1, idx2, idx3, idx4;
     scalar forceConstant, multiplicity, phi_0;
@@ -60,14 +68,18 @@ public:
     using dihedral_configuration = DihedralConfiguration;
     using dihedral_configurations = std::vector<dihedral_configuration>;
 
-    explicit CosineDihedralPotential(const dihedral_configurations &dihedrals);
+    explicit CosineDihedralPotential(const dihedral_configurations &dihedrals)
+            : TorsionPotential(), dihedrals(dihedrals) {}
     CosineDihedralPotential(const CosineDihedralPotential&) = default;
     CosineDihedralPotential& operator=(const CosineDihedralPotential&) = default;
     CosineDihedralPotential(CosineDihedralPotential&&) = default;
     CosineDihedralPotential& operator=(CosineDihedralPotential&&) = default;
-    virtual ~CosineDihedralPotential() = default;
 
-    const dihedral_configurations &getDihedrals() const;
+    ~CosineDihedralPotential() override = default;
+
+    const dihedral_configurations &getDihedrals() const {
+        return dihedrals;
+    }
 
     scalar calculateEnergy(const Vec3 &x_ji, const Vec3 &x_kj, const Vec3 &x_kl, const dihedral_configuration &) const;
 

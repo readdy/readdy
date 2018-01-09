@@ -31,7 +31,7 @@
 
 #include <readdy/model/Context.h>
 
-#include <json.hpp>
+#include <readdy/api/KernelConfiguration.h>
 
 #include <readdy/common/Utils.h>
 #include <readdy/model/_internal/Util.h>
@@ -42,14 +42,6 @@ namespace readdy {
 namespace model {
 
 using particle_t = readdy::model::Particle;
-
-const scalar &Context::kBT() const {
-    return _kBT;
-}
-
-scalar &Context::kBT() {
-    return _kBT;
-}
 
 Context::Context()
         : _potentialRegistry(_particleTypeRegistry), _reactionRegistry(_particleTypeRegistry),
@@ -65,18 +57,6 @@ Context::Context()
     };
 }
 
-const Context::fix_pos_fun &Context::fixPositionFun() const {
-    return _fixPositionFun;
-}
-
-const Context::dist_squared_fun &Context::distSquaredFun() const {
-    return _distFun;
-}
-
-const Context::shortest_dist_fun &Context::shortestDifferenceFun() const {
-    return _diffFun;
-}
-
 void Context::configure() {
     updateFunctions();
 
@@ -86,87 +66,6 @@ void Context::configure() {
     _topologyRegistry.configure();
 
     validate();
-}
-
-std::tuple<Vec3, Vec3> Context::getBoxBoundingVertices() const {
-    const auto &boxSize = _box_size;
-    Vec3 lowerLeft{static_cast<scalar>(-0.5) * boxSize[0],
-                   static_cast<scalar>(-0.5) * boxSize[1],
-                   static_cast<scalar>(-0.5) * boxSize[2]};
-    auto upperRight = lowerLeft + Vec3(boxSize);
-    return std::make_tuple(lowerLeft, upperRight);
-}
-
-const bool &Context::recordReactionsWithPositions() const {
-    return _recordReactionsWithPositions;
-}
-
-bool &Context::recordReactionsWithPositions() {
-    return _recordReactionsWithPositions;
-}
-
-const bool &Context::recordReactionCounts() const {
-    return _recordReactionCounts;
-}
-
-bool &Context::recordReactionCounts() {
-    return _recordReactionCounts;
-}
-
-reactions::ReactionRegistry &Context::reactions() {
-    return _reactionRegistry;
-}
-
-const reactions::ReactionRegistry &Context::reactions() const {
-    return _reactionRegistry;
-}
-
-ParticleTypeRegistry &Context::particle_types() {
-    return _particleTypeRegistry;
-}
-
-const ParticleTypeRegistry &Context::particle_types() const {
-    return _particleTypeRegistry;
-}
-
-const potentials::PotentialRegistry &Context::potentials() const {
-    return _potentialRegistry;
-}
-
-potentials::PotentialRegistry &Context::potentials() {
-    return _potentialRegistry;
-}
-
-const Context::pbc_fun &Context::applyPBCFun() const {
-    return _pbc;
-}
-
-const scalar Context::calculateMaxCutoff() const {
-    scalar max_cutoff{0};
-    for (const auto &entry : potentials().potentialsOrder2()) {
-        for (const auto &potential : entry.second) {
-            max_cutoff = std::max(max_cutoff, potential->getCutoffRadius());
-        }
-    }
-    for (const auto &entry : reactions().order2()) {
-        for (const auto &reaction : entry.second) {
-            max_cutoff = std::max(max_cutoff, reaction->eductDistance());
-        }
-    }
-    for (const auto &entry : _topologyRegistry.spatialReactionRegistry()) {
-        for (const auto &reaction : entry.second) {
-            max_cutoff = std::max(max_cutoff, reaction.radius());
-        }
-    }
-    return max_cutoff;
-}
-
-top::TopologyRegistry &Context::topology_registry() {
-    return _topologyRegistry;
-}
-
-const top::TopologyRegistry &Context::topology_registry() const {
-    return _topologyRegistry;
 }
 
 void Context::updateFunctions() {
@@ -223,44 +122,8 @@ void Context::updateFunctions() {
     };
 }
 
-const Context::BoxSize &Context::boxSize() const {
-    return _box_size;
-}
-
-Context::BoxSize &Context::boxSize() {
-    return _box_size;
-}
-
-const Context::PeriodicBoundaryConditions &Context::periodicBoundaryConditions() const {
-    return _periodic_boundary;
-}
-
-Context::PeriodicBoundaryConditions &Context::periodicBoundaryConditions() {
-    return _periodic_boundary;
-}
-
-scalar Context::boxVolume() const {
-    return _box_size.at(0) * _box_size.at(1) * _box_size.at(2);
-}
-
-Context::KernelConfiguration &Context::kernelConfiguration() {
-    return _kernelConfiguration;
-}
-
-const Context::KernelConfiguration &Context::kernelConfiguration() const {
-    return _kernelConfiguration;
-}
-
 void Context::setKernelConfiguration(const std::string &s) {
     _kernelConfiguration = nlohmann::json::parse(s);
-}
-
-const compartments::CompartmentRegistry &Context::compartments() const {
-    return _compartmentRegistry;
-}
-
-compartments::CompartmentRegistry &Context::compartments() {
-    return _compartmentRegistry;
 }
 
 namespace {
@@ -331,14 +194,25 @@ std::string Context::describe() {
     return description;
 }
 
-Context::~Context() = default;
-
+const scalar Context::calculateMaxCutoff() const {
+    scalar max_cutoff{0};
+    for (const auto &entry : potentials().potentialsOrder2()) {
+        for (const auto &potential : entry.second) {
+            max_cutoff = std::max(max_cutoff, potential->getCutoffRadius());
+        }
+    }
+    for (const auto &entry : reactions().order2()) {
+        for (const auto &reaction : entry.second) {
+            max_cutoff = std::max(max_cutoff, reaction->eductDistance());
+        }
+    }
+    for (const auto &entry : _topologyRegistry.spatialReactionRegistry()) {
+        for (const auto &reaction : entry.second) {
+            max_cutoff = std::max(max_cutoff, reaction.radius());
+        }
+    }
+    return max_cutoff;
+}
 
 }
 }
-
-
-
-
-
-

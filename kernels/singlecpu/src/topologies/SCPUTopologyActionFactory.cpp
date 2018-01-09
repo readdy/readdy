@@ -43,7 +43,7 @@ namespace scpu {
 namespace model {
 namespace top {
 
-SCPUTopologyActionFactory::SCPUTopologyActionFactory(const SCPUKernel *const kernel) : kernel(kernel) {}
+SCPUTopologyActionFactory::SCPUTopologyActionFactory(SCPUKernel *const kernel) : kernel(kernel) {}
 
 std::unique_ptr<c_top::pot::CalculateHarmonicBondPotential>
 SCPUTopologyActionFactory::createCalculateHarmonicBondPotential(const harmonic_bond *const potential) const {

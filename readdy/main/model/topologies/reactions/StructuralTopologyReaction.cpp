@@ -46,46 +46,6 @@ StructuralTopologyReaction::StructuralTopologyReaction(const reaction_function& 
         , _rate_function(rate_function) { }
 
 
-scalar  StructuralTopologyReaction::rate(const GraphTopology &topology) const {
-    return _rate_function(topology);
-}
-
-StructuralTopologyReaction::reaction_recipe StructuralTopologyReaction::operations(GraphTopology &topology) const {
-    return _reaction_function(topology);
-}
-
-const bool StructuralTopologyReaction::raises_if_invalid() const {
-    return mode_.flags.test(mode::raise_or_rollback_flag);
-}
-
-void StructuralTopologyReaction::raise_if_invalid() {
-    mode_.raise();
-}
-
-const bool StructuralTopologyReaction::rolls_back_if_invalid() const {
-    return !raises_if_invalid();
-}
-
-void StructuralTopologyReaction::roll_back_if_invalid() {
-    mode_.rollback();
-}
-
-const bool StructuralTopologyReaction::expects_connected_after_reaction() const {
-    return mode_.flags.test(mode::expect_connected_or_create_children_flag);
-}
-
-void StructuralTopologyReaction::expect_connected_after_reaction() {
-    mode_.expect_connected();
-}
-
-const bool StructuralTopologyReaction::creates_child_topologies_after_reaction() const {
-    return !expects_connected_after_reaction();
-}
-
-void StructuralTopologyReaction::create_child_topologies_after_reaction() {
-    mode_.create_children();
-}
-
 StructuralTopologyReaction::StructuralTopologyReaction(const StructuralTopologyReaction::reaction_function &reaction_function, const scalar  &rate)
         : StructuralTopologyReaction(reaction_function, [rate](const GraphTopology&) -> scalar { return rate; }) {}
 
@@ -176,22 +136,6 @@ std::vector<GraphTopology> StructuralTopologyReaction::execute(GraphTopology &to
     return {};
 }
 
-
-void Mode::raise() {
-    flags[raise_or_rollback_flag] = true;
-}
-
-void Mode::rollback() {
-    flags[raise_or_rollback_flag] = false;
-}
-
-void Mode::expect_connected() {
-    flags[expect_connected_or_create_children_flag] = true;
-}
-
-void Mode::create_children() {
-    flags[expect_connected_or_create_children_flag] = false;
-}
 
 }
 }

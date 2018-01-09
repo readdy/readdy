@@ -34,6 +34,7 @@
 
 #include <readdy/common/macros.h>
 #include <readdy/model/ParticleTypeRegistry.h>
+#include <readdy/model/_internal/Util.h>
 #include "Compartment.h"
 
 NAMESPACE_BEGIN(readdy)
@@ -49,18 +50,28 @@ public:
                                    const Vec3 &origin, scalar radius, bool largerOrLess);
 
     Compartment::id_type addSphere(const Compartment::label_conversion_map &conversions, const std::string &uniqueName,
-                                   const Vec3 &origin, scalar radius, bool largerOrLess);
+                                   const Vec3 &origin, scalar radius, bool largerOrLess) {
+        return addSphere(_internal::util::transformTypesMap(conversions, _types.get()), uniqueName, origin, radius,
+                         largerOrLess);
+    }
 
     Compartment::id_type addPlane(const Compartment::conversion_map &conversions, const std::string &uniqueName,
                                   const Vec3 &normalCoefficients, scalar distance, bool largerOrLess);
 
     Compartment::id_type addPlane(const Compartment::label_conversion_map &conversions, const std::string &uniqueName,
-                                  const Vec3 &normalCoefficients, scalar distance, bool largerOrLess);
+                                  const Vec3 &normalCoefficients, scalar distance, bool largerOrLess) {
+        return addPlane(_internal::util::transformTypesMap(conversions, _types.get()), uniqueName, normalCoefficients,
+                        distance, largerOrLess);
+    }
 
 
-    const std::vector<std::shared_ptr<readdy::model::compartments::Compartment>> &get() const;
+    const auto &get() const {
+        return _compartments;
+    }
 
-    std::vector<std::shared_ptr<readdy::model::compartments::Compartment>> &get();
+    auto &get() {
+        return _compartments;
+    }
 
 private:
     std::vector<std::shared_ptr<readdy::model::compartments::Compartment>> _compartments;

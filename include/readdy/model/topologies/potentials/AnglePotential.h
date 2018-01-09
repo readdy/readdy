@@ -46,14 +46,15 @@ class AnglePotential : public TopologyPotential {
 public:
     using angles = std::vector<std::tuple<std::size_t, std::size_t, std::size_t>>;
 
-    AnglePotential();
+    AnglePotential() : TopologyPotential() {}
 
     virtual ~AnglePotential() = default;
 };
 
 struct AngleConfiguration {
 
-    AngleConfiguration(size_t idx1, size_t idx2, size_t idx3, scalar forceConstant, scalar equilibriumAngle);
+    AngleConfiguration(size_t idx1, size_t idx2, size_t idx3, scalar forceConstant, scalar theta_0)
+            : idx1(idx1), idx2(idx2), idx3(idx3), equilibriumAngle(theta_0), forceConstant(forceConstant) {}
 
     const std::size_t idx1, idx2, idx3;
     const scalar equilibriumAngle, forceConstant;
@@ -65,7 +66,7 @@ public:
     using angle = AngleConfiguration;
     using angle_configurations = std::vector<AngleConfiguration>;
 
-    explicit HarmonicAnglePotential(const angle_configurations &angles);
+    explicit HarmonicAnglePotential(const angle_configurations &angles) : AnglePotential(), angles(angles) {}
     HarmonicAnglePotential(const HarmonicAnglePotential&) = default;
     HarmonicAnglePotential& operator=(const HarmonicAnglePotential&) = delete;
     HarmonicAnglePotential(HarmonicAnglePotential&&) = default;
@@ -76,7 +77,9 @@ public:
     virtual std::unique_ptr<EvaluatePotentialAction>
     createForceAndEnergyAction(const TopologyActionFactory *const factory) override;
 
-    const angle_configurations &getAngles() const;
+    const angle_configurations &getAngles() const {
+        return angles;
+    }
 
     scalar calculateEnergy(const Vec3 &x_ji, const Vec3 &x_jk, const angle &angle) const;
 

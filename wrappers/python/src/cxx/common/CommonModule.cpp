@@ -85,7 +85,7 @@ void exportCommon(py::module& common) {
             return spdlog::level::debug;
         }();
 
-        readdy::log::console()->set_level(l);
+        readdy::log::set_level(l);
 
         /*auto logger =  spdlog::create("console", std::begin(sinks), std::end(sinks));
         logger->set_pattern("[          ] [%Y-%m-%d %H:%M:%S] [%t] [%l] %v");

@@ -51,66 +51,110 @@ public:
     using topology_ref = std::unique_ptr<topology>;
     using topologies_vec = readdy::util::index_persistent_vector<topology_ref>;
 
-    void initializeNeighborList(scalar skin) override;
+    void initializeNeighborList(scalar skin) override {
+        neighborList->create(particleData, skin);
+    }
 
-    void updateNeighborList() override;
+    void updateNeighborList() override {
+        neighborList->create(particleData, neighborList->skin());
+    }
 
-    void clearNeighborList() override;
+    void clearNeighborList() override {
+        neighborList->clear();
+    }
 
-    void addParticle(const readdy::model::Particle &p) override;
+    void addParticle(const readdy::model::Particle &p) override {
+        particleData.addParticles({p});
+    }
 
-    void addParticles(const std::vector<readdy::model::Particle> &p) override;
+    void addParticles(const std::vector<readdy::model::Particle> &p) override {
+        particleData.addParticles(p);
+    }
 
-    void removeParticle(const readdy::model::Particle &p) override;
+    void removeParticle(const readdy::model::Particle &p) override {
+        particleData.removeParticle(p);
+    }
 
-    void removeAllParticles() override;
+    void removeAllParticles() override {
+        particleData.clear();
+    }
 
     readdy::model::top::GraphTopology *const addTopology(topology_type_type type, const std::vector<readdy::model::TopologyParticle> &particles) override;
 
     const std::vector<Vec3> getParticlePositions() const override;
 
-    readdy::model::Particle getParticleForIndex(std::size_t index) const override;
+    readdy::model::Particle getParticleForIndex(std::size_t index) const override {
+        return particleData.getParticle(index);
+    }
 
-    particle_type_type getParticleType(std::size_t index) const override;
+    particle_type_type getParticleType(std::size_t index) const override {
+        return getParticleData()->entry_at(index).type;
+    }
 
-    scalar energy() const override;
+    scalar energy() const override {
+        return currentEnergy;
+    }
 
-    scalar &energy() override;
+    scalar &energy() override {
+        return currentEnergy;
+    }
 
-    virtual void increaseEnergy(scalar increase);
+    virtual void increaseEnergy(scalar increase) {
+        currentEnergy += increase;
+    }
 
     SCPUStateModel(const readdy::model::Context &context, const topology_action_factory *);
 
-    ~SCPUStateModel() override;
+    ~SCPUStateModel() override = default;
 
     // move
-    SCPUStateModel(SCPUStateModel &&rhs) noexcept;
+    SCPUStateModel(SCPUStateModel &&rhs) noexcept = default;
 
-    SCPUStateModel &operator=(SCPUStateModel &&rhs) noexcept;
+    SCPUStateModel &operator=(SCPUStateModel &&rhs) noexcept = default;
 
     SCPUStateModel(const SCPUStateModel&) = delete;
 
     SCPUStateModel& operator=(const SCPUStateModel&) = delete;
 
-    virtual readdy::kernel::scpu::model::SCPUParticleData *getParticleData() const;
+    readdy::kernel::scpu::model::SCPUParticleData *getParticleData() {
+        return &particleData;
+    }
 
-    virtual const model::SCPUNeighborList *getNeighborList() const;
+    const readdy::kernel::scpu::model::SCPUParticleData *getParticleData() const {
+        return &particleData;
+    }
+
+    virtual const model::SCPUNeighborList *getNeighborList() const {
+        return neighborList.get();
+    }
 
     const std::vector<readdy::model::Particle> getParticles() const override;
 
-    std::vector<readdy::model::reactions::ReactionRecord>& reactionRecords();
+    std::vector<readdy::model::reactions::ReactionRecord>& reactionRecords() {
+        return _reactionRecords;
+    }
 
-    const std::vector<readdy::model::reactions::ReactionRecord>& reactionRecords() const;
+    const std::vector<readdy::model::reactions::ReactionRecord>& reactionRecords() const {
+        return _reactionRecords;
+    }
 
-    const reaction_counts_map & reactionCounts() const;
+    const reaction_counts_map & reactionCounts() const {
+        return _reactionCounts;
+    }
 
-    reaction_counts_map &reactionCounts();
+    reaction_counts_map &reactionCounts() {
+        return _reactionCounts;
+    }
 
     void resetReactionCounts();
 
-    const topologies_vec &topologies() const;
+    const topologies_vec &topologies() const {
+        return _topologies;
+    }
 
-    topologies_vec &topologies();
+    topologies_vec &topologies() {
+        return _topologies;
+    }
 
     void insert_topology(topology&& top);
 
@@ -121,8 +165,13 @@ public:
     readdy::model::top::GraphTopology *getTopologyForParticle(readdy::model::top::Topology::particle_index particle) override;
 
 private:
-    struct Impl;
-    std::unique_ptr<Impl> pimpl;
+    scalar currentEnergy = 0;
+    model::SCPUParticleData particleData {};
+    std::unique_ptr<model::SCPUNeighborList> neighborList;
+    SCPUStateModel::topology_action_factory const *topologyActionFactory {nullptr};
+    // only filled when readdy::model::Context::recordReactionsWithPositions is true
+    std::vector<readdy::model::reactions::ReactionRecord> _reactionRecords{};
+    reaction_counts_map _reactionCounts {};
 
     std::reference_wrapper<const readdy::model::Context> _context;
 

@@ -38,41 +38,14 @@ namespace top {
 namespace pot {
 
 /*
- * Super class
- */
-
-BondedPotential::BondedPotential(const bond_configurations &bonds)
-        : TopologyPotential(), bonds(bonds) {}
-
-const BondedPotential::bond_configurations &BondedPotential::getBonds() const {
-    return bonds;
-}
-
-/*
  * Harmonic bond
  */
-
-HarmonicBondPotential::HarmonicBondPotential(const bond_configurations &bonds)
-        : BondedPotential(bonds) {}
-
-scalar HarmonicBondPotential::calculateEnergy(const Vec3 &x_ij, const BondConfiguration &bond) const {
-    const auto norm = std::sqrt(x_ij * x_ij);
-    return bond.forceConstant * (norm - bond.length) * (norm - bond.length);
-}
-
-void
-HarmonicBondPotential::calculateForce(Vec3 &force, const Vec3 &x_ij, const BondConfiguration &bond) const {
-    const auto norm = std::sqrt(x_ij * x_ij);
-    force += (2. * bond.forceConstant * (norm - bond.length) / norm) * x_ij;
-}
 
 std::unique_ptr<EvaluatePotentialAction>
 HarmonicBondPotential::createForceAndEnergyAction(const TopologyActionFactory *const factory) {
     return factory->createCalculateHarmonicBondPotential(this);
 }
 
-BondConfiguration::BondConfiguration(std::size_t idx1, std::size_t idx2, scalar forceConstant, scalar length)
-        : idx1(idx1), idx2(idx2), length(length), forceConstant(forceConstant) {}
 }
 }
 }

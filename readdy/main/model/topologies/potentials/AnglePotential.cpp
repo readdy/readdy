@@ -40,18 +40,9 @@ namespace model {
 namespace top {
 namespace pot {
 
-AnglePotential::AnglePotential() : TopologyPotential() {}
-
-HarmonicAnglePotential::HarmonicAnglePotential(const angle_configurations &angles)
-        : AnglePotential(), angles(angles) {}
-
 std::unique_ptr<EvaluatePotentialAction>
 HarmonicAnglePotential::createForceAndEnergyAction(const TopologyActionFactory *const factory) {
     return factory->createCalculateHarmonicAnglePotential(this);
-}
-
-const HarmonicAnglePotential::angle_configurations &HarmonicAnglePotential::getAngles() const {
-    return angles;
 }
 
 scalar HarmonicAnglePotential::calculateEnergy(const Vec3 &x_ij, const Vec3 &x_kj,
@@ -67,12 +58,12 @@ void HarmonicAnglePotential::calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, con
                                             const angle &angle) const {
     const scalar scalarProduct = x_ji * x_jk;
     scalar norm_ji_2 = x_ji * x_ji;
-    if(norm_ji_2 < SMALL) {
+    if (norm_ji_2 < SMALL) {
         norm_ji_2 = SMALL;
     }
     const scalar norm_ji = std::sqrt(norm_ji_2);
     scalar norm_jk_2 = x_jk * x_jk;
-    if(norm_jk_2 < SMALL) {
+    if (norm_jk_2 < SMALL) {
         norm_jk_2 = SMALL;
     }
     const scalar norm_jk = std::sqrt(norm_jk_2);
@@ -102,8 +93,6 @@ void HarmonicAnglePotential::calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, con
     f_k -= force_k;
 }
 
-AngleConfiguration::AngleConfiguration(size_t idx1, size_t idx2, size_t idx3, scalar forceConstant, scalar theta_0)
-        : idx1(idx1), idx2(idx2), idx3(idx3), equilibriumAngle(theta_0), forceConstant(forceConstant) {}
 }
 }
 }

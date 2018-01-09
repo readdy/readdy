@@ -51,22 +51,79 @@ public:
 
     using entry_type = typename super::Entries::value_type;
 
-    explicit DefaultDataContainer(EntryDataContainer *entryDataContainer);
+    explicit DefaultDataContainer(EntryDataContainer *entryDataContainer)
+            : DataContainer(entryDataContainer->context(), entryDataContainer->pool()) {
+        _entries = entryDataContainer->entries();
+        _blanks = entryDataContainer->blanks();
+    }
 
-    DefaultDataContainer(const model::Context &context, thread_pool &pool);
+    DefaultDataContainer(const model::Context &context, thread_pool &pool) : DataContainer(context, pool) {};
 
     void reserve(std::size_t n) override {
         _entries.reserve(n);
     };
 
-    size_type addEntry(Entry &&entry) override;
+    size_type addEntry(Entry &&entry) override {
+        if(!_blanks.empty()) {
+            const auto idx = _blanks.back();
+            _blanks.pop_back();
+            _entries.at(idx) = std::move(entry);
+            return idx;
+        }
 
-    void addParticles(const std::vector<Particle> &particles) override;
+        _entries.push_back(std::move(entry));
+        return _entries.size()-1;
+    }
+
+    void addParticles(const std::vector<Particle> &particles) override {
+        for(const auto& p : particles) {
+            if(!_blanks.empty()) {
+                const auto idx = _blanks.back();
+                _blanks.pop_back();
+                _entries.at(idx) = Entry(p);
+            } else {
+                _entries.emplace_back(p);
+            }
+        }
+    }
 
     std::vector<size_type>
-    addTopologyParticles(const std::vector<TopologyParticle> &topologyParticles) override;
+    addTopologyParticles(const std::vector<TopologyParticle> &topologyParticles) override {
+        std::vector<size_type> indices;
+        indices.reserve(topologyParticles.size());
+        for(const auto& p : topologyParticles) {
+            if(!_blanks.empty()) {
+                const auto idx = _blanks.back();
+                _blanks.pop_back();
+                _entries.at(idx) = Entry(p);
+                indices.push_back(idx);
+            } else {
+                _entries.emplace_back(p);
+                indices.push_back(_entries.size()-1);
+            }
+        }
+        return indices;
+    }
 
-    std::vector<size_type> update(DataUpdate &&update) override;
+    std::vector<size_type> update(DataUpdate &&update) override {
+        auto &&newEntries = std::move(std::get<0>(update));
+        auto &&removedEntries = std::move(std::get<1>(update));
+
+        auto it_del = removedEntries.begin();
+        for(auto&& newEntry : newEntries) {
+            if(it_del != removedEntries.end()) {
+                _entries.at(*it_del) = std::move(newEntry);
+                ++it_del;
+            } else {
+                addEntry(std::move(newEntry));
+            }
+        }
+        while(it_del != removedEntries.end()) {
+            removeEntry(*it_del);
+            ++it_del;
+        }
+        return {};
+    }
 
     void displace(size_type index, const Particle::pos_type &delta) override {
         auto &entry = _entries.at(index);

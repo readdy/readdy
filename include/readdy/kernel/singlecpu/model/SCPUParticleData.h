@@ -53,9 +53,9 @@ struct Entry {
             : pos(particle.getPos()), force(force_type()), type(particle.getType()), deactivated(false),
               displacement(0), id(particle.getId()) {}
 
-    Entry(const Entry &) = delete;
+    Entry(const Entry &) = default;
 
-    Entry &operator=(const Entry &) = delete;
+    Entry &operator=(const Entry &) = default;
 
     Entry(Entry &&) noexcept = default;
 
@@ -63,9 +63,13 @@ struct Entry {
 
     ~Entry() = default;
 
-    bool is_deactivated() const;
+    bool is_deactivated() const {
+        return deactivated;
+    }
 
-    const particle_type::pos_type &position() const;
+    const particle_type::pos_type &position() const {
+        return pos;
+    }
 
     force_type force;
     displacement_type displacement;
@@ -99,45 +103,104 @@ public:
 
     readdy::model::Particle getParticle(entry_index index) const;
 
-    readdy::model::Particle toParticle(const Entry &e) const;
+    readdy::model::Particle toParticle(const Entry &e) const {
+        return readdy::model::Particle(e.pos, e.type, e.id);
+    }
 
-    void addParticle(const particle_type &particle);
+    void addParticle(const particle_type &particle) {
+        addParticles({particle});
+    }
 
-    void addParticles(const std::vector<particle_type> &particles);
+    void addParticles(const std::vector<particle_type> &particles) {
+        for(const auto& p : particles) {
+            if(!blanks.empty()) {
+                const auto idx = blanks.back();
+                blanks.pop_back();
+                entries.at(idx) = Entry{p};
+            } else {
+                entries.emplace_back(p);
+            }
+        }
+    }
 
     std::vector<entries_vec::size_type> addTopologyParticles(const std::vector<top_particle_type> &particles);
 
     void removeParticle(const particle_type &particle);
 
-    void removeParticle(size_t index);
+    void removeParticle(size_t index) {
+        auto& p = *(entries.begin() + index);
+        if(!p.deactivated) {
+            blanks.push_back(index);
+            p.deactivated = true;
+            // neighbors.at(index).clear();
+        } else {
+            log::error("Tried to remove particle (index={}), that was already removed!", index);
+        }
+    }
 
-    iterator begin();
+    iterator begin() {
+        return entries.begin();
+    }
 
-    iterator end();
+    iterator end() {
+        return entries.end();
+    }
 
-    const_iterator cbegin() const;
+    const_iterator cbegin() const {
+        return entries.cbegin();
+    }
 
-    const_iterator cend() const;
+    const_iterator cend() const {
+        return entries.cend();
+    }
 
-    const_iterator begin() const;
+    const_iterator begin() const {
+        return entries.begin();
+    }
 
-    const_iterator end() const;
+    const_iterator end() const {
+        return entries.end();
+    }
 
-    Entry &entry_at(entry_index);
+    Entry &entry_at(entry_index idx) {
+        return entries.at(idx);
+    }
 
-    entry_index size() const;
+    entry_index size() const {
+        return entries.size();
+    }
 
-    entry_index n_deactivated() const;
+    entry_index n_deactivated() const {
+        return blanks.size();
+    }
 
-    void reserve(std::size_t n);
+    void reserve(std::size_t n) {
+        entries.reserve(n);
+    }
 
-    void clear();
+    void clear() {
+        entries.clear();
+        blanks.clear();
+    }
 
-    const Entry &entry_at(entry_index) const;
+    const Entry &entry_at(entry_index idx) const {
+        return entries.at(idx);
+    }
 
-    const Entry &centry_at(entry_index) const;
+    const Entry &centry_at(entry_index idx) const {
+        return entries.at(idx);
+    }
 
-    entry_index addEntry(Entry &&entry);
+    entry_index addEntry(Entry entry) {
+        if(!blanks.empty()) {
+            const auto idx = blanks.back();
+            blanks.pop_back();
+            entries.at(idx) = entry;
+            return idx;
+        }
+        entries.push_back(entry);
+        return entries.size()-1;
+    }
 
     void removeEntry(entry_index entry);
 

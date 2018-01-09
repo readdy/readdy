@@ -70,57 +70,6 @@ ReactionRegistry::reaction_id ReactionRegistry::emplaceReaction(const std::share
     return id;
 }
 
-const ReactionRegistry::reactions ReactionRegistry::order1Flat() const {
-    reaction_o1_registry::mapped_type result;
-    for (const auto &mapEntry : one_educt_registry) {
-        for (const auto reaction : mapEntry.second) {
-            result.push_back(reaction);
-        }
-    }
-    return result;
-}
-
-const ReactionRegistry::reaction *ReactionRegistry::order1ByName(const std::string &name) const {
-    for (const auto &mapEntry : one_educt_registry) {
-        for (const auto &reaction : mapEntry.second) {
-            if (reaction->name() == name) return reaction;
-        }
-    }
-    return nullptr;
-}
-
-const ReactionRegistry::reactions ReactionRegistry::order2Flat() const {
-    reaction_o2_registry::mapped_type result;
-    for (const auto &mapEntry : two_educts_registry) {
-        for (const auto reaction : mapEntry.second) {
-            result.push_back(reaction);
-        }
-    }
-    return result;
-}
-
-const ReactionRegistry::reactions &ReactionRegistry::order1ByType(const Particle::type_type type) const {
-    return readdy::util::collections::getOrDefault(one_educt_registry, type, defaultReactions);
-}
-
-const ReactionRegistry::reaction *ReactionRegistry::order2ByName(const std::string &name) const {
-    for (const auto &mapEntry : two_educts_registry) {
-        for (const auto &reaction : mapEntry.second) {
-            if (reaction->name() == name) return reaction;
-        }
-    }
-    return nullptr;
-}
-
-const ReactionRegistry::reactions &ReactionRegistry::order2ByType(const Particle::type_type type1,
-                                                                  const Particle::type_type type2) const {
-    auto it = two_educts_registry.find(std::tie(type1, type2));
-    if (it != two_educts_registry.end()) {
-        return it->second;
-    }
-    return defaultReactions;
-}
-
 void ReactionRegistry::configure() {
     namespace coll = readdy::util::collections;
     using pair = readdy::util::particle_type_pair;
@@ -174,14 +123,6 @@ std::string ReactionRegistry::describe() const {
     return description;
 }
 
-const std::size_t &ReactionRegistry::nOrder1() const {
-    return _n_order1;
-}
-
-const std::size_t &ReactionRegistry::nOrder2() const {
-    return _n_order2;
-}
-
 const short ReactionRegistry::addExternal(reaction *r) {
     if (r->nEducts() == 1) {
         one_educt_registry_external[r->educts()[0]].push_back(r);
@@ -191,80 +132,6 @@ const short ReactionRegistry::addExternal(reaction *r) {
     two_educts_registry_external[std::tie(r->educts()[0], r->educts()[1])].push_back(r);
     _n_order2 += 1;
     return r->id();
-}
-
-ReactionRegistry::ReactionRegistry(std::reference_wrapper<const ParticleTypeRegistry> ref) : _types(ref) {}
-
-const ReactionRegistry::reactions &ReactionRegistry::order1ByType(const std::string &type) const {
-    return order1ByType(_types.get().idOf(type));
-}
-
-const ReactionRegistry::reactions &ReactionRegistry::order2ByType(const std::string &type1,
-                                                                  const std::string &type2) const {
-    return order2ByType(_types.get().idOf(type1), _types.get().idOf(type2));
-}
-
-const ReactionRegistry::reaction_o1_registry &ReactionRegistry::order1() const {
-    return one_educt_registry;
-}
-
-const ReactionRegistry::reaction_o2_registry &ReactionRegistry::order2() const {
-    return two_educts_registry;
-}
-
-bool ReactionRegistry::isReactionOrder2Type(particle_type_type type) const {
-    return _reaction_o2_types.find(type) != _reaction_o2_types.end();
-}
-
-ReactionRegistry::reaction_id
-ReactionRegistry::addConversion(const std::string &name, particle_type_type from, particle_type_type to, scalar rate) {
-    return emplaceReaction(std::make_shared<Conversion>(name, from, to, rate));
-}
-
-ReactionRegistry::reaction_id
-ReactionRegistry::addEnzymatic(const std::string &name, particle_type_type catalyst, particle_type_type from,
-                               particle_type_type to, scalar rate, scalar eductDistance) {
-    return emplaceReaction(std::make_shared<Enzymatic>(name, catalyst, from, to, rate, eductDistance));
-}
-
-ReactionRegistry::reaction_id
-ReactionRegistry::addConversion(const std::string &name, const std::string &from, const std::string &to, scalar rate) {
-    return addConversion(name, _types.get().idOf(from), _types.get().idOf(to), rate);
-}
-
-ReactionRegistry::reaction_id
-ReactionRegistry::addEnzymatic(const std::string &name, const std::string &catalyst, const std::string &from,
-                               const std::string &to, scalar rate, scalar eductDistance) {
-    return addEnzymatic(name, _types.get().idOf(catalyst), _types.get().idOf(from), _types.get().idOf(to),
-                        rate, eductDistance);
-}
-
-ReactionRegistry::reaction_id
-ReactionRegistry::addFission(const std::string &name, const std::string &from, const std::string &to1,
-                             const std::string &to2, scalar rate, scalar productDistance, scalar weight1,
-                             scalar weight2) {
-    return addFission(name, _types.get().idOf(from), _types.get().idOf(to1), _types.get().idOf(to2), rate,
-                      productDistance, weight1, weight2);
-}
-
-ReactionRegistry::reaction_id
-ReactionRegistry::addFission(const std::string &name, particle_type_type from, particle_type_type to1,
-                             particle_type_type to2, scalar rate, scalar productDistance, scalar weight1,
-                             scalar weight2) {
-    return emplaceReaction(std::make_shared<Fission>(name, from, to1, to2, rate, productDistance, weight1, weight2));
-}
-
-ReactionRegistry::reaction_id
-ReactionRegistry::addFusion(const std::string &name, const std::string &from1, const std::string &from2,
-                            const std::string &to, scalar rate, scalar eductDistance, scalar weight1, scalar weight2) {
-    return addFusion(name, _types.get().idOf(from1), _types.get().idOf(from2), _types.get().idOf(to), rate,
-                     eductDistance, weight1, weight2);
-}
-
-ReactionRegistry::reaction_id
-ReactionRegistry::addFusion(const std::string &name, particle_type_type from1, particle_type_type from2,
-                            particle_type_type to, scalar rate, scalar eductDistance, scalar weight1, scalar weight2) {
-    return emplaceReaction(std::make_shared<Fusion>(name, from1, from2, to, rate, eductDistance, weight1, weight2));
 }
 
 ReactionRegistry::reaction_id ReactionRegistry::add(const std::string &descriptor, scalar rate) {
@@ -409,16 +276,6 @@ ReactionRegistry::reaction_id ReactionRegistry::add(const std::string &descripto
             }
         }
     }
-}
-
-ReactionRegistry::reaction_id
-ReactionRegistry::addDecay(const std::string &name, const std::string &type, scalar rate) {
-    return addDecay(name, _types.get().idOf(type), rate);
-}
-
-ReactionRegistry::reaction_id
-ReactionRegistry::addDecay(const std::string &name, particle_type_type type, scalar rate) {
-    return emplaceReaction(std::make_shared<Decay>(name, type, rate));
 }
 
 namespace {

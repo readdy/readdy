@@ -58,7 +58,9 @@ class SpatialTopologyReaction {
 public:
     SpatialTopologyReaction(std::string name, util::particle_type_pair types, topology_type_pair top_types,
                             util::particle_type_pair types_to, topology_type_pair top_types_to, scalar rate,
-                            scalar radius, STRMode mode);
+                            scalar radius, STRMode mode)
+            : _name(std::move(name)), _types(std::move(types)), _types_to(std::move(types_to)), _rate(rate),
+              _radius(radius), _mode(mode), _top_types(std::move(top_types)), _top_types_to(std::move(top_types_to)) {};
 
     ~SpatialTopologyReaction() = default;
 
@@ -70,43 +72,81 @@ public:
 
     SpatialTopologyReaction &operator=(SpatialTopologyReaction &&) = default;
 
-    const std::string &name() const;
+    const std::string &name() const {
+        return _name;
+    }
 
-    const particle_type_type type1() const;
+    const particle_type_type type1() const {
+        return std::get<0>(_types);
+    }
 
-    const particle_type_type type2() const;
+    const particle_type_type type2() const {
+        return std::get<1>(_types);
+    }
 
-    const util::particle_type_pair &types() const;
+    const util::particle_type_pair &types() const {
+        return _types;
+    }
 
-    const particle_type_type type_to1() const;
+    const particle_type_type type_to1() const {
+        return std::get<0>(_types_to);
+    }
 
-    const particle_type_type type_to2() const;
+    const particle_type_type type_to2() const {
+        return std::get<1>(_types_to);
+    }
 
-    const util::particle_type_pair &types_to() const;
+    const util::particle_type_pair &types_to() const {
+        return _types_to;
+    }
 
-    const topology_type_type top_type1() const;
+    const topology_type_type top_type1() const {
+        return std::get<0>(_top_types);
+    }
 
-    const topology_type_type top_type2() const;
+    const topology_type_type top_type2() const {
+        return std::get<1>(_top_types);
+    }
 
-    const topology_type_type top_type_to1() const;
+    const topology_type_type top_type_to1() const {
+        return std::get<0>(_top_types_to);
+    }
 
-    const topology_type_type top_type_to2() const;
+    const topology_type_type top_type_to2() const {
+        return std::get<1>(_top_types_to);
+    }
 
-    bool is_topology_particle_reaction() const;
+    bool is_topology_particle_reaction() const {
+        return top_type2() == topology_type_empty;
+    }
 
-    bool is_topology_topology_reaction() const;
+    bool is_topology_topology_reaction() const {
+        return !is_topology_particle_reaction();
+    }
 
-    const bool is_enzymatic() const;
+    const bool is_enzymatic() const {
+        return _mode == STRMode::TT_ENZYMATIC || _mode == STRMode::TP_ENZYMATIC;
+    }
 
-    const bool is_fusion() const;
+    const bool is_fusion() const {
+        return _mode == STRMode::TT_FUSION || _mode == STRMode::TT_FUSION_ALLOW_SELF || _mode == STRMode::TP_FUSION;
+    }
 
-    const scalar rate() const;
+    const scalar rate() const {
+        return _rate;
+    }
 
-    const scalar radius() const;
+    const scalar radius() const {
+        return _radius;
+    }
 
-    const bool allow_self_connection() const;
+    const bool allow_self_connection() const {
+        return _mode == STRMode::TT_FUSION_ALLOW_SELF;
+    }
 
-    const STRMode &mode() const;
+    const STRMode &mode() const {
+        return _mode;
+    }
 
 private:
 
@@ -127,7 +167,7 @@ private:
 class STRParser {
 public:
 
-    explicit STRParser(const TopologyRegistry &registry);
+    explicit STRParser(const TopologyRegistry &registry) : _topology_registry(registry) {};
 
     /**
      *  Pass descriptor of form for Topology<->Topology
