@@ -109,11 +109,11 @@ public:
         return _stateModel;
     };
 
-    const model::actions::ActionFactory &getActionFactory() const override {
+    const model::actions::ActionFactory &actions() const override {
         return _actions;
     };
 
-    model::actions::ActionFactory &getActionFactory() override {
+    model::actions::ActionFactory &actions() override {
         return _actions;
     };
 

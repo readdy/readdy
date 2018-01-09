@@ -39,31 +39,42 @@ namespace readdy {
 namespace testing {
 
 class FakeActionFactory : public readdy::model::actions::ActionFactory {
-    readdy::model::actions::EulerBDIntegrator *createEulerBDIntegrator(readdy::scalar timeStep) const override {
+public:
+    std::unique_ptr<model::actions::AddParticles>
+    addParticles(const std::vector<model::Particle> &particles) const override {
         return nullptr;
     }
 
-    readdy::model::actions::CalculateForces *createCalculateForces() const override {
+    std::unique_ptr<model::actions::EulerBDIntegrator> eulerBDIntegrator(scalar timeStep) const override {
         return nullptr;
     }
 
-    readdy::model::actions::UpdateNeighborList *
-    createUpdateNeighborList(readdy::model::actions::UpdateNeighborList::Operation operation,
-                             readdy::scalar skinSize) const override { return nullptr; }
-
-    readdy::model::actions::EvaluateCompartments *createEvaluateCompartments() const override {
+    std::unique_ptr<model::actions::CalculateForces> calculateForces() const override {
         return nullptr;
     }
 
-    readdy::model::actions::reactions::UncontrolledApproximation *
-    createUncontrolledApproximation(readdy::scalar timeStep) const override {
+    std::unique_ptr<model::actions::UpdateNeighborList>
+    updateNeighborList(model::actions::UpdateNeighborList::Operation operation, scalar skinSize) const override {
         return nullptr;
     }
 
-    readdy::model::actions::reactions::Gillespie *createGillespie(readdy::scalar timeStep) const override {
+    std::unique_ptr<model::actions::EvaluateCompartments> evaluateCompartments() const override {
         return nullptr;
     }
 
+    std::unique_ptr<model::actions::reactions::UncontrolledApproximation>
+    uncontrolledApproximation(scalar timeStep) const override {
+        return nullptr;
+    }
+
+    std::unique_ptr<model::actions::reactions::Gillespie> gillespie(scalar timeStep) const override {
+        return nullptr;
+    }
+
+    std::unique_ptr<model::actions::top::EvaluateTopologyReactions>
+    evaluateTopologyReactions(scalar timeStep) const override {
+        return nullptr;
+    }
 };
 
 class KernelMock : public readdy::model::Kernel {
@@ -71,8 +82,10 @@ class KernelMock : public readdy::model::Kernel {
 public:
     explicit KernelMock(const std::string &name) : Kernel(name) {}
 
-    MOCK_METHOD0(getActionFactory, readdy::model::actions::ActionFactory &(void));
-    MOCK_CONST_METHOD0(getActionFactory, const readdy::model::actions::ActionFactory & (void));
+    MOCK_METHOD0(actions, readdy::model::actions::ActionFactory & (void));
+
+    MOCK_CONST_METHOD0(actions, const readdy::model::actions::ActionFactory & (
+            void));
 
     MOCK_METHOD0(stateModel, readdy::model::StateModel &(void));
     MOCK_CONST_METHOD0(stateModel, const readdy::model::StateModel & (void));

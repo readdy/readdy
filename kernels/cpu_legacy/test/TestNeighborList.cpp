@@ -613,7 +613,7 @@ TEST(TestAdaptiveNeighborList, AdaptiveUpdating) {
         }
     }
 
-    auto integrator = kernel->createAction<readdy::model::actions::EulerBDIntegrator>(.01);
+    auto integrator = kernel->actions().eulerBDIntegrator(.01);
 
     for (int t = 0; t < 100; ++t) {
         integrator->perform();

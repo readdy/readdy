@@ -56,9 +56,9 @@ void setupParticles(readdy::model::Kernel &kernel) {
 
 void run(readdy::model::Kernel &kernel, readdy::scalar timeStep) {
     unsigned int nSteps = 200;
-    auto &&integrator = kernel.createAction<readdy::model::actions::EulerBDIntegrator>(timeStep);
-    auto &&nl = kernel.createAction<readdy::model::actions::UpdateNeighborList>();
-    auto &&forces = kernel.createAction<readdy::model::actions::CalculateForces>();
+    auto &&integrator = kernel.actions().eulerBDIntegrator(timeStep);
+    auto &&nl = kernel.actions().updateNeighborList();
+    auto &&forces = kernel.actions().calculateForces();
     nl->perform();
     for (readdy::time_step_type &&t = 0; t < nSteps; ++t) {
         forces->perform();
@@ -134,7 +134,7 @@ TEST_P(TestPotentials, TestParticleStayInSphere) {
 }
 
 TEST_P(TestPotentials, TestLennardJonesRepellent) {
-    auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
+    auto calculateForces = kernel->actions().calculateForces();
     // test system where the particles are closer together than they should be, i.e., the force should be repellent
     auto& ctx = kernel->context();
     // one particle type A
@@ -171,10 +171,10 @@ TEST_P(TestPotentials, TestLennardJonesRepellent) {
     ctx.configure();
 
     // we need to update the neighbor list as this is a pair potential
-    auto neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>(readdy::model::actions::UpdateNeighborList::init);
+    auto neighborList = kernel->actions().updateNeighborList(readdy::model::actions::UpdateNeighborList::init);
     neighborList->perform();
 
-    auto updateNeighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>(readdy::model::actions::UpdateNeighborList::update);
+    auto updateNeighborList = kernel->actions().updateNeighborList(readdy::model::actions::UpdateNeighborList::update);
     updateNeighborList->perform();
     // calc forces
     calculateForces->perform();
@@ -206,7 +206,7 @@ TEST_P(TestPotentials, TestLennardJonesRepellent) {
 }
 
 TEST_P(TestPotentials, ScreenedElectrostatics) {
-    auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
+    auto calculateForces = kernel->actions().calculateForces();
     auto &ctx = kernel->context();
     ctx.periodicBoundaryConditions() = {{false, false, false}};
     ctx.particle_types().add("A", 1.0);
@@ -242,7 +242,7 @@ TEST_P(TestPotentials, ScreenedElectrostatics) {
     ctx.configure();
 
     // we need to update the neighbor list as this is a pair potential
-    auto neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>();
+    auto neighborList = kernel->actions().updateNeighborList();
     neighborList->perform();
     // calc forces
     calculateForces->perform();
@@ -297,12 +297,12 @@ TEST_P(TestPotentials, SphericalMembrane) {
     ctx.configure();
 
     // we need to update the neighbor list as this is a pair potential
-    auto neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>();
+    auto neighborList = kernel->actions().updateNeighborList();
     neighborList->perform();
-    auto updateNeighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>(readdy::model::actions::UpdateNeighborList::Operation::update);
+    auto updateNeighborList = kernel->actions().updateNeighborList(readdy::model::actions::UpdateNeighborList::Operation::update);
     updateNeighborList->perform();
     // calc forces
-    auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
+    auto calculateForces = kernel->actions().calculateForces();
     calculateForces->perform();
     // give me results
     kernel->evaluateObservables(1);
@@ -323,7 +323,7 @@ TEST_P(TestPotentials, SphericalMembrane) {
 
 TEST_P(TestPotentials, SphericalBarrier) {
     auto &ctx = kernel->context();
-    auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
+    auto calculateForces = kernel->actions().calculateForces();
     ctx.particle_types().add("A", 1.0);
     ctx.boxSize() = {{10, 10, 10}};
     // add two particles, one on the outer edge getting pushed outside, one inside the sphere unaffected

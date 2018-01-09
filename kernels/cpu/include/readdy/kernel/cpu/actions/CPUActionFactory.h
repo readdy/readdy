@@ -43,27 +43,25 @@ class CPUActionFactory : public readdy::model::actions::ActionFactory {
 public:
     explicit CPUActionFactory(CPUKernel *kernel);
 
-protected:
-    readdy::model::actions::AddParticles *
-    createAddParticles(const std::vector<readdy::model::Particle> &particles) const override;
+    std::unique_ptr<model::actions::AddParticles>
+    addParticles(const std::vector<model::Particle> &particles) const override;
 
-    readdy::model::actions::EulerBDIntegrator *createEulerBDIntegrator(readdy::scalar timeStep) const override;
+    std::unique_ptr<model::actions::EulerBDIntegrator> eulerBDIntegrator(scalar timeStep) const override;
 
-    readdy::model::actions::CalculateForces *createCalculateForces() const override;
+    std::unique_ptr<model::actions::CalculateForces> calculateForces() const override;
 
-    readdy::model::actions::UpdateNeighborList *
-    createUpdateNeighborList(readdy::model::actions::UpdateNeighborList::Operation operation,
-                             readdy::scalar skinSize) const override;
+    std::unique_ptr<model::actions::UpdateNeighborList>
+    updateNeighborList(model::actions::UpdateNeighborList::Operation operation, scalar skinSize) const override;
 
-    readdy::model::actions::EvaluateCompartments *createEvaluateCompartments() const override;
+    std::unique_ptr<model::actions::EvaluateCompartments> evaluateCompartments() const override;
 
-    readdy::model::actions::reactions::UncontrolledApproximation *
-    createUncontrolledApproximation(readdy::scalar timeStep) const override;
+    std::unique_ptr<model::actions::reactions::UncontrolledApproximation>
+    uncontrolledApproximation(scalar timeStep) const override;
 
-    readdy::model::actions::reactions::Gillespie *createGillespie(readdy::scalar timeStep) const override;
+    std::unique_ptr<model::actions::reactions::Gillespie> gillespie(scalar timeStep) const override;
 
-    readdy::model::actions::top::EvaluateTopologyReactions *
-    createEvaluateTopologyReactions(readdy::scalar timeStep) const override;
+    std::unique_ptr<model::actions::top::EvaluateTopologyReactions>
+    evaluateTopologyReactions(scalar timeStep) const override;
 };
 
 }

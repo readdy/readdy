@@ -51,10 +51,10 @@ TEST_P(TestObservables, TestParticlePositions) {
     auto &&obs = kernel->createObservable<m::observables::Positions>(3);
     auto &&connection = kernel->connectObservable(obs.get());
 
-    auto &&integrator = kernel->getActionFactory().createIntegrator("EulerBDIntegrator", timeStep);
+    auto &&integrator = kernel->actions().createIntegrator("EulerBDIntegrator", timeStep);
     using update_nl = readdy::model::actions::UpdateNeighborList;
-    auto &&neighborListInit = kernel->createAction<update_nl>(update_nl::Operation::init, 0);
-    auto &&neighborList = kernel->createAction<update_nl>(update_nl::Operation::update, -1);
+    auto &&neighborListInit = kernel->actions().updateNeighborList(update_nl::Operation::init, 0);
+    auto &&neighborList = kernel->actions().updateNeighborList(update_nl::Operation::update, -1);
     neighborListInit->perform();
     for (readdy::time_step_type t = 0; t < 100; t++) {
         integrator->perform();
@@ -123,8 +123,8 @@ TEST_P(TestObservables, TestForcesObservable) {
     kernel->context().potentials().addHarmonicRepulsion("C", "C", 2.0, 2.0);
 
     using update_nl = readdy::model::actions::UpdateNeighborList;
-    auto &&nl = kernel->createAction<update_nl>();
-    auto &&forces = kernel->createAction<readdy::model::actions::CalculateForces>();
+    auto &&nl = kernel->actions().updateNeighborList();
+    auto &&forces = kernel->actions().calculateForces();
     kernel->context().configure();
     kernel->initialize();
     {

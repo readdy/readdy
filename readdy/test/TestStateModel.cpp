@@ -65,7 +65,7 @@ TEST_P(TestStateModel, CalculateForcesTwoParticles) {
     stateModel.initializeNeighborList(0.);
     stateModel.updateNeighborList();
 
-    auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
+    auto calculateForces = kernel->actions().calculateForces();
     calculateForces->perform();
     calculateForces->perform(); // calculating twice should yield the same result. force and energy must not accumulate
     // check results
@@ -91,7 +91,7 @@ TEST_P(TestStateModel, CalculateForcesTwoParticles) {
 
 TEST_P(TestStateModel, CalculateForcesRepulsion) {
     m::Context &ctx = kernel->context();
-    auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
+    auto calculateForces = kernel->actions().calculateForces();
     auto &stateModel = kernel->stateModel();
 
     // similar situation as before but now with repulsion between A and B
@@ -209,7 +209,7 @@ TEST_P(TestStateModel, CalculateForcesRepulsion) {
 TEST_P(TestStateModel, CalculateForcesNoForces) {
     m::Context &ctx = kernel->context();
     auto &stateModel = kernel->stateModel();
-    auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
+    auto calculateForces = kernel->actions().calculateForces();
     // several particles without potentials -> forces must all be zero
     auto obs = kernel->createObservable<m::observables::Forces>(1);
     auto conn = kernel->connectObservable(obs.get());

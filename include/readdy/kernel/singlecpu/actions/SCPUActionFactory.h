@@ -40,24 +40,27 @@ public:
 
     std::vector<std::string> getAvailableActions() const override;
 
-protected:
-    readdy::model::actions::AddParticles *createAddParticles(const std::vector<readdy::model::Particle> &particles) const override;
+    std::unique_ptr<readdy::model::actions::AddParticles>
+    addParticles(const std::vector<readdy::model::Particle> &particles) const override {
+        return std::make_unique<readdy::model::actions::AddParticles>(kernel, particles);
+    }
 
-    readdy::model::actions::EulerBDIntegrator *createEulerBDIntegrator(scalar timeStep) const override;
+    std::unique_ptr<readdy::model::actions::EulerBDIntegrator> eulerBDIntegrator(scalar timeStep) const override;
 
-    readdy::model::actions::CalculateForces *createCalculateForces() const override;
+    std::unique_ptr<readdy::model::actions::CalculateForces> calculateForces() const override;
 
-    readdy::model::actions::UpdateNeighborList *
-    createUpdateNeighborList(readdy::model::actions::UpdateNeighborList::Operation /*unused*/, scalar /*skinSize*/) const override;
+    std::unique_ptr<readdy::model::actions::UpdateNeighborList>
+    updateNeighborList(readdy::model::actions::UpdateNeighborList::Operation operation, scalar skinSize) const override;
 
-    readdy::model::actions::EvaluateCompartments *createEvaluateCompartments() const override;
+    std::unique_ptr<readdy::model::actions::EvaluateCompartments> evaluateCompartments() const override;
 
-    readdy::model::actions::reactions::UncontrolledApproximation *
-    createUncontrolledApproximation(scalar timeStep) const override;
+    std::unique_ptr<readdy::model::actions::reactions::UncontrolledApproximation>
+    uncontrolledApproximation(scalar timeStep) const override;
 
-    readdy::model::actions::reactions::Gillespie *createGillespie(scalar timeStep) const override;
+    std::unique_ptr<readdy::model::actions::reactions::Gillespie> gillespie(scalar timeStep) const override;
 
-    readdy::model::actions::top::EvaluateTopologyReactions *createEvaluateTopologyReactions(scalar timeStep) const override;
+    std::unique_ptr<readdy::model::actions::top::EvaluateTopologyReactions>
+    evaluateTopologyReactions(scalar timeStep) const override;
 
 private:
     SCPUKernel *const kernel;

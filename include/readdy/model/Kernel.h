@@ -88,11 +88,6 @@ public:
         return _name;
     };
 
-    template<typename ActionType, typename... Args>
-    std::unique_ptr<ActionType> createAction(Args &&... args) const {
-        return getActionFactory().createAction<ActionType>(std::forward<Args>(args)...);
-    }
-
     template<typename T, typename... Args>
     std::unique_ptr<T> createObservable(unsigned int stride, Args &&... args) {
         return getObservableFactory().create<T>(stride, std::forward<Args>(args)...);
@@ -140,7 +135,7 @@ public:
      * @return The program names.
      */
     virtual std::vector<std::string> getAvailableActions() const {
-        return getActionFactory().getAvailableActions();
+        return actions().getAvailableActions();
     }
 
     /**
@@ -192,9 +187,9 @@ public:
         return _context;
     };
 
-    virtual const readdy::model::actions::ActionFactory &getActionFactory() const = 0;
+    virtual const readdy::model::actions::ActionFactory &actions() const = 0;
 
-    virtual readdy::model::actions::ActionFactory &getActionFactory() = 0;
+    virtual readdy::model::actions::ActionFactory &actions() = 0;
 
     virtual const readdy::model::observables::ObservableFactory &getObservableFactory() const {
         return _observableFactory;

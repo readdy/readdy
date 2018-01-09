@@ -45,11 +45,6 @@ NAMESPACE_BEGIN(actions)
 class ActionFactory {
 public:
 
-    template<typename R, typename... Args>
-    std::unique_ptr<R> createAction(Args &&... args) const {
-        return std::unique_ptr<R>(get_dispatcher<R, Args...>::impl(this, std::forward<Args>(args)...));
-    }
-
     virtual std::vector<std::string> getAvailableActions() const {
         return {
                 getActionName<AddParticles>(), getActionName<EulerBDIntegrator>(), getActionName<CalculateForces>(),
@@ -64,7 +59,7 @@ public:
      */
     std::unique_ptr<TimeStepDependentAction> createIntegrator(const std::string& name, scalar timeStep) {
         if(name == getActionName<EulerBDIntegrator>()) {
-            return std::unique_ptr<TimeStepDependentAction>(createEulerBDIntegrator(timeStep));
+            return std::unique_ptr<TimeStepDependentAction>(eulerBDIntegrator(timeStep));
         }
         log::critical("Requested integrator \"{}\" is not available, returning nullptr", name);
         return nullptr;
@@ -72,83 +67,44 @@ public:
 
     std::unique_ptr<TimeStepDependentAction> createReactionScheduler(const std::string& name, scalar timeStep) {
         if(name == getActionName<reactions::Gillespie>()) {
-            return std::unique_ptr<TimeStepDependentAction>(createGillespie(timeStep));
+            return std::unique_ptr<TimeStepDependentAction>(gillespie(timeStep));
         }
-        /*if(name == getActionName<reactions::GillespieParallel>()) {
-            return std::unique_ptr<TimeStepDependentAction>(createGillespieParallel(timeStep));
-        }
-        if(name == getActionName<reactions::NextSubvolumes>()) {
-            return std::unique_ptr<TimeStepDependentAction>(createNextSubvolumes(timeStep));
-        }*/
         if(name == getActionName<reactions::UncontrolledApproximation>()) {
-            return std::unique_ptr<TimeStepDependentAction>(createUncontrolledApproximation(timeStep));
+            return std::unique_ptr<TimeStepDependentAction>(uncontrolledApproximation(timeStep));
         }
         log::critical("Requested reaction scheduler \"{}\" is not available, returning nullptr", name);
         return nullptr;
     }
 
-protected:
-    
-    virtual AddParticles *createAddParticles(const std::vector<Particle> &particles) const = 0;
-    AddParticles *createAddParticles(const Particle &particle) const {
-        return createAddParticles(std::vector<Particle>{particle});
+    virtual std::unique_ptr<AddParticles> addParticles(const std::vector<Particle> &particles) const = 0;
+    std::unique_ptr<AddParticles> addParticles(const Particle &particle) const {
+        return addParticles(std::vector<Particle>{particle});
+    }
+
+    virtual std::unique_ptr<EulerBDIntegrator> eulerBDIntegrator(scalar timeStep) const = 0;
+
+    virtual std::unique_ptr<CalculateForces> calculateForces() const = 0;
+
+    virtual std::unique_ptr<UpdateNeighborList> updateNeighborList(UpdateNeighborList::Operation operation,
+                                                                   scalar skinSize) const = 0;
+
+    std::unique_ptr<UpdateNeighborList> updateNeighborList(UpdateNeighborList::Operation op) const {
+        return updateNeighborList(op, 0);
+    };
+    std::unique_ptr<UpdateNeighborList> updateNeighborList() const {
+        return updateNeighborList(UpdateNeighborList::Operation::init, 0);
     };
 
-    virtual EulerBDIntegrator *createEulerBDIntegrator(scalar timeStep) const = 0;
+    virtual std::unique_ptr<EvaluateCompartments> evaluateCompartments() const = 0;
 
-    virtual CalculateForces *createCalculateForces() const = 0;
+    virtual std::unique_ptr<reactions::UncontrolledApproximation> uncontrolledApproximation(scalar timeStep) const = 0;
 
-    virtual UpdateNeighborList *createUpdateNeighborList(UpdateNeighborList::Operation, scalar skinSize) const = 0;
-    UpdateNeighborList *createUpdateNeighborList(UpdateNeighborList::Operation op) const {
-        return createUpdateNeighborList(op, 0);
-    };
-    UpdateNeighborList *createUpdateNeighborList() const {
-        return createUpdateNeighborList(UpdateNeighborList::Operation::init, 0);
-    };
+    virtual std::unique_ptr<reactions::Gillespie> gillespie(scalar timeStep) const = 0;
 
-    virtual EvaluateCompartments *createEvaluateCompartments() const = 0;
+    virtual std::unique_ptr<top::EvaluateTopologyReactions> evaluateTopologyReactions(scalar timeStep) const = 0;
 
-    virtual reactions::UncontrolledApproximation *createUncontrolledApproximation(scalar timeStep) const = 0;
-
-    virtual reactions::Gillespie *createGillespie(scalar timeStep) const = 0;
-
-    // virtual reactions::GillespieParallel *createGillespieParallel(scalar timeStep) const = 0;
-
-    // virtual reactions::NextSubvolumes *createNextSubvolumes(scalar timeStep) const = 0;
-
-    virtual top::EvaluateTopologyReactions *createEvaluateTopologyReactions(scalar timeStep) const = 0;
-
-    template<typename T, typename... Args>
-    struct get_dispatcher;
-
-    template<typename T, typename... Args>
-    struct get_dispatcher {
-        static T *impl(const ActionFactory *self, Args &&... args) {
-            // this only invokes the normal constructor
-            return new T(std::forward<Args>(args)...);
-        };
-    };
 };
 
-READDY_CREATE_FACTORY_DISPATCHER(ActionFactory, AddParticles)
-
-READDY_CREATE_FACTORY_DISPATCHER(ActionFactory, EulerBDIntegrator)
-
-READDY_CREATE_FACTORY_DISPATCHER(ActionFactory, CalculateForces)
-
-READDY_CREATE_FACTORY_DISPATCHER(ActionFactory, UpdateNeighborList)
-
-READDY_CREATE_FACTORY_DISPATCHER(ActionFactory, EvaluateCompartments)
-
-READDY_CREATE_FACTORY_DISPATCHER2(ActionFactory, reactions, UncontrolledApproximation)
-
-READDY_CREATE_FACTORY_DISPATCHER2(ActionFactory, reactions, Gillespie)
-
-// READDY_CREATE_FACTORY_DISPATCHER2(ActionFactory, reactions, GillespieParallel)
-
-// READDY_CREATE_FACTORY_DISPATCHER2(ActionFactory, reactions, NextSubvolumes)
-
-READDY_CREATE_FACTORY_DISPATCHER2(ActionFactory, top, EvaluateTopologyReactions)
 
 NAMESPACE_END(actions)
 NAMESPACE_END(model)

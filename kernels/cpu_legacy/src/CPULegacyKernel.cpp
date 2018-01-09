@@ -132,11 +132,11 @@ model::StateModel &CPULegacyKernel::stateModel() {
     return *pimpl->stateModel;
 }
 
-const model::actions::ActionFactory &CPULegacyKernel::getActionFactory() const {
+const model::actions::ActionFactory &CPULegacyKernel::actions() const {
     return *pimpl->actionFactory;
 }
 
-model::actions::ActionFactory &CPULegacyKernel::getActionFactory() {
+model::actions::ActionFactory &CPULegacyKernel::actions() {
     return *pimpl->actionFactory;
 }
 

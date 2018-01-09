@@ -67,11 +67,11 @@ public:
         return _observables;
     };
 
-    const readdy::model::actions::ActionFactory &getActionFactory() const override {
+    const readdy::model::actions::ActionFactory &actions() const override {
         return _actionFactory;
     };
 
-    readdy::model::actions::ActionFactory &getActionFactory() override {
+    readdy::model::actions::ActionFactory &actions() override {
         return _actionFactory;
     };
 

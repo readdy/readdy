@@ -56,7 +56,7 @@ TEST_P(TestCompartments, OneCompartmentOneConversionOneParticle) {
     const auto &resultBefore = obs->getResult();
     EXPECT_THAT(resultBefore, ::testing::ElementsAre(1, 0)) << "Expect one A particle before program execution";
 
-    auto &&evaluateCompartments = kernel->createAction<m::actions::EvaluateCompartments>();
+    auto &&evaluateCompartments = kernel->actions().evaluateCompartments();
     evaluateCompartments->perform();
 
     obs->evaluate();
@@ -72,7 +72,7 @@ TEST_P(TestCompartments, TwoCompartments) {
     ctx.particle_types().add("B", 1.);
     ctx.particle_types().add("C", 1.);
     ctx.particle_types().add("D", 1.);
-    auto &&comp = kernel->createAction<m::actions::EvaluateCompartments>();
+    auto &&comp = kernel->actions().evaluateCompartments();
 
     std::unordered_map<std::string, std::string> conversionsXPos = {{"A", "C"}, {"B", "C"}};
     std::unordered_map<std::string, std::string> conversionsXNeg = {{"A", "D"}, {"B", "D"}};

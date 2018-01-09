@@ -45,10 +45,10 @@ TEST(CPUTestKernel, TestKernelLoad) {
     kernel->context().reactions().addDecay("X decay", "X", .5);
     kernel->context().reactions().addFission("X fission", "X", "X", "X", .00, .5);
 
-    auto &&integrator = kernel->createAction<readdy::model::actions::EulerBDIntegrator>(1);
-    auto &&neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>();
-    auto &&forces = kernel->createAction<readdy::model::actions::CalculateForces>();
-    auto &&reactions = kernel->createAction<readdy::model::actions::reactions::Gillespie>(1);
+    auto &&integrator = kernel->actions().eulerBDIntegrator(1);
+    auto &&neighborList = kernel->actions().updateNeighborList();
+    auto &&forces = kernel->actions().calculateForces();
+    auto &&reactions = kernel->actions().gillespie(1);
 
     auto pp_obs = kernel->createObservable<readdy::model::observables::Positions>(1);
     auto connection = kernel->connectObservable(pp_obs.get());

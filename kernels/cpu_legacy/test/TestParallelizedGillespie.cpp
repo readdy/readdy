@@ -52,7 +52,7 @@ TEST(TestParallelGillespie, Sanity) {
     kernel.initialize();
     kernel.getCPULegacyKernelStateModel().initializeNeighborList(0.);
 
-    auto prog = kernel.createAction<readdy::model::actions::reactions::Gillespie>(1);
+    auto prog = kernel.actions().gillespie(1);
     prog->perform();
 }
 }

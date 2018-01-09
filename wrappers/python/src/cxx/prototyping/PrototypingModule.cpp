@@ -60,6 +60,6 @@ void exportPrototyping(py::module& proto) {
             .def("get_kernel_context", [](const scpu_kernel_t &self) -> const readdy::model::Context& { return self.context(); }, rvp::reference_internal)
             .def("get_observable_factory", [](const scpu_kernel_t &self) -> const readdy::model::observables::ObservableFactory& {return self.getObservableFactory();}, rvp::reference_internal)
             .def("get_topology_action_factory", [](const scpu_kernel_t &self) -> const readdy::model::top::TopologyActionFactory*  {return self.getTopologyActionFactory();}, rvp::reference_internal)
-            .def("get_action_factory", [](const scpu_kernel_t &self) -> const readdy::model::actions::ActionFactory& {return self.getActionFactory();}, rvp::reference_internal);
+            .def("get_action_factory", [](const scpu_kernel_t &self) -> const readdy::model::actions::ActionFactory& {return self.actions();}, rvp::reference_internal);
 
 }

@@ -56,7 +56,7 @@ TEST_P(TestSchemes, SimulationObject) {
      * use ReaDDyScheme without defaults
      */
     simulation.runScheme<readdy::api::ReaDDyScheme>(false)
-            .withIntegrator<readdy::model::actions::EulerBDIntegrator>()
+            .withEulerBDIntegrator()
             .withReactionScheduler<readdy::model::actions::reactions::UncontrolledApproximation>()
             .configureAndRun(5, .5);
 
@@ -65,7 +65,7 @@ TEST_P(TestSchemes, SimulationObject) {
      */
     simulation.runScheme()
             .includeForces(false)
-            .withIntegrator<readdy::model::actions::EulerBDIntegrator>()
+            .withEulerBDIntegrator()
             .withReactionScheduler<readdy::model::actions::reactions::UncontrolledApproximation>()
             .configureAndRun(5, .5);
 
@@ -74,7 +74,7 @@ TEST_P(TestSchemes, SimulationObject) {
      */
     simulation.runScheme<readdy::api::AdvancedScheme>(false)
             .includeForces(true)
-            .withIntegrator<readdy::model::actions::EulerBDIntegrator>()
+            .withEulerBDIntegrator()
             .includeCompartments(true)
             .configureAndRun(5, .5);
 }

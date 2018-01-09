@@ -84,9 +84,9 @@ public:
 
     model::StateModel &stateModel() override;
 
-    const model::actions::ActionFactory &getActionFactory() const override;
+    const model::actions::ActionFactory &actions() const override;
 
-    model::actions::ActionFactory &getActionFactory() override;
+    model::actions::ActionFactory &actions() override;
 
     const model::top::TopologyActionFactory *const getTopologyActionFactory() const override;
 
