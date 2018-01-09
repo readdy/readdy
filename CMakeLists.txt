@@ -112,7 +112,11 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
         MESSAGE(STATUS "Using specified '${CMAKE_BUILD_TYPE}' build type.")
     ENDIF (NOT CMAKE_BUILD_TYPE)
 
-    if (CMAKE_BUILD_TYPE EQUAL "DEBUG")
+    string(TOLOWER "${CMAKE_BUILD_TYPE}" BUILD_TYPE_LOWER)
+    if (BUILD_TYPE_LOWER STREQUAL "release")
+        message(STATUS "--- release build type ---")
+    else()
+        message(STATUS "--- debug build type, specifying debug flag ---")
         SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DREADDY_DEBUG")
     endif()
 
