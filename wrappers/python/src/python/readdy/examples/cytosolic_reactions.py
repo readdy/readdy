@@ -22,7 +22,6 @@ the name of the host machine. The output is pickled to compare different version
 """
 
 parser = argparse.ArgumentParser(description='Run performance scenario A + B <--> C with repulsion')
-parser.add_argument('version_string', type=str, help='Current version of readdy')  # @todo get from module
 parser.add_argument('--long', action='store_true',
                     help='Perform full equilibration of the system. Computes for several hours')
 parser.add_argument('--debug', action='store_true',
@@ -172,9 +171,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     full_simulation = args.long
     debug_run = args.debug
-    # version = "v1.0.0-py36_7_g50d9ee5"
-    # @todo get this from readdy module
-    version = args.version_string
+    version = readdy.__version__
     host = socket.gethostname()
     file_suffix = version + "_" + host
     file_name = "cytosolic_reactions_" + file_suffix + ".pickle"
