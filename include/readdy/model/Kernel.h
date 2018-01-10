@@ -68,7 +68,7 @@ public:
     /**
      * Constructs a kernel with a given name.
      */
-    explicit Kernel(std::string name) :_name(std::move(name)), _observableFactory(this), _signal() {};
+    explicit Kernel(std::string name) :_name(std::move(name)), _signal() {};
 
     /**
      * The kernel destructor.
@@ -87,16 +87,6 @@ public:
     const std::string &getName() const override {
         return _name;
     };
-
-    template<typename T, typename... Args>
-    std::unique_ptr<T> createObservable(unsigned int stride, Args &&... args) {
-        return getObservableFactory().create<T>(stride, std::forward<Args>(args)...);
-    }
-
-    template<typename T, typename Obs1, typename Obs2>
-    std::unique_ptr<T> createObservable(Obs1 *obs1, Obs2 *obs2, unsigned int stride = 1) {
-        return getObservableFactory().create<T>(obs1, obs2, stride);
-    }
 
     /**
      * Connects an observable to the kernel signal.
@@ -155,16 +145,6 @@ public:
         return TopologyParticle(pos, info.typeId);
     };
 
-    template<typename T, typename Obs1, typename Obs2>
-    inline std::unique_ptr<T> createCombinedObservable(Obs1 *obs1, Obs2 *obs2, unsigned int stride = 1) const {
-        return _observableFactory.create(obs1, obs2, stride);
-    }
-
-    template<typename R, typename... Args>
-    inline std::unique_ptr<R> createObservable(unsigned int stride, Args &&... args) const {
-        return getObservableFactory().create(stride, std::forward<Args>(args)...);
-    }
-
     bool supportsTopologies() const {
         return getTopologyActionFactory() != nullptr;
     };
@@ -191,13 +171,9 @@ public:
 
     virtual readdy::model::actions::ActionFactory &actions() = 0;
 
-    virtual const readdy::model::observables::ObservableFactory &getObservableFactory() const {
-        return _observableFactory;
-    };
+    virtual const readdy::model::observables::ObservableFactory &observe() const = 0;
 
-    virtual readdy::model::observables::ObservableFactory &getObservableFactory() {
-        return _observableFactory;
-    };
+    virtual readdy::model::observables::ObservableFactory &observe() = 0;
 
     virtual const readdy::model::top::TopologyActionFactory *const getTopologyActionFactory() const = 0;
 
@@ -223,7 +199,6 @@ protected:
     model::Context _context;
     std::string _name;
     observables::signal_type _signal;
-    observables::ObservableFactory _observableFactory;
 };
 
 NAMESPACE_END(model)

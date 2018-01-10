@@ -78,13 +78,6 @@ public:
         return _stateModel;
     };
 
-    const model::actions::ActionFactory &getActionFactory() const override {
-        return _actions;
-    };
-
-    model::actions::ActionFactory &getActionFactory() override {
-        return _actions;
-    };
     void setNThreads(std::uint32_t n) {
         _pool.resize(n);
     };
@@ -92,22 +85,6 @@ public:
     std::size_t getNThreads() {
         return static_cast<std::size_t>(_pool.size());
     }
-
-    const CPUStateModel &getCPUKernelStateModel() const {
-        return _stateModel;
-    };
-
-    CPUStateModel &getCPUKernelStateModel() {
-        return _stateModel;
-    };
-
-    const model::StateModel &stateModel() const override {
-        return _stateModel;
-    };
-
-    model::StateModel &stateModel() override {
-        return _stateModel;
-    };
 
     const model::actions::ActionFactory &actions() const override {
         return _actions;
@@ -125,11 +102,11 @@ public:
         return &_topologyActionFactory;
     };
 
-    const model::observables::ObservableFactory &getObservableFactory() const override {
+    const model::observables::ObservableFactory &observe() const override {
         return _observables;
     };
 
-    model::observables::ObservableFactory &getObservableFactory() override {
+    model::observables::ObservableFactory &observe() override {
         return _observables;
     };
 

@@ -41,8 +41,8 @@ NAMESPACE_BEGIN(_internal)
 NAMESPACE_BEGIN(util)
 
 template<typename Context>
-inline std::set<unsigned int> transformTypes(const std::vector<std::string> &types, const Context &ctx) {
-    std::set<unsigned int> result;
+inline std::set<particle_type_type> transformTypes(const std::vector<std::string> &types, const Context &ctx) {
+    std::set<particle_type_type> result;
     for (const auto &t : types) {
         result.insert(ctx.particle_types().idOf(t));
     }
@@ -50,9 +50,9 @@ inline std::set<unsigned int> transformTypes(const std::vector<std::string> &typ
 }
 
 template<typename Context>
-inline std::vector<unsigned int>
+inline std::vector<particle_type_type>
 transformTypes2(const std::vector<std::string> &types, const Context &ctx) {
-    std::vector<unsigned int> result;
+    std::vector<particle_type_type> result;
     result.reserve(types.size());
     for (auto &t : types) {
         result.push_back(ctx.particle_types().idOf(t));

@@ -42,16 +42,16 @@ NAMESPACE_BEGIN(observables)
 class MeanSquaredDisplacement
         : public Combiner<std::pair<std::vector<time_step_type>, std::vector<scalar>>, Particles> {
 public:
-    MeanSquaredDisplacement(Kernel* kernel, unsigned int stride, std::vector<std::string> typesToCount,
+    MeanSquaredDisplacement(Kernel* kernel, stride_type stride, std::vector<std::string> typesToCount,
                             Particles *particlesObservable);
 
-    MeanSquaredDisplacement(Kernel* kernel, unsigned int stride, std::vector<unsigned int> typesToCount,
+    MeanSquaredDisplacement(Kernel* kernel, stride_type stride, const std::vector<particle_type_type> &typesToCount,
                             Particles *particlesObservable);
 
     void evaluate() override = 0;
 
 protected:
-    std::vector<unsigned int> typesToCount;
+    std::vector<particle_type_type> typesToCount;
 };
 
 template<typename ParentObs>
@@ -62,7 +62,10 @@ class Trivial
             std::is_base_of<readdy::model::observables::Observable<typename ParentObs::result_type>, ParentObs>::value,
             "ParentObs must extend readdy::model::observables::Observable");
 public:
-    Trivial(Kernel *const kernel, unsigned int stride, ParentObs *parentObs)
+
+    using stride_type = typename ParentObs::stride_type;
+
+    Trivial(Kernel *const kernel, stride_type stride, ParentObs *parentObs)
             : Combiner<std::pair<std::vector<time_step_type>, std::vector<typename ParentObs::result_type>>, ParentObs>(
             kernel, stride,
             parentObs) {}
@@ -71,7 +74,7 @@ public:
         const auto &currentInput = std::get<0>(this->parentObservables)->getResult();
         auto &resultTimes = std::get<0>(this->result);
         auto &resultValues = std::get<1>(this->result);
-        resultTimes.push_back(this->getCurrentTimeStep());
+        resultTimes.push_back(this->currentTimeStep());
         resultValues.push_back(currentInput);
     };
 };

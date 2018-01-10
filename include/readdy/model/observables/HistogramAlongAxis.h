@@ -43,11 +43,11 @@ NAMESPACE_BEGIN(observables)
 class HistogramAlongAxis : public Observable<std::vector<scalar>> {
 
 public:
-    HistogramAlongAxis(readdy::model::Kernel *const kernel, unsigned int stride,
-                       std::vector<scalar> binBorders, std::set<unsigned int> typesToCount,
+    HistogramAlongAxis(readdy::model::Kernel *kernel, stride_type stride,
+                       std::vector<scalar> binBorders, std::set<particle_type_type> typesToCount,
                        unsigned int axis);
 
-    HistogramAlongAxis(Kernel *const kernel, unsigned int stride, std::vector<scalar> binBorders,
+    HistogramAlongAxis(Kernel *kernel, stride_type stride, std::vector<scalar> binBorders,
                        std::vector<std::string> typesToCount, unsigned int axis);
 
     void flush() override;
@@ -58,12 +58,12 @@ protected:
     struct Impl;
     std::unique_ptr<Impl> pimpl;
 
-    void initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) override;
+    void initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) override;
 
     void append() override;
 
     std::vector<scalar> binBorders;
-    std::set<unsigned int> typesToCount;
+    std::set<particle_type_type> typesToCount;
 
     unsigned int axis;
 

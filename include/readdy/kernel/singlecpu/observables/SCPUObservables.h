@@ -260,7 +260,7 @@ public:
         if (binBorders.size() > 1) {
             std::fill(counts.begin(), counts.end(), 0);
             const auto particles = kernel->stateModel().getParticles();
-            auto isInCollection = [](const readdy::model::Particle &p, const std::vector<unsigned int> &collection) {
+            auto isInCollection = [](const readdy::model::Particle &p, const auto &collection) {
                 return std::find(collection.begin(), collection.end(), p.getType()) != collection.end();
             };
             const auto nFromParticles = std::count_if(particles.begin(), particles.end(),

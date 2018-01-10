@@ -227,7 +227,7 @@ TEST(CPUTestReactions, TestDecay) {
     auto &&neighborList = kernel->actions().updateNeighborList();
     auto &&reactions = kernel->actions().gillespie(1);
 
-    auto pp_obs = kernel->createObservable<readdy::model::observables::Positions>(1);
+    auto pp_obs = kernel->observe().positions(1);
     pp_obs->setCallback([](const readdy::model::observables::Positions::result_type &t) {
         /* ignore */
     });

@@ -44,14 +44,14 @@ struct Energy::Impl {
     io::BloscFilter bloscFilter{};
 };
 
-Energy::Energy(Kernel *kernel, unsigned int stride) : Observable(kernel, stride), pimpl(std::make_unique<Impl>()) {}
+Energy::Energy(Kernel *kernel, stride_type stride) : Observable(kernel, stride), pimpl(std::make_unique<Impl>()) {}
 
 void Energy::flush() {
     if (pimpl->ds) pimpl->ds->flush();
     if (pimpl->time) pimpl->time->flush();
 }
 
-void Energy::initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) {
+void Energy::initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) {
     h5rd::dimensions fs = {flushStride};
     h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
     auto group = file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName);

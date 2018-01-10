@@ -67,7 +67,7 @@ TEST_P(TestReactions, TestConstantNumberOfParticleType) {
     }
 
 
-    auto obs = kernel->createObservable<n_particles_obs>(1, std::vector<std::string>({"A", "B", "AB"}));
+    auto obs = kernel->observe().nParticles(1, std::vector<std::string>({"A", "B", "AB"}));
     auto conn = kernel->connectObservable(obs.get());
     obs->setCallback([&n_A, &n_B](const n_particles_obs::result_type &result) {
         if (result.size() == 2) {
@@ -123,7 +123,7 @@ TEST_P(TestReactions, FusionFissionWeights) {
         kernel->addParticle("A", n3(static_cast<readdy::scalar>(0.), static_cast<readdy::scalar>(1.)));
     }
 
-    auto obs = kernel->createObservable<readdy::model::observables::Positions>(1, std::vector<std::string>({"F"}));
+    auto obs = kernel->observe().positions(1, std::vector<std::string>({"F"}));
     obs->setCallback(
             [&fPositions, this](const readdy::model::observables::Positions::result_type &result) {
                 std::set<readdy::Vec3, Vec3ProjectedLess> checklist;

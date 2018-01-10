@@ -37,7 +37,6 @@
 #include <readdy/common/Utils.h>
 #include <readdy/model/observables/Observables.h>
 #include "Aggregators.h"
-#include "Positions.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
@@ -45,106 +44,67 @@ class Kernel;
 
 NAMESPACE_BEGIN(observables)
 
+namespace detail {
+template<typename T>
+using is_observable_type = std::enable_if_t<std::is_base_of<model::observables::ObservableBase, T>::value>;
+}
+
 class ObservableFactory {
 public:
+    using stride_type = ObservableBase::stride_type;
+    
     explicit ObservableFactory(Kernel *const kernel) : kernel(kernel) {};
 
-    template<typename T, typename Obs1, typename Obs2>
-    inline std::unique_ptr<T> create(Obs1 *obs1, Obs2 *obs2, unsigned int stride = 1) const {
-        return std::make_unique<T>(kernel, obs1, obs2, stride);
+    template<typename T>
+    std::unique_ptr<Trivial<T>> collect(stride_type stride, T* observable, detail::is_observable_type<T>* = 0) const {
+        return std::make_unique<Trivial<T>>(kernel, stride, observable);
+    }
+    
+    std::unique_ptr<Energy> energy(stride_type stride) const {
+        return std::make_unique<Energy>(kernel, stride);
+    };
+    
+    virtual std::unique_ptr<HistogramAlongAxis> histogramAlongAxis(stride_type stride, std::vector<scalar> binBorders, 
+                                                                   std::vector<std::string> typesToCount, 
+                                                                   unsigned int axis) const = 0;
+    
+    std::unique_ptr<NParticles> nParticles(stride_type stride) const { return nParticles(stride, {}); }
+    
+    virtual std::unique_ptr<NParticles> nParticles(stride_type stride, std::vector<std::string> typesToCount) const = 0;
+
+    std::unique_ptr<Forces> forces(stride_type stride) const { return forces(stride, {}); }
+    
+    virtual std::unique_ptr<Forces> forces(stride_type stride, std::vector<std::string> typesToCount) const  = 0;
+
+    std::unique_ptr<Positions> positions(stride_type stride) const { return positions(stride, {}); }
+
+    virtual std::unique_ptr<Positions> positions(stride_type stride, std::vector<std::string> typesToCount) const = 0;
+
+    virtual std::unique_ptr<RadialDistribution> radialDistribution(stride_type stride, std::vector<scalar> binBorders, 
+                                                                   std::vector<std::string> typeCountFrom,
+                                                                   std::vector<std::string> typeCountTo,
+                                                                   scalar particleDensity) const = 0;
+
+    virtual std::unique_ptr<Particles> particles(stride_type stride) const = 0;
+
+    virtual std::unique_ptr<MeanSquaredDisplacement> msd(stride_type stride, std::vector<std::string> typesToCount, 
+                                                         Particles *particlesObservable) const = 0;
+
+    virtual std::unique_ptr<Reactions> reactions(stride_type stride) const = 0;
+
+    virtual std::unique_ptr<ReactionCounts> reactionCounts(stride_type stride) const = 0;
+
+    std::unique_ptr<Trajectory> trajectory(stride_type stride) const {
+        return std::make_unique<Trajectory>(kernel, stride);
     }
 
-    template<typename R, typename... Args>
-    inline std::unique_ptr<R> create(unsigned int stride, Args &&... args) const {
-        return std::unique_ptr<R>(
-                ObservableFactory::get_dispatcher<R, Args...>::impl(this, stride, std::forward<Args>(args)...));
-    }
-
-    Energy* createEnergy(unsigned int stride) {
-        return new Energy(kernel, stride);
-    }
-
-    virtual HistogramAlongAxis* createHistogramAlongAxis(unsigned int stride, std::vector<scalar> binBorders,
-                             std::vector<std::string> typesToCount, unsigned int axis) const {
-        throw std::runtime_error("should be overridden if a kernel supports this observable");
-    }
-
-    NParticles* createNParticles(unsigned int stride) const { return createNParticles(stride, {}); }
-
-    virtual NParticles* createNParticles(unsigned int stride, std::vector<std::string> typesToCount) const {
-        throw std::runtime_error("should be overridden if a kernel supports this observable");
-    }
-
-    Forces* createForces(unsigned int stride) const { return createForces(stride, {}); }
-
-    virtual Forces* createForces(unsigned int stride, std::vector<std::string> typesToCount) const {
-        throw std::runtime_error("should be overridden if a kernel supports this observable");
-    }
-
-    Positions* createPositions(unsigned int stride) const { return createPositions(stride, {}); }
-
-    virtual Positions* createPositions(unsigned int stride, std::vector<std::string> typesToCount) const {
-        throw std::runtime_error("should be overridden if a kernel supports this observable");
-    }
-
-    virtual RadialDistribution *
-    createRadialDistribution(unsigned int stride, std::vector<scalar> binBorders, std::vector<std::string> typeCountFrom,
-                             std::vector<std::string> typeCountTo,
-                             scalar particleDensity) const {
-        throw std::runtime_error("should be overridden if a kernel supports this observable");
-    }
-
-    virtual Particles *
-    createParticles(unsigned int stride) const {
-        throw std::runtime_error("should be overridden if a kernel supports this observable");
-    }
-
-    virtual MeanSquaredDisplacement *
-    createMeanSquaredDisplacement(unsigned int stride, std::vector<std::string> typesToCount, Particles *particlesObservable) const {
-        throw std::runtime_error("should be overridden if a kernel supports this observable");
-    }
-
-    virtual Reactions * createReactions(unsigned int stride) const {
-        throw std::runtime_error("should be overridden if a kernel supports this observable");
-    }
-
-    virtual ReactionCounts* createReactionCounts(unsigned int stride) const {
-        throw std::runtime_error("should be overridden if a kernel supports this observable");
+    std::unique_ptr<FlatTrajectory> flatTrajectory(stride_type stride) const {
+        return std::make_unique<FlatTrajectory>(kernel, stride);
     }
 
 protected:
     Kernel *const kernel;
-
-    template<typename T, typename... Args>
-    struct get_dispatcher;
-
-    template<typename T, typename... Args>
-    struct get_dispatcher {
-        static T *impl(const ObservableFactory *self, unsigned int stride, Args &&... args) {
-            // this only invokes the normal constructor
-            return new T(self->kernel, stride, std::forward<Args>(args)...);
-        };
-    };
-
 };
-
-READDY_CREATE_OBSERVABLE_FACTORY_DISPATCHER(HistogramAlongAxis)
-
-READDY_CREATE_OBSERVABLE_FACTORY_DISPATCHER(NParticles)
-
-READDY_CREATE_OBSERVABLE_FACTORY_DISPATCHER(Forces)
-
-READDY_CREATE_OBSERVABLE_FACTORY_DISPATCHER(Positions)
-
-READDY_CREATE_OBSERVABLE_FACTORY_DISPATCHER(RadialDistribution)
-
-READDY_CREATE_OBSERVABLE_FACTORY_DISPATCHER(Particles)
-
-READDY_CREATE_OBSERVABLE_FACTORY_DISPATCHER(MeanSquaredDisplacement)
-
-READDY_CREATE_OBSERVABLE_FACTORY_DISPATCHER(Reactions)
-
-READDY_CREATE_OBSERVABLE_FACTORY_DISPATCHER(ReactionCounts)
 
 NAMESPACE_END(observables)
 NAMESPACE_END(model)

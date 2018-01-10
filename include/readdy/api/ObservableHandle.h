@@ -37,6 +37,11 @@
 
 NAMESPACE_BEGIN(readdy)
 
+namespace detail {
+template<typename T>
+using is_observable_type = std::enable_if_t<std::is_base_of<model::observables::ObservableBase, T>::value>;
+}
+
 class ObservableHandle {
 public:
     /**

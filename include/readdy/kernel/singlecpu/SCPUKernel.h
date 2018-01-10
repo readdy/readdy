@@ -59,11 +59,11 @@ public:
 
     void initialize() override;
 
-    const readdy::model::observables::ObservableFactory &getObservableFactory() const override {
+    const readdy::model::observables::ObservableFactory &observe() const override {
         return _observables;
     };
 
-    readdy::model::observables::ObservableFactory &getObservableFactory() override {
+    readdy::model::observables::ObservableFactory &observe() override {
         return _observables;
     };
 

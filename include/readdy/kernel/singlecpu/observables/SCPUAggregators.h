@@ -55,7 +55,7 @@ public:
         const auto &positions = std::get<2>(currentInput);
 
         auto &resultTime = std::get<0>(result);
-        resultTime.push_back(getCurrentTimeStep());
+        resultTime.push_back(currentTimeStep());
         auto &resultMsd = std::get<1>(result);
         if (resultMsd.size() == 0) { // first evaluation
             for (auto i = 0; i < positions.size(); ++i) {

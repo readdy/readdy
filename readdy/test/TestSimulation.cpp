@@ -90,7 +90,11 @@ TEST_F(TestSimulation, TestMeanSquaredDisplacement) {
     readdy::scalar timestep = 1;
     MSDAggregator aggregator;
     aggregator.initialPositions = simulation.getAllParticlePositions();
-    simulation.registerObservable<readdy::model::observables::Positions>(aggregator, 1);
+    {
+        auto positions = simulation.observe().positions(1);
+        positions->setCallback(aggregator);
+        simulation.registerObservable(std::move(positions));
+    }
     simulation.run(100, timestep);
     auto positions = simulation.getAllParticlePositions();
     readdy::scalar msd = 0;
@@ -115,11 +119,11 @@ TEST_F(TestSimulation, TestObservables) {
     readdy::scalar timestep = 1;
 
     int n_callbacks = 0;
-    simulation.registerObservable<readdy::model::observables::Positions>(
-            [&n_callbacks](const readdy::model::observables::Positions::result_type &result) -> void {
-                ++n_callbacks;
-                EXPECT_EQ(103, result.size());
-            }, 1);
+    simulation.registerObservable(simulation.observe().positions(1),
+                                  [&n_callbacks](const readdy::model::observables::Positions::result_type &result) {
+                                      ++n_callbacks;
+                                      EXPECT_EQ(103, result.size());
+                                  });
     simulation.run(100, timestep);
     EXPECT_EQ(101, n_callbacks);
 }

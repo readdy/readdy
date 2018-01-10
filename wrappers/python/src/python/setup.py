@@ -88,7 +88,7 @@ def get_package_dir():
 
 metadata = dict(
     name='ReaDDy',
-    version=__version__ if __version__[0] == 'v' else __version__,
+    version=__version__[1:] if __version__.startswith("v") else __version__,
     package_dir={'': get_package_dir()},
     package_data={'readdy._internal': ["*"]},
     packages=find_packages(where=get_package_dir()),

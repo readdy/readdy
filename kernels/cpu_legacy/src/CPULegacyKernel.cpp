@@ -148,11 +148,11 @@ model::top::TopologyActionFactory *const CPULegacyKernel::getTopologyActionFacto
     return pimpl->topologyActionFactory.get();
 }
 
-const model::observables::ObservableFactory &CPULegacyKernel::getObservableFactory() const {
+const model::observables::ObservableFactory &CPULegacyKernel::observe() const {
     return *pimpl->observableFactory;
 }
 
-model::observables::ObservableFactory &CPULegacyKernel::getObservableFactory() {
+model::observables::ObservableFactory &CPULegacyKernel::observe() {
     return *pimpl->observableFactory;
 }
 

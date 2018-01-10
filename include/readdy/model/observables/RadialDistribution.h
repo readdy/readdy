@@ -43,11 +43,11 @@ NAMESPACE_BEGIN(observables)
 
 class RadialDistribution : public Observable<std::pair<std::vector<scalar>, std::vector<scalar>>> {
 public:
-    RadialDistribution(Kernel *const kernel, unsigned int stride, std::vector<scalar> binBorders,
-                       std::vector<unsigned int> typeCountFrom, std::vector<unsigned int> typeCountTo,
+    RadialDistribution(Kernel *const kernel, stride_type stride, std::vector<scalar> binBorders,
+                       std::vector<particle_type_type> typeCountFrom, std::vector<particle_type_type> typeCountTo,
                        scalar particleToDensity);
 
-    RadialDistribution(Kernel *const kernel, unsigned int stride, const std::vector<scalar> &binBorders,
+    RadialDistribution(Kernel *const kernel, stride_type stride, const std::vector<scalar> &binBorders,
                        const std::vector<std::string> &typeCountFrom, const std::vector<std::string> &typeCountTo,
                        scalar particleToDensity);
 
@@ -63,7 +63,7 @@ protected:
 
     void setBinBorders(const std::vector<scalar> &binBorders);
 
-    void initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) override;
+    void initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) override;
 
     void append() override;
 
@@ -71,7 +71,7 @@ protected:
     std::unique_ptr<Impl> pimpl;
     std::vector<scalar> binBorders;
     std::vector<scalar> counts;
-    std::vector<unsigned int> typeCountFrom, typeCountTo;
+    std::vector<particle_type_type> typeCountFrom, typeCountTo;
     scalar particleToDensity;
     readdy::io::BloscFilter bloscFilter;
 };

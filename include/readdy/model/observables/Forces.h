@@ -42,11 +42,11 @@ NAMESPACE_BEGIN(observables)
 class Forces : public Observable<std::vector<Vec3>> {
 
 public:
-    Forces(Kernel* kernel, unsigned int stride);
+    Forces(Kernel* kernel, stride_type stride);
 
-    Forces(Kernel* kernel, unsigned int stride, std::vector<std::string> typesToCount);
+    Forces(Kernel* kernel, stride_type stride, std::vector<std::string> typesToCount);
 
-    Forces(Kernel* kernel, unsigned int stride, std::vector<unsigned int> typesToCount);
+    Forces(Kernel* kernel, stride_type stride, const std::vector<particle_type_type> &typesToCount);
 
     Forces(const Forces&) = delete;
     Forces& operator=(const Forces&) = delete;
@@ -58,14 +58,14 @@ public:
     void flush() override;
 
 protected:
-    void initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) override;
+    void initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) override;
 
     void append() override;
 
     struct Impl;
     std::unique_ptr<Impl> pimpl;
 
-    std::vector<unsigned int> typesToCount;
+    std::vector<particle_type_type> typesToCount;
 };
 NAMESPACE_END(observables)
 NAMESPACE_END(model)

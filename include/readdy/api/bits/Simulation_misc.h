@@ -45,26 +45,25 @@ struct Simulation::Impl {
     util::PerformanceNode performanceRoot{"simulation", true};
 };
 
-template<typename T, typename... Args>
-inline ObservableHandle Simulation::registerObservable(unsigned int stride, Args... args) {
+template<typename T>
+inline ObservableHandle Simulation::registerObservable(std::unique_ptr<T> observable, detail::is_observable_type<T>*) {
     ensureKernelSelected();
     auto uuid = pimpl->counter++;
-    auto obs = pimpl->kernel->createObservable<T>(stride, std::forward<Args>(args)...);
-    auto connection = pimpl->kernel->connectObservable(obs.get());
-    pimpl->observables.emplace(uuid, std::move(obs));
+    auto connection = pimpl->kernel->connectObservable(observable.get());
+    pimpl->observables.emplace(uuid, std::move(observable));
     pimpl->observableConnections.emplace(uuid, std::move(connection));
     return {uuid, pimpl->observables.at(uuid).get()};
 }
 
-template<typename T, typename... Args>
-inline ObservableHandle Simulation::registerObservable(const std::function<void(typename T::result_type)> &callbackFun,
-                                             unsigned int stride, Args... args) {
+template<typename T>
+inline ObservableHandle Simulation::registerObservable(std::unique_ptr<T> observable,
+                                                       const observable_callback<T> &callback,
+                                                       detail::is_observable_type<T>*) {
     ensureKernelSelected();
     auto uuid = pimpl->counter++;
-    auto obs = pimpl->kernel->createObservable<T>(stride, std::forward<Args>(args)...);
-    obs->setCallback(callbackFun);
-    auto connection = pimpl->kernel->connectObservable(obs.get());
-    pimpl->observables.emplace(uuid, std::move(obs));
+    auto connection = pimpl->kernel->connectObservable(observable.get());
+    observable->setCallback(callback);
+    pimpl->observables.emplace(uuid, std::move(observable));
     pimpl->observableConnections.emplace(uuid, std::move(connection));
     return {uuid, pimpl->observables.at(uuid).get()};
 }

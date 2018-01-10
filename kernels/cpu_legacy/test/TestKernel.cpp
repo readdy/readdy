@@ -50,7 +50,7 @@ TEST(CPUTestKernel, TestKernelLoad) {
     auto &&forces = kernel->actions().calculateForces();
     auto &&reactions = kernel->actions().gillespie(1);
 
-    auto pp_obs = kernel->createObservable<readdy::model::observables::Positions>(1);
+    auto pp_obs = kernel->observe().positions(1);
     auto connection = kernel->connectObservable(pp_obs.get());
 
     const int n_particles = 500;

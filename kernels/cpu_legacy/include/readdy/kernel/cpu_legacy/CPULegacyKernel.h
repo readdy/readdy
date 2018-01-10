@@ -92,9 +92,9 @@ public:
 
     model::top::TopologyActionFactory *const getTopologyActionFactory() override;
 
-    const model::observables::ObservableFactory &getObservableFactory() const override;
+    const model::observables::ObservableFactory &observe() const override;
 
-    model::observables::ObservableFactory &getObservableFactory() override;
+    model::observables::ObservableFactory &observe() override;
 
 protected:
 

@@ -35,15 +35,15 @@ namespace readdy {
 namespace model {
 namespace observables {
 
-MeanSquaredDisplacement::MeanSquaredDisplacement(Kernel *const kernel, unsigned int stride,
+MeanSquaredDisplacement::MeanSquaredDisplacement(Kernel *const kernel, stride_type stride,
                                                  std::vector<std::string> typesToCount,
                                                  Particles *particlesObservable)
         : MeanSquaredDisplacement(kernel, stride, readdy::model::_internal::util::transformTypes2(typesToCount,
                                                                                                   kernel->context()),
                                   particlesObservable) {}
 
-MeanSquaredDisplacement::MeanSquaredDisplacement(Kernel *const kernel, unsigned int stride,
-                                                 std::vector<unsigned int> typesToCount,
+MeanSquaredDisplacement::MeanSquaredDisplacement(Kernel *const kernel, stride_type stride,
+                                                 const std::vector<particle_type_type> &typesToCount,
                                                  Particles *particlesObservable)
         : Combiner(kernel, stride, particlesObservable), typesToCount(std::move(typesToCount)) {}
 

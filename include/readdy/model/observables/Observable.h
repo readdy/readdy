@@ -73,27 +73,32 @@ using observable_type = signal_type::slot_type;
 class ObservableBase {
 public:
     /**
+     * The type of the stride
+     */
+    using stride_type = std::uint32_t;
+
+    /**
      * Constructs an object of type ObservableBase. Needs a kernel and a stride, which is defaulted to 1, i.e.,
      * evaluation in every time step.
      * @param kernel the kernel
      * @param stride the stride
      */
-    explicit ObservableBase(readdy::model::Kernel *const kernel, unsigned int stride = 1)
-            : stride(stride), kernel(kernel) {};
+    explicit ObservableBase(readdy::model::Kernel *const kernel, stride_type stride = 1)
+            : _stride(stride), kernel(kernel) {};
 
     /**
      * The stride at which the observable gets evaluated. Can be 0, which is equivalent to stride = 1.
      * @return the stride
      */
-    unsigned int getStride() const {
-        return stride;
+    stride_type stride() const {
+        return _stride;
     }
 
     /**
      * The observable's current time step, i.e., the time step when it was last evaluated.
      * @return the observable's current time step
      */
-    const time_step_type &getCurrentTimeStep() const {
+    const time_step_type &currentTimeStep() const {
         return t_current;
     }
 
@@ -126,7 +131,7 @@ public:
      * @return true, if we haven't been evaluated in the current time step yet and stride is 0 or a divisor of t
      */
     virtual bool shouldExecuteCallback(time_step_type t) const {
-        return (t_current != t || firstCall) && (stride == 0 || t % stride == 0);
+        return (t_current != t || firstCall) && (_stride == 0 || t % _stride == 0);
     }
 
     /**
@@ -142,7 +147,7 @@ public:
      * @param dataSetName the name of the data set, automatically placed under the group /readdy/observables
      * @param flushStride performance parameter, determining the hdf5-internal chunk size
      */
-    void enableWriteToFile(File &file, const std::string &dataSetName, unsigned int flushStride) {
+    void enableWriteToFile(File &file, const std::string &dataSetName, stride_type flushStride) {
         writeToFile = true;
         initializeDataSet(file, dataSetName, flushStride);
     }
@@ -168,7 +173,7 @@ protected:
      * @param dataSetName the name of the data set to be created
      * @param flushStride the flush stride, more specifically the internal hdf5 chunk size
      */
-    virtual void initializeDataSet(File &, const std::string &dataSetName, unsigned int flushStride) = 0;
+    virtual void initializeDataSet(File &, const std::string &dataSetName, stride_type flushStride) = 0;
 
     /**
      * Called whenever result should be written into the file
@@ -178,7 +183,7 @@ protected:
     /**
      * Stride at which the observable gets evaluated
      */
-    unsigned int stride;
+    stride_type _stride;
     /**
      * The kernel which created this observable
      */
@@ -221,7 +226,7 @@ public:
      * @param kernel the kernel
      * @param stride the stride
      */
-    Observable(Kernel *const kernel, unsigned int stride)
+    Observable(Kernel *const kernel, stride_type stride)
             : ObservableBase(kernel, stride), result() {
     }
 
@@ -275,13 +280,19 @@ protected:
 template<typename RESULT, typename... PARENT_OBS>
 class Combiner : public Observable<RESULT> {
 public:
+
+    /**
+     * type of the stride
+     */
+    using stride_type = typename Observable<RESULT>::stride_type;
+
     /**
      * Constructs a combiner observable.
      * @param kernel the kernel it belongs to
      * @param stride a stride
      * @param parents the parent observables
      */
-    Combiner(Kernel *const kernel, unsigned int stride, PARENT_OBS *... parents)
+    Combiner(Kernel *const kernel, stride_type stride, PARENT_OBS *... parents)
             : Observable<RESULT>(kernel, stride), parentObservables(std::forward<PARENT_OBS *>(parents)...) {}
 
     /**
@@ -310,7 +321,7 @@ protected:
      * @param dataSetName data set name
      * @param flushStride flush stride
      */
-    void initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) override {
+    void initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) override {
         throw std::runtime_error("not supported for combiner observables");
     }
 

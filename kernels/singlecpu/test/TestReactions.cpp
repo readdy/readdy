@@ -50,7 +50,7 @@ TEST(SingleCPUTestReactions, TestDecay) {
     auto &&neighborList = kernel->actions().updateNeighborList(update_nl::Operation::update, 0);
     auto &&reactions = kernel->actions().uncontrolledApproximation(timeStep);
 
-    auto pp_obs = kernel->createObservable<readdy::model::observables::Positions>(1);
+    auto pp_obs = kernel->observe().positions(1);
     pp_obs->setCallback([](const readdy::model::observables::Positions::result_type &t) {
         readdy::log::trace("got n particles={}", t.size());
     });

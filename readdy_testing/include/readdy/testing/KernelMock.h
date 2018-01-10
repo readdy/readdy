@@ -90,6 +90,9 @@ public:
     MOCK_METHOD0(stateModel, readdy::model::StateModel &(void));
     MOCK_CONST_METHOD0(stateModel, const readdy::model::StateModel & (void));
 
+    MOCK_METHOD0(observe, readdy::model::observables::ObservableFactory &(void));
+    MOCK_CONST_METHOD0(observe, const readdy::model::observables::ObservableFactory & (void));
+
     MOCK_METHOD0(getTopologyActionFactory, readdy::model::top::TopologyActionFactory*const (void));
     MOCK_CONST_METHOD0(getTopologyActionFactory, const readdy::model::top::TopologyActionFactory*const (void));
 };

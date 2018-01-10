@@ -257,7 +257,7 @@ TEST_P(TestTopologyGraphs, BondedPotential) {
     auto top = kernel->stateModel().addTopology(0, {x_i, x_j});
     top->graph().addEdge(top->graph().vertices().begin(), ++top->graph().vertices().begin());
     top->configure();
-    auto fObs = kernel->createObservable<readdy::model::observables::Forces>(1);
+    auto fObs = kernel->observe().forces(1);
     std::vector<readdy::Vec3> collectedForces;
     fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_type &result) {
         for (const auto &force : result) {
@@ -298,7 +298,7 @@ TEST_P(TestTopologyGraphs, MoreComplicatedAnglePotential) {
         top->graph().addEdge(std::next(it), std::next(it, 2));
     }
     top->configure();
-    auto fObs = kernel->createObservable<readdy::model::observables::Forces>(1);
+    auto fObs = kernel->observe().forces(1);
     std::vector<readdy::Vec3> collectedForces;
     fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_type &result) {
         for (const auto &force : result) {
@@ -350,7 +350,7 @@ TEST_P(TestTopologyGraphs, DihedralPotentialSteeperAngle) {
                                                                     "Topology A",
                                                                     {1.0, 3, readdy::util::numeric::pi()});
     top->configure();
-    auto fObs = kernel->createObservable<readdy::model::observables::Forces>(1);
+    auto fObs = kernel->observe().forces(1);
     std::vector<readdy::Vec3> collectedForces;
     fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_type &result) {
         for (const auto &force : result) {
