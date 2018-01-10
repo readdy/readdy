@@ -41,7 +41,8 @@ def traverse_performance_tree(tree):
 
 def perform(kernel="SingleCPU", n_particles_a=2357, force_constant=10., file_suffix="", full_simulation=False,
             debug_run=False, n_threads=-1):
-    print("kernel {}, n_particles_a {}, force_constant {}".format(kernel, n_particles_a, force_constant))
+    print("kernel {}, n_particles_a {}, force_constant {}, threads {}"
+          .format(kernel, n_particles_a, force_constant, n_threads))
     n_particles_b = n_particles_a
     n_particles_c = 0
     desired_a_density = 2357. / 1e6  # number of particles per nanometer**3
@@ -163,6 +164,12 @@ def perform(kernel="SingleCPU", n_particles_a=2357, force_constant=10., file_suf
     data.update(result)
 
     os.unlink(simulation.output_file)
+
+    del simulation
+    del system
+
+    import gc
+    gc.collect()
     return data
 
 
@@ -181,11 +188,11 @@ if __name__ == '__main__':
     t1 = time.perf_counter()
     n_cores = multiprocessing.cpu_count()
     perf_results = []
-    for kernel in ["SingleCPU", "CPU", "CPU_Legacy"]:
+    for kernel in ["CPU", "SingleCPU", "CPU_Legacy"]:
             for n_particles_a in [200, 400, 700, 1000, 2357, 5000, 10000, 15000, 20000, 30000]:
                 for force_constant in [10.]:
                     if kernel != "SingleCPU":
-                        for n_threads in range(1, 4*n_cores+1):
+                        for n_threads in [1,2,3,4,5,6,7,8,10,16,24,32]:
                             data = perform(
                                 kernel=kernel,
                                 n_particles_a=n_particles_a,
@@ -195,6 +202,7 @@ if __name__ == '__main__':
                                 debug_run=debug_run,
                                 n_threads=n_threads)
                             perf_results.append(data)
+                            time.sleep(.5)
                     else:
                         data = perform(
                             kernel=kernel,

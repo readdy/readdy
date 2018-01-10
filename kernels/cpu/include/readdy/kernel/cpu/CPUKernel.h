@@ -79,7 +79,7 @@ public:
     };
 
     void setNThreads(std::uint32_t n) {
-        _pool.resize(n);
+        _pool.resize_wait(n);
     };
 
     std::size_t getNThreads() {
