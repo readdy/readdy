@@ -72,15 +72,19 @@ MACRO_ENSURE_OUT_OF_SOURCE_BUILD("${PROJECT_NAME} requires an out source build."
 SET(CMAKE_VERBOSE_MAKEFILE OFF)
 SET(CMAKE_COLOR_MAKEFILE ON)
 
-# we use c++11
+# version
+set(READDY_VERSION "v0.0" CACHE STRING "The version")
+mark_as_advanced(READDY_VERSION)
+set(READDY_BUILD_STRING "dev" CACHE STRING "Build string")
+mark_as_advanced(READDY_BUILD_STRING)
+
+message(STATUS "====================================================")
+message(STATUS "CMake configure for readdy version ${READDY_VERSION}-${READDY_BUILD_STRING}")
+message(STATUS "====================================================")
+
+# we use c++17
 SET(CMAKE_CXX_STANDARD 17)
 SET(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-# version
-SET(READDY_MAJOR_VERSION 0)
-SET(READDY_MINOR_VERSION 0)
-SET(READDY_PATCH_VERSION 1)
-SET(READDY_VERSION "${READDY_MAJOR_VERSION}.${READDY_MINOR_VERSION}.${READDY_PATCH_VERSION}")
 
 # always build readdy as shared lib
 SET(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libs" FORCE)

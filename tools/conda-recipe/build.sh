@@ -26,6 +26,9 @@ CMAKE_FLAGS+=" -DHDF5_INCLUDE_DIR=$PREFIX/include"
 # select compiler
 CMAKE_FLAGS+=" -DCMAKE_C_COMPILER=${CC}"
 CMAKE_FLAGS+=" -DCMAKE_CXX_COMPILER=${CXX}"
+# version flags
+CMAKE_FLAGS+=" -DREADDY_VERSION=${PKG_VERSION}"
+CMAKE_FLAGS+=" -DREADDY_BUILD_STRING=${PKG_BUILD_STRING}"
 
 #########################################################
 #                                                       #
