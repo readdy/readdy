@@ -41,7 +41,6 @@ LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/actions/SCPUEvaluateTopologyReacti
 
 # --- model ---
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/model/SCPUParticleData.cpp")
-LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/model/SCPUNeighborList.cpp")
 
 # --- observables ---
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/observables/SCPUObservableFactory.cpp")

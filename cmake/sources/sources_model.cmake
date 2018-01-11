@@ -44,7 +44,6 @@ LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/compartments/CompartmentRegistr
 
 # potentials
 LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/potentials/Potentials.cpp")
-LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/potentials/PotentialRegistry.cpp")
 
 # reactions
 LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/reactions/Reactions.cpp")

@@ -47,40 +47,62 @@ void SCPUCalculateForces::perform(const util::PerformanceNode &node) {
     auto &neighborList = *stateModel.getNeighborList();
 
     stateModel.energy() = 0;
+
+    const auto &potentials = context.potentials();
+    auto &topologies = stateModel.topologies();
+    if (!potentials.potentialsOrder1().empty() || !potentials.potentialsOrder2().empty() || !topologies.empty()) {
+        auto tClear = node.subnode("clear").timeit();
+        std::for_each(data.begin(), data.end(), [](auto &entry) {
+            entry.force = {0, 0, 0};
+        });
+    }
+
     // update forces and energy order 1 potentials
-    {
-        const Vec3 zero{0, 0, 0};
-        for (auto &e : data) {
-            e.force = zero;
-            for (const auto &po1 : context.potentials().potentialsOf(e.type)) {
-                po1->calculateForceAndEnergy(e.force, stateModel.energy(), e.position());
-            }
+    if (!potentials.potentialsOrder1().empty()) {
+        {
+            auto tFirstOrder = node.subnode("first order").timeit();
+            std::transform(data.begin(), data.end(), data.begin(), [&potentials, &stateModel](auto &entry) {
+                if (!entry.deactivated) {
+                    for (const auto &po1 : potentials.potentialsOf(entry.type)) {
+                        po1->calculateForceAndEnergy(entry.force, stateModel.energy(), entry.position());
+                    }
+                }
+                return entry;
+            });
         }
     }
 
     // update forces and energy order 2 potentials
-    if(!context.potentials().potentialsOrder2().empty()) {
+    if (!potentials.potentialsOrder2().empty()) {
+        auto tSecondOrder = node.subnode("second order").timeit();
         const auto &difference = context.shortestDifferenceFun();
-        for (auto it = neighborList.begin(); it != neighborList.end(); ++it) {
-            auto i = it->idx1;
-            auto j = it->idx2;
-            auto &entry_i = data.entry_at(i);
-            auto &entry_j = data.entry_at(j);
-            const auto &potentials = context.potentials().potentialsOf(entry_i.type, entry_j.type);
-            Vec3 forceVec{0, 0, 0};
-            const auto &x_ij = difference(entry_i.position(), entry_j.position());
-            for (const auto &potential : potentials) {
-                potential->calculateForceAndEnergy(forceVec, stateModel.energy(), x_ij);
+        for (auto cell = 0_z; cell < neighborList.nCells(); ++cell) {
+            for (auto it = neighborList.particlesBegin(cell); it != neighborList.particlesEnd(cell); ++it) {
+                auto pidx = *it;
+                auto &entry = data.entry_at(pidx);
+                const auto &pots = potentials.potentialsOrder2(entry.type);
+                neighborList.forEachNeighbor(it, cell, [&](const std::size_t neighbor) {
+                    auto &neighborEntry = data.entry_at(neighbor);
+                    auto itPot = pots.find(neighborEntry.type);
+                    if (itPot != pots.end()) {
+                        Vec3 forceVec{0, 0, 0};
+                        auto x_ij = difference(entry.position(), neighborEntry.position());
+                        for (const auto &potential : itPot->second) {
+                            potential->calculateForceAndEnergy(forceVec, stateModel.energy(), x_ij);
+                        }
+                        entry.force += forceVec;
+                        neighborEntry.force += -1 * forceVec;
+                    }
+                });
             }
-            entry_i.force += forceVec;
-            entry_j.force += -1 * forceVec;
         }
     }
     // update forces and energy for topologies
     {
+        auto tTopologies = node.subnode("topologies").timeit();
         auto taf = kernel->getTopologyActionFactory();
-        for ( auto &topology : stateModel.topologies()) {
-            if(!topology->isDeactivated()) {
+        for (auto &topology : topologies) {
+            if (!topology->isDeactivated()) {
                 // calculate bonded potentials
                 for (const auto &bondedPot : topology->getBondedPotentials()) {
                     auto energy = bondedPot->createForceAndEnergyAction(taf)->perform(topology.get());

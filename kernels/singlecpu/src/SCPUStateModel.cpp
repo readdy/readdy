@@ -38,7 +38,7 @@ namespace scpu {
 
 SCPUStateModel::SCPUStateModel(const readdy::model::Context &context, topology_action_factory const *const taf)
         : _context(context) {
-    neighborList = std::make_unique<model::SCPUNeighborList>(&_context.get());
+    neighborList = std::make_unique<model::CellLinkedList>(particleData, context);
     topologyActionFactory = taf;
 }
 

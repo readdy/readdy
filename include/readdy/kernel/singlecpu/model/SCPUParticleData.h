@@ -83,6 +83,7 @@ struct Entry {
 class SCPUParticleData {
 public:
 
+    using entry_type = Entry;
     using entries_vec = std::vector<Entry>;
     using entry_index = entries_vec::size_type;
     using new_entries = std::vector<Entry>;

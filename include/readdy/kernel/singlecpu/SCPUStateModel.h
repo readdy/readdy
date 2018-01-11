@@ -52,11 +52,11 @@ public:
     using topologies_vec = readdy::util::index_persistent_vector<topology_ref>;
 
     void initializeNeighborList(scalar skin) override {
-        neighborList->create(particleData, skin);
+        neighborList->setUp(skin, 1, {});
     }
 
     void updateNeighborList() override {
-        neighborList->create(particleData, neighborList->skin());
+        neighborList->update({});
     }
 
     void clearNeighborList() override {
@@ -124,7 +124,11 @@ public:
         return &particleData;
     }
 
-    virtual const model::SCPUNeighborList *getNeighborList() const {
+    virtual const model::CellLinkedList *getNeighborList() const {
+        return neighborList.get();
+    }
+
+    model::CellLinkedList *getNeighborList() {
         return neighborList.get();
     }
 
@@ -167,7 +171,7 @@ public:
 private:
     scalar currentEnergy = 0;
     model::SCPUParticleData particleData {};
-    std::unique_ptr<model::SCPUNeighborList> neighborList;
+    std::unique_ptr<model::CellLinkedList> neighborList;
     SCPUStateModel::topology_action_factory const *topologyActionFactory {nullptr};
     // only filled when readdy::model::Context::recordReactionsWithPositions is true
     std::vector<readdy::model::reactions::ReactionRecord> _reactionRecords{};

@@ -76,6 +76,7 @@ public:
 
     using potential_o1_registry = std::unordered_map<particle_type_type, potentials_o1>;
     using potential_o2_registry = util::particle_type_pair_unordered_map<potentials_o2>;
+    using o2_registry_alt = std::unordered_map<particle_type_type, std::unordered_map<particle_type_type, potentials_o2>>;
 
     id_type addUserDefined(potentials::PotentialOrder1 *potential);
 
@@ -208,6 +209,11 @@ public:
         return it != potentialO2Registry.end() ? it->second : defaultPotentialsO2;
     }
 
+    const o2_registry_alt::value_type::second_type &potentialsOrder2(const particle_type_type t) const {
+        auto it = _alternativeO2Registry.find(t);
+        return it != _alternativeO2Registry.end() ? it->second : defaultAlt;
+    }
+
     const potential_o2_registry &potentialsOrder2() const {
         return potentialO2Registry;
     }
@@ -232,6 +238,7 @@ private:
 
     potential_o1_registry potentialO1Registry{};
     potential_o2_registry potentialO2Registry{};
+    o2_registry_alt _alternativeO2Registry{};
 
     potential_o1_registry_internal potentialO1RegistryInternal{};
     potential_o1_registry potentialO1RegistryExternal{};
@@ -241,8 +248,12 @@ private:
     pot_ptr_vec1_external defaultPotentialsO1{};
     pot_ptr_vec2_external defaultPotentialsO2{};
 
+    o2_registry_alt::value_type::second_type defaultAlt{};
+
 };
 
 NAMESPACE_END(potentials)
 NAMESPACE_END(model)
 NAMESPACE_END(readdy)
+
+#include "misc/PotentialRegistry_misc.h"

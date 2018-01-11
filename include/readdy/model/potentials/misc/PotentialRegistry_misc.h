@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          * 
+ * Copyright © 2018 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -20,25 +20,27 @@
  ********************************************************************/
 
 
-#include <readdy/model/potentials/PotentialRegistry.h>
-#include <readdy/common/Utils.h>
-#include <readdy/model/potentials/PotentialsOrder1.h>
-#include <readdy/common/string.h>
-
 /**
  * << detailed description >>
  *
- * @file PotentialRegistry.cpp
+ * @file PotentialRegistry_misc.h
  * @brief << brief description >>
  * @author clonker
- * @date 29.03.17
- * @copyright GNU Lesser General Public License v3.0
+ * @date 1/11/18
  */
+
+
+#pragma once
+
+#include <readdy/common/Utils.h>
+#include <readdy/common/string.h>
+#include "../PotentialRegistry.h"
 
 namespace readdy {
 namespace model {
 namespace potentials {
-PotentialRegistry::id_type PotentialRegistry::addUserDefined(potentials::PotentialOrder2 *potential) {
+
+inline PotentialRegistry::id_type PotentialRegistry::addUserDefined(potentials::PotentialOrder2 *potential) {
     auto id = potential->getId();
     auto type1Id = potential->particleType1();
     auto type2Id = potential->particleType2();
@@ -50,7 +52,7 @@ PotentialRegistry::id_type PotentialRegistry::addUserDefined(potentials::Potenti
     return id;
 }
 
-PotentialRegistry::id_type PotentialRegistry::addUserDefined(potentials::PotentialOrder1 *potential) {
+inline PotentialRegistry::id_type PotentialRegistry::addUserDefined(potentials::PotentialOrder1 *potential) {
     auto typeId = potential->particleType();
     if (potentialO1RegistryExternal.find(typeId) == potentialO1RegistryExternal.end()) {
         potentialO1RegistryExternal.emplace(std::make_pair(typeId, pot_ptr_vec1_external()));
@@ -59,7 +61,7 @@ PotentialRegistry::id_type PotentialRegistry::addUserDefined(potentials::Potenti
     return potential->getId();
 }
 
-void PotentialRegistry::remove(const Potential::id_type handle) {
+inline void PotentialRegistry::remove(const Potential::id_type handle) {
     for (auto &entry : potentialO1RegistryInternal) {
         entry.second.erase(std::remove_if(entry.second.begin(), entry.second.end(),
                                           [=](const std::shared_ptr<potentials::PotentialOrder1> &p) -> bool {
@@ -90,7 +92,7 @@ void PotentialRegistry::remove(const Potential::id_type handle) {
     }
 }
 
-void PotentialRegistry::configure() {
+inline void PotentialRegistry::configure() {
     namespace coll = readdy::util::collections;
     using pair = util::particle_type_pair;
     using pot1 = potentials::PotentialOrder1;
@@ -99,22 +101,31 @@ void PotentialRegistry::configure() {
     using pot2 = potentials::PotentialOrder2;
     potentialO1Registry.clear();
     potentialO2Registry.clear();
+    _alternativeO2Registry.clear();
 
     coll::for_each_value(potentialO1RegistryInternal, [&](const particle_type_type type, const pot1_ptr &ptr) {
         (potentialO1Registry)[type].push_back(ptr.get());
     });
     coll::for_each_value(potentialO2RegistryInternal, [&](const pair &type, const pot2_ptr &ptr) {
         (potentialO2Registry)[type].push_back(ptr.get());
+        _alternativeO2Registry[std::get<0>(type)][std::get<1>(type)].push_back(ptr.get());
+        if(std::get<0>(type) != std::get<1>(type)) {
+            _alternativeO2Registry[std::get<1>(type)][std::get<0>(type)].push_back(ptr.get());
+        }
     });
     coll::for_each_value(potentialO1RegistryExternal, [&](const particle_type_type type, pot1 *ptr) {
         (potentialO1Registry)[type].push_back(ptr);
     });
     coll::for_each_value(potentialO2RegistryExternal, [&](const pair &type, pot2 *ptr) {
         (potentialO2Registry)[type].push_back(ptr);
+        _alternativeO2Registry[std::get<0>(type)][std::get<1>(type)].push_back(ptr);
+        if(std::get<0>(type) != std::get<1>(type)) {
+            _alternativeO2Registry[std::get<1>(type)][std::get<0>(type)].push_back(ptr);
+        }
     });
 }
 
-std::string PotentialRegistry::describe() const {
+inline std::string PotentialRegistry::describe() const {
     namespace rus = readdy::util::str;
     auto find_pot_name = [this](particle_type_type type) -> const std::string {
         for (auto &&t : _types.get().typeMapping()) {
@@ -145,8 +156,6 @@ std::string PotentialRegistry::describe() const {
     return description;
 }
 
-
 }
 }
 }
-

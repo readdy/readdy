@@ -144,10 +144,6 @@ protected:
 
 class BoxIterator;
 
-class MacroBoxIterator;
-
-class NeighborsIterator;
-
 class CompactCellLinkedList : public CellLinkedList {
 public:
 
@@ -233,7 +229,8 @@ public:
     using iterator_category = std::forward_iterator_tag;
     using size_type = CompactCellLinkedList::LIST::size_type;
 
-    BoxIterator(const CompactCellLinkedList &ccll, std::size_t state) : _ccll(ccll), _state(state), _val(state - 1) {};
+    BoxIterator(const CompactCellLinkedList::LIST &list, std::size_t state)
+            : _list(list), _state(state), _val(state - 1) {};
 
     BoxIterator(const BoxIterator &) = default;
 
@@ -256,7 +253,7 @@ public:
     }
 
     BoxIterator &operator++() {
-        _state = _ccll.list().at(_state);
+        _state = _list.at(_state);
         _val = _state - 1;
         return *this;
     };
@@ -274,24 +271,24 @@ public:
     };
 
 private:
-    const CompactCellLinkedList &_ccll;
+    const CompactCellLinkedList::LIST &_list;
     std::size_t _state, _val;
 };
 
 inline BoxIterator CompactCellLinkedList::particlesBegin(std::size_t cellIndex) {
-    return {*this, (*_head.at(cellIndex)).load()};
+    return {_list, (*_head.at(cellIndex)).load()};
 }
 
 inline BoxIterator CompactCellLinkedList::particlesBegin(std::size_t cellIndex) const {
-    return {*this, (*_head.at(cellIndex)).load()};
+    return {_list, (*_head.at(cellIndex)).load()};
 }
 
 inline BoxIterator CompactCellLinkedList::particlesEnd(std::size_t /*cellIndex*/) const {
-    return {*this, 0};
+    return {_list, 0};
 }
 
 inline BoxIterator CompactCellLinkedList::particlesEnd(std::size_t /*cellIndex*/) {
-    return {*this, 0};
+    return {_list, 0};
 }
 
 
