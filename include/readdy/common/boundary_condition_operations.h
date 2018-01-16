@@ -207,6 +207,11 @@ inline Vec3 shortestDifference<false, false, false>(const Vec3 &lhs, const Vec3 
     return rhs - lhs;
 };
 
+template<bool PX, bool PY, bool PZ, typename Container>
+inline Vec3 shortestDifference(const Vec3 &lhs, const Vec3 &rhs, const Container &box) {
+    return shortestDifference<PX, PY, PZ>(lhs, rhs, box.at(0), box.at(1), box.at(2));
+};
+
 template<bool PX, bool PY, bool PZ>
 inline scalar
 distSquared(const Vec3 &lhs, const Vec3 &rhs, const scalar dx, const scalar dy, const scalar dz) {
