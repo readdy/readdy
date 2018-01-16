@@ -54,34 +54,6 @@
 #  define READDY_API __attribute__ ((visibility("default")))
 #endif
 
-/**
- * Utilities
- */
-#define READDY_CREATE_FACTORY_DISPATCHER(FACTORY, TYPE) template<typename... Args> \
-struct FACTORY::get_dispatcher<TYPE, Args...> { \
-    static TYPE *impl(const FACTORY *self, Args &&... args) { \
-        return self->create##TYPE(std::forward<Args>(args)...); \
-    } \
-};
-#define READDY_CREATE_FACTORY_DISPATCHER2(FACTORY, NS, TYPE) template<typename... Args> \
-struct FACTORY::get_dispatcher<NS::TYPE, Args...> { \
-    static NS::TYPE *impl(const FACTORY *self, Args &&... args) { \
-        return self->create##TYPE(std::forward<Args>(args)...); \
-    } \
-};
-#define READDY_CREATE_OBSERVABLE_FACTORY_DISPATCHER(TYPE) template<typename... Args> \
-struct ObservableFactory::get_dispatcher<TYPE, Args...> { \
-    static TYPE *impl(const ObservableFactory *self, unsigned int stride, Args &&... args) { \
-        return self->create##TYPE(stride, std::forward<Args>(args)...); \
-    } \
-};
-#define READDY_CREATE_COMPARTMENT_FACTORY_DISPATCHER(TYPE) template<typename... Args> \
-struct CompartmentFactory::get_dispatcher<TYPE, Args...> { \
-    static TYPE *impl(const CompartmentFactory *self, const Compartment::conversion_map &convMap, Args &&... args) { \
-        return self->create##TYPE(convMap, std::forward<Args>(args)...); \
-    } \
-};
-
 #if !defined(NAMESPACE_BEGIN)
 #  define NAMESPACE_BEGIN(name) namespace name {
 #endif

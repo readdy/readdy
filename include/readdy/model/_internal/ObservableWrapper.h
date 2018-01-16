@@ -42,18 +42,29 @@ NAMESPACE_BEGIN(observables)
 class ObservableWrapper : public ObservableBase {
 public:
     ObservableWrapper(Kernel *kernel,
-                      const observables::observable_type &observable, unsigned int stride = 1);
+                      const observables::observable_type &observable, unsigned int stride = 1)
+            : ObservableBase(kernel, stride), observable(observable) {};
 
-    void operator()(time_step_type t);
+    void operator()(time_step_type t) {
+        callback(t);
+    }
 
-    void evaluate() override;
+    void evaluate() override {
+        observable(t_current);
+    }
 
-    void flush() override;
+    void flush() override {
+        throw std::runtime_error("not supported");
+    }
 
 protected:
-    void initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) override;
+    void initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) override {
+        throw std::runtime_error("not supported");
+    }
 
-    void append() override;
+    void append() override {
+        throw std::runtime_error("not supported");
+    }
 
     const observables::observable_type observable;
 };

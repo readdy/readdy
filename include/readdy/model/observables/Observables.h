@@ -49,3 +49,4 @@
 #include "Reactions.h"
 #include "ReactionCounts.h"
 #include "Energy.h"
+#include "io/Trajectory.h"

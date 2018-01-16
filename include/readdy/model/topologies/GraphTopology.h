@@ -87,25 +87,48 @@ public:
 
     GraphTopology &operator=(const GraphTopology &) = delete;
 
-    topology_graph &graph();
+    topology_graph &graph() {
+        return graph_;
+    }
 
-    const topology_graph &graph() const;
+    const topology_graph &graph() const {
+        return graph_;
+    }
 
     void configure();
 
-    void updateReactionRates(const TopologyRegistry::structural_reactions &reactions);
+    void updateReactionRates(const TopologyRegistry::structural_reactions &reactions) {
+        _cumulativeRate = 0;
+        _reaction_rates.resize(reactions.size());
+        auto that = this;
+        std::transform(reactions.begin(), reactions.end(), _reaction_rates.begin(), [&](const auto &reaction) {
+            const auto rate = reaction.rate(*that);
+            _cumulativeRate += rate;
+            return rate;
+        });
+    }
 
-    void validate();
+    void validate() {
+        if (!graph().isConnected()) {
+            throw std::invalid_argument("The graph is not connected!");
+        }
+    }
 
     std::vector<GraphTopology> connectedComponents();
 
-    const bool isDeactivated() const;
+    const bool isDeactivated() const {
+        return deactivated;
+    }
 
-    void deactivate();
+    void deactivate() {
+        deactivated = true;
+    }
 
     const bool isNormalParticle(const Kernel &k) const;
 
-    const topology_reaction_rate cumulativeRate() const;
+    const topology_reaction_rate cumulativeRate() const {
+        return _cumulativeRate;
+    }
 
     void appendParticle(particle_index newParticle, particle_type_type newParticleType,
                         particle_index counterPart, particle_type_type counterPartType);
@@ -113,21 +136,37 @@ public:
     void appendTopology(GraphTopology &other, particle_index otherParticle, particle_type_type otherNewParticleType,
                         particle_index thisParticle, particle_type_type thisNewParticleType, topology_type_type newType);
 
-    const topology_type_type &type() const;
+    const topology_type_type &type() const {
+        return _topology_type;
+    }
 
-    topology_type_type &type();
+    topology_type_type &type() {
+        return _topology_type;
+    }
 
-    topology_graph::vertex_ref vertexForParticle(particle_index particle);
+    topology_graph::vertex_ref vertexForParticle(particle_index particle) {
+        auto it = std::find(particles.begin(), particles.end(), particle);
+        if(it != particles.end()) {
+            return std::next(graph_.vertices().begin(), std::distance(particles.begin(), it));
+        }
+        return graph_.vertices().end();
+    }
 
-    const topology_reaction_rates &rates() const;
+    const topology_reaction_rates &rates() const {
+        return _reaction_rates;
+    }
 
-    const model::Context &context() const;
+    const model::Context &context() const {
+        return _context.get();
+    }
 
     std::vector<Particle> fetchParticles() const;
 
     Particle particleForVertex(const vertex &vertex) const;
 
-    Particle particleForVertex(topology_graph::vertex_ref vertexRef) const;
+    Particle particleForVertex(topology_graph::vertex_ref vertexRef) const {
+        return particleForVertex(*vertexRef);
+    }
 
 protected:
     topology_graph graph_;

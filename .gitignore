@@ -52,3 +52,6 @@ docs/sphinx/build
 .idea
 
 cmake-build-*
+
+# ignore configured version file
+wrappers/python/src/python/readdy/_version.py

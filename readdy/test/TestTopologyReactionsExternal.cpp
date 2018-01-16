@@ -85,9 +85,9 @@ TEST_P(TestTopologyReactionsExternal, TestTopologyEnzymaticReaction) {
 
     kernel->initialize();
 
-    auto nlCreate = kernel->getActionFactory().createAction<readdy::model::actions::UpdateNeighborList>(readdy::model::actions::UpdateNeighborList::Operation::init);
-    auto nlUpdate = kernel->getActionFactory().createAction<readdy::model::actions::UpdateNeighborList>(readdy::model::actions::UpdateNeighborList::Operation::update);
-    auto action = kernel->getActionFactory().createAction<readdy::model::actions::reactions::UncontrolledApproximation>(1.0);
+    auto nlCreate = kernel->actions().updateNeighborList(readdy::model::actions::UpdateNeighborList::Operation::init);
+    auto nlUpdate = kernel->actions().updateNeighborList(readdy::model::actions::UpdateNeighborList::Operation::update);
+    auto action = kernel->actions().uncontrolledApproximation(1.0);
     nlCreate->perform();
     nlUpdate->perform();
     action->perform();

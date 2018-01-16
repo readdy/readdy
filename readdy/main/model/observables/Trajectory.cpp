@@ -29,6 +29,8 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
+#include <readdy/model/Kernel.h>
+
 #include <readdy/model/observables/io/Trajectory.h>
 #include <readdy/model/observables/io/TimeSeriesWriter.h>
 #include <readdy/model/observables/io/Types.h>

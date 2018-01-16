@@ -142,11 +142,6 @@ void CPUStateModel::insert_topology(CPUStateModel::topology &&top) {
     });
 }
 
-void CPUStateModel::configure(const readdy::conf::cpu::Configuration &configuration) {
-    const auto& nl = configuration.neighborList;
-    _neighborListCellRadius = nl.cll_radius;
-}
-
 void CPUStateModel::resetReactionCounts() {
     if(!_reactionCounts.empty()) {
         for(auto &e : _reactionCounts) {
@@ -166,8 +161,6 @@ void CPUStateModel::resetReactionCounts() {
         }
     }
 }
-
-CPUStateModel::~CPUStateModel() = default;
 
 
 }

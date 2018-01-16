@@ -56,27 +56,6 @@ CompartmentRegistry::addPlane(const Compartment::conversion_map &conversions, co
 
 CompartmentRegistry::CompartmentRegistry(const ParticleTypeRegistry &types) : _types(types) {}
 
-Compartment::id_type
-CompartmentRegistry::addSphere(const Compartment::label_conversion_map &conversions, const std::string &uniqueName,
-                               const Vec3 &origin, scalar radius, bool largerOrLess) {
-    return addSphere(_internal::util::transformTypesMap(conversions, _types.get()), uniqueName, origin, radius,
-                     largerOrLess);
-}
-
-Compartment::id_type
-CompartmentRegistry::addPlane(const Compartment::label_conversion_map &conversions, const std::string &uniqueName,
-                              const Vec3 &normalCoefficients, scalar distance, bool largerOrLess) {
-    return addPlane(_internal::util::transformTypesMap(conversions, _types.get()), uniqueName, normalCoefficients,
-                    distance, largerOrLess);
-}
-
-const std::vector<std::shared_ptr<readdy::model::compartments::Compartment>> &CompartmentRegistry::get() const {
-    return _compartments;
-}
-
-std::vector<std::shared_ptr<readdy::model::compartments::Compartment>> &CompartmentRegistry::get() {
-    return _compartments;
-}
 }
 }
 }

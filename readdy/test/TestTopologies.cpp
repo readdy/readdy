@@ -91,7 +91,7 @@ TEST_P(TestTopologies, BondedPotential) {
         bonds.emplace_back(0, 1, 10.0, 5.0);
         top->addBondedPotential<harmonic_bond>(bonds);
     }
-    auto fObs = kernel->createObservable<readdy::model::observables::Forces>(1);
+    auto fObs = kernel->observe().forces(1);
     std::vector<readdy::Vec3> collectedForces;
     fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_type &result) {
         for (const auto &force : result) {
@@ -102,7 +102,7 @@ TEST_P(TestTopologies, BondedPotential) {
     auto conn = kernel->connectObservable(fObs.get());
 
     ctx.configure();
-    auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
+    auto calculateForces = kernel->actions().calculateForces();
     calculateForces->perform();
     kernel->evaluateObservables(1);
 
@@ -136,7 +136,7 @@ TEST_P(TestTopologies, AnglePotential) {
         std::vector<angle_bond::angle> angles{{0, 1, 2, 1.0, readdy::util::numeric::pi()}};
         top->addAnglePotential<angle_bond>(std::move(angles));
     }
-    auto fObs = kernel->createObservable<readdy::model::observables::Forces>(1);
+    auto fObs = kernel->observe().forces(1);
     std::vector<readdy::Vec3> collectedForces;
     fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_type &result) {
         for (const auto &force : result) {
@@ -147,7 +147,7 @@ TEST_P(TestTopologies, AnglePotential) {
     auto conn = kernel->connectObservable(fObs.get());
 
     ctx.configure();
-    auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
+    auto calculateForces = kernel->actions().calculateForces();
     calculateForces->perform();
     kernel->evaluateObservables(1);
 
@@ -178,7 +178,7 @@ TEST_P(TestTopologies, MoreComplicatedAnglePotential) {
         std::vector<angle_bond::angle> angles{{0, 1, 2, 1.0, readdy::util::numeric::pi()}};
         top->addAnglePotential<angle_bond>(std::move(angles));
     }
-    auto fObs = kernel->createObservable<readdy::model::observables::Forces>(1);
+    auto fObs = kernel->observe().forces(1);
     std::vector<readdy::Vec3> collectedForces;
     fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_type &result) {
         for (const auto &force : result) {
@@ -189,7 +189,7 @@ TEST_P(TestTopologies, MoreComplicatedAnglePotential) {
     auto conn = kernel->connectObservable(fObs.get());
 
     ctx.configure();
-    auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
+    auto calculateForces = kernel->actions().calculateForces();
     calculateForces->perform();
     kernel->evaluateObservables(1);
 
@@ -238,7 +238,7 @@ TEST_P(TestTopologies, DihedralPotential) {
         std::vector<dihedral_bond::dihedral_configuration> dihedrals{{0, 1, 2, 3, 1.0, 3, readdy::util::numeric::pi()}};
         top->addTorsionPotential<dihedral_bond>(dihedrals);
     }
-    auto fObs = kernel->createObservable<readdy::model::observables::Forces>(1);
+    auto fObs = kernel->observe().forces(1);
     std::vector<readdy::Vec3> collectedForces;
     fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_type &result) {
         for (const auto &force : result) {
@@ -247,7 +247,7 @@ TEST_P(TestTopologies, DihedralPotential) {
     });
 
     auto conn = kernel->connectObservable(fObs.get());
-    auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
+    auto calculateForces = kernel->actions().calculateForces();
     ctx.configure();
     calculateForces->perform();
     kernel->evaluateObservables(1);
@@ -281,7 +281,7 @@ TEST_P(TestTopologies, DihedralPotentialSteeperAngle) {
         std::vector<dihedral_bond::dihedral_configuration> dihedral{{0, 1, 2, 3, 1.0, 3, readdy::util::numeric::pi()}};
         top->addTorsionPotential(std::make_unique<dihedral_bond>(dihedral));
     }
-    auto fObs = kernel->createObservable<readdy::model::observables::Forces>(1);
+    auto fObs = kernel->observe().forces(1);
     std::vector<readdy::Vec3> collectedForces;
     fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_type &result) {
         for (const auto &force : result) {
@@ -290,7 +290,7 @@ TEST_P(TestTopologies, DihedralPotentialSteeperAngle) {
     });
 
     auto conn = kernel->connectObservable(fObs.get());
-    auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
+    auto calculateForces = kernel->actions().calculateForces();
     ctx.configure();
     calculateForces->perform();
     kernel->evaluateObservables(1);

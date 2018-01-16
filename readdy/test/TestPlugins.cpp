@@ -53,7 +53,7 @@ TEST(Kernel, LoadingExistingPlugin) {
 
 TEST(KernelProvider, SanityCheckDefaultDirectory) {
     std::string defaultDirectory = plug::KernelProvider::getInstance().getDefaultKernelDirectory();
-    readdy::log::console() ->debug("default directory is {}", defaultDirectory);
+    readdy::log::debug("default directory is {}", defaultDirectory);
     SUCCEED();
 }
 

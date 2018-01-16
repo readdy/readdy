@@ -86,35 +86,72 @@ public:
 
     ~ParticleTypeRegistry() = default;
 
-    particle_type_type idOf(const std::string &name) const;
+    particle_type_type idOf(const std::string &name) const {
+        return _idOf(name);
+    }
 
-    particle_type_type operator()(const std::string &name) const;
+    particle_type_type operator()(const std::string &name) const {
+        return idOf(name);
+    }
 
     void add(const std::string &name, scalar diffusionConst, particle_flavor flavor = particleflavor::NORMAL);
 
-    const ParticleTypeInfo &infoOf(const std::string &name) const;
+    const ParticleTypeInfo &infoOf(const std::string &name) const {
+        return infoOf(_idOf(name));
+    }
 
-    const ParticleTypeInfo &infoOf(Particle::type_type type) const;
+    const ParticleTypeInfo &infoOf(Particle::type_type type) const {
+        return particle_info_.at(type);
+    }
 
-    scalar diffusionConstantOf(const std::string &particleType) const;
+    scalar diffusionConstantOf(const std::string &particleType) const {
+        return diffusionConstantOf(idOf(particleType));
+    }
 
-    scalar diffusionConstantOf(particle_type_type particleType) const;
+    scalar diffusionConstantOf(particle_type_type particleType) const {
+        return particle_info_.at(particleType).diffusionConstant;
+    }
 
-    const std::size_t &nTypes() const;
+    const std::size_t &nTypes() const {
+        return n_types_;
+    }
 
-    std::vector<particle_type_type> typesFlat() const;
+    std::vector<particle_type_type> typesFlat() const {
+        std::vector<particle_type_type> v;
+        std::transform(std::begin(type_mapping_), std::end(type_mapping_), std::back_inserter(v), [](const auto &e) {
+            return e.second;
+        });
+        return v;
+    }
 
-    std::string nameOf(particle_type_type id) const;
+    std::string nameOf(particle_type_type id) const {
+        auto it = std::find_if(std::begin(type_mapping_), std::end(type_mapping_), [id](const auto &e) {
+            return e.second == id;
+        });
+        return it == std::end(type_mapping_) ? "" : it->first;
+    }
 
-    const type_map &typeMapping() const;
+    const type_map &typeMapping() const {
+        return type_mapping_;
+    }
 
     std::string describe() const;
 
-    void configure();
+    void configure() {
+        /*no op*/
+    }
 
 private:
 
-    particle_type_type _idOf(const std::string &name) const;
+    particle_type_type _idOf(const std::string &name) const {
+        auto it = type_mapping_.find(name);
+        if (it == type_mapping_.end()) {
+            throw std::invalid_argument(
+                    fmt::format("Could not find type \"{}\", did you forget to register it before accessing it?", name)
+            );
+        }
+        return it->second;
+    }
 
     std::size_t n_types_ = 0;
     particle_type_type type_counter_ = 0;

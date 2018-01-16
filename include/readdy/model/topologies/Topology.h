@@ -64,9 +64,9 @@ public:
     using torsion_potential = pot::TorsionPotential;
     using cos_dihedral = TopologyActionFactory::cos_dihedral;
 
-    Topology(particle_indices &&particles);
+    Topology(particle_indices &&p) : particles(std::move(p)) { };
 
-    Topology(const particle_indices &particles);
+    Topology(const particle_indices &particles) : particles(particles) { }
 
     Topology(const Topology &) = delete;
 
@@ -76,42 +76,73 @@ public:
 
     Topology &operator=(Topology &&) = default;
 
-    virtual ~Topology();
+    virtual ~Topology() = default;
 
-    particle_indices::size_type getNParticles() const;
+    particle_indices::size_type getNParticles() const {
+        return particles.size();
+    }
 
-    const particle_indices &getParticles() const;
+    const particle_indices &getParticles() const {
+        return particles;
+    }
 
-    particle_indices &getParticles();
+    particle_indices &getParticles() {
+        return particles;
+    }
 
-    const std::vector<std::unique_ptr<bonded_potential>> &getBondedPotentials() const;
+    const std::vector<std::unique_ptr<bonded_potential>> &getBondedPotentials() const {
+        return bondedPotentials;
+    }
 
-    const std::vector<std::unique_ptr<angle_potential>> &getAnglePotentials() const;
+    const std::vector<std::unique_ptr<angle_potential>> &getAnglePotentials() const {
+        return anglePotentials;
+    }
 
-    const std::vector<std::unique_ptr<torsion_potential>> &getTorsionPotentials() const;
+    const std::vector<std::unique_ptr<torsion_potential>> &getTorsionPotentials() const {
+        return torsionPotentials;
+    }
 
     template<typename T, typename... Args>
     typename std::enable_if<std::is_base_of<bonded_potential, T>::value>::type addBondedPotential(Args &&...args) {
         bondedPotentials.push_back(std::make_unique<T>(std::forward<Args>(args)...));
     }
 
-    void addBondedPotential(std::unique_ptr<bonded_potential> &&);
+    void addBondedPotential(std::unique_ptr<bonded_potential> &&pot) {
+        const auto n = getNParticles();
+        for(const auto& bond : pot->getBonds()) {
+            if (bond.idx1 >= n) {
+                throw std::invalid_argument("the first particle (" + std::to_string(bond.idx1) + ") was out of bounds!");
+            }
+            if (bond.idx2 >= n) {
+                throw std::invalid_argument("the second particle (" + std::to_string(bond.idx2) + ") was out of bounds!");
+            }
+        }
+        bondedPotentials.push_back(std::move(pot));
+    }
 
     template<typename T, typename... Args>
     typename std::enable_if<std::is_base_of<angle_potential, T>::value>::type addAnglePotential(Args &&...args) {
         anglePotentials.push_back(std::make_unique<T>(std::forward<Args>(args)...));
     }
 
-    void addAnglePotential(std::unique_ptr<angle_potential> &&);
+    void addAnglePotential(std::unique_ptr<angle_potential> &&pot) {
+        anglePotentials.push_back(std::move(pot));
+    }
 
     template<typename T, typename... Args>
     typename std::enable_if<std::is_base_of<torsion_potential, T>::value>::type addTorsionPotential(Args &&...args) {
         torsionPotentials.push_back(std::make_unique<T>(std::forward<Args>(args)...));
     }
 
-    void addTorsionPotential(std::unique_ptr<torsion_potential> &&);
+    void addTorsionPotential(std::unique_ptr<torsion_potential> &&pot) {
+        torsionPotentials.push_back(std::move(pot));
+    }
 
-    virtual void permuteIndices(const std::vector<std::size_t> &permutation);
+    virtual void permuteIndices(const std::vector<std::size_t> &permutation) {
+        std::transform(particles.begin(), particles.end(), particles.begin(), [&permutation](std::size_t index) {
+            return permutation[index];
+        });
+    }
 
 protected:
     particle_indices particles;

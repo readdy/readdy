@@ -51,12 +51,12 @@ TEST_P(TestCompartments, OneCompartmentOneConversionOneParticle) {
     ctx.compartments().addSphere(conversionsMap, "kugelrund", readdy::Vec3(0,0,0), 10., false);
 
     std::vector<std::string> typesToCount = {"A", "B"};
-    auto &&obs = kernel->createObservable<m::observables::NParticles>(1, typesToCount);
+    auto &&obs = kernel->observe().nParticles(1, typesToCount);
     obs->evaluate();
     const auto &resultBefore = obs->getResult();
     EXPECT_THAT(resultBefore, ::testing::ElementsAre(1, 0)) << "Expect one A particle before program execution";
 
-    auto &&evaluateCompartments = kernel->createAction<m::actions::EvaluateCompartments>();
+    auto &&evaluateCompartments = kernel->actions().evaluateCompartments();
     evaluateCompartments->perform();
 
     obs->evaluate();
@@ -72,7 +72,7 @@ TEST_P(TestCompartments, TwoCompartments) {
     ctx.particle_types().add("B", 1.);
     ctx.particle_types().add("C", 1.);
     ctx.particle_types().add("D", 1.);
-    auto &&comp = kernel->createAction<m::actions::EvaluateCompartments>();
+    auto &&comp = kernel->actions().evaluateCompartments();
 
     std::unordered_map<std::string, std::string> conversionsXPos = {{"A", "C"}, {"B", "C"}};
     std::unordered_map<std::string, std::string> conversionsXNeg = {{"A", "D"}, {"B", "D"}};
@@ -87,7 +87,7 @@ TEST_P(TestCompartments, TwoCompartments) {
     comp->perform();
 
     std::vector<std::string> typesToCount = {"A", "B", "C", "D"};
-    auto &&obs = kernel->createObservable<m::observables::NParticles>(1, typesToCount);
+    auto &&obs = kernel->observe().nParticles(1, typesToCount);
     obs->evaluate();
     const auto &result = obs->getResult();
     EXPECT_EQ(result[0], 0) << "Expect no As";
@@ -95,8 +95,8 @@ TEST_P(TestCompartments, TwoCompartments) {
 
     const std::vector<std::string> typesC = {"C"};
     const std::vector<std::string> typesD = {"D"};
-    auto &&posC = kernel->createObservable<m::observables::Positions>(1, typesC);
-    auto &&posD = kernel->createObservable<m::observables::Positions>(1, typesD);
+    auto &&posC = kernel->observe().positions(1, typesC);
+    auto &&posD = kernel->observe().positions(1, typesD);
     posC->evaluate();
     posD->evaluate();
     const auto &resultC = posC->getResult();

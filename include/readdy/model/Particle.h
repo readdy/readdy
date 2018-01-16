@@ -49,11 +49,12 @@ public:
     using pos_type = Vec3;
     using type_type = particle_type_type;
 
-    Particle(scalar x, scalar y, scalar z, type_type type);
+    Particle(scalar x, scalar y, scalar z, type_type type)
+            : id(std::atomic_fetch_add<unsigned long>(&id_counter, 1L)), pos(x, y, z), type(type) {};
 
-    Particle(Vec3 pos, type_type type);
+    Particle(Vec3 pos, type_type type) : pos(pos), type(type), id(std::atomic_fetch_add<id_type>(&id_counter, 1)) {}
 
-    Particle(Vec3 pos, type_type type, id_type id);
+    Particle(Vec3 pos, type_type type, id_type id) : pos(pos), type(type), id(id) {}
 
     Particle(const Particle&) = default;
 
@@ -63,23 +64,40 @@ public:
 
     Particle& operator=(Particle&&) = default;
 
-    virtual ~Particle();
+    virtual ~Particle() = default;
 
-    const Vec3 &getPos() const;
+    const Vec3 &getPos() const {
+        return pos;
+    }
 
-    Vec3 &getPos();
+    Vec3 &getPos() {
+        return pos;
+    }
 
-    const type_type &getType() const;
+    const type_type &getType() const {
+        return type;
+    }
 
-    const id_type getId() const;
+    const id_type getId() const {
+        return id;
+    }
 
-    bool operator==(const Particle &rhs) const;
+    bool operator==(const Particle &rhs) const {
+        return rhs.id == id;
+    }
 
-    bool operator!=(const Particle &rhs) const;
+    bool operator!=(const Particle &rhs) const {
+        return !(*this == rhs);
+    }
 
-    friend std::ostream &operator<<(std::ostream &, const Particle &);
+    friend std::ostream &operator<<(std::ostream &os, const Particle &p) {
+        os << "Particle(id=" << p.id << ", type=" << p.type << ", pos=" << p.pos << ")";
+        return os;
+    }
 
-    static id_type nextId();
+    static id_type nextId() {
+        return std::atomic_fetch_add<id_type>(&id_counter, 1);
+    }
 
 protected:
     Vec3 pos;

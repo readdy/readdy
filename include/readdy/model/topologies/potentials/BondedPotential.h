@@ -43,7 +43,8 @@ NAMESPACE_BEGIN(top)
 NAMESPACE_BEGIN(pot)
 
 struct BondConfiguration {
-    BondConfiguration(std::size_t idx1, std::size_t idx2, scalar forceConstant, scalar length);
+    BondConfiguration(std::size_t idx1, std::size_t idx2, scalar forceConstant, scalar length)
+            : idx1(idx1), idx2(idx2), length(length), forceConstant(forceConstant) {}
 
     std::size_t idx1, idx2;
     scalar length, forceConstant;
@@ -55,14 +56,17 @@ public:
     using bond_configuration = BondConfiguration;
     using bond_configurations = std::vector<bond_configuration>;
 
-    explicit BondedPotential(const bond_configurations &bonds);
+    explicit BondedPotential(const bond_configurations &bonds) : TopologyPotential(), bonds(bonds) {}
+
     BondedPotential(const BondedPotential&) = default;
     BondedPotential& operator=(const BondedPotential&) = delete;
     BondedPotential(BondedPotential&&) = default;
     BondedPotential& operator=(BondedPotential&&) = delete;
     virtual ~BondedPotential() = default;
 
-    const bond_configurations &getBonds() const;
+    const bond_configurations &getBonds() const {
+        return bonds;
+    }
 protected:
     bond_configurations bonds;
 };
@@ -71,7 +75,7 @@ protected:
 class HarmonicBondPotential : public BondedPotential {
 public:
 
-    explicit HarmonicBondPotential(const bond_configurations &bonds);
+    explicit HarmonicBondPotential(const bond_configurations &bonds) : BondedPotential(bonds) {};
     HarmonicBondPotential(const HarmonicBondPotential&) = default;
     HarmonicBondPotential& operator=(const HarmonicBondPotential&) = delete;
     HarmonicBondPotential(HarmonicBondPotential&&) = default;
@@ -79,9 +83,15 @@ public:
 
     ~HarmonicBondPotential() override = default;
 
-    scalar calculateEnergy(const Vec3 &x_ij, const bond_configuration &bond) const;
+    scalar calculateEnergy(const Vec3 &x_ij, const bond_configuration &bond) const {
+        const auto norm = std::sqrt(x_ij * x_ij);
+        return bond.forceConstant * (norm - bond.length) * (norm - bond.length);
+    }
 
-    void calculateForce(Vec3 &force, const Vec3 &x_ij, const bond_configuration &bond) const;
+    void calculateForce(Vec3 &force, const Vec3 &x_ij, const bond_configuration &bond) const {
+        const auto norm = std::sqrt(x_ij * x_ij);
+        force += (2. * bond.forceConstant * (norm - bond.length) / norm) * x_ij;
+    }
 
     virtual std::unique_ptr<EvaluatePotentialAction>
     createForceAndEnergyAction(const TopologyActionFactory *const) override;

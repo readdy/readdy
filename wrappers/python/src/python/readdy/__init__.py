@@ -24,6 +24,8 @@ from .api.simulation import *
 from .api.trajectory import Trajectory
 from .api.conf import ureg as units
 
+from readdy._version import __version__ as __version__
+
 # elevate reaction recipe
 from ._internal.readdybinding.api.top import Recipe as StructuralReactionRecipe
 

@@ -72,15 +72,19 @@ MACRO_ENSURE_OUT_OF_SOURCE_BUILD("${PROJECT_NAME} requires an out source build."
 SET(CMAKE_VERBOSE_MAKEFILE OFF)
 SET(CMAKE_COLOR_MAKEFILE ON)
 
-# we use c++11
-SET(CMAKE_CXX_STANDARD 11)
-SET(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 # version
-SET(READDY_MAJOR_VERSION 0)
-SET(READDY_MINOR_VERSION 0)
-SET(READDY_PATCH_VERSION 1)
-SET(READDY_VERSION "${READDY_MAJOR_VERSION}.${READDY_MINOR_VERSION}.${READDY_PATCH_VERSION}")
+set(READDY_VERSION "v0.0" CACHE STRING "The version")
+mark_as_advanced(READDY_VERSION)
+set(READDY_BUILD_STRING "dev" CACHE STRING "Build string")
+mark_as_advanced(READDY_BUILD_STRING)
+
+message(STATUS "====================================================")
+message(STATUS "CMake configure for readdy version ${READDY_VERSION}-${READDY_BUILD_STRING}")
+message(STATUS "====================================================")
+
+# we use c++17
+SET(CMAKE_CXX_STANDARD 17)
+SET(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # always build readdy as shared lib
 SET(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libs" FORCE)
@@ -112,7 +116,11 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
         MESSAGE(STATUS "Using specified '${CMAKE_BUILD_TYPE}' build type.")
     ENDIF (NOT CMAKE_BUILD_TYPE)
 
-    if (CMAKE_BUILD_TYPE EQUAL "DEBUG")
+    string(TOLOWER "${CMAKE_BUILD_TYPE}" BUILD_TYPE_LOWER)
+    if (BUILD_TYPE_LOWER STREQUAL "release")
+        message(STATUS "--- release build type ---")
+    else()
+        message(STATUS "--- debug build type, specifying debug flag ---")
         SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DREADDY_DEBUG")
     endif()
 

@@ -37,12 +37,14 @@
 
 #include <array>
 #include <memory>
-#include "readdy/model/Kernel.h"
+
+#include <readdy/model/observables/Observable.h>
+
 #include "TrajectoryEntry.h"
 
 NAMESPACE_BEGIN(readdy)
-
 NAMESPACE_BEGIN(model)
+class Kernel;
 NAMESPACE_BEGIN(observables)
 
 class Trajectory : public Observable<std::vector<TrajectoryEntry>> {

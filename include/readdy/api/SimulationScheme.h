@@ -241,6 +241,11 @@ public:
     }
 };
 
+namespace detail {
+template<typename T>
+struct identity { typedef T type; };
+}
+
 /**
  * The scheme configurator, enabling fluent-api style configuration of the simulation scheme.
  * @tparam SchemeType the scheme type
@@ -276,9 +281,8 @@ public:
      * @tparam IntegratorType the integrator type
      * @return reference to self
      */
-    template<typename IntegratorType>
-    SchemeConfigurator &withIntegrator() {
-        scheme->integrator = scheme->kernel->template createAction<IntegratorType>(0.);
+    SchemeConfigurator &withEulerBDIntegrator() {
+        scheme->integrator = scheme->kernel->actions().eulerBDIntegrator(0.);
         return *this;
     }
 
@@ -288,7 +292,7 @@ public:
      * @return reference to self
      */
     SchemeConfigurator &withIntegrator(const std::string &integratorName) {
-        scheme->integrator = scheme->kernel->getActionFactory().createIntegrator(integratorName, 0.);
+        scheme->integrator = scheme->kernel->actions().createIntegrator(integratorName, 0.);
         return *this;
     }
 
@@ -299,8 +303,7 @@ public:
      */
     template<typename ReactionSchedulerType>
     SchemeConfigurator &withReactionScheduler() {
-        scheme->reactionScheduler = scheme->kernel->template createAction<ReactionSchedulerType>(0.);
-        return *this;
+        return withReactionScheduler(detail::identity<ReactionSchedulerType>());
     }
 
     /**
@@ -320,7 +323,7 @@ public:
      * @return reference to self
      */
     SchemeConfigurator &withReactionScheduler(const std::string &name) {
-        scheme->reactionScheduler = scheme->kernel->getActionFactory().createReactionScheduler(name, 0.);
+        scheme->reactionScheduler = scheme->kernel->actions().createReactionScheduler(name, 0.);
         return *this;
     }
 
@@ -331,8 +334,7 @@ public:
      */
     SchemeConfigurator &evaluateTopologyReactions(bool evaluate = true) {
         if(evaluate) {
-            scheme->evaluateTopologyReactions = scheme->kernel->
-                    template createAction<model::actions::top::EvaluateTopologyReactions>(0.);
+            scheme->evaluateTopologyReactions = scheme->kernel->actions().evaluateTopologyReactions(c_::zero);
         } else {
             scheme->evaluateTopologyReactions = nullptr;
         }
@@ -357,7 +359,7 @@ public:
      */
     SchemeConfigurator &includeForces(bool include = true) {
         if (include) {
-            scheme->forces = scheme->kernel->template createAction<readdy::model::actions::CalculateForces>();
+            scheme->forces = scheme->kernel->actions().calculateForces();
         } else {
             scheme->forces = nullptr;
         }
@@ -398,25 +400,23 @@ public:
         using update_neighbor_list = readdy::model::actions::UpdateNeighborList;
         if (useDefaults) {
             if (!scheme->integrator) {
-                scheme->integrator = scheme->kernel->template createAction<default_integrator>(timeStep);
+                scheme->integrator = scheme->kernel->actions().eulerBDIntegrator(timeStep);
             }
             if (!scheme->reactionScheduler) {
-                scheme->reactionScheduler = scheme->kernel->template createAction<default_reactions>(timeStep);
+                scheme->reactionScheduler = scheme->kernel->actions().gillespie(timeStep);
             }
             if (!evaluateObservablesSet) {
                 scheme->evaluateObservables = true;
             }
             if (!scheme->forces && !includeForcesSet) {
-                scheme->forces = scheme->kernel->template createAction<calculate_forces>();
+                scheme->forces = scheme->kernel->actions().calculateForces();
             }
         }
         if (scheme->forces || scheme->reactionScheduler) {
-            scheme->initNeighborList = scheme->kernel
-                    ->template createAction<update_neighbor_list>(update_neighbor_list::Operation::init, skinSize);
-            scheme->neighborList = scheme->kernel
-                    ->template createAction<update_neighbor_list>(update_neighbor_list::Operation::update, skinSize);
-            scheme->clearNeighborList = scheme->kernel
-                    ->template createAction<update_neighbor_list>(update_neighbor_list::Operation::clear, skinSize);
+            using ops = model::actions::UpdateNeighborList::Operation;
+            scheme->initNeighborList = scheme->kernel->actions().updateNeighborList(ops::init, skinSize);
+            scheme->neighborList = scheme->kernel->actions().updateNeighborList(ops::update, skinSize);
+            scheme->clearNeighborList = scheme->kernel->actions().updateNeighborList(ops::clear, skinSize);
         }
         if (scheme->integrator) scheme->integrator->setTimeStep(timeStep);
         if (scheme->reactionScheduler) scheme->reactionScheduler->setTimeStep(timeStep);
@@ -437,6 +437,17 @@ public:
     }
 
 protected:
+
+    SchemeConfigurator &withReactionScheduler(detail::identity<model::actions::reactions::Gillespie>) {
+        scheme->reactionScheduler = scheme->kernel->actions().gillespie(c_::zero);
+        return *this;
+    }
+
+    SchemeConfigurator &withReactionScheduler(detail::identity<model::actions::reactions::UncontrolledApproximation>) {
+        scheme->reactionScheduler = scheme->kernel->actions().uncontrolledApproximation(c_::zero);
+        return *this;
+    }
+
     /**
      * whether to use defaults or start on a blank slate
      */
@@ -497,6 +508,7 @@ public:
     }
 
 protected:
+
     template<typename SchemeType>
     friend
     class SchemeConfigurator;
@@ -512,7 +524,7 @@ public:
 
     SchemeConfigurator &includeCompartments(bool include = true) {
         if (include) {
-            scheme->compartments = scheme->kernel->template createAction<readdy::model::actions::EvaluateCompartments>();
+            scheme->compartments = scheme->kernel->actions().evaluateCompartments();
         } else {
             scheme->compartments = nullptr;
         }
@@ -525,28 +537,25 @@ public:
         return *this;
     }
 
-    template<typename IntegratorType>
-    SchemeConfigurator &withIntegrator() {
-        scheme->integrator = scheme->kernel->template createAction<IntegratorType>(0.);
+    SchemeConfigurator &withEulerBDIntegrator() {
+        scheme->integrator = scheme->kernel->actions().eulerBDIntegrator(c_::zero);
         return *this;
     }
 
     SchemeConfigurator &withIntegrator(const std::string &integratorName) {
-        scheme->integrator = scheme->kernel->getActionFactory().createIntegrator(integratorName,
-                                                                                 static_cast<scalar>(0.));
+        scheme->integrator = scheme->kernel->actions().createIntegrator(integratorName, c_::zero);
         return *this;
     }
 
+
     template<typename ReactionSchedulerType>
     SchemeConfigurator &withReactionScheduler() {
-        scheme->reactionScheduler = scheme->kernel->template createAction<ReactionSchedulerType>(0.);
-        return *this;
+        return withReactionScheduler(detail::identity<ReactionSchedulerType>());
     }
 
     SchemeConfigurator &evaluateTopologyReactions(bool evaluate = true) {
         if(evaluate) {
-            scheme->evaluateTopologyReactions = scheme->kernel->template createAction<model::actions::top::EvaluateTopologyReactions>(
-                    0.);
+            scheme->evaluateTopologyReactions = scheme->kernel->actions().evaluateTopologyReactions(c_::zero);
         } else {
             scheme->evaluateTopologyReactions = nullptr;
         }
@@ -559,8 +568,7 @@ public:
     }
 
     SchemeConfigurator &withReactionScheduler(const std::string &name) {
-        scheme->reactionScheduler = scheme->kernel->getActionFactory()
-                .createReactionScheduler(name, static_cast<scalar>(0.));
+        scheme->reactionScheduler = scheme->kernel->actions().createReactionScheduler(name, c_::zero);
         return *this;
     }
 
@@ -572,7 +580,7 @@ public:
 
     SchemeConfigurator &includeForces(bool include = true) {
         if (include) {
-            scheme->forces = scheme->kernel->template createAction<readdy::model::actions::CalculateForces>();
+            scheme->forces = scheme->kernel->actions().calculateForces();
         } else {
             scheme->forces = nullptr;
         }
@@ -591,34 +599,28 @@ public:
     }
 
     std::unique_ptr<AdvancedScheme> configure(scalar timeStep) {
-        using default_integrator = readdy::model::actions::EulerBDIntegrator;
-        using default_reactions = readdy::model::actions::reactions::Gillespie;
-        using calculate_forces = readdy::model::actions::CalculateForces;
-        using update_neighbor_list = readdy::model::actions::UpdateNeighborList;
         if (useDefaults) {
             if (!scheme->integrator) {
-                scheme->integrator = scheme->kernel->template createAction<default_integrator>(timeStep);
+                scheme->integrator = scheme->kernel->actions().eulerBDIntegrator(timeStep);
             }
             if (!scheme->reactionScheduler) {
-                scheme->reactionScheduler = scheme->kernel->template createAction<default_reactions>(timeStep);
+                scheme->reactionScheduler = scheme->kernel->actions().gillespie(timeStep);
             }
             if (!evaluateObservablesSet) {
                 scheme->evaluateObservables = true;
             }
             if (!scheme->forces && !includeForcesSet) {
-                scheme->forces = scheme->kernel->template createAction<calculate_forces>();
+                scheme->forces = scheme->kernel->actions().calculateForces();
             }
             if (!scheme->compartments && !includeCompartmentsSet) {
                 scheme->compartments = nullptr;
             }
         }
         if (scheme->forces || scheme->reactionScheduler) {
-            scheme->initNeighborList = scheme->kernel
-                    ->template createAction<update_neighbor_list>(update_neighbor_list::Operation::init, skinSize);
-            scheme->neighborList = scheme->kernel
-                    ->template createAction<update_neighbor_list>(update_neighbor_list::Operation::update, skinSize);
-            scheme->clearNeighborList = scheme->kernel
-                    ->template createAction<update_neighbor_list>(update_neighbor_list::Operation::clear, skinSize);
+            using ops = model::actions::UpdateNeighborList::Operation;
+            scheme->initNeighborList = scheme->kernel->actions().updateNeighborList(ops::init, skinSize);
+            scheme->neighborList = scheme->kernel->actions().updateNeighborList(ops::update, skinSize);
+            scheme->clearNeighborList = scheme->kernel->actions().updateNeighborList(ops::clear, skinSize);
         }
         if (scheme->integrator) scheme->integrator->setTimeStep(timeStep);
         if (scheme->reactionScheduler) scheme->reactionScheduler->setTimeStep(timeStep);
@@ -633,6 +635,17 @@ public:
     }
 
 protected:
+
+    SchemeConfigurator &withReactionScheduler(detail::identity<model::actions::reactions::Gillespie>) {
+        scheme->reactionScheduler = scheme->kernel->actions().gillespie(c_::zero);
+        return *this;
+    }
+
+    SchemeConfigurator &withReactionScheduler(detail::identity<model::actions::reactions::UncontrolledApproximation>) {
+        scheme->reactionScheduler = scheme->kernel->actions().uncontrolledApproximation(c_::zero);
+        return *this;
+    }
+
     std::unique_ptr<AdvancedScheme> scheme = nullptr;
     bool useDefaults;
     bool evaluateObservablesSet = false;

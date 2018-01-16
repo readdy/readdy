@@ -433,6 +433,11 @@ const model::Context &Simulation::currentContext() const {
     return getSelectedKernel()->context();
 }
 
+const model::observables::ObservableFactory &Simulation::observe() const {
+    ensureKernelSelected();
+    return getSelectedKernel()->observe();
+}
+
 NoKernelSelectedException::NoKernelSelectedException(const std::string &__arg) : runtime_error(__arg) {}
 
 }

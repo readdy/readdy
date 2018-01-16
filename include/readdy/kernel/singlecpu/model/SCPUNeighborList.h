@@ -34,257 +34,436 @@
 #include <readdy/model/Context.h>
 #include "SCPUParticleData.h"
 #include <readdy/common/numeric.h>
+#include <readdy/common/Index.h>
+#include <readdy/common/Timer.h>
 
 namespace readdy {
 namespace kernel {
 namespace scpu {
 namespace model {
-struct READDY_API ParticleIndexPair {
-    size_t idx1, idx2;
 
-    ParticleIndexPair(size_t idx1, size_t idx2) {
-        if (idx1 < idx2) {
-            ParticleIndexPair::idx1 = idx1;
-            ParticleIndexPair::idx2 = idx2;
-        } else if (idx1 > idx2) {
-            ParticleIndexPair::idx1 = idx2;
-            ParticleIndexPair::idx2 = idx1;
-        } else {
-            throw std::runtime_error("pair must not have equal indices");
-        }
-    }
+class BoxIterator;
 
-    friend size_t hash_value(const ParticleIndexPair &pip) {
-        size_t seed = 0;
-        readdy::util::hash::combine(seed, pip.idx1);
-        readdy::util::hash::combine(seed, pip.idx2);
-        return seed;
-    }
-
-    friend bool operator==(const ParticleIndexPair &pip1, const ParticleIndexPair &pip2) {
-        return pip1.idx1 == pip2.idx1 && pip1.idx2 == pip2.idx2;
-    }
-
-    friend std::ostream &operator<<(std::ostream &os, const ParticleIndexPair &pip) {
-        os << "ParticleIndexPair(" << pip.idx1 << ", " << pip.idx2 << ")";
-        return os;
-    }
-};
-
-struct READDY_API ParticleIndexPairHasher {
-    size_t operator()(const ParticleIndexPair &pip) const {
-        return hash_value(pip);
-    }
-};
-
-template<typename container=std::unordered_set<ParticleIndexPair, ParticleIndexPairHasher>>
-struct READDY_API SCPUNeighborListContainer {
-    typedef typename container::iterator iter_type;
-    typedef typename container::const_iterator const_iter_type;
-
-    virtual iter_type begin() { return pairs->begin(); };
-
-    virtual const_iter_type begin() const { return cbegin(); };
-
-    virtual const_iter_type cbegin() const { return pairs->cbegin(); };
-
-    virtual iter_type end() { return pairs->end(); };
-
-    virtual const_iter_type end() const { return cend(); };
-
-    virtual const_iter_type cend() const { return pairs->cend(); };
-
-    virtual void create(const SCPUParticleData &data, scalar skin) = 0;
-
-    scalar skin() const {
-        return _skin;
-    }
-
-protected:
-    std::unique_ptr<container> pairs = std::make_unique<container>();
-
-    scalar _skin;
-};
-
-struct READDY_API SCPUNaiveNeighborList : public SCPUNeighborListContainer<> {
-    void create(const SCPUParticleData &data, scalar skin) override;
-
-    // ctor and dtor
-    SCPUNaiveNeighborList();
-
-    ~SCPUNaiveNeighborList();
-
-    // move
-    SCPUNaiveNeighborList(SCPUNaiveNeighborList &&rhs) noexcept;
-
-    SCPUNaiveNeighborList &operator=(SCPUNaiveNeighborList &&rhs) noexcept;
-
-    // copy
-    SCPUNaiveNeighborList(const SCPUNaiveNeighborList &rhs) = delete;
-
-    SCPUNaiveNeighborList &operator=(const SCPUNaiveNeighborList &rhs) = delete;
-
-};
-
-struct READDY_API Box {
-    std::vector<Box *> neighbors;
-    std::vector<unsigned long> particleIndices;
-    long i, j, k;
-    long id = 0;
-
-    Box(long i, long j, long k, long id) : i(i), j(j), k(k), id(id), particleIndices(), neighbors() {
-    }
-
-    void addNeighbor(Box *box) {
-        if (box && box->id != id
-            && std::find(neighbors.begin(), neighbors.end(), box) == neighbors.end()) {
-            neighbors.push_back(box);
-        }
-    }
-
-    friend bool operator==(const Box &lhs, const Box &rhs) {
-        return lhs.id == rhs.id;
-    }
-
-    friend bool operator!=(const Box &lhs, const Box &rhs) {
-        return !(lhs == rhs);
-    }
-};
-
-template<typename container=std::unordered_set<ParticleIndexPair, ParticleIndexPairHasher>>
-class READDY_API SCPUNotThatNaiveNeighborList : public SCPUNeighborListContainer<container> {
-    using super = readdy::kernel::scpu::model::SCPUNeighborListContainer<container>;
-    using context = readdy::model::Context;
+class CellLinkedList {
 public:
-    explicit SCPUNotThatNaiveNeighborList(const context *const context) : ctx(context) {}
+    using data_type = readdy::kernel::scpu::model::SCPUParticleData;
+    using cell_radius_type = std::uint8_t;
+    using HEAD = std::vector<std::size_t>;
+    using LIST = std::vector<std::size_t>;
+    using entry_cref = const data_type::entry_type &;
+    using pair_callback = std::function<void(entry_cref, entry_cref)>;
 
-    void create(const SCPUParticleData &data, scalar skin) override {
-        super::_skin = skin;
-        setupBoxes(skin);
-        fillBoxes(data);
-    }
+    using iterator_bounds = std::tuple<std::size_t, std::size_t>;
 
-    void clear() {
-        boxes.clear();
-    }
+    CellLinkedList(data_type &data, const readdy::model::Context &context)
+            : _data(data), _context(context), _head{}, _list{}, _radius{0} {};
 
-    virtual void setupNeighboringBoxes(unsigned long i, unsigned long j, unsigned long k) {
-        auto me = getBox(i, j, k);
-        me->addNeighbor(getBox(i + 0, j + 0, k + 1));
-        me->addNeighbor(getBox(i + 0, j + 1, k - 1));
-        me->addNeighbor(getBox(i + 0, j + 1, k + 0));
-        me->addNeighbor(getBox(i + 0, j + 1, k + 1));
-        me->addNeighbor(getBox(i + 1, j - 1, k - 1));
-        me->addNeighbor(getBox(i + 1, j - 1, k + 0));
-        me->addNeighbor(getBox(i + 1, j - 1, k + 1));
-        me->addNeighbor(getBox(i + 1, j + 0, k - 1));
-        me->addNeighbor(getBox(i + 1, j + 0, k + 0));
-        me->addNeighbor(getBox(i + 1, j + 0, k + 1));
-        me->addNeighbor(getBox(i + 1, j + 1, k - 1));
-        me->addNeighbor(getBox(i + 1, j + 1, k + 0));
-        me->addNeighbor(getBox(i + 1, j + 1, k + 1));
-    }
+    void setUp(scalar skin, cell_radius_type radius, const util::PerformanceNode &node) {
+        if (!_is_set_up || _skin != skin || _radius != radius) {
+            auto t = node.timeit();
 
-    virtual void setupBoxes(scalar skin) {
-        if (boxes.empty()) {
-            const auto &simBoxSize = ctx->boxSize();
-            auto maxCutoff = ctx->calculateMaxCutoff();
-            if (maxCutoff > 0) {
-                maxCutoff += skin;
-                SCPUNotThatNaiveNeighborList::maxCutoff = maxCutoff;
-
-                for (std::uint8_t i = 0; i < 3; ++i) {
-                    nBoxes[i] = std::max(1, static_cast<int>(std::floor(simBoxSize[i] / maxCutoff)));
-                    boxSize[i] = simBoxSize[i] / nBoxes[i];
+            _skin = skin;
+            _radius = radius;
+            _max_cutoff = _context.get().calculateMaxCutoff();
+            if (_max_cutoff > 0) {
+                auto size = _context.get().boxSize();
+                auto desiredWidth = static_cast<scalar>((_max_cutoff + _skin) / static_cast<scalar>(radius));
+                std::array<std::size_t, 3> dims{};
+                for (int i = 0; i < 3; ++i) {
+                    dims[i] = static_cast<unsigned int>(std::max(1., std::floor(size[i] / desiredWidth)));
+                    _cellSize[i] = size[i] / static_cast<scalar>(dims[i]);
                 }
-                for (long i = 0; i < nBoxes[0]; ++i) {
-                    for (long j = 0; j < nBoxes[1]; ++j) {
-                        for (long k = 0; k < nBoxes[2]; ++k) {
-                            boxes.push_back({i, j, k, k + j * nBoxes[2] + i * nBoxes[2] * nBoxes[1]});
+
+                _cellIndex = util::Index3D(dims[0], dims[1], dims[2]);
+
+                {
+                    // set up cell adjacency list
+                    auto t2 = node.subnode("setUpCellNeighbors").timeit();
+                    std::array<std::size_t, 3> nNeighbors{{_cellIndex[0], _cellIndex[1], _cellIndex[2]}};
+                    for (int i = 0; i < 3; ++i) {
+                        nNeighbors[i] = std::min(nNeighbors[i], static_cast<std::size_t>(2 * radius + 1));
+                    }
+                    auto nAdjacentCells = nNeighbors[0] * nNeighbors[1] * nNeighbors[2];
+                    _cellNeighbors = util::Index2D(_cellIndex.size(), 1 + nAdjacentCells);
+                    _cellNeighborsContent.resize(_cellNeighbors.size());
+                    {
+                        auto pbc = _context.get().periodicBoundaryConditions();
+                        auto fixBoxIx = [&](auto boxIx, std::uint8_t axis) {
+                            auto cix = static_cast<int>(_cellIndex[axis]);
+                            if(pbc[axis]) {
+                                return (boxIx % cix + cix) % cix;
+                            }
+                            return boxIx;
+                        };
+
+                        int r = _radius;
+                        // local adjacency
+                        std::vector<std::size_t> adj;
+                        adj.reserve(1 + nAdjacentCells);
+                        for (int i = 0; i < _cellIndex[0]; ++i) {
+                            for (int j = 0; j < _cellIndex[1]; ++j) {
+                                for (int k = 0; k < _cellIndex[2]; ++k) {
+                                    auto cellIdx = _cellIndex(static_cast<std::size_t>(i), static_cast<std::size_t>(j),
+                                                              static_cast<std::size_t>(k));
+
+                                    adj.resize(0);
+                                    {
+                                        std::vector<std::array<int, 3>> boxCoords {
+                                                {{i + 0, j + 0, k + 1}},
+
+                                                {{i + 0, j + 1, k - 1}},
+                                                {{i + 0, j + 1, k - 0}},
+                                                {{i + 0, j + 1, k + 1}},
+
+                                                {{i + 1, j - 1, k - 1}},
+                                                {{i + 1, j  - 1, k + 0}},
+                                                {{i + 1, j  - 1, k + 1}},
+
+                                                {{i + 1, j + 0, k - 1}},
+                                                {{i + 1, j + 0, k + 0}},
+                                                {{i + 1, j + 0, k + 1}},
+
+                                                {{i + 1, j + 1, k - 1}},
+                                                {{i + 1, j + 1, k + 0}},
+                                                {{i + 1, j + 1, k + 1}},
+
+                                        };
+
+
+                                        for(auto boxCoord : boxCoords) {
+                                            for (std::uint8_t d = 0; d < 3; ++d) {
+                                                boxCoord.at(d) = fixBoxIx(boxCoord.at(d), d);
+                                            }
+                                            if (boxCoord[0] >= 0 && boxCoord[1] >= 0 && boxCoord[2] >= 0
+                                                && boxCoord[0] < _cellIndex[0] && boxCoord[1] < _cellIndex[1] &&
+                                                boxCoord[2] < _cellIndex[2]) {
+                                                adj.push_back(_cellIndex(boxCoord[0], boxCoord[1], boxCoord[2]));
+                                            }
+                                        }
+                                    }
+
+                                    std::sort(adj.begin(), adj.end());
+                                    adj.erase(std::unique(std::begin(adj), std::end(adj)), std::end(adj));
+
+                                    auto begin = _cellNeighbors(cellIdx, 0_z);
+                                    _cellNeighborsContent[begin] = adj.size();
+                                    std::copy(adj.begin(), adj.end(), &_cellNeighborsContent.at(begin + 1));
+                                }
+                            }
                         }
                     }
                 }
-                for (auto i = 0; i < nBoxes[0]; ++i) {
-                    for (auto j = 0; j < nBoxes[1]; ++j) {
-                        for (auto k = 0; k < nBoxes[2]; ++k) {
-                            setupNeighboringBoxes(static_cast<unsigned long>(i),
-                                                  static_cast<unsigned long>(j),
-                                                  static_cast<unsigned long>(k));
-                        }
-                    }
+
+                if (_max_cutoff > 0) {
+                    setUpBins(node.subnode("setUpBins"));
                 }
+
+                _is_set_up = true;
             }
         }
+    };
+
+    void update(const util::PerformanceNode &node) {
+        auto t = node.timeit();
+        setUpBins(node.subnode("setUpBins"));
     }
 
-    virtual void fillBoxes(const SCPUParticleData &data) {
-        const auto &simBoxSize = ctx->boxSize();
-        if (maxCutoff > 0) {
+    virtual void clear() {
+        _head.resize(0);
+        _list.resize(0);
+        _is_set_up = false;
+    };
 
-            std::for_each(boxes.begin(), boxes.end(), [](Box& box) {box.particleIndices.clear();});
-            super::pairs->clear();
+    const util::Index3D &cellIndex() const {
+        return _cellIndex;
+    };
 
-            unsigned long idx = 0;
-            const auto shift = Vec3(c_::half * simBoxSize[0], c_::half * simBoxSize[1], c_::half * simBoxSize[2]);
-            for(const auto& entry : data) {
-                if(!entry.is_deactivated()) {
-                    const auto pos_shifted = entry.position() + shift;
-                    const long i = (const long) floor(pos_shifted[0] / boxSize[0]);
-                    const long j = (const long) floor(pos_shifted[1] / boxSize[1]);
-                    const long k = (const long) floor(pos_shifted[2] / boxSize[2]);
-                    auto box = getBox(i, j, k);
-                    if (box) {
-                        box->particleIndices.push_back(idx);
-                    }
-                }
-                ++idx;
-            }
+    const util::Index2D &neighborIndex() const {
+        return _cellNeighbors;
+    };
 
-            for (auto &&box : boxes) {
-                for (long i = 0; i < box.particleIndices.size(); ++i) {
-                    const auto pI = box.particleIndices[i];
-                    for (long j = i + 1; j < box.particleIndices.size(); ++j) {
-                        super::pairs->push_back({pI, box.particleIndices[j]});
-                    }
+    const std::vector<std::size_t> &neighbors() const {
+        return _cellNeighborsContent;
+    };
 
-                    for (auto &&neighboringBox : box.neighbors) {
-                        for (const auto &pJ : neighboringBox->particleIndices) {
-                            super::pairs->push_back({pI, pJ});
-                        }
-                    }
-                }
-            }
+    std::size_t *neighborsBegin(std::size_t cellIndex) {
+        auto beginIdx = _cellNeighbors(cellIndex, 1_z);
+        return &_cellNeighborsContent.at(beginIdx);
+    };
+
+    const std::size_t *neighborsBegin(std::size_t cellIndex) const {
+        auto beginIdx = _cellNeighbors(cellIndex, 1_z);
+        return &_cellNeighborsContent.at(beginIdx);
+    };
+
+    std::size_t *neighborsEnd(std::size_t cellIndex) {
+        return neighborsBegin(cellIndex) + nNeighbors(cellIndex);
+    };
+
+    const std::size_t *neighborsEnd(std::size_t cellIndex) const {
+        return neighborsBegin(cellIndex) + nNeighbors(cellIndex);
+    };
+
+    std::size_t nNeighbors(std::size_t cellIndex) const {
+        return _cellNeighborsContent.at(_cellNeighbors(cellIndex, 0_z));
+    };
+
+    data_type &data() {
+        return _data.get();
+    };
+
+    const data_type &data() const {
+        return _data.get();
+    };
+
+    scalar maxCutoff() const {
+        return _max_cutoff;
+    };
+
+    const HEAD &head() const {
+        return _head;
+    };
+
+    const LIST &list() const {
+        return _list;
+    };
+
+    template<typename Function>
+    void forEachPair(const Function &function) const;
+
+    template<typename Function>
+    void forEachNeighbor(BoxIterator particle, const Function &function) const;
+
+    template<typename Function>
+    void forEachNeighbor(BoxIterator particle, std::size_t cell, const Function &function) const;
+
+    bool cellEmpty(std::size_t index) const {
+        return _head.at(index) == 0;
+    };
+
+    std::size_t cellOfParticle(std::size_t index) const {
+        const auto &entry = data().entry_at(index);
+        if (entry.deactivated) {
+            throw std::invalid_argument("requested deactivated entry");
         }
+        const auto &boxSize = _context.get().boxSize();
+        const auto i = static_cast<std::size_t>(std::floor((entry.pos.x + .5 * boxSize[0]) / _cellSize.x));
+        const auto j = static_cast<std::size_t>(std::floor((entry.pos.y + .5 * boxSize[1]) / _cellSize.y));
+        const auto k = static_cast<std::size_t>(std::floor((entry.pos.z + .5 * boxSize[2]) / _cellSize.z));
+        return _cellIndex(i, j, k);
+    };
+
+    std::size_t nCells() const {
+        return _cellIndex.size();
+    };
+
+    BoxIterator particlesBegin(std::size_t cellIndex);
+
+    BoxIterator particlesBegin(std::size_t cellIndex) const;
+
+    BoxIterator particlesEnd(std::size_t cellIndex);
+
+    BoxIterator particlesEnd(std::size_t cellIndex) const;
+
+    /*auto begin() const {
+        return pairs.cbegin();
     }
 
-    Box *getBox(long i, long j, long k) {
-        const auto &periodic = ctx->periodicBoundaryConditions();
-        if (periodic[0]) i = readdy::util::numeric::positive_modulo(i, nBoxes[0]);
-        else if (i < 0 || i >= nBoxes[0]) return nullptr;
-        if (periodic[1]) j = readdy::util::numeric::positive_modulo(j, nBoxes[1]);
-        else if (j < 0 || j >= nBoxes[1]) return nullptr;
-        if (periodic[2]) k = readdy::util::numeric::positive_modulo(k, nBoxes[2]);
-        else if (k < 0 || k >= nBoxes[2]) return nullptr;
-        return &boxes[k + j * nBoxes[2] + i * nBoxes[2] * nBoxes[1]];
+    auto cbegin() const {
+        return pairs.cbegin();
     }
 
-    const std::vector<Box> &getBoxes() const {
-        return boxes;
+    auto end() const {
+        return pairs.cend();
     }
+
+    auto cend() const {
+        return pairs.cend();
+    }
+
+    auto begin() {
+        return pairs.begin();
+    }
+
+    auto end() {
+        return pairs.end();
+    }*/
 
 protected:
-    std::vector<Box> boxes{};
-    std::array<int, 3> nBoxes{{0, 0, 0}};
-    Vec3 boxSize{0, 0, 0};
-    scalar maxCutoff {0};
+    virtual void setUpBins(const util::PerformanceNode &node) {
+        if (_max_cutoff > 0) {
+            auto t = node.timeit();
+            auto tt = node.subnode("allocate").timeit();
+            auto nParticles = _data.get().size();
+            _head.clear();
+            _head.resize(_cellIndex.size());
+            _list.resize(0);
+            _list.resize(nParticles + 1);
+            fillBins(node.subnode("fillBins"));
+            //fillTuples(node.subnode("fillTuples"));
+        }
+    };
 
-    const context *const ctx;
+    void fillBins(const util::PerformanceNode &node) {
+        auto t = node.timeit();
+        const auto &boxSize = _context.get().boxSize();
+        std::size_t pidx = 1;
+        for (const auto &entry : _data.get()) {
+            if (!entry.deactivated) {
+                const auto i = static_cast<std::size_t>(std::floor((entry.pos.x + .5 * boxSize[0]) / _cellSize.x));
+                const auto j = static_cast<std::size_t>(std::floor((entry.pos.y + .5 * boxSize[1]) / _cellSize.y));
+                const auto k = static_cast<std::size_t>(std::floor((entry.pos.z + .5 * boxSize[2]) / _cellSize.z));
+                const auto cellIndex = _cellIndex(i, j, k);
+                _list[pidx] = _head.at(cellIndex);
+                _head[cellIndex] = pidx;
+            }
+            ++pidx;
+        }
+    }
+
+    void fillTuples(const util::PerformanceNode &node);
+
+    HEAD _head;
+    // particles, 1-indexed
+    LIST _list;
+
+
+    bool _is_set_up{false};
+
+    scalar _skin{0};
+    scalar _max_cutoff{0};
+    std::uint8_t _radius;
+
+    Vec3 _cellSize{0, 0, 0};
+
+    util::Index3D _cellIndex;
+    // index of size (n_cells x (1 + nAdjacentCells)), where the first element tells how many adj cells are stored
+    util::Index2D _cellNeighbors;
+    // backing vector of _cellNeighbors index of size (n_cells x (1 + nAdjacentCells))
+    std::vector<std::size_t> _cellNeighborsContent;
+
+    std::reference_wrapper<data_type> _data;
+    std::reference_wrapper<const readdy::model::Context> _context;
+
+    std::vector<std::tuple<std::size_t, std::size_t>> pairs;
 };
 
-struct READDY_API SCPUNeighborList : public SCPUNotThatNaiveNeighborList<std::vector<ParticleIndexPair>> {
-    explicit SCPUNeighborList(const readdy::model::Context *const ctx)
-            : SCPUNotThatNaiveNeighborList(ctx) {}
+class BoxIterator {
+
+    using alloc = std::allocator<std::size_t>;
+
+public:
+
+    using difference_type = typename alloc::difference_type;
+    using value_type = typename alloc::value_type;
+    using reference = typename alloc::const_reference;
+    using pointer = typename alloc::const_pointer;
+    using iterator_category = std::forward_iterator_tag;
+    using size_type = CellLinkedList::LIST::size_type;
+
+    BoxIterator(const CellLinkedList &ccll, std::size_t state) : _ccll(ccll), _state(state), _val(state - 1) {};
+
+    BoxIterator(const BoxIterator &) = default;
+
+    BoxIterator &operator=(const BoxIterator &) = delete;
+
+    BoxIterator(BoxIterator &&) = default;
+
+    BoxIterator &operator=(BoxIterator &&) = delete;
+
+    ~BoxIterator() = default;
+
+    BoxIterator operator++(int) {
+        BoxIterator tmp(*this);
+        operator++();
+        return tmp;
+    };
+
+    pointer operator->() const {
+        return &_val;
+    }
+
+    BoxIterator &operator++() {
+        _state = _ccll.list().at(_state);
+        _val = _state - 1;
+        return *this;
+    };
+
+    value_type operator*() const {
+        return _val;
+    };
+
+    bool operator==(const BoxIterator &rhs) const {
+        return _state == rhs._state;
+    };
+
+    bool operator!=(const BoxIterator &rhs) const {
+        return _state != rhs._state;
+    };
+
+private:
+    const CellLinkedList &_ccll;
+    std::size_t _state, _val;
 };
+
+inline BoxIterator CellLinkedList::particlesBegin(std::size_t cellIndex) {
+    return {*this, _head.at(cellIndex)};
+}
+
+inline BoxIterator CellLinkedList::particlesBegin(std::size_t cellIndex) const {
+    return {*this, _head.at(cellIndex)};
+}
+
+inline BoxIterator CellLinkedList::particlesEnd(std::size_t /*cellIndex*/) const {
+    return {*this, 0};
+}
+
+inline BoxIterator CellLinkedList::particlesEnd(std::size_t /*cellIndex*/) {
+    return {*this, 0};
+}
+
+template<typename Function>
+inline void CellLinkedList::forEachNeighbor(BoxIterator particle, const Function &function) const {
+    forEachNeighbor(particle, cellOfParticle(*particle), function);
+}
+
+template<typename Function>
+inline void CellLinkedList::forEachNeighbor(BoxIterator particle, std::size_t cell,
+                                            const Function &function) const {
+    std::for_each(std::next(particle, 1), particlesEnd(cell), [&function, particle](auto x) {
+        function(x);
+    });
+    for (auto itNeighCell = neighborsBegin(cell); itNeighCell != neighborsEnd(cell); ++itNeighCell) {
+        std::for_each(particlesBegin(*itNeighCell), particlesEnd(*itNeighCell), function);
+    }
+}
+
+inline void CellLinkedList::fillTuples(const util::PerformanceNode &node) {
+    auto t = node.timeit();
+    pairs.resize(0);
+    for(auto cell = 0_z; cell < nCells(); ++cell) {
+        for(auto it = particlesBegin(cell); it != particlesEnd(cell); ++it) {
+            for(auto it2 = std::next(it, 1_z); it2 != particlesEnd(cell); ++it2) {
+                pairs.emplace_back(std::forward_as_tuple(*it, *it2));
+            }
+            for (auto itNeighCell = neighborsBegin(cell); itNeighCell != neighborsEnd(cell); ++itNeighCell) {
+                for(auto it2 = particlesBegin(*itNeighCell); it2 != particlesEnd(*itNeighCell); ++it2) {
+                    pairs.emplace_back(std::forward_as_tuple(*it, *it2));
+                }
+            }
+        }
+    }
+}
+
+template<typename Function>
+inline void CellLinkedList::forEachPair(const Function &function) const {
+    for(auto cell = 0_z; cell < nCells(); ++cell) {
+        for(auto it = particlesBegin(cell); it != particlesEnd(cell); ++it) {
+            forEachNeighbor(it, cell, function);
+        }
+    }
+}
+
 
 }
 }

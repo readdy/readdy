@@ -67,14 +67,17 @@ public:
     CPUStateModel(data_type &data, const readdy::model::Context &context, thread_pool &pool,
                   readdy::model::top::TopologyActionFactory const* taf);
 
-    ~CPUStateModel() override;
+    ~CPUStateModel() override = default;
 
     CPUStateModel(const CPUStateModel&) = delete;
     CPUStateModel& operator=(const CPUStateModel&) = delete;
     CPUStateModel(CPUStateModel&&) = delete;
     CPUStateModel& operator=(CPUStateModel&&) = delete;
 
-    void configure(const readdy::conf::cpu::Configuration &configuration);
+    void configure(const readdy::conf::cpu::Configuration &configuration) {
+        const auto& nl = configuration.neighborList;
+        _neighborListCellRadius = nl.cll_radius;
+    }
 
     const std::vector<Vec3> getParticlePositions() const override;
 
@@ -128,7 +131,7 @@ public:
     data_type *const getParticleData() {
         return &_data.get();
     };
-    
+
     neighbor_list const *const getNeighborList() const {
         return _neighborList.get();
 

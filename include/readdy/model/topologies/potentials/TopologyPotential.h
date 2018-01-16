@@ -43,7 +43,7 @@ NAMESPACE_BEGIN(pot)
 
 class TopologyPotential {
 public:
-    explicit TopologyPotential();
+    TopologyPotential() = default;
 
     TopologyPotential(const TopologyPotential&) = default;
     TopologyPotential& operator=(const TopologyPotential&) = delete;

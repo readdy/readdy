@@ -43,13 +43,13 @@
 #include <unordered_set>
 
 #include <readdy/common/ParticleTypeTuple.h>
-#include "ParticleTypeRegistry.h"
+#include <readdy/api/KernelConfiguration.h>
 
+#include "ParticleTypeRegistry.h"
 #include <readdy/model/potentials/PotentialRegistry.h>
 #include <readdy/model/reactions/ReactionRegistry.h>
 #include <readdy/model/topologies/TopologyRegistry.h>
 #include <readdy/model/compartments/CompartmentRegistry.h>
-#include <readdy/api/KernelConfiguration.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
@@ -65,35 +65,68 @@ public:
     using dist_squared_fun = std::function<scalar(const Vec3 &, const Vec3 &)>;
     using shortest_dist_fun = std::function<Vec3(const Vec3 &, const Vec3 &)>;
 
-    const scalar &kBT() const;
+    const scalar &kBT() const {
+        return _kBT;
+    }
 
-    scalar &kBT();
+    scalar &kBT() {
+        return _kBT;
+    }
 
-    scalar boxVolume() const;
+    scalar boxVolume() const {
+        return _box_size.at(0) * _box_size.at(1) * _box_size.at(2);
+    }
 
-    const BoxSize &boxSize() const;
+    const BoxSize &boxSize() const {
+        return _box_size;
+    }
 
-    BoxSize &boxSize();
+    BoxSize &boxSize() {
+        return _box_size;
+    }
 
-    const PeriodicBoundaryConditions &periodicBoundaryConditions() const;
+    const PeriodicBoundaryConditions &periodicBoundaryConditions() const {
+        return _periodic_boundary;
+    }
 
-    PeriodicBoundaryConditions &periodicBoundaryConditions();
+    PeriodicBoundaryConditions &periodicBoundaryConditions() {
+        return _periodic_boundary;
+    }
 
-    std::tuple<Vec3, Vec3> getBoxBoundingVertices() const;
+    std::tuple<Vec3, Vec3> getBoxBoundingVertices() const {
+        const auto &boxSize = _box_size;
+        Vec3 lowerLeft{static_cast<scalar>(-0.5) * boxSize[0],
+                       static_cast<scalar>(-0.5) * boxSize[1],
+                       static_cast<scalar>(-0.5) * boxSize[2]};
+        auto upperRight = lowerLeft + Vec3(boxSize);
+        return std::make_tuple(lowerLeft, upperRight);
+    };
 
-    const fix_pos_fun &fixPositionFun() const;
+    const fix_pos_fun &fixPositionFun() const {
+        return _fixPositionFun;
+    }
 
-    const dist_squared_fun &distSquaredFun() const;
+    const dist_squared_fun &distSquaredFun() const {
+        return _distFun;
+    }
 
-    const shortest_dist_fun &shortestDifferenceFun() const;
+    const shortest_dist_fun &shortestDifferenceFun() const {
+        return _diffFun;
+    }
 
-    const pbc_fun &applyPBCFun() const;
+    const pbc_fun &applyPBCFun() const {
+        return _pbc;
+    }
 
     const scalar calculateMaxCutoff() const;
 
-    compartments::CompartmentRegistry &compartments();
+    compartments::CompartmentRegistry &compartments() {
+        return _compartmentRegistry;
+    }
 
-    const compartments::CompartmentRegistry &compartments() const;
+    const compartments::CompartmentRegistry &compartments() const {
+        return _compartmentRegistry;
+    }
 
     /**
      * Method for sanity checking at least some parts of the configuration. It should only be called after configure().
@@ -117,55 +150,83 @@ public:
      * the readdy::model::observables::Reactions observable.
      * @return whether reactions shall be recorded in the state model, by default false
      */
-    const bool &recordReactionsWithPositions() const;
+    const bool &recordReactionsWithPositions() const {
+        return _recordReactionsWithPositions;
+    }
 
     /**
      * Returns whether reactions with positions shall be recorded in the state model, then obtainable by
      * the readdy::model::observables::Reactions observable.
      * @return whether reactions shall be recorded in the state model, by default false
      */
-    bool &recordReactionsWithPositions();
+    bool &recordReactionsWithPositions() {
+        return _recordReactionsWithPositions;
+    }
 
     /**
      * Returns whether reaction counts shall be recorded in the state model (if it is supported). It is then obtainable
      * by the readdy::model::observables::ReactionCounts observable.
      * @return wheter reaction counts shall be recorded
      */
-    const bool &recordReactionCounts() const;
+    const bool &recordReactionCounts() const {
+        return _recordReactionCounts;
+    }
 
     /**
      * Returns whether reaction counts shall be recorded in the state model (if it is supported). It is then obtainable
      * by the readdy::model::observables::ReactionCounts observable.
      * @return wheter reaction counts shall be recorded
      */
-    bool &recordReactionCounts();
+    bool &recordReactionCounts() {
+        return _recordReactionCounts;
+    }
 
-    top::TopologyRegistry &topology_registry();
+    top::TopologyRegistry &topology_registry() {
+        return _topologyRegistry;
+    }
 
-    const top::TopologyRegistry &topology_registry() const;
+    const top::TopologyRegistry &topology_registry() const {
+        return _topologyRegistry;
+    }
 
-    reactions::ReactionRegistry &reactions();
+    reactions::ReactionRegistry &reactions() {
+        return _reactionRegistry;
+    }
 
-    const reactions::ReactionRegistry &reactions() const;
+    const reactions::ReactionRegistry &reactions() const {
+        return _reactionRegistry;
+    }
 
-    ParticleTypeRegistry &particle_types();
+    ParticleTypeRegistry &particle_types() {
+        return _particleTypeRegistry;
+    }
 
-    const ParticleTypeRegistry &particle_types() const;
+    const ParticleTypeRegistry &particle_types() const {
+        return _particleTypeRegistry;
+    }
 
-    potentials::PotentialRegistry &potentials();
+    potentials::PotentialRegistry &potentials() {
+        return _potentialRegistry;
+    }
 
-    const potentials::PotentialRegistry &potentials() const;
+    const potentials::PotentialRegistry &potentials() const {
+        return _potentialRegistry;
+    }
 
-    KernelConfiguration &kernelConfiguration();
+    KernelConfiguration &kernelConfiguration() {
+        return _kernelConfiguration;
+    }
 
-    const KernelConfiguration &kernelConfiguration() const;
+    const KernelConfiguration &kernelConfiguration() const {
+        return _kernelConfiguration;
+    }
 
     void setKernelConfiguration(const std::string &jsonStr);
 
     // ctor and dtor
     Context();
 
-    ~Context();
+    ~Context() = default;
 
     // move
     Context(Context &&rhs) = default;

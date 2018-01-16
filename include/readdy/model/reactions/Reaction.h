@@ -48,7 +48,16 @@ NAMESPACE_BEGIN(reactions)
 
 enum class ReactionType { Conversion, Fusion, Fission, Enzymatic, Decay };
 
-std::ostream& operator<<(std::ostream& os, const ReactionType& reactionType);
+inline std::ostream& operator<<(std::ostream& os, const ReactionType& reactionType) {
+    switch (reactionType) {
+        case ReactionType::Decay: os << "Decay"; break;
+        case ReactionType::Conversion: os << "Conversion"; break;
+        case ReactionType::Fusion: os << "Fusion"; break;
+        case ReactionType::Fission: os << "Fission"; break;
+        case ReactionType::Enzymatic: os << "Enzymatic"; break;
+    }
+    return os;
+}
 
 class Reaction {
 public:
@@ -56,37 +65,79 @@ public:
     using reaction_id = unsigned short;
 
     Reaction(std::string name, scalar rate, scalar eductDistance, scalar productDistance, std::uint8_t nEducts,
-             std::uint8_t nProducts);
+             std::uint8_t nProducts)
+            : _name(std::move(name)), _id(counter++), _rate(rate), _eductDistance(eductDistance),
+              _eductDistanceSquared(eductDistance * eductDistance), _productDistance(productDistance),
+              _nEducts(nEducts), _nProducts(nProducts) {};
 
     virtual ~Reaction() = default;
 
     virtual const ReactionType type() const = 0;
 
-    const std::string &name() const;
+    const std::string &name() const {
+        return _name;
+    }
 
-    const reaction_id id() const;
+    const reaction_id id() const {
+        return _id;
+    }
 
-    const scalar rate() const;
+    const scalar rate() const {
+        return _rate;
+    }
 
-    std::uint8_t nEducts() const;
+    std::uint8_t nEducts() const {
+        return _nEducts;
+    }
 
-    std::uint8_t nProducts() const;
+    std::uint8_t nProducts() const {
+        return _nProducts;
+    }
 
-    const scalar eductDistance() const;
+    const scalar eductDistance() const {
+        return _eductDistance;
+    }
 
-    const scalar eductDistanceSquared() const;
+    const scalar eductDistanceSquared() const {
+        return _eductDistanceSquared;
+    }
 
-    const scalar productDistance() const;
+    const scalar productDistance() const {
+        return _productDistance;
+    }
 
-    friend std::ostream &operator<<(std::ostream &os, const Reaction &reaction);
+    friend std::ostream &operator<<(std::ostream &os, const Reaction &reaction) {
+        os << "Reaction(\"" << reaction._name << "\", N_Educts=" << std::to_string(reaction._nEducts) << ", N_Products="
+           << std::to_string(reaction._nProducts) << ", (";
+        for (unsigned int i = 0; i < reaction._nEducts; i++) {
+            if (i > 0) os << ",";
+            os << reaction._educts[i];
+        }
+        os << ") -> (";
+        for (unsigned int i = 0; i < reaction._nProducts; i++) {
+            if (i > 0) os << ",";
+            os << reaction._products[i];
+        }
+        os << "), rate=" << reaction._rate << ", eductDist=" << reaction._eductDistance << ", prodDist="
+           << reaction._productDistance << ")";
+        return os;
+    }
 
-    const std::array<particle_type_type, 2> &educts() const;
+    const std::array<particle_type_type, 2> &educts() const {
+        return _educts;
+    };
 
-    const std::array<particle_type_type, 2> &products() const;
+    const std::array<particle_type_type, 2> &products() const {
+        return _products;
+    };
 
-    const scalar weight1() const;
+    const scalar weight1() const {
+        return _weight1;
+    }
 
-    const scalar weight2() const;
+    const scalar weight2() const {
+        return _weight2;
+    }
 
 
 protected:

@@ -32,16 +32,13 @@ LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/SCPUActionFactory.cpp")
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/SCPUStateModel.cpp")
 
 # --- actions ---
-LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/actions/SCPUEulerBDIntegrator.cpp")
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/actions/SCPUUpdateNeighborList.cpp")
-LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/actions/SCPUCalculateForces.cpp")
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/actions/SCPUReactionImpls.cpp")
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/actions/SCPUEvaluateCompartments.cpp")
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/actions/SCPUEvaluateTopologyReactions.cpp")
 
 # --- model ---
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/model/SCPUParticleData.cpp")
-LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/model/SCPUNeighborList.cpp")
 
 # --- observables ---
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/observables/SCPUObservableFactory.cpp")

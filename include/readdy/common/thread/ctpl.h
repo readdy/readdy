@@ -66,10 +66,17 @@ public:
         return true;
     }
 
+    void popAll() {
+        std::unique_lock<std::mutex> lock(this->mutex);
+        while(!q.empty()) q.pop();
+    }
+
     bool empty() {
         std::unique_lock<std::mutex> lock(this->mutex);
         return this->q.empty();
     }
+
+    Queue() = default;
 
 private:
     std::queue<T> q;
@@ -99,6 +106,14 @@ public:
     int n_idle() { return this->nWaiting; }
 
     std::thread &get_thread(int i) { return *this->threads[i]; }
+
+    void resize_wait(std::size_t n) {
+        stop(true);
+        nWaiting = 0;
+        isStop = false;
+        isDone = false;
+        resize(n);
+    }
 
     // change the number of threads in the pool
     // should be called from one thread, otherwise be careful to not interleave, also with this->stop()
@@ -143,11 +158,10 @@ public:
     std::function<void(int)> pop() {
         std::function<void(int id)> *_f = nullptr;
         this->q.pop(_f);
-        std::unique_ptr<std::function<void(int id)>> func(
-                _f); // at return, delete the function even if an exception occurred
+        // at return, delete the function even if an exception occurred
+        std::unique_ptr<std::function<void(int id)>> func(_f);
         std::function<void(int)> f;
-        if (_f)
-            f = *_f;
+        if (_f) f = *_f;
         return f;
     }
 
@@ -243,9 +257,9 @@ public:
     }
 
     thread_pool(const thread_pool &) = delete;// = delete;
-    thread_pool(thread_pool &&) = delete;// = delete;
+    thread_pool(thread_pool &&) = delete;
     thread_pool &operator=(const thread_pool &) = delete;// = delete;
-    thread_pool &operator=(thread_pool &&) = delete;// = delete;
+    thread_pool &operator=(thread_pool &&) = delete;
 private:
 
 

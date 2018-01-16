@@ -45,13 +45,13 @@ class KernelContext;
 class Positions : public Observable<std::vector<Vec3>> {
 public:
 
-    explicit Positions(Kernel* kernel, unsigned int stride = 1);
+    explicit Positions(Kernel* kernel, stride_type stride = 1);
 
     void flush() override;
 
-    Positions(Kernel* kernel, unsigned int stride, std::vector<std::string> typesToCount);
+    Positions(Kernel* kernel, stride_type stride, std::vector<std::string> typesToCount);
 
-    Positions(Kernel* kernel, unsigned int stride, std::vector<unsigned int> typesToCount);
+    Positions(Kernel* kernel, stride_type stride, std::vector<particle_type_type> typesToCount);
 
     Positions(const Positions&) = delete;
     Positions& operator=(const Positions&) = delete;
@@ -62,11 +62,11 @@ public:
 
 protected:
 
-    void initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) override;
+    void initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) override;
 
     void append() override;
 
-    std::vector<unsigned int> typesToCount;
+    std::vector<particle_type_type> typesToCount;
 
     struct Impl;
     std::unique_ptr<Impl> pimpl;

@@ -37,6 +37,7 @@
 namespace readdy {
 namespace log {
 
+#ifdef READDY_DEBUG
 std::shared_ptr<spdlog::logger> console() {
     static auto logger = spdlog::get("console");
     if (!logger) {
@@ -46,15 +47,7 @@ std::shared_ptr<spdlog::logger> console() {
     }
     return logger;
 }
-
-Level::Level(spdlog::level::level_enum newLevel) : oldLevel(console()->level()) {
-    console()->set_level(newLevel);
-}
-
-Level::~Level() {
-    console()->set_level(oldLevel);
-}
-
+#endif
 
 }
 }

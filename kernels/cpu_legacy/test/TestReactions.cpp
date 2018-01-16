@@ -222,12 +222,12 @@ TEST(CPUTestReactions, TestDecay) {
     kernel->context().reactions().addDecay("X decay", "X", 1e16);
     kernel->context().reactions().addFission("X fission", "X", "X", "X", .5, .3);
 
-    auto &&integrator = kernel->createAction<readdy::model::actions::EulerBDIntegrator>(1);
-    auto &&forces = kernel->createAction<readdy::model::actions::CalculateForces>();
-    auto &&neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>();
-    auto &&reactions = kernel->createAction<readdy::model::actions::reactions::Gillespie>(1);
+    auto &&integrator = kernel->actions().eulerBDIntegrator(1);
+    auto &&forces = kernel->actions().calculateForces();
+    auto &&neighborList = kernel->actions().updateNeighborList();
+    auto &&reactions = kernel->actions().gillespie(1);
 
-    auto pp_obs = kernel->createObservable<readdy::model::observables::Positions>(1);
+    auto pp_obs = kernel->observe().positions(1);
     pp_obs->setCallback([](const readdy::model::observables::Positions::result_type &t) {
         /* ignore */
     });
@@ -308,9 +308,9 @@ TEST(CPUTestReactions, TestGillespieParallel) {
     {
         fix_n_threads n_threads{kernel.get(), 2};
         EXPECT_EQ(2, kernel->getNThreads());
-        auto &&neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>();
+        auto &&neighborList = kernel->actions().updateNeighborList();
         std::unique_ptr<readdy::kernel::cpu_legacy::actions::reactions::CPUGillespie> reactions = readdy::util::static_unique_ptr_cast_no_del<readdy::kernel::cpu_legacy::actions::reactions::CPUGillespie>(
-                kernel->createAction<readdy::model::actions::reactions::Gillespie>(1)
+                kernel->actions().gillespie(1)
         );
         neighborList->perform();
         reactions->perform({});

@@ -49,6 +49,13 @@ NAMESPACE_BEGIN(readdy)
  */
 class Simulation {
 public:
+
+    /**
+     * Type of an observable callback corresponding to a certain observable
+     */
+    template<typename T>
+    using observable_callback = typename std::function<void(typename T::result_type)>;
+
     /**
      * The default constructor. Instantiates the pimpl.
      */
@@ -177,27 +184,29 @@ public:
      */
     void setPeriodicBoundary(const std::array<bool, 3> &periodic);
 
-    /**
-     * Registers a predefined observable with the kernel. A list of available observables can be obtained by
-     * getAvailableObservables().
-     * @param stride the stride argument which decides how often the observable gets called
-     * @param args arguments for creation of the observable
-     * @return a uuid with which the observable is associated
-     */
-    template<typename T, typename... Args>
-    ObservableHandle registerObservable(unsigned int stride, Args... args);
+    const model::observables::ObservableFactory &observe() const;
 
     /**
      * Registers a predefined observable with the kernel. A list of available observables can be obtained by
      * getAvailableObservables().
-     * @param callbackFun a function which gets called upon evaluation of the observable
-     * @param stride the stride argument which decides how often the observable gets called
-     * @param args arguments for creation of the observable
+     * @tparam observable type
+     * @param observable the observable
      * @return a uuid with which the observable is associated
      */
-    template<typename T, typename... Args>
-    ObservableHandle registerObservable(const std::function<void(typename T::result_type)> &callbackFun,
-                                        unsigned int stride, Args... args);
+    template<typename T>
+    ObservableHandle registerObservable(std::unique_ptr<T> observable, detail::is_observable_type<T>* = 0);
+
+    /**
+     * Registers a predefined observable with the kernel together with a callback.
+     * A list of available observables can be obtained by getAvailableObservables().
+     * @tparam T observable type
+     * @param observable the observable instance
+     * @param callback the callback
+     * @return a observable handle that allows for post-hoc modification of the observable
+     */
+    template<typename T>
+    ObservableHandle registerObservable(std::unique_ptr<T> observable, const observable_callback<T> &callback,
+                                        detail::is_observable_type<T>* = 0);
 
     /**
      * Registers an observable that implements the readdy::model::ObservableBase interface.

@@ -41,16 +41,6 @@ namespace model {
 namespace top {
 namespace pot {
 
-TorsionPotential::TorsionPotential() : TopologyPotential() {}
-
-CosineDihedralPotential::CosineDihedralPotential(const dihedral_configurations &dihedrals)
-        : TorsionPotential(), dihedrals(dihedrals) {
-}
-
-const CosineDihedralPotential::dihedral_configurations &CosineDihedralPotential::getDihedrals() const {
-    return dihedrals;
-}
-
 scalar  CosineDihedralPotential::calculateEnergy(const Vec3 &x_ji, const Vec3 &x_kj, const Vec3 &x_kl,
                                                 const dihedral_configuration &dihedral) const {
     const auto x_jk = -1 * x_kj;
@@ -163,17 +153,6 @@ std::unique_ptr<EvaluatePotentialAction>
 CosineDihedralPotential::createForceAndEnergyAction(const TopologyActionFactory *const factory) {
     return factory->createCalculateCosineDihedralPotential(this);
 }
-
-DihedralConfiguration::DihedralConfiguration(size_t idx1, size_t idx2, size_t idx3, size_t idx4, scalar  forceConstant,
-                                             scalar  multiplicity, scalar  equilibriumAngle)
-        : idx1(idx1), idx2(idx2), idx3(idx3), idx4(idx4), forceConstant(forceConstant),
-          phi_0(equilibriumAngle), multiplicity(multiplicity) {
-    if (equilibriumAngle > readdy::util::numeric::pi() || equilibriumAngle < -readdy::util::numeric::pi()) {
-        throw std::invalid_argument("the equilibrium angle should be within [-pi, pi], but was "
-                                    + std::to_string(equilibriumAngle));
-    }
-}
-
 
 }
 }

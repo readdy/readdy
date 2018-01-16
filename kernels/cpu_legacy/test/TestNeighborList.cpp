@@ -613,7 +613,7 @@ TEST(TestAdaptiveNeighborList, AdaptiveUpdating) {
         }
     }
 
-    auto integrator = kernel->createAction<readdy::model::actions::EulerBDIntegrator>(.01);
+    auto integrator = kernel->actions().eulerBDIntegrator(.01);
 
     for (int t = 0; t < 100; ++t) {
         integrator->perform();
@@ -667,7 +667,7 @@ TEST_P(TestNeighborListImpl, DiffusionAndReaction) {
         kernel->addParticle("A", n3(0., 1.));
     }
 
-    auto obs = kernel->createObservable<readdy::model::observables::NParticles>(1, std::vector<std::string>({"F", "A"}));
+    auto obs = kernel->observe().nParticles(1, std::vector<std::string>({"F", "A"}));
     obs->setCallback(
             [&](const readdy::model::observables::NParticles::result_type &result) {
                 EXPECT_EQ(result[0], 100);
@@ -713,7 +713,7 @@ TEST_P(TestNeighborListImpl, Diffusion) {
         kernel->addParticle("F", n3(0., 1.));
         kernel->addParticle("A", n3(0., 1.));
     }
-    auto obs = kernel->createObservable<readdy::model::observables::NParticles>(1);
+    auto obs = kernel->observe().nParticles(1);
     obs->setCallback(
             [&](const readdy::model::observables::NParticles::result_type &) {
                 const auto &d2 = context.distSquaredFun();

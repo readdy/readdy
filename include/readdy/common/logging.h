@@ -36,7 +36,7 @@
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(log)
-
+#ifdef READDY_DEBUG
 std::shared_ptr<spdlog::logger> console();
 
 template<typename... Args>
@@ -69,18 +69,54 @@ void info(Args &&... args) {
     console()->info(std::forward<Args>(args)...);
 }
 
+inline void set_level(spdlog::level::level_enum level) {
+    console()->set_level(level);
+}
+
 class Level {
 public:
-    explicit Level(spdlog::level::level_enum newLevel);
+    explicit Level(spdlog::level::level_enum newLevel) : oldLevel(console()->level()) {
+        console()->set_level(newLevel);
+    }
     Level(const Level&) = default;
     Level& operator=(const Level&) = default;
     Level(Level&&) = default;
     Level& operator=(Level&&) = default;
-    ~Level();
+    ~Level() {
+        console()->set_level(oldLevel);
+    }
 
 private:
     spdlog::level::level_enum oldLevel;
 };
+#else
+
+inline void set_level(spdlog::level::level_enum /*level*/) {};
+
+template<typename... Args>
+void trace(Args &&... /*args*/) {}
+
+template<typename... Args>
+void debug(Args &&... /*args*/) {}
+
+template<typename... Args>
+void critical(Args &&... /*args*/) {}
+
+template<typename... Args>
+void warn(Args &&... /*args*/) {}
+
+template<typename... Args>
+void error(Args &&... /*args*/) {}
+
+template<typename... Args>
+void info(Args &&... /*args*/) {}
+
+class Level {
+public:
+    explicit Level(spdlog::level::level_enum /*newLevel*/) {}
+};
+
+#endif //READDY_DEBUG
 
 NAMESPACE_END(log)
 NAMESPACE_END(readdy)

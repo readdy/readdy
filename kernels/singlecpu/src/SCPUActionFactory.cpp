@@ -41,42 +41,6 @@ namespace scpu {
 namespace actions {
 SCPUActionFactory::SCPUActionFactory(SCPUKernel *const kernel) : kernel(kernel) {}
 
-core_actions::EulerBDIntegrator *SCPUActionFactory::createEulerBDIntegrator(scalar timeStep) const {
-    return new SCPUEulerBDIntegrator(kernel, timeStep);
-}
-
-core_actions::CalculateForces *SCPUActionFactory::createCalculateForces() const {
-    return new SCPUCalculateForces(kernel);
-}
-
-core_actions::UpdateNeighborList *
-SCPUActionFactory::createUpdateNeighborList(core_actions::UpdateNeighborList::Operation op, scalar skinSize) const {
-    return new SCPUUpdateNeighborList(kernel, op, skinSize);
-}
-
-core_actions::EvaluateCompartments *SCPUActionFactory::createEvaluateCompartments() const {
-    return new SCPUEvaluateCompartments(kernel);
-}
-
-core_actions::reactions::UncontrolledApproximation *
-SCPUActionFactory::createUncontrolledApproximation(scalar timeStep) const {
-    return new reactions::SCPUUncontrolledApproximation(kernel, timeStep);
-}
-
-core_actions::reactions::Gillespie *SCPUActionFactory::createGillespie(scalar timeStep) const {
-    return new reactions::SCPUGillespie(kernel, timeStep);
-}
-
-readdy::model::actions::AddParticles *
-SCPUActionFactory::createAddParticles(const std::vector<readdy::model::Particle> &particles) const {
-    return new readdy::model::actions::AddParticles(kernel, particles);
-}
-
-readdy::model::actions::top::EvaluateTopologyReactions *
-SCPUActionFactory::createEvaluateTopologyReactions(scalar timeStep) const {
-    return new actions::top::SCPUEvaluateTopologyReactions(kernel, timeStep);
-}
-
 namespace rma = readdy::model::actions;
 
 std::vector<std::string> SCPUActionFactory::getAvailableActions() const {
@@ -88,6 +52,38 @@ std::vector<std::string> SCPUActionFactory::getAvailableActions() const {
             rma::getActionName<rma::reactions::Gillespie>(),
             rma::getActionName<rma::top::EvaluateTopologyReactions>()
     };
+}
+
+std::unique_ptr<readdy::model::actions::EulerBDIntegrator> SCPUActionFactory::eulerBDIntegrator(scalar timeStep) const {
+    return {std::make_unique<SCPUEulerBDIntegrator>(kernel, timeStep)};
+}
+
+std::unique_ptr<readdy::model::actions::CalculateForces> SCPUActionFactory::calculateForces() const {
+    return {std::make_unique<SCPUCalculateForces>(kernel)};
+}
+
+std::unique_ptr<readdy::model::actions::UpdateNeighborList>
+SCPUActionFactory::updateNeighborList(readdy::model::actions::UpdateNeighborList::Operation operation,
+                                      scalar skinSize) const {
+    return {std::make_unique<SCPUUpdateNeighborList>(kernel, operation, skinSize)};
+}
+
+std::unique_ptr<readdy::model::actions::EvaluateCompartments> SCPUActionFactory::evaluateCompartments() const {
+    return {std::make_unique<SCPUEvaluateCompartments>(kernel)};
+}
+
+std::unique_ptr<readdy::model::actions::reactions::UncontrolledApproximation>
+SCPUActionFactory::uncontrolledApproximation(scalar timeStep) const {
+    return {std::make_unique<reactions::SCPUUncontrolledApproximation>(kernel, timeStep)};
+}
+
+std::unique_ptr<readdy::model::actions::reactions::Gillespie> SCPUActionFactory::gillespie(scalar timeStep) const {
+    return {std::make_unique<reactions::SCPUGillespie>(kernel, timeStep)};
+}
+
+std::unique_ptr<readdy::model::actions::top::EvaluateTopologyReactions>
+SCPUActionFactory::evaluateTopologyReactions(scalar timeStep) const {
+    return {std::make_unique<top::SCPUEvaluateTopologyReactions>(kernel, timeStep)};
 }
 
 }

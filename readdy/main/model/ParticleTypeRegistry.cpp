@@ -42,41 +42,6 @@ ParticleTypeInfo::ParticleTypeInfo(const std::string &name, const scalar diffusi
         : name(name), diffusionConstant(diffusionConstant), flavor(flavor), typeId(typeId) {}
 
 
-const ParticleTypeInfo &ParticleTypeRegistry::infoOf(const std::string &name) const {
-    return infoOf(_idOf(name));
-}
-
-const ParticleTypeInfo &ParticleTypeRegistry::infoOf(Particle::type_type type) const {
-    return particle_info_.at(type);
-}
-
-const ParticleTypeRegistry::type_map &ParticleTypeRegistry::typeMapping() const {
-    return type_mapping_;
-}
-
-std::string ParticleTypeRegistry::nameOf(particle_type_type id) const {
-    for (const auto &e : type_mapping_) {
-        if (e.second == id) return e.first;
-    }
-    return "";
-}
-
-std::vector<particle_type_type> ParticleTypeRegistry::typesFlat() const {
-    std::vector<particle_type_type> v;
-    for (auto &&entry : type_mapping_) {
-        v.push_back(entry.second);
-    }
-    return v;
-}
-
-scalar ParticleTypeRegistry::diffusionConstantOf(particle_type_type particleType) const {
-    return particle_info_.at(particleType).diffusionConstant;
-}
-
-scalar ParticleTypeRegistry::diffusionConstantOf(const std::string &particleType) const {
-    return diffusionConstantOf(idOf(particleType));
-}
-
 void ParticleTypeRegistry::add(const std::string &name, const scalar diffusionConst, const particle_flavor flavor) {
     util::validateTypeName(name);
     {
@@ -96,24 +61,6 @@ void ParticleTypeRegistry::add(const std::string &name, const scalar diffusionCo
     n_types_++;
 }
 
-particle_type_type ParticleTypeRegistry::idOf(const std::string &name) const {
-    return _idOf(name);
-}
-
-const std::size_t &ParticleTypeRegistry::nTypes() const {
-    return n_types_;
-}
-
-particle_type_type ParticleTypeRegistry::_idOf(const std::string &name) const {
-    auto it = type_mapping_.find(name);
-    if (it == type_mapping_.end()) {
-        throw std::invalid_argument(
-                fmt::format("Could not find type \"{}\", did you forget to register it before accessing it?", name)
-        );
-    }
-    return it->second;
-}
-
 std::string ParticleTypeRegistry::describe() const {
     namespace rus = readdy::util::str;
     std::string description;
@@ -125,12 +72,6 @@ std::string ParticleTypeRegistry::describe() const {
                                    rus::newline);
     }
     return description;
-}
-
-void ParticleTypeRegistry::configure() { /*no op*/ }
-
-particle_type_type ParticleTypeRegistry::operator()(const std::string &name) const {
-    return idOf(name);
 }
 
 }

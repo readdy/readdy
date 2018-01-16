@@ -33,7 +33,6 @@
 #pragma once
 
 #include <set>
-#include <readdy/model/Context.h>
 #include <sstream>
 
 NAMESPACE_BEGIN(readdy)
@@ -41,17 +40,19 @@ NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(_internal)
 NAMESPACE_BEGIN(util)
 
-inline std::set<unsigned int> transformTypes(const std::vector<std::string> &types, const readdy::model::Context &ctx) {
-    std::set<unsigned int> result;
+template<typename Context>
+inline std::set<particle_type_type> transformTypes(const std::vector<std::string> &types, const Context &ctx) {
+    std::set<particle_type_type> result;
     for (const auto &t : types) {
         result.insert(ctx.particle_types().idOf(t));
     }
     return result;
 }
 
-inline std::vector<unsigned int>
-transformTypes2(const std::vector<std::string> &types, const readdy::model::Context &ctx) {
-    std::vector<unsigned int> result;
+template<typename Context>
+inline std::vector<particle_type_type>
+transformTypes2(const std::vector<std::string> &types, const Context &ctx) {
+    std::vector<particle_type_type> result;
     result.reserve(types.size());
     for (auto &t : types) {
         result.push_back(ctx.particle_types().idOf(t));

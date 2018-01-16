@@ -36,7 +36,13 @@
 #include <readdy/common/ParticleTypeTuple.h>
 #include <readdy/model/ParticleTypeRegistry.h>
 #include <unordered_set>
+#include <readdy/common/Utils.h>
 #include "Reaction.h"
+#include "Enzymatic.h"
+#include "Conversion.h"
+#include "Fission.h"
+#include "Fusion.h"
+#include "Decay.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
@@ -60,7 +66,7 @@ public:
     using reaction_id = Reaction::reaction_id;
     using reactions_raw_ptr_map = std::unordered_map<reaction_id, reaction*>;
 
-    explicit ReactionRegistry(std::reference_wrapper<const ParticleTypeRegistry> ref);
+    explicit ReactionRegistry(std::reference_wrapper<const ParticleTypeRegistry> ref) : _types(ref) {};
 
     ReactionRegistry(const ReactionRegistry &) = default;
 
@@ -72,31 +78,80 @@ public:
 
     ~ReactionRegistry() = default;
 
-    const std::size_t &nOrder1() const;
+    const std::size_t &nOrder1() const {
+        return _n_order1;
+    }
 
-    const reaction_o1_registry &order1() const;
+    const reaction_o1_registry &order1() const {
+        return one_educt_registry;
+    }
 
-    const reactions order1Flat() const;
+    const reactions order1Flat() const {
+        reaction_o1_registry::mapped_type result;
+        for (const auto &mapEntry : one_educt_registry) {
+            for (const auto reaction : mapEntry.second) {
+                result.push_back(reaction);
+            }
+        }
+        return result;
+    }
 
-    const reaction* order1ByName(const std::string &name) const;
+    const reaction* order1ByName(const std::string &name) const {
+        for (const auto &mapEntry : one_educt_registry) {
+            for (const auto &reaction : mapEntry.second) {
+                if (reaction->name() == name) return reaction;
+            }
+        }
+        throw std::invalid_argument(fmt::format("No first order reaction with name \"{}\" found.", name));
+    }
 
-    const reactions &order1ByType(const particle::type_type type) const;
+    const reactions &order1ByType(const particle::type_type type) const {
+        return readdy::util::collections::getOrDefault(one_educt_registry, type, defaultReactions);
+    }
 
-    const std::size_t &nOrder2() const;
+    const std::size_t &nOrder2() const {
+        return _n_order2;
+    }
 
-    const reaction_o2_registry &order2() const;
+    const reaction_o2_registry &order2() const {
+        return two_educts_registry;
+    }
 
-    const reactions order2Flat() const;
+    const reactions order2Flat() const {
+        reaction_o2_registry::mapped_type result;
+        for (const auto &mapEntry : two_educts_registry) {
+            for (const auto reaction : mapEntry.second) {
+                result.push_back(reaction);
+            }
+        }
+        return result;
+    }
 
-    const reaction* order2ByName(const std::string &name) const;
+    const reaction* order2ByName(const std::string &name) const {
+        for (const auto &mapEntry : two_educts_registry) {
+            for (const auto &reaction : mapEntry.second) {
+                if (reaction->name() == name) return reaction;
+            }
+        }
+        throw std::invalid_argument(fmt::format("No second order reaction with name \"{}\" found.", name));
+    }
 
-    const reactions &order2ByType(const particle::type_type type1, const particle::type_type type2) const;
+    const reactions &order2ByType(const particle::type_type type1, const particle::type_type type2) const {
+        auto it = two_educts_registry.find(std::tie(type1, type2));
+        return it != two_educts_registry.end() ? it->second : defaultReactions;
+    }
 
-    const reactions &order1ByType(const std::string &type) const;
+    const reactions &order1ByType(const std::string &type) const {
+        return order1ByType(_types.get().idOf(type));
+    }
 
-    const reactions &order2ByType(const std::string &type1, const std::string &type2) const;
+    const reactions &order2ByType(const std::string &type1, const std::string &type2) const {
+        return order2ByType(_types.get().idOf(type1), _types.get().idOf(type2));
+    }
 
-    bool isReactionOrder2Type(particle_type_type type) const;
+    bool isReactionOrder2Type(particle_type_type type) const {
+        return _reaction_o2_types.find(type) != _reaction_o2_types.end();
+    }
 
     std::string nameOf(reaction_id id) const;
 
@@ -104,35 +159,58 @@ public:
 
     reaction_id add(const std::string &descriptor, scalar rate);
 
-    reaction_id addConversion(const std::string &name, const std::string &from, const std::string &to, scalar rate);
+    reaction_id addConversion(const std::string &name, const std::string &from, const std::string &to, scalar rate) {
+        return addConversion(name, _types.get().idOf(from), _types.get().idOf(to), rate);
+    }
 
-    reaction_id addConversion(const std::string &name, particle_type_type from, particle_type_type to, scalar rate);
+    reaction_id addConversion(const std::string &name, particle_type_type from, particle_type_type to, scalar rate) {
+        return emplaceReaction(std::make_shared<Conversion>(name, from, to, rate));
+    }
 
     reaction_id addEnzymatic(const std::string &name, const std::string &catalyst, const std::string &from,
-                             const std::string &to, scalar rate, scalar eductDistance);
+                             const std::string &to, scalar rate, scalar eductDistance) {
+        return addEnzymatic(name, _types.get().idOf(catalyst), _types.get().idOf(from), _types.get().idOf(to),
+                            rate, eductDistance);
+    }
 
     reaction_id addEnzymatic(const std::string &name, particle_type_type catalyst, particle_type_type from,
-                             particle_type_type to, scalar rate, scalar eductDistance);
+                             particle_type_type to, scalar rate, scalar eductDistance) {
+        return emplaceReaction(std::make_shared<Enzymatic>(name, catalyst, from, to, rate, eductDistance));
+    }
 
     reaction_id addFission(const std::string &name, const std::string &from, const std::string &to1,
                            const std::string &to2, scalar rate, scalar productDistance,
-                           scalar weight1 = 0.5, scalar weight2 = 0.5);
+                           scalar weight1 = 0.5, scalar weight2 = 0.5) {
+        return addFission(name, _types.get().idOf(from), _types.get().idOf(to1), _types.get().idOf(to2), rate,
+                          productDistance, weight1, weight2);
+    }
 
     reaction_id addFission(const std::string &name, particle_type_type from, particle_type_type to1,
                            particle_type_type to2, scalar rate, scalar productDistance,
-                           scalar weight1 = 0.5, scalar weight2 = 0.5);
+                           scalar weight1 = 0.5, scalar weight2 = 0.5) {
+        return emplaceReaction(std::make_shared<Fission>(name, from, to1, to2, rate, productDistance, weight1, weight2));
+    }
 
     reaction_id addFusion(const std::string &name, const std::string &from1, const std::string &from2,
                           const std::string &to, scalar rate, scalar eductDistance,
-                          scalar weight1 = 0.5, scalar weight2 = 0.5);
+                          scalar weight1 = 0.5, scalar weight2 = 0.5) {
+        return addFusion(name, _types.get().idOf(from1), _types.get().idOf(from2), _types.get().idOf(to), rate,
+                         eductDistance, weight1, weight2);
+    }
 
     reaction_id addFusion(const std::string &name, particle_type_type from1, particle_type_type from2,
                           particle_type_type to, scalar rate, scalar eductDistance,
-                          scalar weight1 = 0.5, scalar weight2 = 0.5);
+                          scalar weight1 = 0.5, scalar weight2 = 0.5) {
+        return emplaceReaction(std::make_shared<Fusion>(name, from1, from2, to, rate, eductDistance, weight1, weight2));
+    }
 
-    reaction_id addDecay(const std::string &name, const std::string &type, scalar rate);
+    reaction_id addDecay(const std::string &name, const std::string &type, scalar rate) {
+        return addDecay(name, _types.get().idOf(type), rate);
+    }
 
-    reaction_id addDecay(const std::string &name, particle_type_type type, scalar rate);
+    reaction_id addDecay(const std::string &name, particle_type_type type, scalar rate) {
+        return emplaceReaction(std::make_shared<Decay>(name, type, rate));
+    }
 
     const short addExternal(reaction* r);
 

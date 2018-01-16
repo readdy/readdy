@@ -392,9 +392,9 @@ TEST_P(TestTopologyReactions, SplitUpChain) {
     }
 
     {
-        auto integrator = kernel->getActionFactory().createIntegrator("EulerBDIntegrator", 1.0);
-        auto forces = kernel->getActionFactory().createAction<readdy::model::actions::CalculateForces>();
-        auto topReactions = kernel->getActionFactory().createAction<readdy::model::actions::top::EvaluateTopologyReactions>(1.0);
+        auto integrator = kernel->actions().createIntegrator("EulerBDIntegrator", 1.0);
+        auto forces = kernel->actions().calculateForces();
+        auto topReactions = kernel->actions().evaluateTopologyReactions(1.0);
 
         std::size_t time = 0;
         std::size_t n_time_steps = 500;
@@ -503,9 +503,9 @@ TEST_P(TestTopologyReactions, SplitUpChainDecay) {
     }
 
     {
-        auto integrator = kernel->getActionFactory().createIntegrator("EulerBDIntegrator", 1.0);
-        auto forces = kernel->getActionFactory().createAction<readdy::model::actions::CalculateForces>();
-        auto topReactions = kernel->getActionFactory().createAction<readdy::model::actions::top::EvaluateTopologyReactions>(1.0);
+        auto integrator = kernel->actions().createIntegrator("EulerBDIntegrator", 1.0);
+        auto forces = kernel->actions().calculateForces();
+        auto topReactions = kernel->actions().evaluateTopologyReactions(1.0);
 
         std::size_t time = 0;
         std::size_t n_time_steps = 500;

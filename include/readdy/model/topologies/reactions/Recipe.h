@@ -55,7 +55,7 @@ public:
     using edge = topology_graph::edge;
     using graph_topology = GraphTopology;
 
-    explicit Recipe(graph_topology &topology);
+    explicit Recipe(graph_topology &topology) : _topology(topology) {};
 
     Recipe(Recipe &&) = default;
 
@@ -69,25 +69,52 @@ public:
 
     Recipe &changeParticleType(const vertex_ref &ref, const std::string &to);
 
-    Recipe &changeParticleType(const vertex_ref &ref, const particle_type_type &to);
+    Recipe &changeParticleType(const vertex_ref &ref, const particle_type_type &to) {
+        _steps.push_back(std::make_shared<op::ChangeParticleType>(ref, to));
+        return *this;
+    }
 
-    Recipe &addEdge(const edge &edge);
+    Recipe &addEdge(const edge &edge) {
+        _steps.push_back(std::make_shared<op::AddEdge>(edge));
+        return *this;
+    }
 
-    Recipe &addEdge(vertex_ref v1, vertex_ref v2);
+    Recipe &addEdge(vertex_ref v1, vertex_ref v2) {
+        return addEdge(std::tie(v1, v2));
+    }
 
-    Recipe &removeEdge(const edge &edge);
+    Recipe &removeEdge(const edge &edge) {
+        _steps.push_back(std::make_shared<op::RemoveEdge>(edge));
+        return *this;
+    }
 
-    Recipe &removeEdge(vertex_ref v1, vertex_ref v2);
+    Recipe &removeEdge(vertex_ref v1, vertex_ref v2) {
+        return removeEdge(std::tie(v1, v2));
+    }
 
-    Recipe &separateVertex(const vertex_ref &vertex);
+    Recipe &separateVertex(const vertex_ref &vertex) {
+        std::for_each(vertex->neighbors().begin(), vertex->neighbors().end(), [this, &vertex](const auto &neighbor) {
+            removeEdge(std::make_tuple(vertex, neighbor));
+        });
+        return *this;
+    }
     
-    Recipe &changeTopologyType(const std::string &type);
+    Recipe &changeTopologyType(const std::string &type) {
+        _steps.push_back(std::make_shared<op::ChangeTopologyType>(type));
+        return *this;
+    }
 
-    const reaction_operations &steps() const;
+    const reaction_operations &steps() const {
+        return _steps;
+    }
 
-    graph_topology &topology();
+    graph_topology &topology() {
+        return _topology;
+    }
 
-    const graph_topology &topology() const;
+    const graph_topology &topology() const {
+        return _topology;
+    }
 
 private:
     std::reference_wrapper<graph_topology> _topology;

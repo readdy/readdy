@@ -99,27 +99,33 @@ std::vector<event_t> findEvents(const SCPUKernel *const kernel, scalar dt, bool 
             ++idx;
         }
     }
-    auto it_nl = stateModel.getNeighborList()->cbegin();
-    for (; it_nl != stateModel.getNeighborList()->cend(); ++it_nl) {
-        const auto &entry = data.entry_at(it_nl->idx1);
-        if (!entry.is_deactivated()) {
-
-            // order 2
-            const auto &neighbor = data.entry_at(it_nl->idx2);
-            const auto &reactions = kernel->context().reactions().order2ByType(entry.type, neighbor.type);
-            if (!reactions.empty()) {
-                const auto distSquared = d2(neighbor.position(), entry.position());
-                for (auto it_reactions = reactions.begin(); it_reactions < reactions.end(); ++it_reactions) {
-                    const auto &react = *it_reactions;
-                    const auto rate = react->rate();
-                    if (rate > 0 && distSquared < react->eductDistanceSquared()
-                        && shouldPerformEvent(rate, dt, approximateRate)) {
-                        const auto reaction_index = static_cast<event_t::reaction_index_type>(it_reactions -
-                                                                                              reactions.begin());
-                        eventsUpdate.emplace_back(2, react->nProducts(), it_nl->idx1, it_nl->idx2, rate, 0,
-                                                  reaction_index, entry.type, neighbor.type);
+    const auto &nl = *stateModel.getNeighborList();
+    const auto &context = kernel->context();
+    for(auto cell = 0_z; cell < nl.nCells(); ++cell) {
+        for(auto it = nl.particlesBegin(cell); it != nl.particlesEnd(cell); ++it) {
+            auto pidx = *it;
+            const auto &entry = data.entry_at(*it);
+            if(!entry.deactivated) {
+                nl.forEachNeighbor(it, cell, [&](const std::size_t neighborIdx) {
+                    const auto &neighbor = data.entry_at(neighborIdx);
+                    if(!neighbor.deactivated) {
+                        const auto &reactions = context.reactions().order2ByType(entry.type, neighbor.type);
+                        if (!reactions.empty()) {
+                            const auto distSquared = d2(neighbor.position(), entry.position());
+                            for (auto it_reactions = reactions.begin(); it_reactions < reactions.end(); ++it_reactions) {
+                                const auto &react = *it_reactions;
+                                const auto rate = react->rate();
+                                if (rate > 0 && distSquared < react->eductDistanceSquared()
+                                    && shouldPerformEvent(rate, dt, approximateRate)) {
+                                    const auto reaction_index = static_cast<event_t::reaction_index_type>(it_reactions -
+                                                                                                          reactions.begin());
+                                    eventsUpdate.emplace_back(2, react->nProducts(), pidx, neighborIdx, rate, 0,
+                                                              reaction_index, entry.type, neighbor.type);
+                                }
+                            }
+                        }
                     }
-                }
+                });
             }
         }
     }
@@ -216,46 +222,53 @@ void SCPUUncontrolledApproximation::registerReactionScheme_22(const std::string 
 }
 
 void gatherEvents(SCPUKernel const *const kernel,
-                  const readdy::kernel::scpu::model::SCPUNeighborList &nl, const scpu_data &data, scalar &alpha,
+                  const readdy::kernel::scpu::model::CellLinkedList &nl, const scpu_data &data, scalar &alpha,
                   std::vector<event_t> &events, const readdy::model::Context::dist_squared_fun &d2) {
     {
         std::size_t index = 0;
         for (const auto &entry : data) {
-            if(!entry.is_deactivated()) {
+            if (!entry.is_deactivated()) {
                 const auto &reactions = kernel->context().reactions().order1ByType(entry.type);
                 for (auto it = reactions.begin(); it != reactions.end(); ++it) {
                     const auto rate = (*it)->rate();
                     if (rate > 0) {
                         alpha += rate;
                         events.emplace_back(1, (*it)->nProducts(), index, 0, rate, alpha,
-                                 static_cast<event_t::reaction_index_type>(it - reactions.begin()),
-                                 entry.type, 0);
+                                            static_cast<event_t::reaction_index_type>(it - reactions.begin()),
+                                            entry.type, 0);
                     }
                 }
             }
             ++index;
         }
     }
-    for (auto it_nl : nl) {
-        auto &entry = data.entry_at(it_nl.idx1);
-        if (!entry.is_deactivated()) {
-            // order 2
-            const auto &neighbor = data.entry_at(it_nl.idx2);
-            const auto &reactions = kernel->context().reactions().order2ByType(entry.type,
-                                                                               neighbor.type);
-            if (!reactions.empty()) {
-                const auto distSquared = d2(neighbor.position(), entry.position());
-                for (auto it = reactions.begin(); it < reactions.end(); ++it) {
-                    const auto &react = *it;
-                    const auto rate = react->rate();
-                    if (rate > 0 && distSquared < react->eductDistanceSquared()) {
-                        alpha += rate;
-                        events.emplace_back(2, react->nProducts(), it_nl.idx1, it_nl.idx2,
-                                          rate, alpha,
-                                          static_cast<event_t::reaction_index_type>(it - reactions.begin()),
-                                          entry.type, neighbor.type);
+    for (auto cell = 0_z; cell < nl.nCells(); ++cell) {
+        for (auto it = nl.particlesBegin(cell); it != nl.particlesEnd(cell); ++it) {
+            auto &entry = data.entry_at(*it);
+            if (!entry.deactivated) {
+                nl.forEachNeighbor(it, cell, [&](const std::size_t nIdx) {
+                    const auto &neighbor = data.entry_at(nIdx);
+                    if (!neighbor.deactivated) {
+                        const auto &reactions = kernel->context().reactions().order2ByType(entry.type,
+                                                                                           neighbor.type);
+                        if (!reactions.empty()) {
+                            const auto distSquared = d2(neighbor.position(), entry.position());
+                            for (auto itR = reactions.begin(); itR < reactions.end(); ++itR) {
+                                const auto &react = *itR;
+                                const auto rate = react->rate();
+                                if (rate > 0 && distSquared < react->eductDistanceSquared()) {
+                                    alpha += rate;
+                                    events.emplace_back(2, react->nProducts(), *it, nIdx,
+                                                        rate, alpha,
+                                                        static_cast<event_t::reaction_index_type>(
+                                                                itR - reactions.begin()
+                                                        ),
+                                                        entry.type, neighbor.type);
+                                }
+                            }
+                        }
                     }
-                }
+                });
             }
         }
     }

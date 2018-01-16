@@ -67,14 +67,6 @@ GraphTopology::GraphTopology(topology_type_type type,
     }
 }
 
-graph::Graph &GraphTopology::graph() {
-    return graph_;
-}
-
-const graph::Graph &GraphTopology::graph() const {
-    return graph_;
-}
-
 void GraphTopology::configure() {
     validate();
 
@@ -159,24 +151,6 @@ void GraphTopology::configure() {
     }
 }
 
-void GraphTopology::validate() {
-    if (!graph().isConnected()) {
-        throw std::invalid_argument("The graph is not connected!");
-    }
-}
-
-void GraphTopology::updateReactionRates(const TopologyRegistry::structural_reactions &reactions) {
-    _cumulativeRate = 0;
-    _reaction_rates.resize(reactions.size());
-    auto it = _reaction_rates.begin();
-    for(auto&& reaction : reactions) {
-        const auto rate = reaction.rate(*this);
-        *it = rate;
-        _cumulativeRate += rate;
-        ++it;
-    }
-}
-
 std::vector<GraphTopology> GraphTopology::connectedComponents() {
     auto subGraphs = graph_.connectedComponentsDestructive();
     // generate particles list for each sub graph, update sub graph's vertices to obey this new list
@@ -208,18 +182,6 @@ std::vector<GraphTopology> GraphTopology::connectedComponents() {
     return std::move(components);
 }
 
-const bool GraphTopology::isDeactivated() const {
-    return deactivated;
-}
-
-void GraphTopology::deactivate() {
-    deactivated = true;
-}
-
-const GraphTopology::topology_reaction_rate GraphTopology::cumulativeRate() const {
-    return _cumulativeRate;
-}
-
 const bool GraphTopology::isNormalParticle(const Kernel &k) const {
     if(getNParticles() == 1){
         const auto particle_type = k.stateModel().getParticleType(particles.front());
@@ -246,18 +208,6 @@ void GraphTopology::appendParticle(particle_index newParticle, particle_type_typ
     } else {
         log::critical("counterPart {} was not contained in topology, this should not happen", counterPart);
     }
-}
-
-topology_type_type &GraphTopology::type() {
-    return _topology_type;
-}
-
-const topology_type_type &GraphTopology::type() const {
-    return _topology_type;
-}
-
-const GraphTopology::topology_reaction_rates &GraphTopology::rates() const {
-    return _reaction_rates;
 }
 
 void GraphTopology::appendTopology(GraphTopology &other, Topology::particle_index otherParticle,
@@ -290,27 +240,11 @@ void GraphTopology::appendTopology(GraphTopology &other, Topology::particle_inde
     _topology_type = newType;
 }
 
-graph::Graph::vertex_ref GraphTopology::vertexForParticle(Topology::particle_index particle) {
-    auto it = std::find(particles.begin(), particles.end(), particle);
-    if(it != particles.end()) {
-        return std::next(graph_.vertices().begin(), std::distance(particles.begin(), it));
-    }
-    return graph_.vertices().end();
-}
-
-const model::Context &GraphTopology::context() const {
-    return _context.get();
-}
-
 std::vector<Particle> GraphTopology::fetchParticles() const {
     if(!_stateModel) {
         throw std::logic_error("Cannot fetch particles if no state model was provided!");
     }
     return _stateModel->getParticlesForTopology(*this);
-}
-
-Particle GraphTopology::particleForVertex(graph::Graph::vertex_ref vertexRef) const {
-    return particleForVertex(*vertexRef);
 }
 
 Particle GraphTopology::particleForVertex(const vertex &vertex) const {

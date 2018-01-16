@@ -48,9 +48,9 @@ struct RadialDistribution::Impl {
     std::unique_ptr<util::TimeSeriesWriter> time;
 };
 
-RadialDistribution::RadialDistribution(Kernel *const kernel, unsigned int stride,
-                                       std::vector<scalar> binBorders, std::vector<unsigned int> typeCountFrom,
-                                       std::vector<unsigned int> typeCountTo, scalar particleToDensity)
+RadialDistribution::RadialDistribution(Kernel *const kernel, stride_type stride,
+                                       std::vector<scalar> binBorders, std::vector<particle_type_type> typeCountFrom,
+                                       std::vector<particle_type_type> typeCountTo, scalar particleToDensity)
         : Observable(kernel, stride), typeCountFrom(std::move(typeCountFrom)), typeCountTo(std::move(typeCountTo)),
           particleToDensity(particleToDensity), pimpl(std::make_unique<Impl>()) {
     setBinBorders(binBorders);
@@ -60,7 +60,7 @@ void RadialDistribution::evaluate() {
     if (binBorders.size() > 1) {
         std::fill(counts.begin(), counts.end(), 0);
         const auto particles = kernel->stateModel().getParticles();
-        auto isInCollection = [](const readdy::model::Particle &p, const std::vector<unsigned int> &collection) {
+        auto isInCollection = [](const readdy::model::Particle &p, const auto &collection) {
             return std::find(collection.begin(), collection.end(), p.getType()) != collection.end();
         };
         const auto nFromParticles = std::count_if(particles.begin(), particles.end(),

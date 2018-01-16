@@ -62,14 +62,6 @@ public:
     // factory method
     static readdy::model::Kernel *create();
 
-    void setNThreads(std::uint32_t n) {
-        _pool.resize(n);
-    };
-
-    std::size_t getNThreads() {
-        return static_cast<std::size_t>(_pool.size());
-    }
-
     const CPUStateModel &getCPUKernelStateModel() const {
         return _stateModel;
     };
@@ -86,11 +78,19 @@ public:
         return _stateModel;
     };
 
-    const model::actions::ActionFactory &getActionFactory() const override {
+    void setNThreads(std::uint32_t n) {
+        _pool.resize_wait(n);
+    };
+
+    std::size_t getNThreads() {
+        return static_cast<std::size_t>(_pool.size());
+    }
+
+    const model::actions::ActionFactory &actions() const override {
         return _actions;
     };
 
-    model::actions::ActionFactory &getActionFactory() override {
+    model::actions::ActionFactory &actions() override {
         return _actions;
     };
 
@@ -102,17 +102,19 @@ public:
         return &_topologyActionFactory;
     };
 
-    const model::observables::ObservableFactory &getObservableFactory() const override {
+    const model::observables::ObservableFactory &observe() const override {
         return _observables;
     };
 
-    model::observables::ObservableFactory &getObservableFactory() override {
+    model::observables::ObservableFactory &observe() override {
         return _observables;
     };
 
     void initialize() override;
 
-    void finalize() override;
+    void finalize() override {
+        readdy::model::Kernel::finalize();
+    }
 
     thread_pool &pool() {
         return _pool;

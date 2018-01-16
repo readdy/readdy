@@ -46,42 +46,42 @@ namespace cpu_legacy {
 namespace actions {
 CPUActionFactory::CPUActionFactory(CPULegacyKernel *const kernel) : kernel(kernel) { }
 
-core_p::EulerBDIntegrator *CPUActionFactory::createEulerBDIntegrator(scalar timeStep) const {
-    return new CPUEulerBDIntegrator(kernel, timeStep);
+std::unique_ptr<model::actions::AddParticles>
+CPUActionFactory::addParticles(const std::vector<model::Particle> &particles) const {
+    return {std::make_unique<model::actions::AddParticles>(kernel, particles)};
 }
 
-core_p::CalculateForces *CPUActionFactory::createCalculateForces() const {
-    return new CPUCalculateForces(kernel);
+std::unique_ptr<model::actions::EulerBDIntegrator> CPUActionFactory::eulerBDIntegrator(scalar timeStep) const {
+    return {std::make_unique<CPUEulerBDIntegrator>(kernel, timeStep)};
 }
 
-core_p::UpdateNeighborList *
-CPUActionFactory::createUpdateNeighborList(core_p::UpdateNeighborList::Operation operation,
-                                            scalar skinSize) const {
-    return new CPUUpdateNeighborList(kernel, operation, skinSize);
+std::unique_ptr<model::actions::CalculateForces> CPUActionFactory::calculateForces() const {
+    return {std::make_unique<CPUCalculateForces>(kernel)};
 }
 
-core_p::EvaluateCompartments *CPUActionFactory::createEvaluateCompartments() const {
-    return new CPUEvaluateCompartments(kernel);
+std::unique_ptr<model::actions::UpdateNeighborList>
+CPUActionFactory::updateNeighborList(model::actions::UpdateNeighborList::Operation operation, scalar skinSize) const {
+    return {std::make_unique<CPUUpdateNeighborList>(kernel, operation, skinSize)};
 }
 
-core_p::reactions::UncontrolledApproximation *
-CPUActionFactory::createUncontrolledApproximation(scalar timeStep) const {
-    return new reactions::CPUUncontrolledApproximation(kernel, timeStep);
+std::unique_ptr<model::actions::EvaluateCompartments> CPUActionFactory::evaluateCompartments() const {
+    return {std::make_unique<CPUEvaluateCompartments>(kernel)};
 }
 
-core_p::reactions::Gillespie *CPUActionFactory::createGillespie(scalar timeStep) const {
-    return new reactions::CPUGillespie(kernel, timeStep);
+std::unique_ptr<model::actions::reactions::UncontrolledApproximation>
+CPUActionFactory::uncontrolledApproximation(scalar timeStep) const {
+    return {std::make_unique<reactions::CPUUncontrolledApproximation>(kernel, timeStep)};
 }
 
-readdy::model::actions::AddParticles *
-CPUActionFactory::createAddParticles(const std::vector<readdy::model::Particle> &particles) const {
-    return new readdy::model::actions::AddParticles(kernel, particles);
+std::unique_ptr<model::actions::reactions::Gillespie> CPUActionFactory::gillespie(scalar timeStep) const {
+    return {std::make_unique<reactions::CPUGillespie>(kernel, timeStep)};
 }
 
-readdy::model::actions::top::EvaluateTopologyReactions *
-CPUActionFactory::createEvaluateTopologyReactions(scalar timeStep) const {
-    return new top::CPUEvaluateTopologyReactions(kernel, timeStep);
+std::unique_ptr<model::actions::top::EvaluateTopologyReactions>
+CPUActionFactory::evaluateTopologyReactions(scalar timeStep) const {
+    return {std::make_unique<top::CPUEvaluateTopologyReactions>(kernel, timeStep)};
 }
+
 }
 }
 }

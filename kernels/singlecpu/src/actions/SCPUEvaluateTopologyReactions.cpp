@@ -230,81 +230,86 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
             const auto &data = *stateModel.getParticleData();
             const auto &nl = *stateModel.getNeighborList();
 
-            for (auto pair : nl) {
-                auto &entry = data.entry_at(pair.idx1);
-                auto &neighbor = data.entry_at(pair.idx2);
-                if (!entry.deactivated && !neighbor.deactivated) {
-                    topology_type_type tt1 = entry.topology_index >= 0 ? stateModel.topologies().at(static_cast<std::size_t>(entry.topology_index))->type() : static_cast<topology_type_type>(-1);
-                    topology_type_type tt2 = neighbor.topology_index >= 0 ? stateModel.topologies().at(static_cast<std::size_t>(neighbor.topology_index))->type() : static_cast<topology_type_type>(-1);
-                    if(tt1 == -1 && tt2 == -1) continue;
-                    const auto &reactions = topology_registry.spatialReactionsByType(entry.type, tt1,
-                                                                                     neighbor.type, tt2);
-                    const auto distSquared = d2(entry.pos, neighbor.pos);
-                    std::size_t reaction_index = 0;
-                    for (const auto &reaction : reactions) {
-                        if (distSquared < reaction.radius() * reaction.radius()) {
-                            TREvent event{};
-                            event.own_rate = reaction.rate();
-                            event.cumulative_rate = event.own_rate + current_cumulative_rate;
-                            current_cumulative_rate = event.cumulative_rate;
-                            switch (reaction.mode()) {
-                                case readdy::model::top::reactions::STRMode::TT_FUSION:
-                                    if(entry.topology_index >= 0 && neighbor.topology_index >= 0 && entry.topology_index != neighbor.topology_index) {
-                                        event.topology_idx = static_cast<std::size_t>(entry.topology_index);
-                                        event.topology_idx2 = neighbor.topology_index;
-                                        event.t1 = entry.type;
-                                        event.t2 = neighbor.type;
-                                        event.idx1 = pair.idx1;
-                                        event.idx2 = pair.idx2;
-                                        event.reaction_idx = reaction_index;
-                                        event.spatial = true;
+            for(auto cell = 0_z; cell < nl.nCells(); ++cell) {
+                for(auto it = nl.particlesBegin(cell); it != nl.particlesEnd(cell); ++it) {
+                    auto pidx = *it;
+                    nl.forEachNeighbor(it, cell, [&](std::size_t neighborIdx) {
+                        auto &entry = data.entry_at(pidx);
+                        auto &neighbor = data.entry_at(neighborIdx);
+                        if (!entry.deactivated && !neighbor.deactivated) {
+                            topology_type_type tt1 = entry.topology_index >= 0 ? stateModel.topologies().at(static_cast<std::size_t>(entry.topology_index))->type() : static_cast<topology_type_type>(-1);
+                            topology_type_type tt2 = neighbor.topology_index >= 0 ? stateModel.topologies().at(static_cast<std::size_t>(neighbor.topology_index))->type() : static_cast<topology_type_type>(-1);
+                            if(tt1 == -1 && tt2 == -1) return;
+                            const auto &reactions = topology_registry.spatialReactionsByType(entry.type, tt1,
+                                                                                             neighbor.type, tt2);
+                            const auto distSquared = d2(entry.pos, neighbor.pos);
+                            std::size_t reaction_index = 0;
+                            for (const auto &reaction : reactions) {
+                                if (distSquared < reaction.radius() * reaction.radius()) {
+                                    TREvent event{};
+                                    event.own_rate = reaction.rate();
+                                    event.cumulative_rate = event.own_rate + current_cumulative_rate;
+                                    current_cumulative_rate = event.cumulative_rate;
+                                    switch (reaction.mode()) {
+                                        case readdy::model::top::reactions::STRMode::TT_FUSION:
+                                            if(entry.topology_index >= 0 && neighbor.topology_index >= 0 && entry.topology_index != neighbor.topology_index) {
+                                                event.topology_idx = static_cast<std::size_t>(entry.topology_index);
+                                                event.topology_idx2 = neighbor.topology_index;
+                                                event.t1 = entry.type;
+                                                event.t2 = neighbor.type;
+                                                event.idx1 = pidx;
+                                                event.idx2 = neighborIdx;
+                                                event.reaction_idx = reaction_index;
+                                                event.spatial = true;
 
-                                        events.push_back(event);
+                                                events.push_back(event);
+                                            }
+                                            break;
+                                        case readdy::model::top::reactions::STRMode::TT_ENZYMATIC: // fall through
+                                        case readdy::model::top::reactions::STRMode::TT_FUSION_ALLOW_SELF:
+                                            if(entry.topology_index >= 0 && neighbor.topology_index >= 0) {
+                                                event.topology_idx = static_cast<std::size_t>(entry.topology_index);
+                                                event.topology_idx2 = neighbor.topology_index;
+                                                event.t1 = entry.type;
+                                                event.t2 = neighbor.type;
+                                                event.idx1 = pidx;
+                                                event.idx2 = neighborIdx;
+                                                event.reaction_idx = reaction_index;
+                                                event.spatial = true;
+
+                                                events.push_back(event);
+                                            }
+                                            break;
+                                        case readdy::model::top::reactions::STRMode::TP_ENZYMATIC: // fall through
+                                        case readdy::model::top::reactions::STRMode::TP_FUSION:
+                                            if (entry.topology_index >= 0 && neighbor.topology_index < 0) {
+                                                event.topology_idx = static_cast<std::size_t>(entry.topology_index);
+                                                event.t1 = entry.type;
+                                                event.t2 = neighbor.type;
+                                                event.idx1 = pidx;
+                                                event.idx2 = neighborIdx;
+                                                event.reaction_idx = reaction_index;
+                                                event.spatial = true;
+
+                                                events.push_back(event);
+                                            } else if (entry.topology_index < 0 && neighbor.topology_index >= 0) {
+                                                event.topology_idx = static_cast<std::size_t>(neighbor.topology_index);
+                                                event.t1 = neighbor.type;
+                                                event.t2 = entry.type;
+                                                event.idx1 = neighborIdx;
+                                                event.idx2 = pidx;
+                                                event.reaction_idx = reaction_index;
+                                                event.spatial = true;
+
+                                                events.push_back(event);
+                                            }
+                                            break;
                                     }
-                                    break;
-                                case readdy::model::top::reactions::STRMode::TT_ENZYMATIC: // fall through
-                                case readdy::model::top::reactions::STRMode::TT_FUSION_ALLOW_SELF:
-                                    if(entry.topology_index >= 0 && neighbor.topology_index >= 0) {
-                                        event.topology_idx = static_cast<std::size_t>(entry.topology_index);
-                                        event.topology_idx2 = neighbor.topology_index;
-                                        event.t1 = entry.type;
-                                        event.t2 = neighbor.type;
-                                        event.idx1 = pair.idx1;
-                                        event.idx2 = pair.idx2;
-                                        event.reaction_idx = reaction_index;
-                                        event.spatial = true;
-
-                                        events.push_back(event);
-                                    }
-                                    break;
-                                case readdy::model::top::reactions::STRMode::TP_ENZYMATIC: // fall through
-                                case readdy::model::top::reactions::STRMode::TP_FUSION:
-                                    if (entry.topology_index >= 0 && neighbor.topology_index < 0) {
-                                        event.topology_idx = static_cast<std::size_t>(entry.topology_index);
-                                        event.t1 = entry.type;
-                                        event.t2 = neighbor.type;
-                                        event.idx1 = pair.idx1;
-                                        event.idx2 = pair.idx2;
-                                        event.reaction_idx = reaction_index;
-                                        event.spatial = true;
-
-                                        events.push_back(event);
-                                    } else if (entry.topology_index < 0 && neighbor.topology_index >= 0) {
-                                        event.topology_idx = static_cast<std::size_t>(neighbor.topology_index);
-                                        event.t1 = neighbor.type;
-                                        event.t2 = entry.type;
-                                        event.idx1 = pair.idx2;
-                                        event.idx2 = pair.idx1;
-                                        event.reaction_idx = reaction_index;
-                                        event.spatial = true;
-
-                                        events.push_back(event);
-                                    }
-                                    break;
+                                }
+                                ++reaction_index;
                             }
                         }
-                        ++reaction_index;
-                    }
+                    });
                 }
             }
         }

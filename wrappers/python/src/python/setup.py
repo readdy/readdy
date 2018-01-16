@@ -31,6 +31,7 @@ from distutils.command.build import build
 dyn_lib_extensions = [".so", ".dll", ".lib", ".dylib"]
 print_sep = "***" * 15
 
+__version__ = '@READDY_VERSION@'
 
 class ReaDDyBuild(build):
     @staticmethod
@@ -87,7 +88,7 @@ def get_package_dir():
 
 metadata = dict(
     name='ReaDDy',
-    version='@READDY_VERSION@',
+    version=__version__[1:] if __version__.startswith("v") else __version__,
     package_dir={'': get_package_dir()},
     package_data={'readdy._internal': ["*"]},
     packages=find_packages(where=get_package_dir()),

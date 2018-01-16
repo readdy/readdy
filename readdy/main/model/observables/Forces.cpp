@@ -46,14 +46,14 @@ struct Forces::Impl {
     std::unique_ptr<util::CompoundH5Types> h5types;
 };
 
-Forces::Forces(Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount)
+Forces::Forces(Kernel *const kernel, stride_type stride, std::vector<std::string> typesToCount)
         : Forces(kernel, stride,
                  _internal::util::transformTypes2(typesToCount, kernel->context())) {}
 
-Forces::Forces(Kernel *const kernel, unsigned int stride, std::vector<unsigned int> typesToCount)
-        : Observable(kernel, stride), typesToCount(std::move(typesToCount)), pimpl(std::make_unique<Impl>()) {}
+Forces::Forces(Kernel *const kernel, stride_type stride, const std::vector<particle_type_type> &typesToCount)
+        : Observable(kernel, stride), typesToCount(typesToCount), pimpl(std::make_unique<Impl>()) {}
 
-Forces::Forces(Kernel *const kernel, unsigned int stride) : Observable(kernel, stride), typesToCount({}),
+Forces::Forces(Kernel *const kernel, stride_type stride) : Observable(kernel, stride), typesToCount({}),
                                                             pimpl(std::make_unique<Impl>()) {}
 
 void Forces::flush() {

@@ -44,25 +44,63 @@ class HarmonicRepulsion : public PotentialOrder2 {
     using super = PotentialOrder2;
 public:
     HarmonicRepulsion(particle_type_type type1, particle_type_type type2,
-                      scalar forceConstant, scalar interactionDistance);
+                      scalar forceConstant, scalar interactionDistance)
+            : super(type1, type2), _forceConstant(forceConstant), _interactionDistance(interactionDistance),
+              _interactionDistanceSquared(interactionDistance*interactionDistance) {}
 
-    scalar interactionDistance() const;
+    scalar interactionDistance() const {
+        return _interactionDistance;
+    }
 
     std::string describe() const override;
 
-    scalar getForceConstant() const;
+    scalar getForceConstant() const {
+        return _forceConstant;
+    }
 
-    scalar getMaximalForce(scalar kbt) const noexcept override;
+    scalar getMaximalForce(scalar kbt) const noexcept override {
+        return _forceConstant * getCutoffRadius();
+    }
 
-    scalar calculateEnergy(const Vec3 &x_ij) const override;
+    scalar calculateEnergy(const Vec3 &x_ij) const override {
+        auto distanceSquared = x_ij * x_ij;
+        if (distanceSquared < _interactionDistanceSquared) {
+            distanceSquared = std::sqrt(distanceSquared);
+            distanceSquared -= _interactionDistance;
+            distanceSquared *= distanceSquared;
+            return static_cast<scalar>(0.5) * distanceSquared * getForceConstant();
+        }
+        return 0;
+    }
 
-    void calculateForce(Vec3 &force, const Vec3 &x_ij) const override;
+    void calculateForce(Vec3 &force, const Vec3 &x_ij) const override {
+        auto squared = x_ij * x_ij;
+        if (squared < _interactionDistanceSquared && squared > 0) {
+            squared = std::sqrt(squared);
+            force += (getForceConstant() * (squared - _interactionDistance)) / squared * x_ij;
+        } else {
+            // nothing happens
+        }
+    }
 
-    void calculateForceAndEnergy(Vec3 &force, scalar &energy, const Vec3 &x_ij) const override;
+    void calculateForceAndEnergy(Vec3 &force, scalar &energy, const Vec3 &x_ij) const override {
+        auto squared = x_ij * x_ij;
+        if (squared < _interactionDistanceSquared && squared > 0) {
+            squared = std::sqrt(squared);
+            energy += 0.5 * getForceConstant() * std::pow(squared - _interactionDistance, 2);
+            force += (getForceConstant() * (squared - _interactionDistance)) / squared * x_ij;
+        } else {
+            // nothing happens
+        }
+    }
 
-    scalar getCutoffRadius() const override;
+    scalar getCutoffRadius() const override {
+        return _interactionDistance;
+    }
 
-    scalar getCutoffRadiusSquared() const override;
+    scalar getCutoffRadiusSquared() const override {
+        return _interactionDistanceSquared;
+    }
 
     std::string type() const override;
 
@@ -90,19 +128,77 @@ public:
     };
 
     WeakInteractionPiecewiseHarmonic(particle_type_type type1, particle_type_type type2,
-                                     scalar forceConstant, const Configuration &config);
+                                     scalar forceConstant, const Configuration &config)
+            : super(type1, type2), forceConstant(forceConstant), conf(config) {};
 
-    scalar getMaximalForce(scalar kbt) const noexcept override;
+    scalar getMaximalForce(scalar kbt) const noexcept override {
+        scalar fMax1 = forceConstant * conf.desiredParticleDistance;
+        scalar fMax2 = 2 * conf.depthAtDesiredDistance *
+                       (conf.noInteractionDistance - conf.desiredParticleDistance);
+        return std::max(fMax1, fMax2);
+    }
 
-    scalar calculateEnergy(const Vec3 &x_ij) const override;
+    scalar calculateEnergy(const Vec3 &x_ij) const override {
+        const auto dist = std::sqrt(x_ij * x_ij);
+        const auto len_part2 = conf.noInteractionDistance - conf.desiredParticleDistance;
+        if (dist < conf.desiredParticleDistance) {
+            // repulsive as we are closer than the desired distance
+            return static_cast<scalar>(.5) * forceConstant * (dist - conf.desiredParticleDistance) * (dist - conf.desiredParticleDistance) -
+                   conf.depthAtDesiredDistance;
+        }
+        // attractive as we are further (but not too far) apart than the desired distance
+        if (dist < conf.desiredParticleDistance + c_::half * len_part2) {
+            return c_::half * conf.depthAtDesiredDistance * (c_::one / (c_::half * len_part2)) * (c_::one / (c_::half * len_part2)) *
+                   (dist - conf.desiredParticleDistance) * (dist - conf.desiredParticleDistance) -
+                   conf.depthAtDesiredDistance;
+        }
+        // if we are not too far apart but still further than in the previous case, attractive
+        if (dist < conf.noInteractionDistance) {
+            return -c_::half * conf.depthAtDesiredDistance * (c_::one / (c_::half * len_part2)) * (c_::one / (c_::half * len_part2)) *
+                   (dist - conf.noInteractionDistance) * (dist - conf.noInteractionDistance);
+        }
+        return 0;
+    }
 
-    void calculateForce(Vec3 &force, const Vec3 &x_ij) const override;
+    void calculateForce(Vec3 &force, const Vec3 &x_ij) const override {
+        const auto dist = std::sqrt(x_ij * x_ij);
+        const auto len_part2 = conf.noInteractionDistance - conf.desiredParticleDistance;
+        scalar  factor = 0;
+        if (dist < conf.desiredParticleDistance) {
+            // repulsive as we are closer than the desired distance
+            factor = -1 * forceConstant * (conf.desiredParticleDistance - dist);
+        } else {
+            // attractive as we are further (but not too far) apart than the desired distance
+            if (dist < conf.desiredParticleDistance + .5 * len_part2) {
+                factor = -c_::one * conf.depthAtDesiredDistance * (c_::one / (c_::half * len_part2)) * (c_::one / (c_::half * len_part2)) *
+                         (conf.desiredParticleDistance - dist);
+            } else {
+                // if we are not too far apart but still further than in the previous case, attractive
+                if (dist < conf.noInteractionDistance) {
+                    factor = conf.depthAtDesiredDistance * (c_::one / (c_::half * len_part2)) * (c_::one / (c_::half * len_part2)) *
+                             (conf.noInteractionDistance - dist);
+                }
+            }
+        }
+        if (dist > 0 && factor != 0) {
+            force += factor * x_ij / dist;
+        } else {
+            // nothing happens
+        }
+    }
 
-    void calculateForceAndEnergy(Vec3 &force, scalar &energy, const Vec3 &x_ij) const override;
+    void calculateForceAndEnergy(Vec3 &force, scalar &energy, const Vec3 &x_ij) const override {
+        energy += calculateEnergy(x_ij);
+        calculateForce(force, x_ij);
+    }
 
-    scalar getCutoffRadius() const override;
+    scalar getCutoffRadius() const override {
+        return conf.noInteractionDistance;
+    }
 
-    scalar getCutoffRadiusSquared() const override;
+    scalar getCutoffRadiusSquared() const override {
+        return conf.noInteractionDistanceSquared;
+    }
 
     std::string type() const override;
 
@@ -153,24 +249,46 @@ public:
 
     LennardJones &operator=(LennardJones &&) = delete;
 
-    ~LennardJones() override;
+    ~LennardJones() override = default;
 
-    scalar calculateEnergy(const Vec3 &x_ij) const override;
+    scalar calculateEnergy(const Vec3 &x_ij) const override {
+        const auto r = x_ij.norm();
+        if (r > cutoffDistance) return 0;
+        return shift ? energy(r) - energy(cutoffDistance) : energy(r);
+    }
 
-    void calculateForce(Vec3 &force, const Vec3 &x_ij) const override;
+    void calculateForce(Vec3 &force, const Vec3 &x_ij) const override {
+        const auto norm = x_ij.norm();
+        if (norm <= cutoffDistance) {
+            force += -1. * k * (1 / (sigma * sigma)) *
+                     (m * std::pow(sigma / norm, m + 2) - n * std::pow(sigma / norm, n + 2)) *
+                     x_ij;
+        }
+    }
 
-    void calculateForceAndEnergy(Vec3 &force, scalar &energy, const Vec3 &x_ij) const override;
+    void calculateForceAndEnergy(Vec3 &force, scalar &energy, const Vec3 &x_ij) const override {
+        energy += calculateEnergy(x_ij);
+        calculateForce(force, x_ij);
+    }
 
-    scalar getCutoffRadius() const override;
+    scalar getCutoffRadius() const override {
+        return cutoffDistance;
+    }
 
-    scalar getCutoffRadiusSquared() const override;
+    scalar getCutoffRadiusSquared() const override {
+        return cutoffDistanceSquared;
+    }
 
-    scalar getMaximalForce(scalar kbt) const noexcept override;
+    scalar getMaximalForce(scalar kbt) const noexcept override {
+        return 0;
+    };
 
     std::string type() const override;
 
 protected:
-    scalar energy(scalar r) const;
+    scalar energy(scalar r) const {
+        return k * (std::pow(sigma / r, m) - std::pow(sigma / r, n));
+    }
 
     scalar m, n;
     scalar cutoffDistance, cutoffDistanceSquared;
@@ -195,21 +313,41 @@ public:
 
     ScreenedElectrostatics &operator=(ScreenedElectrostatics &&) = delete;
 
-    ~ScreenedElectrostatics() override;
+    ~ScreenedElectrostatics() override = default;
 
-    scalar calculateEnergy(const Vec3 &x_ij) const override;
+    scalar calculateEnergy(const Vec3 &x_ij) const override {
+        const scalar  distance = x_ij.norm();
+        scalar  result = electrostaticStrength * std::exp(-inverseScreeningDepth * distance) / distance;
+        result += repulsionStrength * std::pow(repulsionDistance / distance, exponent);
+        return result;
+    }
 
-    void calculateForce(Vec3 &force, const Vec3 &x_ij) const override;
+    void calculateForce(Vec3 &force, const Vec3 &x_ij) const override {
+        auto distance = x_ij.norm();
+        auto forceFactor = electrostaticStrength * std::exp(-inverseScreeningDepth * distance);
+        forceFactor *= (inverseScreeningDepth / distance + c_::one / std::pow(distance, c_::two));
+        forceFactor += repulsionStrength * exponent / repulsionDistance * std::pow( repulsionDistance / distance, exponent + c_::one);
+        force += forceFactor * (- c_::one * x_ij / distance);
+    }
 
-    void calculateForceAndEnergy(Vec3 &force, scalar &energy, const Vec3 &x_ij) const override;
+    void calculateForceAndEnergy(Vec3 &force, scalar &energy, const Vec3 &x_ij) const override {
+        calculateForce(force, x_ij);
+        energy += calculateEnergy(x_ij);
+    }
 
-    scalar getCutoffRadius() const override;
+    scalar getCutoffRadius() const override {
+        return cutoff;
+    }
 
     std::string describe() const override;
 
-    scalar getCutoffRadiusSquared() const override;
+    scalar getCutoffRadiusSquared() const override {
+        return cutoffSquared;
+    }
 
-    scalar getMaximalForce(scalar kbt) const noexcept override;
+    scalar getMaximalForce(scalar kbt) const noexcept override {
+        return 0;
+    }
 
     std::string type() const override;
 

@@ -56,7 +56,7 @@ TEST_P(TestSchemes, SimulationObject) {
      * use ReaDDyScheme without defaults
      */
     simulation.runScheme<readdy::api::ReaDDyScheme>(false)
-            .withIntegrator<readdy::model::actions::EulerBDIntegrator>()
+            .withEulerBDIntegrator()
             .withReactionScheduler<readdy::model::actions::reactions::UncontrolledApproximation>()
             .configureAndRun(5, .5);
 
@@ -65,7 +65,7 @@ TEST_P(TestSchemes, SimulationObject) {
      */
     simulation.runScheme()
             .includeForces(false)
-            .withIntegrator<readdy::model::actions::EulerBDIntegrator>()
+            .withEulerBDIntegrator()
             .withReactionScheduler<readdy::model::actions::reactions::UncontrolledApproximation>()
             .configureAndRun(5, .5);
 
@@ -74,7 +74,7 @@ TEST_P(TestSchemes, SimulationObject) {
      */
     simulation.runScheme<readdy::api::AdvancedScheme>(false)
             .includeForces(true)
-            .withIntegrator<readdy::model::actions::EulerBDIntegrator>()
+            .withEulerBDIntegrator()
             .includeCompartments(true)
             .configureAndRun(5, .5);
 }
@@ -84,7 +84,7 @@ TEST_P(TestSchemes, CorrectNumberOfTimesteps) {
     auto increment = [&counter](readdy::model::observables::NParticles::result_type result) {
         counter++;
     };
-    auto obsHandle = simulation.registerObservable<readdy::model::observables::NParticles>(increment, 1);
+    auto obsHandle = simulation.registerObservable(simulation.observe().nParticles(1), increment);
     simulation.run(3, 0.1);
     EXPECT_EQ(counter, 4);
 }
@@ -94,7 +94,7 @@ TEST_P(TestSchemes, StoppingCriterionSimple) {
     auto increment = [&counter](readdy::model::observables::NParticles::result_type result) {
         counter++;
     };
-    auto obsHandle = simulation.registerObservable<readdy::model::observables::NParticles>(increment, 1);
+    auto obsHandle = simulation.registerObservable(simulation.observe().nParticles(1), increment);
     auto shallContinue = [](readdy::time_step_type currentStep) {
         return currentStep < 5;
     };
@@ -116,7 +116,7 @@ TEST_P(TestSchemes, ComplexStoppingCriterion) {
             doStop = true;
         }
     };
-    auto obsHandle = simulation.registerObservable<readdy::model::observables::NParticles>(increment, 1);
+    auto obsHandle = simulation.registerObservable(simulation.observe().nParticles(1), increment);
     auto shallContinue = [&doStop](readdy::time_step_type currentStep) {
         return !doStop;
     };

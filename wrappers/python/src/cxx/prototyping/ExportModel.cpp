@@ -52,8 +52,7 @@ using particle_t = readdy::model::Particle;
 
 using model_t = readdy::kernel::scpu::SCPUStateModel;
 
-using scpu_neighbor_list = readdy::kernel::scpu::model::SCPUNeighborList;
-using scpu_nl_box = readdy::kernel::scpu::model::Box;
+using scpu_neighbor_list = readdy::kernel::scpu::model::CellLinkedList;
 using scpu_particle_data = readdy::kernel::scpu::model::SCPUParticleData;
 using scpu_pd_entry = readdy::kernel::scpu::model::Entry;
 
@@ -83,24 +82,7 @@ void exportModelClasses(py::module &proto) {
             .def("get_particle_data", [](model_t& self) -> const scpu_particle_data& {
                 return *self.getParticleData();
             }, rvp::reference_internal)
-            .def("get_neighbor_list", &model_t::getNeighborList, rvp::reference_internal)
             .def("get_particles", &model_t::getParticles);
-
-    py::class_<scpu_neighbor_list>(proto, "NeighborList")
-            .def(py::init<context *>())
-            .def("create", &scpu_neighbor_list::create)
-            .def("setup_neighboring_boxes", &scpu_neighbor_list::setupNeighboringBoxes)
-            .def("setup_boxes", &scpu_neighbor_list::setupBoxes)
-            .def("fill_boxes", &scpu_neighbor_list::fillBoxes);
-    py::class_<scpu_nl_box>(proto, "NeighborListBox")
-            .def(py::init<long, long, long, long>())
-            .def("add_neighbor", &scpu_nl_box::addNeighbor)
-            .def_readonly("i", &scpu_nl_box::i)
-            .def_readonly("j", &scpu_nl_box::j)
-            .def_readonly("k", &scpu_nl_box::k)
-            .def_readonly("id", &scpu_nl_box::id)
-            .def_readwrite("particle_indices", &scpu_nl_box::particleIndices)
-            .def_readwrite("neighboring_boxes", &scpu_nl_box::neighbors);
 
     py::class_<scpu_pd_entry>(proto, "ParticleDataEntry")
             .def("is_deactivated", &scpu_pd_entry::is_deactivated)

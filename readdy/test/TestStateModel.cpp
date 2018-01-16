@@ -44,7 +44,7 @@ TEST_P(TestStateModel, CalculateForcesTwoParticles) {
     m::Context &ctx = kernel->context();
     auto &stateModel = kernel->stateModel();
 
-    auto obs = kernel->createObservable<m::observables::Forces>(1);
+    auto obs = kernel->observe().forces(1);
     auto conn = kernel->connectObservable(obs.get());
     // two A particles with radius 1. -> cutoff 2, distance 1.8 -> r-r_0 = 0.2 -> force = 0.2
     ctx.particle_types().add("A", 1.0);
@@ -65,7 +65,7 @@ TEST_P(TestStateModel, CalculateForcesTwoParticles) {
     stateModel.initializeNeighborList(0.);
     stateModel.updateNeighborList();
 
-    auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
+    auto calculateForces = kernel->actions().calculateForces();
     calculateForces->perform();
     calculateForces->perform(); // calculating twice should yield the same result. force and energy must not accumulate
     // check results
@@ -91,11 +91,11 @@ TEST_P(TestStateModel, CalculateForcesTwoParticles) {
 
 TEST_P(TestStateModel, CalculateForcesRepulsion) {
     m::Context &ctx = kernel->context();
-    auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
+    auto calculateForces = kernel->actions().calculateForces();
     auto &stateModel = kernel->stateModel();
 
     // similar situation as before but now with repulsion between A and B
-    auto obs = kernel->createObservable<m::observables::Forces>(1);
+    auto obs = kernel->observe().forces(1);
     auto conn = kernel->connectObservable(obs.get());
     ctx.particle_types().add("A", 1.0);
     ctx.particle_types().add("B", 1.0);
@@ -209,9 +209,9 @@ TEST_P(TestStateModel, CalculateForcesRepulsion) {
 TEST_P(TestStateModel, CalculateForcesNoForces) {
     m::Context &ctx = kernel->context();
     auto &stateModel = kernel->stateModel();
-    auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
+    auto calculateForces = kernel->actions().calculateForces();
     // several particles without potentials -> forces must all be zero
-    auto obs = kernel->createObservable<m::observables::Forces>(1);
+    auto obs = kernel->observe().forces(1);
     auto conn = kernel->connectObservable(obs.get());
     ctx.particle_types().add("A", 1.0);
     ctx.particle_types().add("B", 1.0);

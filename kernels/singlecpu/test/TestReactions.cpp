@@ -43,14 +43,14 @@ TEST(SingleCPUTestReactions, TestDecay) {
     kernel->context().reactions().addFission("X fission", "X", "X", "X", .5, .3);
 
     readdy::scalar timeStep = 1.0;
-    auto &&integrator = kernel->createAction<readdy::model::actions::EulerBDIntegrator>(timeStep);
-    auto &&forces = kernel->createAction<readdy::model::actions::CalculateForces>();
+    auto &&integrator = kernel->actions().eulerBDIntegrator(timeStep);
+    auto &&forces = kernel->actions().calculateForces();
     using update_nl = readdy::model::actions::UpdateNeighborList;
-    auto &&initNeighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>(update_nl::Operation::init, 0);
-    auto &&neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>(update_nl::Operation::update, 0);
-    auto &&reactions = kernel->createAction<readdy::model::actions::reactions::UncontrolledApproximation>(timeStep);
+    auto &&initNeighborList = kernel->actions().updateNeighborList(update_nl::Operation::init, 0);
+    auto &&neighborList = kernel->actions().updateNeighborList(update_nl::Operation::update, 0);
+    auto &&reactions = kernel->actions().uncontrolledApproximation(timeStep);
 
-    auto pp_obs = kernel->createObservable<readdy::model::observables::Positions>(1);
+    auto pp_obs = kernel->observe().positions(1);
     pp_obs->setCallback([](const readdy::model::observables::Positions::result_type &t) {
         readdy::log::trace("got n particles={}", t.size());
     });
@@ -121,10 +121,10 @@ TEST(SingleCPUTestReactions, TestMultipleReactionTypes) {
     kernel->context().reactions().addConversion("E->A", "E", "A", 1e16);
     kernel->context().reactions().addConversion("C->D", "C", "D", 1e16);
 
-    auto &&integrator = kernel->createAction<readdy::model::actions::EulerBDIntegrator>(1);
-    auto &&forces = kernel->createAction<readdy::model::actions::CalculateForces>();
-    auto &&neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>();
-    auto &&reactions = kernel->createAction<readdy::model::actions::reactions::UncontrolledApproximation>(1);
+    auto &&integrator = kernel->actions().eulerBDIntegrator(1);
+    auto &&forces = kernel->actions().calculateForces();
+    auto &&neighborList = kernel->actions().updateNeighborList();
+    auto &&reactions = kernel->actions().uncontrolledApproximation(1);
 
     const auto typeId_A = kernel->context().particle_types().idOf("A");
     const auto typeId_B = kernel->context().particle_types().idOf("B");

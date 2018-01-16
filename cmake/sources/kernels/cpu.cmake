@@ -26,7 +26,6 @@ SET(CPU_INCLUDE_DIR "${READDY_GLOBAL_DIR}/kernels/cpu/include")
 # --- main sources ---
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/CPUKernel.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/CPUStateModel.cpp")
-LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/data/DefaultDataContainer.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/observables/CPUObservableFactory.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/observables/CPUObservables.cpp")
 

@@ -67,11 +67,6 @@ void CPUKernel::initialize() {
     _stateModel.resetReactionCounts();
 }
 
-void CPUKernel::finalize() {
-    readdy::model::Kernel::finalize();
-    //_pool.stop();
-}
-
 }
 }
 }

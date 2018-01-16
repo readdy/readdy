@@ -43,7 +43,14 @@ public:
     Sphere(const Compartment::conversion_map &conversions, const std::string &uniqueName, const Vec3 &origin,
            const scalar radius, const bool largerOrLess);
 
-    virtual const bool isContained(const Vec3 &position) const override;
+    virtual const bool isContained(const Vec3 &position) const override {
+        const auto delta = position - origin;
+        const auto distanceSquared = delta * delta;
+        if (largerOrLess) {
+            return distanceSquared > radiusSquared;
+        }
+        return distanceSquared < radiusSquared;
+    }
 
 protected:
     const Vec3 origin;
@@ -58,7 +65,13 @@ public:
     Plane(const Compartment::conversion_map &conversions, const std::string &uniqueName, const Vec3 &normalCoefficients,
           scalar distance, bool largerOrLess);
 
-    const bool isContained(const Vec3 &position) const override;
+    const bool isContained(const Vec3 &position) const override {
+        const scalar distanceFromPlane = position * normalCoefficients - distanceFromOrigin;
+        if (largerOrLess) {
+            return distanceFromPlane > 0;
+        }
+        return distanceFromPlane < 0;
+    }
 
 protected:
     const Vec3 normalCoefficients;

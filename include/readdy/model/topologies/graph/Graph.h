@@ -66,7 +66,7 @@ public:
 
     Graph() = default;
 
-    explicit Graph(vertex_list vertexList);
+    explicit Graph(vertex_list vertexList) : _vertices(std::move(vertexList)) {}
 
     virtual ~Graph() = default;
 
@@ -78,39 +78,105 @@ public:
 
     Graph &operator=(Graph &&) = default;
 
-    const vertex_list &vertices() const;
+    const vertex_list &vertices() const {
+        return _vertices;
+    }
 
-    vertex_list &vertices();
+    vertex_list &vertices() {
+        return _vertices;
+    }
 
-    vertex_ref firstVertex();
+    vertex_ref firstVertex() {
+        return vertices().begin();
+    }
 
-    vertex_ref lastVertex();
+    vertex_ref lastVertex() {
+        return --vertices().end();
+    }
 
-    bool containsEdge(const cedge& edge) const;
+    bool containsEdge(const cedge& edge) const {
+        const auto& v1 = std::get<0>(edge);
+        const auto& v2 = std::get<1>(edge);
+        const auto& v1Neighbors = v1->neighbors();
+        const auto& v2Neighbors = v2->neighbors();
+        return std::find(v1Neighbors.begin(), v1Neighbors.end(), v2) != v1Neighbors.end()
+               && std::find(v2Neighbors.begin(), v2Neighbors.end(), v1) != v2Neighbors.end();
+    }
 
-    bool containsEdge(vertex_cref v1, vertex_cref v2) const;
+    bool containsEdge(vertex_cref v1, vertex_cref v2) const {
+        return containsEdge(std::tie(v1, v2));
+    }
 
-    const Vertex &vertexForParticleIndex(std::size_t particleIndex) const;
+    const Vertex &vertexForParticleIndex(std::size_t particleIndex) const {
+        auto it = std::find_if(_vertices.begin(), _vertices.end(), [particleIndex](const Vertex &vertex) {
+            return vertex.particleIndex == particleIndex;
+        });
+        if (it != _vertices.end()) {
+            return *it;
+        }
+        throw std::invalid_argument("graph did not contain the particle index " + std::to_string(particleIndex));
+    }
 
-    void addVertex(std::size_t particleIndex, particle_type_type particleType);
+    void addVertex(std::size_t particleIndex, particle_type_type particleType) {
+        _vertices.emplace_back(particleIndex, particleType);
+    }
 
-    void addEdge(vertex_ref v1, vertex_ref v2);
+    void addEdge(vertex_ref v1, vertex_ref v2) {
+        v1->addNeighbor(v2);
+        v2->addNeighbor(v1);
+    }
 
-    void addEdge(const edge& edge);
+    void addEdge(const edge& edge) {
+        addEdge(std::get<0>(edge), std::get<1>(edge));
+    }
 
-    void addEdgeBetweenParticles(std::size_t particleIndex1, std::size_t particleIndex2);
+    void addEdgeBetweenParticles(std::size_t particleIndex1, std::size_t particleIndex2) {
+        auto it1 = vertexItForParticleIndex(particleIndex1);
+        auto it2 = vertexItForParticleIndex(particleIndex2);
+        if (it1 != _vertices.end() && it2 != _vertices.end()) {
+            it1->addNeighbor(it2);
+            it2->addNeighbor(it1);
+        } else {
+            throw std::invalid_argument("the particles indices did not exist...");
+        }
+    }
 
-    void removeEdge(vertex_ref v1, vertex_ref v2);
+    void removeEdge(vertex_ref v1, vertex_ref v2) {
+        assert(v1 != v2);
+        v1->removeNeighbor(v2);
+        v2->removeNeighbor(v1);
+    }
 
-    void removeEdge(const edge& edge);
+    void removeEdge(const edge& edge) {
+        removeEdge(std::get<0>(edge), std::get<1>(edge));
+    }
 
-    void removeVertex(vertex_ref vertex);
+    void removeVertex(vertex_ref vertex) {
+        removeNeighborsEdges(vertex);
+        _vertices.erase(vertex);
+    }
 
-    void removeParticle(std::size_t particleIndex);
+    void removeParticle(std::size_t particleIndex) {
+        auto v = vertexItForParticleIndex(particleIndex);
+        if (v != _vertices.end()) {
+            removeNeighborsEdges(v);
+            _vertices.erase(v);
+        } else {
+            throw std::invalid_argument(
+                    "the vertex corresponding to the particle with topology index " + std::to_string(particleIndex) +
+                    " did not exist in the graph");
+        }
+    }
 
     bool isConnected();
     
-    std::vector<std::tuple<vertex_ref, vertex_ref>> edges();
+    std::vector<std::tuple<vertex_ref, vertex_ref>> edges() {
+        std::vector<std::tuple<Graph::vertex_ref, Graph::vertex_ref>> result;
+        findEdges([&result](const edge& tup) {
+            result.push_back(tup);
+        });
+        return result;
+    };
 
     void findEdges(const edge_callback &edgeCallback);
     
@@ -119,7 +185,17 @@ public:
                      const path_len_3_callback &quadruple_callback);
 
     std::tuple<std::vector<edge>, std::vector<path_len_2>, std::vector<path_len_3>>
-    findNTuples();
+    findNTuples() {
+        auto tuple = std::make_tuple(std::vector<edge>(), std::vector<path_len_2>(), std::vector<path_len_3>());
+        findNTuples([&](const edge& tup) {
+            std::get<0>(tuple).push_back(tup);
+        }, [&](const path_len_2& path2) {
+            std::get<1>(tuple).push_back(path2);
+        }, [&](const path_len_3& path3) {
+            std::get<2>(tuple).push_back(path3);
+        });
+        return tuple;
+    };
 
     /**
      * Returns the connected components, invalidates this graph
@@ -130,9 +206,17 @@ public:
 private:
     vertex_list _vertices {};
 
-    void removeNeighborsEdges(vertex_ref vertex);
+    void removeNeighborsEdges(vertex_ref vertex) {
+        std::for_each(std::begin(vertex->neighbors()), std::end(vertex->neighbors()), [vertex](const auto neighbor) {
+            neighbor->removeNeighbor(vertex);
+        });
+    }
 
-    auto vertexItForParticleIndex(std::size_t particleIndex) -> decltype(_vertices.begin());
+    auto vertexItForParticleIndex(std::size_t particleIndex) -> decltype(_vertices.begin()) {
+        return std::find_if(_vertices.begin(), _vertices.end(), [particleIndex](const Vertex &vertex) {
+            return vertex.particleIndex == particleIndex;
+        });
+    }
 };
 
 NAMESPACE_END(graph)

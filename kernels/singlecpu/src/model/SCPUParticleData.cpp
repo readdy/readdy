@@ -38,56 +38,12 @@ namespace kernel {
 namespace scpu {
 namespace model {
 
-SCPUParticleData::iterator SCPUParticleData::begin() {
-    return entries.begin();
-}
-
-SCPUParticleData::iterator SCPUParticleData::end() {
-    return entries.end();
-}
-
-SCPUParticleData::const_iterator SCPUParticleData::cbegin() const {
-    return entries.cbegin();
-}
-
-SCPUParticleData::const_iterator SCPUParticleData::cend() const {
-    return entries.cend();
-}
-
-SCPUParticleData::const_iterator SCPUParticleData::begin() const {
-    return entries.begin();
-}
-
-SCPUParticleData::const_iterator SCPUParticleData::end() const {
-    return entries.end();
-}
-
 readdy::model::Particle SCPUParticleData::getParticle(const entry_index index) const {
     const auto& entry = *(entries.begin() + index);
     if(entry.deactivated) {
         log::error("Requested deactivated particle at index {}!", index);
     }
     return toParticle(entry);
-}
-
-readdy::model::Particle SCPUParticleData::toParticle(const Entry &e) const {
-    return readdy::model::Particle(e.pos, e.type, e.id);
-}
-
-void SCPUParticleData::addParticle(const SCPUParticleData::particle_type &particle) {
-    addParticles({particle});
-}
-
-void SCPUParticleData::addParticles(const std::vector<SCPUParticleData::particle_type> &particles) {
-    for(const auto& p : particles) {
-        if(!blanks.empty()) {
-            const auto idx = blanks.back();
-            blanks.pop_back();
-            entries.at(idx) = Entry{p};
-        } else {
-            entries.emplace_back(p);
-        }
-    }
 }
 
 std::vector<SCPUParticleData::entries_vec::size_type>
@@ -121,38 +77,6 @@ void SCPUParticleData::removeParticle(const SCPUParticleData::particle_type &par
     log::error("Tried to remove particle ({}) which did not exist or was already deactivated!", particle);
 }
 
-void SCPUParticleData::removeParticle(const size_t index) {
-    auto& p = *(entries.begin() + index);
-    if(!p.deactivated) {
-        blanks.push_back(index);
-        p.deactivated = true;
-        // neighbors.at(index).clear();
-    } else {
-        log::error("Tried to remove particle (index={}), that was already removed!", index);
-    }
-}
-
-Entry &SCPUParticleData::entry_at(SCPUParticleData::entry_index idx) {
-    return entries.at(idx);
-}
-
-const Entry &SCPUParticleData::entry_at(SCPUParticleData::entry_index idx) const {
-    return entries.at(idx);
-}
-
-const Entry &SCPUParticleData::centry_at(SCPUParticleData::entry_index idx) const {
-    return entries.at(idx);
-}
-
-SCPUParticleData::entry_index SCPUParticleData::size() const {
-    return entries.size();
-}
-
-void SCPUParticleData::clear() {
-    entries.clear();
-    blanks.clear();
-}
-
 std::vector<SCPUParticleData::entry_index> SCPUParticleData::update(SCPUParticleData::entries_update &&update_data) {
     std::vector<entry_index> result;
 
@@ -161,13 +85,13 @@ std::vector<SCPUParticleData::entry_index> SCPUParticleData::update(SCPUParticle
     result.reserve(newEntries.size());
 
     auto it_del = removedEntries.begin();
-    for(auto&& newEntry : newEntries) {
+    for(const auto& newEntry : newEntries) {
         if(it_del != removedEntries.end()) {
-            entries.at(*it_del) = std::move(newEntry);
+            entries.at(*it_del) = newEntry;
             result.push_back(*it_del);
             ++it_del;
         } else {
-            result.push_back(addEntry(std::move(newEntry)));
+            result.push_back(addEntry(newEntry));
         }
     }
     while(it_del != removedEntries.end()) {
@@ -178,17 +102,6 @@ std::vector<SCPUParticleData::entry_index> SCPUParticleData::update(SCPUParticle
     return result;
 }
 
-SCPUParticleData::entry_index SCPUParticleData::addEntry(Entry &&entry) {
-    if(!blanks.empty()) {
-        const auto idx = blanks.back();
-        blanks.pop_back();
-        entries.at(idx) = std::move(entry);
-        return idx;
-    }
-    entries.push_back(std::move(entry));
-    return entries.size()-1;
-}
-
 void SCPUParticleData::removeEntry(SCPUParticleData::entry_index idx) {
     auto &entry = entries.at(idx);
     if(!entry.is_deactivated()) {
@@ -196,23 +109,6 @@ void SCPUParticleData::removeEntry(SCPUParticleData::entry_index idx) {
         blanks.push_back(idx);
     }
 }
-
-SCPUParticleData::entry_index SCPUParticleData::n_deactivated() const {
-    return blanks.size();
-}
-
-void SCPUParticleData::reserve(std::size_t n) {
-    entries.reserve(n);
-}
-
-bool Entry::is_deactivated() const {
-    return deactivated;
-}
-
-const readdy::model::Particle::pos_type &Entry::position() const {
-    return pos;
-}
-
 
 }
 }

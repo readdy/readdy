@@ -48,13 +48,13 @@ TEST_P(TestObservables, TestParticlePositions) {
     const auto particleTypeId = kernel->context().particle_types().idOf("type");
     const auto particles = std::vector<m::Particle>(n_particles, m::Particle(0, 0, 0, particleTypeId));
     kernel->stateModel().addParticles(particles);
-    auto &&obs = kernel->createObservable<m::observables::Positions>(3);
+    auto &&obs = kernel->observe().positions(3);
     auto &&connection = kernel->connectObservable(obs.get());
 
-    auto &&integrator = kernel->getActionFactory().createIntegrator("EulerBDIntegrator", timeStep);
+    auto &&integrator = kernel->actions().createIntegrator("EulerBDIntegrator", timeStep);
     using update_nl = readdy::model::actions::UpdateNeighborList;
-    auto &&neighborListInit = kernel->createAction<update_nl>(update_nl::Operation::init, 0);
-    auto &&neighborList = kernel->createAction<update_nl>(update_nl::Operation::update, -1);
+    auto &&neighborListInit = kernel->actions().updateNeighborList(update_nl::Operation::init, 0);
+    auto &&neighborList = kernel->actions().updateNeighborList(update_nl::Operation::update, -1);
     neighborListInit->perform();
     for (readdy::time_step_type t = 0; t < 100; t++) {
         integrator->perform();
@@ -89,9 +89,9 @@ TEST_P(TestObservables, TestForcesObservable) {
     {
         // Check if result has correct size
         // Check that empty particleType argument gives correct object, namely all forces
-        auto &&obsA = kernel->createObservable<m::observables::Forces>(1, std::vector<std::string>{"A"});
-        auto &&obsB = kernel->createObservable<m::observables::Forces>(1, std::vector<std::string>{"B"});
-        auto &&obsBoth = kernel->createObservable<m::observables::Forces>(1);
+        auto &&obsA = kernel->observe().forces(1, std::vector<std::string>{"A"});
+        auto &&obsB = kernel->observe().forces(1, std::vector<std::string>{"B"});
+        auto &&obsBoth = kernel->observe().forces(1);
         auto &&connectionA = kernel->connectObservable(obsA.get());
         auto &&connectionB = kernel->connectObservable(obsB.get());
         auto &&connectionBoth = kernel->connectObservable(obsBoth.get());
@@ -123,12 +123,12 @@ TEST_P(TestObservables, TestForcesObservable) {
     kernel->context().potentials().addHarmonicRepulsion("C", "C", 2.0, 2.0);
 
     using update_nl = readdy::model::actions::UpdateNeighborList;
-    auto &&nl = kernel->createAction<update_nl>();
-    auto &&forces = kernel->createAction<readdy::model::actions::CalculateForces>();
+    auto &&nl = kernel->actions().updateNeighborList();
+    auto &&forces = kernel->actions().calculateForces();
     kernel->context().configure();
     kernel->initialize();
     {
-        auto obsC = kernel->createObservable<m::observables::Forces>(1, std::vector<std::string>{"C"});
+        auto obsC = kernel->observe().forces(1, std::vector<std::string>{"C"});
         auto connectionC = kernel->connectObservable(obsC.get());
         nl->perform();
         forces->perform();
