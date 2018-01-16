@@ -79,6 +79,11 @@ inline void fixPosition<false, false, true>(Vec3 &vec, const scalar dx, const sc
 template<>
 inline void fixPosition<false, false, false>(Vec3 &vec, const scalar dx, const scalar dy, const scalar dz) {};
 
+template<bool PX, bool PY, bool PZ, typename Container>
+inline void fixPosition(Vec3 &vec, const Container &box) {
+    fixPosition<PX, PY, PZ>(vec, box.at(0), box.at(1), box.at(2));
+};
+
 template<bool PX, bool PY, bool PZ>
 inline Vec3 applyPBC(const Vec3 &in, scalar dx, scalar dy, scalar dz);
 
