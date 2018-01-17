@@ -188,7 +188,7 @@ if __name__ == '__main__':
     t1 = time.perf_counter()
     n_cores = multiprocessing.cpu_count()
     perf_results = []
-    for kernel in ["CPU", "SingleCPU", "CPU_Legacy"]:
+    for kernel in ["CPU", "SingleCPU"]:
             for n_particles_a in [200, 400, 700, 1000, 2357, 5000, 10000, 15000, 20000, 30000]:
                 for force_constant in [10.]:
                     if kernel != "SingleCPU":
