@@ -32,7 +32,6 @@
 
 #include <future>
 #include <readdy/kernel/cpu/CPUStateModel.h>
-#include <readdy/common/thread/barrier.h>
 
 namespace readdy {
 namespace kernel {
@@ -143,20 +142,20 @@ void CPUStateModel::insert_topology(CPUStateModel::topology &&top) {
 }
 
 void CPUStateModel::resetReactionCounts() {
-    if(!_reactionCounts.empty()) {
-        for(auto &e : _reactionCounts) {
+    if(!reactionCounts().empty()) {
+        for(auto &e : reactionCounts()) {
             e.second = 0;
         }
     } else {
         const auto &reactions = _context.get().reactions();
         for (const auto &entry : reactions.order1()) {
             for (auto reaction : entry.second) {
-                _reactionCounts[reaction->id()] = 0;
+                reactionCounts()[reaction->id()] = 0;
             }
         }
         for (const auto &entry : reactions.order2()) {
             for (auto reaction : entry.second) {
-                _reactionCounts[reaction->id()] = 0;
+                reactionCounts()[reaction->id()] = 0;
             }
         }
     }

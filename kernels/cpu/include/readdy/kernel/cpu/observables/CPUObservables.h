@@ -39,6 +39,16 @@ class CPUKernel;
 
 namespace observables {
 
+class CPUVirial : public readdy::model::observables::Virial {
+public:
+    CPUVirial(CPUKernel *kernel, stride_type stride);
+
+    void evaluate() override;
+
+protected:
+    CPUKernel *const kernel;
+};
+
 class CPUPositions : public readdy::model::observables::Positions {
 public:
     CPUPositions(CPUKernel* kernel, unsigned int stride, const std::vector<std::string> &typesToCount = {});

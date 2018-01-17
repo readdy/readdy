@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2018 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -20,47 +20,34 @@
  ********************************************************************/
 
 
-//
-// Created by clonker on 07.03.16.
-//
+/**
+ * << detailed description >>
+ *
+ * @file ObservableData.h
+ * @brief << brief description >>
+ * @author clonker
+ * @date 1/18/18
+ */
 
-#include <readdy/kernel/singlecpu/SCPUKernel.h>
+
+#pragma once
+
+#include <readdy/model/reactions/ReactionRecord.h>
+#include <readdy/common/common.h>
 
 namespace readdy {
 namespace kernel {
-namespace scpu {
-const std::string SCPUKernel::name = "SingleCPU";
+namespace cpu {
+namespace data {
 
-SCPUKernel::SCPUKernel() : readdy::model::Kernel(name), _actionFactory(this), _topologyActionFactory(this),
-                           _model(_context, &_topologyActionFactory), _observables(this) {}
-
-/**
- * factory method
- */
-std::unique_ptr<SCPUKernel> SCPUKernel::create() {
-    return std::make_unique<SCPUKernel>();
-}
-
-/**
- * Destructor: default
- */
-SCPUKernel::~SCPUKernel() = default;
-
-void SCPUKernel::initialize() {
-    readdy::model::Kernel::initialize();
-    for(auto& top : getSCPUKernelStateModel().topologies()) {
-        top->configure();
-        top->updateReactionRates(context().topology_registry().structuralReactionsOf(top->type()));
-    }
-    getSCPUKernelStateModel().reactionRecords().clear();
-    getSCPUKernelStateModel().resetReactionCounts();
-    getSCPUKernelStateModel().virial() = {0, 0, 0, 0, 0, 0, 0, 0, 0};
-}
+struct ObservableData {
+    std::vector<readdy::model::reactions::ReactionRecord> reactionRecords;
+    readdy::model::reactions::reaction_counts_map reactionCounts;
+    scalar energy;
+    Matrix33 virial;
+};
 
 }
 }
 }
-
-
-
-
+}

@@ -45,6 +45,7 @@ void CPUCalculateForces::perform(const util::PerformanceNode &node) {
     auto &topologies = stateModel.topologies();
 
     stateModel.energy() = 0;
+    stateModel.virial() = {0, 0, 0, 0, 0, 0, 0, 0, 0};
 
     const auto &potOrder1 = ctx.potentials().potentialsOrder1();
     const auto &potOrder2 = ctx.potentials().potentialsOrder2();
@@ -59,6 +60,7 @@ void CPUCalculateForces::perform(const util::PerformanceNode &node) {
         {
             auto &pool = data->pool();
             std::vector<std::promise<scalar>> promises;
+            std::vector<std::promise<Matrix33>> virialPromises;
             // 1st order pot + topologies = 2*pool size
             // 2nd order pot <= nl.nCells
             size_t nThreads = pool.size();
@@ -70,6 +72,7 @@ void CPUCalculateForces::perform(const util::PerformanceNode &node) {
                 auto tTasks = nTasks.timeit();
                 size_t nCells = neighborList->nCells();
                 promises.reserve(numberTasks);
+                virialPromises.reserve(!potOrder2.empty() ? nThreads : 0);
                 if (!potOrder1.empty()) {
                     // 1st order pot
                     auto tO1 = nTasks.subnode("order1").timeit();
@@ -84,7 +87,8 @@ void CPUCalculateForces::perform(const util::PerformanceNode &node) {
                             promises.emplace_back();
                             auto dataBounds = std::make_tuple(it, itNext);
                             tasks.push_back(pool.pack(calculate_order1, dataBounds, std::ref(promises.back()), data,
-                                                      ctx.potentials().potentialsOrder1(), ctx.shortestDifferenceFun()));
+                                                      ctx.potentials().potentialsOrder1(),
+                                                      ctx.shortestDifferenceFun()));
                         }
                         it = itNext;
                     }
@@ -146,21 +150,41 @@ void CPUCalculateForces::perform(const util::PerformanceNode &node) {
                         auto itNext = std::min(it + grainSize, nCells);
                         if (it != itNext) {
                             promises.emplace_back();
-                            tasks.push_back(pool.pack(
-                                    calculate_order2, std::make_tuple(it, itNext), data, std::cref(*neighborList),
-                                    std::ref(promises.back()), ctx.potentials().potentialsOrder2(),
-                                    ctx.shortestDifferenceFun()
-                            ));
+                            virialPromises.emplace_back();
+                            if(ctx.recordVirial()) {
+                                tasks.push_back(pool.pack(
+                                        calculate_order2<true>, std::make_tuple(it, itNext), data,
+                                        std::cref(*neighborList), std::ref(promises.back()),
+                                        std::ref(virialPromises.back()), ctx.potentials().potentialsOrder2(),
+                                        ctx.shortestDifferenceFun()
+                                ));
+                            } else {
+                                tasks.push_back(pool.pack(
+                                        calculate_order2<false>, std::make_tuple(it, itNext), data,
+                                        std::cref(*neighborList), std::ref(promises.back()),
+                                        std::ref(virialPromises.back()), ctx.potentials().potentialsOrder2(),
+                                        ctx.shortestDifferenceFun()
+                                ));
+                            }
                         }
                         it = itNext;
                     }
                     if (it != nCells) {
                         promises.emplace_back();
-                        tasks.push_back(pool.pack(
-                                calculate_order2, std::make_tuple(it, nCells), data, std::cref(*neighborList),
-                                std::ref(promises.back()), ctx.potentials().potentialsOrder2(),
-                                ctx.shortestDifferenceFun()
-                        ));
+                        virialPromises.emplace_back();
+                        if(ctx.recordVirial()) {
+                            tasks.push_back(pool.pack(
+                                    calculate_order2<true>, std::make_tuple(it, nCells), data, std::cref(*neighborList),
+                                    std::ref(promises.back()), std::ref(virialPromises.back()),
+                                    ctx.potentials().potentialsOrder2(), ctx.shortestDifferenceFun()
+                            ));
+                        } else {
+                            tasks.push_back(pool.pack(
+                                    calculate_order2<false>, std::make_tuple(it, nCells), data, std::cref(*neighborList),
+                                    std::ref(promises.back()), std::ref(virialPromises.back()),
+                                    ctx.potentials().potentialsOrder2(), ctx.shortestDifferenceFun()
+                            ));
+                        }
                     }
                     {
                         auto tPush = nTasks.subnode("execute order 2 tasks and wait").timeit();
@@ -180,16 +204,24 @@ void CPUCalculateForces::perform(const util::PerformanceNode &node) {
                     stateModel.energy() += f.get_future().get();
                 }
             }
+            {
+                auto tVirialFutures = node.subnode("get virial futures").timeit();
+                for (auto &f : virialPromises) {
+                    stateModel.virial() += f.get_future().get();
+                }
+            }
         }
     }
 }
 
+template<bool COMPUTE_VIRIAL>
 void CPUCalculateForces::calculate_order2(std::size_t, nl_bounds nlBounds,
                                           CPUStateModel::data_type *data, const CPUStateModel::neighbor_list &nl,
-                                          std::promise<scalar> &energyPromise,
+                                          std::promise<scalar> &energyPromise, std::promise<Matrix33> &virialPromise,
                                           model::potentials::PotentialRegistry::potential_o2_registry pot2,
                                           model::Context::shortest_dist_fun d) {
     scalar energyUpdate = 0.0;
+    Matrix33 virialUpdate(0, 0, 0, 0, 0, 0, 0, 0, 0);
 
     //
     // 2nd order potentials
@@ -221,9 +253,13 @@ void CPUCalculateForces::calculate_order2(std::size_t, nl_bounds nlBounds,
                                 Vec3 forceUpdate{0, 0, 0};
                                 potential->calculateForceAndEnergy(forceUpdate, mySecondOrderEnergy, x_ij);
                                 force += forceUpdate;
+                                if(COMPUTE_VIRIAL && *particleIt < neighborIndex) {
+                                    virialUpdate += math::outerProduct(x_ij, force);
+                                }
                             }
                         }
                     }
+
                     // The contribution of second order potentials must be halved since we parallelize over particles.
                     // Thus every particle pair potential is seen twice
                     energyUpdate += 0.5 * mySecondOrderEnergy;
@@ -234,7 +270,9 @@ void CPUCalculateForces::calculate_order2(std::size_t, nl_bounds nlBounds,
         }
 
     }
+
     energyPromise.set_value(energyUpdate);
+    virialPromise.set_value(virialUpdate);
 
 }
 

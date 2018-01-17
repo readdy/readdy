@@ -63,6 +63,8 @@ public:
     std::unique_ptr<Energy> energy(stride_type stride) const {
         return std::make_unique<Energy>(kernel, stride);
     };
+
+    virtual std::unique_ptr<Virial> virial(stride_type stride) const = 0;
     
     virtual std::unique_ptr<HistogramAlongAxis> histogramAlongAxis(stride_type stride, std::vector<scalar> binBorders, 
                                                                    std::vector<std::string> typesToCount, 

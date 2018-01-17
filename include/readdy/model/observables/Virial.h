@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2018 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -20,47 +20,51 @@
  ********************************************************************/
 
 
-//
-// Created by clonker on 07.03.16.
-//
-
-#include <readdy/kernel/singlecpu/SCPUKernel.h>
-
-namespace readdy {
-namespace kernel {
-namespace scpu {
-const std::string SCPUKernel::name = "SingleCPU";
-
-SCPUKernel::SCPUKernel() : readdy::model::Kernel(name), _actionFactory(this), _topologyActionFactory(this),
-                           _model(_context, &_topologyActionFactory), _observables(this) {}
-
 /**
- * factory method
+ * << detailed description >>
+ *
+ * @file Virial.h
+ * @brief << brief description >>
+ * @author clonker
+ * @date 1/17/18
  */
-std::unique_ptr<SCPUKernel> SCPUKernel::create() {
-    return std::make_unique<SCPUKernel>();
-}
-
-/**
- * Destructor: default
- */
-SCPUKernel::~SCPUKernel() = default;
-
-void SCPUKernel::initialize() {
-    readdy::model::Kernel::initialize();
-    for(auto& top : getSCPUKernelStateModel().topologies()) {
-        top->configure();
-        top->updateReactionRates(context().topology_registry().structuralReactionsOf(top->type()));
-    }
-    getSCPUKernelStateModel().reactionRecords().clear();
-    getSCPUKernelStateModel().resetReactionCounts();
-    getSCPUKernelStateModel().virial() = {0, 0, 0, 0, 0, 0, 0, 0, 0};
-}
-
-}
-}
-}
 
 
+#pragma once
 
+#include <readdy/common/macros.h>
+#include "Observable.h"
 
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
+NAMESPACE_BEGIN(observables)
+
+class Virial : public Observable<Matrix33> {
+    using super = Observable<Matrix33>;
+public:
+
+    Virial(Kernel* kernel, stride_type stride);
+
+    Virial(Virial &&) = default;
+    Virial& operator=(Virial &&) = default;
+    Virial(const Virial &) = delete;
+    Virial &operator=(const Virial &) = delete;
+
+    ~Virial();
+
+    void flush() override;
+
+protected:
+    void initialize(Kernel * kernel) override;
+
+    void initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) override;
+
+    void append() override;
+
+    struct Impl;
+    std::unique_ptr<Impl> pimpl;
+};
+
+NAMESPACE_END(observables)
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)

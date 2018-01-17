@@ -47,6 +47,7 @@
 #include <readdy/kernel/cpu/data/DefaultDataContainer.h>
 #include <readdy/kernel/cpu/nl/CellLinkedList.h>
 #include <readdy/kernel/cpu/nl/ContiguousCellLinkedList.h>
+#include <readdy/kernel/cpu/data/ObservableData.h>
 
 namespace readdy {
 namespace kernel {
@@ -116,12 +117,28 @@ public:
         getParticleData()->clear();
     };
 
+    data::ObservableData &observableData() {
+        return _observableData;
+    }
+    
+    const data::ObservableData &observableData() const {
+        return _observableData;
+    }
+    
+    Matrix33 &virial() {
+        return _observableData.virial;
+    }
+    
+    const Matrix33 &virial() const {
+        return _observableData.virial;
+    }
+    
     scalar energy() const override {
-        return _currentEnergy;
+        return _observableData.energy;
     };
 
     scalar &energy() override {
-        return _currentEnergy;
+        return _observableData.energy;
     };
 
     data_type const *const getParticleData() const {
@@ -153,19 +170,19 @@ public:
     addTopology(topology_type_type type, const std::vector<readdy::model::TopologyParticle> &particles) override;
 
     std::vector<readdy::model::reactions::ReactionRecord> &reactionRecords() {
-        return _reactionRecords;
+        return _observableData.reactionRecords;
     };
 
     const std::vector<readdy::model::reactions::ReactionRecord> &reactionRecords() const {
-        return _reactionRecords;
+        return _observableData.reactionRecords;
     };
 
     const reaction_counts_map & reactionCounts() const {
-        return _reactionCounts;
+        return _observableData.reactionCounts;
     };
 
     reaction_counts_map &reactionCounts() {
-        return _reactionCounts;
+        return _observableData.reactionCounts;
     };
 
     void resetReactionCounts();
@@ -195,6 +212,7 @@ public:
     readdy::model::top::GraphTopology *getTopologyForParticle(readdy::model::top::Topology::particle_index particle) override;
 
 private:
+    data::ObservableData _observableData;
     std::reference_wrapper<thread_pool> _pool;
     std::reference_wrapper<const readdy::model::Context> _context;
     std::reference_wrapper<data_type> _data;
@@ -202,9 +220,6 @@ private:
     neighbor_list::cell_radius_type _neighborListCellRadius {1};
     std::unique_ptr<readdy::signals::scoped_connection> _reorderConnection;
     std::reference_wrapper<const readdy::model::top::TopologyActionFactory> _topologyActionFactory;
-    std::vector<readdy::model::reactions::ReactionRecord> _reactionRecords{};
-    reaction_counts_map _reactionCounts;
-    scalar _currentEnergy = 0;
     topologies_vec _topologies{};
 };
 }

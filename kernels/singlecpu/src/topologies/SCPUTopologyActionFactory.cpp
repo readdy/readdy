@@ -47,8 +47,9 @@ SCPUTopologyActionFactory::SCPUTopologyActionFactory(SCPUKernel *const kernel) :
 
 std::unique_ptr<c_top::pot::CalculateHarmonicBondPotential>
 SCPUTopologyActionFactory::createCalculateHarmonicBondPotential(const harmonic_bond *const potential) const {
+    auto& stateModel = kernel->getSCPUKernelStateModel();
     return std::make_unique<SCPUCalculateHarmonicBondPotential>(
-            &kernel->context(), kernel->getSCPUKernelStateModel().getParticleData(), potential
+            &kernel->context(), stateModel.getParticleData(), &stateModel.observableData(), potential
     );
 }
 
@@ -56,7 +57,8 @@ std::unique_ptr<readdy::model::top::pot::CalculateHarmonicAnglePotential>
 SCPUTopologyActionFactory::createCalculateHarmonicAnglePotential(
         const harmonic_angle *const potential) const {
     return std::make_unique<SCPUCalculateHarmonicAnglePotential>(
-            &kernel->context(), kernel->getSCPUKernelStateModel().getParticleData(), potential
+            &kernel->context(), kernel->getSCPUKernelStateModel().getParticleData(),
+            &kernel->getSCPUKernelStateModel().observableData(), potential
     );
 }
 

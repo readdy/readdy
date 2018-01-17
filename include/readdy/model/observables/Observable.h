@@ -83,8 +83,7 @@ public:
      * @param kernel the kernel
      * @param stride the stride
      */
-    explicit ObservableBase(readdy::model::Kernel *const kernel, stride_type stride = 1)
-            : _stride(stride), kernel(kernel) {};
+    explicit ObservableBase(Kernel* kernel, stride_type stride = 1) : _stride(stride), kernel(kernel) {};
 
     /**
      * The stride at which the observable gets evaluated. Can be 0, which is equivalent to stride = 1.
@@ -165,7 +164,7 @@ protected:
      * modify the simulation setup to the observable's needs.
      * @param kernel the kernel
      */
-    virtual void initialize(Kernel *const kernel) {};
+    virtual void initialize(Kernel * kernel) {};
 
     /**
      * Method that will be called once, if enableWriteToFile() is called and should create a readdy::io::DataSet that
@@ -187,7 +186,7 @@ protected:
     /**
      * The kernel which created this observable
      */
-    readdy::model::Kernel *const kernel;
+    readdy::model::Kernel * kernel;
     /**
      * The current time step of the observable
      */
@@ -226,7 +225,7 @@ public:
      * @param kernel the kernel
      * @param stride the stride
      */
-    Observable(Kernel *const kernel, stride_type stride)
+    Observable(Kernel * kernel, stride_type stride)
             : ObservableBase(kernel, stride), result() {
     }
 
@@ -292,7 +291,7 @@ public:
      * @param stride a stride
      * @param parents the parent observables
      */
-    Combiner(Kernel *const kernel, stride_type stride, PARENT_OBS *... parents)
+    Combiner(Kernel* kernel, stride_type stride, PARENT_OBS *... parents)
             : Observable<RESULT>(kernel, stride), parentObservables(std::forward<PARENT_OBS *>(parents)...) {}
 
     /**
