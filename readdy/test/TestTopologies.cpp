@@ -311,6 +311,6 @@ TEST_P(TestTopologies, DihedralPotentialSteeperAngle) {
     EXPECT_VEC3_NEAR(collectedForces[3], force_x_l, 1e-6);
 }
 
-INSTANTIATE_TEST_CASE_P(TestTopologiesCore, TestTopologies, ::testing::Values("SingleCPU", "CPU", "CPU_Legacy"));
+INSTANTIATE_TEST_CASE_P(TestTopologiesCore, TestTopologies, ::testing::Values("SingleCPU", "CPU"));
 
 }

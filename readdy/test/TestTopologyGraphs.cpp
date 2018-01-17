@@ -405,5 +405,5 @@ TEST(TestTopologyGraphs, TestAppendParticle) {
     EXPECT_TRUE(gt.graph().containsEdge(it, v2));
 }
 
-INSTANTIATE_TEST_CASE_P(TestTopologyGraphsCore, TestTopologyGraphs, ::testing::Values("SingleCPU", "CPU", "CPU_Legacy"));
+INSTANTIATE_TEST_CASE_P(TestTopologyGraphsCore, TestTopologyGraphs, ::testing::Values("SingleCPU", "CPU"));
 
