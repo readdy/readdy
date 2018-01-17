@@ -34,7 +34,7 @@
 
 #include <functional>
 
-#include "common.h"
+#include "macros.h"
 #include "index_sequence.h"
 
 NAMESPACE_BEGIN(readdy)

@@ -30,50 +30,167 @@
  */
 
 #pragma once
+
 #include <array>
 #include <cmath>
 #include <string>
 #include <ostream>
-#include <readdy/common/common.h>
+#include <algorithm>
+#include <type_traits>
+#include "Index.h"
+#include "FloatingPoints.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(_internal)
 
-struct READDY_API ReaDDyVec3 {
-public:
+namespace detail {
+template<typename T>
+using is_arithmetic_type = std::enable_if_t<std::is_arithmetic<T>::value, int>;
+}
 
+template<unsigned int N, unsigned int M, typename scalar = double, typename index_type = std::size_t>
+class ReaDDyMatrix {
+public:
+    using data_arr = std::array<scalar, N * M>;
+    using size_type = index_type;
+
+    ReaDDyMatrix() {
+        std::fill(_data.begin(), _data.end(), 0.);
+    }
+
+    template<typename... T, typename = typename std::enable_if_t<sizeof...(T) == N*M>>
+    ReaDDyMatrix(T &&... elems) : _data{{static_cast<scalar>(std::forward<T>(elems))...}} {}
+
+    explicit ReaDDyMatrix(data_arr data) : _data(data) {}
+
+    ReaDDyMatrix(ReaDDyMatrix &&) noexcept = default;
+
+    ReaDDyMatrix(const ReaDDyMatrix &) = default;
+
+    ReaDDyMatrix &operator=(ReaDDyMatrix &&) noexcept = default;
+
+    ReaDDyMatrix &operator=(const ReaDDyMatrix &) = default;
+
+    ~ReaDDyMatrix() = default;
+
+    const data_arr &data() const {
+        return _data;
+    }
+
+    data_arr &data() {
+        return _data;
+    }
+
+    static constexpr std::size_t n() {
+        return N;
+    }
+
+    static constexpr std::size_t m() {
+        return M;
+    }
+
+    scalar at(index_type i, index_type j) const {
+        return _data.at(_index(i, j));
+    }
+
+    scalar &at(index_type i, index_type j) {
+        return _data.at(_index(i, j));
+    }
+
+    ReaDDyMatrix &operator+=(const ReaDDyMatrix &rhs) {
+        std::transform(_data.begin(), _data.end(), rhs._data.begin(), _data.begin(), std::plus<scalar>());
+        return *this;
+    }
+
+    friend ReaDDyMatrix operator+(ReaDDyMatrix lhs, const ReaDDyMatrix &rhs) {
+        lhs += rhs;
+        return lhs;
+    }
+
+    template<typename arithmetic, typename detail::is_arithmetic_type<arithmetic> = 0>
+    ReaDDyMatrix &operator*=(const arithmetic a) {
+        std::transform(_data.begin(), _data.end(), _data.begin(), std::bind1st(std::multiplies<arithmetic>(), a));
+        return *this;
+    }
+
+    template<typename arithmetic, typename detail::is_arithmetic_type<arithmetic> = 0>
+    friend ReaDDyMatrix operator*(ReaDDyMatrix lhs, arithmetic a) {
+        lhs *= a;
+        return lhs;
+    }
+
+    template<typename arithmetic, typename detail::is_arithmetic_type<arithmetic> = 0>
+    friend ReaDDyMatrix operator*(arithmetic a, ReaDDyMatrix rhs) {
+        rhs *= a;
+        return rhs;
+    }
+
+    bool operator==(const ReaDDyMatrix &rhs) const {
+        return _data == rhs._data;
+    }
+
+    bool operator!=(const ReaDDyMatrix &rhs) const {
+        return _data != rhs._data;
+    }
+
+private:
+    data_arr _data;
+    util::Index2D _index{static_cast<std::size_t>(N), static_cast<std::size_t>(M)};
+};
+
+template<typename scalar>
+using ReaDDyMatrix33 = ReaDDyMatrix<3, 3, scalar, std::uint8_t>;
+
+template<typename scalar=double>
+class READDY_API ReaDDyVec3 {
+    static_assert(std::is_arithmetic<scalar>::value, "scalar needs to be an arithmetic type");
+public:
     using data_arr = std::array<scalar, 3>;
 
     union {
-        struct { scalar x, y, z; };
+        struct {
+            scalar x, y, z;
+        };
         data_arr data;
     };
 
-    ReaDDyVec3() : ReaDDyVec3(0, 0, 0) { };
+    ReaDDyVec3() : ReaDDyVec3(0, 0, 0) {};
 
     ReaDDyVec3(scalar x, scalar y, scalar z) : x(x), y(y), z(z) {};
 
     explicit ReaDDyVec3(const data_arr &xyz) : data(xyz) {};
 
     ReaDDyVec3 &operator+=(const ReaDDyVec3 &rhs) {
-        for(auto i=0; i < 3; ++i) { data[i] += rhs[i]; }
+        std::transform(data.begin(), data.end(), rhs.data.begin(), data.begin(), std::plus<scalar>());
         return *this;
     };
 
     ReaDDyVec3 &operator-=(const ReaDDyVec3 &rhs) {
-        for(auto i=0; i < 3; ++i) {
-            data[i] -= rhs.data[i];
-        }
+        std::transform(data.begin(), data.end(), rhs.data.begin(), data.begin(), std::minus<scalar>());
         return *this;
     };
 
-    ReaDDyVec3 &operator*=(scalar a) {
-        for(auto i=0; i < 3; ++i) { data[i] *= a; }
+    template<typename arithmetic, typename detail::is_arithmetic_type<arithmetic> = 0>
+    ReaDDyVec3 &operator+=(arithmetic a) {
+        std::transform(data.begin(), data.end(), data.begin(), std::bind1st(std::plus<scalar>(), a));
+        return *this;
+    }
+
+    template<typename arithmetic, typename detail::is_arithmetic_type<arithmetic> = 0>
+    ReaDDyVec3 &operator-=(arithmetic a) {
+        std::transform(data.begin(), data.end(), data.begin(), std::bind2nd(std::minus<scalar>(), a));
+        return *this;
+    }
+
+    template<typename arithmetic, typename detail::is_arithmetic_type<arithmetic> = 0>
+    ReaDDyVec3 &operator*=(arithmetic a) {
+        std::transform(data.begin(), data.end(), data.begin(), std::bind1st(std::multiplies<scalar>(), a));
         return *this;
     };
 
-    ReaDDyVec3 &operator/=(scalar a) {
-        for(auto i=0; i < 3; ++i) { data[i] /= a; }
+    template<typename arithmetic, typename detail::is_arithmetic_type<arithmetic> = 0>
+    ReaDDyVec3 &operator/=(arithmetic a) {
+        std::transform(data.begin(), data.end(), data.begin(), std::bind2nd(std::divides<scalar>(), a));
         return *this;
     };
 
@@ -90,80 +207,91 @@ public:
     };
 
     scalar normSquared() const {
-        scalar result {0};
-        for(auto i=0; i < 3; ++i) { result += data[i]*data[i]; }
-        return result;
+        return std::inner_product(data.begin(), data.end(), data.begin(), static_cast<scalar>(0));
     };
 
-    scalar operator[](unsigned int i) const {
-        return data[i];
+    scalar operator[](std::size_t i) const {
+        return data.at(i);
     };
 
-    scalar &operator[](unsigned int i) {
-        return data[i];
+    scalar &operator[](std::size_t i) {
+        return data.at(i);
     };
 
-    ReaDDyVec3& invertElementWise() {
-        for(auto i=0; i < 3; ++i) {
+    ReaDDyVec3 &invertElementWise() {
+        for (auto i = 0; i < 3; ++i) {
             data[i] = static_cast<scalar>(1.) / data[i];
         }
         return *this;
     };
 
     bool operator==(const ReaDDyVec3 &rhs) const {
-        bool result {true};
-        for(auto i=0; i < 3; ++i) { result &= data[i] == rhs[i]; }
-        return result;
+        return data == rhs.data;
     };
 
     bool operator!=(const ReaDDyVec3 &rhs) const {
-        bool result {true};
-        for(auto i=0; i < 3; ++i) { result &= data[i] != rhs[i]; }
-        return result;
+        return data != rhs.data;
     };
+
+    bool almostEquals(const ReaDDyVec3 &rhs) const {
+        bool result {true};
+        for(std::uint8_t i = 0; i < 3; ++i) {
+            const auto fp1 = fp::FloatingPoint<float>(data[i]);
+            const auto fp2 = fp::FloatingPoint<float>(rhs.data[i]);
+            auto x = fp::FloatingPoint<float>::DistanceBetweenSignAndMagnitudeNumbers(fp1.bits(), fp2.bits());
+            result &= fp1.AlmostEquals(fp2);
+        }
+        return result;
+    }
 
     friend std::ostream &operator<<(std::ostream &os, const ReaDDyVec3 &vec) {
         os << "ReaDDyVec3(" << vec[0] << ", " << vec[1] << ", " << vec[2] << ")";
         return os;
     };
 
-    friend ReaDDyVec3 operator+(const ReaDDyVec3 &lhs, const ReaDDyVec3 &rhs) {
-        auto result = ReaDDyVec3(lhs);
-        result += rhs;
-        return result;
+    friend ReaDDyVec3 operator+(ReaDDyVec3 lhs, const ReaDDyVec3 &rhs) {
+        lhs += rhs;
+        return lhs;
     };
 
-    friend ReaDDyVec3 operator+(const ReaDDyVec3 &lhs, scalar rhs) {
-        auto copy = ReaDDyVec3(lhs);
-        for(auto i=0U; i < 3; ++i) copy[i] += rhs;
-        return copy;
+    template<typename arithmetic, typename detail::is_arithmetic_type<arithmetic> = 0>
+    friend ReaDDyVec3 operator+(ReaDDyVec3 lhs, arithmetic rhs) {
+        lhs += rhs;
+        return lhs;
     };
 
-    friend ReaDDyVec3 operator-(const ReaDDyVec3 &lhs, const ReaDDyVec3 &rhs) {
-        auto copy = ReaDDyVec3(lhs);
-        copy -= rhs;
-        return copy;
+    friend ReaDDyVec3 operator-(ReaDDyVec3 lhs, const ReaDDyVec3 &rhs) {
+        lhs -= rhs;
+        return lhs;
     };
 
-    friend ReaDDyVec3 operator-(const ReaDDyVec3 &lhs, scalar rhs) {
-        return lhs + (-1 * rhs);
+    template<typename arithmetic, typename detail::is_arithmetic_type<arithmetic> = 0>
+    friend ReaDDyVec3 operator-(ReaDDyVec3 lhs, arithmetic rhs) {
+        lhs -= rhs;
+        return lhs;
     };
 
-    friend ReaDDyVec3 operator/(const ReaDDyVec3 &lhs, scalar rhs) {
-        auto copy = ReaDDyVec3(lhs);
-        for(auto i=0U; i < 3; ++i) copy[i] /= rhs;
-        return copy;
+    template<typename arithmetic, typename detail::is_arithmetic_type<arithmetic> = 0>
+    friend ReaDDyVec3 operator/(ReaDDyVec3 lhs, arithmetic rhs) {
+        lhs /= rhs;
+        return lhs;
     };
+
+    template<typename arithmetic, typename detail::is_arithmetic_type<arithmetic> = 0>
+    friend ReaDDyVec3 operator*(ReaDDyVec3 lhs, const arithmetic rhs) {
+        lhs *= rhs;
+        return lhs;
+    }
 
     friend bool operator>=(const ReaDDyVec3 &lhs, const ReaDDyVec3 &rhs) {
-        bool result {true};
-        for(auto i=0; i < 3; ++i) { result &= lhs[i] >= rhs[i]; }
+        bool result{true};
+        for (auto i = 0; i < 3; ++i) { result &= lhs[i] >= rhs[i]; }
         return result;
     };
 
     friend bool operator<=(const ReaDDyVec3 &lhs, const ReaDDyVec3 &rhs) {
-        bool result {true};
-        for(auto i=0; i < 3; ++i) { result &= lhs[i] <= rhs[i]; }
+        bool result{true};
+        for (auto i = 0; i < 3; ++i) { result &= lhs[i] <= rhs[i]; }
         return result;
     };
 
@@ -175,24 +303,17 @@ public:
         return !(lhs >= rhs);
     };
 
-};
-
-inline readdy::scalar operator*(const ReaDDyVec3 &lhs, const ReaDDyVec3 &rhs) {
-    readdy::scalar result {0};
-    for(auto i=0; i < 3; ++i) {
-        result += lhs[i]*rhs[i];
+    friend scalar operator*(const ReaDDyVec3 &lhs, const ReaDDyVec3 &rhs) {
+        return std::inner_product(lhs.data.begin(), lhs.data.end(), rhs.data.begin(), static_cast<scalar>(0));
     }
-    return result;
-}
 
-inline ReaDDyVec3 operator*(const ReaDDyVec3 &lhs, const readdy::scalar rhs) {
-    return {rhs * lhs[0], rhs * lhs[1], rhs * lhs[2]};
-}
+    template<typename arithmetic, typename detail::is_arithmetic_type<arithmetic> = 0>
+    friend ReaDDyVec3 operator*(const arithmetic rhs, ReaDDyVec3 lhs) {
+        lhs *= rhs;
+        return lhs;
+    }
 
-inline ReaDDyVec3 operator*(const readdy::scalar rhs, const ReaDDyVec3 &lhs) {
-    return lhs * rhs;
-}
-
+};
 
 NAMESPACE_END(_internal)
 NAMESPACE_END(readdy)

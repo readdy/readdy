@@ -68,4 +68,17 @@ constexpr T clamp_min(T d, T min) {
 
 NAMESPACE_END(numeric)
 NAMESPACE_END(util)
+
+NAMESPACE_BEGIN(math)
+
+inline Matrix33 outerProduct(const Vec3 &lhs, const Vec3 &rhs) {
+    Matrix33::data_arr result;
+    for(Matrix33::size_type i = 0; i < Matrix33::n(); ++i) {
+        for(Matrix33::size_type j = 0; j < Matrix33::m(); ++j) {
+            result.at(Matrix33::m()*j+i) = lhs[j]*rhs[i];
+        }
+    }
+    return Matrix33(result);
+}
+NAMESPACE_END(math)
 NAMESPACE_END(readdy)

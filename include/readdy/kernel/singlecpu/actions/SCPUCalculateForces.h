@@ -133,7 +133,7 @@ private:
                                 potential->calculateForceAndEnergy(forceVec, stateModel.energy(), x_ij);
                             }
                             entry.force += forceVec;
-                            neighborEntry.force += -1 * forceVec;
+                            neighborEntry.force -= forceVec;
                         }
                     });
                 }
