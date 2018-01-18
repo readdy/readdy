@@ -75,7 +75,7 @@ public:
     /**
      * The type of the stride
      */
-    using stride_type = std::uint32_t;
+    using stride_type = readdy::stride_type;
 
     /**
      * Constructs an object of type ObservableBase. Needs a kernel and a stride, which is defaulted to 1, i.e.,
