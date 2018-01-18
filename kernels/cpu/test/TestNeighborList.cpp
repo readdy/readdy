@@ -279,4 +279,128 @@ TEST(TestNeighborListImpl, Diffusion) {
     }
 }
 
+class TestCPUNeighborList : public ::testing::TestWithParam<std::array<readdy::scalar, 3>> {
+public:
+
+    auto getTestingBoxSize() const -> decltype(GetParam()) {
+        return GetParam();
+    }
+
+};
+
+TEST_P(TestCPUNeighborList, Diffuse) {
+    using namespace readdy;
+
+    using IndexPair = std::tuple<std::size_t, std::size_t>;
+
+    kernel::cpu::CPUKernel kernel;
+
+    auto& context = kernel.context();
+    context.particle_types().add("Test", 1.);
+    auto id = context.particle_types().idOf("Test");
+    scalar cutoff = 4;
+    context.reactions().addFusion("Fusion", id, id, id, .001, cutoff);
+    context.boxSize() = getTestingBoxSize();
+    /*context.boxSize()[0] = 10;
+    context.boxSize()[1] = 5;
+    context.boxSize()[2] = 5;*/
+    bool periodic = true;
+    context.periodicBoundaryConditions()[0] = periodic;
+    context.periodicBoundaryConditions()[1] = periodic;
+    context.periodicBoundaryConditions()[2] = periodic;
+
+#ifdef READDY_DEBUG
+    auto n_steps = 3U;
+    auto n_particles = 500;
+#else
+    auto n_steps = 6U;
+    auto n_particles = 1000;
+#endif
+
+    for(auto i = 0; i < n_particles; ++i) {
+        model::Particle particle(model::rnd::uniform_real<scalar>(-.5*context.boxSize()[0], .5*context.boxSize()[0]),
+                                 model::rnd::uniform_real<scalar>(-.5*context.boxSize()[1], .5*context.boxSize()[1]),
+                                 model::rnd::uniform_real<scalar>(-.5*context.boxSize()[2], .5*context.boxSize()[2]), id);
+        kernel.stateModel().addParticle(particle);
+    }
+
+    kernel.initialize();
+
+    kernel.stateModel().initializeNeighborList(0);
+
+    auto integrator = kernel.actions().eulerBDIntegrator(.1);
+    auto reactionHandler = kernel.actions().uncontrolledApproximation(.1);
+
+    const auto &d2 = kernel.context().distSquaredFun();
+    const auto &data = *kernel.getCPUKernelStateModel().getParticleData();
+
+    // collect all pairs of particles that are closer than cutoff, these should (uniquely) be in the NL
+    std::unordered_set<IndexPair, util::ForwardTupleHasher<IndexPair>, util::ForwardTupleEquality<IndexPair>> pairs;
+    for(auto t = 0U; t < n_steps; ++t) {
+        integrator->perform();
+
+        kernel.stateModel().updateNeighborList();
+        {
+            pairs.clear();
+            std::size_t ix1 = 0;
+            for(const auto &e1 : data) {
+                std::size_t ix2 = 0;
+                for(const auto &e2 : data) {
+                    if(ix1 != ix2 && !e1.deactivated && !e2.deactivated && std::sqrt(d2(e1.pos, e2.pos)) < cutoff) {
+                        pairs.insert(std::make_tuple(ix1, ix2));
+                    }
+                    ++ix2;
+                }
+                ++ix1;
+            }
+        }
+        auto pairsCopy = pairs;
+
+        const auto &neighborList = *kernel.getCPUKernelStateModel().getNeighborList();
+        for (auto cell = 0U; cell < neighborList.nCells(); ++cell) {
+            for(auto it = neighborList.particlesBegin(cell); it != neighborList.particlesEnd(cell); ++it) {
+                const auto &entry = data.entry_at(*it);
+                EXPECT_FALSE(entry.deactivated) << "A deactivated entry should not end up in the NL";
+                neighborList.forEachNeighbor(*it, cell, [&](const std::size_t neighborIndex) {
+                    const auto &neighbor = data.entry_at(neighborIndex);
+                    EXPECT_FALSE(neighbor.deactivated) << "A deactivated entry should not end up in the NL";
+                    // we got a pair
+                    if(std::sqrt(d2(entry.pos, neighbor.pos)) < cutoff) {
+                        auto findIt = pairs.find(std::make_tuple(*it, neighborIndex));
+                        std::stringstream ss;
+                        if(pairsCopy.find(std::make_tuple(*it, neighborIndex)) != pairsCopy.end()) {
+                            ss << "A particle pairing was more than once in the NL";
+                        } else {
+                            ss << "A particle pairing was not contained in the NL";
+                        }
+
+                        ASSERT_NE(findIt, pairs.end()) << ss.str();
+                        if(findIt != pairs.end()) {
+                            pairs.erase(findIt);
+                        }
+                    }
+                });
+            }
+        }
+        EXPECT_EQ(pairs.size(), 0) << "Some pairs were not contained in the NL";
+
+        reactionHandler->perform();
+    }
 }
+
+}
+
+INSTANTIATE_TEST_CASE_P(
+        CPUNeighborList,
+        TestCPUNeighborList,
+        ::testing::Values(
+                std::array<readdy::scalar, 3>{{15, 15, 15}},
+                std::array<readdy::scalar, 3>{{10, 10, 10}},
+                std::array<readdy::scalar, 3>{{10, 5, 5}},
+                std::array<readdy::scalar, 3>{{5, 5, 10}},
+                std::array<readdy::scalar, 3>{{15, 5, 10}},
+                std::array<readdy::scalar, 3>{{5, 10, 5}},
+                std::array<readdy::scalar, 3>{{5, 5, 5}}
+        )
+);
+

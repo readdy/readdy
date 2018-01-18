@@ -81,6 +81,17 @@ TEST(Matrix33, Plus) {
     EXPECT_EQ(m.at(2, 0), 14);
     EXPECT_EQ(m.at(2, 1), 16);
     EXPECT_EQ(m.at(2, 2), 18);
+    for(auto i = 0; i < mat::n(); ++i) {
+        for(auto j = 0; j < mat::m(); ++j) {
+            if(std::is_same<readdy::scalar, float>::value) {
+                EXPECT_FLOAT_EQ(m.at(i, j), m3.at(i, j));
+            } else if(std::is_same<readdy::scalar, double>::value) {
+                EXPECT_DOUBLE_EQ(m.at(i, j), m3.at(i, j));
+            } else {
+                FAIL() << "this should not happen";
+            }
+        }
+    }
     EXPECT_EQ(m, m3);
 }
 

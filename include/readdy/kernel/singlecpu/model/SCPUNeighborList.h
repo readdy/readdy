@@ -30,6 +30,7 @@
  */
 
 #pragma once
+
 #include <unordered_set>
 #include <readdy/model/Context.h>
 #include "SCPUParticleData.h"
@@ -88,10 +89,10 @@ public:
                     _cellNeighborsContent.resize(_cellNeighbors.size());
                     {
                         auto pbc = _context.get().periodicBoundaryConditions();
-                        auto fixBoxIx = [&](auto boxIx, std::uint8_t axis) {
-                            auto cix = static_cast<int>(_cellIndex[axis]);
-                            if(pbc[axis]) {
-                                return (boxIx % cix + cix) % cix;
+                        auto fixBoxIx = [&](auto cix, auto boxIx, std::uint8_t axis) {
+                            auto nCells = static_cast<int>(_cellIndex[axis]);
+                            if (pbc[axis] && nCells > 2) {
+                                return (boxIx % nCells + nCells) % nCells;
                             }
                             return boxIx;
                         };
@@ -105,10 +106,11 @@ public:
                                 for (int k = 0; k < _cellIndex[2]; ++k) {
                                     auto cellIdx = _cellIndex(static_cast<std::size_t>(i), static_cast<std::size_t>(j),
                                                               static_cast<std::size_t>(k));
+                                    std::array<std::size_t, 3> ijk {{static_cast<std::size_t>(i), static_cast<std::size_t>(j),static_cast<std::size_t>(k)}};
 
                                     adj.resize(0);
                                     {
-                                        std::vector<std::array<int, 3>> boxCoords {
+                                        std::vector<std::array<int, 3>> boxCoords{
                                                 {{i + 0, j + 0, k + 1}},
 
                                                 {{i + 0, j + 1, k - 1}},
@@ -116,8 +118,8 @@ public:
                                                 {{i + 0, j + 1, k + 1}},
 
                                                 {{i + 1, j - 1, k - 1}},
-                                                {{i + 1, j  - 1, k + 0}},
-                                                {{i + 1, j  - 1, k + 1}},
+                                                {{i + 1, j - 1, k + 0}},
+                                                {{i + 1, j - 1, k + 1}},
 
                                                 {{i + 1, j + 0, k - 1}},
                                                 {{i + 1, j + 0, k + 0}},
@@ -126,14 +128,18 @@ public:
                                                 {{i + 1, j + 1, k - 1}},
                                                 {{i + 1, j + 1, k + 0}},
                                                 {{i + 1, j + 1, k + 1}},
-
                                         };
 
+                                        std::transform(boxCoords.begin(), boxCoords.end(), boxCoords.begin(),
+                                                       [&](auto arr) {
+                                                           for (std::uint8_t d = 0; d < 3; ++d) {
+                                                               arr.at(d) = fixBoxIx(ijk[d], arr.at(d), d);
+                                                           }
+                                                           return arr;
+                                                       }
+                                        );
 
-                                        for(auto boxCoord : boxCoords) {
-                                            for (std::uint8_t d = 0; d < 3; ++d) {
-                                                boxCoord.at(d) = fixBoxIx(boxCoord.at(d), d);
-                                            }
+                                        for (auto boxCoord : boxCoords) {
                                             if (boxCoord[0] >= 0 && boxCoord[1] >= 0 && boxCoord[2] >= 0
                                                 && boxCoord[0] < _cellIndex[0] && boxCoord[1] < _cellIndex[1] &&
                                                 boxCoord[2] < _cellIndex[2]) {
@@ -144,7 +150,10 @@ public:
 
                                     std::sort(adj.begin(), adj.end());
                                     adj.erase(std::unique(std::begin(adj), std::end(adj)), std::end(adj));
+                                    adj.erase(std::remove(std::begin(adj), std::end(adj), _cellIndex(i, j, k)),
+                                              std::end(adj));
 
+                                    //log::critical("cell {} with n neighbors: {}" ,cellIdx, adj.size());
                                     auto begin = _cellNeighbors(cellIdx, 0_z);
                                     _cellNeighborsContent[begin] = adj.size();
                                     std::copy(adj.begin(), adj.end(), &_cellNeighborsContent.at(begin + 1));
@@ -264,30 +273,6 @@ public:
     BoxIterator particlesEnd(std::size_t cellIndex);
 
     BoxIterator particlesEnd(std::size_t cellIndex) const;
-
-    /*auto begin() const {
-        return pairs.cbegin();
-    }
-
-    auto cbegin() const {
-        return pairs.cbegin();
-    }
-
-    auto end() const {
-        return pairs.cend();
-    }
-
-    auto cend() const {
-        return pairs.cend();
-    }
-
-    auto begin() {
-        return pairs.begin();
-    }
-
-    auto end() {
-        return pairs.end();
-    }*/
 
 protected:
     virtual void setUpBins(const util::PerformanceNode &node) {
@@ -441,13 +426,13 @@ inline void CellLinkedList::forEachNeighbor(BoxIterator particle, std::size_t ce
 inline void CellLinkedList::fillTuples(const util::PerformanceNode &node) {
     auto t = node.timeit();
     pairs.resize(0);
-    for(auto cell = 0_z; cell < nCells(); ++cell) {
-        for(auto it = particlesBegin(cell); it != particlesEnd(cell); ++it) {
-            for(auto it2 = std::next(it, 1_z); it2 != particlesEnd(cell); ++it2) {
+    for (auto cell = 0_z; cell < nCells(); ++cell) {
+        for (auto it = particlesBegin(cell); it != particlesEnd(cell); ++it) {
+            for (auto it2 = std::next(it, 1_z); it2 != particlesEnd(cell); ++it2) {
                 pairs.emplace_back(std::forward_as_tuple(*it, *it2));
             }
             for (auto itNeighCell = neighborsBegin(cell); itNeighCell != neighborsEnd(cell); ++itNeighCell) {
-                for(auto it2 = particlesBegin(*itNeighCell); it2 != particlesEnd(*itNeighCell); ++it2) {
+                for (auto it2 = particlesBegin(*itNeighCell); it2 != particlesEnd(*itNeighCell); ++it2) {
                     pairs.emplace_back(std::forward_as_tuple(*it, *it2));
                 }
             }
@@ -457,8 +442,8 @@ inline void CellLinkedList::fillTuples(const util::PerformanceNode &node) {
 
 template<typename Function>
 inline void CellLinkedList::forEachPair(const Function &function) const {
-    for(auto cell = 0_z; cell < nCells(); ++cell) {
-        for(auto it = particlesBegin(cell); it != particlesEnd(cell); ++it) {
+    for (auto cell = 0_z; cell < nCells(); ++cell) {
+        for (auto it = particlesBegin(cell); it != particlesEnd(cell); ++it) {
             forEachNeighbor(it, cell, function);
         }
     }

@@ -187,5 +187,16 @@ void exportCommon(py::module& common) {
                 return self[i];
             });
 
+    py::class_<readdy::Matrix33>(common, "Matrix33")
+            .def(py::self + py::self)
+            //.def(py::self - py::self)
+            .def(readdy::scalar() * py::self)
+            //.def(py::self / readdy::scalar())
+            .def(py::self += py::self)
+            .def(py::self *= readdy::scalar())
+            .def(py::self == py::self)
+            .def(py::self != py::self);
+            // .def(py::self * py::self);
+
 
 }

@@ -37,7 +37,16 @@
 
 namespace {
 
-TEST(NeighborList, Diffuse) {
+class TestSCPUNeighborList : public ::testing::TestWithParam<std::array<readdy::scalar, 3>> {
+public:
+
+    auto getTestingBoxSize() const -> decltype(GetParam()) {
+        return GetParam();
+    }
+
+};
+
+TEST_P(TestSCPUNeighborList, Diffuse) {
     using namespace readdy;
 
     using IndexPair = std::tuple<std::size_t, std::size_t>;
@@ -47,11 +56,12 @@ TEST(NeighborList, Diffuse) {
     auto& context = kernel.context();
     context.particle_types().add("Test", 1.);
     auto id = context.particle_types().idOf("Test");
-    scalar cutoff = 1;
+    scalar cutoff = 4;
     context.reactions().addFusion("Fusion", id, id, id, .001, cutoff);
-    context.boxSize()[0] = 10;
-    context.boxSize()[1] = 10;
-    context.boxSize()[2] = 10;
+    context.boxSize() = getTestingBoxSize();
+    /*context.boxSize()[0] = 10;
+    context.boxSize()[1] = 5;
+    context.boxSize()[2] = 5;*/
     bool periodic = true;
     context.periodicBoundaryConditions()[0] = periodic;
     context.periodicBoundaryConditions()[1] = periodic;
@@ -60,7 +70,7 @@ TEST(NeighborList, Diffuse) {
     kernel::scpu::model::top::SCPUTopologyActionFactory taf (nullptr);
 
 #ifdef READDY_DEBUG
-    auto n_steps = 10U;
+    auto n_steps = 3U;
     auto n_particles = 1000;
 #else
     auto n_steps = 20U;
@@ -68,9 +78,9 @@ TEST(NeighborList, Diffuse) {
 #endif
 
     for(auto i = 0; i < n_particles; ++i) {
-        model::Particle particle(model::rnd::uniform_real<scalar>(-5, 5),
-                                 model::rnd::uniform_real<scalar>(-5, 5),
-                                 model::rnd::uniform_real<scalar>(-5, 5), id);
+        model::Particle particle(model::rnd::uniform_real<scalar>(-.5*context.boxSize()[0], .5*context.boxSize()[0]),
+                                 model::rnd::uniform_real<scalar>(-.5*context.boxSize()[1], .5*context.boxSize()[1]),
+                                 model::rnd::uniform_real<scalar>(-.5*context.boxSize()[2], .5*context.boxSize()[2]), id);
         kernel.stateModel().addParticle(particle);
     }
 
@@ -84,15 +94,16 @@ TEST(NeighborList, Diffuse) {
     const auto &d2 = kernel.context().distSquaredFun();
     const auto &data = *kernel.getSCPUKernelStateModel().getParticleData();
 
+    // collect all pairs of particles that are closer than cutoff, these should (uniquely) be in the NL
+    std::unordered_set<IndexPair,
+            util::ForwardBackwardTupleHasher<IndexPair>,
+            util::ForwardBackwardTupleEquality<IndexPair>> pairs;
     for(auto t = 0U; t < n_steps; ++t) {
         integrator->perform();
         
         kernel.stateModel().updateNeighborList();
-        // collect all pairs of particles that are closer than cutoff, these should (uniquely) be in the NL
-        std::unordered_set<IndexPair,
-                           util::ForwardBackwardTupleHasher<IndexPair>,
-                           util::ForwardBackwardTupleEquality<IndexPair>> pairs;
         {
+            pairs.clear();
             std::size_t ix1 = 0;
             for(const auto &e1 : data) {
                 std::size_t ix2 = 0;
@@ -105,6 +116,7 @@ TEST(NeighborList, Diffuse) {
                 ++ix1;
             }
         }
+        auto pairsCopy = pairs;
 
         const auto &neighborList = *kernel.getSCPUKernelStateModel().getNeighborList();
         for (auto cell = 0U; cell < neighborList.nCells(); ++cell) {
@@ -117,7 +129,13 @@ TEST(NeighborList, Diffuse) {
                     // we got a pair
                     if(std::sqrt(d2(entry.pos, neighbor.pos)) < cutoff) {
                         auto findIt = pairs.find(std::make_tuple(*it, neighborIndex));
-                        EXPECT_NE(findIt, pairs.end()) << "A particle pairing was more than once in the NL";
+                        std::stringstream ss;
+                        if(pairsCopy.find(std::make_tuple(*it, neighborIndex)) != pairsCopy.end()) {
+                            ss << "A particle pairing was more than once in the NL";
+                        } else {
+                            ss << "A particle pairing was not contained in the NL";
+                        }
+                        ASSERT_NE(findIt, pairs.end()) << ss.str();
                         if(findIt != pairs.end()) {
                             pairs.erase(findIt);
                         }
@@ -136,3 +154,17 @@ TEST(NeighborList, Diffuse) {
 }
 
 }
+
+INSTANTIATE_TEST_CASE_P(
+        SCPUNeighborList,
+        TestSCPUNeighborList,
+        ::testing::Values(
+                std::array<readdy::scalar, 3>{{15, 15, 15}},
+                std::array<readdy::scalar, 3>{{10, 10, 10}},
+                std::array<readdy::scalar, 3>{{10, 5, 5}},
+                std::array<readdy::scalar, 3>{{5, 5, 10}},
+                std::array<readdy::scalar, 3>{{15, 5, 10}},
+                std::array<readdy::scalar, 3>{{5, 10, 5}},
+                std::array<readdy::scalar, 3>{{5, 5, 5}}
+        )
+);
