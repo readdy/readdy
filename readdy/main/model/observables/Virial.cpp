@@ -60,7 +60,7 @@ void Virial::initializeDataSet(File &file, const std::string &dataSetName, strid
     h5rd::dimensions fs = {flushStride, Matrix33::n(), Matrix33::m()};
     h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS, Matrix33::n(), Matrix33::m()};
     auto group = file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName);
-    pimpl->ds = group.createDataSet<std::size_t>("data", fs, dims, {&pimpl->bloscFilter});
+    pimpl->ds = group.createDataSet<readdy::scalar>("data", fs, dims, {&pimpl->bloscFilter});
     pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
 }
 

@@ -226,7 +226,7 @@ void CPUReactionCounts::evaluate() {
 CPUVirial::CPUVirial(CPUKernel *kernel, stride_type stride) : Virial(kernel, stride), kernel(kernel) {}
 
 void CPUVirial::evaluate() {
-    
+    result = kernel->getCPUKernelStateModel().virial();
 }
 
 

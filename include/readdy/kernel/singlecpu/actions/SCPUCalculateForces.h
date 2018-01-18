@@ -44,7 +44,7 @@ void computeVirial(const Vec3& r_ij, const Vec3 &force, Matrix33 &virial);
 
 template<>
 void computeVirial<true>(const Vec3& r_ij, const Vec3 &force, Matrix33 &virial) {
-    virial += math::outerProduct(r_ij, force);
+    virial += math::outerProduct(-1.*r_ij, force);
 }
 
 template<>
@@ -78,6 +78,7 @@ private:
         auto &neighborList = *stateModel.getNeighborList();
 
         stateModel.energy() = 0;
+        stateModel.virial() = {0, 0, 0, 0, 0, 0, 0, 0, 0};
 
         const auto &potentials = context.potentials();
         auto &topologies = stateModel.topologies();

@@ -195,8 +195,14 @@ void exportCommon(py::module& common) {
             .def(py::self += py::self)
             .def(py::self *= readdy::scalar())
             .def(py::self == py::self)
-            .def(py::self != py::self);
-            // .def(py::self * py::self);
-
-
+            .def(py::self != py::self)
+            .def("toarray", [](const readdy::Matrix33 &self) {
+                std::array<std::array<readdy::scalar, 3>, 3> arr {};
+                for(readdy::Matrix33::size_type i = 0; i < readdy::Matrix33::n(); ++i) {
+                    for(readdy::Matrix33::size_type j = 0; j < readdy::Matrix33::m(); ++j) {
+                        arr[i][j] = self.at(i, j);
+                    }
+                }
+                return arr;
+            });
 }
