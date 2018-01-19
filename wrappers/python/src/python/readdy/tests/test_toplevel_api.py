@@ -254,14 +254,14 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
         traj_fname = os.path.join(self.tempdir, "traj_{}_{}.h5".format(kernel, reaction_handler))
         traj_fname2 = os.path.join(self.tempdir, "traj2_{}_{}.h5".format(kernel, reaction_handler))
 
-        rdf = readdy.ReactionDiffusionSystem(box_size=[10., 10., 10.])
-        rdf.add_species("A", diffusion_constant=1.0)
-        rdf.add_species("B", diffusion_constant=1.0)
-        rdf.reactions.add_conversion("myconversion", "A", "B", 1.0)
-        rdf.reactions.add_fusion("myfusion", "A", "A", "A", 2, .5)
-        rdf.reactions.add_fission("myfission", "A", "A", "A", 2, .5)
-        rdf.potentials.add_harmonic_repulsion("A", "A", 1., .2)
-        sim = rdf.simulation(kernel=kernel, reaction_handler=reaction_handler)
+        rds = readdy.ReactionDiffusionSystem(box_size=[10., 10., 10.])
+        rds.add_species("A", diffusion_constant=1.0)
+        rds.add_species("B", diffusion_constant=1.0)
+        rds.reactions.add_conversion("myconversion", "A", "B", 1.0)
+        rds.reactions.add_fusion("myfusion", "A", "A", "A", 2, .5)
+        rds.reactions.add_fission("myfission", "A", "A", "A", 2, .5)
+        rds.potentials.add_harmonic_repulsion("A", "A", 1., .2)
+        sim = rds.simulation(kernel=kernel, reaction_handler=reaction_handler)
         sim.show_progress = False
         sim.output_file = traj_fname
         sim.add_particles("A", np.random.random((100, 3)))
@@ -269,7 +269,7 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
         sim.observe.particle_positions(1)
         sim.observe.particles(1)
         sim.observe.rdf(1, bin_borders=np.arange(-5, 5, 1.), types_count_from=["A"], types_count_to=["A"],
-                        particle_to_density=1. / rdf.box_volume)
+                        particle_to_density=1. / rds.box_volume)
         sim.observe.number_of_particles(1, types=["B", "A"])
         reactions = []
         sim.observe.reactions(1, callback=lambda x: reactions.append(x))
@@ -283,6 +283,11 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
 
         for fname in [traj_fname, traj_fname2]:
             traj = readdy.Trajectory(fname)
+
+            np.testing.assert_almost_equal(traj.kbt, rds.kbt.magnitude)
+            np.testing.assert_equal(traj.periodic_boundary_conditions, rds.periodic_boundary_conditions)
+            np.testing.assert_almost_equal(traj.box_size, rds.box_size.magnitude)
+            np.testing.assert_almost_equal(traj.box_volume, rds.box_volume.magnitude)
 
             time, positions = traj.read_observable_particle_positions()
             np.testing.assert_equal(len(time), 51)

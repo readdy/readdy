@@ -67,6 +67,7 @@ struct ParticleTypeInfo {
 std::tuple<h5rd::NativeCompoundType, h5rd::STDCompoundType> getReactionInfoMemoryType(h5rd::Object::ParentFileRef ref);
 std::tuple<h5rd::NativeCompoundType, h5rd::STDCompoundType> getParticleTypeInfoType(h5rd::Object::ParentFileRef ref);
 
+void writeGeneralContextInformation(h5rd::Group &group, const Context &context);
 void writeSimulationSetup(h5rd::Group &group, const Context &context);
 void writeReactionInformation(h5rd::Group &group, const Context &context);
 void writeParticleTypeInformation(h5rd::Group &group, const Context &context);

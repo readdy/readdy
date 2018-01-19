@@ -154,7 +154,7 @@ private:
 };
 
 template<typename scalar>
-using ReaDDyMatrix33 = ReaDDyMatrix<3, 3, scalar, std::uint8_t>;
+using ReaDDyMatrix33 = ReaDDyMatrix<3, 3, scalar, std::size_t>;
 
 template<typename scalar=double>
 class READDY_API ReaDDyVec3 {

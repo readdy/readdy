@@ -28,6 +28,8 @@ Created on 28.09.17
 import os as _os
 
 import h5py as _h5py
+import numpy as _np
+
 from readdy._internal.readdybinding.common.util import read_reaction_observable as _read_reaction_observable
 from readdy._internal.readdybinding.common.util import read_trajectory as _read_trajectory
 
@@ -163,6 +165,37 @@ class ReactionInfo:
 
     __repr__ = __str__
 
+class GeneralInformation(object):
+
+    def __init__(self, filename):
+        import json
+
+        dsname = "readdy/config/general"
+        with _h5py.File(filename, "r") as f:
+            if not dsname in f:
+                raise ValueError("General information was not recorded in the file!")
+            j = json.loads(f[dsname].value)
+            self._kbt = j['kbt']
+            self._box_volume = j['box_volume']
+            self._box_size = _np.array(j['box_size'])
+            self._pbc = _np.array(j['pbc'])
+
+    @property
+    def kbt(self):
+        return self._kbt
+
+    @property
+    def box_volume(self):
+        return self._box_volume
+
+    @property
+    def box_size(self):
+        return self._box_size
+
+    @property
+    def periodic_boundary_conditions(self):
+        return self._pbc
+
 
 class Trajectory(object):
     def __init__(self, filename, name=""):
@@ -178,6 +211,7 @@ class Trajectory(object):
         self._particle_types = _io_utils.get_particle_types(filename)
         self._reactions = []
         self._inverse_types_map = {v: k for k, v in self.particle_types.items()}
+        self._general = GeneralInformation(filename)
         for _, reaction in _io_utils.get_reactions(filename).items():
             info = ReactionInfo(reaction["name"], reaction["id"], reaction["n_educts"],
                                 reaction["n_products"], reaction["rate"], reaction["educt_distance"],
@@ -192,6 +226,22 @@ class Trajectory(object):
         :return: the species' name
         """
         return self._inverse_types_map[id]
+
+    @property
+    def kbt(self):
+        return self._general.kbt
+
+    @property
+    def box_volume(self):
+        return self._general.box_volume
+
+    @property
+    def box_size(self):
+        return self._general.box_size
+
+    @property
+    def periodic_boundary_conditions(self):
+        return self._general.periodic_boundary_conditions
 
     @property
     def diffusion_constants(self):
