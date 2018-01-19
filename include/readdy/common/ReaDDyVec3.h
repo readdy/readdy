@@ -59,9 +59,6 @@ public:
         std::fill(_data.begin(), _data.end(), 0.);
     }
 
-    template<typename... T, typename = typename std::enable_if_t<sizeof...(T) == N*M>>
-    explicit ReaDDyMatrix(T &&... elems) : _data{{static_cast<scalar>(std::forward<T>(elems))...}} {}
-
     explicit ReaDDyMatrix(data_arr data) : _data(data) {}
 
     ReaDDyMatrix(ReaDDyMatrix &&) noexcept = default;
@@ -103,10 +100,9 @@ public:
         return *this;
     }
 
-    friend ReaDDyMatrix operator+(const ReaDDyMatrix &lhs, const ReaDDyMatrix &rhs) {
-        ReaDDyMatrix copy(lhs);
-        copy += rhs;
-        return copy;
+    friend ReaDDyMatrix operator+(ReaDDyMatrix lhs, const ReaDDyMatrix &rhs) {
+        lhs += rhs;
+        return lhs;
     }
 
     template<typename arithmetic, typename detail::is_arithmetic_type<arithmetic> = 0>

@@ -8,18 +8,12 @@ build:
   number: {{ environ.get('GIT_DESCRIBE_NUMBER', 0) }}
   {% if environ.get('GIT_DESCRIBE_NUMBER', '0') == '0' %}string: py{{ environ.get('PY_VER').replace('.', '') }}_0
   {% else %}string: py{{ environ.get('PY_VER').replace('.', '') }}_{{ environ.get('GIT_BUILD_STR', 'GIT_STUB') }}{% endif %}
-  script_env:
-    - CXX
-    - CC
-    - TRAVIS
-    - BUILD_TYPE
   rpaths:
     - lib/
     - readdy/readdy_plugins/
 
 requirements:
-  build:
-    - cmake # [not win]
+  host:
     - python
     - h5py
     - hdf5
@@ -27,6 +21,12 @@ requirements:
     - numpy
     - zlib 1.2.*
     - vs2015_runtime  # [win]
+
+  build:
+    - {{ compiler('c') }}
+    - {{ compiler('cxx') }}
+    - cmake # [not win]
+    - hdf5
 
   run:
     - python
@@ -38,9 +38,16 @@ requirements:
     - networkx
     - matplotlib
     - zlib 1.2.*
-    - libgcc
+    - libgcc # [linux]
     - vs2015_runtime  # [win]
 
 test:
+  #commands:
+  #  - runUnitTests
+  #  - runUnitTests_singlecpu
+  #  - runUnitTests_cpu
+  #  - nosetests
+  imports:
+    - readdy
   requires:
     - nose

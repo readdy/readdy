@@ -50,7 +50,7 @@ TEST(Matrix33, OuterProduct) {
 }
 
 TEST(Matrix33, Access) {
-    mat m(1, 2, 3, 4, 5, 6, 7, 8, 9);
+    mat m{{{1, 2, 3, 4, 5, 6, 7, 8, 9}}};
     EXPECT_EQ(m.at(0, 0), 1);
     EXPECT_EQ(m.at(0, 1), 2);
     EXPECT_EQ(m.at(0, 2), 3);
@@ -68,7 +68,7 @@ TEST(Matrix33, Dims) {
 }
 
 TEST(Matrix33, Copy) {
-    mat m(1, 2, 3, 4, 5, 6, 7, 8, 9);
+    mat m{{{1, 2, 3, 4, 5, 6, 7, 8, 9}}};
     auto copy = m;
     mat copy2(m);
 
@@ -81,7 +81,7 @@ TEST(Matrix33, Copy) {
 }
 
 TEST(Matrix33, At) {
-    mat m(1, 2, 3, 4, 5, 6, 7, 8, 9);
+    mat m{{{1, 2, 3, 4, 5, 6, 7, 8, 9}}};
     EXPECT_EQ(m.at(0, 0), m.data()[0]);
     EXPECT_EQ(m.at(0, 1), m.data()[1]);
     EXPECT_EQ(m.at(0, 2), m.data()[2]);
@@ -94,10 +94,10 @@ TEST(Matrix33, At) {
 }
 
 TEST(Matrix33, Plus) {
-    mat m(1, 2, 3, 4, 5, 6, 7, 8, 9);
-    mat m2(1, 2, 3, 4, 5, 6, 7, 8, 9);
-    auto m3 = m + m2;
+    mat m2{{{1, 2, 3, 4, 5, 6, 7, 8, 9}}};
+    mat m{{{1, 2, 3, 4, 5, 6, 7, 8, 9}}};
     m += m2;
+    auto m3 = m2 + m2;
     EXPECT_EQ(m.at(0, 0), 2) << "tried accessing (0, 0) = " << m.at(0, 0) << " for matrix " << m;
     EXPECT_EQ(m.at(0, 1), 4) << "tried accessing (0, 1) = " << m.at(0, 1) << " for matrix " << m;
     EXPECT_EQ(m.at(0, 2), 6) << "tried accessing (0, 2) = " << m.at(0, 2) << " for matrix " << m;
@@ -120,7 +120,7 @@ TEST(Matrix33, Plus) {
 }
 
 TEST(Matrix33, Scale) {
-    mat m(1, 2, 3, 4, 5, 6, 7, 8, 9);
+    mat m{{{1, 2, 3, 4, 5, 6, 7, 8, 9}}};
     auto m2 = m * 2;
     auto m3 = 2 * m;
     m *= 2;
@@ -138,9 +138,9 @@ TEST(Matrix33, Scale) {
 }
 
 TEST(Matrix33, EQ) {
-    mat m(1, 2, 3, 4, 5, 6, 7, 8, 9);
-    mat m2(1, 2, 3, 4, 5, 6, 7, 8, 9);
-    mat m3(2, 2, 3, 4, 5, 6, 7, 8, 9);
+    mat m{{{1, 2, 3, 4, 5, 6, 7, 8, 9}}};
+    mat m2{{{1, 2, 3, 4, 5, 6, 7, 8, 9}}};
+    mat m3{{{2, 2, 3, 4, 5, 6, 7, 8, 9}}};
 
     EXPECT_TRUE(m == m);
     EXPECT_TRUE(m == m2);

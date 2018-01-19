@@ -308,7 +308,6 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
                 ARCHIVE DESTINATION lib)
         INSTALL_TARGETS(/lib RUNTIME_DIRECTORY /lib ${READDY_PROJECT_NAME})
     ENDIF(READDY_BUILD_SHARED_COMBINED)
-    INSTALL(DIRECTORY include/ DESTINATION include)
 
     #####################################
     #                                   #

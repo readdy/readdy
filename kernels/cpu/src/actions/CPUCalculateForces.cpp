@@ -45,7 +45,7 @@ void CPUCalculateForces::perform(const util::PerformanceNode &node) {
     auto &topologies = stateModel.topologies();
 
     stateModel.energy() = 0;
-    stateModel.virial() = Matrix33{0, 0, 0, 0, 0, 0, 0, 0, 0};
+    stateModel.virial() = Matrix33{{{0, 0, 0, 0, 0, 0, 0, 0, 0}}};
 
     const auto &potOrder1 = ctx.potentials().potentialsOrder1();
     const auto &potOrder2 = ctx.potentials().potentialsOrder2();
@@ -221,7 +221,7 @@ void CPUCalculateForces::calculate_order2(std::size_t, nl_bounds nlBounds,
                                           model::potentials::PotentialRegistry::potential_o2_registry pot2,
                                           model::Context::shortest_dist_fun d) {
     scalar energyUpdate = 0.0;
-    Matrix33 virialUpdate(0, 0, 0, 0, 0, 0, 0, 0, 0);
+    Matrix33 virialUpdate{{{0, 0, 0, 0, 0, 0, 0, 0, 0}}};
 
     //
     // 2nd order potentials
