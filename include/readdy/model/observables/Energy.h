@@ -56,6 +56,8 @@ public:
 
     void evaluate() override;
 
+    std::string type() const override;
+
 private:
     struct Impl;
     std::unique_ptr<Impl> pimpl;

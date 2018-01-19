@@ -211,6 +211,7 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
         rdf.reactions.add_fusion("myfusion", "A", "A", "A", 2, .5)
         rdf.potentials.add_harmonic_repulsion("A", "A", 1., .2)
         sim = rdf.simulation(kernel="SingleCPU")
+        sim.show_progress = False
         sim.output_file = traj_fname
         sim.record_trajectory(1)
         sim.add_particles("A", np.random.random((100, 3)))
@@ -261,6 +262,7 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
         rdf.reactions.add_fission("myfission", "A", "A", "A", 2, .5)
         rdf.potentials.add_harmonic_repulsion("A", "A", 1., .2)
         sim = rdf.simulation(kernel=kernel, reaction_handler=reaction_handler)
+        sim.show_progress = False
         sim.output_file = traj_fname
         sim.add_particles("A", np.random.random((100, 3)))
 

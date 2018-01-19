@@ -88,6 +88,10 @@ void Particles::flush() {
     if (pimpl->time) pimpl->time->flush();
 }
 
+std::string Particles::type() const {
+    return "Particles";
+}
+
 Particles::~Particles() = default;
 
 

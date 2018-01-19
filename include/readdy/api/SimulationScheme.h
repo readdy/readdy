@@ -98,14 +98,13 @@ public:
      */
     virtual void run(time_step_type steps) {
         // show every 100 time steps
-        const auto progressOutputStride = 100;
         if(!_updateCallback) {
-            _updateCallback = [this, steps, progressOutputStride](time_step_type current) {
+            _updateCallback = [this, steps](time_step_type current) {
                 log::info("Simulation progress: {} / {} steps", (current - start), steps);
             };
         }
-        auto defaultContinueCriterion = [this, steps, progressOutputStride](const time_step_type current) {
-            if (progressOutputStride > 0 && (current - start) % progressOutputStride == 0) {
+        auto defaultContinueCriterion = [this, steps](const time_step_type current) {
+            if (current != start && _progressOutputStride > 0 && (current - start) % _progressOutputStride == 0) {
                 _updateCallback(current);
             }
             return current < start + steps;
@@ -121,6 +120,16 @@ public:
     std::function<void(time_step_type)> &updateCallback() {
         return _updateCallback;
     }
+
+    /**
+     * show progress every N steps
+     * @return N steps
+     */
+    std::size_t &progressOutputStride() {
+        return _progressOutputStride;
+    }
+
+
 
 protected:
     template<typename SchemeType>
@@ -174,6 +183,10 @@ protected:
      * the starting point
      */
     time_step_type start = 0;
+    /**
+     * show progress every N steps
+     */
+    std::size_t _progressOutputStride = 100;
     /**
      * cref to the performance root node
      */

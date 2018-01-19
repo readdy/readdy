@@ -55,6 +55,8 @@ public:
 
     virtual ~Forces();
 
+    std::string type() const override;
+
     void flush() override;
 
 protected:

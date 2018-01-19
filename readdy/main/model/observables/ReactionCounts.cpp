@@ -107,6 +107,10 @@ void ReactionCounts::append() {
     pimpl->time->append(t_current);
 }
 
+std::string ReactionCounts::type() const {
+    return "ReactionCounts";
+}
+
 ReactionCounts::~ReactionCounts() = default;
 
 }

@@ -73,7 +73,7 @@ TEST_P(TestSCPUNeighborList, Diffuse) {
     auto n_steps = 3U;
     auto n_particles = 1000;
 #else
-    auto n_steps = 20U;
+    auto n_steps = 5U;
     auto n_particles = 3000;
 #endif
 

@@ -156,6 +156,8 @@ public:
      */
     virtual void flush() = 0;
 
+    virtual std::string type() const = 0;
+
 protected:
     friend class readdy::model::Kernel;
 

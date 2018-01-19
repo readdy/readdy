@@ -78,7 +78,7 @@ private:
         auto &neighborList = *stateModel.getNeighborList();
 
         stateModel.energy() = 0;
-        stateModel.virial() = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+        stateModel.virial() = Matrix33{0, 0, 0, 0, 0, 0, 0, 0, 0};
 
         const auto &potentials = context.potentials();
         auto &topologies = stateModel.topologies();

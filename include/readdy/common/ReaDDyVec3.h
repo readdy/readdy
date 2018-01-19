@@ -34,9 +34,10 @@
 #include <array>
 #include <cmath>
 #include <string>
-#include <ostream>
 #include <algorithm>
 #include <type_traits>
+#include <sstream>
+#include <ostream>
 #include "Index.h"
 #include "FloatingPoints.h"
 
@@ -59,7 +60,7 @@ public:
     }
 
     template<typename... T, typename = typename std::enable_if_t<sizeof...(T) == N*M>>
-    ReaDDyMatrix(T &&... elems) : _data{{static_cast<scalar>(std::forward<T>(elems))...}} {}
+    explicit ReaDDyMatrix(T &&... elems) : _data{{static_cast<scalar>(std::forward<T>(elems))...}} {}
 
     explicit ReaDDyMatrix(data_arr data) : _data(data) {}
 
@@ -102,9 +103,10 @@ public:
         return *this;
     }
 
-    friend ReaDDyMatrix operator+(ReaDDyMatrix lhs, const ReaDDyMatrix &rhs) {
-        lhs += rhs;
-        return lhs;
+    friend ReaDDyMatrix operator+(const ReaDDyMatrix &lhs, const ReaDDyMatrix &rhs) {
+        ReaDDyMatrix copy(lhs);
+        copy += rhs;
+        return copy;
     }
 
     template<typename arithmetic, typename detail::is_arithmetic_type<arithmetic> = 0>
@@ -131,6 +133,19 @@ public:
 
     bool operator!=(const ReaDDyMatrix &rhs) const {
         return _data != rhs._data;
+    }
+
+    friend std::ostream &operator<<(std::ostream &os, const ReaDDyMatrix &matrix) {
+        std::stringstream ss;
+        ss << "Matrix " << ReaDDyMatrix::n() << " x " << ReaDDyMatrix::m() << ": " << std::endl;
+        for(index_type i = 0; i < ReaDDyMatrix::n(); ++i) {
+            for(index_type j = 0; j < ReaDDyMatrix::m(); ++j) {
+                ss << matrix.at(i, j) << " ";
+            }
+            ss << std::endl;
+        }
+        os << ss.str();
+        return os;
     }
 
 private:
@@ -245,7 +260,7 @@ public:
     }
 
     friend std::ostream &operator<<(std::ostream &os, const ReaDDyVec3 &vec) {
-        os << "ReaDDyVec3(" << vec[0] << ", " << vec[1] << ", " << vec[2] << ")";
+        os << "(" << vec[0] << ", " << vec[1] << ", " << vec[2] << ")";
         return os;
     };
 

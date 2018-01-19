@@ -66,6 +66,11 @@ protected:
 
     void append() override;
 
+public:
+    std::string type() const override;
+
+protected:
+
     std::vector<particle_type_type> typesToCount;
 
     struct Impl;

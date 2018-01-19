@@ -45,7 +45,7 @@ void CPUCalculateForces::perform(const util::PerformanceNode &node) {
     auto &topologies = stateModel.topologies();
 
     stateModel.energy() = 0;
-    stateModel.virial() = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+    stateModel.virial() = Matrix33{0, 0, 0, 0, 0, 0, 0, 0, 0};
 
     const auto &potOrder1 = ctx.potentials().potentialsOrder1();
     const auto &potOrder2 = ctx.potentials().potentialsOrder2();

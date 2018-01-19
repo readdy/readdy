@@ -52,6 +52,8 @@ public:
 
     ~Virial();
 
+    std::string type() const override;
+
     void flush() override;
 
 protected:

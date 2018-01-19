@@ -86,6 +86,10 @@ void HistogramAlongAxis::flush() {
     if (pimpl->time) pimpl->time->flush();
 }
 
+std::string HistogramAlongAxis::type() const {
+    return "HistogramAlongAxis";
+}
+
 HistogramAlongAxis::~HistogramAlongAxis() = default;
 
 }

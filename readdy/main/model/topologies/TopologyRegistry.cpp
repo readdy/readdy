@@ -90,65 +90,90 @@ std::string TopologyRegistry::describe() const {
             }
         }
     }
-    description += fmt::format(" - topology types:{}", rus::newline);
-    for (const auto &entry : _registry) {
-        description += fmt::format("     * topology type \"{}\" with id {} and {} structural reactions{}",
-                                   entry.second.name, entry.second.type, entry.second.structural_reactions.size(),
-                                   rus::newline);
-    }
-
-    description += fmt::format(" - structural topology reactions:{}", rus::newline);
-    for (const auto &entry : _registry) {
-        description += fmt::format("     - topology type \"{}\" with {} structural reactions:{}",
-                                   entry.second.name, entry.second.structural_reactions.size(), rus::newline);
-        for (const auto &r : entry.second.structural_reactions) {
-            description += fmt::format("         * reaction with roll_back = {} and create child tops = {}{}",
-                                       r.rolls_back_if_invalid(), r.creates_child_topologies_after_reaction(), rus::newline);
+    if(!_registry.empty()) {
+        description += fmt::format(" - topology types:{}", rus::newline);
+        for (const auto &entry : _registry) {
+            description += fmt::format("     * topology type \"{}\" with id {} and {} structural reactions{}",
+                                       entry.second.name, entry.second.type, entry.second.structural_reactions.size(),
+                                       rus::newline);
         }
     }
 
-    description += fmt::format(" - topology potential configuration:{}", rus::newline);
-    description += fmt::format("     - bonds ({}):{}", _potentialConfiguration.pairPotentials.size(), rus::newline);
-    for (const auto &entry : _potentialConfiguration.pairPotentials) {
-        description += fmt::format("         - Bonds for particle types {} and {}:{}",
-                                   _typeRegistry.get().nameOf(std::get<0>(entry.first)),
-                                   _typeRegistry.get().nameOf(std::get<1>(entry.first)), rus::newline);
-        auto bondToStr = [](const api::Bond &bond) -> std::string {
-            switch (bond.type) {
-                case api::BondType::HARMONIC:
-                    return "Harmonic";
+    if(nStructuralReactions() > 0) {
+        description += fmt::format(" - structural topology reactions:{}", rus::newline);
+        for (const auto &entry : _registry) {
+            if(!entry.second.structural_reactions.empty()) {
+                description += fmt::format("     - topology type \"{}\" with {} structural reactions:{}",
+                                           entry.second.name, entry.second.structural_reactions.size(), rus::newline);
+                for (const auto &r : entry.second.structural_reactions) {
+                    description += fmt::format("         * reaction with roll_back = {} and create child tops = {}{}",
+                                               r.rolls_back_if_invalid(), r.creates_child_topologies_after_reaction(),
+                                               rus::newline);
+                }
             }
-        };
-        for (const auto &bond : entry.second) {
-            description += fmt::format("             * {} bond with force constant {} and length {}{}", bondToStr(bond),
-                                       bond.forceConstant, bond.length, rus::newline);
         }
     }
-    description += fmt::format("     - angles ({}):{}", _potentialConfiguration.anglePotentials.size(), rus::newline);
-    for (const auto &entry : _potentialConfiguration.anglePotentials) {
-        auto angleToStr = [](const api::Angle &angle) -> std::string {
-            switch (angle.type) {
-                case api::AngleType::HARMONIC:
-                    return "Harmonic";
+
+    if(!_potentialConfiguration.pairPotentials.empty()
+       || !_potentialConfiguration.anglePotentials.empty()
+       || !_potentialConfiguration.torsionPotentials.empty()) {
+        description += fmt::format(" - topology potential configuration:{}", rus::newline);
+
+        if(!_potentialConfiguration.pairPotentials.empty()) {
+            description += fmt::format("     - bonds ({}):{}", _potentialConfiguration.pairPotentials.size(),
+                                       rus::newline);
+            for (const auto &entry : _potentialConfiguration.pairPotentials) {
+                description += fmt::format("         - Bonds for particle types {} and {}:{}",
+                                           _typeRegistry.get().nameOf(std::get<0>(entry.first)),
+                                           _typeRegistry.get().nameOf(std::get<1>(entry.first)), rus::newline);
+                auto bondToStr = [](const api::Bond &bond) -> std::string {
+                    switch (bond.type) {
+                        case api::BondType::HARMONIC:
+                            return "Harmonic";
+                    }
+                };
+                for (const auto &bond : entry.second) {
+                    description += fmt::format("             * {} bond with force constant {} and length {}{}",
+                                               bondToStr(bond),
+                                               bond.forceConstant, bond.length, rus::newline);
+                }
             }
-        };
-        for (const auto &angle : entry.second) {
-            description += fmt::format("             * {} angle with force constant {} and equilibrium angle {}{}",
-                                       angleToStr(angle), angle.forceConstant, angle.equilibriumAngle, rus::newline);
         }
-    }
-    description += fmt::format("     - torsions ({}):{}", _potentialConfiguration.torsionPotentials.size(), rus::newline);
-    for (const auto &entry : _potentialConfiguration.torsionPotentials) {
-        auto torsionToStr = [](const api::TorsionAngle &torsion) -> std::string {
-            switch (torsion.type) {
-                case api::TorsionType::COS_DIHEDRAL:
-                    return "Cosine-Dihedral";
+
+        if(!_potentialConfiguration.anglePotentials.empty()) {
+            description += fmt::format("     - angles ({}):{}", _potentialConfiguration.anglePotentials.size(),
+                                       rus::newline);
+            for (const auto &entry : _potentialConfiguration.anglePotentials) {
+                auto angleToStr = [](const api::Angle &angle) -> std::string {
+                    switch (angle.type) {
+                        case api::AngleType::HARMONIC:
+                            return "Harmonic";
+                    }
+                };
+                for (const auto &angle : entry.second) {
+                    description += fmt::format(
+                            "             * {} angle with force constant {} and equilibrium angle {}{}",
+                            angleToStr(angle), angle.forceConstant, angle.equilibriumAngle,
+                            rus::newline);
+                }
             }
-        };
-        for (const auto &dih : entry.second) {
-            description += fmt::format(
-                    "             * {} with force constant {}, equilibrium angle {} and multiplicity {}{}",
-                    torsionToStr(dih), dih.forceConstant, dih.phi_0, dih.multiplicity, rus::newline);
+        }
+        if(!_potentialConfiguration.torsionPotentials.empty()) {
+            description += fmt::format("     - torsions ({}):{}", _potentialConfiguration.torsionPotentials.size(),
+                                       rus::newline);
+            for (const auto &entry : _potentialConfiguration.torsionPotentials) {
+                auto torsionToStr = [](const api::TorsionAngle &torsion) -> std::string {
+                    switch (torsion.type) {
+                        case api::TorsionType::COS_DIHEDRAL:
+                            return "Cosine-Dihedral";
+                    }
+                };
+                for (const auto &dih : entry.second) {
+                    description += fmt::format(
+                            "             * {} with force constant {}, equilibrium angle {} and multiplicity {}{}",
+                            torsionToStr(dih), dih.forceConstant, dih.phi_0, dih.multiplicity, rus::newline);
+                }
+            }
         }
     }
     return description;

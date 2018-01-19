@@ -67,31 +67,55 @@ TEST(Matrix33, Dims) {
     EXPECT_EQ(mat::m(), 3);
 }
 
+TEST(Matrix33, Copy) {
+    mat m(1, 2, 3, 4, 5, 6, 7, 8, 9);
+    auto copy = m;
+    mat copy2(m);
+
+    copy.at(0, 1) = 5;
+    copy2.at(0, 1) = 6;
+
+    EXPECT_EQ(m.at(0, 1), 2);
+    EXPECT_EQ(copy.at(0, 1), 5);
+    EXPECT_EQ(copy2.at(0, 1), 6);
+}
+
+TEST(Matrix33, At) {
+    mat m(1, 2, 3, 4, 5, 6, 7, 8, 9);
+    EXPECT_EQ(m.at(0, 0), m.data()[0]);
+    EXPECT_EQ(m.at(0, 1), m.data()[1]);
+    EXPECT_EQ(m.at(0, 2), m.data()[2]);
+    EXPECT_EQ(m.at(1, 0), m.data()[3]);
+    EXPECT_EQ(m.at(1, 1), m.data()[4]);
+    EXPECT_EQ(m.at(1, 2), m.data()[5]);
+    EXPECT_EQ(m.at(2, 0), m.data()[6]);
+    EXPECT_EQ(m.at(2, 1), m.data()[7]);
+    EXPECT_EQ(m.at(2, 2), m.data()[8]);
+}
+
 TEST(Matrix33, Plus) {
     mat m(1, 2, 3, 4, 5, 6, 7, 8, 9);
     mat m2(1, 2, 3, 4, 5, 6, 7, 8, 9);
-    auto m3 = m+m2;
+    auto m3 = m + m2;
     m += m2;
-    EXPECT_EQ(m.at(0, 0), 2);
-    EXPECT_EQ(m.at(0, 1), 4);
-    EXPECT_EQ(m.at(0, 2), 6);
-    EXPECT_EQ(m.at(1, 0), 8);
-    EXPECT_EQ(m.at(1, 1), 10);
-    EXPECT_EQ(m.at(1, 2), 12);
-    EXPECT_EQ(m.at(2, 0), 14);
-    EXPECT_EQ(m.at(2, 1), 16);
-    EXPECT_EQ(m.at(2, 2), 18);
-    for(auto i = 0; i < mat::n(); ++i) {
-        for(auto j = 0; j < mat::m(); ++j) {
-            if(std::is_same<readdy::scalar, float>::value) {
-                EXPECT_FLOAT_EQ(m.at(i, j), m3.at(i, j));
-            } else if(std::is_same<readdy::scalar, double>::value) {
-                EXPECT_DOUBLE_EQ(m.at(i, j), m3.at(i, j));
-            } else {
-                FAIL() << "this should not happen";
-            }
-        }
-    }
+    EXPECT_EQ(m.at(0, 0), 2) << "tried accessing (0, 0) = " << m.at(0, 0) << " for matrix " << m;
+    EXPECT_EQ(m.at(0, 1), 4) << "tried accessing (0, 1) = " << m.at(0, 1) << " for matrix " << m;
+    EXPECT_EQ(m.at(0, 2), 6) << "tried accessing (0, 2) = " << m.at(0, 2) << " for matrix " << m;
+    EXPECT_EQ(m.at(1, 0), 8) << "tried accessing (1, 0) = " << m.at(1, 0) << " for matrix " << m;
+    EXPECT_EQ(m.at(1, 1), 10) << "tried accessing (1, 1) = " << m.at(1, 1) << " for matrix " << m;
+    EXPECT_EQ(m.at(1, 2), 12) << "tried accessing (1, 2) = " << m.at(1, 2) << " for matrix " << m;
+    EXPECT_EQ(m.at(2, 0), 14) << "tried accessing (2, 0) = " << m.at(2, 0) << " for matrix " << m;
+    EXPECT_EQ(m.at(2, 1), 16) << "tried accessing (2, 1) = " << m.at(2, 1) << " for matrix " << m;
+    EXPECT_EQ(m.at(2, 2), 18) << "tried accessing (2, 2) = " << m.at(2, 2) << " for matrix " << m;
+    EXPECT_EQ(m3.at(0, 0), 2) << "tried accessing (0, 0) = " << m3.at(0, 0) << " for matrix " << m3;
+    EXPECT_EQ(m3.at(0, 1), 4) << "tried accessing (0, 1) = " << m3.at(0, 1) << " for matrix " << m3;
+    EXPECT_EQ(m3.at(0, 2), 6) << "tried accessing (0, 2) = " << m3.at(0, 2) << " for matrix " << m3;
+    EXPECT_EQ(m3.at(1, 0), 8) << "tried accessing (1, 0) = " << m3.at(1, 0) << " for matrix " << m3;
+    EXPECT_EQ(m3.at(1, 1), 10) << "tried accessing (1, 1) = " << m3.at(1, 1) << " for matrix " << m3;
+    EXPECT_EQ(m3.at(1, 2), 12) << "tried accessing (1, 2) = " << m3.at(1, 2) << " for matrix " << m3;
+    EXPECT_EQ(m3.at(2, 0), 14) << "tried accessing (2, 0) = " << m3.at(2, 0) << " for matrix " << m3;
+    EXPECT_EQ(m3.at(2, 1), 16) << "tried accessing (2, 1) = " << m3.at(2, 1) << " for matrix " << m3;
+    EXPECT_EQ(m3.at(2, 2), 18) << "tried accessing (2, 2) = " << m3.at(2, 2) << " for matrix " << m3;
     EXPECT_EQ(m, m3);
 }
 

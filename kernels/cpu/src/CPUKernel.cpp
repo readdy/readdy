@@ -65,7 +65,7 @@ void CPUKernel::initialize() {
     }
     _stateModel.reactionRecords().clear();
     _stateModel.resetReactionCounts();
-    _stateModel.virial() = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+    _stateModel.virial() = Matrix33{0, 0, 0, 0, 0, 0, 0, 0, 0};
 }
 
 }

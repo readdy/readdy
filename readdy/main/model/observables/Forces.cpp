@@ -77,6 +77,10 @@ void Forces::append() {
     pimpl->timeSeries->append(t_current);
 }
 
+std::string Forces::type() const {
+    return "Forces";
+}
+
 Forces::~Forces() = default;
 
 }

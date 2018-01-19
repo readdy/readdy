@@ -78,6 +78,10 @@ void Positions::flush() {
     if (pimpl->time) pimpl->time->flush();
 }
 
+std::string Positions::type() const {
+    return "Positions";
+}
+
 Positions::~Positions() = default;
 }
 }

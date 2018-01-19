@@ -162,6 +162,10 @@ void RadialDistribution::flush() {
     if (pimpl->time) pimpl->time->flush();
 }
 
+std::string RadialDistribution::type() const {
+    return "RadialDistribution";
+}
+
 RadialDistribution::~RadialDistribution() = default;
 }
 }

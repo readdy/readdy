@@ -2,7 +2,7 @@ package:
   name: readdy
   version: {{ environ.get('GIT_DESCRIBE_TAG', 'dev') }}
 source:
-  path: ../..
+  git_url: ../..
 
 build:
   number: {{ environ.get('GIT_DESCRIBE_NUMBER', 0) }}

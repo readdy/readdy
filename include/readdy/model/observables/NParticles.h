@@ -50,6 +50,9 @@ public:
     NParticles(Kernel* kernel, stride_type stride, std::vector<particle_type_type> typesToCount);
 
     NParticles(const NParticles&) = delete;
+
+    std::string type() const override;
+
     NParticles& operator=(const NParticles&) = delete;
     NParticles(NParticles&&) = default;
     NParticles& operator=(NParticles&&) = delete;

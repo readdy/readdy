@@ -61,6 +61,8 @@ public:
 
     void flush() override;
 
+    std::string type() const override;
+
 
 protected:
     void initialize(Kernel *kernel) override;

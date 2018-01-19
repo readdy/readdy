@@ -161,6 +161,14 @@ public:
                             const util::particle_type_pair &types_to, const topology_type_pair &topology_types_to,
                             scalar rate, scalar radius, reactions::STRMode mode);
 
+    std::size_t nStructuralReactions() const {
+        return std::accumulate(_registry.begin(), _registry.end(), 0_z,
+                               [](std::size_t current, const type_registry::const_iterator::value_type &other) {
+                                   return current + other.second.structural_reactions.size();
+                               }
+        );
+    }
+
     /**
      * Convenience function for adding spatial reaction.
      *

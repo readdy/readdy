@@ -54,6 +54,8 @@ public:
 
     virtual ~HistogramAlongAxis();
 
+    std::string type() const override;
+
 protected:
     struct Impl;
     std::unique_ptr<Impl> pimpl;

@@ -83,6 +83,10 @@ void Reactions::initialize(Kernel *const kernel) {
     }
 }
 
+std::string Reactions::type() const {
+    return "Reactions";
+}
+
 Reactions::~Reactions() = default;
 
 }

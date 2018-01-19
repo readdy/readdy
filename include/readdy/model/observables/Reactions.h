@@ -57,6 +57,8 @@ public:
 
     virtual ~Reactions();
 
+    std::string type() const override;
+
     void flush() override;
 
 protected:

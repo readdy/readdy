@@ -46,6 +46,9 @@ void exportSchemeApi(pybind11::module &module, const std::string &schemeName) {
             .def("set_progress_callback", [](SchemeType &self, const std::function<void(readdy::time_step_type)> &fun)  {
                 self.updateCallback() = fun;
             })
+            .def("set_progress_output_stride", [](SchemeType &self, std::size_t stride) {
+                self.progressOutputStride() = stride;
+            })
             .def("run", [](SchemeType& self, const readdy::time_step_type steps) {
                 py::gil_scoped_release release;
                 self.run(steps);
