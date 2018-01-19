@@ -25,6 +25,7 @@ Created on 08.09.17
 @author: clonker
 """
 
+
 def _parse_save_args(save_args):
     assert save_args is None or isinstance(save_args, (dict, bool)), \
         "save can only be None, bool, or a dictionary, not {}".format(type(save_args))
@@ -34,6 +35,7 @@ def _parse_save_args(save_args):
         assert "chunk_size" in save_args.keys(), "save needs to have a \"chunk_size\" key"
         assert "name" in save_args.keys(), "save needs to have a \"name\" key"
         return save_args["name"], save_args["chunk_size"]
+
 
 class Observables(object):
     def __init__(self, simulation):
@@ -56,23 +58,22 @@ class Observables(object):
         :param save: dictionary containing `name` and `chunk_size` or None to not save the observable to file
         """
         if isinstance(save, str) and save == 'default':
-            save = {"name": "rdf", "chunk_size": 100}
+            save = {"name": "rdf", "chunk_size": 1000}
         if isinstance(types_count_from, str):
             types_count_from = [types_count_from]
         if isinstance(types_count_to, str):
             types_count_to = [types_count_to]
         bin_borders = self._simulation._unit_conf.convert(bin_borders, self._simulation.length_unit)
         particle_to_density = self._simulation._unit_conf.convert(particle_to_density,
-                                                                  1 / self._simulation.length_unit**3)
+                                                                  1 / self._simulation.length_unit ** 3)
         assert all([isinstance(x, str) for x in types_count_from]), \
             "types_count_from={} has an invalid type".format(types_count_from)
         assert all([isinstance(x, str) for x in types_count_to]), \
             "types_count_to={} has an invalid type".format(types_count_to)
-        handle = self._sim.register_observable_radial_distribution(stride, bin_borders, types_count_from, types_count_to,
+        handle = self._sim.register_observable_radial_distribution(stride, bin_borders, types_count_from,
+                                                                   types_count_to,
                                                                    particle_to_density, callback)
-        name, chunk_size = _parse_save_args(save)
-        if name is not None and chunk_size is not None:
-            self._observable_handles.append((name, chunk_size, handle))
+        self._add_observable_handle(*_parse_save_args(save), handle)
 
     def reactions(self, stride, callback=None, save='default'):
         """
@@ -83,12 +84,10 @@ class Observables(object):
         :param save: dictionary containing `name` and `chunk_size` or None to not save the observable to file
         """
         if isinstance(save, str) and save == 'default':
-            save = {"name": "reactions", "chunk_size": 100}
+            save = {"name": "reactions", "chunk_size": 500}
         handle = self._sim.register_observable_reactions(stride, callback)
 
-        name, chunk_size = _parse_save_args(save)
-        if name is not None and chunk_size is not None:
-            self._observable_handles.append((name, chunk_size, handle))
+        self._add_observable_handle(*_parse_save_args(save), handle)
 
     def particle_positions(self, stride, types=None, callback=None, save='default'):
         """
@@ -106,9 +105,7 @@ class Observables(object):
             types = []
         handle = self._sim.register_observable_particle_positions(stride, types, callback)
 
-        name, chunk_size = _parse_save_args(save)
-        if name is not None and chunk_size is not None:
-            self._observable_handles.append((name, chunk_size, handle))
+        self._add_observable_handle(*_parse_save_args(save), handle)
 
     def particles(self, stride, callback=None, save='default'):
         """
@@ -123,9 +120,7 @@ class Observables(object):
 
         handle = self._sim.register_observable_particles(stride, callback)
 
-        name, chunk_size = _parse_save_args(save)
-        if name is not None and chunk_size is not None:
-            self._observable_handles.append((name, chunk_size, handle))
+        self._add_observable_handle(*_parse_save_args(save), handle)
 
     def number_of_particles(self, stride, types=None, callback=None, save='default'):
         """
@@ -143,9 +138,7 @@ class Observables(object):
             types = []
         handle = self._sim.register_observable_n_particles(stride, types, callback)
 
-        name, chunk_size = _parse_save_args(save)
-        if name is not None and chunk_size is not None:
-            self._observable_handles.append((name, chunk_size, handle))
+        self._add_observable_handle(*_parse_save_args(save), handle)
 
     def energy(self, stride, callback=None, save='default'):
         """
@@ -156,13 +149,11 @@ class Observables(object):
         :param save: dictionary containing `name` and `chunk_size` or None to not save the observable to file
         """
         if isinstance(save, str) and save == 'default':
-            save = {"name": "energy", "chunk_size": 100}
+            save = {"name": "energy", "chunk_size": 10000}
 
         handle = self._sim.register_observable_energy(stride, callback)
 
-        name, chunk_size = _parse_save_args(save)
-        if name is not None and chunk_size is not None:
-            self._observable_handles.append((name, chunk_size, handle))
+        self._add_observable_handle(*_parse_save_args(save), handle)
 
     def forces(self, stride, types=None, callback=None, save='default'):
         """
@@ -180,9 +171,7 @@ class Observables(object):
             types = []
         handle = self._sim.register_observable_forces(stride, types, callback)
 
-        name, chunk_size = _parse_save_args(save)
-        if name is not None and chunk_size is not None:
-            self._observable_handles.append((name, chunk_size, handle))
+        self._add_observable_handle(*_parse_save_args(save), handle)
 
     def reaction_counts(self, stride, callback=None, save='default'):
         """
@@ -194,10 +183,29 @@ class Observables(object):
         :param save: dictionary containing `name` and `chunk_size` or None to not save the observable to file
         """
         if isinstance(save, str) and save == 'default':
-            save = {"name": "reaction_counts", "chunk_size": 100}
+            save = {"name": "reaction_counts", "chunk_size": 500}
 
         handle = self._sim.register_observable_reaction_counts(stride, callback)
 
-        name, chunk_size = _parse_save_args(save)
-        if name is not None and chunk_size is not None:
-            self._observable_handles.append((name, chunk_size, handle))
+        self._add_observable_handle(*_parse_save_args(save), handle)
+
+    def virial(self, stride, callback=None, save='default'):
+        """
+        Records the virial tensor of the system.
+        :param stride: skip `stride` time steps before evaluating the observable again
+        :param callback: callback function that takes the current virial as argument in terms of a (3,3) numpy array
+        :param save: dictionary containing `name` and `chunk_size` or None to not save the observable to file
+        """
+        if isinstance(save, str) and save == 'default':
+            save = {"name": "virial", "chunk_size": 100}
+
+        handle = self._sim.register_observable_virial(stride, lambda x: callback(x.toarray()))
+        self._add_observable_handle(*_parse_save_args(save), handle)
+
+
+    def _add_observable_handle(self, save_name, save_chunk_size, handle):
+        if save_name is not None and save_chunk_size is not None:
+            if next((n for n, c, h in self._observable_handles if n == save_name), None) is not None:
+                raise RuntimeError("A observable with the name {} is already being recorded into the trajectory file."
+                                   .format(save_name))
+            self._observable_handles.append((save_name, save_chunk_size, handle))
