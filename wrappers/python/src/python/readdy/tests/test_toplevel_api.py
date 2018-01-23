@@ -276,8 +276,25 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
         sim.observe.reaction_counts(1)
         sim.observe.forces(1)
         sim.observe.energy(1)
+        pressures = []
+        pressures_inactive = []
+
+        class PressureCallback(object):
+
+            def __init__(self):
+                self.active = True
+
+            def __call__(self, p):
+                if self.active:
+                    pressures.append(p)
+                else:
+                    pressures_inactive.append(p)
+        pressure_callback = PressureCallback()
+
+        sim.observe.pressure(1, callback=pressure_callback)
         sim.run(50, 1e-3, False)
 
+        pressure_callback.active = False
         sim.output_file = traj_fname2
         sim.run(50, 1e-3, False)
 
@@ -292,6 +309,16 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
             time, positions = traj.read_observable_particle_positions()
             np.testing.assert_equal(len(time), 51)
             np.testing.assert_equal(len(positions), 51)
+
+            time, pressure = traj.read_observable_pressure()
+            np.testing.assert_equal(len(time), 51)
+            np.testing.assert_equal(len(pressure), 51)
+            np.testing.assert_equal(len(pressures), 51)
+            np.testing.assert_equal(len(pressures_inactive), 51)
+            if fname == traj_fname:
+                np.testing.assert_array_almost_equal(pressure, np.array(pressures))
+            else:
+                np.testing.assert_array_almost_equal(pressure, np.array(pressures_inactive))
 
             time, types, ids, positions = traj.read_observable_particles()
             np.testing.assert_equal(len(time), 51)

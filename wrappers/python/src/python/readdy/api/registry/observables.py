@@ -25,7 +25,10 @@ Created on 08.09.17
 @author: clonker
 """
 
+import numpy as _np
+
 from typing import Optional as _Optional, Dict as _Dict, Union as _Union
+from readdy.util.observable_utils import calculate_pressure as _calculate_pressure
 
 def _parse_save_args(save_args):
     assert save_args is None or isinstance(save_args, (dict, bool)), \
@@ -201,18 +204,22 @@ class Observables(object):
         if isinstance(save, str) and save == 'default':
             save = {"name": "virial", "chunk_size": 100}
 
-        handle = self._sim.register_observable_virial(stride, lambda x: callback(x.toarray()))
+        handle = self._sim.register_observable_virial(stride, lambda x: callback(_np.ndarray((3,3), buffer=x)))
         self._add_observable_handle(*_parse_save_args(save), handle)
 
     def pressure(self, stride, physical_particles=None, callback=None, save: _Optional[_Union[_Dict, str]]='default'):
         """
-
-        :param stride:
-        :param physical_particles:
-        :param save:
+        This observable will report back the pressure of the system. As the pressure can be computed from the number of
+        physical particles and the virial tensor, this observable actually delegates to the n_particles and virial
+        observables. The default save behavior is to save virial and n_particles under
+        "virial_pressure" and "n_particles_pressure", respectively.
+        :param stride: skip `stride` time steps before evaluating the observable again
+        :param physical_particles: a list of physical particles, if None, all particles are considered physical
+        :param callback: callback function that takes the current pressure as argument
+        :param save: dictionary containing `name` and `chunk_size` or None to not save the observable to file
         """
         if isinstance(save, str) and save == 'default':
-            save = {"name": "_pressure", "chunk_size": 100}
+            save = {"name": "_pressure", "chunk_size": 500}
         save_name, save_chunk_size = _parse_save_args(save)
         save_n_particles = None
         save_virial = None
@@ -222,11 +229,13 @@ class Observables(object):
 
         class PressureCallback(object):
 
-            def __init__(self, user_callback):
+            def __init__(self, user_callback, kbt, volume):
 
                 self._user_callback = user_callback
                 self._n = None
                 self._v = None
+                self._kbt = kbt
+                self._volume = volume
 
                 def pressure_callback_n_particles(n):
                     self._n = n
@@ -241,11 +250,12 @@ class Observables(object):
 
             def _eval_user_callback(self):
                 if self._n is not None and self._v is not None:
-                    # todo calc
+                    self._user_callback(_calculate_pressure(box_volume=self._volume, kbt=self._kbt,
+                                                            n_particles=self._n, virial=self._v))
                     self._n = None
                     self._v = None
 
-        pressure_callback = PressureCallback(callback)
+        pressure_callback = PressureCallback(callback, self._sim.context.kbt, self._sim.context.box_volume())
         self.number_of_particles(stride, types=physical_particles, callback=pressure_callback.n_particles_callback,
                                  save=save_n_particles)
         self.virial(stride, callback=pressure_callback.virial_callback, save=save_virial)

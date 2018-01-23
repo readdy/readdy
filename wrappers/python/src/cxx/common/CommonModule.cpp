@@ -32,6 +32,7 @@
 #include <readdy/common/ReaDDyVec3.h>
 #include <readdy/common/Timer.h>
 #include <readdy/io/BloscFilter.h>
+#include <pybind11/numpy.h>
 #include "SpdlogPythonSink.h"
 
 namespace py = pybind11;
@@ -45,6 +46,8 @@ using rvp = py::return_value_policy;
 void exportIO(py::module &);
 
 void exportUtils(py::module& m);
+
+using np_array = py::array_t<readdy::scalar, py::array::c_style>;
 
 void exportCommon(py::module& common) {
     using namespace pybind11::literals;
@@ -187,8 +190,21 @@ void exportCommon(py::module& common) {
                 return self[i];
             });
 
-    py::class_<readdy::Matrix33>(common, "Matrix33")
-            .def(py::self + py::self)
+    py::class_<readdy::Matrix33>(common, "Matrix33", py::buffer_protocol())
+            .def_buffer([](readdy::Matrix33 &m) -> py::buffer_info {
+                return py::buffer_info(
+                        m.data().data(),
+                        sizeof(readdy::Matrix33::data_arr::value_type),
+                        py::format_descriptor<readdy::Matrix33::data_arr::value_type>::format(),
+                        2,
+                        {readdy::Matrix33::n(), readdy::Matrix33::m()},
+                        { sizeof(readdy::Matrix33::data_arr::value_type) * readdy::Matrix33::n(),
+                          sizeof(readdy::Matrix33::data_arr::value_type)}
+                );
+            })
+            ;
+    /**
+     * .def(py::self + py::self)
             //.def(py::self - py::self)
             .def(readdy::scalar() * py::self)
             //.def(py::self / readdy::scalar())
@@ -197,12 +213,13 @@ void exportCommon(py::module& common) {
             .def(py::self == py::self)
             .def(py::self != py::self)
             .def("toarray", [](const readdy::Matrix33 &self) {
-                std::array<std::array<readdy::scalar, 3>, 3> arr {};
+                np_array arr {3, 3};
                 for(readdy::Matrix33::size_type i = 0; i < readdy::Matrix33::n(); ++i) {
                     for(readdy::Matrix33::size_type j = 0; j < readdy::Matrix33::m(); ++j) {
-                        arr[i][j] = self.at(i, j);
+                        arr.mutable_at(i, j) = self.at(i, j);
                     }
                 }
                 return arr;
-            });
+            })
+     */
 }

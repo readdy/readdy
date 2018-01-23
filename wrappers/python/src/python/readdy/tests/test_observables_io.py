@@ -99,7 +99,7 @@ class TestObservablesIO(ReaDDyTestCase):
 
         virials = []
         def virial_callback(virial):
-            virials.append(np.array(virial.toarray()))
+            virials.append(np.ndarray((3,3), buffer=virial))
 
         handle = sim.register_observable_virial(1, virial_callback)
         with closing(io.File.create(fname)) as f:
@@ -126,7 +126,7 @@ class TestObservablesIO(ReaDDyTestCase):
 
         virials = []
         def virial_callback(virial):
-            virials.append(np.array(virial.toarray()))
+            virials.append(np.ndarray((3,3), buffer=virial))
 
         handle = sim.register_observable_virial(1, virial_callback)
         with closing(io.File.create(fname)) as f:
