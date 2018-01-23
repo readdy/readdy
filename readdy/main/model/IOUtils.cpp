@@ -32,7 +32,10 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
+#include <json.hpp>
 #include <readdy/model/IOUtils.h>
+
+using json = nlohmann::json;
 
 namespace readdy {
 namespace model {
@@ -64,6 +67,15 @@ void writeReactionInformation(h5rd::Group &group, const Context &context) {
                                                std::get<1>(types), filters);
         infoDataSet->append(extent, reactionInfos.data());
     }
+}
+
+void writeGeneralContextInformation(h5rd::Group &group, const Context &context) {
+    json j;
+    j["kbt"] = context.kBT();
+    j["box_volume"] = context.boxVolume();
+    j["box_size"] = context.boxSize();
+    j["pbc"] = context.periodicBoundaryConditions();
+    group.write("general", j.dump());
 }
 
 void writeParticleTypeInformation(h5rd::Group &group, const Context &context) {
@@ -116,6 +128,7 @@ std::tuple<h5rd::NativeCompoundType, h5rd::STDCompoundType> getReactionInfoMemor
 void writeSimulationSetup(h5rd::Group &group, const Context &context) {
     writeParticleTypeInformation(group, context);
     writeReactionInformation(group, context);
+    writeGeneralContextInformation(group, context);
 }
 
 }

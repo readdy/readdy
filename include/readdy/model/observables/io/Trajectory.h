@@ -61,6 +61,8 @@ public:
 
     virtual void flush() override;
 
+    std::string type() const override;
+
 protected:
     void initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) override;
 
@@ -83,6 +85,8 @@ public:
     virtual void evaluate() override;
 
     virtual void flush() override;
+
+    std::string type() const override;
 
 protected:
     void initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) override;

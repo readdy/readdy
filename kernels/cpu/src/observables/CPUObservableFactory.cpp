@@ -93,6 +93,11 @@ std::unique_ptr<model::observables::ReactionCounts> CPUObservableFactory::reacti
     return {std::make_unique<CPUReactionCounts>(kernel, stride)};
 }
 
+std::unique_ptr<model::observables::Virial>
+CPUObservableFactory::virial(stride_type stride) const {
+    return {std::make_unique<CPUVirial>(kernel, stride)};
+}
+
 }
 }
 }

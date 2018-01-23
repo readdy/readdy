@@ -37,6 +37,7 @@
 #include <array>
 #include <numeric>
 #include <tuple>
+#include <cmath>
 #include "macros.h"
 #include "tuple_utils.h"
 
@@ -126,7 +127,7 @@ public:
      */
     template<typename ...Args, typename = typename std::enable_if<detail::all_of_type<std::size_t, Args...>::value>::type>
     Index(Args &&...args) : _size({std::forward<Args>(args)...}),
-                            n_elems(std::accumulate(_size.begin(), _size.end(), 1_z, std::multiplies<value_type>())) {}
+                            n_elems(std::accumulate(_size.begin(), _size.end(), static_cast<std::size_t>(1), std::multiplies<value_type>())) {}
 
     /**
      * the number of elements in this index, exactly the product of the grid dimensions

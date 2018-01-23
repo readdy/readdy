@@ -94,6 +94,10 @@ SCPUObservableFactory::reactionCounts(readdy::model::observables::ObservableFact
     return {std::make_unique<SCPUReactionCounts>(kernel, stride)};
 }
 
+std::unique_ptr<readdy::model::observables::Virial>
+SCPUObservableFactory::virial(readdy::model::observables::ObservableFactory::stride_type stride) const {
+    return {std::make_unique<SCPUVirial>(kernel, stride)};
+}
 
 }
 }

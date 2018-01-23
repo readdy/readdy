@@ -57,6 +57,10 @@ public:
         throw std::runtime_error("not supported");
     }
 
+    std::string type() const override {
+        throw std::runtime_error("not supported");
+    }
+
 protected:
     void initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) override {
         throw std::runtime_error("not supported");

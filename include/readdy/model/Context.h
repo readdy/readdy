@@ -181,6 +181,14 @@ public:
         return _recordReactionCounts;
     }
 
+    const bool &recordVirial() const {
+        return _recordVirial;
+    }
+
+    bool &recordVirial() {
+        return _recordVirial;
+    }
+
     top::TopologyRegistry &topology_registry() {
         return _topologyRegistry;
     }
@@ -261,6 +269,7 @@ private:
     // here come horrible flags
     bool _recordReactionsWithPositions{false};
     bool _recordReactionCounts{false};
+    bool _recordVirial{false};
 
 };
 

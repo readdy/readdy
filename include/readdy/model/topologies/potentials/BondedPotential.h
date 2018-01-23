@@ -89,7 +89,7 @@ public:
     }
 
     void calculateForce(Vec3 &force, const Vec3 &x_ij, const bond_configuration &bond) const {
-        const auto norm = std::sqrt(x_ij * x_ij);
+        const auto norm = x_ij.norm();
         force += (2. * bond.forceConstant * (norm - bond.length) / norm) * x_ij;
     }
 

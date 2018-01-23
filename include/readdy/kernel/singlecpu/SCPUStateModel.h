@@ -37,6 +37,7 @@
 #include <readdy/model/Context.h>
 #include <readdy/kernel/singlecpu/model/SCPUNeighborList.h>
 #include <readdy/model/reactions/ReactionRecord.h>
+#include "model/ObservableData.h"
 #include <readdy/common/index_persistent_vector.h>
 
 namespace readdy {
@@ -92,15 +93,11 @@ public:
     }
 
     scalar energy() const override {
-        return currentEnergy;
+        return _observableData.energy;
     }
 
     scalar &energy() override {
-        return currentEnergy;
-    }
-
-    virtual void increaseEnergy(scalar increase) {
-        currentEnergy += increase;
+        return _observableData.energy;
     }
 
     SCPUStateModel(const readdy::model::Context &context, const topology_action_factory *);
@@ -135,19 +132,27 @@ public:
     const std::vector<readdy::model::Particle> getParticles() const override;
 
     std::vector<readdy::model::reactions::ReactionRecord>& reactionRecords() {
-        return _reactionRecords;
+        return _observableData.reactionRecords;
     }
 
     const std::vector<readdy::model::reactions::ReactionRecord>& reactionRecords() const {
-        return _reactionRecords;
+        return _observableData.reactionRecords;
     }
 
     const reaction_counts_map & reactionCounts() const {
-        return _reactionCounts;
+        return _observableData.reactionCounts;
     }
 
     reaction_counts_map &reactionCounts() {
-        return _reactionCounts;
+        return _observableData.reactionCounts;
+    }
+
+    Matrix33 &virial() {
+        return _observableData.virial;
+    }
+
+    const Matrix33 &virial() const {
+        return _observableData.virial;
     }
 
     void resetReactionCounts();
@@ -160,6 +165,14 @@ public:
         return _topologies;
     }
 
+    model::ObservableData &observableData() {
+        return _observableData;
+    }
+
+    const model::ObservableData &observableData() const {
+        return _observableData;
+    }
+
     void insert_topology(topology&& top);
 
     std::vector<readdy::model::top::GraphTopology*> getTopologies() override;
@@ -169,17 +182,16 @@ public:
     readdy::model::top::GraphTopology *getTopologyForParticle(readdy::model::top::Topology::particle_index particle) override;
 
 private:
-    scalar currentEnergy = 0;
     model::SCPUParticleData particleData {};
     std::unique_ptr<model::CellLinkedList> neighborList;
     SCPUStateModel::topology_action_factory const *topologyActionFactory {nullptr};
     // only filled when readdy::model::Context::recordReactionsWithPositions is true
-    std::vector<readdy::model::reactions::ReactionRecord> _reactionRecords{};
-    reaction_counts_map _reactionCounts {};
 
     std::reference_wrapper<const readdy::model::Context> _context;
 
     topologies_vec _topologies;
+
+    model::ObservableData _observableData;
 };
 
 }

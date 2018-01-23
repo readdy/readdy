@@ -218,6 +218,18 @@ protected:
     SCPUKernel *const kernel;
 };
 
+class SCPUVirial : public readdy::model::observables::Virial {
+public:
+    SCPUVirial(SCPUKernel *kernel, stride_type stride) : Virial(kernel, stride), _kernel(kernel) {};
+
+    void evaluate() override {
+        result = _kernel->getSCPUKernelStateModel().virial();
+    }
+
+private:
+    SCPUKernel* const _kernel;
+};
+
 class SCPUReactions : public readdy::model::observables::Reactions {
 public:
     SCPUReactions(SCPUKernel *const kernel, unsigned int stride)

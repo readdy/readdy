@@ -35,7 +35,7 @@
 #include <random>
 #include <ctime>
 #include <thread>
-#include "readdy/common/ReaDDyVec3.h"
+#include "readdy/common/common.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)

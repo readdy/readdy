@@ -33,6 +33,7 @@ print_sep = "***" * 15
 
 __version__ = '@READDY_VERSION@'
 
+
 class ReaDDyBuild(build):
     @staticmethod
     def is_dynlib(file_path):

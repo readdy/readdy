@@ -49,12 +49,14 @@ class SCPUCalculateHarmonicBondPotential : public readdy::model::top::pot::Calcu
 
     const harmonic_bond *const potential;
     SCPUParticleData *const data;
+    model::ObservableData *const observableData;
 
 public:
     SCPUCalculateHarmonicBondPotential(const readdy::model::Context *const context,
-                                       SCPUParticleData *const data,
+                                       SCPUParticleData *const data, model::ObservableData * observableData,
                                        const harmonic_bond *const potential)
-            : CalculateHarmonicBondPotential(context), potential(potential), data(data) {}
+            : CalculateHarmonicBondPotential(context), potential(potential), data(data),
+              observableData(observableData) {}
 
     scalar perform(const readdy::model::top::Topology* const topology) override {
         scalar energy = 0;
@@ -67,7 +69,7 @@ public:
             const auto x_ij = d(e1.position(), e2.position());
             potential->calculateForce(forceUpdate, x_ij, bond);
             e1.force += forceUpdate;
-            e2.force += -1 * forceUpdate;
+            e2.force -= forceUpdate;
             energy += potential->calculateEnergy(x_ij, bond);
         }
         return energy;
@@ -78,10 +80,12 @@ public:
 class SCPUCalculateHarmonicAnglePotential : public readdy::model::top::pot::CalculateHarmonicAnglePotential {
     const harmonic_angle *const potential;
     SCPUParticleData *const data;
+    model::ObservableData *const observableData;
 public:
     SCPUCalculateHarmonicAnglePotential(const readdy::model::Context *const context, SCPUParticleData *const data,
-                                        const harmonic_angle *const potential)
-            : CalculateHarmonicAnglePotential(context), potential(potential), data(data) {}
+                                        model::ObservableData * observableData, const harmonic_angle *const potential)
+            : CalculateHarmonicAnglePotential(context), potential(potential), data(data),
+              observableData(observableData) {}
 
     scalar perform(const readdy::model::top::Topology* const topology) override {
         scalar energy = 0;

@@ -31,6 +31,7 @@
  */
 
 #include "gtest/gtest.h"
+#include <readdy/common/common.h>
 #include <readdy/common/Index.h>
 
 namespace {

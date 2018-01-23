@@ -83,6 +83,10 @@ void Trajectory::append() {
     pimpl->time->append(t_current);
 }
 
+std::string Trajectory::type() const {
+    return "Trajectory";
+}
+
 struct FlatTrajectory::Impl {
     std::unique_ptr<h5rd::DataSet> dataSet {nullptr};
     std::unique_ptr<h5rd::DataSet> limits {nullptr};
@@ -136,6 +140,10 @@ void FlatTrajectory::append() {
     pimpl->dataSet->append({result.size()}, result.data());
     pimpl->time->append(t_current);
     pimpl->limits->append({1, 2}, pimpl->current_limits);
+}
+
+std::string FlatTrajectory::type() const {
+    return "FlatTrajectory";
 }
 
 FlatTrajectory::FlatTrajectory(FlatTrajectory &&) = default;

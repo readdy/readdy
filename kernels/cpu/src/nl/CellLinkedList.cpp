@@ -116,6 +116,8 @@ void CellLinkedList::setUp(scalar skin, cell_radius_type radius, const util::Per
 
                                 std::sort(adj.begin(), adj.end());
                                 adj.erase(std::unique(std::begin(adj), std::end(adj)), std::end(adj));
+                                adj.erase(std::remove(std::begin(adj), std::end(adj), _cellIndex(i, j, k)),
+                                          std::end(adj));
 
                                 auto begin = _cellNeighbors(cellIdx, 0_z);
                                 _cellNeighborsContent[begin] = adj.size();

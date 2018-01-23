@@ -35,7 +35,7 @@
 #include <readdy/kernel/cpu/CPUKernel.h>
 #include <readdy/kernel/cpu/actions/reactions/ReactionUtils.h>
 #include <readdy/testing/Utils.h>
-#include <readdy/testing/FloatingPoints.h>
+#include <readdy/common/FloatingPoints.h>
 #include <readdy/kernel/cpu/actions/reactions/CPUGillespie.h>
 #include <readdy/model/reactions/Fusion.h>
 #include <readdy/model/reactions/Fission.h>

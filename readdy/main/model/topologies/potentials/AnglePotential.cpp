@@ -48,8 +48,8 @@ HarmonicAnglePotential::createForceAndEnergyAction(const TopologyActionFactory *
 scalar HarmonicAnglePotential::calculateEnergy(const Vec3 &x_ij, const Vec3 &x_kj,
                                                const angle &angle) const {
     const scalar scalarProduct = x_ij * x_kj;
-    const scalar norm_ij = std::sqrt(x_ij * x_ij);
-    const scalar norm_kj = std::sqrt(x_kj * x_kj);
+    const scalar norm_ij = x_ij.norm();
+    const scalar norm_kj = x_kj.norm();
     const scalar theta_ijk = std::acos(scalarProduct / (norm_ij * norm_kj));
     return angle.forceConstant * (theta_ijk - angle.equilibriumAngle) * (theta_ijk - angle.equilibriumAngle);
 }

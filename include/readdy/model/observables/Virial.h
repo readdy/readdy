@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          * 
+ * Copyright © 2018 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -23,49 +23,41 @@
 /**
  * << detailed description >>
  *
- * @file ReactionCounts.h
+ * @file Virial.h
  * @brief << brief description >>
  * @author clonker
- * @date 13.03.17
- * @copyright GNU Lesser General Public License v3.0
+ * @date 1/17/18
  */
+
 
 #pragma once
 
+#include <readdy/common/macros.h>
 #include "Observable.h"
-#include <readdy/common/ParticleTypeTuple.h>
-#include <readdy/model/Particle.h>
-#include <readdy/model/Context.h>
-#include <readdy/model/reactions/Reaction.h>
-#include <readdy/model/reactions/ReactionRecord.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(observables)
 
-class ReactionCounts : public Observable<reactions::reaction_counts_map> {
+class Virial : public Observable<Matrix33> {
+    using super = Observable<Matrix33>;
 public:
-    using reaction_counts_map = result_type;
 
-    ReactionCounts(Kernel *kernel, stride_type stride);
+    Virial(Kernel* kernel, stride_type stride);
 
-    ReactionCounts(const ReactionCounts &) = delete;
+    Virial(Virial &&) = default;
+    Virial& operator=(Virial &&) = default;
+    Virial(const Virial &) = delete;
+    Virial &operator=(const Virial &) = delete;
 
-    ReactionCounts &operator=(const ReactionCounts &) = delete;
-
-    ReactionCounts(ReactionCounts &&) = default;
-
-    ReactionCounts &operator=(ReactionCounts &&) = delete;
-
-    virtual ~ReactionCounts();
-
-    void flush() override;
+    ~Virial();
 
     std::string type() const override;
 
+    void flush() override;
 
 protected:
-    void initialize(Kernel *kernel) override;
+    void initialize(Kernel * kernel) override;
 
     void initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) override;
 

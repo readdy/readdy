@@ -38,7 +38,7 @@ FIND_PROGRAM(PYTHON "python")
 if (PYTHON)
     set(SETUP_PY_IN "${CMAKE_CURRENT_SOURCE_DIR}/src/python/setup.py")
     set(SETUP_PY    "${CMAKE_CURRENT_BINARY_DIR}/setup.py")
-    set(VERSION_IN "${CMAKE_CURRENT_SOURCE_DIR}/src/python/readdy/_version.py.in")
+    set(VERSION_IN  "${CMAKE_CURRENT_SOURCE_DIR}/src/python/readdy/_version.py.in")
     set(VERSION_OUT "${CMAKE_CURRENT_SOURCE_DIR}/src/python/readdy/_version.py")
     set(OUTPUT      "${CMAKE_CURRENT_BINARY_DIR}/build/timestamp")
 
@@ -52,7 +52,7 @@ if (PYTHON)
 
     add_custom_target(target ALL DEPENDS ${OUTPUT})
 
-    install(CODE "execute_process(COMMAND ${PYTHON} ${SETUP_PY} install)")
+    install(CODE "execute_process(COMMAND ${PYTHON} ${SETUP_PY} install --prefix=${CMAKE_INSTALL_PREFIX})")
 ELSE()
     MESSAGE(FATAL_ERROR "No python executable was found!")
 endif()

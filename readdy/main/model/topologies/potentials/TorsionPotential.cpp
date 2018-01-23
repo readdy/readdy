@@ -43,7 +43,7 @@ namespace pot {
 
 scalar  CosineDihedralPotential::calculateEnergy(const Vec3 &x_ji, const Vec3 &x_kj, const Vec3 &x_kl,
                                                 const dihedral_configuration &dihedral) const {
-    const auto x_jk = -1 * x_kj;
+    const auto x_jk = -1. * x_kj;
     auto x_jk_norm = x_jk.norm();
     x_jk_norm = static_cast<scalar>(x_jk_norm < SMALL ? SMALL : x_jk_norm);
     const auto m = x_ji.cross(x_kj);
@@ -62,7 +62,7 @@ void
 CosineDihedralPotential::calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, Vec3 &f_l, const Vec3 &x_ji, const Vec3 &x_kj,
                                         const Vec3 &x_kl,
                                         const dihedral_configuration &dih) const {
-    const auto x_jk = -1 * x_kj;
+    const auto x_jk = -1. * x_kj;
     auto x_jk_norm_squared = x_jk.normSquared();
     x_jk_norm_squared = static_cast<scalar>(x_jk_norm_squared < SMALL ? SMALL : x_jk_norm_squared);
     const auto x_jk_norm = std::sqrt(x_jk_norm_squared);
@@ -89,14 +89,14 @@ CosineDihedralPotential::calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, Vec3 &f
     const auto dm_norm_dxi = dm_norm_squared_dxi / (2 * m_norm);
     const auto dm_norm_squared_dxk = -2 * x_ji.normSquared() * x_kj + 2 * (x_ji * x_kj) * x_ji;
     const auto dm_norm_dxk = dm_norm_squared_dxk / (2 * m_norm);
-    const auto dm_norm_squared_dxj = -1 * (dm_norm_squared_dxi + dm_norm_squared_dxk);
+    const auto dm_norm_squared_dxj = -1. * (dm_norm_squared_dxi + dm_norm_squared_dxk);
     const auto dm_norm_dxj = dm_norm_squared_dxj / (2 * m_norm);
     // dm_squared_dxl = 0;
     const auto dn_norm_squared_dxl = 2 * x_jk_norm_squared * x_kl - 2 * (x_kl * x_jk) * x_jk;
     const auto dn_norm_dxl = dn_norm_squared_dxl / (2 * n_norm);
     const auto dn_norm_squared_dxj = -2 * x_kl.normSquared() * x_jk + 2 * (x_kl * x_jk) * x_kl;
     const auto dn_norm_dxj = dn_norm_squared_dxj / (2 * n_norm);
-    const auto dn_norm_squared_dxk = -1 * (dn_norm_squared_dxl + dn_norm_squared_dxj);
+    const auto dn_norm_squared_dxk = -1. * (dn_norm_squared_dxl + dn_norm_squared_dxj);
     const auto dn_norm_dxk = dn_norm_squared_dxk / (2 * n_norm);
 
     const Vec3Tensor<3> dm_dxi{{{{0, -x_kj[2], x_kj[1]}, {x_kj[2], 0, -x_kj[0]}, {-x_kj[1], x_kj[0], 0}}}};
@@ -127,7 +127,7 @@ CosineDihedralPotential::calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, Vec3 &f
     const auto dsin_phi_prefactor = (1. / (n_m_norm * x_jk_norm));
     const auto dsin_phi_dxi = dsin_phi_prefactor * (x_jk * dmxn_dxi - (sin_phi * n_norm * x_jk_norm) * dm_norm_dxi);
     const auto dsin_phi_dxj =
-            dsin_phi_prefactor * (x_jk * dmxn_dxj - 1 * m_x_n - (sin_phi * n_norm * x_jk_norm) * dm_norm_dxj -
+            dsin_phi_prefactor * (x_jk * dmxn_dxj - 1. * m_x_n - (sin_phi * n_norm * x_jk_norm) * dm_norm_dxj -
                                   (sin_phi * m_norm * x_jk_norm) * dn_norm_dxj +
                                   (sin_phi * n_m_norm / x_jk_norm) * x_jk);
     const auto dsin_phi_dxk = dsin_phi_prefactor *

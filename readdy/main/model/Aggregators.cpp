@@ -47,6 +47,10 @@ MeanSquaredDisplacement::MeanSquaredDisplacement(Kernel *const kernel, stride_ty
                                                  Particles *particlesObservable)
         : Combiner(kernel, stride, particlesObservable), typesToCount(std::move(typesToCount)) {}
 
+std::string MeanSquaredDisplacement::type() const {
+    return "Mean squared displacement";
+}
+
 }
 }
 }

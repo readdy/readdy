@@ -129,20 +129,20 @@ void SCPUStateModel::insert_topology(SCPUStateModel::topology &&top) {
 }
 
 void SCPUStateModel::resetReactionCounts() {
-    if(!_reactionCounts.empty()) {
-        for(auto &e : _reactionCounts) {
+    if(!reactionCounts().empty()) {
+        for(auto &e : reactionCounts()) {
             e.second = 0;
         }
     } else {
         const auto &reactions = _context.get().reactions();
         for (const auto &entry : reactions.order1()) {
             for (auto reaction : entry.second) {
-                _reactionCounts[reaction->id()] = 0;
+                reactionCounts()[reaction->id()] = 0;
             }
         }
         for (const auto &entry : reactions.order2()) {
             for (auto reaction : entry.second) {
-                _reactionCounts[reaction->id()] = 0;
+                reactionCounts()[reaction->id()] = 0;
             }
         }
     }

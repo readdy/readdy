@@ -233,6 +233,15 @@ public:
                <= kMaxUlps;
     }
 
+    // Given two numbers in the sign-and-magnitude representation,
+    // returns the distance between them as an unsigned number.
+    static Bits DistanceBetweenSignAndMagnitudeNumbers(const Bits &sam1,
+                                                       const Bits &sam2) {
+        const Bits biased1 = SignAndMagnitudeToBiased(sam1);
+        const Bits biased2 = SignAndMagnitudeToBiased(sam2);
+        return (biased1 >= biased2) ? (biased1 - biased2) : (biased2 - biased1);
+    }
+
 private:
     // The data type used to store the actual floating-point number.
     union FloatingPointUnion {
@@ -263,15 +272,6 @@ private:
             // sam represents a positive number.
             return kSignBitMask | sam;
         }
-    }
-
-    // Given two numbers in the sign-and-magnitude representation,
-    // returns the distance between them as an unsigned number.
-    static Bits DistanceBetweenSignAndMagnitudeNumbers(const Bits &sam1,
-                                                       const Bits &sam2) {
-        const Bits biased1 = SignAndMagnitudeToBiased(sam1);
-        const Bits biased2 = SignAndMagnitudeToBiased(sam2);
-        return (biased1 >= biased2) ? (biased1 - biased2) : (biased2 - biased1);
     }
 
     FloatingPointUnion u_;

@@ -44,6 +44,8 @@ class CPUObservableFactory : public readdy::model::observables::ObservableFactor
 public:
     explicit CPUObservableFactory(CPUKernel* kernel);
 
+    std::unique_ptr<model::observables::Virial> virial(stride_type stride) const override;
+
     std::unique_ptr<model::observables::HistogramAlongAxis>
     histogramAlongAxis(stride_type stride, std::vector<scalar> binBorders, std::vector<std::string> typesToCount,
                        unsigned int axis) const override;

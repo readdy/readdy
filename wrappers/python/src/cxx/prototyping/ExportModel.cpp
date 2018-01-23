@@ -78,7 +78,6 @@ void exportModelClasses(py::module &proto) {
             .def("remove_particle", &model_t::removeParticle)
             .def("get_particle_positions", &model_t::getParticlePositions)
             .def("get_energy", [](const model_t &self) {return self.energy();})
-            .def("increase_energy", &model_t::increaseEnergy)
             .def("get_particle_data", [](model_t& self) -> const scpu_particle_data& {
                 return *self.getParticleData();
             }, rvp::reference_internal)

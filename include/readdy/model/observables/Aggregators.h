@@ -42,13 +42,15 @@ NAMESPACE_BEGIN(observables)
 class MeanSquaredDisplacement
         : public Combiner<std::pair<std::vector<time_step_type>, std::vector<scalar>>, Particles> {
 public:
-    MeanSquaredDisplacement(Kernel* kernel, stride_type stride, std::vector<std::string> typesToCount,
+    MeanSquaredDisplacement(Kernel *kernel, stride_type stride, std::vector<std::string> typesToCount,
                             Particles *particlesObservable);
 
-    MeanSquaredDisplacement(Kernel* kernel, stride_type stride, const std::vector<particle_type_type> &typesToCount,
+    MeanSquaredDisplacement(Kernel *kernel, stride_type stride, const std::vector<particle_type_type> &typesToCount,
                             Particles *particlesObservable);
 
     void evaluate() override = 0;
+
+    std::string type() const override;
 
 protected:
     std::vector<particle_type_type> typesToCount;
@@ -77,6 +79,10 @@ public:
         resultTimes.push_back(this->currentTimeStep());
         resultValues.push_back(currentInput);
     };
+
+    std::string type() const override {
+        return "Trivial";
+    }
 };
 
 NAMESPACE_END(observables)

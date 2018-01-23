@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          * 
+ * Copyright © 2018 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -23,58 +23,34 @@
 /**
  * << detailed description >>
  *
- * @file ReactionCounts.h
+ * @file ObservableData.h
  * @brief << brief description >>
  * @author clonker
- * @date 13.03.17
- * @copyright GNU Lesser General Public License v3.0
+ * @date 1/17/18
  */
+
 
 #pragma once
 
-#include "Observable.h"
-#include <readdy/common/ParticleTypeTuple.h>
-#include <readdy/model/Particle.h>
-#include <readdy/model/Context.h>
-#include <readdy/model/reactions/Reaction.h>
+#include <readdy/common/common.h>
 #include <readdy/model/reactions/ReactionRecord.h>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(observables)
+namespace readdy {
+namespace kernel {
+namespace scpu {
+namespace model {
 
-class ReactionCounts : public Observable<reactions::reaction_counts_map> {
-public:
-    using reaction_counts_map = result_type;
+struct ObservableData {
 
-    ReactionCounts(Kernel *kernel, stride_type stride);
+    using reaction_counts_map = readdy::model::reactions::reaction_counts_map;
 
-    ReactionCounts(const ReactionCounts &) = delete;
-
-    ReactionCounts &operator=(const ReactionCounts &) = delete;
-
-    ReactionCounts(ReactionCounts &&) = default;
-
-    ReactionCounts &operator=(ReactionCounts &&) = delete;
-
-    virtual ~ReactionCounts();
-
-    void flush() override;
-
-    std::string type() const override;
-
-
-protected:
-    void initialize(Kernel *kernel) override;
-
-    void initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) override;
-
-    void append() override;
-
-    struct Impl;
-    std::unique_ptr<Impl> pimpl;
+    scalar energy = 0;
+    std::vector<readdy::model::reactions::ReactionRecord> reactionRecords{};
+    reaction_counts_map reactionCounts {};
+    Matrix33 virial {};
 };
 
-NAMESPACE_END(observables)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}
+}
+}
+}

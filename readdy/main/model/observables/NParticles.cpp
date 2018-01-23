@@ -80,6 +80,10 @@ void NParticles::flush() {
     if (pimpl->ds) pimpl->ds->flush();
     if(pimpl->time) pimpl->time->flush();
 }
+
+std::string NParticles::type() const {
+    return "NParticles";
+}
 }
 }
 }

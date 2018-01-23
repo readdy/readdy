@@ -119,8 +119,6 @@ public:
     public:
         Configuration(scalar desiredParticleDistance, scalar depthAtDesiredDistance, scalar noInteractionDistance);
 
-        friend std::ostream &operator<<(std::ostream &os, const Configuration &configuration);
-
     private:
         friend class WeakInteractionPiecewiseHarmonic;
 

@@ -63,6 +63,26 @@ public:
         return seed;
     }
 };
+
+template<typename T>
+class ForwardTupleHasher {
+public:
+    std::size_t operator()(const T& tuple) const {
+        std::size_t seed {0};
+        for_each_in_tuple(tuple, [&seed](particle_type_type ptt) { hash::combine(seed, ptt); });
+        return seed;
+    }
+};
+
+template<typename T>
+class ForwardTupleEquality {
+public:
+    bool operator()(const T &lhs, const T &rhs) const {
+        return lhs == rhs;
+    }
+};
+
+
 template<typename T>
 class ForwardBackwardTupleEquality {
 public:

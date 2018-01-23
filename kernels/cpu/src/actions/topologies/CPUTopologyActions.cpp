@@ -54,7 +54,7 @@ readdy::scalar CPUCalculateHarmonicBondPotential::perform(const readdy::model::t
         const auto x_ij = d(e1.pos, e2.pos);
         potential->calculateForce(forceUpdate, x_ij, bond);
         e1.force += forceUpdate;
-        e2.force += -1 * forceUpdate;
+        e2.force -= forceUpdate;
         energy += potential->calculateEnergy(x_ij, bond);
     }
     return energy;

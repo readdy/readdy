@@ -85,6 +85,60 @@ class TestObservablesIO(ReaDDyTestCase):
                     np.testing.assert_equal(positions[i]["y"], 2.5)
                     np.testing.assert_equal(positions[i]["z"], 3.5)
 
+    def test_virial_observable_CPU(self):
+        fname = os.path.join(self.dir, "test_observables_virial.h5")
+
+        sim = Simulation()
+        sim.set_kernel("CPU")
+        sim.box_size = common.Vec(13, 13, 13)
+        sim.register_particle_type("A", .1)
+        sim.register_potential_harmonic_repulsion("A", "A", 10., .5)
+        for _ in range(10000):
+            pos = common.Vec(*(13*np.random.random(size=3)-.5*13))
+            sim.add_particle("A", pos)
+
+        virials = []
+        def virial_callback(virial):
+            virials.append(np.ndarray((3,3), buffer=virial))
+
+        handle = sim.register_observable_virial(1, virial_callback)
+        with closing(io.File.create(fname)) as f:
+            handle.enable_write_to_file(f, u"virial", int(3))
+            sim.run_scheme_readdy(True).configure(.1).run(10)
+            handle.flush()
+
+        with h5py.File(fname, "r") as f2:
+            h5virials = f2["readdy/observables/virial/data"]
+            for v, v2 in zip(virials, h5virials):
+                np.testing.assert_almost_equal(v, v2)
+
+    def test_virial_observable_SCPU(self):
+        fname = os.path.join(self.dir, "test_observables_virial_scpu.h5")
+
+        sim = Simulation()
+        sim.set_kernel("SingleCPU")
+        sim.box_size = common.Vec(13, 13, 13)
+        sim.register_particle_type("A", .1)
+        sim.register_potential_harmonic_repulsion("A", "A", 10., .5)
+        for _ in range(10000):
+            pos = common.Vec(*(13*np.random.random(size=3)-.5*13))
+            sim.add_particle("A", pos)
+
+        virials = []
+        def virial_callback(virial):
+            virials.append(np.ndarray((3,3), buffer=virial))
+
+        handle = sim.register_observable_virial(1, virial_callback)
+        with closing(io.File.create(fname)) as f:
+            handle.enable_write_to_file(f, u"virial", int(3))
+            sim.run_scheme_readdy(True).configure(.1).run(10)
+            handle.flush()
+
+        with h5py.File(fname, "r") as f2:
+            h5virials = f2["readdy/observables/virial/data"]
+            for v, v2 in zip(virials, h5virials):
+                np.testing.assert_almost_equal(v, v2)
+
     def test_particles_observable(self):
         fname = os.path.join(self.dir, "test_observables_particles.h5")
         sim = Simulation()

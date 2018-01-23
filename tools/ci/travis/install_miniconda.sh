@@ -19,5 +19,5 @@ install_miniconda
 export PATH=$TARGET/bin:$PATH
 
 conda config --set always_yes true
-# conda config --add channels conda-forge
-conda install -q conda-build=3
+#conda update --all
+conda install -q conda-build

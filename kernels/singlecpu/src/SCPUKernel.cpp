@@ -54,6 +54,7 @@ void SCPUKernel::initialize() {
     }
     getSCPUKernelStateModel().reactionRecords().clear();
     getSCPUKernelStateModel().resetReactionCounts();
+    getSCPUKernelStateModel().virial() = Matrix33{{{0, 0, 0, 0, 0, 0, 0, 0, 0}}};
 }
 
 }

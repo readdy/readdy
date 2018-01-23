@@ -77,6 +77,8 @@ public:
      */
     observable_id getId() const;
 
+    std::string getType() const;
+
     /**
      * Triggers a flush, i.e., everything that can be written will be written
      */

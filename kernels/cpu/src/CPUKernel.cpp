@@ -45,7 +45,7 @@ readdy::model::Kernel *CPUKernel::create() {
 CPUKernel::CPUKernel() : readdy::model::Kernel(name), _pool(readdy_default_n_threads()),
                          _data(_context, _pool), _actions(this),
                          _observables(this), _topologyActionFactory(_context, _data),
-                         _stateModel(_data, _context, _pool, &_topologyActionFactory){}
+                         _stateModel(_data, _context, _pool, &_topologyActionFactory) {}
 
 void CPUKernel::initialize() {
     readdy::model::Kernel::initialize();
@@ -65,6 +65,7 @@ void CPUKernel::initialize() {
     }
     _stateModel.reactionRecords().clear();
     _stateModel.resetReactionCounts();
+    _stateModel.virial() = Matrix33{{{0, 0, 0, 0, 0, 0, 0, 0, 0}}};
 }
 
 }

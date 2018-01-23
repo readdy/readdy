@@ -37,46 +37,37 @@ namespace readdy {
 namespace kernel {
 namespace scpu {
 namespace actions {
+
+namespace detail {
+template<bool COMPUTE_VIRIAL>
+void computeVirial(const Vec3& r_ij, const Vec3 &force, Matrix33 &virial);
+
+template<>
+void computeVirial<true>(const Vec3& r_ij, const Vec3 &force, Matrix33 &virial) {
+    virial += math::outerProduct(-1.*r_ij, force);
+}
+
+template<>
+void computeVirial<false>(const Vec3& /*r_ij*/, const Vec3 &/*force*/, Matrix33 &/*virial*/) {}
+}
+
 class SCPUCalculateForces : public readdy::model::actions::CalculateForces {
 public:
     explicit SCPUCalculateForces(SCPUKernel *kernel) : kernel(kernel) {};
 
     void perform(const util::PerformanceNode &node) override {
-        const auto &pbc = kernel->context().periodicBoundaryConditions();
-        if(pbc[0]) {
-            if(pbc[1]) {
-                if(pbc[2]) {
-                    performImpl<true, true, true>(node);
-                } else {
-                    performImpl<true, true, false>(node);
-                }
-            } else {
-                if(pbc[2]) {
-                    performImpl<true, false, true>(node);
-                } else {
-                    performImpl<true, false, false>(node);
-                }
-            }
+        const auto &context = kernel->context();
+        if(context.recordVirial()) {
+            performImpl<true>(node);
         } else {
-            if(pbc[1]) {
-                if(pbc[2]) {
-                    performImpl<false, true, true>(node);
-                } else {
-                    performImpl<false, true, false>(node);
-                }
-            } else {
-                if(pbc[2]) {
-                    performImpl<false, false, true>(node);
-                } else {
-                    performImpl<false, false, false>(node);
-                }
-            }
+            performImpl<false>(node);
         }
+
     };
 
 private:
 
-    template<bool PBC1, bool PBC2, bool PBC3>
+    template<bool COMPUTE_VIRIAL>
     void performImpl(const util::PerformanceNode &node) {
         auto t = node.timeit();
 
@@ -87,6 +78,7 @@ private:
         auto &neighborList = *stateModel.getNeighborList();
 
         stateModel.energy() = 0;
+        stateModel.virial() = Matrix33{{{0, 0, 0, 0, 0, 0, 0, 0, 0}}};
 
         const auto &potentials = context.potentials();
         auto &topologies = stateModel.topologies();
@@ -117,6 +109,7 @@ private:
             auto tSecondOrder = node.subnode("second order").timeit();
 
             const auto &box = context.boxSize();
+            const auto &difference = context.shortestDifferenceFun();
             //const auto &difference = context.shortestDifferenceFun();
             for (auto cell = 0_z; cell < neighborList.nCells(); ++cell) {
                 for (auto it = neighborList.particlesBegin(cell); it != neighborList.particlesEnd(cell); ++it) {
@@ -128,12 +121,13 @@ private:
                         auto itPot = pots.find(neighborEntry.type);
                         if (itPot != pots.end()) {
                             Vec3 forceVec{0, 0, 0};
-                            auto x_ij = bcs::shortestDifference<PBC1, PBC2, PBC3>(entry.position(), neighborEntry.position(), box);
+                            auto x_ij = difference(entry.position(), neighborEntry.position());
                             for (const auto &potential : itPot->second) {
                                 potential->calculateForceAndEnergy(forceVec, stateModel.energy(), x_ij);
                             }
                             entry.force += forceVec;
-                            neighborEntry.force += -1 * forceVec;
+                            neighborEntry.force -= forceVec;
+                            detail::computeVirial<COMPUTE_VIRIAL>(x_ij, forceVec, stateModel.virial());
                         }
                     });
                 }

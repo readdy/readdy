@@ -43,6 +43,8 @@ class SCPUObservableFactory : public readdy::model::observables::ObservableFacto
 public:
     explicit SCPUObservableFactory(readdy::kernel::scpu::SCPUKernel* kernel);
 
+    std::unique_ptr<readdy::model::observables::Virial> virial(stride_type stride) const override;
+
     std::unique_ptr<readdy::model::observables::HistogramAlongAxis>
     histogramAlongAxis(stride_type stride, std::vector<scalar> binBorders, std::vector<std::string> typesToCount,
                        unsigned int axis) const override;

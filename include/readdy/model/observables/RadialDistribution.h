@@ -55,6 +55,8 @@ public:
 
     const std::vector<scalar> &getBinBorders() const;
 
+    std::string type() const override;
+
     void evaluate() override;
 
     void flush() override;

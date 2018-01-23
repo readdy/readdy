@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2017 Computational Molecular Biology Group,          *
+ * Copyright © 2018 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -23,56 +23,58 @@
 /**
  * << detailed description >>
  *
- * @file Energy.cpp
+ * @file Virial.cpp
  * @brief << brief description >>
  * @author clonker
- * @date 12/21/17
+ * @date 1/17/18
  */
 
-#include "readdy/model/Kernel.h"
+#include <readdy/model/observables/Virial.h>
+
+#include <readdy/model/Kernel.h>
 #include <readdy/model/observables/io/TimeSeriesWriter.h>
 #include <readdy/model/observables/io/Types.h>
-#include "readdy/model/observables/Energy.h"
 
 namespace readdy {
 namespace model {
 namespace observables {
 
-struct Energy::Impl {
+struct Virial::Impl {
     std::unique_ptr<h5rd::DataSet> ds{nullptr};
     std::unique_ptr<util::TimeSeriesWriter> time{nullptr};
     io::BloscFilter bloscFilter{};
 };
 
-Energy::Energy(Kernel *kernel, stride_type stride) : Observable(kernel, stride), pimpl(std::make_unique<Impl>()) {}
+Virial::Virial(Kernel *kernel, stride_type stride) : super(kernel, stride), pimpl(std::make_unique<Impl>()) {}
 
-void Energy::flush() {
+void Virial::flush() {
     if (pimpl->ds) pimpl->ds->flush();
     if (pimpl->time) pimpl->time->flush();
 }
 
-void Energy::initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) {
-    h5rd::dimensions fs = {flushStride};
-    h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
+void Virial::initialize(Kernel *const kernel) {
+    kernel->context().recordVirial() = true;
+}
+
+void Virial::initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) {
+    h5rd::dimensions fs = {flushStride, Matrix33::n(), Matrix33::m()};
+    h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS, Matrix33::n(), Matrix33::m()};
     auto group = file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName);
-    pimpl->ds = group.createDataSet<scalar>("data", fs, dims, {&pimpl->bloscFilter});
+    pimpl->ds = group.createDataSet<readdy::scalar>("data", fs, dims, {&pimpl->bloscFilter});
     pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
 }
 
-void Energy::append() {
-    pimpl->ds->append({1}, &result);
+void Virial::append() {
+    pimpl->ds->append({1, Matrix33::n(), Matrix33::m()}, result.data().data());
     pimpl->time->append(t_current);
 }
 
-void Energy::evaluate() {
-    result = kernel->stateModel().energy();
+std::string Virial::type() const {
+    return "Virial";
 }
 
-std::string Energy::type() const {
-    return "Energy";
-}
+Virial::~Virial() = default;
 
-Energy::~Energy() = default;
 
 }
 }

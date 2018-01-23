@@ -15,20 +15,17 @@ CMAKE_FLAGS+=" -DREADDY_GENERATE_DOCUMENTATION_TARGET:BOOL=OFF"
 # build monolithic lib
 CMAKE_FLAGS+=" -DREADDY_BUILD_SHARED_COMBINED:BOOL=ON"
 # release compile flags
-CMAKE_FLAGS+=" -DCMAKE_BUILD_TYPE=Release" # BUILD_TYPE="Release" if not a PR, otherwise RelWithDebInfo
+CMAKE_FLAGS+=" -DCMAKE_BUILD_TYPE=Release"
 # debug cmake config
 CMAKE_FLAGS+=" -DREADDY_LOG_CMAKE_CONFIGURATION:BOOL=ON"
 # enable testing and install test target
 CMAKE_FLAGS+=" -DREADDY_CREATE_TEST_TARGET:BOOL=ON"
-CMAKE_FLAGS+=" -DREADDY_INSTALL_UNIT_TEST_EXECUTABLE:BOOL=ON"
+CMAKE_FLAGS+=" -DREADDY_INSTALL_UNIT_TEST_EXECUTABLE:BOOL=OFF"
 # hdf5 flags
-CMAKE_FLAGS+=" -DHDF5_INCLUDE_DIR=$PREFIX/include"
-# select compiler
-CMAKE_FLAGS+=" -DCMAKE_C_COMPILER=${CC}"
-CMAKE_FLAGS+=" -DCMAKE_CXX_COMPILER=${CXX}"
+CMAKE_FLAGS+=" -DHDF5_INCLUDE_DIRS=$BUILD_PREFIX/include"
 # version flags
-CMAKE_FLAGS+=" -DREADDY_VERSION=${PKG_VERSION}"
-CMAKE_FLAGS+=" -DREADDY_BUILD_STRING=${PKG_BUILD_STRING}"
+CMAKE_FLAGS+=" -DREADDY_VERSION=${PKG_BUILDNUM}"
+CMAKE_FLAGS+=" -DREADDY_BUILD_STRING=${PKG_HASH}"
 
 #########################################################
 #                                                       #
@@ -41,11 +38,7 @@ CMAKE_FLAGS+=" -DREADDY_BUILD_STRING=${PKG_BUILD_STRING}"
 #                                                       #
 #########################################################
 
-export HDF5_ROOT=${PREFIX}
-
-# cant reliably determine cpu count in a docker container,
-# therefore fix this value.
-if [ "$TRAVIS" == "true" ]; then CPU_COUNT=2; fi
+export HDF5_ROOT=$BUILD_PREFIX
 
 mkdir build || true
 cd build
@@ -56,10 +49,41 @@ do
 done
 
 cmake .. ${CMAKE_FLAGS}
-make -j${CPU_COUNT}
-make install &> /dev/null
+make ${MAKEFLAGS}
+make install
 
-if [ $(uname) = "Darwin" ]; then
-    install_name_tool -add_rpath @loader_path/../readdy/readdy_plugins/ $PREFIX/bin/runUnitTests_singlecpu
-    install_name_tool -add_rpath @loader_path/../readdy/readdy_plugins/ $PREFIX/bin/runUnitTests_cpu
+#if [ $(uname) = "Darwin" ]; then
+#    install_name_tool -add_rpath @loader_path/../readdy/readdy_plugins/ $BUILD_PREFIX/bin/runUnitTests_singlecpu
+#    install_name_tool -add_rpath @loader_path/../readdy/readdy_plugins/ $BUILD_PREFIX/bin/runUnitTests_cpu
+#fi
+
+export READDY_N_CORES=2
+
+err_code=0
+ret_code=0
+
+echo "calling c++ core unit tests"
+bin/runUnitTests
+err_code=$?
+if [ ${err_code} -ne 0 ]; then
+    ret_code=${err_code}
+    echo "core unit tests failed with ${ret_code}"
 fi
+
+echo "calling c++ singlecpu unit tests"
+bin/runUnitTests_singlecpu
+err_code=$?
+if [ ${err_code} -ne 0 ]; then
+    ret_code=${err_code}
+    echo "singlecpu unit tests failed with ${ret_code}"
+fi
+
+echo "calling c++ cpu unit tests"
+bin/runUnitTests_cpu
+err_code=$?
+if [ ${err_code} -ne 0 ]; then
+    ret_code=${err_code}
+    echo "cpu unit tests failed with ${ret_code}"
+fi
+
+exit ${ret_code}

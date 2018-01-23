@@ -28,8 +28,11 @@ Created on 28.09.17
 import os as _os
 
 import h5py as _h5py
+import numpy as _np
+
 from readdy._internal.readdybinding.common.util import read_reaction_observable as _read_reaction_observable
 from readdy._internal.readdybinding.common.util import read_trajectory as _read_trajectory
+from readdy.util.observable_utils import calculate_pressure as _calculate_pressure
 
 import readdy.util.io_utils as _io_utils
 
@@ -163,6 +166,37 @@ class ReactionInfo:
 
     __repr__ = __str__
 
+class GeneralInformation(object):
+
+    def __init__(self, filename):
+        import json
+
+        dsname = "readdy/config/general"
+        with _h5py.File(filename, "r") as f:
+            if not dsname in f:
+                raise ValueError("General information was not recorded in the file!")
+            j = json.loads(f[dsname].value)
+            self._kbt = j['kbt']
+            self._box_volume = j['box_volume']
+            self._box_size = _np.array(j['box_size'])
+            self._pbc = _np.array(j['pbc'])
+
+    @property
+    def kbt(self):
+        return self._kbt
+
+    @property
+    def box_volume(self):
+        return self._box_volume
+
+    @property
+    def box_size(self):
+        return self._box_size
+
+    @property
+    def periodic_boundary_conditions(self):
+        return self._pbc
+
 
 class Trajectory(object):
     def __init__(self, filename, name=""):
@@ -178,6 +212,7 @@ class Trajectory(object):
         self._particle_types = _io_utils.get_particle_types(filename)
         self._reactions = []
         self._inverse_types_map = {v: k for k, v in self.particle_types.items()}
+        self._general = GeneralInformation(filename)
         for _, reaction in _io_utils.get_reactions(filename).items():
             info = ReactionInfo(reaction["name"], reaction["id"], reaction["n_educts"],
                                 reaction["n_products"], reaction["rate"], reaction["educt_distance"],
@@ -192,6 +227,22 @@ class Trajectory(object):
         :return: the species' name
         """
         return self._inverse_types_map[id]
+
+    @property
+    def kbt(self):
+        return self._general.kbt
+
+    @property
+    def box_volume(self):
+        return self._general.box_volume
+
+    @property
+    def box_size(self):
+        return self._general.box_size
+
+    @property
+    def periodic_boundary_conditions(self):
+        return self._general.periodic_boundary_conditions
 
     @property
     def diffusion_constants(self):
@@ -377,3 +428,42 @@ class Trajectory(object):
             time = f[group_path]["time"][:]
             forces = f[group_path]["data"][:]
             return time, forces
+
+    def read_observable_virial(self, data_set_name="virial"):
+        """
+        Reads back the output of the "virial" observable.
+        :param data_set_name: The data set name as given in the simulation setup
+        :return: a tuple which contains an array corresponding to the time as first entry and an array containing the
+                 corresponding virial per time step
+        """
+        group_path = "readdy/observables/{}".format(data_set_name)
+        with _h5py.File(self._filename, "r") as f:
+            if not group_path in f:
+                raise ValueError("The virial observable was not recorded in the file or recorded under a "
+                                 "different name!")
+            time = f[group_path]["time"][:]
+            virial = f[group_path]["data"][:]
+            return time, virial
+
+    def read_observable_pressure(self, data_set_name="_pressure"):
+        """
+        Reads back the output of the "pressure" observable. As the pressure can be computed from the number of particles
+        and the virial, this actually reads back the n_particles and virial observables. The data_set_name serves as a
+        postfix, where the default value corresponds to the data sets as they are created when using the default
+        settings of the observable.
+
+        :param data_set_name: the data set name postfix, default="_pressure",
+               yielding "n_particles_pressure" and "virial_pressure", respectively
+        :return: a tuple which contains an array corresponding to the time as first entry and an array containing the
+                 corresponding pressure per time step
+        """
+        time_n_particles, n_particles = self.read_observable_number_of_particles("n_particles{}".format(data_set_name))
+        time_virial, virial = self.read_observable_virial("virial{}".format(data_set_name))
+
+        if not _np.array_equal(time_n_particles, time_virial):
+            raise RuntimeError("For Pressure it is required to know the number of particles and the virial. "
+                               "However, these two observables were recorded with different strides.")
+
+        pressure = _np.array([_calculate_pressure(self.box_volume, self.kbt, n_particles[i], virial[i])
+                              for i in range(len(time_n_particles))])
+        return time_virial, pressure

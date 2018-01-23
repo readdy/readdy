@@ -49,4 +49,5 @@
 #include "Reactions.h"
 #include "ReactionCounts.h"
 #include "Energy.h"
+#include "Virial.h"
 #include "io/Trajectory.h"

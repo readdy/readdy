@@ -35,7 +35,7 @@
 #include <readdy/testing/Utils.h>
 #include <readdy/api/Simulation.h>
 #include <readdy/model/topologies/Utils.h>
-#include <readdy/testing/FloatingPoints.h>
+#include <readdy/common/FloatingPoints.h>
 
 class TestTopologyReactionsExternal : public KernelTest {
 protected:

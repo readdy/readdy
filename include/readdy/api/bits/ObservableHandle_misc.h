@@ -61,4 +61,11 @@ inline void ObservableHandle::flush() {
 
 inline ObservableHandle::ObservableHandle() : ObservableHandle(0, nullptr) { }
 
+inline std::string ObservableHandle::getType() const {
+    if(observable) {
+        return observable->type();
+    }
+    throw std::runtime_error("No observable attached to this handle, therefore no type");
+}
+
 NAMESPACE_END(readdy)

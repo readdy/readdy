@@ -183,6 +183,17 @@ inline obs_handle_t registerObservable_Energy(sim &self, unsigned int stride, co
     }
 }
 
+inline obs_handle_t registerObservable_Virial(sim &self, readdy::stride_type stride,
+                                              const py::object &callback = py::none()) {
+    auto obs = self.observe().virial(stride);
+    if(callback.is_none()) {
+        return self.registerObservable(std::move(obs));
+    } else {
+        auto pyFun = readdy::rpy::PyFunction<void(readdy::model::observables::Virial::result_type)>(callback);
+        return self.registerObservable(std::move(obs), pyFun);
+    }
+}
+
 inline obs_handle_t registerObservable_Trajectory(sim& self, unsigned int stride) {
     return self.registerObservable(self.observe().trajectory(stride));
 }
@@ -234,6 +245,7 @@ void exportObservables(py::module &apiModule, py::class_<type_, options...> &sim
                  "stride"_a, "callback"_a = py::none())
             .def("register_observable_trajectory", &registerObservable_Trajectory, "stride"_a)
             .def("register_observable_flat_trajectory", &registerObservable_FlatTrajectory, "stride"_a)
+            .def("register_observable_virial", &registerObservable_Virial, "stride"_a, "callback"_a=py::none())
             .def("deregister_observable", [](sim &self, const obs_handle_t &handle) {
                 self.deregisterObservable(handle.getId());
             }, "handle"_a);

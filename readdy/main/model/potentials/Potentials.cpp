@@ -77,11 +77,8 @@ Box::Box(particle_type_type particleType, scalar forceConstant, const Vec3 &orig
           min(getMinExtent(origin, extent)), max(getMaxExtent(origin, extent)) {}
 
 std::string Box::describe() const {
-    std::ostringstream ss;
-    ss << getPotentialName<Box>() << "[type: " << _particleType << ", origin: " << origin
-       << ", extent: " << extent << ", min: " << min << ", max: " << max << ", forceConstant: "
-       << forceConstant << "]";
-    return ss.str();
+    return fmt::format("{} potential with origin {}, extent {}, and force constant {}",
+                       getPotentialName<Box>(), origin, extent, forceConstant);
 }
 
 std::string Box::type() const {
@@ -94,9 +91,10 @@ std::string Box::type() const {
 
 std::string SphereIn::describe() const {
     std::ostringstream ss;
-    ss << getPotentialName<SphereIn>() << "[type: " << _particleType << ", origin: " << origin
+    ss << getPotentialName<SphereIn>() << "[origin: " << origin
        << ", radius: " << radius << ", forceConstant: " << forceConstant << "]";
-    return ss.str();
+    return fmt::format("{} potential with origin {}, radius {}, and force constant {}",
+                       getPotentialName<SphereIn>(), origin, radius, forceConstant);
 }
 
 std::string SphereIn::type() const {
@@ -104,10 +102,8 @@ std::string SphereIn::type() const {
 }
 
 std::string SphereOut::describe() const {
-    std::ostringstream ss;
-    ss << getPotentialName<SphereIn>() << "[type: " << _particleType << ", origin: " << origin
-       << ", radius: " << radius << ", forceConstant: " << forceConstant << "]";
-    return ss.str();
+    return fmt::format("{} potential with origin {}, radius {}, and force constant {}",
+                       getPotentialName<SphereOut>(), origin, radius, forceConstant);
 }
 
 std::string SphereOut::type() const {
@@ -123,10 +119,8 @@ SphericalBarrier::SphericalBarrier(particle_type_type particleType, scalar heigh
 }
 
 std::string SphericalBarrier::describe() const {
-    std::ostringstream ss;
-    ss << getPotentialName<SphericalBarrier>() << "[type: " << _particleType << ", origin: " << origin
-       << ", radius: " << radius << ", height(energy): " << height << ", width: " << width << "]";
-    return ss.str();
+    return fmt::format("Spherical barrier potential with origin {}, radius {}, height(energy) {}, and width {}",
+                       origin, radius, height, width);
 }
 
 std::string SphericalBarrier::type() const {
@@ -144,10 +138,7 @@ std::string SphericalBarrier::type() const {
  */
 
 std::string HarmonicRepulsion::describe() const {
-    std::ostringstream ss;
-    ss << getPotentialName<HarmonicRepulsion>() << "[type1: " << _particleType1 << ", type2: "
-       << _particleType2 << ", forceConstant: " << _forceConstant << "]";
-    return ss.str();
+    return fmt::format("Harmonic repulsion with force constant {}", _forceConstant);
 }
 
 std::string HarmonicRepulsion::type() const {
@@ -158,18 +149,11 @@ std::string HarmonicRepulsion::type() const {
  * Weak interaction piecewise harmonic
  */
 
-std::ostream &operator<<(std::ostream &os, const WeakInteractionPiecewiseHarmonic::Configuration &configuration) {
-    os << "desiredParticleDistance: " << configuration.desiredParticleDistance << " depthAtDesiredDistance: "
-       << configuration.depthAtDesiredDistance << " noInteractionDistance: " << configuration.noInteractionDistance;
-    return os;
-}
-
 std::string WeakInteractionPiecewiseHarmonic::describe() const {
-    std::ostringstream ss;
-    ss << getPotentialName<HarmonicRepulsion>() << "[type1: " << _particleType1 << ", type2: "
-       << _particleType2 << ", configuration[" << conf
-       << "], forceConstant: " << forceConstant << "]";
-    return ss.str();
+    return fmt::format("Weak interaction piecewise harmonic potential with force constant {}, desired distance {}, "
+                               "depth {}, and cutoff {}",
+                       forceConstant, conf.desiredParticleDistance, conf.depthAtDesiredDistance,
+                       conf.noInteractionDistance);
 }
 
 std::string WeakInteractionPiecewiseHarmonic::type() const {
@@ -200,11 +184,9 @@ LennardJones::LennardJones(particle_type_type type1, particle_type_type type2,
 }
 
 std::string LennardJones::describe() const {
-    std::ostringstream ss;
-    ss << getPotentialName<LennardJones>() << "[m: " << m << " n: "
-       << n << " cutoffDistance: " << cutoffDistance << " shift: " << shift
-       << " epsilon: " << epsilon << " k: " << k << "]";
-    return ss.str();
+    std::string withOrWithout = shift ? "with" : "without";
+    return fmt::format("{}-{}-Lennard-Jones potential with cutoff {}, epsilon {}, k {}, and {} energy shift",
+                       m, n, cutoffDistance, epsilon, k, withOrWithout);
 }
 
 std::string LennardJones::type() const {
@@ -233,13 +215,10 @@ ScreenedElectrostatics::ScreenedElectrostatics(particle_type_type type1, particl
 }
 
 std::string ScreenedElectrostatics::describe() const {
-    std::ostringstream ss;
-    ss << getPotentialName<ScreenedElectrostatics>() << "[electrostaticStrength: " << electrostaticStrength
-       << " inverseScreeningDepth: " << inverseScreeningDepth
-       << " repulsionStrength: " << repulsionStrength << " repulsionDistance: " << repulsionDistance
-       << " exponent: " << exponent
-       << " cutoff: " << cutoff << "]";
-    return ss.str();
+    return fmt::format("Screened electrostatics potential with electrostatic strength {}, inverse screening depth {}, "
+                               "repulsion strength {}, repulsion distance {}, exponent {}, and cutoff {}",
+                       electrostaticStrength, inverseScreeningDepth, repulsionStrength, repulsionDistance,
+                       exponent, cutoff);
 }
 
 std::string ScreenedElectrostatics::type() const {

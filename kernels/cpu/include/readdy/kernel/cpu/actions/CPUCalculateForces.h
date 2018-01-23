@@ -51,8 +51,10 @@ public:
 
 protected:
 
+    template<bool COMPUTE_VIRIAL>
     static void calculate_order2(std::size_t, nl_bounds nlBounds, CPUStateModel::data_type *data,
                                  const CPUStateModel::neighbor_list &nl, std::promise<scalar> &energyPromise,
+                                 std::promise<Matrix33> &virialPromise,
                                  model::potentials::PotentialRegistry::potential_o2_registry pot2,
                                  model::Context::shortest_dist_fun d);
 
