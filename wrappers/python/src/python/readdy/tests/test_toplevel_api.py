@@ -161,6 +161,8 @@ class TestTopLevelAPI(ReaDDyTestCase):
         simulation.observe.particles(5)
         simulation.observe.reaction_counts(5)
         simulation.observe.reactions(5)
+        simulation.observe.virial(5)
+        simulation.observe.pressure(5)
         simulation.run(10, .1 * ut.nanosecond, False)
 
     def test_add_particles(self):
