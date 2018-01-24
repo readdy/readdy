@@ -75,44 +75,6 @@ void TopologyRegistry::configure() {
 std::string TopologyRegistry::describe() const {
     namespace rus = readdy::util::str;
     std::string description;
-    if (!_spatialReactions.empty()) {
-        description += fmt::format(" - spatial topology reactions:{}", rus::newline);
-        for (const auto &entry : _spatialReactions) {
-            for (const auto &reaction : entry.second) {
-                auto d = fmt::format(
-                        "SpatialTopologyReaction( ({} (id={}), {} (id={})) -> ({} (id={}), {} (id={})) , radius={}, rate={}",
-                        _typeRegistry.get().nameOf(reaction.type1()), reaction.type1(),
-                        _typeRegistry.get().nameOf(reaction.type2()), reaction.type2(),
-                        _typeRegistry.get().nameOf(reaction.type_to1()), reaction.type_to1(),
-                        _typeRegistry.get().nameOf(reaction.type_to2()), reaction.type_to2(),
-                        reaction.radius(), reaction.rate());
-                description += fmt::format("     * reaction {}{}", d, rus::newline);
-            }
-        }
-    }
-    if(!_registry.empty()) {
-        description += fmt::format(" - topology types:{}", rus::newline);
-        for (const auto &entry : _registry) {
-            description += fmt::format("     * topology type \"{}\" with id {} and {} structural reactions{}",
-                                       entry.second.name, entry.second.type, entry.second.structural_reactions.size(),
-                                       rus::newline);
-        }
-    }
-
-    if(nStructuralReactions() > 0) {
-        description += fmt::format(" - structural topology reactions:{}", rus::newline);
-        for (const auto &entry : _registry) {
-            if(!entry.second.structural_reactions.empty()) {
-                description += fmt::format("     - topology type \"{}\" with {} structural reactions:{}",
-                                           entry.second.name, entry.second.structural_reactions.size(), rus::newline);
-                for (const auto &r : entry.second.structural_reactions) {
-                    description += fmt::format("         * reaction with roll_back = {} and create child tops = {}{}",
-                                               r.rolls_back_if_invalid(), r.creates_child_topologies_after_reaction(),
-                                               rus::newline);
-                }
-            }
-        }
-    }
 
     if(!_potentialConfiguration.pairPotentials.empty()
        || !_potentialConfiguration.anglePotentials.empty()
@@ -172,6 +134,61 @@ std::string TopologyRegistry::describe() const {
                     description += fmt::format(
                             "             * {} with force constant {}, equilibrium angle {} and multiplicity {}{}",
                             torsionToStr(dih), dih.forceConstant, dih.phi_0, dih.multiplicity, rus::newline);
+                }
+            }
+        }
+    }
+
+    if(!_registry.empty()) {
+        description += fmt::format(" - topology types:{}", rus::newline);
+        for (const auto &entry : _registry) {
+            description += fmt::format("     * topology type \"{}\" with {} structural reactions{}",
+                                       entry.second.name, entry.second.structural_reactions.size(), rus::newline);
+        }
+    }
+
+    if (!_spatialReactions.empty()) {
+        description += fmt::format(" - spatial topology reactions:{}", rus::newline);
+        for (const auto &entry : _spatialReactions) {
+            for (const auto &reaction : entry.second) {
+                std::stringstream ss;
+                switch(reaction.mode()) {
+                    case reactions::STRMode::TT_ENZYMATIC: {
+                        ss << "Topology-topology enzymatic reaction \"";
+                        break;
+                    }
+                    case reactions::STRMode::TT_FUSION:
+                    case reactions::STRMode::TT_FUSION_ALLOW_SELF: {
+                        ss << "Topology-topology fusion reaction \"";
+                        break;
+                    }
+                    case reactions::STRMode::TP_ENZYMATIC: {
+                        ss << "Topology-particle enzymatic reaction \"";
+                        break;
+                    }
+                    case reactions::STRMode::TP_FUSION: {
+                        ss << "Topology-particle fusion reaction \"";
+                        break;
+                    }
+                }
+                ss << generateSpatialReactionRepresentation(reaction);
+                ss << "\"";
+
+                description += fmt::format("     * {}{}", ss.str(), rus::newline);
+            }
+        }
+    }
+
+    if(nStructuralReactions() > 0) {
+        description += fmt::format(" - structural topology reactions:{}", rus::newline);
+        for (const auto &entry : _registry) {
+            if(!entry.second.structural_reactions.empty()) {
+                description += fmt::format("     - for topology type \"{}\" with {} structural reactions:{}",
+                                           entry.second.name, entry.second.structural_reactions.size(), rus::newline);
+                for (const auto &r : entry.second.structural_reactions) {
+                    description += fmt::format("         * reaction with roll_back = {} and create child topologies = {}{}",
+                                               r.rolls_back_if_invalid(), r.creates_child_topologies_after_reaction(),
+                                               rus::newline);
                 }
             }
         }
@@ -315,6 +332,48 @@ void TopologyRegistry::configureTorsionPotential(const std::string &type1, const
                                                               _typeRegistry.get().idOf(type3),
                                                               _typeRegistry.get().idOf(type4))].push_back(
             torsionAngle);
+}
+
+std::string TopologyRegistry::generateSpatialReactionRepresentation(const spatial_reaction &reaction) const {
+    auto pName = [&](particle_type_type t) { return _typeRegistry.get().nameOf(t); };
+    auto tName = [&](topology_type_type t) { return nameOf(t); };
+
+    std::stringstream ss;
+    ss << reaction.name() << ": ";
+    switch (reaction.mode()) {
+        case reactions::STRMode::TT_ENZYMATIC: {
+            ss << fmt::format("{}({}) + {}({}) -> {}({}) + {}({})",
+                              tName(reaction.top_type1()), pName(reaction.type1()),
+                              tName(reaction.top_type2()), pName(reaction.type2()),
+                              tName(reaction.top_type_to1()), pName(reaction.type_to1()),
+                              tName(reaction.top_type_to2()), pName(reaction.type_to2()));
+            break;
+        }
+        case reactions::STRMode::TT_FUSION:
+        case reactions::STRMode::TT_FUSION_ALLOW_SELF: {
+            ss << fmt::format("{}({}) + {}({}) -> {}({}--{})",
+                              tName(reaction.top_type1()), pName(reaction.type1()),
+                              tName(reaction.top_type2()), pName(reaction.type2()),
+                              tName(reaction.top_type_to1()), pName(reaction.type_to1()), pName(reaction.type_to2()));
+            if(reaction.allow_self_connection()) {
+                ss << " [self=true]";
+            }
+            break;
+        }
+        case reactions::STRMode::TP_ENZYMATIC: {
+            ss << fmt::format("{}({}) + ({}) -> {}({}) + ({})", tName(reaction.top_type1()), pName(reaction.type1()),
+                              pName(reaction.type2()), tName(reaction.top_type_to1()), pName(reaction.type_to1()),
+                              pName(reaction.type_to2()));
+            break;
+        }
+        case reactions::STRMode::TP_FUSION: {
+            ss << fmt::format("{}({}) + ({}) -> {}({}--{})", tName(reaction.top_type1()), pName(reaction.type1()),
+                              pName(reaction.type2()), tName(reaction.top_type_to1()), pName(reaction.type_to1()),
+                              pName(reaction.type_to2()));
+            break;
+        }
+    }
+    return ss.str();
 }
 
 }

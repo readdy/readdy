@@ -169,6 +169,8 @@ public:
         );
     }
 
+    std::string generateSpatialReactionRepresentation(const spatial_reaction &reaction) const;
+
     /**
      * Convenience function for adding spatial reaction.
      *
