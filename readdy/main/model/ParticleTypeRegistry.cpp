@@ -82,8 +82,8 @@ std::string ParticleTypeRegistry::describe() const {
         }
     };
     for (const auto &entry : particle_info_) {
-        description += fmt::format("     * {} particle type \"{}\" with D={}{}", entry.second.name,
-                                   flavorName(entry.second.flavor), entry.second.diffusionConstant, rus::newline);
+        description += fmt::format("     * {} particle type \"{}\" with D={}{}", flavorName(entry.second.flavor),
+                                   entry.second.name, entry.second.diffusionConstant, rus::newline);
     }
     return description;
 }
