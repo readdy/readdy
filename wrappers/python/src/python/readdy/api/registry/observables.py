@@ -27,7 +27,7 @@ Created on 08.09.17
 
 import numpy as _np
 
-from typing import Optional as _Optional, Dict as _Dict, Union as _Union
+from typing import Optional as _Optional, Dict as _Dict, Union as _Union, Callable as _Callable
 from readdy.util.observable_utils import calculate_pressure as _calculate_pressure
 
 def _parse_save_args(save_args):
@@ -47,8 +47,8 @@ class Observables(object):
         self._sim = self._simulation._simulation
         self._observable_handles = []
 
-    def rdf(self, stride, bin_borders, types_count_from, types_count_to, particle_to_density, callback=None,
-            save: _Optional[_Union[_Dict, str]]='default'):
+    def rdf(self, stride, bin_borders, types_count_from, types_count_to, particle_to_density,
+            callback: _Optional[_Callable]=None, save: _Optional[_Union[_Dict, str]]='default'):
         """
         Calculates and possibly records the radial distribution function.
 
@@ -79,7 +79,7 @@ class Observables(object):
                                                                    particle_to_density, callback)
         self._add_observable_handle(*_parse_save_args(save), handle)
 
-    def reactions(self, stride, callback=None, save: _Optional[_Union[_Dict, str]]='default'):
+    def reactions(self, stride, callback: _Optional[_Callable]=None, save: _Optional[_Union[_Dict, str]]='default'):
         """
         Records all reactions.
 
@@ -93,7 +93,8 @@ class Observables(object):
 
         self._add_observable_handle(*_parse_save_args(save), handle)
 
-    def particle_positions(self, stride, types=None, callback=None, save: _Optional[_Union[_Dict, str]]='default'):
+    def particle_positions(self, stride, types=None, callback: _Optional[_Callable]=None,
+                           save: _Optional[_Union[_Dict, str]]='default'):
         """
         Records particle positions of either all particles or a selection of particle types.
 
@@ -108,10 +109,9 @@ class Observables(object):
         if types is None:
             types = []
         handle = self._sim.register_observable_particle_positions(stride, types, callback)
-
         self._add_observable_handle(*_parse_save_args(save), handle)
 
-    def particles(self, stride, callback=None, save: _Optional[_Union[_Dict, str]]='default'):
+    def particles(self, stride, callback: _Optional[_Callable]=None, save: _Optional[_Union[_Dict, str]]='default'):
         """
         Records all particles in the system.
 
@@ -123,10 +123,9 @@ class Observables(object):
             save = {"name": "particles", "chunk_size": 100}
 
         handle = self._sim.register_observable_particles(stride, callback)
-
         self._add_observable_handle(*_parse_save_args(save), handle)
 
-    def number_of_particles(self, stride, types=None, callback=None,
+    def number_of_particles(self, stride, types=None, callback: _Optional[_Callable]=None,
                             save: _Optional[_Union[_Dict, str]]='default'):
         """
         Records the number of particles in the system.
@@ -145,7 +144,7 @@ class Observables(object):
 
         self._add_observable_handle(*_parse_save_args(save), handle)
 
-    def energy(self, stride, callback=None, save: _Optional[_Union[_Dict, str]]='default'):
+    def energy(self, stride, callback: _Optional[_Callable]=None, save: _Optional[_Union[_Dict, str]]='default'):
         """
         Records the potential energy of the system.
 
@@ -160,7 +159,8 @@ class Observables(object):
 
         self._add_observable_handle(*_parse_save_args(save), handle)
 
-    def forces(self, stride, types=None, callback=None, save: _Optional[_Union[_Dict, str]]='default'):
+    def forces(self, stride, types=None, callback: _Optional[_Callable]=None,
+               save: _Optional[_Union[_Dict, str]]='default'):
         """
         Records the forces acting on particles.
 
@@ -178,7 +178,8 @@ class Observables(object):
 
         self._add_observable_handle(*_parse_save_args(save), handle)
 
-    def reaction_counts(self, stride, callback=None, save: _Optional[_Union[_Dict, str]]='default'):
+    def reaction_counts(self, stride, callback: _Optional[_Callable]=None,
+                        save: _Optional[_Union[_Dict, str]]='default'):
         """
         Records the occurred number of reactions per registered reaction.
 
@@ -194,7 +195,7 @@ class Observables(object):
 
         self._add_observable_handle(*_parse_save_args(save), handle)
 
-    def virial(self, stride, callback=None, save: _Optional[_Union[_Dict, str]]='default'):
+    def virial(self, stride, callback: _Optional[_Callable]=None, save: _Optional[_Union[_Dict, str]]='default'):
         """
         Records the virial tensor of the system.
         :param stride: skip `stride` time steps before evaluating the observable again
@@ -210,7 +211,8 @@ class Observables(object):
         handle = self._sim.register_observable_virial(stride, internal_callback)
         self._add_observable_handle(*_parse_save_args(save), handle)
 
-    def pressure(self, stride, physical_particles=None, callback=None, save: _Optional[_Union[_Dict, str]]='default'):
+    def pressure(self, stride, physical_particles=None,
+                 callback: _Optional[_Callable]=None, save: _Optional[_Union[_Dict, str]]='default'):
         """
         This observable will report back the pressure of the system. As the pressure can be computed from the number of
         physical particles and the virial tensor, this observable actually delegates to the n_particles and virial

@@ -166,6 +166,7 @@ class ReactionInfo:
 
     __repr__ = __str__
 
+
 class GeneralInformation(object):
 
     def __init__(self, filename):

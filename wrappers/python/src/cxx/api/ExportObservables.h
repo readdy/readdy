@@ -81,8 +81,16 @@ inline obs_handle_t registerObservable_ReactionCounts(sim &self, unsigned int st
     if (callback.is_none()) {
         return self.registerObservable(std::move(obs));
     } else {
-        auto pyFun = readdy::rpy::PyFunction<void(readdy::model::observables::ReactionCounts::result_type)>(callback);
-        return self.registerObservable(std::move(obs), pyFun);
+        auto internalCallback = [&self, callback](const readdy::model::observables::ReactionCounts::result_type &counts) mutable {
+            py::gil_scoped_acquire gil;
+            std::unordered_map<std::string, std::size_t> converted;
+            const auto &reactionRegistry = self.currentContext().reactions();
+            for(const auto &e : counts) {
+                converted[reactionRegistry.nameOf(e.first)] = e.second;
+            }
+            callback(converted);
+        };
+        return self.registerObservable(std::move(obs), internalCallback);
     }
 }
 
@@ -104,8 +112,25 @@ inline obs_handle_t registerObservable_Particles(sim &self, unsigned int stride,
     if (callbackFun.is_none()) {
         return self.registerObservable(std::move(obs));
     } else {
-        auto pyFun = readdy::rpy::PyFunction<void(readdy::model::observables::Particles::result_type)>(callbackFun);
-        return self.registerObservable(std::move(obs), pyFun);
+        auto internalCallback = [&self, callbackFun](const readdy::model::observables::Particles::result_type &r) mutable {
+            using particle_type = std::string;
+            using particle_id_type = readdy::model::Particle::id_type;
+            using result_type = std::tuple<std::vector<particle_type>, std::vector<particle_id_type>, std::vector<readdy::Vec3>>;
+            py::gil_scoped_acquire gil;
+            result_type result;
+            std::get<0>(result).reserve(std::get<0>(r).size());
+            std::get<1>(result) = std::get<1>(r);
+            std::get<2>(result) = std::get<2>(r);
+
+            auto &names = std::get<0>(result);
+            const auto &types = self.currentContext().particle_types();
+
+            for(const auto particleType : std::get<0>(r)) {
+                names.push_back(types.nameOf(particleType));
+            }
+            callbackFun(result);
+        };
+        return self.registerObservable(std::move(obs), internalCallback);
     }
 }
 
