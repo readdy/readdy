@@ -204,7 +204,10 @@ class Observables(object):
         if isinstance(save, str) and save == 'default':
             save = {"name": "virial", "chunk_size": 100}
 
-        handle = self._sim.register_observable_virial(stride, lambda x: callback(_np.ndarray((3,3), buffer=x)))
+        internal_callback = None
+        if callback is not None:
+            internal_callback = lambda x: callback(_np.ndarray((3,3), buffer=x))
+        handle = self._sim.register_observable_virial(stride, internal_callback)
         self._add_observable_handle(*_parse_save_args(save), handle)
 
     def pressure(self, stride, physical_particles=None, callback=None, save: _Optional[_Union[_Dict, str]]='default'):

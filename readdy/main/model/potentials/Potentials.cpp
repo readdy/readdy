@@ -77,8 +77,8 @@ Box::Box(particle_type_type particleType, scalar forceConstant, const Vec3 &orig
           min(getMinExtent(origin, extent)), max(getMaxExtent(origin, extent)) {}
 
 std::string Box::describe() const {
-    return fmt::format("{} potential with origin {}, extent {}, and force constant {}",
-                       getPotentialName<Box>(), origin, extent, forceConstant);
+    return fmt::format("Box potential with origin={}, extent={}, and force constant k={}",
+                       origin, extent, forceConstant);
 }
 
 std::string Box::type() const {
@@ -90,11 +90,8 @@ std::string Box::type() const {
  */
 
 std::string SphereIn::describe() const {
-    std::ostringstream ss;
-    ss << getPotentialName<SphereIn>() << "[origin: " << origin
-       << ", radius: " << radius << ", forceConstant: " << forceConstant << "]";
-    return fmt::format("{} potential with origin {}, radius {}, and force constant {}",
-                       getPotentialName<SphereIn>(), origin, radius, forceConstant);
+    return fmt::format("Spherical inclusion potential with origin={}, radius={}, and force constant k={}",
+                       origin, radius, forceConstant);
 }
 
 std::string SphereIn::type() const {
@@ -102,8 +99,8 @@ std::string SphereIn::type() const {
 }
 
 std::string SphereOut::describe() const {
-    return fmt::format("{} potential with origin {}, radius {}, and force constant {}",
-                       getPotentialName<SphereOut>(), origin, radius, forceConstant);
+    return fmt::format("Spherical exclusion potential with origin={}, radius={}, and force constant k={}",
+                       origin, radius, forceConstant);
 }
 
 std::string SphereOut::type() const {
@@ -119,7 +116,7 @@ SphericalBarrier::SphericalBarrier(particle_type_type particleType, scalar heigh
 }
 
 std::string SphericalBarrier::describe() const {
-    return fmt::format("Spherical barrier potential with origin {}, radius {}, height(energy) {}, and width {}",
+    return fmt::format("Spherical barrier potential with origin={}, radius={}, height(energy)={}, and width={}",
                        origin, radius, height, width);
 }
 
@@ -138,7 +135,7 @@ std::string SphericalBarrier::type() const {
  */
 
 std::string HarmonicRepulsion::describe() const {
-    return fmt::format("Harmonic repulsion with force constant {}", _forceConstant);
+    return fmt::format("Harmonic repulsion with force constant k={}", _forceConstant);
 }
 
 std::string HarmonicRepulsion::type() const {
@@ -150,8 +147,8 @@ std::string HarmonicRepulsion::type() const {
  */
 
 std::string WeakInteractionPiecewiseHarmonic::describe() const {
-    return fmt::format("Weak interaction piecewise harmonic potential with force constant {}, desired distance {}, "
-                               "depth {}, and cutoff {}",
+    return fmt::format("Weak interaction piecewise harmonic potential with force constant k={}, desired distance={}, "
+                               "depth={}, and cutoff={}",
                        forceConstant, conf.desiredParticleDistance, conf.depthAtDesiredDistance,
                        conf.noInteractionDistance);
 }
@@ -185,7 +182,7 @@ LennardJones::LennardJones(particle_type_type type1, particle_type_type type2,
 
 std::string LennardJones::describe() const {
     std::string withOrWithout = shift ? "with" : "without";
-    return fmt::format("{}-{}-Lennard-Jones potential with cutoff {}, epsilon {}, k {}, and {} energy shift",
+    return fmt::format("{}-{}-Lennard-Jones potential with cutoff={}, epsilon={}, k={}, and {} energy shift",
                        m, n, cutoffDistance, epsilon, k, withOrWithout);
 }
 
@@ -215,8 +212,8 @@ ScreenedElectrostatics::ScreenedElectrostatics(particle_type_type type1, particl
 }
 
 std::string ScreenedElectrostatics::describe() const {
-    return fmt::format("Screened electrostatics potential with electrostatic strength {}, inverse screening depth {}, "
-                               "repulsion strength {}, repulsion distance {}, exponent {}, and cutoff {}",
+    return fmt::format("Screened electrostatics potential with electrostatic strength={}, inverse screening depth={}, "
+                               "repulsion strength={}, repulsion distance={}, exponent={}, and cutoff={}",
                        electrostaticStrength, inverseScreeningDepth, repulsionStrength, repulsionDistance,
                        exponent, cutoff);
 }

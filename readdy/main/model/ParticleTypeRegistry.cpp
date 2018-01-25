@@ -65,11 +65,25 @@ std::string ParticleTypeRegistry::describe() const {
     namespace rus = readdy::util::str;
     std::string description;
     description += fmt::format(" - particle types:{}", rus::newline);
+    auto flavorName = [](auto flavor) -> std::string {
+        switch (flavor) {
+            case particleflavor::NORMAL: {
+                return "";
+            }
+            case particleflavor::TOPOLOGY: {
+                return "Topology";
+            }
+            case particleflavor::MEMBRANE: {
+                return "Membrane";
+            }
+            default: {
+                throw std::logic_error("encountered a particle flavor that was neither of NORMAL, TOPOLOGY, MEMBRANE.");
+            }
+        }
+    };
     for (const auto &entry : particle_info_) {
-        description += fmt::format("     * particle type \"{}\" with D={}, flavor={}, id={}{}", entry.second.name,
-                                   entry.second.diffusionConstant,
-                                   particleflavor::particle_flavor_to_str(entry.second.flavor), entry.second.typeId,
-                                   rus::newline);
+        description += fmt::format("     * {} particle type \"{}\" with D={}{}", flavorName(entry.second.flavor),
+                                   entry.second.name, entry.second.diffusionConstant, rus::newline);
     }
     return description;
 }

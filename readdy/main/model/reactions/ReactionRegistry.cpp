@@ -104,19 +104,71 @@ void ReactionRegistry::configure() {
 std::string ReactionRegistry::describe() const {
     namespace rus = readdy::util::str;
     std::string description;
+    auto nameOf = [&](particle_type_type t) {return _types.get().nameOf(t);};
+
     if (!one_educt_registry.empty()) {
-        description += fmt::format(" - reactions of order 1:{}", rus::newline);
+        description += fmt::format(" - unimolecular reactions:{}", rus::newline);
         for (const auto &entry : one_educt_registry) {
             for (const auto reaction : entry.second) {
-                description += fmt::format("     * reaction {}{}", *reaction, rus::newline);
+                const auto &educts = reaction->educts();
+                const auto &products = reaction->products();
+
+                switch (reaction->type()) {
+                    case ReactionType::Conversion: {
+                        description += fmt::format("     * Conversion {} -> {} with a rate of {}{}",
+                                                   nameOf(educts[0]), nameOf(products[0]), reaction->rate(),
+                                                   rus::newline);
+                        break;
+                    }
+                    case ReactionType::Fission: {
+                        description += fmt::format("     * Fission {} -> {} + {} with a rate of {}, a product distance of {}, and weights {} and {}{}",
+                                                   nameOf(educts[0]), nameOf(products[0]), nameOf(products[1]),
+                                                   reaction->rate(), reaction->productDistance(),
+                                                   reaction->weight1(), reaction->weight2(), rus::newline);
+                        break;
+                    }
+                    case ReactionType::Decay: {
+                        description += fmt::format("     * Decay {} -> ø with a rate of {}{}",
+                                                   nameOf(educts[0]), reaction->rate(), rus::newline);
+                        break;
+                    }
+                    default: {
+                        throw std::logic_error(fmt::format("unimolecular reaction in registry that was of type {}", 
+                                                           reaction->type()));
+                    }
+                }
             }
         }
     }
     if (!two_educts_registry.empty()) {
-        description += fmt::format(" - reactions of order 2:{}", rus::newline);
+        description += fmt::format(" - bimolecular reactions:{}", rus::newline);
         for (const auto &entry : two_educts_registry) {
             for (const auto reaction : entry.second) {
-                description += fmt::format("     * reaction {}{}", *reaction, rus::newline);
+                const auto &educts = reaction->educts();
+                const auto &products = reaction->products();
+
+                switch(reaction->type()) {
+                    case ReactionType::Enzymatic: {
+                        auto enzymatic = dynamic_cast<const Enzymatic*>(reaction);
+                        description += fmt::format("     * Enzymatic {} + {} -> {} + {} with a rate of {} and an educt distance of {}{}",
+                                                   nameOf(enzymatic->getFrom()), nameOf(enzymatic->getCatalyst()),
+                                                   nameOf(enzymatic->getTo()), nameOf(enzymatic->getCatalyst()),
+                                                   enzymatic->rate(), enzymatic->eductDistance(), rus::newline);
+                        break;
+                    }
+                    case ReactionType::Fusion: {
+                        auto fusion = dynamic_cast<const Fusion*>(reaction);
+                        description += fmt::format("     * Fusion {} + {} -> {} with a rate of {}, an educt distance of {}, and weights {} and {}{}",
+                                                   nameOf(fusion->getFrom1()), nameOf(fusion->getFrom2()),
+                                                   nameOf(fusion->getTo()), fusion->rate(), fusion->eductDistance(),
+                                                   fusion->weight1(), fusion->weight2(), rus::newline);
+                        break;
+                    }
+                    default: {
+                        throw std::logic_error(fmt::format("bimolecular reaction in registry that was of type {}",
+                                                           reaction->type()));
+                    }
+                }
             }
         }
     }
