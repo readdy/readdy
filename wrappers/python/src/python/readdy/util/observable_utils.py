@@ -25,5 +25,5 @@ import numpy as _np
 def calculate_pressure(box_volume, kbt, n_particles, virial):
     if isinstance(n_particles, (list, tuple, _np.ndarray)):
         n_particles = _np.sum(_np.array(n_particles).squeeze())
-    VP = (n_particles * kbt * _np.identity(3, dtype=virial.dtype) + virial) / 3.
+    VP = n_particles * kbt * _np.identity(3, dtype=virial.dtype) + virial
     return _np.mean(VP.diagonal()) / box_volume
