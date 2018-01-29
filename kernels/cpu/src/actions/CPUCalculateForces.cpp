@@ -254,7 +254,7 @@ void CPUCalculateForces::calculate_order2(std::size_t, nl_bounds nlBounds,
                                 potential->calculateForceAndEnergy(forceUpdate, mySecondOrderEnergy, x_ij);
                                 force += forceUpdate;
                                 if(COMPUTE_VIRIAL && *particleIt < neighborIndex) {
-                                    virialUpdate += math::outerProduct(-1.*x_ij, force);
+                                    virialUpdate += math::outerProduct(-1.*x_ij, forceUpdate);
                                 }
                             }
                         }
