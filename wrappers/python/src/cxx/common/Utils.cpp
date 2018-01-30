@@ -44,6 +44,7 @@
 #include <readdy/model/IOUtils.h>
 #include <readdy/io/BloscFilter.h>
 #include <readdy/model/reactions/ReactionRecord.h>
+#include <readdy/model/topologies/TopologyRecord.h>
 #include "ReadableReactionRecord.h"
 
 namespace py = pybind11;
@@ -341,6 +342,90 @@ std::string repr(const TrajectoryParticle &p) {
        << ", position=(" << p.position[0] << ", " << p.position[1] << ", " << p.position[2] << ")]";
 
     return ss.str();
+}
+
+using TopologyRecord = readdy::model::top::TopologyRecord;
+
+std::tuple<std::vector<readdy::time_step_type>, std::vector<std::vector<TopologyRecord>>> readTopologies(const std::string &filename, const std::string &groupName) {
+    readdy::io::BloscFilter bloscFilter;
+    bloscFilter.registerFilter();
+
+    std::string groupPath = std::string(readdy::model::observables::util::OBSERVABLES_GROUP_PATH) + "/" + groupName;
+    auto f = h5rd::File::open(filename, h5rd::File::Flag::READ_ONLY);
+    auto group = f->getSubgroup(groupPath);
+
+    // limits
+    std::vector<std::size_t> limitsParticles;
+    group.read("limitsParticles", limitsParticles);
+    std::vector<std::size_t> limitsEdges;
+    group.read("limitsEdges", limitsEdges);
+
+    // time
+    std::vector<readdy::time_step_type> time;
+    group.read("time", time);
+
+    // now check that nFrames(particles) == nFrames(edges) == nFrames(time)...
+    if(limitsParticles.size() % 2 != 0 || limitsEdges.size() % 2 != 0) {
+        throw std::logic_error(fmt::format(
+                "limitsParticles size was {} and limitsEdges size was {}, they should be divisible by 2",
+                limitsParticles.size(), limitsEdges.size())
+        );
+    }
+    const auto nFrames = limitsParticles.size() / 2;
+    if(nFrames != limitsEdges.size() / 2 || nFrames != time.size()) {
+        throw std::logic_error(fmt::format(
+                "nFrames should be equal to limitsEdges/2 and equal to the number of time steps in the recording, "
+                        "but was: nFrames = {}, limitsEdges/2 = {}, nTimeSteps={}",
+                nFrames, limitsEdges.size() / 2, time.size()
+        ));
+    }
+
+    std::vector<std::size_t> flatParticles;
+    group.read("particles", flatParticles);
+    std::vector<std::size_t> flatEdges;
+    group.read("edges", flatEdges);
+
+    std::vector<std::vector<TopologyRecord>> result;
+
+    for(std::size_t frame = 0; frame < nFrames; ++frame) {
+        result.emplace_back();
+        // this frame's records
+        auto &records = result.back();
+
+        const auto &particlesLimitBegin = limitsParticles.at(2*frame);
+        const auto &particlesLimitEnd = limitsParticles.at(2*frame + 1);
+        // since the edges are flattened, we actually have to multiply this by 2
+        const auto &edgesLimitBegin = limitsEdges.at(2*frame);
+        const auto &edgesLimitEnd = limitsEdges.at(2*frame + 1);
+
+        for(auto particlesIt = flatParticles.begin() + particlesLimitBegin;
+            particlesIt != flatParticles.begin() + particlesLimitEnd; ++particlesIt) {
+
+            records.emplace_back();
+            auto nParticles = *particlesIt;
+            for(std::size_t i = 0; i < nParticles; ++i) {
+                ++particlesIt;
+                records.back().particleIndices.push_back(*particlesIt);
+            }
+        }
+
+        std::size_t recordIx = 0;
+        for(auto edgesIt = flatEdges.begin() + 2*edgesLimitBegin;
+            edgesIt != flatEdges.begin() + 2*edgesLimitEnd; ++edgesIt, ++recordIx) {
+            auto &currentRecord = records.at(recordIx);
+
+            auto nEdges = *edgesIt;
+
+            for(std::size_t i = 0; i < nEdges; ++i) {
+                edgesIt += 2;
+                currentRecord.edges.push_back(std::make_tuple(*edgesIt, *(edgesIt+1)));
+            }
+
+        }
+
+    }
+
+    return std::make_tuple(time, result);
 }
 
 std::vector<std::vector<TrajectoryParticle>> read_trajectory(const std::string &filename, const std::string &name) {

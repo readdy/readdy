@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2018 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -21,34 +21,29 @@
 
 
 /**
- * Header file containing definitions for various observables. Currently:
- *  - Positions,
- *  - Particles,
- *  - RadialDistribution,
- *  - HistogramAlongAxis,
- *  - NParticles,
- *  - Forces,
- *  - Reactions,
- *  - ReactionCounts
+ * << detailed description >>
  *
- * @file Observables.h
- * @brief Header file combining definitions for various observables.
+ * @file TopologyRecord.h
+ * @brief << brief description >>
  * @author clonker
- * @date 26.04.16
- * @todo for demonstration purposes, add a more meaningful combiner observable, such as velocity
+ * @date 1/30/18
  */
+
 
 #pragma once
 
-#include "HistogramAlongAxis.h"
-#include "Particles.h"
-#include "Positions.h"
-#include "RadialDistribution.h"
-#include "Forces.h"
-#include "NParticles.h"
-#include "Reactions.h"
-#include "ReactionCounts.h"
-#include "Topologies.h"
-#include "Energy.h"
-#include "Virial.h"
-#include "io/Trajectory.h"
+#include <readdy/common/macros.h>
+#include "Topology.h"
+
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
+NAMESPACE_BEGIN(top)
+
+struct TopologyRecord {
+    Topology::particle_indices particleIndices;
+    std::vector<std::tuple<std::size_t, std::size_t>> edges;
+};
+
+NAMESPACE_END(top)
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)
