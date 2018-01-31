@@ -163,6 +163,7 @@ class TestTopLevelAPI(ReaDDyTestCase):
         simulation.observe.reactions(5)
         simulation.observe.virial(5)
         simulation.observe.pressure(5)
+        simulation.observe.topologies(5)
         simulation.run(10, .1 * ut.nanosecond, False)
 
     def test_add_particles(self):
@@ -251,6 +252,74 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
                 np.testing.assert_equal("NORMAL", entry.flavor)
                 np.testing.assert_equal("A", entry.type)
                 np.testing.assert_equal(idx, entry.t)
+
+    def _run_topology_observable_test_for(self, kernel):
+        traj_fname = os.path.join(self.tempdir, "traj_top_obs_{}.h5".format(kernel))
+        system = readdy.ReactionDiffusionSystem(box_size=[300, 300, 300])
+        system.periodic_boundary_conditions = False, False, False
+
+        system.add_species("Decay", diffusion_constant=.01)
+        system.add_topology_species("unstable T", diffusion_constant=.01)
+        system.reactions.add("decay: Decay ->", .1)
+        system.potentials.add_box("Decay", 100., [-70, -70, -70], [130, 130, 130])
+        system.potentials.add_box("unstable T", 100., [-70, -70, -70], [130, 130, 130])
+        system.potentials.add_harmonic_repulsion("Decay", "unstable T", force_constant=20.,
+                                                 interaction_distance=2.)
+        system.topologies.configure_harmonic_bond("unstable T", "unstable T", force_constant=20.,
+                                                  length=2.)
+
+        system.topologies.add_type("unstable")
+        def unstable_rate_function(_):
+            return .1
+        def unstable_reaction_function(topology):
+            recipe = readdy.StructuralReactionRecipe(topology)
+            index = np.random.randint(0, len(topology.particles))
+            recipe.separate_vertex(index)
+            recipe.change_particle_type(index, "Decay")
+            return recipe
+        system.topologies.add_structural_reaction(topology_type="unstable",
+                                                  reaction_function=unstable_reaction_function,
+                                                  rate_function=unstable_rate_function)
+        simulation = system.simulation(kernel=kernel)
+
+        n_topology_particles = 70
+        positions = [[0, 0, 0], np.random.normal(size=3)]
+        for i in range(n_topology_particles-2):
+            delta = positions[-1] - positions[-2]
+            offset = np.random.normal(size=3) + delta
+            offset = offset / np.linalg.norm(offset)
+            positions.append(positions[-1] + 2.*offset)
+        topology = simulation.add_topology(topology_type="unstable", particle_types="unstable T",
+                                           positions=np.array(positions))
+        graph = topology.get_graph()
+        for i in range(len(graph.get_vertices())-1):
+            graph.add_edge(i, i+1)
+            simulation.output_file = traj_fname
+
+        topology_records = []
+        simulation.observe.topologies(1, callback=lambda x: topology_records.append(x))
+        simulation.show_progress = False
+        n_steps = 100
+        simulation.run(n_steps=n_steps, timestep=1e-1, show_system=False)
+
+        traj = readdy.Trajectory(simulation.output_file)
+
+        time, tops = traj.read_observable_topologies()
+
+        np.testing.assert_equal(len(time), n_steps+1)
+
+        for ix, records in enumerate(topology_records):
+            np.testing.assert_equal(len(records), len(tops[ix]))
+            for record, recordedRecord in zip(records, tops[ix]):
+                np.testing.assert_equal(record.particles, recordedRecord.particles)
+                np.testing.assert_equal(record.edges, recordedRecord.edges)
+
+    def test_topology_observable_scpu(self):
+        self._run_topology_observable_test_for("SingleCPU")
+
+    def test_topology_observable_cpu(self):
+        self._run_topology_observable_test_for("CPU")
+
 
     def _run_readwrite_test_for(self, kernel, reaction_handler):
         traj_fname = os.path.join(self.tempdir, "traj_{}_{}.h5".format(kernel, reaction_handler))

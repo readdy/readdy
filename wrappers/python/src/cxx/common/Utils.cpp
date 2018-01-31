@@ -350,9 +350,8 @@ std::tuple<std::vector<readdy::time_step_type>, std::vector<std::vector<Topology
     readdy::io::BloscFilter bloscFilter;
     bloscFilter.registerFilter();
 
-    std::string groupPath = std::string(readdy::model::observables::util::OBSERVABLES_GROUP_PATH) + "/" + groupName;
     auto f = h5rd::File::open(filename, h5rd::File::Flag::READ_ONLY);
-    auto group = f->getSubgroup(groupPath);
+    auto group = f->getSubgroup(groupName);
 
     // limits
     std::vector<std::size_t> limitsParticles;
@@ -411,14 +410,15 @@ std::tuple<std::vector<readdy::time_step_type>, std::vector<std::vector<Topology
 
         std::size_t recordIx = 0;
         for(auto edgesIt = flatEdges.begin() + 2*edgesLimitBegin;
-            edgesIt != flatEdges.begin() + 2*edgesLimitEnd; ++edgesIt, ++recordIx) {
+            edgesIt != flatEdges.begin() + 2*edgesLimitEnd; ++recordIx) {
             auto &currentRecord = records.at(recordIx);
 
             auto nEdges = *edgesIt;
+            edgesIt += 2;
 
             for(std::size_t i = 0; i < nEdges; ++i) {
-                edgesIt += 2;
                 currentRecord.edges.push_back(std::make_tuple(*edgesIt, *(edgesIt+1)));
+                edgesIt += 2;
             }
 
         }
@@ -565,5 +565,6 @@ void exportUtils(py::module &m) {
           "generate_tcl"_a = true, "tcl_with_grid"_a = false, "radii"_a = radiusmap{});
     m.def("convert_readdyviewer", &convert_readdy_viewer, "h5_file_name"_a, "traj_data_set_name"_a);
     m.def("read_trajectory", &read_trajectory, "filename"_a, "name"_a);
+    m.def("read_topologies_observable", &readTopologies, "filename"_a, "groupname"_a);
     m.def("read_reaction_observable", &read_reactions_obs, "filename"_a, "name"_a);
 }

@@ -52,6 +52,7 @@ void Topologies::evaluate() {
         for(auto&& edge : topologyPtr->graph().edges()) {
             record.edges.push_back(std::make_tuple(std::get<0>(edge)->particleIndex, std::get<1>(edge)->particleIndex));
         }
+        result.push_back(record);
     }
 }
 
@@ -118,8 +119,11 @@ void Topologies::append() {
         }
     }
 
+    pimpl->dataSetParticles->append({flatParticles.size()}, flatParticles.data());
     pimpl->limitsParticles->append({1, 2}, pimpl->currentLimitsParticles.data());
+    pimpl->dataSetEdges->append({flatEdges.size(), 2}, &flatEdges[0][0]);
     pimpl->limitsEdges->append({1, 2}, pimpl->currentLimitsEdges.data());
+    pimpl->time->append(t_current);
 }
 
 Topologies::~Topologies() = default;

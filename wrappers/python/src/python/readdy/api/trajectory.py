@@ -32,6 +32,7 @@ import numpy as _np
 
 from readdy._internal.readdybinding.common.util import read_reaction_observable as _read_reaction_observable
 from readdy._internal.readdybinding.common.util import read_trajectory as _read_trajectory
+from readdy._internal.readdybinding.common.util import read_topologies_observable as _read_topologies
 from readdy.util.observable_utils import calculate_pressure as _calculate_pressure
 
 import readdy.util.io_utils as _io_utils
@@ -429,6 +430,20 @@ class Trajectory(object):
             time = f[group_path]["time"][:]
             forces = f[group_path]["data"][:]
             return time, forces
+
+    def read_observable_topologies(self, data_set_name="topologies"):
+        """
+        Reads back the output of the "topologies" observable
+        :param data_set_name: The data set name as given in the simulation setup
+        :return: a tuple which contains an array corresponding to the time as first entry and an array containing
+                 lists of topologies per recorded time step
+        """
+        group_path = "readdy/observables/{}".format(data_set_name)
+        with _h5py.File(self._filename, "r") as f:
+            if not group_path in f:
+                raise ValueError("The topologies observable was not recorded in the file or recorded under a different"
+                                 "name!")
+        return _read_topologies(self._filename, group_path)
 
     def read_observable_virial(self, data_set_name="virial"):
         """
