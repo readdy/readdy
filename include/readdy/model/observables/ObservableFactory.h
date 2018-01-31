@@ -104,6 +104,10 @@ public:
         return std::make_unique<FlatTrajectory>(kernel, stride);
     }
 
+    std::unique_ptr<Topologies> topologies(stride_type stride) const {
+        return std::make_unique<Topologies>(kernel, stride);
+    }
+
 protected:
     Kernel *const kernel;
 };

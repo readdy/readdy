@@ -75,6 +75,170 @@ TEST_P(TestObservables, TestParticlePositions) {
     connection.disconnect();
 }
 
+TEST_P(TestObservables, Topologies) {
+    using namespace readdy;
+    auto &ctx = kernel->context();
+    ctx.particle_types().add("Topology A", 1.0, readdy::model::particleflavor::TOPOLOGY);
+    ctx.particle_types().add("Topology B", 1.0, readdy::model::particleflavor::TOPOLOGY);
+    ctx.particle_types().add("Topology Invalid Type", 1.0, readdy::model::particleflavor::TOPOLOGY);
+    ctx.particle_types().add("A", 1.0, readdy::model::particleflavor::NORMAL);
+
+    ctx.topology_registry().configureBondPotential("Topology A", "Topology A", {10, 10});
+    ctx.topology_registry().configureBondPotential("Topology A", "Topology B", {10, 10});
+    ctx.topology_registry().configureBondPotential("Topology B", "Topology B", {10, 10});
+
+    ctx.boxSize() = {{10, 10, 10}};
+
+    std::size_t n_chain_elements = 50;
+    auto &toptypes = ctx.topology_registry();
+    toptypes.addType("TA");
+
+    ctx.boxSize() = {{10, 10, 10}};
+    std::vector<readdy::model::TopologyParticle> topologyParticles;
+    {
+        topologyParticles.reserve(n_chain_elements);
+        for (std::size_t i = 0; i < n_chain_elements; ++i) {
+            const auto id = ctx.particle_types().idOf("Topology A");
+            topologyParticles.emplace_back(-5 + i * 10. / static_cast<readdy::scalar>(n_chain_elements), 0, 0, id);
+        }
+    }
+    auto topology = kernel->stateModel().addTopology(toptypes.idOf("TA"), topologyParticles);
+    {
+        auto it = topology->graph().vertices().begin();
+        auto it2 = ++topology->graph().vertices().begin();
+        while(it2 != topology->graph().vertices().end()) {
+            topology->graph().addEdge(it, it2);
+            std::advance(it, 1);
+            std::advance(it2, 1);
+        }
+    }
+
+    {
+        // split reaction
+        auto reactionFunction = [&](model::top::GraphTopology &top) {
+            model::top::reactions::Recipe recipe (top);
+            auto& vertices = top.graph().vertices();
+            auto current_n_vertices = vertices.size();
+            if(current_n_vertices > 1) {
+                auto edge = readdy::model::rnd::uniform_int<>(0, static_cast<int>(current_n_vertices - 2));
+                auto it1 = vertices.begin();
+                auto it2 = ++vertices.begin();
+                for(int i = 0; i < edge; ++i) {
+                    ++it1;
+                    ++it2;
+                }
+                recipe.removeEdge(it1, it2);
+            }
+
+            return recipe;
+        };
+        auto rateFunction = [](const model::top::GraphTopology &top) {
+            return top.getNParticles() > 1 ? top.getNParticles()/50. : 0;
+        };
+        model::top::reactions::StructuralTopologyReaction reaction {reactionFunction, rateFunction};
+        reaction.create_child_topologies_after_reaction();
+        reaction.roll_back_if_invalid();
+
+        toptypes.addStructuralReaction("TA", reaction);
+    }
+    {
+        // decay reaction
+        auto reactionFunction = [&](model::top::GraphTopology &top) {
+            model::top::reactions::Recipe recipe (top);
+            if(top.graph().vertices().size() == 1) {
+                recipe.changeParticleType(top.graph().vertices().begin(),
+                                          kernel->context().particle_types().idOf("A"));
+            } else {
+                throw std::logic_error("this reaction should only be executed when there is exactly "
+                                               "one particle in the topology");
+            }
+            return recipe;
+        };
+        auto rateFunction = [](const model::top::GraphTopology &top) {
+            return top.getNParticles() > 1 ? 0 : 1;
+        };
+        model::top::reactions::StructuralTopologyReaction reaction {reactionFunction, rateFunction};
+        reaction.create_child_topologies_after_reaction();
+        reaction.roll_back_if_invalid();
+        toptypes.addStructuralReaction("TA", reaction);
+    }
+
+    {
+        auto integrator = kernel->actions().createIntegrator("EulerBDIntegrator", 1.0);
+        auto forces = kernel->actions().calculateForces();
+        auto topReactions = kernel->actions().evaluateTopologyReactions(1.0);
+
+        std::size_t time = 0;
+        std::size_t n_time_steps = 500;
+
+        auto obs = kernel->observe().topologies(1);
+        obs->setCallback([&](const model::observables::Topologies::result_type &value) {
+            auto tops = kernel->stateModel().getTopologies();
+            ASSERT_EQ(value.size(), tops.size());
+            for(auto its = std::make_pair(tops.begin(), value.begin()); its.first != tops.end(); ++its.first, ++its.second) {
+                auto topPtr = *its.first;
+                const auto& record = *its.second;
+                const auto &topParticles = topPtr->getParticles();
+                const auto &recordParticles = record.particleIndices;
+                auto contains1 = std::all_of(recordParticles.begin(), recordParticles.end(), [&](auto idx) {
+                    return std::find(topParticles.begin(), topParticles.end(), idx) != topParticles.end();
+                });
+                auto contains2 = std::all_of(topParticles.begin(), topParticles.end(), [&](auto idx) {
+                    return std::find(recordParticles.begin(), recordParticles.end(), idx) != recordParticles.end();
+                });
+                ASSERT_TRUE(contains1) << "record.particleIndices was not contained in topology particles";
+                ASSERT_TRUE(contains2) << "topology particles were not contained in record.particleIndices";
+
+                auto topEdges = topPtr->graph().edges();
+                ASSERT_EQ(topEdges.size(), record.edges.size());
+
+                contains1 = std::all_of(record.edges.begin(), record.edges.end(), [&](const auto &edge) {
+                    std::size_t ix1 = std::get<0>(edge);
+                    std::size_t ix2 = std::get<1>(edge);
+                    for(const auto &topEdge : topEdges) {
+                        const auto &v1 = std::get<0>(topEdge);
+                        const auto &v2 = std::get<1>(topEdge);
+                        if(v1->particleIndex == ix1 && v2->particleIndex == ix2) {
+                            return true;
+                        }
+                        if(v1->particleIndex == ix2 && v2->particleIndex == ix1) {
+                            return true;
+                        }
+                    }
+                    return false;
+                });
+
+                contains2 = std::all_of(topEdges.begin(), topEdges.end(), [&](const auto &e) {
+                    auto vtup1 = std::make_tuple(std::get<0>(e)->particleIndex, std::get<1>(e)->particleIndex);
+                    auto vtup2 = std::make_tuple(std::get<1>(e)->particleIndex, std::get<0>(e)->particleIndex);
+
+                    auto find1 = std::find(record.edges.begin(), record.edges.end(), vtup1);
+                    auto find2 = std::find(record.edges.begin(), record.edges.end(), vtup2);
+
+                    return find1 != record.edges.end() || find2 != record.edges.end();
+                });
+
+                ASSERT_TRUE(contains1) << "there were non existent edges in the record";
+                ASSERT_TRUE(contains2) << "some edges were not in the record";
+            }
+        });
+        auto connection = kernel->connectObservable(obs.get());
+
+        kernel->initialize();
+
+        forces->perform();
+        kernel->evaluateObservables(time);
+        for(time = 1; time < n_time_steps; ++time) {
+            integrator->perform();
+            topReactions->perform();
+            forces->perform();
+            kernel->evaluateObservables(time);
+
+        }
+        kernel->finalize();
+    }
+}
+
 TEST_P(TestObservables, TestForcesObservable) {
     // Setup particles
     kernel->context().particle_types().add("A", 42.);

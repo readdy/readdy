@@ -74,6 +74,17 @@ inline obs_handle_t registerObservable_Reactions(sim &self, unsigned int stride,
     }
 }
 
+inline obs_handle_t registerObservable_Topologies(sim &self, readdy::stride_type stride,
+                                                  const py::object &callback = py::none()) {
+    auto obs = self.observe().topologies(stride);
+    if(callback.is_none()) {
+        return self.registerObservable(std::move(obs));
+    } else {
+        auto pyFun = readdy::rpy::PyFunction<void(readdy::model::observables::Topologies::result_type)>(callback);
+        return self.registerObservable(std::move(obs), pyFun);
+    }
+}
+
 inline obs_handle_t registerObservable_ReactionCounts(sim &self, unsigned int stride,
                                                       const py::object& callback = py::none()) {
     self.currentContext().recordReactionCounts() = true;
@@ -252,6 +263,11 @@ void exportObservables(py::module &apiModule, py::class_<type_, options...> &sim
                 return ss.str();
             });
 
+    using TopologyRecord = readdy::model::top::TopologyRecord;
+    py::class_<TopologyRecord>(apiModule, "TopologyRecord")
+            .def_property_readonly("particles", [](const TopologyRecord &self) {return self.particleIndices;})
+            .def_property_readonly("edges", [](const TopologyRecord &self) {return self.edges; });
+
     simulation.def("register_observable_particle_positions", &registerObservable_Positions,
                    "stride"_a, "types"_a, "callback"_a = py::none())
             .def("register_observable_particles", &registerObservable_Particles, "stride"_a, "callback"_a = py::none())
@@ -271,6 +287,7 @@ void exportObservables(py::module &apiModule, py::class_<type_, options...> &sim
             .def("register_observable_trajectory", &registerObservable_Trajectory, "stride"_a)
             .def("register_observable_flat_trajectory", &registerObservable_FlatTrajectory, "stride"_a)
             .def("register_observable_virial", &registerObservable_Virial, "stride"_a, "callback"_a=py::none())
+            .def("register_observable_topologies", &registerObservable_Topologies, "stride"_a, "callback"_a=py::none())
             .def("deregister_observable", [](sim &self, const obs_handle_t &handle) {
                 self.deregisterObservable(handle.getId());
             }, "handle"_a);

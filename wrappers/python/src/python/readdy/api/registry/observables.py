@@ -195,6 +195,22 @@ class Observables(object):
 
         self._add_observable_handle(*_parse_save_args(save), handle)
 
+    def topologies(self, stride, callback: _Optional[_Callable]=None, save: _Optional[_Union[_Dict, str]]='default'):
+        """
+        Records all topologies along with their connectivity graphs.
+
+        :param stride: skip `stride` time steps before evaluating the observable again
+        :param callback: callback function that has as argument a object with properties `particles` containing particle
+                         indices referring to the current frame and `edges` returning tuples with indices referring to
+                         the `particles` propert
+        :param save: dictionary containing `name` and `chunk_size` or `None` to not save the observable to file
+        """
+        if isinstance(save, str) and save == 'default':
+            save = {"name": "topologies", "chunk_size": 1000}
+
+        handle = self._sim.register_observable_topologies(stride, callback)
+        self._add_observable_handle(*_parse_save_args(save), handle)
+
     def virial(self, stride, callback: _Optional[_Callable]=None, save: _Optional[_Union[_Dict, str]]='default'):
         """
         Records the virial tensor of the system.
