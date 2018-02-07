@@ -161,6 +161,19 @@ void CPUStateModel::resetReactionCounts() {
     }
 }
 
+void CPUStateModel::toDenseParticleIndices(std::vector<std::size_t>::iterator begin,
+                                           std::vector<std::size_t>::iterator end) const {
+    const auto &blanks = _data.get().blanks();
+    std::transform(begin, end, begin, [&blanks](std::size_t ix) {
+        for(auto blankIx : blanks) {
+            if(blankIx < ix) {
+                --ix;
+            }
+        }
+        return ix;
+    });
+}
+
 
 }
 }

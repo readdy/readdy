@@ -211,6 +211,9 @@ public:
 
     readdy::model::top::GraphTopology *getTopologyForParticle(readdy::model::top::Topology::particle_index particle) override;
 
+    void toDenseParticleIndices(std::vector<std::size_t>::iterator begin,
+                                std::vector<std::size_t>::iterator end) const override;
+
 private:
     data::ObservableData _observableData;
     std::reference_wrapper<thread_pool> _pool;

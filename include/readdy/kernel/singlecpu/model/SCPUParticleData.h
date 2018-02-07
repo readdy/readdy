@@ -114,9 +114,9 @@ public:
 
     void addParticles(const std::vector<particle_type> &particles) {
         for(const auto& p : particles) {
-            if(!blanks.empty()) {
-                const auto idx = blanks.back();
-                blanks.pop_back();
+            if(!_blanks.empty()) {
+                const auto idx = _blanks.back();
+                _blanks.pop_back();
                 entries.at(idx) = Entry{p};
             } else {
                 entries.emplace_back(p);
@@ -131,7 +131,7 @@ public:
     void removeParticle(size_t index) {
         auto& p = *(entries.begin() + index);
         if(!p.deactivated) {
-            blanks.push_back(index);
+            _blanks.push_back(index);
             p.deactivated = true;
             // neighbors.at(index).clear();
         } else {
@@ -172,7 +172,7 @@ public:
     }
 
     entry_index n_deactivated() const {
-        return blanks.size();
+        return _blanks.size();
     }
 
     void reserve(std::size_t n) {
@@ -181,7 +181,7 @@ public:
 
     void clear() {
         entries.clear();
-        blanks.clear();
+        _blanks.clear();
     }
 
     const Entry &entry_at(entry_index idx) const {
@@ -193,9 +193,9 @@ public:
     }
 
     entry_index addEntry(Entry entry) {
-        if(!blanks.empty()) {
-            const auto idx = blanks.back();
-            blanks.pop_back();
+        if(!_blanks.empty()) {
+            const auto idx = _blanks.back();
+            _blanks.pop_back();
             entries.at(idx) = entry;
             return idx;
         }
@@ -206,11 +206,15 @@ public:
     void removeEntry(entry_index entry);
 
     std::vector<entry_index> update(entries_update&&);
+    
+    const std::vector<entry_index> &blanks() const {
+        return _blanks;
+    }
 
 protected:
 
     entries_vec entries;
-    std::vector<entry_index> blanks;
+    std::vector<entry_index> _blanks;
 
 };
 

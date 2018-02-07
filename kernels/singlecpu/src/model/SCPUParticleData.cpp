@@ -51,9 +51,9 @@ SCPUParticleData::addTopologyParticles(const std::vector<SCPUParticleData::top_p
     std::vector<entries_vec::size_type> indices;
     indices.reserve(particles.size());
     for(const auto& p : particles) {
-        if(!blanks.empty()) {
-            const auto idx = blanks.back();
-            blanks.pop_back();
+        if(!_blanks.empty()) {
+            const auto idx = _blanks.back();
+            _blanks.pop_back();
             entries.at(idx) = Entry{p};
             indices.push_back(idx);
         } else {
@@ -69,7 +69,7 @@ void SCPUParticleData::removeParticle(const SCPUParticleData::particle_type &par
     std::size_t idx = 0;
     for(; it_entries != end(); ++it_entries, ++idx) {
         if(!it_entries->is_deactivated() && it_entries->id == particle.getId()) {
-            blanks.push_back(idx);
+            _blanks.push_back(idx);
             it_entries->deactivated = true;
             return;
         }
@@ -106,7 +106,7 @@ void SCPUParticleData::removeEntry(SCPUParticleData::entry_index idx) {
     auto &entry = entries.at(idx);
     if(!entry.is_deactivated()) {
         entry.deactivated = true;
-        blanks.push_back(idx);
+        _blanks.push_back(idx);
     }
 }
 

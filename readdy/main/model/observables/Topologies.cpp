@@ -49,6 +49,7 @@ void Topologies::evaluate() {
     for(auto topologyPtr : kernel->stateModel().getTopologies()) {
         top::TopologyRecord record;
         record.particleIndices = topologyPtr->getParticles();
+        kernel->stateModel().toDenseParticleIndices(record.particleIndices.begin(), record.particleIndices.end());
         for(auto&& edge : topologyPtr->graph().edges()) {
             record.edges.push_back(std::make_tuple(std::get<0>(edge)->particleIndex, std::get<1>(edge)->particleIndex));
         }
@@ -112,7 +113,9 @@ void Topologies::append() {
 
     for(const auto &r : result) {
         flatParticles.push_back(r.particleIndices.size());
-        flatParticles.insert(std::end(flatParticles), std::begin(r.particleIndices), std::end(r.particleIndices));
+        auto firstIt = flatParticles.insert(std::end(flatParticles), std::begin(r.particleIndices),
+                                            std::end(r.particleIndices));
+        kernel->stateModel().toDenseParticleIndices(firstIt, flatParticles.end());
         flatEdges.push_back(std::array<std::size_t, 2>{{r.edges.size(), 0}});
         for(const auto &edge : r.edges) {
             flatEdges.push_back(std::array<std::size_t, 2>{{std::get<0>(edge), std::get<1>(edge)}});
