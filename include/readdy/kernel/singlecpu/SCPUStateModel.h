@@ -175,6 +175,9 @@ public:
 
     void insert_topology(topology&& top);
 
+    void toDenseParticleIndices(std::vector<std::size_t>::iterator begin,
+                                std::vector<std::size_t>::iterator end) const override;
+
     std::vector<readdy::model::top::GraphTopology*> getTopologies() override;
 
     const readdy::model::top::GraphTopology *getTopologyForParticle(readdy::model::top::Topology::particle_index particle) const override;

@@ -48,10 +48,14 @@ void Topologies::evaluate() {
     result.clear();
     for(auto topologyPtr : kernel->stateModel().getTopologies()) {
         top::TopologyRecord record;
+
         record.particleIndices = topologyPtr->getParticles();
+        kernel->stateModel().toDenseParticleIndices(record.particleIndices.begin(), record.particleIndices.end());
+
         for(auto&& edge : topologyPtr->graph().edges()) {
             record.edges.push_back(std::make_tuple(std::get<0>(edge)->particleIndex, std::get<1>(edge)->particleIndex));
         }
+
         result.push_back(record);
     }
 }

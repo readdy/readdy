@@ -96,6 +96,10 @@ public:
 
     void add(const std::string &name, scalar diffusionConst, particle_flavor flavor = particleflavor::NORMAL);
 
+    void addTopologyType(const std::string &name, scalar diffusionConst) {
+        add(name, diffusionConst, particleflavor::TOPOLOGY);
+    }
+
     const ParticleTypeInfo &infoOf(const std::string &name) const {
         return infoOf(_idOf(name));
     }

@@ -148,6 +148,20 @@ void SCPUStateModel::resetReactionCounts() {
     }
 }
 
+void SCPUStateModel::toDenseParticleIndices(std::vector<std::size_t>::iterator begin,
+                                            std::vector<std::size_t>::iterator end) const {
+    const auto &blanks = particleData.blanks();
+    std::transform(begin, end, begin, [&blanks](const std::size_t &ix) {
+        auto result = ix;
+        for(auto blankIx : blanks) {
+            if(blankIx < ix) {
+                --result;
+            }
+        }
+        return result;
+    });
+}
+
 }
 }
 }

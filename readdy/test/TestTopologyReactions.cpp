@@ -527,6 +527,140 @@ TEST_P(TestTopologyReactions, SplitUpChainDecay) {
     EXPECT_EQ(kernel->stateModel().getTopologies().size(), 0);
 }
 
+TEST_P(TestTopologyReactions, ChainDecayIntegrationTest) {
+    using namespace readdy;
+    if (!kernel->supportsTopologies()) {
+        log::debug("kernel {} does not support topologies, thus skipping the test", kernel->getName());
+        return;
+    }
+    auto &ctx = kernel->context();
+    ctx.boxSize() = {{150, 150, 150}};
+    ctx.periodicBoundaryConditions() = {{true, true, true}};
+
+    ctx.particle_types().add("Decay", 1.);
+    ctx.particle_types().addTopologyType("T", 1.);
+    ctx.particle_types().add("whatever", 1.);
+    ctx.reactions().add("decay: Decay ->", 1000.);
+    ctx.reactions().add("whatever: whatever ->", 1000.);
+    ctx.potentials().addBox("Decay", 10, {-70, -70, -70}, {130, 130, 130});
+    ctx.potentials().addBox("T", 10, {-70, -70, -70}, {130, 130, 130});
+
+    ctx.topology_registry().configureBondPotential("T", "T", {20, 2});
+    ctx.topology_registry().addType("unstable");
+    // decay reaction
+    auto reactionFunction = [&](model::top::GraphTopology &top) {
+        model::top::reactions::Recipe recipe (top);
+        auto& vertices = top.graph().vertices();
+        auto current_n_vertices = vertices.size();
+        auto vIdx = readdy::model::rnd::uniform_int<>(0, static_cast<int>(current_n_vertices - 1));
+        auto v = vertices.begin();
+        std::advance(v, vIdx);
+        recipe.separateVertex(v);
+        recipe.changeParticleType(v, "Decay");
+        return recipe;
+    };
+    auto rateFunction = [](const model::top::GraphTopology &top) {
+        return .1;
+    };
+    model::top::reactions::StructuralTopologyReaction reaction {reactionFunction, rateFunction};
+    ctx.topology_registry().addStructuralReaction("unstable", reaction);
+
+    std::vector<readdy::model::TopologyParticle> topologyParticles;
+    {
+        topologyParticles.reserve(70);
+        for (std::size_t i = 0; i < 70; ++i) {
+            const auto id = ctx.particle_types().idOf("T");
+            topologyParticles.emplace_back(-5 + i * 10. / static_cast<readdy::scalar>(70), 0, 0, id);
+        }
+    }
+
+    for(auto i = 0_z; i < 50; ++i) {
+        kernel->stateModel().addParticle(model::Particle(0, 0, 0, ctx.particle_types().idOf("whatever")));
+    }
+
+    auto topology = kernel->stateModel().addTopology(ctx.topology_registry().idOf("unstable"), topologyParticles);
+    {
+        auto it = topology->graph().vertices().begin();
+        auto it2 = ++topology->graph().vertices().begin();
+        while(it2 != topology->graph().vertices().end()) {
+            topology->graph().addEdge(it, it2);
+            std::advance(it, 1);
+            std::advance(it2, 1);
+        }
+    }
+
+    auto topsobs = kernel->observe().topologies(1);
+    auto connection = kernel->connectObservable(topsobs.get());
+    topsobs->setCallback([&](const model::observables::Topologies::result_type &result) {
+        auto tops = kernel->stateModel().getTopologies();
+        EXPECT_EQ(result.size(), tops.size());
+        for(std::size_t i = 0; i < tops.size(); ++i) {
+            auto top = tops.at(i);
+            auto record = result.at(i);
+
+            auto edges = top->graph().edges();
+            EXPECT_EQ(edges.size(), record.edges.size());
+
+            auto particles = top->fetchParticles();
+
+            EXPECT_EQ(record.particleIndices.size(), particles.size());
+            for(std::size_t j = 0; j < record.particleIndices.size(); ++j) {
+                auto topParticles = top->getParticles();
+                kernel->stateModel().toDenseParticleIndices(topParticles.begin(), topParticles.end());
+                EXPECT_TRUE(std::find(topParticles.begin(), topParticles.end(),
+                                      record.particleIndices.at(j)) != topParticles.end());
+                EXPECT_TRUE(particles.at(j).getType() == ctx.particle_types().idOf("T"));
+            }
+
+            for(const auto &edge : record.edges) {
+                auto it = std::find_if(edges.begin(), edges.end(), [&](const auto &e) {
+                    auto p1Idx = std::get<0>(e)->particleIndex;
+                    auto p2Idx = std::get<1>(e)->particleIndex;
+                    return (p1Idx == std::get<0>(edge) && p2Idx == std::get<1>(edge))
+                           || (p1Idx == std::get<1>(edge) && p2Idx == std::get<0>(edge));
+                });
+                EXPECT_TRUE(it != edges.end());
+            }
+
+        }
+    });
+
+    {
+        auto integrator = kernel->actions().createIntegrator("EulerBDIntegrator", 1e-2);
+        auto forces = kernel->actions().calculateForces();
+        auto topReactions = kernel->actions().evaluateTopologyReactions(1e-2);
+        auto reactions = kernel->actions().uncontrolledApproximation(1e-2);
+
+        std::size_t time = 0;
+        std::size_t n_time_steps = 10000;
+
+        kernel->initialize();
+
+        forces->perform();
+        kernel->evaluateObservables(time);
+        for(time = 1; time < n_time_steps; ++time) {
+            integrator->perform();
+            topReactions->perform();
+            forces->perform();
+            reactions->perform();
+            kernel->evaluateObservables(time);
+            for(auto topPtr : kernel->stateModel().getTopologies()) {
+                // check that all topologies are just containing T particles and their edges are also fine
+                for(const auto &p : topPtr->fetchParticles()) {
+                    EXPECT_EQ(p.getType(), ctx.particle_types().idOf("T"));
+                }
+                for(auto edge : topPtr->graph().edges()) {
+                    auto v1 = std::get<0>(edge);
+                    auto v2 = std::get<1>(edge);
+                    EXPECT_EQ(topPtr->particleForVertex(v1).getType(), ctx.particle_types().idOf("T"));
+                    EXPECT_EQ(topPtr->particleForVertex(v2).getType(), ctx.particle_types().idOf("T"));
+                }
+            }
+        }
+        kernel->finalize();
+    }
+}
+
 INSTANTIATE_TEST_CASE_P(TestTopologyReactionsKernelTests, TestTopologyReactions,
                         ::testing::ValuesIn(readdy::testing::getKernelsToTest()));
 

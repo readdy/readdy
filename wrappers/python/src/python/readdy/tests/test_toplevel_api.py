@@ -32,6 +32,7 @@ import numpy as np
 
 import readdy
 from readdy.util.testing_utils import ReaDDyTestCase
+
 ut = readdy.units
 
 
@@ -253,6 +254,104 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
                 np.testing.assert_equal("A", entry.type)
                 np.testing.assert_equal(idx, entry.t)
 
+    def _run_topology_observable_integration_test_for(self, kernel):
+        traj_fname = os.path.join(self.tempdir, "traj_top_obs_integration_{}.h5".format(kernel))
+
+        system = readdy.ReactionDiffusionSystem(box_size=[150, 150, 150])
+        system.periodic_boundary_conditions = False, False, False
+
+        system.add_species("Ligand", diffusion_constant=3.)
+        system.add_species("Decay", diffusion_constant=1.)
+        system.add_topology_species("T", diffusion_constant=1.)
+        system.add_topology_species("unstable T", diffusion_constant=1.)
+
+        system.reactions.add("decay: Decay ->", .1)
+        system.potentials.add_box("Ligand", 10., [-70, -70, -70], [130, 130, 130])
+        system.potentials.add_box("Decay", 10., [-70, -70, -70], [130, 130, 130])
+        system.potentials.add_box("T", 10., [-70, -70, -70], [130, 130, 130])
+        system.potentials.add_box("unstable T", 10., [-70, -70, -70], [130, 130, 130])
+        system.potentials.add_harmonic_repulsion("Decay", "unstable T", force_constant=20.,
+                                                 interaction_distance=2.)
+        system.topologies.configure_harmonic_bond("T", "T", force_constant=20., length=2.)
+        system.topologies.configure_harmonic_bond("unstable T", "unstable T", force_constant=20.,
+                                                  length=2.)
+
+        system.topologies.add_type("stable")
+        system.topologies.add_type("intermediate")
+        system.topologies.add_type("unstable")
+        system.topologies.add_spatial_reaction(
+            "encounter: stable(T) + (Ligand) -> intermediate(T) + (Ligand)",
+            rate=10.0, radius=2.0
+        )
+
+        def intermediate_rate_function(_):
+            return 1e3
+
+        def intermediate_reaction_function(topology):
+            recipe = readdy.StructuralReactionRecipe(topology)
+            for i in range(len(topology.get_graph().get_vertices())):
+                recipe.change_particle_type(i, "unstable T")
+            recipe.change_topology_type("unstable")
+            return recipe
+
+        system.topologies.add_structural_reaction(topology_type="intermediate",
+                                                  reaction_function=intermediate_reaction_function,
+                                                  rate_function=intermediate_rate_function)
+
+        def unstable_rate_function(_):
+            return .1
+
+        def unstable_reaction_function(topology):
+            recipe = readdy.StructuralReactionRecipe(topology)
+            index = np.random.randint(0, len(topology.particles))
+            recipe.separate_vertex(index)
+            recipe.change_particle_type(index, "Decay")
+            return recipe
+
+        system.topologies.add_structural_reaction(topology_type="unstable",
+                                                  reaction_function=unstable_reaction_function,
+                                                  rate_function=unstable_rate_function)
+        simulation = system.simulation(kernel=kernel)
+        n_topology_particles = 70
+        positions = [[0, 0, 0], np.random.normal(size=3)]
+        for i in range(n_topology_particles - 2):
+            delta = positions[-1] - positions[-2]
+            offset = np.random.normal(size=3) + delta
+            offset = offset / np.linalg.norm(offset)
+            positions.append(positions[-1] + 2. * offset)
+        topology = simulation.add_topology(topology_type="stable", particle_types="T",
+                                           positions=np.array(positions))
+        graph = topology.get_graph()
+        for i in range(len(graph.get_vertices()) - 1):
+            graph.add_edge(i, i + 1)
+        simulation.add_particles("Ligand", -6 * np.ones((5, 3)))
+        simulation.output_file = traj_fname
+        simulation.record_trajectory()
+        simulation.observe.topologies(1)
+        simulation.show_progress = False
+        simulation.run(n_steps=10000, timestep=1e-2, show_system=False)
+
+        t = readdy.Trajectory(simulation.output_file)
+        entries = t.read()
+        time, topology_records = t.read_observable_topologies()
+
+        assert len(time) == len(entries)
+        assert len(topology_records) == len(entries)
+
+        for timestep, tops in zip(time, topology_records):
+            current_edges = []
+            for top in tops:
+                for e1, e2 in top.edges:
+                    ix1 = top.particles[e1]
+                    ix2 = top.particles[e2]
+                    current_edges.append((ix1, ix2))
+                    p1 = entries[timestep][ix1]
+                    p2 = entries[timestep][ix2]
+                    assert p1.type == 'T' or p1.type == 'unstable T', \
+                        "expected topology type but got {} -- {}".format(p1, p2)
+                    assert p2.type == 'T' or p2.type == 'unstable T', \
+                        "expected topology type but got {} -- {}".format(p1, p2)
+
     def _run_topology_observable_test_for(self, kernel):
         traj_fname = os.path.join(self.tempdir, "traj_top_obs_{}.h5".format(kernel))
         system = readdy.ReactionDiffusionSystem(box_size=[300, 300, 300])
@@ -269,14 +368,17 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
                                                   length=2.)
 
         system.topologies.add_type("unstable")
+
         def unstable_rate_function(_):
             return .1
+
         def unstable_reaction_function(topology):
             recipe = readdy.StructuralReactionRecipe(topology)
             index = np.random.randint(0, len(topology.particles))
             recipe.separate_vertex(index)
             recipe.change_particle_type(index, "Decay")
             return recipe
+
         system.topologies.add_structural_reaction(topology_type="unstable",
                                                   reaction_function=unstable_reaction_function,
                                                   rate_function=unstable_rate_function)
@@ -284,19 +386,20 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
 
         n_topology_particles = 70
         positions = [[0, 0, 0], np.random.normal(size=3)]
-        for i in range(n_topology_particles-2):
+        for i in range(n_topology_particles - 2):
             delta = positions[-1] - positions[-2]
             offset = np.random.normal(size=3) + delta
             offset = offset / np.linalg.norm(offset)
-            positions.append(positions[-1] + 2.*offset)
+            positions.append(positions[-1] + 2. * offset)
         topology = simulation.add_topology(topology_type="unstable", particle_types="unstable T",
                                            positions=np.array(positions))
         graph = topology.get_graph()
-        for i in range(len(graph.get_vertices())-1):
-            graph.add_edge(i, i+1)
+        for i in range(len(graph.get_vertices()) - 1):
+            graph.add_edge(i, i + 1)
             simulation.output_file = traj_fname
 
         topology_records = []
+        simulation.record_trajectory()
         simulation.observe.topologies(1, callback=lambda x: topology_records.append(x))
         simulation.show_progress = False
         n_steps = 100
@@ -306,20 +409,29 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
 
         time, tops = traj.read_observable_topologies()
 
-        np.testing.assert_equal(len(time), n_steps+1)
+        entries = traj.read()
+
+        np.testing.assert_equal(len(time), n_steps + 1)
 
         for ix, records in enumerate(topology_records):
             np.testing.assert_equal(len(records), len(tops[ix]))
             for record, recordedRecord in zip(records, tops[ix]):
-                np.testing.assert_equal(record.particles, recordedRecord.particles)
+                np.testing.assert_equal(record.particles, recordedRecord.particles,
+                                        err_msg="observable callback: {}, file: {}".format(record.particles,
+                                                                                           recordedRecord.particles))
                 np.testing.assert_equal(record.edges, recordedRecord.edges)
+                for edge in record.edges:
+                    p1 = entries[ix][record.particles[edge[0]]]
+                    p2 = entries[ix][record.particles[edge[1]]]
+
+                    assert p1.type == 'unstable T', "expected topology type but got {}".format(p1)
+                    assert p2.type == 'unstable T', "expected topology type but got {}".format(p2)
 
     def test_topology_observable_scpu(self):
         self._run_topology_observable_test_for("SingleCPU")
 
     def test_topology_observable_cpu(self):
         self._run_topology_observable_test_for("CPU")
-
 
     def _run_readwrite_test_for(self, kernel, reaction_handler):
         traj_fname = os.path.join(self.tempdir, "traj_{}_{}.h5".format(kernel, reaction_handler))
@@ -360,6 +472,7 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
                     pressures.append(p)
                 else:
                     pressures_inactive.append(p)
+
         pressure_callback = PressureCallback()
 
         sim.observe.pressure(1, callback=pressure_callback)
@@ -452,3 +565,9 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
 
     def test_readwrite_observables_cpu_gillespie(self):
         self._run_readwrite_test_for("CPU", "Gillespie")
+
+    def test_topologies_integration_cpu(self):
+        self._run_topology_observable_integration_test_for("CPU")
+
+    def test_topologies_integration_scpu(self):
+        self._run_topology_observable_integration_test_for("SingleCPU")
