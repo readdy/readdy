@@ -67,6 +67,7 @@ void Graph::findEdges(const Graph::edge_callback &edgeCallback) {
     }
     
     for(auto it = _vertices.begin(); it != _vertices.end(); ++it) {
+        it->visited = true;
         auto &neighbors = it->neighbors();
         for (auto it_neigh : neighbors) {
             if(!it_neigh->visited) {
