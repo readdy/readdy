@@ -52,7 +52,8 @@ using rvp = py::return_value_policy;
 
 using radiusmap = std::map<std::string, readdy::scalar>;
 
-py::tuple convert_readdy_viewer(const std::string &h5name, const std::string &trajName) {
+py::tuple convert_readdy_viewer(const std::string &h5name, const std::string &trajName, std::size_t from,
+                                std::size_t to, std::size_t stride) {
     readdy::log::debug(R"(converting "{}" to readdy viewer format)", h5name);
 
     readdy::io::BloscFilter bloscFilter;
@@ -73,15 +74,30 @@ py::tuple convert_readdy_viewer(const std::string &h5name, const std::string &tr
 
     // limits
     std::vector<std::size_t> limits;
-    traj.read("limits", limits);
+    {
+        if(stride > 1) {
+            traj.read("limits", limits, {stride, 1});
+        } else {
+            traj.read("limits", limits);
+        }
+        auto n = limits.size() / 2;
 
-    // records
-    std::vector<readdy::model::observables::TrajectoryEntry> entries;
-    auto trajectoryEntryTypes = readdy::model::observables::util::getTrajectoryEntryTypes(f->ref());
-    traj.read("records", entries, &std::get<0>(trajectoryEntryTypes), &std::get<1>(trajectoryEntryTypes));
+        from = std::min(n, from);
+        to = std::min(n, to);
+
+        if(from == to) {
+            throw std::invalid_argument(fmt::format("not enough frames to cover range ({}, {}]", from, to));
+        } else {
+            limits = std::vector<std::size_t>(limits.begin() + 2*from, limits.begin() + 2*to);
+        }
+    }
 
     auto n_frames = limits.size()/2;
     readdy::log::debug("got n frames: {}", n_frames);
+
+    if(n_frames > to - from) {
+        throw std::logic_error("something major went wrong here");
+    }
 
     // map from type name to max number of particles in traj
     std::size_t max_n_particles_per_frame = 0;
@@ -106,13 +122,25 @@ py::tuple convert_readdy_viewer(const std::string &h5name, const std::string &tr
     auto types_ptr = types_arr.mutable_unchecked();
     auto ids_ptr = ids_arr.mutable_unchecked();
 
+    auto trajectoryEntryTypes = readdy::model::observables::util::getTrajectoryEntryTypes(f->ref());
+
     for (std::size_t i = 0; i < limits.size(); i += 2) {
         auto frame = i/2;
         auto begin = limits[i];
         auto end = limits[i+1];
 
+        // records
+        std::vector<readdy::model::observables::TrajectoryEntry> entries;
+        traj.readSelection("records", entries, &std::get<0>(trajectoryEntryTypes), &std::get<1>(trajectoryEntryTypes),
+                           {begin}, {1}, {end - begin});
+
+        if(entries.size() != end - begin) {
+            throw std::runtime_error(fmt::format("this should not happen, the flat selection was {} to {} "
+                                                         "but we got {} entries", begin, end, entries.size()));
+        }
+
         std::size_t p = 0;
-        for (auto it = entries.begin() + begin; it != entries.begin() + end; ++it, ++p) {
+        for (auto it = entries.begin(); it != entries.end(); ++it, ++p) {
             positions_ptr(frame, p, 0) = it->pos.x;
             positions_ptr(frame, p, 1) = it->pos.y;
             positions_ptr(frame, p, 2) = it->pos.z;
@@ -563,7 +591,8 @@ void exportUtils(py::module &m) {
             });
     m.def("convert_xyz", &convert_xyz, "h5_file_name"_a, "traj_data_set_name"_a, "xyz_out_file_name"_a,
           "generate_tcl"_a = true, "tcl_with_grid"_a = false, "radii"_a = radiusmap{});
-    m.def("convert_readdyviewer", &convert_readdy_viewer, "h5_file_name"_a, "traj_data_set_name"_a);
+    m.def("convert_readdyviewer", &convert_readdy_viewer, "h5_file_name"_a, "traj_data_set_name"_a,
+          "begin"_a = 0, "end"_a = std::numeric_limits<int>::max(), "stride"_a = 1);
     m.def("read_trajectory", &read_trajectory, "filename"_a, "name"_a);
     m.def("read_topologies_observable", &readTopologies, "filename"_a, "groupname"_a);
     m.def("read_reaction_observable", &read_reactions_obs, "filename"_a, "name"_a);
