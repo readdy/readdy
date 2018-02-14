@@ -31,7 +31,7 @@ from readdy._internal.readdybinding.common.util import convert_readdyviewer as _
 from readdy._internal.readdybinding.common.util import convert_xyz as _convert_xyz
 
 
-def load_trajectory_to_npy(filename, name=""):
+def load_trajectory_to_npy(filename, name="", begin=0, end=None, stride=None):
     """
     Loads the trajectory into four numpy arrays containing:
 
@@ -44,7 +44,16 @@ def load_trajectory_to_npy(filename, name=""):
     :param name: the name of the trajectory as it was given when recording it
     :return: the four numpy arrays
     """
-    return _convert_readdyviewer(filename, name)
+    if end is None:
+        if stride is None:
+            return _convert_readdyviewer(filename, name, begin=begin)
+        else:
+            return _convert_readdyviewer(filename, name, stride=stride)
+    else:
+        if stride is None:
+            return _convert_readdyviewer(filename, name, begin=begin, end=end)
+        else:
+            return _convert_readdyviewer(filename, name, stride=stride, begin=begin, end=end)
 
 
 def convert_trajectory_to_xyz(filename, name="", xyz_filename=None, generate_tcl=True, tcl_with_grid=False,
