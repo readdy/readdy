@@ -60,6 +60,15 @@ class Simulation(object):
         self._simulation.set_kernel(kernel)
         self._simulation.context = context
 
+        self._evaluate_topology_reactions = True
+        self._evaluate_forces = True
+        self._evaluate_observables = True
+        self._skin = 0
+        self._integrator = "EulerBDIntegrator"
+        self._reaction_handler = "Gillespie"
+        self._simulation_scheme = "ReaDDyScheme"
+        self._output_file = ""
+
         self.output_file = output_file
         self._observables = _Observables(self)
 
@@ -69,8 +78,8 @@ class Simulation(object):
         self.evaluate_forces = evaluate_forces
         self.evaluate_observables = evaluate_observables
         self.skin = skin
-        self.simulation_scheme = "ReaDDyScheme"
-        self.show_progress = True
+        self._show_progress = True
+        self._progress_output_stride = 10
 
         self._progress = None
 
@@ -96,7 +105,26 @@ class Simulation(object):
         return self._unit_conf.time_unit
 
     @property
-    def show_progress(self):
+    def progress_output_stride(self) -> int:
+        """
+        If the progress bar is shown, this value determines how often it is updated. A value of n means that every
+        n-th time step the progress is increased by one.
+        :return: the progress output stride
+        """
+        return self._progress_output_stride
+
+    @progress_output_stride.setter
+    def progress_output_stride(self, value: int):
+        """
+        Sets the progress output stride, determining how often the progressbar (if any) is updated. A value of n means
+        that every n-th time step the progress is increased by one.
+        :param value: the progress output stride
+        """
+        assert value > 0, "The progress output stride must be a positive value but was {}".format(value)
+        self._progress_output_stride = value
+
+    @property
+    def show_progress(self) -> bool:
         """
         Returns if a progress bar is shown during simulation. Will only appear if there are more than 100 time steps.
         :return: true if a progress bar should be shown
@@ -104,7 +132,7 @@ class Simulation(object):
         return self._show_progress
 
     @show_progress.setter
-    def show_progress(self, value):
+    def show_progress(self, value: bool):
         """
         Sets whether to show a progress bar.
         :param value: true if a progress bar should be shown
@@ -112,7 +140,7 @@ class Simulation(object):
         self._show_progress = value
 
     @property
-    def evaluate_topology_reactions(self):
+    def evaluate_topology_reactions(self) -> bool:
         """
         Returns whether to evaluate topology reactions during simulation.
         :return: a boolean
@@ -120,7 +148,7 @@ class Simulation(object):
         return self._evaluate_topology_reactions
 
     @evaluate_topology_reactions.setter
-    def evaluate_topology_reactions(self, value):
+    def evaluate_topology_reactions(self, value: bool):
         """
         Sets whether to evaluate topology reactions during simulation.
         :param value: a boolean value
@@ -129,7 +157,7 @@ class Simulation(object):
         self._evaluate_topology_reactions = value
 
     @property
-    def evaluate_forces(self):
+    def evaluate_forces(self) -> bool:
         """
         Returns whether to evaluate forces during simulation.
         :return: a boolean
@@ -137,7 +165,7 @@ class Simulation(object):
         return self._evaluate_forces
 
     @evaluate_forces.setter
-    def evaluate_forces(self, value):
+    def evaluate_forces(self, value: bool):
         """
         Sets whether to evaluate forces during simulation.
         :param value: a boolean value
@@ -146,7 +174,7 @@ class Simulation(object):
         self._evaluate_forces = value
 
     @property
-    def evaluate_observables(self):
+    def evaluate_observables(self) -> bool:
         """
         Returns whether observables are evaluated during simulation.
         :return: a boolean
@@ -154,7 +182,7 @@ class Simulation(object):
         return self._evaluate_observables
 
     @evaluate_observables.setter
-    def evaluate_observables(self, value):
+    def evaluate_observables(self, value: bool):
         """
         Sets whether to evaluate observables during simulation.
         :param value: a boolean value
@@ -224,7 +252,6 @@ class Simulation(object):
         assert isinstance(value, str) and value in supported_reaction_handlers, \
             "the reaction handler can only be one of {}".format(",".join(supported_reaction_handlers))
         self._reaction_handler = value
-
 
     @property
     def simulation_scheme(self):
@@ -380,16 +407,16 @@ class Simulation(object):
                     handle.enable_write_to_file(f, name, chunk_size)
                 scheme = conf.write_config_to_file(f).configure(timestep)
                 if self.show_progress:
-                    self._progress = _SimulationProgress(n_steps // 10)
+                    self._progress = _SimulationProgress(n_steps // self._progress_output_stride)
                     scheme.set_progress_callback(self._progress.callback)
-                    scheme.set_progress_output_stride(10)
+                    scheme.set_progress_output_stride(self._progress_output_stride)
                 scheme.run(n_steps)
         else:
             scheme = conf.configure(timestep)
             if self.show_progress:
-                self._progress = _SimulationProgress(n_steps // 10)
+                self._progress = _SimulationProgress(n_steps // self._progress_output_stride)
                 scheme.set_progress_callback(self._progress.callback)
-                scheme.set_progress_output_stride(10)
+                scheme.set_progress_output_stride(self._progress_output_stride)
             scheme.run(n_steps)
         if self.show_progress:
             self._progress.finish()
