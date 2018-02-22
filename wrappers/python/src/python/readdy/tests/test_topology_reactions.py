@@ -38,6 +38,8 @@ from readdy._internal.readdybinding.api import Simulation
 from readdy.util import platform_utils
 from readdy.util.testing_utils import ReaDDyTestCase
 
+import readdy
+
 
 class TestTopologyReactions(ReaDDyTestCase):
     @classmethod
@@ -118,6 +120,33 @@ class TestTopologyReactions(ReaDDyTestCase):
         sim.run_scheme_readdy(True).evaluate_topology_reactions().configure_and_run(int(500), float(1.0))
 
         np.testing.assert_equal(0, len(sim.current_topologies()))
+
+    def test_edges_decay(self):
+        def dissociation_reaction_function(topology):
+            recipe = readdy.StructuralReactionRecipe(topology)
+            edges = topology.get_graph().get_edges()
+            edge = edges[1 + np.random.randint(0, len(edges)-2)]
+            recipe.remove_edge(edge)
+            recipe.change_particle_type(edge[0].get().particle_index, "Head")
+            recipe.change_particle_type(edge[1].get().particle_index, "Head")
+            return recipe
+
+        system = readdy.ReactionDiffusionSystem(box_size=[100, 100, 100])
+        system.topologies.add_type("Polymer")
+        system.add_topology_species("Head", .002)
+        system.add_topology_species("Tail", .002)
+        simulation = system.simulation(kernel="SingleCPU")
+        head_position = [0, 0, 0]
+        tail1 = [0, 0, 1]
+        tail2 = [0, 0, 2]
+        head_position2 = [0, 0, 3]
+        top = simulation.add_topology("Polymer", ["Head", "Tail", "Tail", "Head"],
+                                      np.array([head_position, tail1, tail2, head_position2]).squeeze())
+        top.get_graph().add_edge(0, 1)
+        top.get_graph().add_edge(1, 2)
+        top.get_graph().add_edge(2, 3)
+
+        dissociation_reaction_function(top)
 
 
 if __name__ == '__main__':

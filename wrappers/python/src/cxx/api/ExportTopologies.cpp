@@ -269,7 +269,7 @@ void exportTopologies(py::module &m) {
             }, "vertex_index_1"_a, "vertex_index_2"_a);
 
     py::class_<vertex::vertex_ptr>(m, "VertexPointer")
-            .def("get", [](const vertex::vertex_ptr &edge) -> const vertex & { return *edge; });
+            .def("get", [](const vertex::vertex_ptr &edge) -> const vertex & { return *edge; }, rvp::reference_internal);
 
     py::class_<vertex>(m, "Vertex")
             .def("particle_type", &vertex::particleType, R"topdoc(
