@@ -72,10 +72,6 @@ bool performReactionEvent(const scalar rate, const scalar timeStep) {
     }
 }
 
-bool shouldPerformEvent(const scalar rate, const scalar timeStep, bool approximated) {
-    return approximated ? performReactionEvent<true>(rate, timeStep) : performReactionEvent<false>(rate, timeStep);
-}
-
 void SCPUEvaluateTopologyReactions::perform(const util::PerformanceNode &node) {
     auto t = node.timeit();
     auto &model = kernel->getSCPUKernelStateModel();
@@ -104,7 +100,7 @@ void SCPUEvaluateTopologyReactions::perform(const util::PerformanceNode &node) {
                 if (eventIt != events.end()) {
                     const auto &event = *eventIt;
 
-                    if (performReactionEvent<true>(event.own_rate, timeStep)) {
+                    if (performReactionEvent<false>(event.own_rate, timeStep)) {
                         log::trace("picked event {} / {} with rate {}", std::distance(events.begin(), eventIt) + 1,
                                    events.size(), eventIt->own_rate);
                         // perform the event!
@@ -120,12 +116,14 @@ void SCPUEvaluateTopologyReactions::perform(const util::PerformanceNode &node) {
                                           it->own_rate, it->cumulative_rate);
                             }
                         }
-                        assert(!topology->isDeactivated());
                         if(!event.spatial) {
                             handleStructuralReaction(topologies, new_topologies, event, topology);
                         } else {
                             if(event.topology_idx2 >= 0) {
                                 auto &top2 = topologies.at(static_cast<std::size_t>(event.topology_idx2));
+                                if(top2->isDeactivated()) {
+                                    throw std::logic_error("encountered deactivated topology here, oh no.");
+                                }
                                 handleTopologyTopologyReaction(topology, top2, event);
                             } else {
                                 handleTopologyParticleReaction(topology, event);
@@ -233,12 +231,23 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
             for(auto cell = 0_z; cell < nl.nCells(); ++cell) {
                 for(auto it = nl.particlesBegin(cell); it != nl.particlesEnd(cell); ++it) {
                     auto pidx = *it;
+                    auto &entry = data.entry_at(pidx);
+                    const auto tidx1 = entry.topology_index;
+                    if(entry.deactivated || (tidx1 >= 0 && topologyDeactivated(static_cast<std::size_t>(tidx1)))) {
+                        continue;
+                    }
+                    topology_type_type tt1 = tidx1 >= 0 ? stateModel.topologies().at(static_cast<std::size_t>(tidx1))->type() : static_cast<topology_type_type>(-1);
+
                     nl.forEachNeighbor(it, cell, [&](std::size_t neighborIdx) {
-                        auto &entry = data.entry_at(pidx);
                         auto &neighbor = data.entry_at(neighborIdx);
-                        if (!entry.deactivated && !neighbor.deactivated) {
-                            topology_type_type tt1 = entry.topology_index >= 0 ? stateModel.topologies().at(static_cast<std::size_t>(entry.topology_index))->type() : static_cast<topology_type_type>(-1);
-                            topology_type_type tt2 = neighbor.topology_index >= 0 ? stateModel.topologies().at(static_cast<std::size_t>(neighbor.topology_index))->type() : static_cast<topology_type_type>(-1);
+                        if (!neighbor.deactivated) {
+                            const auto tidx2 = neighbor.topology_index;
+
+                            if(tidx2 >= 0 && topologyDeactivated(static_cast<std::size_t>(tidx2))) {
+                                return;
+                            }
+
+                            topology_type_type tt2 = tidx2 >= 0 ? stateModel.topologies().at(static_cast<std::size_t>(tidx2))->type() : static_cast<topology_type_type>(-1);
                             if(tt1 == -1 && tt2 == -1) return;
                             const auto &reactions = topology_registry.spatialReactionsByType(entry.type, tt1,
                                                                                              neighbor.type, tt2);
@@ -252,9 +261,9 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
                                     current_cumulative_rate = event.cumulative_rate;
                                     switch (reaction.mode()) {
                                         case readdy::model::top::reactions::STRMode::TT_FUSION:
-                                            if(entry.topology_index >= 0 && neighbor.topology_index >= 0 && entry.topology_index != neighbor.topology_index) {
-                                                event.topology_idx = static_cast<std::size_t>(entry.topology_index);
-                                                event.topology_idx2 = neighbor.topology_index;
+                                            if(tidx1 >= 0 && tidx2 >= 0 && tidx1 != tidx2) {
+                                                event.topology_idx = static_cast<std::size_t>(tidx1);
+                                                event.topology_idx2 = tidx2;
                                                 event.t1 = entry.type;
                                                 event.t2 = neighbor.type;
                                                 event.idx1 = pidx;
@@ -267,9 +276,9 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
                                             break;
                                         case readdy::model::top::reactions::STRMode::TT_ENZYMATIC: // fall through
                                         case readdy::model::top::reactions::STRMode::TT_FUSION_ALLOW_SELF:
-                                            if(entry.topology_index >= 0 && neighbor.topology_index >= 0) {
-                                                event.topology_idx = static_cast<std::size_t>(entry.topology_index);
-                                                event.topology_idx2 = neighbor.topology_index;
+                                            if(tidx1 >= 0 && tidx2 >= 0) {
+                                                event.topology_idx = static_cast<std::size_t>(tidx1);
+                                                event.topology_idx2 = tidx2;
                                                 event.t1 = entry.type;
                                                 event.t2 = neighbor.type;
                                                 event.idx1 = pidx;
@@ -282,8 +291,8 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
                                             break;
                                         case readdy::model::top::reactions::STRMode::TP_ENZYMATIC: // fall through
                                         case readdy::model::top::reactions::STRMode::TP_FUSION:
-                                            if (entry.topology_index >= 0 && neighbor.topology_index < 0) {
-                                                event.topology_idx = static_cast<std::size_t>(entry.topology_index);
+                                            if (tidx1 >= 0 && tidx2 < 0) {
+                                                event.topology_idx = static_cast<std::size_t>(tidx1);
                                                 event.t1 = entry.type;
                                                 event.t2 = neighbor.type;
                                                 event.idx1 = pidx;
@@ -292,8 +301,8 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
                                                 event.spatial = true;
 
                                                 events.push_back(event);
-                                            } else if (entry.topology_index < 0 && neighbor.topology_index >= 0) {
-                                                event.topology_idx = static_cast<std::size_t>(neighbor.topology_index);
+                                            } else if (tidx1 < 0 && tidx2 >= 0) {
+                                                event.topology_idx = static_cast<std::size_t>(tidx2);
                                                 event.t1 = neighbor.type;
                                                 event.t2 = entry.type;
                                                 event.idx1 = neighborIdx;
@@ -433,6 +442,15 @@ void SCPUEvaluateTopologyReactions::handleStructuralReaction(SCPUStateModel::top
     const auto &reactions = context.topology_registry().structuralReactionsOf(topology->type());
     const auto &reaction = reactions.at(static_cast<std::size_t>(event.reaction_idx));
     auto result = reaction.execute(*topology, kernel);
+    /*if(result.size() != 2) {
+        throw std::logic_error("result size was not 2, split did not work");
+    }
+    if(result[0].getNParticles() < 2) {
+        throw std::logic_error("particle size < 2, should not happen");
+    }
+    if(result[1].getNParticles() < 2) {
+        throw std::logic_error("particle size < 2, should not happen 2");
+    }*/
     if (!result.empty()) {
         // we had a topology fission, so we need to actually remove the current topology from the
         // data structure
@@ -452,6 +470,10 @@ void SCPUEvaluateTopologyReactions::handleStructuralReaction(SCPUStateModel::top
             assert(topology->isDeactivated());
         }
     }
+}
+
+bool SCPUEvaluateTopologyReactions::topologyDeactivated(std::size_t index) const {
+    return kernel->getSCPUKernelStateModel().topologies().at(index)->isDeactivated();
 }
 
 

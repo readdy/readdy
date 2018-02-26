@@ -214,6 +214,11 @@ void GraphTopology::appendTopology(GraphTopology &other, Topology::particle_inde
                                    particle_type_type otherNewParticleType, Topology::particle_index thisParticle,
                                    particle_type_type thisNewParticleType, topology_type_type newType) {
     auto &otherGraph = other.graph();
+
+    if(otherGraph.vertices().empty()) {
+        throw std::logic_error("encountered an empty topology as reaction partner, internal error!");
+    }
+
     auto &thisGraph = graph();
 
     auto former_begin = otherGraph.vertices().begin();

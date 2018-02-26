@@ -60,6 +60,8 @@ private:
 
     topology_reaction_events gatherEvents();
 
+    bool topologyDeactivated(std::ptrdiff_t index) const;
+
     void handleStructuralReaction(CPUStateModel::topologies_vec &topologies,
                                   std::vector<CPUStateModel::topology> &new_topologies,
                                   const TREvent &event, CPUStateModel::topology_ref &topology) const;

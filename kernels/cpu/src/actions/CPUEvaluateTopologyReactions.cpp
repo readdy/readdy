@@ -102,7 +102,7 @@ void CPUEvaluateTopologyReactions::perform(const util::PerformanceNode &node) {
                 if (eventIt != events.end()) {
                     const auto &event = *eventIt;
 
-                    if (performReactionEvent<true>(event.own_rate, timeStep)) {
+                    if (performReactionEvent<false>(event.own_rate, timeStep)) {
                         log::trace("picked event {} / {} with rate {}", std::distance(events.begin(), eventIt) + 1,
                                    events.size(), eventIt->own_rate);
                         // perform the event!
@@ -263,10 +263,11 @@ CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReacti
                 for(auto itParticle = nl.particlesBegin(cell); itParticle != nl.particlesEnd(cell); ++itParticle) {
                     const auto &entry = data.entry_at(*itParticle);
                     if (!entry.deactivated && top_registry.isSpatialReactionType(entry.type)) {
+
                         nl.forEachNeighbor(*itParticle, cell, [&](auto neighborIndex) {
                             const auto &neighbor = data.entry_at(neighborIndex);
-                            if ((entry.topology_index < 0 && neighbor.topology_index < 0)
-                                || (neighbor.topology_index >= 0 && *itParticle > neighborIndex)) {
+                            if ((topologyDeactivated(neighbor.topology_index) && topologyDeactivated(entry.topology_index)) ||
+                                    (!topologyDeactivated(neighbor.topology_index) >= 0 && *itParticle > neighborIndex)) {
                                 // use symmetry or skip entirely
                                 return;
                             }
@@ -442,6 +443,11 @@ bool CPUEvaluateTopologyReactions::eventsDependent(const CPUEvaluateTopologyReac
         return true;
     }
     return evt1.topology_idx2 >= 0 && (evt1.topology_idx2 == evt2.topology_idx || evt1.topology_idx2 == evt2.topology_idx2);
+}
+
+bool CPUEvaluateTopologyReactions::topologyDeactivated(std::ptrdiff_t index) const {
+    return index < 0 || kernel->getCPUKernelStateModel().topologies().at(
+            static_cast<std::size_t>(index))->isDeactivated();
 }
 
 }
