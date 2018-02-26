@@ -56,6 +56,8 @@ private:
 
     topology_reaction_events gatherEvents();
 
+    bool topologyDeactivated(std::size_t index) const;
+
     bool eventsDependent(const TREvent& evt1, const TREvent& evt2) const;
 
     void handleStructuralReaction(SCPUStateModel::topologies_vec &topologies,

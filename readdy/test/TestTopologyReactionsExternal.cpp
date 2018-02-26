@@ -213,7 +213,7 @@ TEST_P(TestTopologyReactionsExternal, AttachParticle) {
     }
 
     // register attach reaction that transforms (end, A) -> (middle, end)
-    sim.registerSpatialTopologyReaction("attach: TA (end) + (A) -> TA (middle--end)",c_::one, c_::one + c_::half);
+    sim.registerSpatialTopologyReaction("attach: TA (end) + (A) -> TA (middle--end)",1e10, c_::one + c_::half);
     sim.addParticle("A", c_::zero - c_::two, c_::zero, c_::zero);
     sim.addParticle("A", c_::zero - c_::three, c_::zero, c_::zero);
     sim.addParticle("A", c_::zero - c_::four, c_::zero, c_::zero);
