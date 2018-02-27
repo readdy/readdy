@@ -136,6 +136,7 @@ public:
         if (it != _registry.end()) {
             return it->second.structural_reactions;
         }
+        throw std::invalid_argument(fmt::format("requested structural topology reactions of type {} which did not exist!", type));
         log::warn("requested structural topology reactions of type {} which did not exist!", type);
         return _defaultInfo.structural_reactions;
     }

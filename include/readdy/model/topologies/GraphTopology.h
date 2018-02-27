@@ -38,6 +38,7 @@
 #include "graph/Graph.h"
 #include "reactions/reactions.h"
 #include "TopologyRegistry.h"
+#include "Utils.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
@@ -110,7 +111,8 @@ public:
 
     void validate() {
         if (!graph().isConnected()) {
-            throw std::invalid_argument("The graph is not connected!");
+            throw std::invalid_argument(fmt::format("The graph is not connected! (GEXF representation: {})",
+                                                    util::to_gexf(graph())));
         }
     }
 

@@ -36,6 +36,9 @@
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(log)
+#ifndef READDY_DEBUG
+#define READDY_DEBUG
+#endif
 #ifdef READDY_DEBUG
 std::shared_ptr<spdlog::logger> console();
 

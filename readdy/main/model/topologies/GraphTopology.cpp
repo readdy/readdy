@@ -215,34 +215,36 @@ void GraphTopology::appendTopology(GraphTopology &other, Topology::particle_inde
                                    particle_type_type thisNewParticleType, topology_type_type newType) {
     auto &otherGraph = other.graph();
 
-    if(otherGraph.vertices().empty()) {
-        throw std::logic_error("encountered an empty topology as reaction partner, internal error!");
+    if(!otherGraph.vertices().empty()) {
+
+
+        auto &thisGraph = graph();
+
+        auto former_begin = otherGraph.vertices().begin();
+        auto former_n_vertices = particles.size();
+
+        auto other_vert = other.vertexForParticle(otherParticle);
+        auto this_vert = vertexForParticle(thisParticle);
+
+        // insert other particles into this' particles
+        particles.insert(std::end(particles), std::begin(other.particles), std::end(other.particles));
+        // move other graph into this graph
+        thisGraph.vertices().splice(thisGraph.vertices().end(), otherGraph.vertices());
+
+        for (auto it = former_begin; it != graph().vertices().end(); ++it) {
+            it->particleIndex = former_n_vertices;
+            ++former_n_vertices;
+        }
+
+        // add edge between the formerly two topologies
+        graph().addEdge(other_vert, this_vert);
+        other_vert->setParticleType(otherNewParticleType);
+        this_vert->setParticleType(thisNewParticleType);
+
+        _topology_type = newType;
+    } else {
+        log::warn("encountered empty topology which was deactivated={}", other.isDeactivated());
     }
-
-    auto &thisGraph = graph();
-
-    auto former_begin = otherGraph.vertices().begin();
-    auto former_n_vertices = particles.size();
-
-    auto other_vert = other.vertexForParticle(otherParticle);
-    auto this_vert = vertexForParticle(thisParticle);
-
-    // insert other particles into this' particles
-    particles.insert(std::end(particles), std::begin(other.particles), std::end(other.particles));
-    // move other graph into this graph
-    thisGraph.vertices().splice(thisGraph.vertices().end(), otherGraph.vertices());
-
-    for(auto it = former_begin; it != graph().vertices().end(); ++it) {
-        it->particleIndex = former_n_vertices;
-        ++former_n_vertices;
-    }
-
-    // add edge between the formerly two topologies
-    graph().addEdge(other_vert, this_vert);
-    other_vert->setParticleType(otherNewParticleType);
-    this_vert->setParticleType(thisNewParticleType);
-
-    _topology_type = newType;
 }
 
 std::vector<Particle> GraphTopology::fetchParticles() const {
