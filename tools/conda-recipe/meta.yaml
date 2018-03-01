@@ -42,11 +42,6 @@ requirements:
     - vs2015_runtime  # [win]
 
 test:
-  #commands:
-  #  - runUnitTests
-  #  - runUnitTests_singlecpu
-  #  - runUnitTests_cpu
-  #  - nosetests
   imports:
     - readdy
   requires:
