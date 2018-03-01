@@ -20,4 +20,4 @@ export PATH=$TARGET/bin:$PATH
 
 conda config --set always_yes true
 #conda update --all
-conda install -q conda-build
+conda install -q conda-build=3.5.1

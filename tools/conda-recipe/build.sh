@@ -9,7 +9,7 @@ unset MACOSX_DEPLOYMENT_TARGET
 #########################################################
 
 # prefix path
-CMAKE_FLAGS="-DCMAKE_INSTALL_PREFIX=$PREFIX"
+CMAKE_FLAGS="-DCMAKE_INSTALL_PREFIX=${PREFIX}"
 # do not generate documentation target
 CMAKE_FLAGS+=" -DREADDY_GENERATE_DOCUMENTATION_TARGET:BOOL=OFF"
 # build monolithic lib
@@ -22,7 +22,7 @@ CMAKE_FLAGS+=" -DREADDY_LOG_CMAKE_CONFIGURATION:BOOL=ON"
 CMAKE_FLAGS+=" -DREADDY_CREATE_TEST_TARGET:BOOL=ON"
 CMAKE_FLAGS+=" -DREADDY_INSTALL_UNIT_TEST_EXECUTABLE:BOOL=OFF"
 # hdf5 flags
-CMAKE_FLAGS+=" -DHDF5_INCLUDE_DIRS=$BUILD_PREFIX/include"
+CMAKE_FLAGS+=" -DHDF5_INCLUDE_DIRS=${BUILD_PREFIX}/include"
 # version flags
 CMAKE_FLAGS+=" -DREADDY_VERSION=${PKG_BUILDNUM}"
 CMAKE_FLAGS+=" -DREADDY_BUILD_STRING=${PKG_HASH}"
@@ -38,7 +38,7 @@ CMAKE_FLAGS+=" -DREADDY_BUILD_STRING=${PKG_HASH}"
 #                                                       #
 #########################################################
 
-export HDF5_ROOT=$BUILD_PREFIX
+export HDF5_ROOT=${BUILD_PREFIX}
 
 mkdir build || true
 cd build

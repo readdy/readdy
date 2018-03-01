@@ -106,7 +106,7 @@ TEST_P(TestSchemes, StoppingCriterionSimple) {
 TEST_P(TestSchemes, ComplexStoppingCriterion) {
     simulation.registerParticleType("A", 0.);
     // A -> A + A, with probability = 1 each timestep. After 3 timesteps there will be 8 particles. The counter will be 4 by then.
-    simulation.registerFissionReaction("bla", "A", "A", "A", 1000., 0.);
+    simulation.registerFissionReaction("bla", "A", "A", "A", 1e8, 0.);
     simulation.addParticle("A", 0, 0, 0);
     unsigned int counter = 0;
     bool doStop = false;

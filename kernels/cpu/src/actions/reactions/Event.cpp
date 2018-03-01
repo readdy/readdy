@@ -39,7 +39,7 @@ namespace reactions {
 
 Event::Event(std::uint8_t nEducts, std::uint8_t nProducts, index_type idx1, index_type idx2, scalar reactionRate,
              scalar cumulativeRate, reaction_index_type reactionIdx, particle_type_type t1, particle_type_type t2)
-        : nEducts(nEducts), nProducts(nProducts), idx1(idx1), idx2(idx2), reactionRate(reactionRate),
+        : nEducts(nEducts), nProducts(nProducts), idx1(idx1), idx2(idx2), rate(reactionRate),
           cumulativeRate(cumulativeRate), reactionIndex(reactionIdx), t1(t1), t2(t2) {
 }
 
@@ -48,7 +48,7 @@ std::ostream &operator<<(std::ostream &os, const Event &evt) {
     if (evt.nEducts == 2) {
         os << " + " << evt.idx2 << "[type=" << evt.t2 << "]";
     }
-    os << ", rate=" << evt.reactionRate << ", cumulativeRate=" << evt.cumulativeRate
+    os << ", rate=" << evt.rate << ", cumulativeRate=" << evt.cumulativeRate
        << ", reactionIdx=" << evt.reactionIndex;
     return os;
 }

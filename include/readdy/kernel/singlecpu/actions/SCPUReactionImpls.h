@@ -65,7 +65,7 @@ struct Event {
     index_type idx1, idx2;
     reaction_index_type reactionIndex;
     particle_type_type t1, t2;
-    scalar reactionRate;
+    scalar rate;
     scalar cumulativeRate;
 
     Event(unsigned int nEducts, unsigned int nProducts, index_type idx1, index_type idx2, scalar reactionRate,
