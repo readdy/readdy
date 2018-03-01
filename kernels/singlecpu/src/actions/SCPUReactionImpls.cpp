@@ -31,6 +31,7 @@
 
 #include <readdy/kernel/singlecpu/actions/SCPUReactionImpls.h>
 #include <readdy/kernel/singlecpu/actions/SCPUReactionUtils.h>
+#include <readdy/common/algorithm.h>
 
 namespace readdy {
 namespace kernel {
@@ -41,7 +42,7 @@ namespace reactions {
 
 Event::Event(unsigned int nEducts, unsigned int nProducts, index_type idx1, index_type idx2, scalar reactionRate,
              scalar cumulativeRate, reaction_index_type reactionIdx, particle_type_type t1, particle_type_type t2)
-        : nEducts(nEducts), nProducts(nProducts), idx1(idx1), idx2(idx2), reactionRate(reactionRate),
+        : nEducts(nEducts), nProducts(nProducts), idx1(idx1), idx2(idx2), rate(reactionRate),
           cumulativeRate(cumulativeRate), reactionIndex(reactionIdx), t1(t1), t2(t2) {
 }
 
@@ -50,7 +51,7 @@ std::ostream &operator<<(std::ostream &os, const Event &evt) {
     if (evt.nEducts == 2) {
         os << " + " << evt.idx2 << "[type=" << evt.t2 << "]";
     }
-    os << ", rate=" << evt.reactionRate << ", cumulativeRate=" << evt.cumulativeRate
+    os << ", rate=" << evt.rate << ", cumulativeRate=" << evt.cumulativeRate
        << ", reactionIdx=" << evt.reactionIndex;
     return os;
 }
@@ -289,107 +290,50 @@ scpu_data::entries_update handleEventsGillespie(
          * Handle gathered reaction events
          */
         {
-            std::size_t nDeactivated = 0;
-            const std::size_t nEvents = events.size();
-            while (nDeactivated < nEvents) {
-                const auto alpha = (*(events.end() - nDeactivated - 1)).cumulativeRate;
-                const auto x = readdy::model::rnd::uniform_real(static_cast<scalar>(0.), alpha);
-                const auto eventIt = std::lower_bound(
-                        events.begin(), events.end() - nDeactivated, x,
-                        [](const event_t &elem1, scalar elem2) {
-                            return elem1.cumulativeRate < elem2;
-                        }
-                );
-                const auto &event = *eventIt;
-                if (eventIt == events.end() - nDeactivated) {
-                    throw std::runtime_error("this should not happen (event not found)");
-                }
-                if (filterEventsInAdvance || shouldPerformEvent(event.reactionRate, timeStep, approximateRate)) {
-                    /**
-                     * Perform reaction
-                     */
-                    {
-                        auto entry1 = event.idx1;
-                        if (event.nEducts == 1) {
-                            auto reaction = ctx.reactions().order1ByType(event.t1)[event.reactionIndex];
-                            if(ctx.recordReactionsWithPositions()) {
-                                reaction_record record;
-                                record.id = reaction->id();
-                                performReaction(*data, entry1, entry1, newParticles, decayedEntries, reaction, ctx,
-                                                &record);
-                                model.reactionRecords().push_back(record);
-                            } else {
-                                performReaction(*data, entry1, entry1, newParticles, decayedEntries, reaction, ctx,
-                                                nullptr);
-                            }
-                            if(ctx.recordReactionCounts()) {
-                                model.reactionCounts().at(reaction->id())++;
-                            }
-                        } else {
-                            auto reaction = ctx.reactions().order2ByType(event.t1, event.t2)[event.reactionIndex];
-                            if(ctx.recordReactionsWithPositions()) {
-                                reaction_record record;
-                                record.id = reaction->id();
-                                performReaction(*data, entry1, event.idx2, newParticles, decayedEntries, reaction, ctx, &record);
-                                model.reactionRecords().push_back(record);
-                            } else {
-                                performReaction(*data, entry1, event.idx2, newParticles, decayedEntries, reaction, ctx, nullptr);
-                            }
-                            if(ctx.recordReactionCounts()) {
-                                model.reactionCounts().at(reaction->id())++;
-                            }
-                        }
-                    }
-                    /**
-                     * deactivate events whose educts have disappeared (including the just handled one)
-                     */
-                    {
-                        auto _it = events.begin();
-                        scalar cumsum = 0.0;
-                        const auto idx1 = event.idx1;
-                        if (event.nEducts == 1) {
-                            while (_it < events.end() - nDeactivated) {
-                                if (_it->idx1 == idx1 ||
-                                    (_it->nEducts == 2 && _it->idx2 == idx1)) {
-                                    ++nDeactivated;
-                                    std::iter_swap(_it, events.end() - nDeactivated);
-                                } else {
-                                    cumsum += _it->reactionRate;
-                                    _it->cumulativeRate = cumsum;
-                                    ++_it;
-                                }
-                            }
-                        } else {
-                            const auto idx2 = event.idx2;
-                            while (_it < events.end() - nDeactivated) {
-                                if (_it->idx1 == idx1 || _it->idx1 == idx2 ||
-                                    (_it->nEducts == 2 &&
-                                     (_it->idx2 == idx1 || _it->idx2 == idx2))) {
-                                    ++nDeactivated;
-                                    std::iter_swap(_it, events.end() - nDeactivated);
-                                } else {
-                                    _it->cumulativeRate = cumsum;
-                                    cumsum += _it->reactionRate;
-                                    ++_it;
-                                }
-                            }
-                        }
+            auto shouldEval = [&](const event_t &event) {
+                return filterEventsInAdvance || shouldPerformEvent(event.rate, timeStep, approximateRate);
+            };
 
+            auto depending = [&](const event_t &e1, const event_t &e2) {
+                return (e1.idx1 == e2.idx1 || (e2.nEducts == 2 && e1.idx1 == e2.idx2)
+                        || (e1.nEducts == 2 && (e1.idx2 == e2.idx1 || (e2.nEducts == 2 && e1.idx2 == e2.idx2))));
+            };
+
+            auto eval = [&](const event_t &event) {
+                auto entry1 = event.idx1;
+                if (event.nEducts == 1) {
+                    auto reaction = ctx.reactions().order1ByType(event.t1)[event.reactionIndex];
+                    if(ctx.recordReactionsWithPositions()) {
+                        reaction_record record;
+                        record.id = reaction->id();
+                        performReaction(*data, entry1, entry1, newParticles, decayedEntries, reaction, ctx,
+                                        &record);
+                        model.reactionRecords().push_back(record);
+                    } else {
+                        performReaction(*data, entry1, entry1, newParticles, decayedEntries, reaction, ctx,
+                                        nullptr);
+                    }
+                    if(ctx.recordReactionCounts()) {
+                        model.reactionCounts().at(reaction->id())++;
                     }
                 } else {
-                    nDeactivated++;
-                    std::iter_swap(eventIt, events.end() - nDeactivated);
-                    (*eventIt).cumulativeRate = (*eventIt).reactionRate;
-                    if (eventIt > events.begin()) {
-                        (*eventIt).cumulativeRate += (*(eventIt - 1)).cumulativeRate;
+                    auto reaction = ctx.reactions().order2ByType(event.t1, event.t2)[event.reactionIndex];
+                    if(ctx.recordReactionsWithPositions()) {
+                        reaction_record record;
+                        record.id = reaction->id();
+                        performReaction(*data, entry1, event.idx2, newParticles, decayedEntries, reaction, ctx, &record);
+                        model.reactionRecords().push_back(record);
+                    } else {
+                        performReaction(*data, entry1, event.idx2, newParticles, decayedEntries, reaction, ctx, nullptr);
                     }
-                    auto cumsum = (*eventIt).cumulativeRate;
-                    for (auto _it = eventIt + 1; _it < events.end() - nDeactivated; ++_it) {
-                        cumsum += (*_it).reactionRate;
-                        (*_it).cumulativeRate = cumsum;
+                    if(ctx.recordReactionCounts()) {
+                        model.reactionCounts().at(reaction->id())++;
                     }
                 }
-            }
+            };
+
+            algo::performEvents(events, shouldEval, depending, eval);
+
         }
     }
     return std::make_pair(std::move(newParticles), std::move(decayedEntries));

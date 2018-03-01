@@ -47,7 +47,7 @@ struct Event {
     index_type idx1, idx2;
     reaction_index_type reactionIndex;
     readdy::model::Particle::type_type t1, t2;
-    readdy::scalar reactionRate;
+    readdy::scalar rate;
     readdy::scalar cumulativeRate;
 
     Event(std::uint8_t nEducts, std::uint8_t nProducts, index_type idx1, index_type idx2, readdy::scalar reactionRate,

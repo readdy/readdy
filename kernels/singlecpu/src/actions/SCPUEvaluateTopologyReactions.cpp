@@ -31,6 +31,7 @@
  */
 
 #include <readdy/kernel/singlecpu/actions/SCPUEvaluateTopologyReactions.h>
+#include <readdy/common/algorithm.h>
 
 namespace readdy {
 namespace kernel {
@@ -47,8 +48,8 @@ namespace top {
 struct SCPUEvaluateTopologyReactions::TREvent {
     using index_type = std::size_t;
 
-    rate_t cumulative_rate{0};
-    rate_t own_rate{0};
+    rate_t cumulativeRate{0};
+    rate_t rate{0};
     std::size_t topology_idx{0};
     std::ptrdiff_t topology_idx2{-1};
     std::size_t reaction_idx{0};
@@ -83,100 +84,41 @@ void SCPUEvaluateTopologyReactions::perform(const util::PerformanceNode &node) {
         auto events = gatherEvents();
 
         if (!events.empty()) {
-            auto end = events.end();
-
             std::vector<readdy::model::top::GraphTopology> new_topologies;
-            while (end != events.begin()) {
-                const auto cumulative_rate = (end - 1)->cumulative_rate;
 
-                const auto x = readdy::model::rnd::uniform_real(c_::zero, cumulative_rate);
+            auto shouldEval = [this](const TREvent &event) {
+                return performReactionEvent<false>(event.rate, timeStep);
+            };
+            auto depending = [this](const TREvent &e1, const TREvent &e2) {
+                return eventsDependent(e1, e2);
+            };
 
-                const auto eventIt = std::lower_bound(
-                        events.begin(), end, x, [](const TREvent &elem1, const rate_t elem2) {
-                            return elem1.cumulative_rate < elem2;
-                        }
-                );
-
-                if (eventIt != events.end()) {
-                    const auto &event = *eventIt;
-
-                    if (performReactionEvent<false>(event.own_rate, timeStep)) {
-                        log::trace("picked event {} / {} with rate {}", std::distance(events.begin(), eventIt) + 1,
-                                   events.size(), eventIt->own_rate);
-                        // perform the event!
-                        auto &topology = topologies.at(event.topology_idx);
-                        if (topology->isDeactivated()) {
-                            log::critical("deactivated topology with idx {}", event.topology_idx);
-                            for (auto it = events.begin(); it != end; ++it) {
-                                log::warn(" -> event {}, {}, {}, {}", it->topology_idx, it->reaction_idx, it->own_rate,
-                                          it->cumulative_rate);
-                            }
-                            for (auto it = end; it != events.end(); ++it) {
-                                log::warn(" -> deactivated event {}, {}, {}, {}", it->topology_idx, it->reaction_idx,
-                                          it->own_rate, it->cumulative_rate);
-                            }
-                        }
-                        if(!event.spatial) {
-                            handleStructuralReaction(topologies, new_topologies, event, topology);
-                        } else {
-                            if(event.topology_idx2 >= 0) {
-                                auto &top2 = topologies.at(static_cast<std::size_t>(event.topology_idx2));
-                                if(top2->isDeactivated()) {
-                                    throw std::logic_error("encountered deactivated topology here, oh no.");
-                                }
-                                handleTopologyTopologyReaction(topology, top2, event);
-                            } else {
-                                handleTopologyParticleReaction(topology, event);
-                            }
-                        }
-
-                        // loop over all other events, swap events considering this particular topology to the end
-                        rate_t cumsum = 0;
-                        //log::warn("------");
-                        for (auto it = events.begin();;) {
-                            if (eventsDependent(*it, event)) {
-                                --end;
-                                //log::warn("swapping event with topology idx {}", it->topology_idx);
-                                std::iter_swap(it, end);
-                            }
-                            cumsum += it->own_rate;
-                            it->cumulative_rate = cumsum;
-                            if (it >= end) {
-                                break;
-                            }
-                            if (!eventsDependent(*it, event)) {
-                                ++it;
-                            }
-                        }
-
-                    } else {
-
-                        // remove event from the list (ie shift it to the end)
-                        --end;
-
-                        // swap with last element that is not yet deactivated
-                        std::iter_swap(eventIt, end);
-
-                        // this element's cumulative rate gets initialized with its own rate
-                        eventIt->cumulative_rate = eventIt->own_rate;
-                        if (eventIt > events.begin()) {
-                            // and then increased by the cumulative rate of its predecessor
-                            eventIt->cumulative_rate += (eventIt - 1)->cumulative_rate;
-                        }
-                        // now update the cumulative rates of all following elements...
-                        auto cumsum = (*eventIt).cumulative_rate;
-                        for (auto _it = eventIt + 1; _it < end; ++_it) {
-                            cumsum += (*_it).own_rate;
-                            (*_it).cumulative_rate = cumsum;
-                        }
-
-                    }
-
-                } else {
-                    log::critical("this should not happen (event not found by drawn rate)");
-                    throw std::logic_error("this should not happen (event not found by drawn rate)");
+            auto eval = [&](const TREvent &event) {
+                auto &topology = topologies.at(event.topology_idx);
+                if (topology->isDeactivated()) {
+                    throw std::logic_error(
+                            fmt::format("deactivated topology with idx {} for {} event", event.topology_idx,
+                                        event.spatial ? "spatial" : "structural"));
                 }
-            }
+                assert(!topology->isDeactivated());
+                if (!event.spatial) {
+                    handleStructuralReaction(topologies, new_topologies, event, topology);
+                } else {
+                    if (event.topology_idx2 >= 0) {
+                        auto &top2 = topologies.at(static_cast<std::size_t>(event.topology_idx2));
+                        if (event.topology_idx2 >= 0 && topologyDeactivated(static_cast<size_t>(event.topology_idx2))) {
+                            throw std::logic_error(
+                                    fmt::format("encountered deactivated topology here, oh no (ix {}).",
+                                                event.topology_idx2));
+                        }
+                        handleTopologyTopologyReaction(topology, top2, event);
+                    } else {
+                        handleTopologyParticleReaction(topology, event);
+                    }
+                }
+            };
+
+            algo::performEvents(events, shouldEval, depending, eval);
 
             if (!new_topologies.empty()) {
                 for (auto &&top : new_topologies) {
@@ -208,9 +150,9 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
                 std::size_t reaction_idx = 0;
                 for (const auto &reaction : topology_registry.structuralReactionsOf(top->type())) {
                     TREvent event{};
-                    event.own_rate = top->rates().at(reaction_idx);
-                    event.cumulative_rate = event.own_rate + current_cumulative_rate;
-                    current_cumulative_rate = event.cumulative_rate;
+                    event.rate = top->rates().at(reaction_idx);
+                    event.cumulativeRate = event.rate + current_cumulative_rate;
+                    current_cumulative_rate = event.cumulativeRate;
                     event.topology_idx = topology_idx;
                     event.reaction_idx = reaction_idx;
 
@@ -256,9 +198,9 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
                             for (const auto &reaction : reactions) {
                                 if (distSquared < reaction.radius() * reaction.radius()) {
                                     TREvent event{};
-                                    event.own_rate = reaction.rate();
-                                    event.cumulative_rate = event.own_rate + current_cumulative_rate;
-                                    current_cumulative_rate = event.cumulative_rate;
+                                    event.rate = reaction.rate();
+                                    event.cumulativeRate = event.rate + current_cumulative_rate;
+                                    current_cumulative_rate = event.cumulativeRate;
                                     switch (reaction.mode()) {
                                         case readdy::model::top::reactions::STRMode::TT_FUSION:
                                             if(tidx1 >= 0 && tidx2 >= 0 && tidx1 != tidx2) {
