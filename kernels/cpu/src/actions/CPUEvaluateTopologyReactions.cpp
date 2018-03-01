@@ -134,147 +134,8 @@ void CPUEvaluateTopologyReactions::perform(const util::PerformanceNode &node) {
                         }
                     }
                 };
-                // todo remove post perform
-                algo::performEvents(events, shouldEval, depending, eval/*, postPerform*/);
+                algo::performEvents(events, shouldEval, depending, eval);
             }
-
-            /*std::size_t nDeactivated = 0;
-            const std::size_t nEvents = events.size();
-            while (nDeactivated < nEvents) {
-                const auto cumulative_rate = (events.end() - nDeactivated - 1)->cumulativeRate;
-
-                const auto x = readdy::model::rnd::uniform_real(c_::zero, cumulative_rate);
-
-                const auto eventIt = std::lower_bound(
-                        events.begin(), events.end() - nDeactivated, x, [](const TREvent &elem1, const rate_t elem2) {
-                            return elem1.cumulativeRate < elem2;
-                        }
-                );
-
-                if (eventIt != events.end()) {
-                    const auto &event = *eventIt;
-
-                    if (performReactionEvent<false>(event.rate, timeStep)) {
-                        log::trace("picked event {} / {} with rate {}", std::distance(events.begin(), eventIt) + 1,
-                                   events.size(), eventIt->rate);
-                        // perform the event!
-                        auto &topology = topologies.at(event.topology_idx);
-                        if (topology->isDeactivated()) {
-                            throw std::logic_error(fmt::format("deactivated topology with idx {} for {} event", event.topology_idx,
-                                          event.spatial ? "spatial" : "structural"));
-                        }
-                        assert(!topology->isDeactivated());
-                        if(!event.spatial) {
-                            handleStructuralReaction(topologies, new_topologies, event, topology);
-                        } else {
-                            if(event.topology_idx2 >= 0) {
-                                auto &top2 = topologies.at(static_cast<std::size_t>(event.topology_idx2));
-                                if(topologyDeactivated(event.topology_idx2)) {
-                                    auto end = events.end() - nDeactivated;
-                                    if (eventIt < end) {
-                                        if(end < events.end()) {
-                                            for (auto it = end; it != events.end(); ++it) {
-                                                if (eventsDependent(*it, event)) {
-                                                    throw std::logic_error(
-                                                            "encountered event with previously disabled topology, hmmm....");
-                                                }
-                                            }
-                                        } else {
-                                            if(end == events.end()) {
-                                                throw std::logic_error("the end is already @ events.end, we should have aborted?!");
-                                            } else {
-                                                throw std::logic_error(fmt::format("end goes beyond events.end by {}", std::distance(events.end(), end)));
-                                            }
-                                        }
-                                        throw std::logic_error(fmt::format("encountered deactivated topology here, oh no (ix {}).", event.topology_idx2));
-                                    } else {
-                                        if(eventIt >= events.end()) {
-                                            throw std::logic_error(fmt::format("now this is some bs, we are beyond events.end (by {})", std::distance(eventIt, events.end())));
-                                        } else {
-                                            throw std::logic_error(fmt::format("we are beyond end by {} and maybe beyond events.end by {}", std::distance(eventIt, end), std::distance(eventIt, events.end())));
-                                        }
-                                    }
-                                }
-                                handleTopologyTopologyReaction(topology, top2, event);
-                            } else {
-                                handleTopologyParticleReaction(topology, event);
-                                // todo remove me
-                                throw std::logic_error("we shouldnt reach this");
-                            }
-                        }
-
-                        //log::warn("considering pair {}, {}", event.topology_idx, event.topology_idx2);
-
-                        // loop over all other events, swap events considering this particular topology to the end
-
-
-                      //deactivate events whose educts have disappeared (including the just handled one)
-                        std::stringstream sss;
-                        {
-                            auto _it = events.begin();
-                            scalar cumsum = 0.0;
-                            const auto idx1 = event.idx1;
-                            const auto idx2 = event.idx2;
-                            while (_it < events.end() - nDeactivated) {
-                                if (eventsDependent(*_it, event)) {
-                                    ++nDeactivated;
-                                    {
-                                        auto mhm = events.end() - nDeactivated;
-                                        sss << fmt::format("swapping t11={}, t12={} <-> t21={}, t22={}", _it->topology_idx, _it->topology_idx2, mhm->topology_idx, mhm->topology_idx2);
-                                        sss << "\n";
-                                    }
-                                    std::iter_swap(_it, events.end() - nDeactivated);
-                                } else {
-                                    cumsum += _it->rate;
-                                    _it->cumulativeRate = cumsum;
-                                    ++_it;
-                                }
-                            }
-
-                        }
-
-                        // todo remove this, check if actually all events have been removed that involve these topologies
-                        for(auto it = events.begin(); it < events.end() - nDeactivated; ++it) {
-                            if (eventsDependent(event, *it)) {
-                                log::critical("here ya go ye filth: {}", sss.str());
-                                std::stringstream ss;
-                                for(auto _it = events.begin(); _it < events.end() - nDeactivated; ++_it) {
-                                    ss << fmt::format("\tEvent: {}({}) + {}({})", _it->topology_idx, _it->idx1, _it->topology_idx2, _it->idx2) << "\n";
-                                }
-                                throw std::logic_error(fmt::format("events list contained event that shouldve been deactivated (t11={}, t12={}, t21={}, t22={}), (ix11={}, ix12={}, ix21={}, ix22={})\nlist:\n{}",
-                                                                   event.topology_idx, event.topology_idx2, it->topology_idx, it->topology_idx2, event.idx1, event.idx2, it->idx1, it->idx2, ss.str()));
-                            }
-                        }
-
-                    } else {
-
-                        // remove event from the list (ie shift it to the end)
-                        ++nDeactivated;
-
-                        // swap with last element that is not yet deactivated
-                        std::iter_swap(eventIt, events.end() - nDeactivated);
-
-                        // this element's cumulative rate gets initialized with its own rate
-                        eventIt->cumulativeRate = eventIt->rate;
-                        if (eventIt > events.begin()) {
-                            // and then increased by the cumulative rate of its predecessor
-                            eventIt->cumulativeRate += (eventIt - 1)->cumulativeRate;
-                        }
-                        // now update the cumulative rates of all following elements...
-                        auto cumsum = (*eventIt).cumulativeRate;
-                        for (auto _it = eventIt + 1; _it < events.end() - nDeactivated; ++_it) {
-                            cumsum += (*_it).rate;
-                            (*_it).cumulativeRate = cumsum;
-                        }
-
-                    }
-
-                } else {
-                    log::critical("this should not happen (event not found by drawn rate)");
-                    throw std::logic_error("this should not happen (event not found by drawn rate)");
-                }
-            }
-             */
 
             if (!new_topologies.empty()) {
                 for (auto &&top : new_topologies) {
@@ -304,42 +165,8 @@ void CPUEvaluateTopologyReactions::handleStructuralReaction(CPUStateModel::topol
         // we had a topology fission, so we need to actually remove the current topology from the
         // data structure
         topologies.erase(topologies.begin() + event.topology_idx);
-        //log::error("erased topology with index {}", event.topology_idx);
         assert(topology->isDeactivated());
 
-        {/*
-            // todo remove me
-            for(auto &t1 : result) {
-                if (t1.graph().vertices().size() != t1.getNParticles()) {
-                    throw std::logic_error("some shit");
-                }
-                std::vector<int> counts(t1.graph().vertices().size(), 0);
-                for (const auto &edge : t1.graph().edges()) {
-                    const auto &v1 = std::get<0>(edge);
-                    const auto &v2 = std::get<1>(edge);
-
-                    counts.at(v1->particleIndex) += 1;
-                    counts.at(v2->particleIndex) += 1;
-                }
-
-                int nEnds = 0;
-                for (const auto c : counts) {
-                    if (c == 1) {
-                        ++nEnds;
-                    }
-                }
-
-                if (nEnds != 2) {
-                    std::stringstream ss;
-                    for (const auto c : counts) {
-                        ss << c << ", ";
-                    }
-                    throw std::logic_error(fmt::format(
-                            "number of ends should always be 2 but was {} after structural reaction (counts: {})",
-                            nEnds, ss.str()));
-                }
-            }
-        */}
         for (auto &it : result) {
             if(!it.isNormalParticle(*kernel)) {
                 new_topologies.push_back(std::move(it));
@@ -449,15 +276,6 @@ CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReacti
                                         // this is a topology-topology fusion
                                         event.topology_idx = static_cast<std::size_t>(entry.topology_index);
                                         event.topology_idx2 = static_cast<std::size_t>(neighbor.topology_index);
-                                        // todo remove
-                                        {/*
-                                            if (topologyDeactivated(event.topology_idx)) {
-                                                throw std::logic_error("hier sollte man aber nicht hinkommen 1");
-                                            }
-                                            if (topologyDeactivated(event.topology_idx2)) {
-                                                throw std::logic_error("hier sollte man aber nicht hinkommen 1");
-                                            }
-                                        */}
                                         event.t1 = entry.type;
                                         event.t2 = neighbor.type;
                                         event.idx1 = *itParticle;
@@ -539,19 +357,6 @@ void CPUEvaluateTopologyReactions::handleTopologyTopologyReaction(CPUStateModel:
     auto &entry1Type = entry1.type;
     auto &entry2Type = entry2.type;
 
-    // todo remove
-    {/*
-        if (context.particle_types().nameOf(entry1Type) != "Head") {
-            throw std::logic_error(fmt::format("entry 1 was no head for reaction {} but was {}",
-                                               top_registry.generateSpatialReactionRepresentation(reaction),
-                                               context.particle_types().nameOf(entry1Type)));
-        }
-        if (context.particle_types().nameOf(entry2Type) != "Head") {
-            throw std::logic_error(fmt::format("entry 2 was no head for reaction {} but was {}",
-                                               top_registry.generateSpatialReactionRepresentation(reaction),
-                                               context.particle_types().nameOf(entry2Type)));
-        }
-    */}
     auto top_type_to1 = reaction.top_type_to1();
     auto top_type_to2 = reaction.top_type_to2();
     if(entry1Type == reaction.type1() && t1->type() == reaction.top_type1()) {
@@ -596,38 +401,6 @@ void CPUEvaluateTopologyReactions::handleTopologyTopologyReaction(CPUStateModel:
     }
     t1->updateReactionRates(context.topology_registry().structuralReactionsOf(t1->type()));
     t1->configure();
-
-    // todo remove
-    {/*
-        if (t1->graph().vertices().size() != t1->getNParticles()) {
-            throw std::logic_error("some shit");
-        }
-        std::vector<int> counts(t1->graph().vertices().size(), 0);
-        for (const auto edge : t1->graph().edges()) {
-            const auto &v1 = std::get<0>(edge);
-            const auto &v2 = std::get<1>(edge);
-
-            counts.at(v1->particleIndex) += 1;
-            counts.at(v2->particleIndex) += 1;
-        }
-
-        int nEnds = 0;
-        for (const auto c : counts) {
-            if (c == 1) {
-                ++nEnds;
-            }
-        }
-
-        if (nEnds != 2) {
-            std::stringstream ss;
-            for (const auto c : counts) {
-                ss << c << ", ";
-            }
-            throw std::logic_error(
-                    fmt::format("number of ends should always be 2 but was {} after spatial reaction (counts: {})",
-                                nEnds, ss.str()));
-        }
-    */}
 }
 
 bool CPUEvaluateTopologyReactions::eventsDependent(const CPUEvaluateTopologyReactions::TREvent &evt1,
