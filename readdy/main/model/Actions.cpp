@@ -21,16 +21,17 @@
 
 
 /**
- * << detailed description >>
- *
- * @file Programs.cpp
- * @brief << brief description >>
+ * @file Actions.cpp
+ * @brief Core library implementation of Actions
  * @author clonker
+ * @author chrisfroe
  * @date 17.11.16
  */
 
 #include <readdy/model/actions/Actions.h>
 #include <readdy/model/Kernel.h>
+#include <readdy/common/integration.h>
+#include <readdy/common/numeric.h>
 
 namespace readdy {
 namespace model {
@@ -46,6 +47,338 @@ EulerBDIntegrator::EulerBDIntegrator(scalar timeStep) : TimeStepDependentAction(
 reactions::UncontrolledApproximation::UncontrolledApproximation(scalar timeStep) : TimeStepDependentAction(timeStep) {}
 
 reactions::Gillespie::Gillespie(scalar timeStep) : TimeStepDependentAction(timeStep) {}
+
+reactions::ReversibleReactionConfig::ReversibleReactionConfig(ReactionId forwardId, ReactionId backwardId,
+                                                              const Context &ctx)
+        : forwardId(forwardId), backwardId(backwardId), ctx(ctx) {
+
+    const auto forwardReaction = ctx.reactions().byId(forwardId);
+    const auto backwardReaction = ctx.reactions().byId(backwardId);
+
+    // species
+    numberLhsTypes = forwardReaction->nEducts();
+    lhsTypes = forwardReaction->educts();
+    numberRhsTypes = backwardReaction->nEducts();
+    rhsTypes = backwardReaction->educts();
+    if (not (lhsTypes == backwardReaction->products()) or not (rhsTypes == forwardReaction->products())) {
+        throw std::logic_error(fmt::format("The given reactions are not reversible w.r.t. particle species"));
+    }
+    if (numberLhsTypes == 2 and numberRhsTypes == 1) {
+        reversibleType = ReversibleType::FusionFission;
+    } else if (numberLhsTypes == 1 and numberRhsTypes == 1) {
+        reversibleType = ReversibleType::ConversionConversion;
+    } else if (numberLhsTypes == 2 and numberRhsTypes == 2) {
+        reversibleType = ReversibleType::EnzymaticEnzymatic;
+    } else {
+        throw std::logic_error("Type of reversible reaction cannot be determined");
+    }
+
+    microForwardRate = forwardReaction->rate();
+    microBackwardRate = backwardReaction->rate();
+
+    // reaction radius
+    switch (reversibleType) {
+        case FusionFission:
+            if (not forwardReaction->eductDistance() == backwardReaction->productDistance()) {
+                throw std::logic_error(fmt::format("Reaction radii forward and backward must be equal,"
+                                                     "were {} and {}", forwardReaction->eductDistance(),
+                                                     backwardReaction->productDistance()));
+            }
+            reactionRadius = forwardReaction->eductDistance();
+            break;
+        case ConversionConversion:
+            // no action required
+            break;
+        case EnzymaticEnzymatic:
+            // Note that Enzymatics only define the educt distance
+            if (not forwardReaction->eductDistance() == backwardReaction->eductDistance()) {
+                throw std::logic_error(fmt::format("Reaction radii forward and backward must be equal,"
+                                                     "were {} and {}", forwardReaction->eductDistance(),
+                                                     backwardReaction->eductDistance()));
+            }
+            reactionRadius = forwardReaction->eductDistance();
+            break;
+        default:
+            throw std::logic_error("Unknown type of reversible reaction");
+    }
+
+    // potentials
+    switch(reversibleType) {
+        case FusionFission:
+            lhsPotentials = ctx.potentials().potentialsOf(lhsTypes[0], lhsTypes[1]);
+            break;
+        case ConversionConversion:
+            // no action required
+            break;
+        case EnzymaticEnzymatic:
+            lhsPotentials = ctx.potentials().potentialsOf(lhsTypes[0], lhsTypes[1]);
+            rhsPotentials = ctx.potentials().potentialsOf(rhsTypes[0], rhsTypes[1]);
+            break;
+        default: throw std::logic_error("Unknown type of reversible reaction");
+    }
+
+    // interaction radius and volume
+    if (lhsPotentials.empty()) {
+        lhsInteractionRadius = 0.;
+        lhsInteractionVolume = 0.;
+    } else {
+        auto maxLhsCutoffPotential = std::max_element(lhsPotentials.begin(), lhsPotentials.end(),
+                                                      [](const pot p1, const pot p2) {
+                                                          return p1->getCutoffRadius() < p2->getCutoffRadius();
+                                                      });
+        lhsInteractionRadius = (*maxLhsCutoffPotential)->getCutoffRadius();
+        lhsInteractionVolume = 4./3. * util::numeric::pi<scalar>() * std::pow(lhsInteractionRadius, 3);
+    }
+
+    if (rhsPotentials.empty()) {
+        rhsInteractionRadius = 0.;
+        rhsInteractionVolume = 0.;
+    } else {
+        auto maxRhsCutoffPotential = std::max_element(rhsPotentials.begin(), rhsPotentials.end(),
+                                                      [](const pot p1, const pot p2) {
+                                                          return p1->getCutoffRadius() < p2->getCutoffRadius();
+                                                      });
+        rhsInteractionRadius = (*maxRhsCutoffPotential)->getCutoffRadius();
+        rhsInteractionVolume = 4./3. * util::numeric::pi<scalar>() * std::pow(rhsInteractionRadius, 3);
+    }
+
+    // effective interaction and reaction volumina
+    const auto integrand = [](const scalar radius, std::vector<pot> potentials, const scalar kbt_) -> scalar {
+        scalar energy = 0.;
+        for (const auto &pot : potentials) {
+            const Vec3 difference(radius, 0., 0.);
+            energy += pot->calculateEnergy(difference);
+        }
+        const scalar result =
+                4. * readdy::util::numeric::pi<scalar>() * radius * radius * std::exp(-1. * energy / kbt_);
+        return result;
+    };
+    kbt = ctx.kBT();
+    const auto lhsIntegrand = std::bind(integrand, std::placeholders::_1, lhsPotentials, kbt);
+    const auto rhsIntegrand = std::bind(integrand, std::placeholders::_1, rhsPotentials, kbt);
+
+    const scalar desiredError = 1e-10;
+    const std::size_t maxiter = 1000;
+
+    // effective lhs interaction volume
+    {
+        const auto result = util::integration::integrateAdaptive(lhsIntegrand, 0., lhsInteractionRadius, desiredError, maxiter);
+        const auto achievedError = result.second;
+        if (achievedError> desiredError) {
+            readdy::log::warn("Integration of potentials yielded larger error ({}) than desired ({}).",
+                              achievedError, desiredError);
+        }
+        effectiveLhsInteractionVolume = result.first;
+    }
+
+    // effective rhs interaction volume
+    {
+        const auto result = util::integration::integrateAdaptive(rhsIntegrand, 0., rhsInteractionRadius, desiredError, maxiter);
+        const auto achievedError = result.second;
+        if (achievedError> desiredError) {
+            readdy::log::warn("Integration of potentials yielded larger error ({}) than desired ({}).",
+                              achievedError, desiredError);
+        }
+        effectiveRhsInteractionVolume = result.first;
+    }
+
+    // effective lhs reaction volume
+    {
+        const auto result = util::integration::integrateAdaptive(lhsIntegrand, 0., reactionRadius, desiredError, maxiter);
+        const auto achievedError = result.second;
+        if (achievedError> desiredError) {
+            readdy::log::warn("Integration of potentials yielded larger error ({}) than desired ({}).",
+                              achievedError, desiredError);
+        }
+        effectiveLhsReactionVolume = result.first;
+    }
+
+    // effective rhs reaction volume
+    {
+        const auto result = util::integration::integrateAdaptive(rhsIntegrand, 0., reactionRadius, desiredError, maxiter);
+        const auto achievedError = result.second;
+        if (achievedError> desiredError) {
+            readdy::log::warn("Integration of potentials yielded larger error ({}) than desired ({}).",
+                              achievedError, desiredError);
+        }
+        effectiveRhsReactionVolume = result.first;
+    }
+
+    // FusionFission needs a cumulative distribution
+    if (reversibleType == ReversibleType::FusionFission) {
+        const size_t nPoints = 1000;
+        fissionRadii.reserve(nPoints);
+        const scalar dr = reactionRadius / static_cast<scalar>(nPoints);
+        scalar r = 0.;
+        for (size_t i = 0; i < nPoints + 1; ++i) {
+            fissionRadii.push_back(r);
+            r += dr;
+        }
+        for (size_t i = 0; i < fissionRadii.size(); ++i) {
+            const auto result = util::integration::integrateAdaptive(lhsIntegrand, fissionRadii.front(),
+                                                                     fissionRadii[i], desiredError, maxiter);
+            const auto cumvalue = result.first;
+            const auto achievedError = result.second;
+            if (achievedError > desiredError) {
+                readdy::log::warn("Integration of lhs potentials yielded larger error ({}) than desired ({}).",
+                                  achievedError, desiredError);
+            }
+            cumulativeFissionProb.push_back(cumvalue);
+        }
+        // normalize fission probability to 1
+        for (auto &p : cumulativeFissionProb) {
+            p = p / cumulativeFissionProb.back();
+        }
+    }
+
+    // acceptance prefactor
+    switch (reversibleType) {
+        case FusionFission:
+            acceptancePrefactor = 1.;
+            break;
+        case ConversionConversion:
+            acceptancePrefactor = 1.;
+            break;
+        case EnzymaticEnzymatic:
+            acceptancePrefactor = effectiveLhsReactionVolume / effectiveRhsReactionVolume;
+            break;
+        default: throw std::logic_error("Unknown type of reversible reaction");
+    }
+
+    totalVolume = ctx.boxVolume();
+
+    // inferred macro rates
+    switch (reversibleType) {
+        case FusionFission:
+            // In this case the equ. constant is K_d V, where K_d = k_off / k_on is the dissociation constant.
+            // We multiply it by the volume to have a unitless expression
+            equilibriumConstant = (microBackwardRate / microForwardRate) *
+                                  (totalVolume - lhsInteractionVolume + effectiveLhsInteractionVolume) /
+                                  effectiveLhsReactionVolume;
+            macroBackwardRate = microBackwardRate;
+            macroForwardRate = macroBackwardRate * totalVolume / equilibriumConstant;
+            break;
+        case ConversionConversion:
+            macroForwardRate = microForwardRate;
+            macroBackwardRate = microBackwardRate;
+            equilibriumConstant = macroBackwardRate / macroForwardRate;
+            break;
+        case EnzymaticEnzymatic:
+            macroForwardRate = microForwardRate * totalVolume * effectiveLhsReactionVolume /
+                               (totalVolume - lhsInteractionVolume + effectiveLhsInteractionVolume);
+            macroBackwardRate = microBackwardRate * totalVolume * effectiveRhsReactionVolume /
+                                (totalVolume - rhsInteractionVolume + effectiveRhsInteractionVolume);
+            equilibriumConstant = macroBackwardRate / macroForwardRate;
+            break;
+        default: throw std::logic_error("Unknown type of reversible reaction");
+    }
+
+    log::info(describe());
+}
+
+std::string reactions::ReversibleReactionConfig::describe() const {
+    std::stringstream description;
+    description << fmt::format("ReversibleReactionConfig({}", readdy::util::str::newline);
+    
+    description << fmt::format("forwardId {} {}", forwardId, readdy::util::str::newline);
+    description << fmt::format("forwardReaction {}{}{}",
+                               readdy::util::str::newline, *(ctx.reactions().byId(forwardId)), readdy::util::str::newline);
+
+    description << fmt::format("backwardId {} {}", backwardId, readdy::util::str::newline);
+    description << fmt::format("backwardReaction {}{}{}", 
+                               readdy::util::str::newline, *(ctx.reactions().byId(backwardId)), readdy::util::str::newline);
+    
+    if (numberLhsTypes==1) {
+        description << fmt::format("lhsTypes {} {}", lhsTypes[0], readdy::util::str::newline);
+    } else if (numberLhsTypes==2){
+        description << fmt::format("lhsTypes {} and {} {}", lhsTypes[0], lhsTypes[1], readdy::util::str::newline);
+    }
+    if (numberRhsTypes==1) {
+        description << fmt::format("rhsTypes {} {}", rhsTypes[0], readdy::util::str::newline);
+    } else if (numberRhsTypes==2){
+        description << fmt::format("rhsTypes {} and {} {}", rhsTypes[0], rhsTypes[1], readdy::util::str::newline);
+    }
+    
+    description << fmt::format("reversibleReactionType {} {}", reversibleType, readdy::util::str::newline);
+
+    description << fmt::format("microForwardRate {} {}", microForwardRate, readdy::util::str::newline);
+    description << fmt::format("microBackwardRate {} {}", microBackwardRate, readdy::util::str::newline);
+    description << fmt::format("reactionRadius {} {}", reactionRadius, readdy::util::str::newline);
+
+    description << fmt::format("lhsPotentials{}", readdy::util::str::newline);
+    for (const auto &p : lhsPotentials) {
+        description << fmt::format("    {}{}", p->describe(), readdy::util::str::newline);
+    }
+    description << fmt::format("rhsPotentials{}", readdy::util::str::newline);
+    for (const auto &p : rhsPotentials) {
+        description << fmt::format("    {}{}", p->describe(), readdy::util::str::newline);
+    }
+    
+    description << fmt::format("lhsInteractionRadius {} {}", lhsInteractionRadius, readdy::util::str::newline);
+    description << fmt::format("lhsInteractionVolume {} {}", lhsInteractionVolume, readdy::util::str::newline);
+    description << fmt::format("effectiveLhsInteractionVolume {} {}", effectiveLhsInteractionVolume, readdy::util::str::newline);
+    description << fmt::format("effectiveLhsReactionVolume {} {}", effectiveLhsReactionVolume, readdy::util::str::newline);
+
+    description << fmt::format("rhsInteractionRadius {} {}", rhsInteractionRadius, readdy::util::str::newline);
+    description << fmt::format("rhsInteractionVolume {} {}", rhsInteractionVolume, readdy::util::str::newline);
+    description << fmt::format("effectiveRhsInteractionVolume {} {}", effectiveRhsInteractionVolume, readdy::util::str::newline);
+    description << fmt::format("effectiveRhsReactionVolume {} {}", effectiveRhsReactionVolume, readdy::util::str::newline);
+    
+    description << fmt::format("totalVolume {} {}", totalVolume, readdy::util::str::newline);
+    description << fmt::format("kbt {} {}", kbt, readdy::util::str::newline);
+    description << fmt::format("acceptancePrefactor {} {}", acceptancePrefactor, readdy::util::str::newline);
+
+    description << fmt::format("inferred macro rates {}", readdy::util::str::newline);
+    description << fmt::format("    equilibriumConstant {} {}", equilibriumConstant, readdy::util::str::newline);
+    description << fmt::format("    macroForwardRate {} {}", macroForwardRate, readdy::util::str::newline);
+    description << fmt::format("    macroBackwardRate {} {}", macroBackwardRate, readdy::util::str::newline);
+    description << fmt::format("){}",  readdy::util::str::newline);
+    return description.str();
+}
+
+reactions::DetailedBalance::DetailedBalance(scalar timeStep) : TimeStepDependentAction(timeStep) {}
+
+void reactions::DetailedBalance::searchReversibleReactions(const Context &ctx) {
+    reversibleReactions.clear();
+
+    const auto &order1Flat = ctx.reactions().order1Flat();
+    const auto &order2Flat = ctx.reactions().order2Flat();
+
+    // look for FusionFission
+    for (;false;) {
+
+    }
+
+    // look for ConversionConversion
+    for (;false;) {
+
+    }
+
+    // look for EnzymaticEnzymatic
+    for (;false;) {
+
+    }
+
+    if (ctx.reactions().nOrder1() == 1 && ctx.reactions().nOrder2() == 1) {
+        // @fixme assume these two reactions are the fusion/fission pair
+        const auto fission = ctx.reactions().order1Flat().at(0);
+        const auto fusion = ctx.reactions().order2Flat().at(0);
+        if (fission->productDistance() != fusion->eductDistance()) {
+            throw std::logic_error("product distance of fission has to be equal to educt distance of fusion");
+        }
+        const auto pots = ctx.potentials().potentialsOf(fusion->educts()[0], fusion->educts()[1]);
+        scalar maxCutoff = 0.;
+        for (const auto &p : pots) {
+            if (p->getCutoffRadius() > maxCutoff) {
+                maxCutoff = p->getCutoffRadius();
+            }
+        }
+        ReversibleReactionConfig conf(fusion->id(), fission->id(), ctx);
+        reversibleReactions.push_back(conf);
+    } else {
+        throw std::runtime_error("no real search going on here ...");
+    }
+}
 
 AddParticles::AddParticles(Kernel *const kernel, const std::vector<Particle> &particles)
         : particles(particles), kernel(kernel) {}

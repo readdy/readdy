@@ -60,6 +60,8 @@ public:
 
     std::unique_ptr<model::actions::reactions::Gillespie> gillespie(scalar timeStep) const override;
 
+    std::unique_ptr<model::actions::reactions::DetailedBalance> detailedBalance(scalar timeStep) const override;
+
     std::unique_ptr<model::actions::top::EvaluateTopologyReactions>
     evaluateTopologyReactions(scalar timeStep) const override;
 };

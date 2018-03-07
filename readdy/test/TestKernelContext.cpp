@@ -345,6 +345,19 @@ TEST_F(TestKernelContext, GetAllReactions) {
     EXPECT_EQ(o1flat.size() + o2flat.size(), 5);
 }
 
+TEST_F(TestKernelContext, GetReactionById) {
+    m::Context ctx;
+    ctx.particle_types().add("A", 1.);
+    ctx.reactions().add("foo: A->", 1.);
+    ctx.reactions().add("bla: A+(1)A->A", 1.);
+    ctx.configure();
+    auto idFoo = ctx.reactions().idOf("foo");
+    auto idBla = ctx.reactions().idOf("bla");
+    auto foo = ctx.reactions().byId(idFoo);
+    auto bla = ctx.reactions().byId(idBla);
+    EXPECT_EQ(foo->name(), "foo");
+    EXPECT_EQ(bla->name(), "bla");
+}
 
 INSTANTIATE_TEST_CASE_P(TestKernelContext, TestKernelContextWithKernels,
                         ::testing::ValuesIn(readdy::testing::getKernelsToTest()));

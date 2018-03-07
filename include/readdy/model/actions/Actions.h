@@ -31,13 +31,14 @@
  *   - DefaultReactionProgram: A program that executes the default reaction scheme.
  *   - CompartmentConversion: Perform instantaneous particle conversions depending on the particles' position.
  *
- * Further, specializations of ProgramName<T> are declared.
+ * Further, specializations of ActionName<T> are declared.
  *
- * @file Programs.h
- * @brief Declaration of all globally available programs.
+ * @file Actions.h
+ * @brief Declaration of all globally available actions.
  * @author clonker
+ * @author chrisfroe
  * @date 11.04.16
- * @todo provide more detailed descriptions for some of the programs
+ * @todo provide more detailed descriptions for some of the actions
  */
 #pragma once
 
@@ -45,6 +46,9 @@
 #include <readdy/model/Particle.h>
 #include <readdy/model/actions/Action.h>
 #include <readdy/model/observables/Observable.h>
+#include <readdy/model/reactions/Reaction.h>
+#include <readdy/model/potentials/PotentialOrder2.h>
+#include <readdy/model/Context.h>
 
 #if READDY_OSX || READDY_WINDOWS
 #include <functional>
@@ -121,6 +125,95 @@ public:
     explicit Gillespie(scalar timeStep);
 };
 
+/**
+ * Types of reversible reactions
+ * - FusionFission A + B <--> C
+ * - ConversionConversion A <--> B
+ * - EnzymaticEnzymatic C + A <--> C + B, reaction radii forw. and backw. have to be equal!
+ */
+enum ReversibleType {
+    FusionFission, ConversionConversion, EnzymaticEnzymatic
+};
+
+inline std::ostream& operator<<(std::ostream& os, const ReversibleType& reversibleType) {
+    switch (reversibleType) {
+        case ReversibleType::FusionFission: os << "FusionFission"; break;
+        case ReversibleType::ConversionConversion: os << "ConversionConversion"; break;
+        case ReversibleType::EnzymaticEnzymatic: os << "EnzymaticEnzymatic"; break;
+    }
+    return os;
+}
+
+/**
+ * A reversible reaction `lhs <--> rhs` is defined by two reactions:
+ * - forward `lhs --> rhs`
+ * - backward `lhs <-- rhs`
+ */
+struct ReversibleReactionConfig {
+    using ReactionId = readdy::model::reactions::Reaction::reaction_id;
+    using pot = readdy::model::potentials::PotentialOrder2 *;
+    ReactionId forwardId;
+    ReactionId backwardId;
+    std::uint8_t numberLhsTypes; // either 1 or 2
+    std::array<particle_type_type, 2> lhsTypes;
+    std::uint8_t numberRhsTypes; // either 1 or 2
+    std::array<particle_type_type, 2> rhsTypes;
+
+    ReversibleType reversibleType;
+
+    scalar microForwardRate;
+    scalar microBackwardRate;
+
+    scalar reactionRadius = 0.; // must be equal forward and backward only FusionFission and EnzymaticEnzymatic
+
+    std::vector<pot> lhsPotentials;
+    std::vector<pot> rhsPotentials; // only needed for EnzymaticEnzymatic
+    scalar lhsInteractionRadius;
+    scalar rhsInteractionRadius;
+    scalar lhsInteractionVolume;
+    scalar rhsInteractionVolume;
+    scalar effectiveLhsInteractionVolume;
+    scalar effectiveRhsInteractionVolume;
+    scalar effectiveLhsReactionVolume;
+    scalar effectiveRhsReactionVolume;
+
+    scalar totalVolume;
+    scalar kbt;
+    scalar acceptancePrefactor = 1.; // EnzymaticEnzymatic only
+
+    // To draw fission radius
+    std::vector<scalar> fissionRadii; // FusionFission only
+    std::vector<scalar> cumulativeFissionProb; // FusionFission only
+
+    // these are inferred from the microscopic quantities
+    scalar equilibriumConstant;
+    scalar macroForwardRate;
+    scalar macroBackwardRate;
+
+    const Context &ctx;
+
+    explicit ReversibleReactionConfig(ReactionId forwardId, ReactionId backwardId, const Context &ctx);
+
+    std::string describe() const;
+
+    scalar drawFissionDistance() const {
+        auto u = readdy::model::rnd::uniform_real();
+        auto it = std::lower_bound(cumulativeFissionProb.begin(), cumulativeFissionProb.end(), u);
+        auto index = std::distance(cumulativeFissionProb.begin(), it);
+        return fissionRadii[index];
+    }
+};
+
+class DetailedBalance : public TimeStepDependentAction {
+public:
+    explicit DetailedBalance(scalar timeStep);
+
+protected:
+    std::vector<ReversibleReactionConfig> reversibleReactions;
+
+    void searchReversibleReactions(const readdy::model::Context& ctx);
+};
+
 NAMESPACE_END(reactions)
 
 NAMESPACE_BEGIN(top)
@@ -166,6 +259,11 @@ getActionName(typename std::enable_if<std::is_base_of<reactions::UncontrolledApp
 template<typename T>
 const std::string getActionName(typename std::enable_if<std::is_base_of<reactions::Gillespie, T>::value>::type * = 0) {
     return "Gillespie";
+}
+
+template<typename T>
+const std::string getActionName(typename std::enable_if<std::is_base_of<reactions::DetailedBalance, T>::value>::type * = 0) {
+    return "DetailedBalance";
 }
 
 template<typename T>

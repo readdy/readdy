@@ -148,15 +148,15 @@ TEST_P(TestReactions, FusionFissionWeights) {
     }
 }
 
-TEST_P(TestReactions, FusionThroughBoundary) {
+auto fusionThroughBoundary = [](readdy::model::Kernel* kernel, const std::string &reactionHandler){
     auto &ctx = kernel->context();
     ctx.boxSize() = {{10, 10, 10}};
     ctx.periodicBoundaryConditions() = {true, true, true};
     ctx.particle_types().add("A", 0.);
     ctx.reactions().add("fus: A +(2) A -> A", 1e16);
 
+    auto &&reactions = kernel->actions().createReactionScheduler(reactionHandler, 1);
     auto &&neighborList = kernel->actions().updateNeighborList();
-    auto &&reactions = kernel->actions().uncontrolledApproximation(1);
     // resulting particle should be at 4.9
     kernel->stateModel().addParticle({4.5, 4.5, 4.5, ctx.particle_types().idOf("A")});
     kernel->stateModel().addParticle({-4.7, -4.7, -4.7, ctx.particle_types().idOf("A")});
@@ -167,20 +167,20 @@ TEST_P(TestReactions, FusionThroughBoundary) {
     const auto particles = kernel->stateModel().getParticles();
     EXPECT_EQ(particles.size(), 1);
     const auto &pos = particles[0].getPos();
-    EXPECT_NEAR(pos.x, 4.9, 0.00001);
-    EXPECT_NEAR(pos.y, 4.9, 0.00001);
-    EXPECT_NEAR(pos.z, 4.9, 0.00001);
-}
+    EXPECT_NEAR(pos.x, 4.9, 0.00001) << "wrong position in " << reactionHandler;
+    EXPECT_NEAR(pos.y, 4.9, 0.00001) << "wrong position in " << reactionHandler;
+    EXPECT_NEAR(pos.z, 4.9, 0.00001) << "wrong position in " << reactionHandler;
+};
 
-TEST_P(TestReactions, FissionNearBoundary) {
+auto fissionThroughBoundary = [](readdy::model::Kernel* kernel, const std::string &reactionHandler){
     auto &ctx = kernel->context();
     ctx.boxSize() = {{10, 10, 10}};
     ctx.periodicBoundaryConditions() = {true, true, true};
     ctx.particle_types().add("A", 0.);
-    ctx.reactions().add("fus: A -> A +(2) A", 1e16);
+    ctx.reactions().add("fis: A -> A +(2) A", 1e16);
 
+    auto &&reactions = kernel->actions().createReactionScheduler(reactionHandler, 1);
     auto &&neighborList = kernel->actions().updateNeighborList();
-    auto &&reactions = kernel->actions().uncontrolledApproximation(1);
     // one product will be in negative-x halfspace, the other in positive-x halfspace
     kernel->stateModel().addParticle({-4.9999999, 0, 0, ctx.particle_types().idOf("A")});
     kernel->context().configure();
@@ -192,10 +192,36 @@ TEST_P(TestReactions, FissionNearBoundary) {
     const auto &pos1 = particles[0].getPos();
     const auto &pos2 = particles[1].getPos();
     if (pos1.x <= 0.) {
-        EXPECT_GT(pos2.x, 0.);
+        EXPECT_GT(pos2.x, 0.) << "wrong position in " << reactionHandler;
     } else if (pos1.x >= 0.) {
-        EXPECT_LT(pos2.x, 0.);
+        EXPECT_LT(pos2.x, 0.) << "wrong position in " << reactionHandler;
     }
+};
+
+std::vector<std::string> reactionHandlers = {"UncontrolledApproximation", "Gillespie", "DetailedBalance"};
+
+TEST_P(TestReactions, FusionThroughBoundaryUncontrolled) {
+    fusionThroughBoundary(kernel.get(), "UncontrolledApproximation");
+}
+
+TEST_P(TestReactions, FusionThroughBoundaryGillespie) {
+    fusionThroughBoundary(kernel.get(), "Gillespie");
+}
+
+TEST_P(TestReactions, FusionThroughBoundaryDetailedBalance) {
+    fusionThroughBoundary(kernel.get(), "DetailedBalance");
+}
+
+TEST_P(TestReactions, FissionNearBoundaryUncontrolled) {
+    fissionThroughBoundary(kernel.get(), "UncontrolledApproximation");
+}
+
+TEST_P(TestReactions, FissionNearBoundaryGillespie) {
+    fissionThroughBoundary(kernel.get(), "Gillespie");
+}
+
+TEST_P(TestReactions, FissionNearBoundaryDetailedBalance) {
+    fissionThroughBoundary(kernel.get(), "DetailedBalance");
 }
 
 /*

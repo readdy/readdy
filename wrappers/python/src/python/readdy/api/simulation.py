@@ -36,7 +36,7 @@ class Simulation(object):
 
     def __init__(self, kernel, context, unit_config, output_file="", integrator="EulerBDIntegrator",
                  reaction_handler="Gillespie", evaluate_topology_reactions=True, evaluate_forces=True,
-                 evaluate_observables=True, skin=0):
+                 evaluate_observables=True, skin=0, simulation_scheme="ReaDDyScheme"):
         """
         Creates a new simulation object
         :param kernel: the kernel to use
@@ -66,7 +66,7 @@ class Simulation(object):
         self._skin = 0
         self._integrator = "EulerBDIntegrator"
         self._reaction_handler = "Gillespie"
-        self._simulation_scheme = "ReaDDyScheme"
+        self._simulation_scheme = simulation_scheme
         self._output_file = ""
 
         self.output_file = output_file
@@ -79,7 +79,7 @@ class Simulation(object):
         self.evaluate_observables = evaluate_observables
         self.skin = skin
         self._show_progress = True
-        self._progress_output_stride = 10
+        self._progress_output_stride = 100
 
         self._progress = None
 
@@ -417,6 +417,110 @@ class Simulation(object):
                 self._progress = _SimulationProgress(n_steps // self._progress_output_stride)
                 scheme.set_progress_callback(self._progress.callback)
                 scheme.set_progress_output_stride(self._progress_output_stride)
+            scheme.run(n_steps)
+        if self.show_progress:
+            self._progress.finish()
+
+
+class DBSimulation(Simulation):
+    def __init__(self, kernel, context, unit_config, output_file="", integrator="EulerBDIntegrator",
+                 reaction_handler="Gillespie", evaluate_topology_reactions=True, evaluate_forces=True,
+                 evaluate_observables=True, skin=0, diss_const=None):
+        """Alternative reaction scheme fulfilling detailed balance"""
+        super(DBSimulation, self).__init__(kernel, context, unit_config, output_file, integrator,
+                                           reaction_handler="DetailedBalance", evaluate_topology_reactions=False,
+                                           evaluate_forces=evaluate_forces, evaluate_observables=evaluate_observables,
+                                           skin=skin, simulation_scheme="DetailedBalanceScheme")
+
+        self._dissociation_constant = diss_const
+
+    @property
+    def dissociation_constant(self):
+        print(self.time_unit)
+        print(self.length_unit)
+        # @todo units
+        return self._dissociation_constant
+
+    @dissociation_constant.setter
+    def dissociation_constant(self, value):
+        # @todo units
+        print(self.time_unit)
+        print(self.length_unit)
+        self._dissociation_constant = value
+
+    @property
+    def reaction_handler(self):
+        return self._reaction_handler
+
+    @reaction_handler.setter
+    def reaction_handler(self, value):
+        supported_reaction_handlers = ("DetailedBalance", )
+        assert isinstance(value, str) and value in supported_reaction_handlers, \
+            "the reaction handler can only be one of {}".format(",".join(supported_reaction_handlers))
+        self._reaction_handler = value
+
+    @property
+    def simulation_scheme(self):
+        return self._simulation_scheme
+
+    @simulation_scheme.setter
+    def simulation_scheme(self, value):
+        """
+        Set the simulation scheme to use in the run loop. Thus far there is the `DefaultScheme` and the
+        `AdvancedScheme`.
+
+        :param value: the scheme
+        """
+        if value in ("DetailedBalanceScheme"):
+            self._simulation_scheme = value
+        else:
+            raise ValueError("Simulation scheme value can only be \"DetailedBalanceScheme\".")
+
+    def run(self, n_steps, timestep, show_system=True):
+        """
+        Executes the simulation as configured.
+
+        :param n_steps: number of steps to perform
+        :param timestep: the time step to use [time]
+        :param show_system: determines if system configuration is printed
+        """
+        import os
+        from contextlib import closing
+        import readdy._internal.readdybinding.common.io as io
+
+        if show_system:
+            print(self._simulation.context.describe())
+
+        timestep = self._unit_conf.convert(timestep, self.time_unit)
+
+        if self.output_file is not None and len(self.output_file) > 0 and os.path.exists(self.output_file):
+            raise ValueError("Output file already existed: {}".format(self.output_file))
+
+        if self.simulation_scheme == 'DetailedBalanceScheme':
+            conf = self._simulation.run_scheme_db(True)
+        else:
+            raise ValueError("Invalid simulation scheme type: {}".format(self.simulation_scheme))
+
+        conf = conf.with_integrator(self.integrator) \
+            .include_forces(self.evaluate_forces) \
+            .evaluate_topology_reactions(self.evaluate_topology_reactions) \
+            .with_skin_size(self._skin) \
+            .evaluate_observables(self.evaluate_observables)
+
+        if self.output_file is not None and len(self.output_file) > 0:
+            with closing(io.File.create(self.output_file)) as f:
+                for name, chunk_size, handle in self._observables._observable_handles:
+                    handle.enable_write_to_file(f, name, chunk_size)
+                scheme = conf.write_config_to_file(f).configure(timestep, self._dissociation_constant)
+                if self.show_progress:
+                    self._progress = _SimulationProgress(1 + n_steps // 100)
+                    scheme.set_progress_callback(self._progress.callback)
+                scheme.run(n_steps)
+        else:
+            scheme = conf.configure(timestep, self._dissociation_constant)
+            if self.show_progress:
+                self._progress = _SimulationProgress(1 + n_steps // 100)
+                scheme.set_progress_callback(self._progress.callback)
             scheme.run(n_steps)
         if self.show_progress:
             self._progress.finish()

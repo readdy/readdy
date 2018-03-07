@@ -87,6 +87,40 @@ public:
 protected:
     SCPUKernel *const kernel;
 };
+
+struct ParticleBackup {
+    std::uint8_t nParticles; // either 1 or 2
+    using index_type = model::SCPUParticleData::entry_index;
+    index_type idx1, idx2;
+    particle_type_type t1, t2;
+    Vec3 pos1, pos2;
+
+    ParticleBackup(unsigned int nParticles, index_type idx1, index_type idx2, particle_type_type t1, particle_type_type t2, Vec3 pos1, Vec3 pos2);
+};
+
+class SCPUDetailedBalance : public readdy::model::actions::reactions::DetailedBalance {
+    using scpu_data = readdy::kernel::scpu::model::SCPUParticleData;
+    using fix_pos = readdy::model::Context::fix_pos_fun;
+    using reaction_type = readdy::model::reactions::ReactionType;
+public:
+    SCPUDetailedBalance(SCPUKernel *const kernel, scalar timeStep)
+            : readdy::model::actions::reactions::DetailedBalance(timeStep), kernel(kernel) {};
+
+    // on each reaction, calc system energy, propose the step, recalculate energy, get the delta, subtract interaction
+    // of a and b (because it was in the proposal step), accept with e^{-beta (delta - u_ab)}
+    void perform(const util::PerformanceNode &node) override;
+
+protected:
+    SCPUKernel *const kernel;
+    bool firstPerform = true;
+
+    void calculateForcesEnergies();
+
+    std::pair<model::SCPUParticleData::entries_update, scalar> performEvent(scpu_data &data, const Event &event, bool recordCounts);
+
+    model::SCPUParticleData::entries_update generateBackwardUpdate(const ParticleBackup &particleBackup, const std::vector<model::SCPUParticleData::entry_index> &updateRecord) const;
+};
+
 }
 }
 }

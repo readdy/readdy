@@ -373,6 +373,12 @@ constexpr std::array<ScalarType, 50> weightsGauss201 = {
  */
 template<typename Func, typename ScalarType>
 inline auto integrate(Func f, ScalarType lowerLimit, ScalarType upperLimit) {
+    if (lowerLimit > upperLimit) {
+        throw std::invalid_argument("lower limit cannot be larger than upper limit");
+    } else if (lowerLimit == upperLimit) {
+        return std::make_pair(static_cast<ScalarType>(0.), static_cast<ScalarType>(0.));
+    }
+
     const ScalarType midpoint = (lowerLimit + upperLimit) / 2.;
     const ScalarType halfInterval = (upperLimit - lowerLimit) / 2.;
 
@@ -412,7 +418,11 @@ template<typename ScalarType>
 struct Panel {
     explicit Panel(ScalarType lowerLimit, ScalarType upperLimit, ScalarType integral, ScalarType absoluteErrorEstimate)
             : lowerLimit(lowerLimit), upperLimit(upperLimit), integral(integral),
-              absoluteErrorEstimate(absoluteErrorEstimate) {};
+              absoluteErrorEstimate(absoluteErrorEstimate) {
+        if (lowerLimit > upperLimit) {
+            throw std::invalid_argument("Limits in a Panel must be ordered");
+        }
+    };
 
     bool operator<(const Panel<ScalarType> &other) const {
         return absoluteErrorEstimate < other.absoluteErrorEstimate;

@@ -72,3 +72,15 @@ TEST(TestIntegration, IntegrateAdaptivePeriodicToMachinePrecision) {
     EXPECT_FLOAT_EQ(result.first, trueIntegral);
     EXPECT_LE(result.second, std::numeric_limits<readdy::scalar>::epsilon()) << "error should be <= machine precision ";
 }
+
+TEST(TestIntegration, LimitsAreEqual) {
+    auto integrand = [](const readdy::scalar x){return 10.;};
+    auto result = readdy::util::integration::integrateAdaptive(integrand, 1., 1.);
+    EXPECT_FLOAT_EQ(result.first, 0.);
+    EXPECT_FLOAT_EQ(result.second, 0.);
+}
+
+TEST(TestIntegration, UnorderedLimits) {
+    auto integrand = [](const readdy::scalar x){return 10.;};
+    EXPECT_ANY_THROW(readdy::util::integration::integrateAdaptive(integrand, 1., 0.));
+}
