@@ -308,9 +308,17 @@ void SCPUEvaluateTopologyReactions::handleTopologyTopologyReaction(SCPUStateMode
             // introduce edge if not already present
             auto v1 = t1->vertexForParticle(event.idx1);
             auto v2 = t1->vertexForParticle(event.idx2);
+            if(entry1Type == reaction.type1() && t1->type() == reaction.top_type1()) {
+                v1->setParticleType(reaction.type_to1());
+                v2->setParticleType(reaction.type_to2());
+            } else {
+                v1->setParticleType(reaction.type_to2());
+                v2->setParticleType(reaction.type_to1());
+            }
             if(!t1->graph().containsEdge(v1, v2)) {
                 t1->graph().addEdge(v1, v2);
             }
+
         } else {
             // merge topologies
             for(auto pidx : t2->getParticles()) {
