@@ -95,7 +95,7 @@ void GraphTopology::configure() {
 
             ss << "The edge " << v1->particleIndex;
             ss << " -- " << v2->particleIndex;
-            ss << " has no bond configured! (See Context.configure_bond_potential())";
+            ss << " has no bond configured!";
 
             throw std::invalid_argument(ss.str());
         }
