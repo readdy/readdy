@@ -31,12 +31,15 @@
  */
 
 #include <readdy/model/observables/RadialDistribution.h>
+
+#include <utility>
+
 #include <readdy/model/Kernel.h>
 #include <readdy/common/numeric.h>
 #include <readdy/model/observables/io/Types.h>
-#include <readdy/model/observables/io/TimeSeriesWriter.h>
 
-#include <utility>
+#include <readdy/model/observables/io/TimeSeriesWriter.h>
+#include <readdy/common/boundary_condition_operations.h>
 
 namespace readdy {
 namespace model {
@@ -68,12 +71,13 @@ void RadialDistribution::evaluate() {
                                                       return isInCollection(p, typeCountFrom);
                                                   });
         {
-            const auto &distSquared = kernel->context().distSquaredFun();
+            const auto pbc = kernel->context().periodicBoundaryConditions().data();
+            const auto box = kernel->context().boxSize().data();
             for (auto &&pFrom : particles) {
                 if (isInCollection(pFrom, typeCountFrom)) {
                     for (auto &&pTo : particles) {
                         if (isInCollection(pTo, typeCountTo) && pFrom.getId() != pTo.getId()) {
-                            const auto dist = sqrt(distSquared(pFrom.getPos(), pTo.getPos()));
+                            const auto dist = sqrt(bcs::distSquared(pFrom.getPos(), pTo.getPos(), box, pbc));
                             auto upperBound = std::upper_bound(binBorders.begin(), binBorders.end(), dist);
                             if (upperBound != binBorders.end()) {
                                 const auto binBordersIdx = upperBound - binBorders.begin();
@@ -96,8 +100,9 @@ void RadialDistribution::evaluate() {
                 const auto upperRadius = binBorders[idx + 1];
                 *it_distribution =
                         (*it_counts) /
-                        (4 / 3 * readdy::util::numeric::pi() * (std::pow(upperRadius, 3) - std::pow(lowerRadius, 3)) *
-                         nFromParticles * particleToDensity);
+                        (c_::four / c_::three * readdy::util::numeric::pi<scalar>() * (std::pow(upperRadius, c_::three)
+                                                                       - std::pow(lowerRadius, c_::three))
+                         * nFromParticles * particleToDensity);
                 ++it_distribution;
                 ++it_centers;
             }

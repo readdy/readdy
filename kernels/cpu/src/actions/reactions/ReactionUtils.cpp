@@ -43,7 +43,8 @@ data_t::DataUpdate handleEventsGillespie(
         CPUKernel *const kernel, scalar timeStep, bool filterEventsInAdvance, bool approximateRate,
         std::vector<event_t> &&events, std::vector<record_t> *maybeRecords, reaction_counts_map *maybeCounts) {
     using rdy_particle_t = readdy::model::Particle;
-    const auto &fixPos = kernel->context().fixPositionFun();
+    const auto &box = kernel->context().boxSize().data();
+    const auto &pbc = kernel->context().periodicBoundaryConditions().data();
 
     data_t::EntriesUpdate newParticles{};
     std::vector<data_t::size_type> decayedEntries{};
@@ -73,7 +74,7 @@ data_t::DataUpdate handleEventsGillespie(
                         record_t record;
                         record.id = reaction->id();
                         performReaction(data, ctx, entry1, entry1, newParticles, decayedEntries, reaction, &record);
-                        fixPos(record.where);
+                        bcs::fixPosition(record.where, box, pbc);
                         maybeRecords->push_back(record);
                     } else {
                         performReaction(data, ctx, entry1, entry1, newParticles, decayedEntries, reaction, nullptr);
@@ -89,7 +90,7 @@ data_t::DataUpdate handleEventsGillespie(
                         record.id = reaction->id();
                         performReaction(data, ctx, entry1, event.idx2, newParticles, decayedEntries, reaction,
                                         &record);
-                        fixPos(record.where);
+                        bcs::fixPosition(record.where, box, pbc);
                         maybeRecords->push_back(record);
                     } else {
                         performReaction(data, ctx, entry1, event.idx2, newParticles, decayedEntries, reaction,

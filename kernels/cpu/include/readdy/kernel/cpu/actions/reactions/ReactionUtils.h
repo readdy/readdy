@@ -34,6 +34,7 @@
 #include <readdy/model/RandomProvider.h>
 #include <readdy/kernel/cpu/CPUKernel.h>
 #include <readdy/common/logging.h>
+#include <readdy/common/boundary_condition_operations.h>
 #include "Event.h"
 
 namespace readdy {
@@ -72,8 +73,9 @@ data_t::DataUpdate handleEventsGillespie(
 
 template<typename ParticleIndexCollection>
 void gatherEvents(CPUKernel *const kernel, const ParticleIndexCollection &particles, const neighbor_list* nl,
-                  const data_t *data, readdy::scalar &alpha, std::vector<event_t> &events,
-                  const readdy::model::Context::dist_squared_fun& d2) {
+                  const data_t *data, readdy::scalar &alpha, std::vector<event_t> &events) {
+    const auto &box = kernel->context().boxSize();
+    const auto &pbc = kernel->context().periodicBoundaryConditions();
     const auto& reaction_registry = kernel->context().reactions();
     for (const auto index : particles) {
         const auto &entry = data->entry_at(index);
@@ -111,7 +113,7 @@ void gatherEvents(CPUKernel *const kernel, const ParticleIndexCollection &partic
                 if(!neighbor.deactivated) {
                     const auto &reactions = kernel->context().reactions().order2ByType(entry.type, neighbor.type);
                     if (!reactions.empty()) {
-                        const auto distSquared = d2(neighbor.pos, entry.pos);
+                        const auto distSquared = bcs::distSquared(neighbor.pos, entry.pos, box, pbc);
                         for (auto itReactions = reactions.begin(); itReactions < reactions.end(); ++itReactions) {
                             const auto &react = *itReactions;
                             const auto rate = react->rate();
@@ -136,8 +138,10 @@ template<typename Reaction>
 void performReaction(data_t* data, const readdy::model::Context& context, data_t::size_type idx1, data_t::size_type idx2,
                      data_t::EntriesUpdate& newEntries, std::vector<data_t::size_type>& decayedEntries,
                      Reaction* reaction, record_t* record) {
-    const auto& pbc = context.applyPBCFun();
-    const auto &shortestDifferenceFun = context.shortestDifferenceFun();
+
+    const auto &pbc = context.periodicBoundaryConditions().data();
+    const auto &box = context.boxSize().data();
+
     auto& entry1 = data->entry_at(idx1);
     auto& entry2 = data->entry_at(idx2);
     if(record) {
@@ -181,7 +185,9 @@ void performReaction(data_t* data, const readdy::model::Context& context, data_t
 
             //readdy::model::Particle p (, reaction->products()[1]);
             const auto id = readdy::model::Particle::nextId();
-            newEntries.emplace_back(pbc(entry1.pos - reaction->weight2() * reaction->productDistance() * n3), reaction->products()[1], id);
+            newEntries.emplace_back(bcs::applyPBC(entry1.pos - reaction->weight2() * reaction->productDistance() * n3,
+                                                  box, pbc),
+                                    reaction->products()[1], id);
 
             entry1.type = reaction->products()[0];
             entry1.id = readdy::model::Particle::nextId();
@@ -195,12 +201,12 @@ void performReaction(data_t* data, const readdy::model::Context& context, data_t
         case reaction_type::Fusion: {
             const auto& e1Pos = entry1.pos;
             const auto& e2Pos = entry2.pos;
-            const auto difference = shortestDifferenceFun(e1Pos, e2Pos);
+            const auto difference = bcs::shortestDifference(e1Pos, e2Pos, box, pbc);
             if (reaction->educts()[0] == entry1.type) {
-                newEntries.emplace_back(pbc(entry1.pos + reaction->weight1() * difference),
+                newEntries.emplace_back(bcs::applyPBC(entry1.pos + reaction->weight1() * difference, box, pbc),
                                         reaction->products()[0], readdy::model::Particle::nextId());
             } else {
-                newEntries.emplace_back(pbc(entry1.pos + reaction->weight2() * difference),
+                newEntries.emplace_back(bcs::applyPBC(entry1.pos + reaction->weight2() * difference, box, pbc),
                                         reaction->products()[0], readdy::model::Particle::nextId());
             }
             decayedEntries.push_back(idx1);

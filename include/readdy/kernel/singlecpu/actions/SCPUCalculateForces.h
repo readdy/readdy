@@ -44,7 +44,7 @@ void computeVirial(const Vec3& r_ij, const Vec3 &force, Matrix33 &virial);
 
 template<>
 void computeVirial<true>(const Vec3& r_ij, const Vec3 &force, Matrix33 &virial) {
-    virial += math::outerProduct(-1.*r_ij, force);
+    virial += math::outerProduct<Matrix33>(-1.*r_ij, force);
 }
 
 template<>
@@ -108,9 +108,8 @@ private:
         if (!potentials.potentialsOrder2().empty()) {
             auto tSecondOrder = node.subnode("second order").timeit();
 
-            const auto &box = context.boxSize();
-            const auto &difference = context.shortestDifferenceFun();
-            //const auto &difference = context.shortestDifferenceFun();
+            const auto &box = context.boxSize().data();
+            const auto &pbc = context.periodicBoundaryConditions().data();
             for (auto cell = 0_z; cell < neighborList.nCells(); ++cell) {
                 for (auto it = neighborList.particlesBegin(cell); it != neighborList.particlesEnd(cell); ++it) {
                     auto pidx = *it;
@@ -119,9 +118,9 @@ private:
                     neighborList.forEachNeighbor(it, cell, [&](const std::size_t neighbor) {
                         auto &neighborEntry = data.entry_at(neighbor);
                         auto itPot = pots.find(neighborEntry.type);
-                        if (itPot != pots.end()) {
+                        if (itPot != std::end(pots)) {
                             Vec3 forceVec{0, 0, 0};
-                            auto x_ij = difference(entry.position(), neighborEntry.position());
+                            auto x_ij = bcs::shortestDifference(entry.position(), neighborEntry.position(), box, pbc);
                             for (const auto &potential : itPot->second) {
                                 potential->calculateForceAndEnergy(forceVec, stateModel.energy(), x_ij);
                             }

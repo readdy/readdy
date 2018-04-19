@@ -71,7 +71,6 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
     auto kernel = std::make_unique<readdy::kernel::cpu::CPUKernel>();
     kernel->context().periodicBoundaryConditions() = {{false, false, false}};
     kernel->context().boxSize() = {{100, 100, 100}};
-    const auto diff = kernel->context().shortestDifferenceFun();
     kernel->context().particle_types().add("A", .1); // type id 0
     kernel->context().particle_types().add("B", .1); // type id 1
     kernel->context().particle_types().add("C", .1); // type id 2
@@ -137,7 +136,8 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
 
         EXPECT_EQ(data.entry_at(0).type, fission.getTo1());
         EXPECT_EQ(data.entry_at(1).type, fission.getTo2());
-        auto p_12 = diff(data.pos(0), data.pos(1));
+        auto p_12 = readdy::bcs::shortestDifference(data.pos(0), data.pos(1), kernel->context().boxSize(),
+                                                    kernel->context().periodicBoundaryConditions());
         auto p_12_nondirect = data.pos(1) - data.pos(0);
         EXPECT_EQ(p_12_nondirect, p_12);
         auto distance = std::sqrt(p_12 * p_12);

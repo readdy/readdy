@@ -94,7 +94,7 @@ public:
 
     Recipe &separateVertex(const vertex_ref &vertex) {
         std::for_each(vertex->neighbors().begin(), vertex->neighbors().end(), [this, &vertex](const auto &neighbor) {
-            removeEdge(std::make_tuple(vertex, neighbor));
+            this->removeEdge(std::make_tuple(vertex, neighbor));
         });
         return *this;
     }

@@ -38,192 +38,45 @@
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(bcs)
 
-
-
-template<bool PX, bool PY, bool PZ>
-inline void fixPosition(Vec3 &vec, const scalar dx, const scalar dy, const scalar dz);
-
-template<>
-inline void fixPosition<true, true, true>(Vec3 &vec, const scalar dx, const scalar dy, const scalar dz) {
-    vec[0] -= floor((vec[0] + .5 * dx) / dx) * dx;
-    vec[1] -= floor((vec[1] + .5 * dy) / dy) * dy;
-    vec[2] -= floor((vec[2] + .5 * dz) / dz) * dz;
-};
-template<>
-inline void fixPosition<true, true, false>(Vec3 &vec, const scalar dx, const scalar dy, const scalar dz) {
-    vec[0] -= floor((vec[0] + .5 * dx) / dx) * dx;
-    vec[1] -= floor((vec[1] + .5 * dy) / dy) * dy;
-};
-template<>
-inline void fixPosition<true, false, true>(Vec3 &vec, const scalar dx, const scalar dy, const scalar dz) {
-    vec[0] -= floor((vec[0] + .5 * dx) / dx) * dx;
-    vec[2] -= floor((vec[2] + .5 * dz) / dz) * dz;
-};
-template<>
-inline void fixPosition<true, false, false>(Vec3 &vec, const scalar dx, const scalar dy, const scalar dz) {
-    vec[0] -= floor((vec[0] + .5 * dx) / dx) * dx;
-};
-template<>
-inline void fixPosition<false, true, true>(Vec3 &vec, const scalar dx, const scalar dy, const scalar dz) {
-    vec[1] -= floor((vec[1] + .5 * dy) / dy) * dy;
-    vec[2] -= floor((vec[2] + .5 * dz) / dz) * dz;
-};
-template<>
-inline void fixPosition<false, true, false>(Vec3 &vec, const scalar dx, const scalar dy, const scalar dz) {
-    vec[1] -= floor((vec[1] + .5 * dy) / dy) * dy;
-};
-template<>
-inline void fixPosition<false, false, true>(Vec3 &vec, const scalar dx, const scalar dy, const scalar dz) {
-    vec[2] -= floor((vec[2] + .5 * dz) / dz) * dz;
-};
-template<>
-inline void fixPosition<false, false, false>(Vec3 &vec, const scalar dx, const scalar dy, const scalar dz) {};
-
-template<bool PX, bool PY, bool PZ, typename Container>
-inline void fixPosition(Vec3 &vec, const Container &box) {
-    fixPosition<PX, PY, PZ>(vec, box.at(0), box.at(1), box.at(2));
+template<typename Container, typename PBC, int DIM = 3>
+inline void fixPosition(Vec3 &vec, const Container &box, const PBC &periodic) {
+    for(int d = 0; d < DIM; ++d) {
+        if(periodic[d]) {
+            while(vec[d] >= .5*box[d]) vec[d] -= box[d];
+            while(vec[d] < -.5*box[d]) vec[d] += box[d];
+        }
+    }
 };
 
-template<bool PX, bool PY, bool PZ>
-inline Vec3 applyPBC(const Vec3 &in, scalar dx, scalar dy, scalar dz);
+template<typename PBC, int DIM=3>
+inline Vec3 applyPBC(const Vec3 &in, const scalar *const box, const PBC &periodic) {
+    Vec3 out(in);
+    fixPosition<const scalar* const, PBC, DIM>(out, box, periodic);
+    return out;
+};
 
-template<>
-inline Vec3
-applyPBC<true, false, false>(const Vec3 &in, const scalar dx, const scalar /*unused*/, const scalar /*unused*/) {
-    return {in[0] - std::floor((in[0] + static_cast<scalar>(.5) * dx) / dx) * dx, in[1], in[2]};
-}
-
-template<>
-inline Vec3
-applyPBC<false, true, false>(const Vec3 &in, const scalar /*unused*/, const scalar dy, const scalar /*unused*/) {
-    return {in[0], in[1] - std::floor((in[1] + static_cast<scalar>(.5) * dy) / dy) * dy, in[2]};
-}
-
-template<>
-inline Vec3
-applyPBC<false, false, true>(const Vec3 &in, const scalar /*unused*/, const scalar /*unused*/, const scalar dz) {
-    return {in[0], in[1], in[2] - std::floor((in[2] + static_cast<scalar>(.5) * dz) / dz) * dz};
-}
-
-template<>
-inline Vec3 applyPBC<true, true, false>(const Vec3 &in, const scalar dx, const scalar dy, const scalar /*unused*/) {
-    return {in[0] - std::floor((in[0] + static_cast<scalar>(.5) * dx) / dx) * dx,
-            in[1] - std::floor((in[1] + static_cast<scalar>(.5) * dy) / dy) * dy, in[2]};
-}
-
-template<>
-inline Vec3 applyPBC<true, false, true>(const Vec3 &in, const scalar dx, const scalar /*unused*/, const scalar dz) {
-    return {in[0] - std::floor((in[0] + static_cast<scalar>(.5) * dx) / dx) * dx, in[1],
-            in[2] - std::floor((in[2] + static_cast<scalar>(.5) * dz) / dz) * dz};
-}
-
-template<>
-inline Vec3 applyPBC<false, true, true>(const Vec3 &in, const scalar /*unused*/, const scalar dy, const scalar dz) {
-    return {in[0], in[1] - std::floor((in[1] + static_cast<scalar>(.5) * dy) / dy) * dy,
-            in[2] - std::floor((in[2] + static_cast<scalar>(.5) * dz) / dz) * dz};
-}
-
-template<>
-inline Vec3 applyPBC<true, true, true>(const Vec3 &in, const scalar dx, const scalar dy, const scalar dz) {
-    return {in[0] - std::floor((in[0] + static_cast<scalar>(.5) * dx) / dx) * dx,
-            in[1] - std::floor((in[1] + static_cast<scalar>(.5) * dy) / dy) * dy,
-            in[2] - std::floor((in[2] + static_cast<scalar>(.5) * dz) / dz) * dz};
-}
-
-template<>
-inline Vec3 applyPBC<false, false, false>(const Vec3 &in, const scalar /*unused*/,
-                                          const scalar /*unused*/, const scalar /*unused*/) {
-    return in;
-}
-
-template<bool PX, bool PY, bool PZ>
-inline Vec3 shortestDifference(const Vec3 &lhs, const Vec3 &rhs, const scalar dx, const scalar dy,
-                               const scalar dz);
-
-template<>
-inline Vec3 shortestDifference<true, true, true>(const Vec3 &lhs, const Vec3 &rhs, const scalar dx, const scalar dy,
-                                                 const scalar dz) {
+template<typename Container, typename PBC, int DIM = 3>
+inline Vec3 shortestDifference(const Vec3 &lhs, const Vec3 &rhs, const Container &box, const PBC &periodic) {
     auto dv = rhs - lhs;
-    if (dv[0] > dx * .5) dv[0] -= dx;
-    else if (dv[0] <= -dx * .5) dv[0] += dx;
-    if (dv[1] > dy * .5) dv[1] -= dy;
-    else if (dv[1] <= -dy * .5) dv[1] += dy;
-    if (dv[2] > dz * .5) dv[2] -= dz;
-    else if (dv[2] <= -dz * .5) dv[2] += dz;
+    for(int i = 0; i < DIM; ++i) {
+        if(periodic[i]) {
+            if (dv[i] > box[i] * .5) dv[i] -= box[i];
+            else if (dv[i] <= -box[i] * .5) dv[i] += box[i];
+        }
+    }
     return dv;
 };
-template<>
-inline Vec3 shortestDifference<true, true, false>(const Vec3 &lhs, const Vec3 &rhs, const scalar dx, const scalar dy,
-                                                  const scalar dz) {
-    auto dv = rhs - lhs;
-    if (dv[0] > dx * .5) dv[0] -= dx;
-    else if (dv[0] <= -dx * .5) dv[0] += dx;
-    if (dv[1] > dy * .5) dv[1] -= dy;
-    else if (dv[1] <= -dy * .5) dv[1] += dy;
-    return dv;
-};
-template<>
-inline Vec3 shortestDifference<true, false, true>(const Vec3 &lhs, const Vec3 &rhs, const scalar dx, const scalar dy,
-                                                  const scalar dz) {
-    auto dv = rhs - lhs;
-    if (dv[0] > dx * .5) dv[0] -= dx;
-    else if (dv[0] <= -dx * .5) dv[0] += dx;
-    if (dv[2] > dz * .5) dv[2] -= dz;
-    else if (dv[2] <= -dz * .5) dv[2] += dz;
-    return dv;
-};
-template<>
-inline Vec3 shortestDifference<true, false, false>(const Vec3 &lhs, const Vec3 &rhs, const scalar dx, const scalar dy,
-                                                  const scalar dz) {
-    auto dv = rhs - lhs;
-    if (dv[0] > dx * .5) dv[0] -= dx;
-    else if (dv[0] <= -dx * .5) dv[0] += dx;
-    return dv;
-};
-template<>
-inline Vec3 shortestDifference<false, true, true>(const Vec3 &lhs, const Vec3 &rhs, const scalar dx, const scalar dy,
-                                                  const scalar dz) {
-    auto dv = rhs - lhs;
-    if (dv[1] > dy * .5) dv[1] -= dy;
-    else if (dv[1] <= -dy * .5) dv[1] += dy;
-    if (dv[2] > dz * .5) dv[2] -= dz;
-    else if (dv[2] <= -dz * .5) dv[2] += dz;
-    return dv;
-};
-template<>
-inline Vec3 shortestDifference<false, true, false>(const Vec3 &lhs, const Vec3 &rhs, const scalar dx, const scalar dy,
-                                                   const scalar dz) {
-    auto dv = rhs - lhs;
-    if (dv[1] > dy * .5) dv[1] -= dy;
-    else if (dv[1] <= -dy * .5) dv[1] += dy;
-    return dv;
-};
-template<>
-inline Vec3 shortestDifference<false, false, true>(const Vec3 &lhs, const Vec3 &rhs, const scalar dx, const scalar dy,
-                                                   const scalar dz) {
-    auto dv = rhs - lhs;
-    if (dv[2] > dz * .5) dv[2] -= dz;
-    else if (dv[2] <= -dz * .5) dv[2] += dz;
-    return dv;
-};
-template<>
-inline Vec3 shortestDifference<false, false, false>(const Vec3 &lhs, const Vec3 &rhs, const scalar dx, const scalar dy,
-                                                    const scalar dz) {
-    return rhs - lhs;
-};
 
-template<bool PX, bool PY, bool PZ, typename Container>
-inline Vec3 shortestDifference(const Vec3 &lhs, const Vec3 &rhs, const Container &box) {
-    return shortestDifference<PX, PY, PZ>(lhs, rhs, box.at(0), box.at(1), box.at(2));
-};
-
-template<bool PX, bool PY, bool PZ>
-inline scalar
-distSquared(const Vec3 &lhs, const Vec3 &rhs, const scalar dx, const scalar dy, const scalar dz) {
-    auto dv = shortestDifference<PX, PY, PZ>(lhs, rhs, dx, dy, dz);
+template<typename Container, typename PBC, int DIM=3>
+inline scalar distSquared(const Vec3 &lhs, const Vec3 &rhs, const Container &box, const PBC &periodic) {
+    auto dv = shortestDifference<Container, PBC, DIM>(lhs, rhs, box, periodic);
     return dv * dv;
 }
 
+template<typename Container, typename PBC, int DIM=3>
+inline scalar dist(const Vec3 &lhs, const Vec3 &rhs, const Container &box, const PBC &periodic) {
+    return std::sqrt(distSquared<Container, PBC, DIM>(lhs, rhs, box, periodic));
+}
 
 NAMESPACE_END(bcs)
 NAMESPACE_END(readdy)

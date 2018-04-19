@@ -63,7 +63,8 @@ void findEvents(std::size_t /*tid*/, data_iter_t begin, data_iter_t end, nl_boun
                 event_promise_t &events, std::promise<std::size_t> &n_events) {
     std::vector<event_t> eventsUpdate;
     const auto &data = *kernel->getCPUKernelStateModel().getParticleData();
-    const auto &d2 = kernel->context().distSquaredFun();
+    const auto &box = kernel->context().boxSize().data();
+    const auto &pbc = kernel->context().periodicBoundaryConditions().data();
     auto index = static_cast<std::size_t>(std::distance(data.begin(), begin));
     for (auto it = begin; it != end; ++it, ++index) {
         const auto &entry = *it;
@@ -97,7 +98,7 @@ void findEvents(std::size_t /*tid*/, data_iter_t begin, data_iter_t end, nl_boun
                 if(!neighbor.deactivated) {
                     const auto &reactions = kernel->context().reactions().order2ByType(entry.type, neighbor.type);
                     if (!reactions.empty()) {
-                        const auto distSquared = d2(neighbor.pos, entry.pos);
+                        const auto distSquared = bcs::distSquared(neighbor.pos, entry.pos, box, pbc);
                         for (auto it_reactions = reactions.begin(); it_reactions < reactions.end(); ++it_reactions) {
                             const auto &react = *it_reactions;
                             const auto rate = react->rate();
@@ -122,10 +123,11 @@ void findEvents(std::size_t /*tid*/, data_iter_t begin, data_iter_t end, nl_boun
 void CPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
     auto t = node.timeit();
     const auto &ctx = kernel->context();
-    const auto &fixPos = ctx.fixPositionFun();
     auto &stateModel = kernel->getCPUKernelStateModel();
     auto nl = stateModel.getNeighborList();
     auto &data = nl->data();
+    const auto &box = ctx.boxSize().data();
+    const auto &pbc = ctx.periodicBoundaryConditions().data();
 
     if (ctx.recordReactionsWithPositions()) {
         kernel->getCPUKernelStateModel().reactionRecords().clear();
@@ -200,7 +202,7 @@ void CPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
                         record_t record;
                         record.id = reaction->id();
                         performReaction(&data, ctx, entry1, entry1, newParticles, decayedEntries, reaction, &record);
-                        fixPos(record.where);
+                        bcs::fixPosition(record.where, box, pbc);
                         kernel->getCPUKernelStateModel().reactionRecords().push_back(record);
                     } else {
                         performReaction(&data, ctx, entry1, entry1, newParticles, decayedEntries, reaction, nullptr);
@@ -220,7 +222,7 @@ void CPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
                         record_t record;
                         record.id = reaction->id();
                         performReaction(&data, ctx, entry1, event.idx2, newParticles, decayedEntries, reaction, &record);
-                        fixPos(record.where);
+                        bcs::fixPosition(record.where, box, pbc);
                         kernel->getCPUKernelStateModel().reactionRecords().push_back(record);
                     } else {
                         performReaction(&data, ctx, entry1, event.idx2, newParticles, decayedEntries, reaction, nullptr);

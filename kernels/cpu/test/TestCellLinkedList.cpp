@@ -54,8 +54,6 @@ void insertTestImpl(readdy::kernel::cpu::data::DefaultDataContainer &data, readd
                     readdy::kernel::cpu::thread_pool &pool, std::uint8_t radius) {
     using namespace readdy;
 
-    const auto &d2 = context.distSquaredFun();
-
     std::vector<model::Particle::id_type> particleIds;
     std::for_each(data.begin(), data.end(), [&] (const auto &entry){ particleIds.push_back(entry.id); });
     scalar cutoff = 1;
@@ -91,7 +89,7 @@ void insertTestImpl(readdy::kernel::cpu::data::DefaultDataContainer &data, readd
 
             std::size_t pidx = 0;
             for (const auto &e : data) {
-                if (pidx != *itParticle && d2(entry.pos, e.pos) < cutoff * cutoff) {
+                if (pidx != *itParticle && bcs::dist(entry.pos, e.pos, context.boxSize(), context.periodicBoundaryConditions()) < cutoff) {
                     ASSERT_TRUE(std::find(neighbors.begin(), neighbors.end(), pidx) != neighbors.end());
                 }
                 ++pidx;
@@ -177,8 +175,6 @@ void insertAndDearviateTestImpl(std::uint8_t radius) {
 
     context.configure();
 
-    const auto &d2 = context.distSquaredFun();
-
     CLL nl(data, context, pool);
     nl.setUp(0, radius, {});
     nl.update({});
@@ -199,7 +195,7 @@ void insertAndDearviateTestImpl(std::uint8_t radius) {
             std::size_t pidx = 0;
             for (const auto &e : nl.data()) {
                 if (!e.deactivated) {
-                    if (pidx != *itParticle && d2(entry.pos, e.pos) < cutoff * cutoff) {
+                    if (pidx != *itParticle && bcs::dist(entry.pos, e.pos, context.boxSize(), context.periodicBoundaryConditions()) < cutoff) {
                         ASSERT_TRUE(std::find(neighbors.begin(), neighbors.end(), pidx) != neighbors.end());
                     }
                 }
@@ -265,7 +261,6 @@ void diffuseTestImpl(std::uint8_t radius) {
 
         nl.update({});
 
-        const auto &d2 = context.distSquaredFun();
 
         for(std::size_t cell = 0; cell < nl.nCells(); ++cell) {
             for(auto itParticle = nl.particlesBegin(cell); itParticle != nl.particlesEnd(cell); ++itParticle) {
@@ -282,7 +277,7 @@ void diffuseTestImpl(std::uint8_t radius) {
                 std::size_t pidx = 0;
                 for (const auto &e : nl.data()) {
                     if (!e.deactivated) {
-                        if (pidx != *itParticle && d2(entry.pos, e.pos) < cutoff * cutoff) {
+                        if (pidx != *itParticle && bcs::dist(entry.pos, e.pos, context.boxSize(), context.periodicBoundaryConditions()) < cutoff) {
                             ASSERT_NE(std::find(neighbors.begin(), neighbors.end(), pidx), neighbors.end());
                         }
                     }

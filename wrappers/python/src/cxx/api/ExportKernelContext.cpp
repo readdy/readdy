@@ -192,9 +192,6 @@ void exportKernelContext(py::module &module) {
                           [](KernelContext &self, KernelContext::PeriodicBoundaryConditions pbc) {
                               self.periodicBoundaryConditions() = pbc;
                           })
-            .def_property_readonly("dist_squared_fun", &KernelContext::distSquaredFun)
-            .def_property_readonly("fix_position_fun", &KernelContext::fixPositionFun)
-            .def_property_readonly("shortest_difference_fun", &KernelContext::shortestDifferenceFun)
             .def("configure", &KernelContext::configure)
             .def("describe", &KernelContext::describe)
             .def("bounding_box_vertices", &KernelContext::getBoxBoundingVertices)

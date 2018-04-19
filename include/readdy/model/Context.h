@@ -102,22 +102,6 @@ public:
         return std::make_tuple(lowerLeft, upperRight);
     };
 
-    const fix_pos_fun &fixPositionFun() const {
-        return _fixPositionFun;
-    }
-
-    const dist_squared_fun &distSquaredFun() const {
-        return _distFun;
-    }
-
-    const shortest_dist_fun &shortestDifferenceFun() const {
-        return _diffFun;
-    }
-
-    const pbc_fun &applyPBCFun() const {
-        return _pbc;
-    }
-
     const scalar calculateMaxCutoff() const;
 
     compartments::CompartmentRegistry &compartments() {
@@ -247,8 +231,6 @@ public:
     Context &operator=(const Context &rhs) = default;
 
 private:
-    void updateFunctions();
-
     ParticleTypeRegistry _particleTypeRegistry;
     reactions::ReactionRegistry _reactionRegistry;
     potentials::PotentialRegistry _potentialRegistry;
@@ -260,11 +242,6 @@ private:
     scalar _kBT{1};
     BoxSize _box_size{{1, 1, 1}};
     PeriodicBoundaryConditions _periodic_boundary{{true, true, true}};
-
-    std::function<Vec3(const Vec3 &)> _pbc;
-    std::function<void(Vec3 &)> _fixPositionFun;
-    std::function<Vec3(const Vec3 &, const Vec3 &)> _diffFun;
-    std::function<scalar(const Vec3 &, const Vec3 &)> _distFun;
 
     // here come horrible flags
     bool _recordReactionsWithPositions{false};

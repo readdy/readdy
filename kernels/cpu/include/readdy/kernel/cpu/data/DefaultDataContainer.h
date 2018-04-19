@@ -35,6 +35,7 @@
 #include <readdy/model/Particle.h>
 #include <hilbert.h>
 #include <readdy/kernel/cpu/pool.h>
+#include <readdy/common/boundary_condition_operations.h>
 #include "DataContainer.h"
 
 namespace readdy {
@@ -128,7 +129,8 @@ public:
     void displace(size_type index, const Particle::pos_type &delta) override {
         auto &entry = _entries.at(index);
         entry.pos += delta;
-        _context.get().fixPositionFun()(entry.pos);
+        bcs::fixPosition(entry.pos, _context.get().boxSize().data(),
+                         _context.get().periodicBoundaryConditions().data());
     };
 
     void hilbertSort(scalar gridWidth) {

@@ -28,6 +28,7 @@
 
 #include "gtest/gtest.h"
 #include <readdy/common/numeric.h>
+#include <readdy/common/common.h>
 
 using mat = readdy::Matrix33;
 using vec = readdy::Vec3;
@@ -37,7 +38,7 @@ namespace {
 TEST(Matrix33, OuterProduct) {
     vec u(1, 2, 3);
     vec v(3, 2, 1);
-    auto outer = readdy::math::outerProduct(u, v);
+    auto outer = readdy::math::outerProduct<mat>(u, v);
     EXPECT_EQ(outer.at(0, 0), u[0] * v[0]);
     EXPECT_EQ(outer.at(0, 1), u[0] * v[1]);
     EXPECT_EQ(outer.at(0, 2), u[0] * v[2]);

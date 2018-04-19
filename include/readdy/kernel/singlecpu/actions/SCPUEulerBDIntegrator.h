@@ -45,60 +45,27 @@ public:
             : readdy::model::actions::EulerBDIntegrator(timeStep), kernel(kernel) {};
 
     void perform(const util::PerformanceNode &node) override {
-        const auto &pbc = kernel->context().periodicBoundaryConditions();
-        if(pbc[0]) {
-            if(pbc[1]) {
-                if(pbc[2]) {
-                    performImpl<true, true, true>(node);
-                } else {
-                    performImpl<true, true, false>(node);
-                }
-            } else {
-                if(pbc[2]) {
-                    performImpl<true, false, true>(node);
-                } else {
-                    performImpl<true, false, false>(node);
-                }
-            }
-        } else {
-            if(pbc[1]) {
-                if(pbc[2]) {
-                    performImpl<false, true, true>(node);
-                } else {
-                    performImpl<false, true, false>(node);
-                }
-            } else {
-                if(pbc[2]) {
-                    performImpl<false, false, true>(node);
-                } else {
-                    performImpl<false, false, false>(node);
-                }
-            }
-        }
-    }
-
-private:
-
-    template<bool PX, bool PY, bool PZ>
-    void performImpl(const util::PerformanceNode &node) {
         auto t = node.timeit();
         const auto &context = kernel->context();
+        const auto &pbc = context.periodicBoundaryConditions().data();
         const auto &kbt = context.kBT();
-        const auto &box = context.boxSize();
+        const auto &box = context.boxSize().data();
         auto& stateModel = kernel->getSCPUKernelStateModel();
         const auto pd = stateModel.getParticleData();
         for(auto& entry : *pd) {
             if(!entry.is_deactivated()) {
                 const scalar D = context.particle_types().diffusionConstantOf(entry.type);
-                const auto randomDisplacement = std::sqrt(2. * D * timeStep) * (readdy::model::rnd::normal3<readdy::scalar>());
+                const auto randomDisplacement = std::sqrt(2. * D * timeStep) *
+                                                (readdy::model::rnd::normal3<readdy::scalar>());
                 entry.pos += randomDisplacement;
                 const auto deterministicDisplacement = entry.force * timeStep * D / kbt;
                 entry.pos += deterministicDisplacement;
-                bcs::fixPosition<PX, PY, PZ>(entry.pos, box);
+                bcs::fixPosition(entry.pos, box, pbc);
             }
         }
     }
 
+private:
     SCPUKernel *kernel;
 };
 }
