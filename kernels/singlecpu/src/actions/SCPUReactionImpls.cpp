@@ -80,7 +80,8 @@ std::vector<event_t> findEvents(const SCPUKernel *const kernel, scalar dt, bool 
     std::vector<event_t> eventsUpdate;
     auto &stateModel = kernel->getSCPUKernelStateModel();
     auto &data = *stateModel.getParticleData();
-    const auto &d2 = kernel->context().distSquaredFun();
+    const auto &box = kernel->context().boxSize().data();
+    const auto &pbc = kernel->context().periodicBoundaryConditions().data();
     {
         std::size_t idx = 0;
         for (const auto &e : data) {
@@ -112,7 +113,7 @@ std::vector<event_t> findEvents(const SCPUKernel *const kernel, scalar dt, bool 
                     if(!neighbor.deactivated) {
                         const auto &reactions = context.reactions().order2ByType(entry.type, neighbor.type);
                         if (!reactions.empty()) {
-                            const auto distSquared = d2(neighbor.position(), entry.position());
+                            const auto distSquared = bcs::distSquared(neighbor.position(), entry.position(), box, pbc);
                             for (auto it_reactions = reactions.begin(); it_reactions < reactions.end(); ++it_reactions) {
                                 const auto &react = *it_reactions;
                                 const auto rate = react->rate();
@@ -224,7 +225,7 @@ void SCPUUncontrolledApproximation::registerReactionScheme_22(const std::string 
 
 void gatherEvents(SCPUKernel const *const kernel,
                   const readdy::kernel::scpu::model::CellLinkedList &nl, const scpu_data &data, scalar &alpha,
-                  std::vector<event_t> &events, const readdy::model::Context::dist_squared_fun &d2) {
+                  std::vector<event_t> &events) {
     {
         std::size_t index = 0;
         for (const auto &entry : data) {
@@ -243,6 +244,8 @@ void gatherEvents(SCPUKernel const *const kernel,
             ++index;
         }
     }
+    const auto box = kernel->context().boxSize().data();
+    const auto pbc = kernel->context().periodicBoundaryConditions().data();
     for (auto cell = 0_z; cell < nl.nCells(); ++cell) {
         for (auto it = nl.particlesBegin(cell); it != nl.particlesEnd(cell); ++it) {
             auto &entry = data.entry_at(*it);
@@ -253,7 +256,7 @@ void gatherEvents(SCPUKernel const *const kernel,
                         const auto &reactions = kernel->context().reactions().order2ByType(entry.type,
                                                                                            neighbor.type);
                         if (!reactions.empty()) {
-                            const auto distSquared = d2(neighbor.position(), entry.position());
+                            const auto distSquared = bcs::distSquared(neighbor.position(), entry.position(), box, pbc);
                             for (auto itR = reactions.begin(); itR < reactions.end(); ++itR) {
                                 const auto &react = *itR;
                                 const auto rate = react->rate();
@@ -351,13 +354,11 @@ void SCPUGillespie::perform(const util::PerformanceNode &node) {
         stateModel.resetReactionCounts();
     }
     auto data = stateModel.getParticleData();
-    const auto &dist = ctx.distSquaredFun();
-    const auto &fixPos = ctx.fixPositionFun();
     const auto nl = stateModel.getNeighborList();
 
     scalar alpha = 0.0;
     std::vector<event_t> events;
-    gatherEvents(kernel, *nl, *data, alpha, events, dist);
+    gatherEvents(kernel, *nl, *data, alpha, events);
     auto particlesUpdate = handleEventsGillespie(kernel, timeStep, false, false, std::move(events));
 
     // update data structure

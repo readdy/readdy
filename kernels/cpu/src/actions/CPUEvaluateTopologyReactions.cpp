@@ -213,7 +213,8 @@ CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReacti
         if (!context.topology_registry().spatialReactionRegistry().empty()) {
             const auto &model = kernel->getCPUKernelStateModel();
             const auto &top_registry = context.topology_registry();
-            const auto &d2 = context.distSquaredFun();
+            const auto &box = context.boxSize().data();
+            const auto &pbc = context.periodicBoundaryConditions().data();
             const auto &data = *kernel->getCPUKernelStateModel().getParticleData();
             const auto &nl = *kernel->getCPUKernelStateModel().getNeighborList();
             const auto &topologies = kernel->getCPUKernelStateModel().topologies();
@@ -240,7 +241,7 @@ CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReacti
                                     static_cast<std::size_t>(neighbor.topology_index))->type()
                                                                     : static_cast<topology_type_type>(-1);
 
-                            const auto distSquared = d2(entry.pos, neighbor.pos);
+                            const auto distSquared = bcs::distSquared(entry.pos, neighbor.pos, box, pbc);
                             std::size_t reaction_index = 0;
                             const auto &otherTop = hasNeighborTop ? model.topologies().at(
                                     static_cast<std::size_t>(neighbor.topology_index)

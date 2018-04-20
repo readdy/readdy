@@ -53,7 +53,8 @@ struct DihedralConfiguration {
     DihedralConfiguration(size_t idx1, size_t idx2, size_t idx3, size_t idx4, scalar forceConstant, scalar multiplicity,
              scalar equilibriumAngle)   : idx1(idx1), idx2(idx2), idx3(idx3), idx4(idx4), forceConstant(forceConstant),
                                           phi_0(equilibriumAngle), multiplicity(multiplicity) {
-        if (equilibriumAngle > readdy::util::numeric::pi() || equilibriumAngle < -readdy::util::numeric::pi()) {
+        if (equilibriumAngle > readdy::util::numeric::pi<scalar>()
+                || equilibriumAngle < -readdy::util::numeric::pi<scalar>()) {
             throw std::invalid_argument("the equilibrium angle should be within [-pi, pi], but was "
                                         + std::to_string(equilibriumAngle));
         }

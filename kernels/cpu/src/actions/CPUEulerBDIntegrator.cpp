@@ -49,15 +49,17 @@ void CPUEulerBDIntegrator::perform(const readdy::util::PerformanceNode &node) {
     const auto dt = timeStep;
 
     auto worker = [&context, data, dt](std::size_t, std::size_t beginIdx, iter_t entry_begin, iter_t entry_end)  {
-        const auto &fixPos = context.fixPositionFun();
         const auto kbt = context.kBT();
         std::size_t idx = beginIdx;
+        const auto &box = context.boxSize().data();
+        const auto &pbc = context.periodicBoundaryConditions().data();
         for (auto it = entry_begin; it != entry_end; ++it, ++idx) {
             if(!it->deactivated) {
                 const scalar D = context.particle_types().diffusionConstantOf(it->type);
                 const auto randomDisplacement = std::sqrt(2. * D * dt) * rnd::normal3<readdy::scalar>(0, 1);
                 const auto deterministicDisplacement = it->force * dt * D / kbt;
-                data->displace(idx, randomDisplacement + deterministicDisplacement);
+                it->pos += randomDisplacement + deterministicDisplacement;
+                bcs::fixPosition(it->pos, box, pbc);
             }
         }
     };

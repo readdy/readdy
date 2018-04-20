@@ -35,6 +35,7 @@
 #include <cassert>
 #include "readdy/common/macros.h"
 #include "ReaDDyVec3.h"
+#include "common.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)

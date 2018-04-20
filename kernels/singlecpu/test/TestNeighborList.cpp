@@ -34,6 +34,7 @@
 #include <readdy/kernel/singlecpu/SCPUStateModel.h>
 #include <readdy/kernel/singlecpu/model/topologies/SCPUTopologyActionFactory.h>
 #include <readdy/kernel/singlecpu/SCPUKernel.h>
+#include <readdy/common/boundary_condition_operations.h>
 
 namespace {
 
@@ -91,7 +92,6 @@ TEST_P(TestSCPUNeighborList, Diffuse) {
     auto integrator = kernel.actions().eulerBDIntegrator(.1);
     auto reactionHandler = kernel.actions().uncontrolledApproximation(.1);
 
-    const auto &d2 = kernel.context().distSquaredFun();
     const auto &data = *kernel.getSCPUKernelStateModel().getParticleData();
 
     // collect all pairs of particles that are closer than cutoff, these should (uniquely) be in the NL
@@ -108,7 +108,8 @@ TEST_P(TestSCPUNeighborList, Diffuse) {
             for(const auto &e1 : data) {
                 std::size_t ix2 = 0;
                 for(const auto &e2 : data) {
-                    if(ix1 != ix2 && !e1.deactivated && !e2.deactivated && std::sqrt(d2(e1.pos, e2.pos)) < cutoff) {
+                    if(ix1 != ix2 && !e1.deactivated && !e2.deactivated &&
+                       bcs::dist(e1.pos, e2.pos, context.boxSize().data(), context.periodicBoundaryConditions().data()) < cutoff) {
                         pairs.insert(std::make_tuple(ix1, ix2));
                     }
                     ++ix2;
@@ -127,7 +128,7 @@ TEST_P(TestSCPUNeighborList, Diffuse) {
                     const auto &neighbor = data.entry_at(neighborIndex);
                     EXPECT_FALSE(neighbor.deactivated) << "A deactivated entry should not end up in the NL";
                     // we got a pair
-                    if(std::sqrt(d2(entry.pos, neighbor.pos)) < cutoff) {
+                    if(bcs::dist(entry.pos, neighbor.pos, context.boxSize().data(), context.periodicBoundaryConditions().data()) < cutoff) {
                         auto findIt = pairs.find(std::make_tuple(*it, neighborIndex));
                         std::stringstream ss;
                         if(pairsCopy.find(std::make_tuple(*it, neighborIndex)) != pairsCopy.end()) {

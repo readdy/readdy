@@ -133,7 +133,7 @@ TEST_P(TestTopologies, AnglePotential) {
     topology_particle_t x_k{1, 1, 0, ctx.particle_types().idOf("Topology A")};
     auto top = kernel->stateModel().addTopology(0, {x_i, x_j, x_k});
     {
-        std::vector<angle_bond::angle> angles{{0, 1, 2, 1.0, readdy::util::numeric::pi()}};
+        std::vector<angle_bond::angle> angles{{0, 1, 2, 1.0, readdy::util::numeric::pi<readdy::scalar>()}};
         top->addAnglePotential<angle_bond>(std::move(angles));
     }
     auto fObs = kernel->observe().forces(1);
@@ -175,7 +175,7 @@ TEST_P(TestTopologies, MoreComplicatedAnglePotential) {
     topology_particle_t x_k{1.0, 0.5, -.3, ctx.particle_types().idOf("Topology A")};
     auto top = kernel->stateModel().addTopology(0, {x_i, x_j, x_k});
     {
-        std::vector<angle_bond::angle> angles{{0, 1, 2, 1.0, readdy::util::numeric::pi()}};
+        std::vector<angle_bond::angle> angles{{0, 1, 2, 1.0, readdy::util::numeric::pi<readdy::scalar>()}};
         top->addAnglePotential<angle_bond>(std::move(angles));
     }
     auto fObs = kernel->observe().forces(1);
@@ -235,7 +235,7 @@ TEST_P(TestTopologies, DihedralPotential) {
     topology_particle_t x_l{1, .1, 1, ctx.particle_types().idOf("Topology A")};
     auto top = kernel->stateModel().addTopology(0, {x_i, x_j, x_k, x_l});
     {
-        std::vector<dihedral_bond::dihedral_configuration> dihedrals{{0, 1, 2, 3, 1.0, 3, readdy::util::numeric::pi()}};
+        std::vector<dihedral_bond::dihedral_configuration> dihedrals{{0, 1, 2, 3, 1.0, 3, readdy::util::numeric::pi<readdy::scalar>()}};
         top->addTorsionPotential<dihedral_bond>(dihedrals);
     }
     auto fObs = kernel->observe().forces(1);
@@ -278,7 +278,7 @@ TEST_P(TestTopologies, DihedralPotentialSteeperAngle) {
     topology_particle_t x_l{1, 3, 1, ctx.particle_types().idOf("Topology A")};
     auto top = kernel->stateModel().addTopology(0, {x_i, x_j, x_k, x_l});
     {
-        std::vector<dihedral_bond::dihedral_configuration> dihedral{{0, 1, 2, 3, 1.0, 3, readdy::util::numeric::pi()}};
+        std::vector<dihedral_bond::dihedral_configuration> dihedral{{0, 1, 2, 3, 1.0, 3, readdy::util::numeric::pi<readdy::scalar>()}};
         top->addTorsionPotential(std::make_unique<dihedral_bond>(dihedral));
     }
     auto fObs = kernel->observe().forces(1);

@@ -260,68 +260,6 @@ private:
     SCPUKernel* const kernel;
 };
 
-template<typename KERNEL=readdy::kernel::scpu::SCPUKernel>
-class SCPURadialDistribution : public readdy::model::observables::RadialDistribution {
-public:
-    SCPURadialDistribution(KERNEL *const kernel, unsigned int stride, std::vector<scalar> binBorders, std::vector<std::string> typeCountFrom,
-                                 std::vector<std::string> typeCountTo, scalar particleToDensity) :
-            readdy::model::observables::RadialDistribution(kernel, stride, binBorders, typeCountFrom,
-                                                           typeCountTo, particleToDensity), kernel(kernel) {}
-
-    void evaluate() override {
-        if (binBorders.size() > 1) {
-            std::fill(counts.begin(), counts.end(), 0);
-            const auto particles = kernel->stateModel().getParticles();
-            auto isInCollection = [](const readdy::model::Particle &p, const auto &collection) {
-                return std::find(collection.begin(), collection.end(), p.getType()) != collection.end();
-            };
-            const auto nFromParticles = std::count_if(particles.begin(), particles.end(),
-                                                      [this, isInCollection](const readdy::model::Particle &p) {
-                                                          return isInCollection(p, typeCountFrom);
-                                                      });
-            {
-                const auto &distSquared = kernel->context().distSquaredFun();
-                for (auto &&pFrom : particles) {
-                    if (isInCollection(pFrom, typeCountFrom)) {
-                        for (auto &&pTo : particles) {
-                            if (isInCollection(pTo, typeCountTo) && pFrom.getId() != pTo.getId()) {
-                                const auto dist = sqrt(distSquared(pFrom.getPos(), pTo.getPos()));
-                                auto upperBound = std::upper_bound(binBorders.begin(), binBorders.end(), dist);
-                                if (upperBound != binBorders.end()) {
-                                    const auto binBordersIdx = upperBound - binBorders.begin();
-                                    counts[binBordersIdx - 1]++;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            auto &radialDistribution = std::get<1>(result);
-            {
-                const auto &binCenters = std::get<0>(result);
-                auto &&it_centers = binCenters.begin();
-                auto &&it_distribution = radialDistribution.begin();
-                for (auto &&it_counts = counts.begin(); it_counts != counts.end(); ++it_counts) {
-                    const auto idx = it_centers - binCenters.begin();
-                    const auto lowerRadius = binBorders[idx];
-                    const auto upperRadius = binBorders[idx + 1];
-                    *it_distribution =
-                            (*it_counts) /
-                            (c_::four / c_::three * util::numeric::pi() * (std::pow(upperRadius, c_::three)
-                                                                           - std::pow(lowerRadius, c_::three))
-                             * nFromParticles * particleToDensity);
-                    ++it_distribution;
-                    ++it_centers;
-                }
-            }
-        }
-    }
-
-protected:
-    KERNEL *const kernel;
-};
-
 }
 }
 }

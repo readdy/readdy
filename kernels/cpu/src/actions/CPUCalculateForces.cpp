@@ -87,8 +87,7 @@ void CPUCalculateForces::perform(const util::PerformanceNode &node) {
                             promises.emplace_back();
                             auto dataBounds = std::make_tuple(it, itNext);
                             tasks.push_back(pool.pack(calculate_order1, dataBounds, std::ref(promises.back()), data,
-                                                      ctx.potentials().potentialsOrder1(),
-                                                      ctx.shortestDifferenceFun()));
+                                                      ctx.potentials().potentialsOrder1()));
                         }
                         it = itNext;
                     }
@@ -96,7 +95,7 @@ void CPUCalculateForces::perform(const util::PerformanceNode &node) {
                         promises.emplace_back();
                         auto dataBounds = std::make_tuple(it, data->end());
                         tasks.push_back(pool.pack(calculate_order1, dataBounds, std::ref(promises.back()), data,
-                                                  ctx.potentials().potentialsOrder1(), ctx.shortestDifferenceFun()));
+                                                  ctx.potentials().potentialsOrder1()));
                     }
                     {
                         auto tPush = nTasks.subnode("execute order 1 tasks and wait").timeit();
@@ -156,14 +155,14 @@ void CPUCalculateForces::perform(const util::PerformanceNode &node) {
                                         calculate_order2<true>, std::make_tuple(it, itNext), data,
                                         std::cref(*neighborList), std::ref(promises.back()),
                                         std::ref(virialPromises.back()), ctx.potentials().potentialsOrder2(),
-                                        ctx.shortestDifferenceFun()
+                                        ctx.boxSize(), ctx.periodicBoundaryConditions()
                                 ));
                             } else {
                                 tasks.push_back(pool.pack(
                                         calculate_order2<false>, std::make_tuple(it, itNext), data,
                                         std::cref(*neighborList), std::ref(promises.back()),
                                         std::ref(virialPromises.back()), ctx.potentials().potentialsOrder2(),
-                                        ctx.shortestDifferenceFun()
+                                        ctx.boxSize(), ctx.periodicBoundaryConditions()
                                 ));
                             }
                         }
@@ -176,13 +175,13 @@ void CPUCalculateForces::perform(const util::PerformanceNode &node) {
                             tasks.push_back(pool.pack(
                                     calculate_order2<true>, std::make_tuple(it, nCells), data, std::cref(*neighborList),
                                     std::ref(promises.back()), std::ref(virialPromises.back()),
-                                    ctx.potentials().potentialsOrder2(), ctx.shortestDifferenceFun()
+                                    ctx.potentials().potentialsOrder2(), ctx.boxSize(), ctx.periodicBoundaryConditions()
                             ));
                         } else {
                             tasks.push_back(pool.pack(
                                     calculate_order2<false>, std::make_tuple(it, nCells), data, std::cref(*neighborList),
                                     std::ref(promises.back()), std::ref(virialPromises.back()),
-                                    ctx.potentials().potentialsOrder2(), ctx.shortestDifferenceFun()
+                                    ctx.potentials().potentialsOrder2(), ctx.boxSize(), ctx.periodicBoundaryConditions()
                             ));
                         }
                     }
@@ -219,7 +218,7 @@ void CPUCalculateForces::calculate_order2(std::size_t, nl_bounds nlBounds,
                                           CPUStateModel::data_type *data, const CPUStateModel::neighbor_list &nl,
                                           std::promise<scalar> &energyPromise, std::promise<Matrix33> &virialPromise,
                                           model::potentials::PotentialRegistry::potential_o2_registry pot2,
-                                          model::Context::shortest_dist_fun d) {
+                                          model::Context::BoxSize box, model::Context::PeriodicBoundaryConditions pbc) {
     scalar energyUpdate = 0.0;
     Matrix33 virialUpdate{{{0, 0, 0, 0, 0, 0, 0, 0, 0}}};
 
@@ -246,7 +245,7 @@ void CPUCalculateForces::calculate_order2(std::size_t, nl_bounds nlBounds,
                     scalar mySecondOrderEnergy = 0.;
                     auto potit = pot2.find(std::tie(entry.type, neighbor.type));
                     if (potit != pot2.end()) {
-                        auto x_ij = d(myPos, neighbor.pos);
+                        auto x_ij = bcs::shortestDifference(myPos, neighbor.pos, box.data(), pbc.data());
                         auto distSquared = x_ij * x_ij;
                         for (const auto &potential : potit->second) {
                             if (distSquared < potential->getCutoffRadiusSquared()) {
@@ -254,7 +253,7 @@ void CPUCalculateForces::calculate_order2(std::size_t, nl_bounds nlBounds,
                                 potential->calculateForceAndEnergy(forceUpdate, mySecondOrderEnergy, x_ij);
                                 force += forceUpdate;
                                 if(COMPUTE_VIRIAL && *particleIt < neighborIndex) {
-                                    virialUpdate += math::outerProduct(-1.*x_ij, forceUpdate);
+                                    virialUpdate += math::outerProduct<Matrix33>(-1.*x_ij, forceUpdate);
                                 }
                             }
                         }
@@ -303,8 +302,7 @@ void CPUCalculateForces::calculate_topologies(std::size_t, top_bounds topBounds,
 
 void CPUCalculateForces::calculate_order1(std::size_t, data_bounds dataBounds,
                                           std::promise<scalar> &energyPromise, CPUStateModel::data_type *data,
-                                          model::potentials::PotentialRegistry::potential_o1_registry pot1,
-                                          model::Context::shortest_dist_fun d) {
+                                          model::potentials::PotentialRegistry::potential_o1_registry pot1) {
     scalar energyUpdate = 0.0;
 
     //

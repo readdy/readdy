@@ -33,13 +33,11 @@
 
 #include <type_traits>
 
-#include "common.h"
-#include "ReaDDyVec3.h"
+namespace readdy {
+namespace util {
+namespace numeric {
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(util)
-NAMESPACE_BEGIN(numeric)
-
+template<typename scalar>
 inline constexpr scalar pi() { return 3.141592653589793238462643383279502884e+00; }
 
 template<typename T, typename D, typename std::enable_if<
@@ -65,20 +63,18 @@ template<typename T, typename std::enable_if<std::is_arithmetic<T>::value, int>:
 constexpr T clamp_min(T d, T min) {
     return d < min ? min : d;
 }
-
-NAMESPACE_END(numeric)
-NAMESPACE_END(util)
-
-NAMESPACE_BEGIN(math)
-
+}
+}
+namespace math {
+template<typename Matrix33, typename Vec3>
 inline Matrix33 outerProduct(const Vec3 &lhs, const Vec3 &rhs) {
-    Matrix33::data_arr result;
-    for(Matrix33::size_type i = 0; i < Matrix33::n(); ++i) {
-        for(Matrix33::size_type j = 0; j < Matrix33::m(); ++j) {
+    typename Matrix33::data_arr result;
+    for(typename Matrix33::size_type i = 0; i < Matrix33::n(); ++i) {
+        for(typename Matrix33::size_type j = 0; j < Matrix33::m(); ++j) {
             result.at(Matrix33::m()*j+i) = lhs[j]*rhs[i];
         }
     }
     return Matrix33(result);
 }
-NAMESPACE_END(math)
-NAMESPACE_END(readdy)
+}
+}

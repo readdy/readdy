@@ -68,7 +68,7 @@ std::unique_ptr<model::observables::RadialDistribution>
 CPUObservableFactory::radialDistribution(stride_type stride, std::vector<scalar> binBorders,
                                          std::vector<std::string> typeCountFrom, std::vector<std::string> typeCountTo,
                                          scalar particleDensity) const {
-    return {std::make_unique<readdy::kernel::scpu::observables::SCPURadialDistribution<CPUKernel>>(
+    return {std::make_unique<model::observables::RadialDistribution>(
             kernel, stride, binBorders, typeCountFrom, typeCountTo, particleDensity
     )};
 }
