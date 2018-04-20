@@ -24,8 +24,8 @@ CMAKE_FLAGS+=" -DREADDY_INSTALL_UNIT_TEST_EXECUTABLE:BOOL=OFF"
 # hdf5 flags
 CMAKE_FLAGS+=" -DHDF5_INCLUDE_DIRS=${BUILD_PREFIX}/include"
 # version flags
-CMAKE_FLAGS+=" -DREADDY_VERSION=${PKG_BUILDNUM}"
-CMAKE_FLAGS+=" -DREADDY_BUILD_STRING=${PKG_HASH}"
+CMAKE_FLAGS+=" -DREADDY_VERSION=${PKG_VERSION}"
+CMAKE_FLAGS+=" -DREADDY_BUILD_STRING=${PKG_BUILDNUM}"
 
 #########################################################
 #                                                       #

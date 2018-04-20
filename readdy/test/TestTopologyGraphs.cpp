@@ -287,7 +287,7 @@ TEST_P(TestTopologyGraphs, MoreComplicatedAnglePotential) {
     ctx.boxSize() = {{10, 10, 10}};
     ctx.topology_registry().configureBondPotential("Topology A", "Topology A", {0., 1.});
     ctx.topology_registry().configureAnglePotential("Topology A", "Topology A", "Topology A",
-                                                    {1.0, readdy::util::numeric::pi()});
+                                                    {1.0, readdy::util::numeric::pi<readdy::scalar>()});
     topology_particle_t x_i{0.1, 0.1, 0.1, ctx.particle_types().idOf("Topology A")};
     topology_particle_t x_j{1.0, 0.0, 0.0, ctx.particle_types().idOf("Topology A")};
     topology_particle_t x_k{1.0, 0.5, -.3, ctx.particle_types().idOf("Topology A")};
@@ -348,7 +348,7 @@ TEST_P(TestTopologyGraphs, DihedralPotentialSteeperAngle) {
     ctx.topology_registry().configureBondPotential("Topology A", "Topology A", {0., 1.});
     kernel->context().topology_registry().configureTorsionPotential("Topology A", "Topology A", "Topology A",
                                                                     "Topology A",
-                                                                    {1.0, 3, readdy::util::numeric::pi()});
+                                                                    {1.0, 3, readdy::util::numeric::pi<readdy::scalar>()});
     top->configure();
     auto fObs = kernel->observe().forces(1);
     std::vector<readdy::Vec3> collectedForces;

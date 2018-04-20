@@ -43,15 +43,15 @@ NAMESPACE_BEGIN(observables)
 
 class RadialDistribution : public Observable<std::pair<std::vector<scalar>, std::vector<scalar>>> {
 public:
-    RadialDistribution(Kernel *const kernel, stride_type stride, std::vector<scalar> binBorders,
+    RadialDistribution(Kernel *kernel, stride_type stride, std::vector<scalar> binBorders,
                        std::vector<particle_type_type> typeCountFrom, std::vector<particle_type_type> typeCountTo,
                        scalar particleToDensity);
 
-    RadialDistribution(Kernel *const kernel, stride_type stride, const std::vector<scalar> &binBorders,
+    RadialDistribution(Kernel *kernel, stride_type stride, const std::vector<scalar> &binBorders,
                        const std::vector<std::string> &typeCountFrom, const std::vector<std::string> &typeCountTo,
                        scalar particleToDensity);
 
-    virtual ~RadialDistribution();
+    ~RadialDistribution() override;
 
     const std::vector<scalar> &getBinBorders() const;
 

@@ -32,6 +32,7 @@
 
 #include <readdy/kernel/singlecpu/actions/SCPUEvaluateTopologyReactions.h>
 #include <readdy/common/algorithm.h>
+#include <readdy/common/boundary_condition_operations.h>
 
 namespace readdy {
 namespace kernel {
@@ -165,7 +166,8 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
 
 
         if (!topology_registry.spatialReactionRegistry().empty()) {
-            const auto &d2 = context.distSquaredFun();
+            const auto &box = context.boxSize().data();
+            const auto &pbc = context.periodicBoundaryConditions().data();
             const auto &stateModel = kernel->getSCPUKernelStateModel();
             const auto &data = *stateModel.getParticleData();
             const auto &nl = *stateModel.getNeighborList();
@@ -193,7 +195,7 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
                             if(tt1 == -1 && tt2 == -1) return;
                             const auto &reactions = topology_registry.spatialReactionsByType(entry.type, tt1,
                                                                                              neighbor.type, tt2);
-                            const auto distSquared = d2(entry.pos, neighbor.pos);
+                            const auto distSquared = bcs::distSquared(entry.pos, neighbor.pos, box, pbc);
                             std::size_t reaction_index = 0;
                             for (const auto &reaction : reactions) {
                                 if (distSquared < reaction.radius() * reaction.radius()) {

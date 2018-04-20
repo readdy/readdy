@@ -38,6 +38,7 @@
 #include <readdy/model/topologies/potentials/TopologyPotentialActions.h>
 #include <readdy/kernel/singlecpu/SCPUStateModel.h>
 #include <readdy/model/topologies/Topology.h>
+#include <readdy/common/boundary_condition_operations.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(kernel)
@@ -61,12 +62,12 @@ public:
     scalar perform(const readdy::model::top::Topology* const topology) override {
         scalar energy = 0;
         const auto &particleIndices = topology->getParticles();
-        const auto &d = context->shortestDifferenceFun();
         for (const auto &bond : potential->getBonds()) {
             Vec3 forceUpdate{0, 0, 0};
             auto &e1 = data->entry_at(particleIndices.at(bond.idx1));
             auto &e2 = data->entry_at(particleIndices.at(bond.idx2));
-            const auto x_ij = d(e1.position(), e2.position());
+            const auto x_ij = bcs::shortestDifference(e1.position(), e2.position(), context->boxSize().data(),
+                                                      context->periodicBoundaryConditions().data());
             potential->calculateForce(forceUpdate, x_ij, bond);
             e1.force += forceUpdate;
             e2.force -= forceUpdate;
@@ -90,15 +91,15 @@ public:
     scalar perform(const readdy::model::top::Topology* const topology) override {
         scalar energy = 0;
         const auto &particleIndices = topology->getParticles();
-        const auto &d = context->shortestDifferenceFun();
-
 
         for (const auto &angle : potential->getAngles()) {
             auto &e1 = data->entry_at(particleIndices.at(angle.idx1));
             auto &e2 = data->entry_at(particleIndices.at(angle.idx2));
             auto &e3 = data->entry_at(particleIndices.at(angle.idx3));
-            const auto x_ji = d(e2.pos, e1.pos);
-            const auto x_jk = d(e2.pos, e3.pos);
+            const auto x_ji = bcs::shortestDifference(e2.pos, e1.pos, context->boxSize().data(),
+                                                      context->periodicBoundaryConditions().data());
+            const auto x_jk = bcs::shortestDifference(e2.pos, e3.pos, context->boxSize().data(),
+                                                      context->periodicBoundaryConditions().data());
             energy += potential->calculateEnergy(x_ji, x_jk, angle);
             potential->calculateForce(e1.force, e2.force, e3.force, x_ji, x_jk, angle);
         }
@@ -119,16 +120,18 @@ public:
     scalar perform(const readdy::model::top::Topology* const topology) override {
         scalar energy = 0;
         const auto &particleIndices = topology->getParticles();
-        const auto &d = context->shortestDifferenceFun();
 
         for (const auto &dih : potential->getDihedrals()) {
             auto &e_i = data->entry_at(particleIndices.at(dih.idx1));
             auto &e_j = data->entry_at(particleIndices.at(dih.idx2));
             auto &e_k = data->entry_at(particleIndices.at(dih.idx3));
             auto &e_l = data->entry_at(particleIndices.at(dih.idx4));
-            const auto x_ji = d(e_j.pos, e_i.pos);
-            const auto x_kj = d(e_k.pos, e_j.pos);
-            const auto x_kl = d(e_k.pos, e_l.pos);
+            const auto x_ji = bcs::shortestDifference(e_j.pos, e_i.pos, context->boxSize().data(),
+                                                      context->periodicBoundaryConditions().data());
+            const auto x_kj = bcs::shortestDifference(e_k.pos, e_j.pos, context->boxSize().data(),
+                                                      context->periodicBoundaryConditions().data());
+            const auto x_kl = bcs::shortestDifference(e_k.pos, e_l.pos, context->boxSize().data(),
+                                                      context->periodicBoundaryConditions().data());
             energy += potential->calculateEnergy(x_ji, x_kj, x_kl, dih);
             potential->calculateForce(e_i.force, e_j.force, e_k.force, e_l.force, x_ji, x_kj, x_kl, dih);
         }

@@ -38,6 +38,7 @@
 #include <readdy/testing/Utils.h>
 #include <readdy/testing/NOOPPotential.h>
 #include <readdy/model/potentials/PotentialsOrder1.h>
+#include <readdy/common/boundary_condition_operations.h>
 
 namespace m = readdy::model;
 
@@ -74,10 +75,9 @@ TEST_F(TestKernelContext, DistanceFunctions) {
     ctx.configure();
     ctx.boxSize() = {{4, 4, 4}};
     ctx.configure();
-    auto distSquared = ctx.distSquaredFun();
     readdy::Vec3 v1(-1.5, -1.5, 0.);
     readdy::Vec3 v2(+1.5, +1.5, 0.);
-    EXPECT_NEAR(distSquared(v1, v2), 2., 1e-9);
+    EXPECT_NEAR(readdy::bcs::distSquared(v1, v2, ctx.boxSize().data(), ctx.periodicBoundaryConditions().data()), 2., 1e-9);
 }
 
 TEST_F(TestKernelContext, BoxSize) {

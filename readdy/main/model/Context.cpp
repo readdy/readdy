@@ -47,79 +47,15 @@ Context::Context()
         : _potentialRegistry(_particleTypeRegistry), _reactionRegistry(_particleTypeRegistry),
           _topologyRegistry(_particleTypeRegistry), _compartmentRegistry(_particleTypeRegistry),
           _kernelConfiguration{} {
-    using namespace std::placeholders;
-    _pbc = std::bind(&bcs::applyPBC<false, false, false>, _1, c_::one, c_::one, c_::one);
-    _fixPositionFun = std::bind(&bcs::fixPosition<false, false, false>, _1, c_::one, c_::one, c_::one);
-    _diffFun = std::bind(&bcs::shortestDifference<false, false, false>, _1, _2, c_::one, c_::one, c_::one);
-    _distFun = [this](const Vec3 &v1, const Vec3 &v2) {
-        const auto dv = _diffFun(v1, v2);
-        return dv * dv;
-    };
 }
 
 void Context::configure() {
-    updateFunctions();
-
     _particleTypeRegistry.configure();
     _potentialRegistry.configure();
     _reactionRegistry.configure();
     _topologyRegistry.configure();
 
     validate();
-}
-
-void Context::updateFunctions() {
-    using namespace std::placeholders;
-    const auto &box = _box_size;
-    if (_periodic_boundary[0]) {
-        if (_periodic_boundary[1]) {
-            if (_periodic_boundary[2]) {
-                _pbc = std::bind(&bcs::applyPBC<true, true, true>, _1, box[0], box[1], box[2]);
-                _fixPositionFun = std::bind(&bcs::fixPosition<true, true, true>, _1, box[0], box[1], box[2]);
-                _diffFun = std::bind(&bcs::shortestDifference<true, true, true>, _1, _2, box[0], box[1], box[2]);
-            } else {
-                _pbc = std::bind(&bcs::applyPBC<true, true, false>, _1, box[0], box[1], box[2]);
-                _fixPositionFun = std::bind(&bcs::fixPosition<true, true, false>, _1, box[0], box[1], box[2]);
-                _diffFun = std::bind(&bcs::shortestDifference<true, true, false>, _1, _2, box[0], box[1], box[2]);
-            }
-        } else {
-            if (_periodic_boundary[2]) {
-                _pbc = std::bind(&bcs::applyPBC<true, false, true>, _1, box[0], box[1], box[2]);
-                _fixPositionFun = std::bind(&bcs::fixPosition<true, false, true>, _1, box[0], box[1], box[2]);
-                _diffFun = std::bind(&bcs::shortestDifference<true, false, true>, _1, _2, box[0], box[1], box[2]);
-            } else {
-                _pbc = std::bind(&bcs::applyPBC<true, false, false>, _1, box[0], box[1], box[2]);
-                _fixPositionFun = std::bind(&bcs::fixPosition<true, false, false>, _1, box[0], box[1], box[2]);
-                _diffFun = std::bind(&bcs::shortestDifference<true, false, false>, _1, _2, box[0], box[1], box[2]);
-            }
-        }
-    } else {
-        if (_periodic_boundary[1]) {
-            if (_periodic_boundary[2]) {
-                _pbc = std::bind(&bcs::applyPBC<false, true, true>, _1, box[0], box[1], box[2]);
-                _fixPositionFun = std::bind(&bcs::fixPosition<false, true, true>, _1, box[0], box[1], box[2]);
-                _diffFun = std::bind(&bcs::shortestDifference<false, true, true>, _1, _2, box[0], box[1], box[2]);
-            } else {
-                _pbc = std::bind(&bcs::applyPBC<false, true, false>, _1, box[0], box[1], box[2]);
-                _fixPositionFun = std::bind(&bcs::fixPosition<false, true, false>, _1, box[0], box[1], box[2]);
-                _diffFun = std::bind(&bcs::shortestDifference<false, true, false>, _1, _2, box[0], box[1], box[2]);
-            }
-        } else {
-            if (_periodic_boundary[2]) {
-                _pbc = std::bind(&bcs::applyPBC<false, false, true>, _1, box[0], box[1], box[2]);
-                _fixPositionFun = std::bind(&bcs::fixPosition<false, false, true>, _1, box[0], box[1], box[2]);
-                _diffFun = std::bind(&bcs::shortestDifference<false, false, true>, _1, _2, box[0], box[1], box[2]);
-            } else {
-                _pbc = std::bind(&bcs::applyPBC<false, false, false>, _1, box[0], box[1], box[2]);
-                _fixPositionFun = std::bind(&bcs::fixPosition<false, false, false>, _1, box[0], box[1], box[2]);
-                _diffFun = std::bind(&bcs::shortestDifference<false, false, false>, _1, _2, box[0], box[1], box[2]);
-            }
-        }
-    }
-    _distFun = [this](const Vec3 &v1, const Vec3 &v2) {
-        const auto dv = _diffFun(v1, v2);
-        return dv * dv;
-    };
 }
 
 void Context::setKernelConfiguration(const std::string &s) {
@@ -147,7 +83,7 @@ bool boxPotentialValid(const Context &self, potentials::Box *potential) {
 
 void Context::validate() const {
     auto periodic = std::accumulate(periodicBoundaryConditions().begin(),
-                                    periodicBoundaryConditions().end(), true, std::logical_and<bool>());
+                                    periodicBoundaryConditions().end(), true, std::logical_and<>());
     if(!periodic) {
         // check if there are box potentials for each particle type and that these box potentials are valid
         for(const auto &entry : particle_types().typeMapping()) {

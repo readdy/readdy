@@ -47,8 +47,6 @@ void CPUGillespie::perform(const util::PerformanceNode &node) {
     }
     auto &stateModel = kernel->getCPUKernelStateModel();
     auto data = stateModel.getParticleData();
-    const auto &dist = ctx.distSquaredFun();
-    const auto &fixPos = ctx.fixPositionFun();
     const auto nl = stateModel.getNeighborList();
 
     if(ctx.recordReactionCounts()) {
@@ -57,7 +55,7 @@ void CPUGillespie::perform(const util::PerformanceNode &node) {
 
     scalar alpha = 0.0;
     std::vector<event_t> events;
-    gatherEvents(kernel, readdy::util::range<event_t::index_type>(0, data->size()), nl, data, alpha, events, dist);
+    gatherEvents(kernel, readdy::util::range<event_t::index_type>(0, data->size()), nl, data, alpha, events);
     if(ctx.recordReactionsWithPositions()) {
         stateModel.reactionRecords().clear();
         if(ctx.recordReactionCounts()) {

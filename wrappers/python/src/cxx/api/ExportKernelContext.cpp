@@ -35,6 +35,7 @@
 #include <pybind11/stl.h>
 #include <pybind11/functional.h>
 #include <readdy/model/Context.h>
+#include <readdy/common/boundary_condition_operations.h>
 
 namespace py = pybind11;
 
@@ -192,9 +193,6 @@ void exportKernelContext(py::module &module) {
                           [](KernelContext &self, KernelContext::PeriodicBoundaryConditions pbc) {
                               self.periodicBoundaryConditions() = pbc;
                           })
-            .def_property_readonly("dist_squared_fun", &KernelContext::distSquaredFun)
-            .def_property_readonly("fix_position_fun", &KernelContext::fixPositionFun)
-            .def_property_readonly("shortest_difference_fun", &KernelContext::shortestDifferenceFun)
             .def("configure", &KernelContext::configure)
             .def("describe", &KernelContext::describe)
             .def("bounding_box_vertices", &KernelContext::getBoxBoundingVertices)
@@ -210,6 +208,21 @@ void exportKernelContext(py::module &module) {
             .def_property_readonly("reactions", [](KernelContext &self) -> ReactionRegistry& { return self.reactions(); }, rvp::reference_internal)
             .def_property_readonly("potentials", [](KernelContext &self) -> PotentialRegistry& { return self.potentials(); }, rvp::reference_internal)
             .def_property_readonly("topologies", [](KernelContext &self) -> TopologyRegistry& { return self.topology_registry(); }, rvp::reference_internal)
-            .def_property_readonly("compartments", [](KernelContext &self) -> CompartmentRegistry&  { return self.compartments(); }, rvp::reference_internal);
+            .def_property_readonly("compartments", [](KernelContext &self) -> CompartmentRegistry&  { return self.compartments(); }, rvp::reference_internal)
+            .def_property_readonly("shortest_difference_fun", [](const KernelContext &self) -> std::function<Vec3(const Vec3&, const Vec3 &)> {
+                return [&self](const Vec3 &v1, const Vec3 &v2) {
+                    return bcs::shortestDifference(v1, v2, self.boxSize(), self.periodicBoundaryConditions());
+                };
+            })
+            .def_property_readonly("fix_position_fun", [](const KernelContext &self) -> std::function<void(Vec3 &)> {
+                return [&self](Vec3 &position) {
+                    return bcs::fixPosition(position, self.boxSize(), self.periodicBoundaryConditions());
+                };
+            })
+            .def_property_readonly("dist_squared_fun", [](const KernelContext &self) -> std::function<scalar(const Vec3 &, const Vec3 &)> {
+                return [&self](const Vec3 &p1, const Vec3 &p2) {
+                    return bcs::distSquared(p1, p2, self.boxSize(), self.periodicBoundaryConditions());
+                };
+            });
 
 }

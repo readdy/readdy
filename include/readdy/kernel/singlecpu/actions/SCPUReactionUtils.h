@@ -31,6 +31,9 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 #pragma once
+
+#include <readdy/common/boundary_condition_operations.h>
+
 namespace readdy {
 namespace kernel {
 namespace scpu {
@@ -48,14 +51,16 @@ template<typename Reaction>
 void performReaction(
         scpu_data &data, scpu_data::entry_index idx1, scpu_data::entry_index idx2, scpu_data::new_entries &newEntries,
         std::vector<scpu_data::entry_index> &decayedEntries, Reaction *reaction, const readdy::model::Context& context, reaction_record* record) {
-    const auto& fixPos = context.fixPositionFun();
-    const auto& shortestDifferenceFun = context.shortestDifferenceFun();
+    //const auto& fixPos = context.fixPositionFun();
+    //const auto& shortestDifferenceFun = context.shortestDifferenceFun();
+    const auto &box = context.boxSize().data();
+    const auto &pbc = context.periodicBoundaryConditions().data();
     auto& entry1 = data.entry_at(idx1);
     auto& entry2 = data.entry_at(idx2);
     if(record) {
         record->type = static_cast<int>(reaction->type());
         record->where = (entry1.position() + entry2.position()) / 2.;
-        fixPos(record->where);
+        bcs::fixPosition(record->where, box, pbc);
         record->educts[0] = entry1.id;
         record->educts[1] = entry2.id;
         record->types_from[0] = entry1.type;
@@ -94,13 +99,13 @@ void performReaction(
 
             readdy::model::Particle p(entry1.position() - reaction->weight2() * reaction->productDistance() * n3,
                                       reaction->products()[1]);
-            fixPos(p.getPos());
+            bcs::fixPosition(p.getPos(), box, pbc);
             newEntries.emplace_back(p);
 
             entry1.type = reaction->products()[0];
             entry1.pos += reaction->weight1() * reaction->productDistance() * n3;
             entry1.id = readdy::model::Particle::nextId();
-            fixPos(entry1.pos);
+            bcs::fixPosition(entry1.pos, box, pbc);
             if(record) {
                 record->products[0] = entry1.id;
                 record->products[1] = p.getId();
@@ -110,13 +115,13 @@ void performReaction(
         case reaction_type::Fusion: {
             const auto e1Pos = data.entry_at(idx1).pos;
             const auto e2Pos = data.entry_at(idx2).pos;
-            const auto difference = shortestDifferenceFun(e1Pos, e2Pos);
+            const auto difference = bcs::shortestDifference(e1Pos, e2Pos, box, pbc);
             if (reaction->educts()[0] == entry1.type) {
                 entry1.pos += reaction->weight1() * difference;
             } else {
                 entry1.pos += reaction->weight2() * difference;
             }
-            fixPos(entry1.pos);
+            bcs::fixPosition(entry1.pos, box, pbc);
             entry1.type = reaction->products()[0];
             entry1.id = readdy::model::Particle::nextId();
             decayedEntries.push_back(idx2);

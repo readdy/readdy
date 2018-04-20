@@ -241,7 +241,6 @@ TEST(TestNeighborListImpl, Diffusion) {
     auto obs = kernel->observe().nParticles(1);
     obs->setCallback(
             [&](const readdy::model::observables::NParticles::result_type &) {
-                const auto &d2 = context.distSquaredFun();
                 const auto neighbor_list = kernel->getCPUKernelStateModel().getNeighborList();
 
                 for(std::size_t cell = 0; cell < neighbor_list->nCells(); ++cell) {
@@ -260,7 +259,7 @@ TEST(TestNeighborListImpl, Diffusion) {
                         std::size_t pidx = 0;
                         for(const auto &e : neighbor_list->data()) {
                             ASSERT_FALSE(e.deactivated);
-                            if (pidx != *itParticle && d2(entry.pos, e.pos) < cutoff * cutoff) {
+                            if (pidx != *itParticle && bcs::dist(entry.pos, e.pos, context.boxSize(), context.periodicBoundaryConditions()) < cutoff) {
                                 ASSERT_TRUE(std::find(neighbors.begin(), neighbors.end(), pidx) != neighbors.end());
                             }
                             ++pidx;
@@ -331,7 +330,6 @@ TEST_P(TestCPUNeighborList, Diffuse) {
     auto integrator = kernel.actions().eulerBDIntegrator(.1);
     auto reactionHandler = kernel.actions().uncontrolledApproximation(.1);
 
-    const auto &d2 = kernel.context().distSquaredFun();
     const auto &data = *kernel.getCPUKernelStateModel().getParticleData();
 
     // collect all pairs of particles that are closer than cutoff, these should (uniquely) be in the NL
@@ -346,7 +344,7 @@ TEST_P(TestCPUNeighborList, Diffuse) {
             for(const auto &e1 : data) {
                 std::size_t ix2 = 0;
                 for(const auto &e2 : data) {
-                    if(ix1 != ix2 && !e1.deactivated && !e2.deactivated && std::sqrt(d2(e1.pos, e2.pos)) < cutoff) {
+                    if(ix1 != ix2 && !e1.deactivated && !e2.deactivated && bcs::dist(e1.pos, e2.pos, context.boxSize(), context.periodicBoundaryConditions()) < cutoff) {
                         pairs.insert(std::make_tuple(ix1, ix2));
                     }
                     ++ix2;
@@ -365,7 +363,7 @@ TEST_P(TestCPUNeighborList, Diffuse) {
                     const auto &neighbor = data.entry_at(neighborIndex);
                     EXPECT_FALSE(neighbor.deactivated) << "A deactivated entry should not end up in the NL";
                     // we got a pair
-                    if(std::sqrt(d2(entry.pos, neighbor.pos)) < cutoff) {
+                    if(bcs::dist(entry.pos, neighbor.pos, context.boxSize(), context.periodicBoundaryConditions()) < cutoff) {
                         auto findIt = pairs.find(std::make_tuple(*it, neighborIndex));
                         std::stringstream ss;
                         if(pairsCopy.find(std::make_tuple(*it, neighborIndex)) != pairsCopy.end()) {

@@ -69,8 +69,8 @@ std::unique_ptr<readdy::model::observables::RadialDistribution>
 SCPUObservableFactory::radialDistribution(stride_type stride, std::vector<scalar> binBorders,
                                           std::vector<std::string> typeCountFrom, std::vector<std::string> typeCountTo,
                                           scalar particleDensity) const {
-    return {std::make_unique<SCPURadialDistribution<>>(kernel, stride, binBorders, typeCountFrom, typeCountTo,
-                                                     particleDensity)};
+    return {std::make_unique<readdy::model::observables::RadialDistribution>(kernel, stride, binBorders, typeCountFrom,
+                                                                             typeCountTo, particleDensity)};
 }
 
 std::unique_ptr<readdy::model::observables::Particles>
