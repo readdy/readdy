@@ -34,7 +34,7 @@
 
 TEST(TestIntegration, IntegratePolynomialExact) {
     // the used integration rules should yield exact results for integrating polynomials of order less than 2*201 - 1
-    auto polynomial = [](const readdy::scalar x) { return  2.*x - 3.*std::pow(x, 2.) + 6.*std::pow(x, 5.); };
+    auto polynomial = [](const readdy::scalar x) { return 2. * x - 3. * std::pow(x, 2.) + 6. * std::pow(x, 5.); };
     const auto result = readdy::util::integration::integrate(polynomial, 0, 10);
     const auto numericIntegral = result.first;
     const auto errorEstimate = result.second;
@@ -54,5 +54,22 @@ TEST(TestIntegration, IntegrateExponentialWithinEstimatedError) {
 }
 
 TEST(TestIntegration, IntegrateAdaptiveExponentialToMachinePrecision) {
-    throw nullptr;
+    auto integrand = [](const readdy::scalar x) { return std::exp(-x); };
+    const auto result = readdy::util::integration::integrateAdaptive(integrand, 0, 1,
+                                                                     std::numeric_limits<readdy::scalar>::epsilon(),
+                                                                     100);
+    const auto trueIntegral = 1.0 - std::exp(-1.0);
+    EXPECT_FLOAT_EQ(result.first, trueIntegral);
+    EXPECT_LE(result.second, std::numeric_limits<readdy::scalar>::epsilon()) << "error should be <= machine precision ";
+}
+
+TEST(TestIntegration, IntegrateAdaptivePeriodicToMachinePrecision) {
+    // integral in range [-a, +a] of odd function is zero, sin=odd, x^4=even, sin(x)*x^4=odd
+    auto integrand = [](const readdy::scalar x) { return std::sin(x) * std::pow(x, 4); };
+    const auto result = readdy::util::integration::integrateAdaptive(integrand, -30., 30.,
+                                                                     std::numeric_limits<readdy::scalar>::epsilon(),
+                                                                     100);
+    const auto trueIntegral = 0.;
+    EXPECT_FLOAT_EQ(result.first, trueIntegral);
+    EXPECT_LE(result.second, std::numeric_limits<readdy::scalar>::epsilon()) << "error should be <= machine precision ";
 }

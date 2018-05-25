@@ -33,6 +33,7 @@
 #include <limits>
 #include <readdy/common/common.h>
 #include <readdy/common/numeric.h>
+#include <queue>
 
 namespace readdy {
 namespace util {
@@ -402,14 +403,63 @@ inline std::pair<scalar, scalar> integrate(Func f, scalar lowerLimit, scalar upp
     return std::make_pair(integralKronrod, absoluteErrorEstimate);
 };
 
+struct Panel {
+    explicit Panel(scalar lowerLimit, scalar upperLimit, scalar integral, scalar absoluteErrorEstimate)
+            : lowerLimit(lowerLimit), upperLimit(upperLimit), integral(integral),
+              absoluteErrorEstimate(absoluteErrorEstimate) {};
+
+    bool operator<(const Panel &other) const {
+        return absoluteErrorEstimate < other.absoluteErrorEstimate;
+    };
+
+    scalar lowerLimit;
+    scalar upperLimit;
+    scalar integral;
+    scalar absoluteErrorEstimate;
+};
 
 template<typename Func>
-inline scalar integrateAdaptive(Func f, scalar lowerLimit, scalar upperLimit,
-                                scalar desiredError = std::numeric_limits<scalar>::epsilon()) {
-    // @todo if integral over range yields larger estimatedError than desiredError, dissect range into panels
-    // keep a queue of errors for each panel, iteratively dissecting the panel with the largest error until the
-    // global relative error reaches the desiredError
-    return 0.;
+inline std::pair<scalar, scalar> integrateAdaptive(Func f, scalar lowerLimit, scalar upperLimit,
+                                scalar desiredError = std::numeric_limits<scalar>::epsilon(),
+                                std::size_t maxiter = 100) {
+    std::vector<Panel> panels;
+
+    const auto initialResult = integrate(f, lowerLimit, upperLimit);
+    panels.push_back(Panel(lowerLimit, upperLimit, initialResult.first, initialResult.second));
+
+    scalar totalError = panels.front().absoluteErrorEstimate;
+    scalar totalIntegral = panels.front().integral;
+
+    std::size_t iter = 0;
+    while (totalError > desiredError && iter < maxiter) {
+        std::sort(panels.begin(), panels.end());
+
+        {
+            const auto &panel = panels.front();
+            const scalar midpoint = (panel.lowerLimit + panel.upperLimit) / 2.;
+
+            const auto lowerResult = integrate(f, panel.lowerLimit, midpoint);
+            Panel lowerPanel(panel.lowerLimit, midpoint, lowerResult.first, lowerResult.second);
+
+            const auto upperResult = integrate(f, midpoint, panel.upperLimit);
+            Panel upperPanel(midpoint, panel.upperLimit, upperResult.first, upperResult.second);
+
+            panels.erase(panels.begin());
+            panels.push_back(lowerPanel);
+            panels.push_back(upperPanel);
+        }
+
+        {
+            totalError = std::accumulate(panels.begin(), panels.end(), 0.,
+                                         [](scalar sum, const Panel &p) { return sum + p.absoluteErrorEstimate; });
+            totalIntegral = std::accumulate(panels.begin(), panels.end(), 0.,
+                                         [](scalar sum, const Panel &p) { return sum + p.integral; });
+        }
+
+        ++iter;
+    }
+
+    return std::make_pair(totalIntegral, totalError);
 }
 
 }
