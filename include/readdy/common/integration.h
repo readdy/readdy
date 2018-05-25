@@ -33,7 +33,6 @@
 #include <limits>
 #include <readdy/common/common.h>
 #include <readdy/common/numeric.h>
-#include <queue>
 
 namespace readdy {
 namespace util {
@@ -359,6 +358,10 @@ constexpr std::array<scalar, 50> weightsGauss201 = {
  * as the difference of the obtained integral and a value integrated with fewer nodes. For the latter use the
  * the associated Gauss rule, whose abscissae are a subset of the 201 Gauss-Kronrod nodes.
  *
+ * The integrand is rescaled, therefore create another function h(x) = c*f(g(x)), such that
+ * the integral of h over [-1,1] is equal to the integral of f over [a,b].
+ * g(x)=0.5*(b-a)*x + 0.5*(a+b) and c=0.5*(b-a)
+ *
  * @tparam Func Callable with one scalar argument returning a scalar
  * @param f the integrand
  * @param lowerLimit lower boundary of integration
@@ -367,11 +370,6 @@ constexpr std::array<scalar, 50> weightsGauss201 = {
  */
 template<typename Func>
 inline std::pair<scalar, scalar> integrate(Func f, scalar lowerLimit, scalar upperLimit) {
-    // create another function h(x) = c*f(g(x)), to rescale boundaries from [a,b] to [-1,1]
-    // h obeys I_{-1}^{1}(h) = I_{a}^{b}(f),
-    // i.e. the integral of h over [-1,1] is equal to the integral of f over [a,b].
-    // g(x)=0.5*(b-a)*x + 0.5(a+b) takes care of rescaling of integration limits of the arguments
-    // and c=0.5*(b-a) is a multiplicative constant
     const scalar midpoint = (lowerLimit + upperLimit) / 2.;
     const scalar halfInterval = (upperLimit - lowerLimit) / 2.;
 
@@ -403,6 +401,10 @@ inline std::pair<scalar, scalar> integrate(Func f, scalar lowerLimit, scalar upp
     return std::make_pair(integralKronrod, absoluteErrorEstimate);
 };
 
+/**
+ * Panel is associated with the range [lowerLimit, upperLimit] and saves the integral over this domain and
+ * an error estimate. Panels are compared with respect to their error estimate.
+ */
 struct Panel {
     explicit Panel(scalar lowerLimit, scalar upperLimit, scalar integral, scalar absoluteErrorEstimate)
             : lowerLimit(lowerLimit), upperLimit(upperLimit), integral(integral),
@@ -418,6 +420,20 @@ struct Panel {
     scalar absoluteErrorEstimate;
 };
 
+/**
+ * Perform integration of f(x) over range [lowerLimit, upperLimit] up to a given desired error. If the estimated error
+ * of the numeric integration is larger than the desired error, the range of integration is split into panels. This
+ * is repeated, always splitting the panel with the largest error estimate, until the total error estimate of all
+ * panels is smaller than the given desired error or the maximum of iterations is reached.
+ *
+ * @tparam Func Callable with one scalar argument returning a scalar
+ * @param f the integrand
+ * @param lowerLimit lower boundary of integration
+ * @param upperLimit upper boundary of integration
+ * @param desiredError result will be accurate up to this value if maxiter is not reached, by default machine precision
+ * @param maxiter the maximum iterations
+ * @return a pair of (value of the integral, error estimate of the integral)
+ */
 template<typename Func>
 inline std::pair<scalar, scalar> integrateAdaptive(Func f, scalar lowerLimit, scalar upperLimit,
                                 scalar desiredError = std::numeric_limits<scalar>::epsilon(),
