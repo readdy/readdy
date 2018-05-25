@@ -31,14 +31,14 @@
 #pragma once
 
 #include <limits>
-#include <readdy/common/common.h>
-#include <readdy/common/numeric.h>
+#include <numeric>
 
 namespace readdy {
 namespace util {
 namespace integration {
 
-constexpr std::array<scalar, 101> weightsGaussKronrod201 = {
+template<typename ScalarType>
+constexpr std::array<ScalarType, 101> weightsGaussKronrod201 = {
         0.00012796430957024721771296604719777847195024888314,
         0.00035867672428027546451819698699002695000334366552,
         0.00061229953852751686968468056548070834614262353518,
@@ -142,7 +142,8 @@ constexpr std::array<scalar, 101> weightsGaussKronrod201 = {
         0.01562962018460484993210603370275515394376090869371
 };
 
-constexpr std::array<scalar, 101> abscissaeGaussKronrod201 = {
+template<typename ScalarType>
+constexpr std::array<ScalarType, 101> abscissaeGaussKronrod201 = {
         0.99995250325234874194558759586872675230201032186296,
         0.99971372677344123367822846934230067671834952730840,
         0.99922816588380125603468689462902570985161537549449,
@@ -246,7 +247,8 @@ constexpr std::array<scalar, 101> abscissaeGaussKronrod201 = {
         0.00000000000000000000000000000000000000000000000000
 };
 
-constexpr std::array<scalar, 50> abscissaeGauss201 = {
+template<typename ScalarType>
+constexpr std::array<ScalarType, 50> abscissaeGauss201 = {
         0.99971372677344123367822846934230067671834952730840,
         0.99849195063959581840016335918634916230485485042057,
         0.99629513473312514918613173224113103543643128814043,
@@ -299,7 +301,8 @@ constexpr std::array<scalar, 50> abscissaeGauss201 = {
         0.01562898442154308287221669999742934014775618285556
 };
 
-constexpr std::array<scalar, 50> weightsGauss201 = {
+template<typename ScalarType>
+constexpr std::array<ScalarType, 50> weightsGauss201 = {
         0.00073463449050567173040632065833033639067047356248,
         0.00170939265351810523952935837149119524373138549146,
         0.00268392537155348241943959042900112008193111495100,
@@ -368,36 +371,36 @@ constexpr std::array<scalar, 50> weightsGauss201 = {
  * @param upperLimit upper boundary of integration
  * @return a pair of (value of the integral, error estimate of the integral)
  */
-template<typename Func>
-inline std::pair<scalar, scalar> integrate(Func f, scalar lowerLimit, scalar upperLimit) {
-    const scalar midpoint = (lowerLimit + upperLimit) / 2.;
-    const scalar halfInterval = (upperLimit - lowerLimit) / 2.;
+template<typename Func, typename ScalarType>
+inline auto integrate(Func f, ScalarType lowerLimit, ScalarType upperLimit) {
+    const ScalarType midpoint = (lowerLimit + upperLimit) / 2.;
+    const ScalarType halfInterval = (upperLimit - lowerLimit) / 2.;
 
-    const auto integrand = [&f, &midpoint, &halfInterval](const scalar x) {
-        const scalar rescaledArgument = halfInterval * x + midpoint;
+    const auto integrand = [&f, &midpoint, &halfInterval](const ScalarType x) {
+        const ScalarType rescaledArgument = halfInterval * x + midpoint;
         return halfInterval * f(rescaledArgument);
     };
 
-    scalar integralKronrod = weightsGaussKronrod201.back() * integrand(0.);
-    scalar integralGauss = 0.;
+    ScalarType integralKronrod = weightsGaussKronrod201<ScalarType>.back() * integrand(0.);
+    ScalarType integralGauss = 0.;
     // leave out last kronrod index, since it corresponds to abscissa=0
-    for (std::size_t kronrodIndex = 0; kronrodIndex < abscissaeGaussKronrod201.size() - 1; ++kronrodIndex) {
-        const scalar abscissa = abscissaeGaussKronrod201[kronrodIndex];
-        const scalar kronrodWeight = weightsGaussKronrod201[kronrodIndex];
-        const scalar symmetricIntegrandSum = integrand(abscissa) + integrand(-1. * abscissa);
+    for (std::size_t kronrodIndex = 0; kronrodIndex < abscissaeGaussKronrod201<ScalarType>.size() - 1; ++kronrodIndex) {
+        const ScalarType abscissa = abscissaeGaussKronrod201<ScalarType>[kronrodIndex];
+        const ScalarType kronrodWeight = weightsGaussKronrod201<ScalarType>[kronrodIndex];
+        const ScalarType symmetricIntegrandSum = integrand(abscissa) + integrand(-1. * abscissa);
 
         integralKronrod += symmetricIntegrandSum * kronrodWeight;
 
         if ((kronrodIndex + 1) % 2 == 0) {
             // every second abscissa of the GaussKronrod rule is also a Gauss abscissa
             const std::size_t gaussIndex = (kronrodIndex - 1) / 2;
-            const scalar gaussWeight = weightsGauss201[gaussIndex];
+            const ScalarType gaussWeight = weightsGauss201<ScalarType>[gaussIndex];
 
             integralGauss += symmetricIntegrandSum * gaussWeight;
         }
     }
 
-    const scalar absoluteErrorEstimate = std::abs(integralKronrod - integralGauss);
+    const ScalarType absoluteErrorEstimate = std::abs(integralKronrod - integralGauss);
     return std::make_pair(integralKronrod, absoluteErrorEstimate);
 };
 
@@ -405,19 +408,20 @@ inline std::pair<scalar, scalar> integrate(Func f, scalar lowerLimit, scalar upp
  * Panel is associated with the range [lowerLimit, upperLimit] and saves the integral over this domain and
  * an error estimate. Panels are compared with respect to their error estimate.
  */
+template<typename ScalarType>
 struct Panel {
-    explicit Panel(scalar lowerLimit, scalar upperLimit, scalar integral, scalar absoluteErrorEstimate)
+    explicit Panel(ScalarType lowerLimit, ScalarType upperLimit, ScalarType integral, ScalarType absoluteErrorEstimate)
             : lowerLimit(lowerLimit), upperLimit(upperLimit), integral(integral),
               absoluteErrorEstimate(absoluteErrorEstimate) {};
 
-    bool operator<(const Panel &other) const {
+    bool operator<(const Panel<ScalarType> &other) const {
         return absoluteErrorEstimate < other.absoluteErrorEstimate;
     };
 
-    scalar lowerLimit;
-    scalar upperLimit;
-    scalar integral;
-    scalar absoluteErrorEstimate;
+    ScalarType lowerLimit;
+    ScalarType upperLimit;
+    ScalarType integral;
+    ScalarType absoluteErrorEstimate;
 };
 
 /**
@@ -434,17 +438,17 @@ struct Panel {
  * @param maxiter the maximum iterations
  * @return a pair of (value of the integral, error estimate of the integral)
  */
-template<typename Func>
-inline std::pair<scalar, scalar> integrateAdaptive(Func f, scalar lowerLimit, scalar upperLimit,
-                                scalar desiredError = std::numeric_limits<scalar>::epsilon(),
+template<typename Func, typename ScalarType>
+inline auto integrateAdaptive(Func f, ScalarType lowerLimit, ScalarType upperLimit,
+                                ScalarType desiredError = std::numeric_limits<ScalarType>::epsilon(),
                                 std::size_t maxiter = 100) {
-    std::vector<Panel> panels;
+    std::vector<Panel<ScalarType>> panels;
 
     const auto initialResult = integrate(f, lowerLimit, upperLimit);
-    panels.push_back(Panel(lowerLimit, upperLimit, initialResult.first, initialResult.second));
+    panels.push_back(Panel<ScalarType>(lowerLimit, upperLimit, initialResult.first, initialResult.second));
 
-    scalar totalError = panels.front().absoluteErrorEstimate;
-    scalar totalIntegral = panels.front().integral;
+    ScalarType totalError = panels.front().absoluteErrorEstimate;
+    ScalarType totalIntegral = panels.front().integral;
 
     std::size_t iter = 0;
     while (totalError > desiredError && iter < maxiter) {
@@ -452,13 +456,13 @@ inline std::pair<scalar, scalar> integrateAdaptive(Func f, scalar lowerLimit, sc
 
         {
             const auto &panel = panels.front();
-            const scalar midpoint = (panel.lowerLimit + panel.upperLimit) / 2.;
+            const ScalarType midpoint = (panel.lowerLimit + panel.upperLimit) / 2.;
 
             const auto lowerResult = integrate(f, panel.lowerLimit, midpoint);
-            Panel lowerPanel(panel.lowerLimit, midpoint, lowerResult.first, lowerResult.second);
+            Panel<ScalarType> lowerPanel(panel.lowerLimit, midpoint, lowerResult.first, lowerResult.second);
 
             const auto upperResult = integrate(f, midpoint, panel.upperLimit);
-            Panel upperPanel(midpoint, panel.upperLimit, upperResult.first, upperResult.second);
+            Panel<ScalarType> upperPanel(midpoint, panel.upperLimit, upperResult.first, upperResult.second);
 
             panels.erase(panels.begin());
             panels.push_back(lowerPanel);
@@ -467,9 +471,9 @@ inline std::pair<scalar, scalar> integrateAdaptive(Func f, scalar lowerLimit, sc
 
         {
             totalError = std::accumulate(panels.begin(), panels.end(), 0.,
-                                         [](scalar sum, const Panel &p) { return sum + p.absoluteErrorEstimate; });
+                                         [](ScalarType sum, const Panel<ScalarType> &p) { return sum + p.absoluteErrorEstimate; });
             totalIntegral = std::accumulate(panels.begin(), panels.end(), 0.,
-                                         [](scalar sum, const Panel &p) { return sum + p.integral; });
+                                         [](ScalarType sum, const Panel<ScalarType> &p) { return sum + p.integral; });
         }
 
         ++iter;

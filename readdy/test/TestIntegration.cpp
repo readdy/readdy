@@ -28,12 +28,13 @@
  */
 
 #include <gtest/gtest.h>
+#include <readdy/common/common.h>
 #include <readdy/common/integration.h>
 
 TEST(TestIntegration, IntegratePolynomialExact) {
     // the used integration rules should yield exact results for integrating polynomials of order less than 2*201 - 1
     auto polynomial = [](const readdy::scalar x) { return 2. * x - 3. * std::pow(x, 2.) + 6. * std::pow(x, 5.); };
-    auto result = readdy::util::integration::integrate(polynomial, 0, 10);
+    auto result = readdy::util::integration::integrate(polynomial, 0., 10.);
     auto numericIntegral = result.first;
     auto errorEstimate = result.second;
     readdy::scalar trueIntegral = 1e2 - 1e3 + 1e6;
@@ -43,7 +44,7 @@ TEST(TestIntegration, IntegratePolynomialExact) {
 
 TEST(TestIntegration, IntegrateExponentialWithinEstimatedError) {
     auto integrand = [](const readdy::scalar x) { return std::exp(-x); };
-    auto result = readdy::util::integration::integrate(integrand, 0, 1);
+    auto result = readdy::util::integration::integrate(integrand, 0., 1.);
     auto numericIntegral = result.first;
     auto errorEstimate = result.second;
     auto trueIntegral = 1.0 - std::exp(-1.0);
@@ -53,7 +54,7 @@ TEST(TestIntegration, IntegrateExponentialWithinEstimatedError) {
 
 TEST(TestIntegration, IntegrateAdaptiveExponentialToMachinePrecision) {
     auto integrand = [](const readdy::scalar x) { return std::exp(-x); };
-    auto result = readdy::util::integration::integrateAdaptive(integrand, 0, 1,
+    auto result = readdy::util::integration::integrateAdaptive(integrand, 0., 1.,
                                                                std::numeric_limits<readdy::scalar>::epsilon(),
                                                                100);
     auto trueIntegral = 1.0 - std::exp(-1.0);
