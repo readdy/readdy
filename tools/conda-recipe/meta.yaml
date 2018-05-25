@@ -26,7 +26,6 @@ requirements:
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
     - cmake # [not win]
-    - hdf5
 
   run:
     - python
