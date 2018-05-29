@@ -33,6 +33,7 @@
 #include <readdy/model/topologies/GraphTopology.h>
 #include <readdy/model/_internal/Util.h>
 #include "PyFunction.h"
+#include "../common/ReadableParticle.h"
 
 namespace py = pybind11;
 using rvp = py::return_value_policy;
@@ -180,11 +181,20 @@ void exportTopologies(py::module &m) {
 
     py::class_<base_topology>(m, "BaseTopology")
             .def("get_n_particles", &base_topology::getNParticles)
-            .def("get_particles", [](const base_topology &self) {return self.getParticles();});
+            .def_property_readonly("n_particles", &base_topology::getNParticles);
 
     py::class_<topology, base_topology>(m, "Topology")
             .def("get_graph", [](topology &self) -> graph & { return self.graph(); }, rvp::reference_internal)
-            .def_property_readonly("particles", &topology::fetchParticles, R"topdoc(
+            .def_property_readonly("graph", [](topology &self) -> graph & { return self.graph(); },
+                                   rvp::reference_internal)
+            .def_property_readonly("particles", [](const topology &self) -> std::vector<rpy::ReadableParticle> {
+                auto particles = self.fetchParticles();
+                std::vector<rpy::ReadableParticle> readableOutput;
+                readableOutput.reserve(particles.size());
+                std::transform(std::begin(particles), std::end(particles), std::back_inserter(readableOutput),
+                               [&self](const auto &particle) { return rpy::ReadableParticle(particle, self.context());});
+                return readableOutput;
+                }, R"topdoc(
                 Retrieves the particles contained in this topology.
 
                 :return: the particles
@@ -248,7 +258,20 @@ void exportTopologies(py::module &m) {
 
                 :return: list of vertices
             )topdoc",rvp::reference_internal)
+            .def_property_readonly("vertices", [](graph &self) -> graph::vertex_list & { return self.vertices(); },
+            R"topdoc(
+                Yields a list of vertices contained in this graph.
+
+                :return: list of vertices
+            )topdoc", rvp::reference_internal)
             .def("get_edges", [](graph &self) -> std::vector<graph::edge> {
+                return self.edges();
+            }, R"topdoc(
+                Yields a list of edges contained in this graph.
+
+                :return: list of edges
+            )topdoc")
+            .def_property_readonly("edges", [](graph &self) -> std::vector<graph::edge> {
                 return self.edges();
             }, R"topdoc(
                 Yields a list of edges contained in this graph.

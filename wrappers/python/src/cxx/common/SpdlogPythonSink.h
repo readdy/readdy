@@ -43,10 +43,10 @@ namespace rpy {
 
 class pysink : public spdlog::sinks::base_sink<std::mutex> {
 
-public:
-    void flush() override { /* no op */ }
-
 protected:
+
+    void _flush() override { /* no op */ }
+
     void _sink_it(const spdlog::details::log_msg &msg) override {
         if(should_log(msg.level)) {
 
