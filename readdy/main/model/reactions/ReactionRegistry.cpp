@@ -387,7 +387,7 @@ struct FindReactionById {
         reaction = r2;
     }
 
-    void assign(const std::shared_ptr<Reaction> r2) {
+    void assign(const std::shared_ptr<Reaction> &r2) {
         reaction = r2.get();
     }
 

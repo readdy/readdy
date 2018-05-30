@@ -413,7 +413,7 @@ void SCPUDetailedBalance::perform(const util::PerformanceNode &node) {
             continue;
         }
         bool isFusionReaction = (event.nEducts == 2);
-        const auto &revReaction = reversibleReactions.front(); // @todo search actual reversibleReactionConfig
+        const auto &revReaction = _reversibleReactions.front(); // @todo search actual reversibleReactionConfig
         const auto particleBackup = ParticleBackup(event.nEducts, event.idx1, event.idx2, event.t1, event.t2, data->entry_at(event.idx1).position(), data->entry_at(event.idx2).position());
         auto energyBefore = stateModel.energy();
         model::SCPUParticleData::entries_update forwardUpdate;
@@ -563,7 +563,7 @@ model::SCPUParticleData::entries_update SCPUDetailedBalance::generateBackwardUpd
 }
 
 std::pair<model::SCPUParticleData::entries_update, scalar> SCPUDetailedBalance::performEvent(scpu_data &data, const Event &event, bool recordCounts) {
-    if (reversibleReactions.size() != 1) {
+    if (_reversibleReactions.size() != 1) {
         throw std::runtime_error("Currently works only for one reversible reaction");
     }
     const auto &ctx = kernel->context();
@@ -582,7 +582,7 @@ std::pair<model::SCPUParticleData::entries_update, scalar> SCPUDetailedBalance::
         }
         auto n3 = readdy::model::rnd::normal3<readdy::scalar>(0, 1);
         n3 /= std::sqrt(n3 * n3);
-        auto revReaction = reversibleReactions.front(); // @fixme search for reaction instead of using the first
+        auto revReaction = _reversibleReactions.front(); // @fixme search for reaction instead of using the first
         auto distance = revReaction.drawFissionDistance();
         Vec3 difference(distance, 0, 0); // orientation does not matter for energy
         scalar energyGain = 0.;
@@ -615,7 +615,7 @@ std::pair<model::SCPUParticleData::entries_update, scalar> SCPUDetailedBalance::
         }
         const auto e1Pos = entry1.pos;
         const auto e2Pos = entry2.pos;
-        auto revReaction = reversibleReactions.front();
+        auto revReaction = _reversibleReactions.front();
         const auto difference = bcs::shortestDifference(e1Pos, e2Pos, box, pbc);
         scalar energyLoss = 0.;
         for (const auto &p : revReaction.lhsPotentials) {

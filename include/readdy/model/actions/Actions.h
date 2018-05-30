@@ -152,8 +152,12 @@ inline std::ostream& operator<<(std::ostream& os, const ReversibleType& reversib
 struct ReversibleReactionConfig {
     using ReactionId = readdy::model::reactions::Reaction::reaction_id;
     using pot = readdy::model::potentials::PotentialOrder2 *;
+
     ReactionId forwardId;
     ReactionId backwardId;
+    std::string forwardName;
+    std::string backwardName;
+
     std::uint8_t numberLhsTypes; // either 1 or 2
     std::array<particle_type_type, 2> lhsTypes;
     std::uint8_t numberRhsTypes; // either 1 or 2
@@ -204,14 +208,26 @@ struct ReversibleReactionConfig {
     }
 };
 
+/**
+ * Comparator for identifying equivalent reversible reactions, which are forbidden due to ambiguity.
+ */
+inline const bool equivalentReversibleReactions(const ReversibleReactionConfig &rev1, const ReversibleReactionConfig &rev2) {
+    return (rev1.lhsTypes == rev2.lhsTypes and rev1.rhsTypes == rev2.rhsTypes) or
+           (rev1.lhsTypes == rev2.rhsTypes and rev1.rhsTypes == rev2.lhsTypes);
+};
+
 class DetailedBalance : public TimeStepDependentAction {
 public:
     explicit DetailedBalance(scalar timeStep);
 
-protected:
-    std::vector<ReversibleReactionConfig> reversibleReactions;
+    const std::vector<ReversibleReactionConfig> &reversibleReactions() const {
+        return _reversibleReactions;
+    }
 
-    void searchReversibleReactions(const readdy::model::Context& ctx);
+protected:
+    void searchReversibleReactions(const Context& ctx);
+
+    std::vector<ReversibleReactionConfig> _reversibleReactions;
 };
 
 NAMESPACE_END(reactions)

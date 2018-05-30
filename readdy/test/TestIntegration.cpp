@@ -30,6 +30,7 @@
 #include <gtest/gtest.h>
 #include <readdy/common/common.h>
 #include <readdy/common/integration.h>
+#include <readdy/common/numeric.h>
 
 TEST(TestIntegration, IntegratePolynomialExact) {
     // the used integration rules should yield exact results for integrating polynomials of order less than 2*201 - 1
@@ -59,7 +60,8 @@ TEST(TestIntegration, IntegrateAdaptiveExponentialToMachinePrecision) {
                                                                100);
     auto trueIntegral = 1.0 - std::exp(-1.0);
     EXPECT_FLOAT_EQ(result.first, trueIntegral);
-    EXPECT_LE(result.second, std::numeric_limits<readdy::scalar>::epsilon()) << "error should be <= machine precision ";
+    EXPECT_LE(result.second/result.first, std::numeric_limits<readdy::scalar>::epsilon())
+                        << "relative error should be <= machine precision ";
 }
 
 TEST(TestIntegration, IntegrateAdaptivePeriodicToMachinePrecision) {
@@ -70,7 +72,7 @@ TEST(TestIntegration, IntegrateAdaptivePeriodicToMachinePrecision) {
                                                                100);
     auto trueIntegral = 0.;
     EXPECT_FLOAT_EQ(result.first, trueIntegral);
-    EXPECT_LE(result.second, std::numeric_limits<readdy::scalar>::epsilon()) << "error should be <= machine precision ";
+    EXPECT_LE(result.second, std::numeric_limits<readdy::scalar>::epsilon())<< "error should be <= machine precision ";
 }
 
 TEST(TestIntegration, LimitsAreEqual) {
@@ -83,4 +85,24 @@ TEST(TestIntegration, LimitsAreEqual) {
 TEST(TestIntegration, UnorderedLimits) {
     auto integrand = [](const readdy::scalar x){return 10.;};
     EXPECT_ANY_THROW(readdy::util::integration::integrateAdaptive(integrand, 1., 0.));
+}
+
+TEST(TestIntegration, RadialIntegralHarmonicRepulsion) {
+    const readdy::scalar interactionDistance = 2.;
+    const auto harmonicRepulsion = [&interactionDistance](const readdy::scalar x){
+        if (x < 0.) {
+            throw std::invalid_argument("only positive");
+        }
+        if (x < interactionDistance) {
+            return 0.5 * 10. * std::pow(x - interactionDistance, 2.);
+        } else {
+            return 0.;
+        }
+    };
+    auto integrand = [&harmonicRepulsion, &interactionDistance](const readdy::scalar x){
+        return 4. * readdy::util::numeric::pi<readdy::scalar>() * x * x * std::exp(- harmonicRepulsion(x));
+    };
+    const readdy::scalar desiredRelativeError = 1e-12;
+    auto result = readdy::util::integration::integrateAdaptive(integrand, 0., 5., desiredRelativeError);
+    EXPECT_LE(result.second/result.first, desiredRelativeError);
 }

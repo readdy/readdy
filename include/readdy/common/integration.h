@@ -412,26 +412,27 @@ inline auto integrate(Func f, ScalarType lowerLimit, ScalarType upperLimit) {
 
 /**
  * Panel is associated with the range [lowerLimit, upperLimit] and saves the integral over this domain and
- * an error estimate. Panels are compared with respect to their error estimate.
+ * an error estimate. Panels are compared with respect to their relative error estimate.
  */
 template<typename ScalarType>
 struct Panel {
     explicit Panel(ScalarType lowerLimit, ScalarType upperLimit, ScalarType integral, ScalarType absoluteErrorEstimate)
             : lowerLimit(lowerLimit), upperLimit(upperLimit), integral(integral),
-              absoluteErrorEstimate(absoluteErrorEstimate) {
+              absoluteErrorEstimate(absoluteErrorEstimate), relativeErrorEstimate(absoluteErrorEstimate / integral) {
         if (lowerLimit > upperLimit) {
             throw std::invalid_argument("Limits in a Panel must be ordered");
         }
     };
 
     bool operator<(const Panel<ScalarType> &other) const {
-        return absoluteErrorEstimate < other.absoluteErrorEstimate;
+        return relativeErrorEstimate < other.relativeErrorEstimate;
     };
 
     ScalarType lowerLimit;
     ScalarType upperLimit;
     ScalarType integral;
     ScalarType absoluteErrorEstimate;
+    ScalarType relativeErrorEstimate;
 };
 
 /**
@@ -450,22 +451,27 @@ struct Panel {
  */
 template<typename Func, typename ScalarType>
 inline auto integrateAdaptive(Func f, ScalarType lowerLimit, ScalarType upperLimit,
-                                ScalarType desiredError = std::numeric_limits<ScalarType>::epsilon(),
-                                std::size_t maxiter = 100) {
+                              ScalarType desiredRelativeError = std::numeric_limits<ScalarType>::epsilon(),
+                              std::size_t maxiter = 100) {
     std::vector<Panel<ScalarType>> panels;
 
     const auto initialResult = integrate(f, lowerLimit, upperLimit);
     panels.push_back(Panel<ScalarType>(lowerLimit, upperLimit, initialResult.first, initialResult.second));
 
-    ScalarType totalError = panels.front().absoluteErrorEstimate;
     ScalarType totalIntegral = panels.front().integral;
+    ScalarType totalAbsoluteError = panels.front().absoluteErrorEstimate;
+    if (totalIntegral==0 and totalAbsoluteError==0) {
+        return std::make_pair(totalIntegral, totalAbsoluteError);
+    }
+    ScalarType totalRelativeError = totalAbsoluteError / totalIntegral;
+
 
     std::size_t iter = 0;
-    while (totalError > desiredError && iter < maxiter) {
+    while (totalRelativeError > desiredRelativeError && iter < maxiter) {
         std::sort(panels.begin(), panels.end());
 
         {
-            const auto &panel = panels.front();
+            const auto &panel = panels.back();
             const ScalarType midpoint = (panel.lowerLimit + panel.upperLimit) / 2.;
 
             const auto lowerResult = integrate(f, panel.lowerLimit, midpoint);
@@ -474,22 +480,27 @@ inline auto integrateAdaptive(Func f, ScalarType lowerLimit, ScalarType upperLim
             const auto upperResult = integrate(f, midpoint, panel.upperLimit);
             Panel<ScalarType> upperPanel(midpoint, panel.upperLimit, upperResult.first, upperResult.second);
 
-            panels.erase(panels.begin());
+            panels.pop_back();
             panels.push_back(lowerPanel);
             panels.push_back(upperPanel);
         }
 
         {
-            totalError = std::accumulate(panels.begin(), panels.end(), 0.,
-                                         [](ScalarType sum, const Panel<ScalarType> &p) { return sum + p.absoluteErrorEstimate; });
             totalIntegral = std::accumulate(panels.begin(), panels.end(), 0.,
-                                         [](ScalarType sum, const Panel<ScalarType> &p) { return sum + p.integral; });
+                                            [](ScalarType sum, const Panel<ScalarType> &p) {
+                                                return sum + p.integral;
+                                            });
+            totalAbsoluteError = std::accumulate(panels.begin(), panels.end(), 0.,
+                                                 [](ScalarType sum, const Panel<ScalarType> &p) {
+                                                     return sum + p.absoluteErrorEstimate;
+                                                 });
+            totalRelativeError = totalAbsoluteError / totalIntegral;
         }
 
         ++iter;
     }
 
-    return std::make_pair(totalIntegral, totalError);
+    return std::make_pair(totalIntegral, totalAbsoluteError);
 }
 
 }

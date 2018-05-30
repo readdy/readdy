@@ -104,7 +104,10 @@ class SCPUDetailedBalance : public readdy::model::actions::reactions::DetailedBa
     using reaction_type = readdy::model::reactions::ReactionType;
 public:
     SCPUDetailedBalance(SCPUKernel *const kernel, scalar timeStep)
-            : readdy::model::actions::reactions::DetailedBalance(timeStep), kernel(kernel) {};
+            : readdy::model::actions::reactions::DetailedBalance(timeStep), kernel(kernel) {
+        kernel->context().configure();
+        searchReversibleReactions(kernel->context());
+    };
 
     // on each reaction, calc system energy, propose the step, recalculate energy, get the delta, subtract interaction
     // of a and b (because it was in the proposal step), accept with e^{-beta (delta - u_ab)}

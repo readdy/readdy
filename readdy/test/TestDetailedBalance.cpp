@@ -41,63 +41,316 @@ class TestDetailedBalanceWithKernels : public KernelTest {
 };
 
 namespace m = readdy::model;
+namespace r = m::actions::reactions;
 
-auto registerAbcSpecies = [](m::Context &ctx){
+auto registerAbcSpecies = [](m::Context &ctx) {
     ctx.particle_types().add("A", 1.);
     ctx.particle_types().add("B", 1.);
     ctx.particle_types().add("C", 1.);
 };
 
-TEST(TestDetailedBalance, ReversibleReactionConfigValues) {
-    {
-        m::Context ctx;
-        ctx.boxSize() = {21.544346900318832, 21.544346900318832, 21.544346900318832};
-        ctx.kBT() = 1;
-        registerAbcSpecies(ctx);
-        ctx.potentials().addHarmonicRepulsion("A", "B", 2., 3.);
-        ctx.reactions().add("fusion: A +(5) B -> C", 1.);
-        ctx.reactions().add("fission: C -> A +(5) B", 2.);
-        ctx.configure();
+TEST(TestDetailedBalance, ReversibleReactionConfigValuesFusionFission) {
+    m::Context ctx;
+    ctx.boxSize() = {21.544346900318832, 21.544346900318832, 21.544346900318832};
+    ctx.kBT() = 1;
+    registerAbcSpecies(ctx);
+    ctx.potentials().addHarmonicRepulsion("A", "B", 2., 3.);
+    ctx.reactions().add("fusion: A +(5) B -> C", 1.);
+    ctx.reactions().add("fission: C -> A +(5) B", 2.);
+    ctx.configure();
 
-        auto idFusion = ctx.reactions().idOf("fusion");
-        auto idFission = ctx.reactions().idOf("fission");
-        m::actions::reactions::ReversibleReactionConfig conf(idFusion, idFission, ctx);
-        EXPECT_NEAR(conf.totalVolume, 10000, 1e-7);
-        EXPECT_FLOAT_EQ(conf.kbt, 1.);
-        EXPECT_FLOAT_EQ(conf.lhsInteractionRadius, 3.);
-        EXPECT_FLOAT_EQ(conf.reactionRadius, 5.);
-        EXPECT_EQ(conf.rhsTypes[0], ctx.particle_types().idOf("C"));
-        EXPECT_EQ(conf.lhsTypes[0], ctx.particle_types().idOf("A"));
-        EXPECT_EQ(conf.lhsTypes[1], ctx.particle_types().idOf("B"));
-        EXPECT_NEAR(conf.lhsInteractionVolume, 113.09733552923254, 1e-6);
-        EXPECT_NEAR(conf.effectiveLhsInteractionVolume, 68.099109181202977, 1e-6);
-        EXPECT_NEAR(conf.effectiveLhsReactionVolume, 478.6005724, 1e-6);
-        EXPECT_NEAR(conf.equilibriumConstant, 41.6004591207713 , 1e-6);
-        EXPECT_FLOAT_EQ(conf.macroBackwardRate, 2.);
-        EXPECT_NEAR(conf.macroForwardRate, 2. / 41.6004591207713 * 10000., 1e-6);
-    }
+    auto idFusion = ctx.reactions().idOf("fusion");
+    auto idFission = ctx.reactions().idOf("fission");
+    r::ReversibleReactionConfig conf(idFusion, idFission, ctx);
+    EXPECT_NEAR(conf.totalVolume, 10000, 1e-4);
+    EXPECT_FLOAT_EQ(conf.kbt, 1.);
+    EXPECT_FLOAT_EQ(conf.lhsInteractionRadius, 3.);
+    EXPECT_FLOAT_EQ(conf.reactionRadius, 5.);
+    EXPECT_EQ(conf.numberLhsTypes, 2);
+    EXPECT_EQ(conf.numberRhsTypes, 1);
+    EXPECT_EQ(conf.rhsTypes[0], ctx.particle_types().idOf("C"));
+    EXPECT_EQ(conf.lhsTypes[0], ctx.particle_types().idOf("A"));
+    EXPECT_EQ(conf.lhsTypes[1], ctx.particle_types().idOf("B"));
+    EXPECT_NEAR(conf.lhsInteractionVolume, 113.09733, 1e-4);
+    EXPECT_NEAR(conf.effectiveLhsInteractionVolume, 68.09910, 1e-4);
+    EXPECT_NEAR(conf.effectiveLhsReactionVolume, 478.60057, 1e-4);
+    EXPECT_NEAR(conf.equilibriumConstant, 41.60045, 1e-4);
+    EXPECT_FLOAT_EQ(conf.macroBackwardRate, 2.);
+    EXPECT_NEAR(conf.macroForwardRate, 480.76392, 1e-4);
+    EXPECT_FLOAT_EQ(conf.acceptancePrefactor, 1.);
+}
 
-    // @todo ConversionConversion
-    // @todo EnzymaticEnzymatic
+TEST(TestDetailedBalance, ReversibleReactionConfigValuesConversionConversion) {
+    m::Context ctx;
+    ctx.boxSize() = {10., 10., 10.};
+    ctx.kBT() = 1;
+    registerAbcSpecies(ctx);
+    ctx.reactions().add("forward: A -> B", 1.);
+    ctx.reactions().add("backward: B -> A", 2.);
+    ctx.configure();
+
+    auto idForward = ctx.reactions().idOf("forward");
+    auto idBackward = ctx.reactions().idOf("backward");
+    r::ReversibleReactionConfig conf(idForward, idBackward, ctx);
+    EXPECT_NEAR(conf.totalVolume, 1000, 1e-4);
+    EXPECT_EQ(conf.numberLhsTypes, 1);
+    EXPECT_EQ(conf.numberRhsTypes, 1);
+    EXPECT_EQ(conf.lhsTypes[0], ctx.particle_types().idOf("A"));
+    EXPECT_EQ(conf.rhsTypes[0], ctx.particle_types().idOf("B"));
+    EXPECT_FLOAT_EQ(conf.lhsInteractionRadius, 0.);
+    EXPECT_FLOAT_EQ(conf.lhsInteractionVolume, 0.);
+    EXPECT_FLOAT_EQ(conf.rhsInteractionRadius, 0.);
+    EXPECT_FLOAT_EQ(conf.rhsInteractionVolume, 0.);
+
+    EXPECT_FLOAT_EQ(conf.effectiveLhsInteractionVolume, 0.);
+    EXPECT_FLOAT_EQ(conf.effectiveLhsReactionVolume, 0.);
+    EXPECT_FLOAT_EQ(conf.effectiveRhsInteractionVolume, 0.);
+    EXPECT_FLOAT_EQ(conf.effectiveRhsReactionVolume, 0.);
+
+    EXPECT_FLOAT_EQ(conf.acceptancePrefactor, 1.);
+
+    EXPECT_FLOAT_EQ(conf.macroForwardRate, 1.);
+    EXPECT_FLOAT_EQ(conf.macroBackwardRate, 2.);
+    EXPECT_FLOAT_EQ(conf.equilibriumConstant, 2.);
+}
+
+TEST(TestDetailedBalance, ReversibleReactionConfigValuesEnzymaticEnzymatic) {
+    m::Context ctx;
+    ctx.boxSize() = {10., 10., 10.};
+    ctx.kBT() = 1;
+    registerAbcSpecies(ctx);
+    ctx.potentials().addHarmonicRepulsion("A", "C", 2., 3.);
+    ctx.potentials().addHarmonicRepulsion("B", "C", 2., 3.);
+    ctx.reactions().add("forward: A +(5) C -> B + C", 1.);
+    ctx.reactions().add("backward: B +(5) C -> A + C", 2.);
+    ctx.configure();
+
+    auto idForward = ctx.reactions().idOf("forward");
+    auto idBackward = ctx.reactions().idOf("backward");
+    r::ReversibleReactionConfig conf(idForward, idBackward, ctx);
+    EXPECT_NEAR(conf.totalVolume, 1000, 1e-4);
+    EXPECT_EQ(conf.numberLhsTypes, 2);
+    EXPECT_EQ(conf.numberRhsTypes, 2);
+    EXPECT_EQ(conf.lhsTypes[0], ctx.particle_types().idOf("A"));
+    EXPECT_EQ(conf.rhsTypes[0], ctx.particle_types().idOf("B"));
+    EXPECT_EQ(conf.lhsTypes[1], ctx.particle_types().idOf("C"));
+    EXPECT_EQ(conf.rhsTypes[1], ctx.particle_types().idOf("C"));
+    EXPECT_FLOAT_EQ(conf.lhsInteractionRadius, 3.);
+    EXPECT_FLOAT_EQ(conf.lhsInteractionVolume, 4. / 3. * readdy::util::numeric::pi<readdy::scalar>() * std::pow(3., 3));
+    EXPECT_FLOAT_EQ(conf.rhsInteractionRadius, 3.);
+    EXPECT_FLOAT_EQ(conf.rhsInteractionVolume, 4. / 3. * readdy::util::numeric::pi<readdy::scalar>() * std::pow(3., 3));
+
+    EXPECT_NEAR(conf.effectiveLhsInteractionVolume, 68.09910, 1e-4);
+    EXPECT_NEAR(conf.effectiveLhsReactionVolume, 478.60057, 1e-4);
+    EXPECT_NEAR(conf.effectiveRhsInteractionVolume, 68.09910, 1e-4);
+    EXPECT_NEAR(conf.effectiveRhsReactionVolume, 478.60057, 1e-4);
+
+    EXPECT_NEAR(conf.acceptancePrefactor, 1., 1e-4) << "ratio of effective reaction volumina";
+
+    EXPECT_NEAR(conf.macroForwardRate, 501.15150, 1e-4);
+    EXPECT_NEAR(conf.macroBackwardRate, 1002.30300, 1e-4);
+    EXPECT_FLOAT_EQ(conf.equilibriumConstant, 2.);
+
 }
 
 TEST(TestDetailedBalance, ReversibleReactionConfigFalseInput) {
-    EXPECT_TRUE(false);
-    // @todo Enzymatic with non-matching reaction radii
-    // @todo pair of non reversible reactions
-}
-
-TEST(TestDetailedBalance, SearchReversibleReactions) {
     {
+        // reaction radii do not match
         m::Context ctx;
         registerAbcSpecies(ctx);
-        // @todo
+        ctx.reactions().add("forward: A +(4) C -> B + C", 1.);
+        ctx.reactions().add("backward: B +(5) C -> A + C", 2.);
+        ctx.configure();
+        auto idForward = ctx.reactions().idOf("forward");
+        auto idBackward = ctx.reactions().idOf("backward");
+        EXPECT_THROW(r::ReversibleReactionConfig conf(idForward, idBackward, ctx), std::logic_error);
     }
 
+    {
+        // reactions are not reversible w.r.t. species
+        m::Context ctx;
+        registerAbcSpecies(ctx);
+        ctx.reactions().add("forward: A -> B", 1.);
+        ctx.reactions().add("backward: B -> C", 2.);
+        ctx.configure();
+        auto idForward = ctx.reactions().idOf("forward");
+        auto idBackward = ctx.reactions().idOf("backward");
+        EXPECT_THROW(r::ReversibleReactionConfig conf(idForward, idBackward, ctx), std::logic_error);
+    }
+
+    {
+        // reactions are not reversible w.r.t. species
+        m::Context ctx;
+        registerAbcSpecies(ctx);
+        ctx.reactions().add("forward: A +(2) B -> C", 1.);
+        ctx.reactions().add("backward: C -> A +(2) A", 2.);
+        ctx.configure();
+        auto idForward = ctx.reactions().idOf("forward");
+        auto idBackward = ctx.reactions().idOf("backward");
+        EXPECT_THROW(r::ReversibleReactionConfig conf(idForward, idBackward, ctx), std::logic_error);
+    }
+
+    {
+        // reactions are not reversible w.r.t. reaction radii
+        m::Context ctx;
+        registerAbcSpecies(ctx);
+        ctx.reactions().add("forward: A +(2) B -> C", 1.);
+        ctx.reactions().add("backward: C -> A +(3) B", 2.);
+        ctx.configure();
+        auto idForward = ctx.reactions().idOf("forward");
+        auto idBackward = ctx.reactions().idOf("backward");
+        EXPECT_THROW(r::ReversibleReactionConfig conf(idForward, idBackward, ctx), std::logic_error);
+    }
+}
+
+TEST(TestDetailedBalance, ReversibleReactionConfigValidCases) {
+    {
+        // FusionFission forward and backward might be swapped
+        m::Context ctx;
+        registerAbcSpecies(ctx);
+        ctx.reactions().add("forward: C -> B +(2) A", 2.);
+        ctx.reactions().add("backward: A +(2) B -> C", 1.);
+        ctx.configure();
+        auto idForward = ctx.reactions().idOf("forward");
+        auto idBackward = ctx.reactions().idOf("backward");
+        EXPECT_NO_THROW(r::ReversibleReactionConfig conf(idForward, idBackward, ctx));
+    }
+    {
+        // EnzymaticEnzymatic without potentials -> acceptancePrefactor = 1
+        m::Context ctx;
+        registerAbcSpecies(ctx);
+        ctx.reactions().add("forward: A +(4) C -> B + C", 1.);
+        ctx.reactions().add("backward: B +(4) C -> A + C", 2.);
+        ctx.configure();
+        auto idForward = ctx.reactions().idOf("forward");
+        auto idBackward = ctx.reactions().idOf("backward");
+        r::ReversibleReactionConfig conf(idForward, idBackward, ctx);
+        EXPECT_FLOAT_EQ(conf.acceptancePrefactor, 1.);
+    }
+}
+
+TEST_P(TestDetailedBalanceWithKernels, SearchReversibleReactionsEnzymaticEnzymatic) {
+    auto &ctx = kernel->context();
+    registerAbcSpecies(ctx);
+    ctx.reactions().add("forward: A +(4) C -> B + C", 1.);
+    ctx.reactions().add("backward: B +(4) C -> A + C", 2.);
+    ctx.configure();
+    auto &&reactions = kernel->actions().detailedBalance(1.);
+    const auto &reversibleReactions = reactions->reversibleReactions();
+    EXPECT_EQ(reversibleReactions.size(), 1);
+    EXPECT_EQ(reversibleReactions.front().reversibleType, r::ReversibleType::EnzymaticEnzymatic);
+}
+
+TEST_P(TestDetailedBalanceWithKernels, SearchReversibleReactionsFusionFission) {
+    auto &ctx = kernel->context();
+    registerAbcSpecies(ctx);
+    ctx.reactions().add("fusion: A +(2) B -> C", 1.);
+    ctx.reactions().add("fission: C -> A +(2) B", 2.);
+    ctx.configure();
+    auto &&reactions = kernel->actions().detailedBalance(1.);
+    const auto &reversibleReactions = reactions->reversibleReactions();
+    EXPECT_EQ(reversibleReactions.size(), 1);
+    EXPECT_EQ(reversibleReactions.front().reversibleType, r::ReversibleType::FusionFission);
+}
+
+TEST_P(TestDetailedBalanceWithKernels, SearchReversibleReactionsFissionFusion) {
+    auto &ctx = kernel->context();
+    registerAbcSpecies(ctx);
+    ctx.reactions().add("fission: C -> A +(2) B", 2.);
+    ctx.reactions().add("fusion: A +(2) B -> C", 1.);
+    ctx.configure();
+    auto &&reactions = kernel->actions().detailedBalance(1.);
+    const auto &reversibleReactions = reactions->reversibleReactions();
+    EXPECT_EQ(reversibleReactions.size(), 1);
+    EXPECT_EQ(reversibleReactions.front().reversibleType, r::ReversibleType::FusionFission);
+}
+
+TEST_P(TestDetailedBalanceWithKernels, SearchReversibleReactionsMichaelisMenten) {
+    // one should be able to have a chain of reversible reactions like in Michaelis Menten type
+    // reaction A + B <--> C <--> A + D
+    // add a non-reversible, B --> D
+    auto &ctx = kernel->context();
+    registerAbcSpecies(ctx);
+    ctx.particle_types().add("D", 1.);
+    ctx.reactions().add("fusion1: A +(2) B -> C", 2.);
+    ctx.reactions().add("fission1: C -> A +(2) B", 1.);
+    ctx.reactions().add("fission2: C -> A +(3) D", 3.);
+    ctx.reactions().add("fusion2: A +(3) D -> C", 4.);
+    ctx.reactions().add("shortcut: B -> D", 5.);
+    ctx.configure();
+    auto &&reactions = kernel->actions().detailedBalance(1.);
+    const auto &reversibleReactions = reactions->reversibleReactions();
+    EXPECT_EQ(reversibleReactions.size(), 2);
+    EXPECT_EQ(reversibleReactions[0].reversibleType, r::ReversibleType::FusionFission);
+    EXPECT_EQ(reversibleReactions[1].reversibleType, r::ReversibleType::FusionFission);
+    std::size_t index1, index2;
+    if (reversibleReactions[0].forwardName == "fusion1") {
+        index1 = 0;
+        index2 = 1;
+    } else {
+        index1 = 1;
+        index2 = 0;
+    }
+    EXPECT_EQ(reversibleReactions[index1].forwardName, "fusion1");
+    EXPECT_EQ(reversibleReactions[index2].forwardName, "fusion2");
+    EXPECT_EQ(reversibleReactions[index1].backwardName, "fission1");
+    EXPECT_EQ(reversibleReactions[index2].backwardName, "fission2");
+}
+
+TEST_P(TestDetailedBalanceWithKernels, SearchReversibleReactionsManyMixed) {
+    // A + B <--> C, reversible
+    // A + C --> B, non reversible
+    // A + B <--> C + B, reversible, B is catalyst
+    // B + A --> C + A, non-reversible, A is catalyst
+    // A <--> B, reversible
+    // C --> B, non-reversible
+    auto &ctx = kernel->context();
+    registerAbcSpecies(ctx);
+    ctx.reactions().add("fusionRev: A +(2) B -> C", 2.);
+    ctx.reactions().add("fissionRev: C -> A +(2) B", 1.);
+    ctx.reactions().add("fusionNonRev: A +(3) C -> B", 4.);
+    ctx.reactions().add("enzRev1: A +(2) B -> C + B", 3.);
+    ctx.reactions().add("enzRev2: C +(2) B -> A + B", 5.);
+    ctx.reactions().add("enzNonRev: B +(4) A -> C + A", 6.);
+    ctx.reactions().add("convRev1: A -> B", 7.);
+    ctx.reactions().add("convRev2: B -> A", 8.);
+    ctx.reactions().add("convNonRev: C -> B", 9.);
+    ctx.configure();
+    auto &&reactions = kernel->actions().detailedBalance(1.);
+    const auto &reversibleReactions = reactions->reversibleReactions();
+    EXPECT_EQ(reversibleReactions.size(), 3);
+    for (const auto &rev : reversibleReactions) {
+        switch (rev.reversibleType) {
+            case readdy::model::actions::reactions::FusionFission:
+                EXPECT_EQ(rev.forwardName, "fusionRev");
+                EXPECT_EQ(rev.backwardName, "fissionRev");
+                break;
+            case readdy::model::actions::reactions::ConversionConversion:
+                EXPECT_TRUE((rev.forwardName == "convRev1" and rev.backwardName == "convRev2") or
+                            (rev.forwardName == "convRev2" and rev.backwardName == "convRev1"));
+                break;
+            case readdy::model::actions::reactions::EnzymaticEnzymatic:
+                EXPECT_TRUE((rev.forwardName == "enzRev1" and rev.backwardName == "enzRev2") or
+                            (rev.forwardName == "enzRev2" and rev.backwardName == "enzRev1"));
+                break;
+            default:throw std::logic_error("Each type should be there");
+        }
+    }
+}
+
+TEST_P(TestDetailedBalanceWithKernels, SearchReversibleReactionsDuplicateReactions) {
+    // A + B <--> C and another A + B --> C. It is ambiguous which reaction should be reversible --> throw
+    auto &ctx = kernel->context();
+    registerAbcSpecies(ctx);
+    ctx.reactions().add("fusion: A +(2) B -> C", 2.);
+    ctx.reactions().add("fission: C -> A +(2) B", 1.);
+    ctx.reactions().add("anotherFusion: A +(2) B -> C", 2.);
+    ctx.configure();
+    EXPECT_THROW({ auto &&reactions = kernel->actions().detailedBalance(1.); }, std::logic_error);
 }
 
 
-auto abcFusionFissionContext = [](readdy::model::Context &ctx, readdy::scalar rateOn, readdy::scalar rateOff){
+auto abcFusionFissionContext = [](readdy::model::Context &ctx, readdy::scalar rateOn, readdy::scalar rateOff) {
     ctx.boxSize() = {{10, 10, 10}};
     ctx.particle_types().add("A", 1.);
     ctx.particle_types().add("B", 1.);
@@ -106,9 +359,9 @@ auto abcFusionFissionContext = [](readdy::model::Context &ctx, readdy::scalar ra
     ctx.potentials().addHarmonicRepulsion("A", "B", 10., reactionRadius);
     ctx.potentials().addHarmonicRepulsion("B", "B", 10., reactionRadius);
     ctx.potentials().addHarmonicRepulsion("A", "A", 10., reactionRadius);
-    ctx.potentials().addHarmonicRepulsion("A", "C", 10., 1+1.2599210498948732);
-    ctx.potentials().addHarmonicRepulsion("B", "C", 10., 1+1.2599210498948732);
-    ctx.potentials().addHarmonicRepulsion("C", "C", 10., 2.*1.2599210498948732);
+    ctx.potentials().addHarmonicRepulsion("A", "C", 10., 1 + 1.2599210498948732);
+    ctx.potentials().addHarmonicRepulsion("B", "C", 10., 1 + 1.2599210498948732);
+    ctx.potentials().addHarmonicRepulsion("C", "C", 10., 2. * 1.2599210498948732);
     ctx.reactions().addFission("fission", "C", "A", "B", rateOff, reactionRadius);
     ctx.reactions().addFusion("fusion", "A", "B", "C", rateOn, reactionRadius);
     ctx.configure();
@@ -126,7 +379,7 @@ auto perform = [](readdy::model::Kernel *kernel, size_t nSteps, readdy::scalar t
     neighborList->perform();
     forces->perform();
     kernel->evaluateObservables(0);
-    for (size_t t = 1; t < nSteps+1; t++) {
+    for (size_t t = 1; t < nSteps + 1; t++) {
         integrator->perform();
         neighborList->perform();
         forces->perform();
@@ -159,9 +412,9 @@ TEST_P(TestDetailedBalanceWithKernels, FusionThatShouldBeRejected) {
     std::vector<std::string> typesToCount = {"A", "B", "C"};
     auto numbersObs = kernel->observe().nParticles(1, typesToCount);
     numbersObs->setCallback([](const readdy::model::observables::NParticles::result_type &result) {
-        EXPECT_EQ(result[0]+result[2], 1) << "conservation of A + C";
-        EXPECT_EQ(result[1]+result[2], 1) << "conservation of B + C";
-        if (result[0]+result[2] != 1) {
+        EXPECT_EQ(result[0] + result[2], 1) << "conservation of A + C";
+        EXPECT_EQ(result[1] + result[2], 1) << "conservation of B + C";
+        if (result[0] + result[2] != 1) {
             readdy::log::trace("A {} B {} C {}", result[0], result[1], result[2]);
         }
     });
@@ -201,9 +454,9 @@ TEST_P(TestDetailedBalanceWithKernels, FissionThatShouldBeRejected) {
     std::vector<std::string> typesToCount = {"A", "B", "C"};
     auto numbersObs = kernel->observe().nParticles(1, typesToCount);
     numbersObs->setCallback([](const readdy::model::observables::NParticles::result_type &result) {
-        EXPECT_EQ(result[0]+result[2], 1) << "conservation of A + C";
-        EXPECT_EQ(result[1]+result[2], 1) << "conservation of B + C";
-        if (result[0]+result[2] != 1) {
+        EXPECT_EQ(result[0] + result[2], 1) << "conservation of A + C";
+        EXPECT_EQ(result[1] + result[2], 1) << "conservation of B + C";
+        if (result[0] + result[2] != 1) {
             readdy::log::trace("A {} B {} C {}", result[0], result[1], result[2]);
         }
     });
@@ -228,9 +481,9 @@ TEST_P(TestDetailedBalanceWithKernels, ConservationOfParticles) {
     std::vector<std::string> typesToCount = {"A", "B", "C"};
     auto numbersObs = kernel->observe().nParticles(1, typesToCount);
     numbersObs->setCallback([](const readdy::model::observables::NParticles::result_type &result) {
-        EXPECT_EQ(result[0]+result[2], 20) << "conservation of A + C";
-        EXPECT_EQ(result[1]+result[2], 20) << "conservation of B + C";
-        if (result[0]+result[2] != 1) {
+        EXPECT_EQ(result[0] + result[2], 20) << "conservation of A + C";
+        EXPECT_EQ(result[1] + result[2], 20) << "conservation of B + C";
+        if (result[0] + result[2] != 1) {
             readdy::log::trace("A {} B {} C {}", result[0], result[1], result[2]);
         }
     });
@@ -241,7 +494,7 @@ TEST_P(TestDetailedBalanceWithKernels, ConservationOfParticles) {
     const int n_particles = 20;
     std::vector<readdy::model::Particle> particlesA;
     std::vector<readdy::model::Particle> particlesB;
-    for (auto i=0; i<n_particles; ++i) {
+    for (auto i = 0; i < n_particles; ++i) {
         particlesA.emplace_back(readdy::model::rnd::normal3<readdy::scalar>(), ida);
         particlesB.emplace_back(readdy::model::rnd::normal3<readdy::scalar>(), idb);
     }
