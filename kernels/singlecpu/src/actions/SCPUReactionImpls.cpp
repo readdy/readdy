@@ -376,17 +376,14 @@ ParticleBackup::ParticleBackup(unsigned int nParticles, ParticleBackup::index_ty
     }
 }
 
-void SCPUDetailedBalance::perform(const util::PerformanceNode &node) {
+void SCPUDetailedBalance::perform(const readdy::util::PerformanceNode &node) {
     auto t = node.timeit();
-    log::trace("SCPUDetailedBalance::perform(){}{}", readdy::util::str::newline, readdy::util::str::newline);
+
     const auto &ctx = kernel->context();
-    if (firstPerform) {
-        searchReversibleReactions(ctx);
-        firstPerform = false;
-    }
     if(ctx.reactions().nOrder1() == 0 && ctx.reactions().nOrder2() == 0) {
         return;
     }
+
     auto &stateModel = kernel->getSCPUKernelStateModel();
     if(ctx.recordReactionCounts()) {
         stateModel.resetReactionCounts();
@@ -398,150 +395,129 @@ void SCPUDetailedBalance::perform(const util::PerformanceNode &node) {
     scalar alpha = 0.0;
     std::vector<event_t> events;
     gatherEvents(kernel, *nl, *data, alpha, events);
-    // @todo shuffle events
 
-    calculateForcesEnergies();
-    std::size_t nDeactivated = 0;
-    const std::size_t nEvents = events.size();
-    while (nDeactivated < nEvents) {
-        log::trace("Handle next event, still {} events left", events.size());
-        const auto event = events.back(); // copy on purpose, due to pop_back later in this loop
-        if (not shouldPerformEvent(event.rate, timeStep, false)) {
-            log::trace("Should not be performed, next one.");
-            events.pop_back();
-            nDeactivated++;
-            continue;
-        }
-        bool isFusionReaction = (event.nEducts == 2);
-        const auto &revReaction = _reversibleReactions.front(); // @todo search actual reversibleReactionConfig
-        const auto particleBackup = ParticleBackup(event.nEducts, event.idx1, event.idx2, event.t1, event.t2, data->entry_at(event.idx1).position(), data->entry_at(event.idx2).position());
-        auto energyBefore = stateModel.energy();
-        model::SCPUParticleData::entries_update forwardUpdate;
-        scalar interactionEnergy;
-        std::tie(forwardUpdate, interactionEnergy) = performEvent(*data, event, ctx.recordReactionCounts());
-        const auto updateRecord = data->update(std::move(forwardUpdate));
-        auto backwardUpdate = generateBackwardUpdate(particleBackup, updateRecord);
-        stateModel.updateNeighborList();
-        calculateForcesEnergies();
-        const auto deltaEnergy = (stateModel.energy() - interactionEnergy) - energyBefore;
-        // get a-value from reversibleReactionConfig depending on direction of reaction
-        const auto aValue = revReaction.acceptancePrefactor;
-        auto acceptance = 1.;
-        if (isFusionReaction) {
-            acceptance = std::min(1., aValue * std::exp(-1. * deltaEnergy / ctx.kBT()));
-        } else {
-            acceptance = std::min(1., 1./aValue * std::exp(-1. * deltaEnergy / ctx.kBT()));
-        }
-        log::trace("Acceptance for current event is {}", acceptance);
+    const auto filterEventsInAdvance = false;
+    const auto approximateRate = false;
 
-        if (readdy::model::rnd::uniform_real() < acceptance) {
-            // accept/do-nothing
-            log::trace("accept!");
-        } else {
-            // reject/rollback
-            log::trace("reject! subtract reaction count again");
-            if (ctx.recordReactionCounts()) {
-                if (isFusionReaction) {
-                    const auto &reaction = ctx.reactions().order2ByType(event.t1, event.t2)[event.reactionIndex];
-                    stateModel.reactionCounts().at(reaction->id())--;
+    {
+        auto shouldEval = [&](const event_t &event) {
+            return filterEventsInAdvance || shouldPerformEvent(event.rate, timeStep, approximateRate);
+        };
+
+        auto depending = [&](const event_t &e1, const event_t &e2) {
+            return (e1.idx1 == e2.idx1 || (e2.nEducts == 2 && e1.idx1 == e2.idx2)
+                    || (e1.nEducts == 2 && (e1.idx2 == e2.idx1 || (e2.nEducts == 2 && e1.idx2 == e2.idx2))));
+        };
+
+        auto eval = [&](const event_t &event) {
+            const readdy::model::reactions::Reaction *reaction;
+            const readdy::model::actions::reactions::ReversibleReactionConfig *revReaction;
+            std::tie(revReaction, reaction) = findReversibleReaction(event);
+            bool isReversibleReaction = (revReaction!=nullptr);
+
+            if (isReversibleReaction) {
+                // Perform detailed balance method for reversible reaction event
+                const auto particleBackup = ParticleBackup(event.nEducts, event.idx1, event.idx2, event.t1, event.t2,
+                                                           data->entry_at(event.idx1).position(),
+                                                           data->entry_at(event.idx2).position());
+                const auto energyBefore = stateModel.energy();
+
+                reaction_record record;
+                model::SCPUParticleData::entries_update forwardUpdate;
+                scalar interactionEnergy; // only relevant for FusionFission
+                if (ctx.recordReactionsWithPositions()) {
+                    std::tie(forwardUpdate, interactionEnergy) = performReversibleReactionEvent(event, revReaction,
+                                                                                                reaction, &record);
                 } else {
-                    const auto &reaction = ctx.reactions().order1ByType(event.t1)[event.reactionIndex];
-                    stateModel.reactionCounts().at(reaction->id())--;
+                    std::tie(forwardUpdate, interactionEnergy) = performReversibleReactionEvent(event, revReaction,
+                                                                                                reaction, nullptr);
                 }
-            }
-            data->update(std::move(backwardUpdate));
-            stateModel.updateNeighborList();
-            calculateForcesEnergies();
-            if (energyBefore != stateModel.energy()) {
-                log::warn(
-                        "reaction move was rejected but energy of state is different after rollback, was {}, is now {}",
-                        energyBefore, stateModel.energy());
-            }
-        }
-        events.pop_back();
-        nDeactivated++;
-        // remove all events involving idx1 or idx2
-        const auto isRelevant = [&isFusionReaction](const event_t &testedEvent, const event_t &performedEvent) -> bool {
-            if (isFusionReaction) {
-                // there are two educts in performedEvent
-                const auto decayedIdx1 = performedEvent.idx1;
-                const auto decayedIdx2 = performedEvent.idx2;
-                // check ANY occurrence of either decayedIdx1 or 2 in testedEvent
-                if (testedEvent.nEducts == 1) {
-                    // idx2 must not be checked, it might be set to anything
-                    return (decayedIdx1 == testedEvent.idx1 || decayedIdx2 == testedEvent.idx1);
-                } else if (testedEvent.nEducts == 2) {
-                    return ((decayedIdx1 == testedEvent.idx1 || decayedIdx1 == testedEvent.idx2) or
-                            (decayedIdx2 == testedEvent.idx1 || decayedIdx2 == testedEvent.idx2));
-                } else {
-                    throw std::runtime_error("unreachable");
-                }
+                const auto updateRecord = data->update(std::move(forwardUpdate));
+                auto backwardUpdate = generateBackwardUpdate(particleBackup, updateRecord);
+                stateModel.updateNeighborList();
+                calculateForcesEnergies();
 
+                scalar boltzmannFactor = 1.;
+                scalar prefactor = 1.;
+                switch (revReaction->reversibleType) {
+                    case readdy::model::actions::reactions::FusionFission: {
+                        // the sign of interactionEnergy was determined automatically in perform...()
+                        // thus not checking if forward or backward here
+                        prefactor = 1.;
+                        boltzmannFactor = std::exp(
+                                -1. / ctx.kBT() * ((stateModel.energy() - interactionEnergy) - energyBefore));
+                        break;
+                    }
+                    case readdy::model::actions::reactions::ConversionConversion: {
+                        prefactor = 1.;
+                        boltzmannFactor = std::exp(-1. / ctx.kBT() * (stateModel.energy() - energyBefore));
+                        break;
+                    }
+                    case readdy::model::actions::reactions::EnzymaticEnzymatic: {
+                        if (reaction->educts() == revReaction->lhsTypes) {
+                            // forward
+                            prefactor = revReaction->acceptancePrefactor;
+                        } else if (reaction->educts() == revReaction->lhsTypes) {
+                            prefactor = 1. / revReaction->acceptancePrefactor;
+                        }
+                        boltzmannFactor = std::exp(-1. / ctx.kBT() * (stateModel.energy() - energyBefore));
+                        break;
+                    }
+                    default: throw std::runtime_error("Should not get here");
+                }
+                const scalar acceptance = std::min(1., prefactor * boltzmannFactor);
+                log::trace("Acceptance for current event is {}", acceptance);
+
+                if (readdy::model::rnd::uniform_real() < acceptance) {
+                    // accept/do-nothing
+                    log::trace("accept!");
+                    stateModel.reactionRecords().push_back(record);
+                    stateModel.reactionCounts().at(reaction->id())++;
+                } else {
+                    // reject/rollback
+                    log::trace("reject! apply backward update");
+
+                    data->update(std::move(backwardUpdate));
+                    stateModel.updateNeighborList();
+                    calculateForcesEnergies();
+                    if (energyBefore != stateModel.energy()) {
+                        log::warn("reaction move was rejected but energy of state is different "
+                                  "after rollback, was {}, is now {}", energyBefore, stateModel.energy());
+                    }
+                }
             } else {
-                // there is only one educt in performedEvent
-                const auto decayedIdx1 = performedEvent.idx1;
-                if (testedEvent.nEducts == 1) {
-                    // idx2 must not be checked, it might be set to anything
-                    return (decayedIdx1 == testedEvent.idx1);
-                } else if (testedEvent.nEducts == 2) {
-                    return (decayedIdx1 == testedEvent.idx1 || decayedIdx1 == testedEvent.idx2);
+                // Perform vanilla Doi model with direct update to data structure
+                model::SCPUParticleData::entries_update forwardUpdate;
+
+                if(ctx.recordReactionsWithPositions()) {
+                    reaction_record record;
+                    record.id = reaction->id();
+                    performReaction(*data, event.idx1, event.idx2, forwardUpdate.first, forwardUpdate.second, reaction, ctx, &record);
+                    stateModel.reactionRecords().push_back(record);
                 } else {
-                    throw std::runtime_error("unreachable");
+                    performReaction(*data, event.idx1, event.idx2, forwardUpdate.first, forwardUpdate.second, reaction, ctx, nullptr);
                 }
+
+                if(ctx.recordReactionCounts()) {
+                    stateModel.reactionCounts().at(reaction->id())++;
+                }
+
+                data->update(std::move(forwardUpdate));
+
+                calculateForcesEnergies();
             }
         };
-        auto it = events.begin();
-        auto end = events.end();
-        size_t nRelevant = 0;
-        while (it < end) {
-            if (isRelevant(*it, event)) {
-                ++nDeactivated;
-                ++nRelevant;
-                it = events.erase(it);
-                end = events.end();
-            } else {
-                it++;
-            }
-        }
-        log::trace("found and removed {} relevant events", nRelevant);
+
+        calculateForcesEnergies();
+        algo::performEvents(events, shouldEval, depending, eval);
+
     }
-
-    // Then calculate for each relevant fusion/fission pair:
-    // acceptance forward, acceptance backward, array of radii and array of cumulatives to draw from
-
-    // gather events, don't evaluate probabilities yet
-    // for each event
-        // energyBefore = stateModel.energy()
-        // interactionEnergy is positive when positive energy was gained in fission
-        // forwardUpdate, interactionEnergy = performEvent()
-        // the record contains the indices of the new particles, len=2 for fission, len=1 for fusion
-        // when rejecting, remove these and restore the oldstate from information from the event
-        // updateRecord = data->update(forwardUpdate)
-        // backwardUpdate = generateBackwardUpdate(forwardUpdate, updateRecord)
-        // stateModel.updateNL()
-        // stateModel.calculateForcesEnergies()
-        // delta = (stateModel.energy() - interactionEnergy) - energyBefore
-        // acceptance = min{1, a_value * e^{-beta delta}}
-        // if uniform < acceptance
-            // accept !
-            // deactivate events whose educts have disappeared (including the just handled one)
-            // therefore misuse the cumulativeRate as in Uncontrolled
-        // else
-            // reject ! apply backwardUpdate
-            // data->update(backwardUpdate)
-            // stateModel.updateNL()
-            // stateModel.calculateForcesEnergies()
-            // assert stateModel.energy() == energyBefore
-
 }
 
 model::SCPUParticleData::entries_update SCPUDetailedBalance::generateBackwardUpdate(const ParticleBackup &particleBackup, const std::vector<model::SCPUParticleData::entry_index> &updateRecord) const {
     std::vector<scpu_data::entry_index> decayedEntries = updateRecord; // the entries that were created by the forward update
     scpu_data::new_entries newParticles{};
     if (particleBackup.nParticles == 1) {
-        // @fixme order of particles w.r.t. old indices might be mixed up,
-        // but events referencing the same indices will have to be removed anyway, irrespective of the event
-        // being accepted or rejected
         readdy::model::Particle p(particleBackup.pos1, particleBackup.t1);
         newParticles.emplace_back(p);
     } else if (particleBackup.nParticles == 2) {
@@ -562,83 +538,154 @@ model::SCPUParticleData::entries_update SCPUDetailedBalance::generateBackwardUpd
     return std::make_pair(std::move(newParticles), decayedEntries);
 }
 
-std::pair<model::SCPUParticleData::entries_update, scalar> SCPUDetailedBalance::performEvent(scpu_data &data, const Event &event, bool recordCounts) {
-    if (_reversibleReactions.size() != 1) {
-        throw std::runtime_error("Currently works only for one reversible reaction");
+std::pair<model::SCPUParticleData::entries_update, scalar> SCPUDetailedBalance::performReversibleReactionEvent(
+        const Event &event, const readdy::model::actions::reactions::ReversibleReactionConfig *reversibleReaction,
+        const readdy::model::reactions::Reaction *reaction, reaction_record *record) {
+    if (reversibleReaction == nullptr) {
+        throw std::runtime_error("Reaction is not reversible");
     }
-    const auto &ctx = kernel->context();
-    const auto box = kernel->context().boxSize().data();
-    const auto pbc = kernel->context().periodicBoundaryConditions().data();
+
     auto &model = kernel->getSCPUKernelStateModel();
+    scpu_data* data = model.getParticleData();
+    const auto &ctx = kernel->context();
+
+    const auto box = ctx.boxSize().data();
+    const auto pbc = ctx.periodicBoundaryConditions().data();
+
     scpu_data::new_entries newParticles{};
     std::vector<scpu_data::entry_index> decayedEntries{};
 
     scalar energyDelta = 0;
-    if (event.nEducts == 1) {
-        auto &entry1 = data.entry_at(event.idx1);
-        auto reaction = ctx.reactions().order1ByType(event.t1)[event.reactionIndex];
-        if (reaction->type() != readdy::model::reactions::ReactionType::Fission) {
-            throw std::runtime_error("Detailed balance reaction handler only handles Fission or Fusion");
-        }
-        auto n3 = readdy::model::rnd::normal3<readdy::scalar>(0, 1);
-        n3 /= std::sqrt(n3 * n3);
-        auto revReaction = _reversibleReactions.front(); // @fixme search for reaction instead of using the first
-        auto distance = revReaction.drawFissionDistance();
-        Vec3 difference(distance, 0, 0); // orientation does not matter for energy
-        scalar energyGain = 0.;
-        for (const auto &p : revReaction.lhsPotentials) {
-            energyGain += p->calculateEnergy(difference);
-        }
-        energyDelta = energyGain;
-        // create new particles, do not re-use entries, such that all 'old' particles end up in the decayedEentries,
-        // which is required for constructing the appropriate backward update
-        readdy::model::Particle p1(entry1.position() - reaction->weight2() * distance * n3,
-                                  reaction->products()[1]);
-        bcs::fixPosition(p1.getPos(), box, pbc);
-        newParticles.emplace_back(p1);
+    switch (reversibleReaction->reversibleType) {
+        case readdy::model::actions::reactions::FusionFission: {
+            if (event.nEducts == 1) {
+                // backward reaction C --> A + B
+                auto &entry1 = data->entry_at(event.idx1);
+                auto n3 = readdy::model::rnd::normal3<readdy::scalar>(0, 1);
+                n3 /= std::sqrt(n3 * n3);
+                auto distance = reversibleReaction->drawFissionDistance();
+                Vec3 difference(distance, 0, 0); // orientation does not matter for energy
+                scalar energyGain = 0.; // calculate U_AB
+                for (const auto &p : reversibleReaction->lhsPotentials) {
+                    energyGain += p->calculateEnergy(difference);
+                }
+                energyDelta = energyGain;
+                // IMPORTANT
+                // create new particles, do not re-use entries,
+                // such that all 'old' particles end up in the decayedEentries,
+                // which is required for constructing the appropriate backward update
+                readdy::model::Particle p1(entry1.position() - reaction->weight2() * distance * n3,
+                                           reaction->products()[1]);
+                bcs::fixPosition(p1.getPos(), box, pbc);
+                newParticles.emplace_back(p1);
 
-        readdy::model::Particle p2(entry1.position() + reaction->weight1() * distance * n3,
-                                   reaction->products()[0]);
-        bcs::fixPosition(p2.getPos(), box, pbc);
-        newParticles.emplace_back(p2);
+                readdy::model::Particle p2(entry1.position() + reaction->weight1() * distance * n3,
+                                           reaction->products()[0]);
+                bcs::fixPosition(p2.getPos(), box, pbc);
 
-        decayedEntries.push_back(event.idx1);
-        if (recordCounts) {
-            model.reactionCounts().at(reaction->id())++;
+                newParticles.emplace_back(p2);
+                decayedEntries.push_back(event.idx1);
+
+                if (record) {
+                    record->id = reaction->id();
+                    record->type = static_cast<int>(reaction->type());
+                    record->where = (entry1.position());
+                    bcs::fixPosition(record->where, box, pbc);
+                    record->educts[0] = entry1.id;
+                    record->educts[1] = entry1.id;
+                    record->types_from[0] = entry1.type;
+                    record->types_from[1] = entry1.type;
+                }
+            } else if (event.nEducts == 2) {
+                // forward reaction C --> A + B
+                auto &entry1 = data->entry_at(event.idx1);
+                auto &entry2 = data->entry_at(event.idx2);
+
+                const auto e1Pos = entry1.pos;
+                const auto e2Pos = entry2.pos;
+                auto revReaction = _reversibleReactionsContainer.front();
+                const auto difference = bcs::shortestDifference(e1Pos, e2Pos, box, pbc);
+                scalar energyLoss = 0.; // calculate U_AB
+                for (const auto &p : revReaction->lhsPotentials) {
+                    energyLoss += p->calculateEnergy(difference);
+                }
+                energyDelta = -1. * energyLoss;
+                Vec3 position;
+                if (reaction->educts()[0] == entry1.type) {
+                    position = entry1.pos + reaction->weight1() * difference;
+                } else {
+                    position = entry1.pos + reaction->weight2() * difference;
+                }
+
+                // do not re-use entries for proper construction of backward update
+                readdy::model::Particle particle(position, reaction->products()[0]);
+                bcs::fixPosition(particle.getPos(), box, pbc);
+
+                newParticles.emplace_back(particle);
+                decayedEntries.push_back(event.idx1);
+                decayedEntries.push_back(event.idx2);
+
+                if (record) {
+                    record->id = reaction->id();
+                    record->type = static_cast<int>(reaction->type());
+                    record->where = (entry1.position() + entry2.position()) / 2.;
+                    bcs::fixPosition(record->where, box, pbc);
+                    record->educts[0] = entry1.id;
+                    record->educts[1] = entry2.id;
+                    record->types_from[0] = entry1.type;
+                    record->types_from[1] = entry2.type;
+                }
+            }
+            break;
         }
-    } else if (event.nEducts == 2) {
-        auto& entry1 = data.entry_at(event.idx1);
-        auto& entry2 = data.entry_at(event.idx2);
-        auto reaction = ctx.reactions().order2ByType(event.t1, event.t2)[event.reactionIndex];
-        if (reaction->type() != readdy::model::reactions::ReactionType::Fusion) {
-            throw std::runtime_error("Detailed balance reaction handler only handles Fission or Fusion");
+        case readdy::model::actions::reactions::ConversionConversion: {
+            auto &entry = data->entry_at(event.idx1);
+
+            // do not re-use entries for proper construction of backward update
+            readdy::model::Particle particle(entry.position(), reaction->products()[0]);
+            newParticles.emplace_back(particle);
+            decayedEntries.push_back(event.idx1);
+            energyDelta = 0.;
+
+            if(record) {
+                record->id = reaction->id();
+                record->type = static_cast<int>(reaction->type());
+                record->where = (entry.position());
+                bcs::fixPosition(record->where, box, pbc);
+                record->educts[0] = entry.id;
+                record->educts[1] = entry.id;
+                record->types_from[0] = entry.type;
+                record->types_from[1] = entry.type;
+            }
+
+            break;
         }
-        const auto e1Pos = entry1.pos;
-        const auto e2Pos = entry2.pos;
-        auto revReaction = _reversibleReactions.front();
-        const auto difference = bcs::shortestDifference(e1Pos, e2Pos, box, pbc);
-        scalar energyLoss = 0.;
-        for (const auto &p : revReaction.lhsPotentials) {
-            energyLoss += p->calculateEnergy(difference);
+        case readdy::model::actions::reactions::EnzymaticEnzymatic: {
+            auto& entry1 = data->entry_at(event.idx1);
+            auto& entry2 = data->entry_at(event.idx2);
+
+            // do not re-use entries for proper construction of backward update
+            readdy::model::Particle particle(entry1.position(), reaction->products()[0]);
+            newParticles.emplace_back(particle);
+            decayedEntries.push_back(event.idx1);
+            energyDelta = 0.;
+
+            if(record) {
+                record->id = reaction->id();
+                record->type = static_cast<int>(reaction->type());
+                record->where = (entry1.position() + entry2.position()) / 2.;
+                bcs::fixPosition(record->where, box, pbc);
+                record->educts[0] = entry1.id;
+                record->educts[1] = entry2.id;
+                record->types_from[0] = entry1.type;
+                record->types_from[1] = entry2.type;
+            }
+
+            break;
         }
-        energyDelta = -1. * energyLoss;
-        Vec3 position;
-        if (reaction->educts()[0] == entry1.type) {
-            position = entry1.pos + reaction->weight1() * difference;
-        } else {
-            position = entry1.pos + reaction->weight2() * difference;
-        }
-        readdy::model::Particle particle(position, reaction->products()[0]);
-        bcs::fixPosition(particle.getPos(), box, pbc);
-        newParticles.emplace_back(particle);
-        decayedEntries.push_back(event.idx1);
-        decayedEntries.push_back(event.idx2);
-        if (recordCounts) {
-            model.reactionCounts().at(reaction->id())++;
-        }
-    } else {
-        throw std::runtime_error("This should not happen");
+        default: throw std::runtime_error("should not get here");
     }
+
     log::trace("DB performEvent energyDelta {}, newParticles.size() {}, decayedEntries.size() {}",
                energyDelta, newParticles.size(), decayedEntries.size());
     return std::make_pair(std::make_pair(std::move(newParticles), decayedEntries), energyDelta);
@@ -700,6 +747,30 @@ void SCPUDetailedBalance::calculateForcesEnergies() {
                     }
                 });
             }
+        }
+    }
+}
+
+std::pair<const readdy::model::actions::reactions::ReversibleReactionConfig *, const readdy::model::reactions::Reaction *>
+SCPUDetailedBalance::findReversibleReaction(const Event &event) {
+    const auto &ctx = kernel->context();
+    if (event.nEducts == 1) {
+        const auto &reaction = ctx.reactions().order1ByType(event.t1)[event.reactionIndex];
+        auto findIt = _reversibleReactionsMap.find(reaction->id());
+        if (findIt != _reversibleReactionsMap.end()) {
+            const auto &revReaction = (*findIt).second;
+            return std::make_pair(revReaction.get(), reaction);
+        } else {
+            return std::make_pair(nullptr, reaction);
+        }
+    } else {
+        const auto &reaction = ctx.reactions().order2ByType(event.t1, event.t2)[event.reactionIndex];
+        auto findIt = _reversibleReactionsMap.find(reaction->id());
+        if (findIt != _reversibleReactionsMap.end()) {
+            const auto &revReaction = (*findIt).second;
+            return std::make_pair(revReaction.get(), reaction);
+        } else {
+            return std::make_pair(nullptr, reaction);
         }
     }
 }

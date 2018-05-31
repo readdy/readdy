@@ -418,14 +418,14 @@ template<typename ScalarType>
 struct Panel {
     explicit Panel(ScalarType lowerLimit, ScalarType upperLimit, ScalarType integral, ScalarType absoluteErrorEstimate)
             : lowerLimit(lowerLimit), upperLimit(upperLimit), integral(integral),
-              absoluteErrorEstimate(absoluteErrorEstimate), relativeErrorEstimate(absoluteErrorEstimate / integral) {
+              absoluteErrorEstimate(absoluteErrorEstimate), relativeErrorEstimate(absoluteErrorEstimate / std::abs(integral)) {
         if (lowerLimit > upperLimit) {
             throw std::invalid_argument("Limits in a Panel must be ordered");
         }
     };
 
     bool operator<(const Panel<ScalarType> &other) const {
-        return relativeErrorEstimate < other.relativeErrorEstimate;
+        return absoluteErrorEstimate < other.absoluteErrorEstimate;
     };
 
     ScalarType lowerLimit;

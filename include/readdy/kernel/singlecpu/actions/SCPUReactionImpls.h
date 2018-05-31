@@ -31,6 +31,7 @@
 
 #include <readdy/model/actions/Actions.h>
 #include <readdy/kernel/singlecpu/SCPUKernel.h>
+#include "SCPUReactionUtils.h"
 
 namespace readdy {
 namespace kernel {
@@ -109,19 +110,25 @@ public:
         searchReversibleReactions(kernel->context());
     };
 
-    // on each reaction, calc system energy, propose the step, recalculate energy, get the delta, subtract interaction
-    // of a and b (because it was in the proposal step), accept with e^{-beta (delta - u_ab)}
+    // on each reaction, calc system energy, propose the step, recalculate energy, get the delta,
+    // accept with according acceptance
     void perform(const util::PerformanceNode &node) override;
 
 protected:
     SCPUKernel *const kernel;
-    bool firstPerform = true;
 
+    // calculate first-order interactions and second-order non-bonded interactions
     void calculateForcesEnergies();
 
-    std::pair<model::SCPUParticleData::entries_update, scalar> performEvent(scpu_data &data, const Event &event, bool recordCounts);
+    std::pair<model::SCPUParticleData::entries_update, scalar> performReversibleReactionEvent(const Event &event,
+                                                                                                  const readdy::model::actions::reactions::ReversibleReactionConfig *reversibleReaction,
+                                                                                                  const readdy::model::reactions::Reaction *reaction,
+                                                                                                  reaction_record *record);
 
     model::SCPUParticleData::entries_update generateBackwardUpdate(const ParticleBackup &particleBackup, const std::vector<model::SCPUParticleData::entry_index> &updateRecord) const;
+
+    std::pair<const readdy::model::actions::reactions::ReversibleReactionConfig *, const readdy::model::reactions::Reaction *>
+    findReversibleReaction(const Event &event);
 };
 
 }

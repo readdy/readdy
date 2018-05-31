@@ -129,7 +129,7 @@ public:
  * Types of reversible reactions
  * - FusionFission A + B <--> C
  * - ConversionConversion A <--> B
- * - EnzymaticEnzymatic C + A <--> C + B, reaction radii forw. and backw. have to be equal!
+ * - EnzymaticEnzymatic A + C <--> B + C, reaction radii forw. and backw. have to be equal!
  */
 enum ReversibleType {
     FusionFission, ConversionConversion, EnzymaticEnzymatic
@@ -220,14 +220,18 @@ class DetailedBalance : public TimeStepDependentAction {
 public:
     explicit DetailedBalance(scalar timeStep);
 
-    const std::vector<ReversibleReactionConfig> &reversibleReactions() const {
-        return _reversibleReactions;
+    const std::vector<std::shared_ptr<const ReversibleReactionConfig>> &reversibleReactions() const {
+        return _reversibleReactionsContainer;
     }
 
 protected:
     void searchReversibleReactions(const Context& ctx);
 
-    std::vector<ReversibleReactionConfig> _reversibleReactions;
+    std::vector<std::shared_ptr<const ReversibleReactionConfig>> _reversibleReactionsContainer;
+    // the map provides a view on the container, where two (unidirectional) reaction ids
+    // might point to the same ReversibleReactionConfig
+    std::unordered_map<model::reactions::Reaction::reaction_id, std::shared_ptr<const ReversibleReactionConfig>>
+            _reversibleReactionsMap;
 };
 
 NAMESPACE_END(reactions)

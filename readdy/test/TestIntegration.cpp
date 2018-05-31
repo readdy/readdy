@@ -106,3 +106,13 @@ TEST(TestIntegration, RadialIntegralHarmonicRepulsion) {
     auto result = readdy::util::integration::integrateAdaptive(integrand, 0., 5., desiredRelativeError);
     EXPECT_LE(result.second/result.first, desiredRelativeError);
 }
+
+TEST(TestIntegration, VaryingPeriodicity) {
+    auto integrand = [](const readdy::scalar x) {return x * std::sin(1./x);};
+    readdy::scalar desiredRelativeError = std::numeric_limits<readdy::scalar>::epsilon() * 1000;
+    auto result = readdy::util::integration::integrateAdaptive(
+            integrand, 0., readdy::util::numeric::pi<readdy::scalar>(), desiredRelativeError, 2000);
+    readdy::scalar trueIntegral = 2.409156679836905734596964251490166243591343837595845857659;
+    EXPECT_NEAR(result.first, trueIntegral, desiredRelativeError*trueIntegral);
+    EXPECT_LE(result.second/result.first, desiredRelativeError);
+}

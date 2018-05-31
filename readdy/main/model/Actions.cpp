@@ -357,7 +357,8 @@ std::string reactions::ReversibleReactionConfig::describe() const {
 reactions::DetailedBalance::DetailedBalance(scalar timeStep) : TimeStepDependentAction(timeStep) {}
 
 void reactions::DetailedBalance::searchReversibleReactions(const Context &ctx) {
-    _reversibleReactions.clear();
+    _reversibleReactionsMap.clear();
+    _reversibleReactionsContainer.clear();
 
     const auto &order1Flat = ctx.reactions().order1Flat();
     const auto &order2Flat = ctx.reactions().order2Flat();
@@ -366,11 +367,16 @@ void reactions::DetailedBalance::searchReversibleReactions(const Context &ctx) {
     for (const auto &reactionO2 : order2Flat) {
         for (const auto &reactionO1 : order1Flat) {
             if (reactionO2->nProducts() == 1 and reactionO1->nProducts() == 2) {
+                // also consider as reversible if for one reaction the educts are swapped
                 if ((reactionO1->educts()[0] == reactionO2->products()[0]) and (
-                        ((reactionO2->educts()[0] == reactionO1->products()[0]) and (reactionO2->educts()[1] == reactionO1->products()[1])) or
-                        ((reactionO2->educts()[0] == reactionO1->products()[1]) and (reactionO2->educts()[0] == reactionO1->products()[1]))
-                                                                               )) {
-                    _reversibleReactions.emplace_back(reactionO2->id(), reactionO1->id(), ctx);
+                        ((reactionO2->educts()[0] == reactionO1->products()[0]) and
+                         (reactionO2->educts()[1] == reactionO1->products()[1])) or
+                        ((reactionO2->educts()[0] == reactionO1->products()[1]) and
+                         (reactionO2->educts()[0] == reactionO1->products()[1]))
+                )) {
+                    _reversibleReactionsContainer.emplace_back(
+                            std::make_shared<ReversibleReactionConfig>(reactionO2->id(), reactionO1->id(), ctx)
+                    );
                 }
             }
         }
@@ -383,7 +389,9 @@ void reactions::DetailedBalance::searchReversibleReactions(const Context &ctx) {
             const auto &rj = order1Flat[j];
             if (ri->nProducts() == 1 and rj->nProducts() == 1) {
                 if ((ri->educts()[0] == rj->products()[0]) and (ri->products()[0] == rj->educts()[0])) {
-                    _reversibleReactions.emplace_back(ri->id(), rj->id(), ctx);
+                    _reversibleReactionsContainer.emplace_back(
+                            std::make_shared<ReversibleReactionConfig>(ri->id(), rj->id(), ctx)
+                    );
                 }
             }
         }
@@ -396,22 +404,30 @@ void reactions::DetailedBalance::searchReversibleReactions(const Context &ctx) {
             const auto &rj = order2Flat[j];
             if (ri->nProducts() == 2 and rj->nProducts() == 2) {
                 if ((ri->educts() == rj->products()) and (ri->products() == rj->educts())) {
-                    _reversibleReactions.emplace_back(ri->id(), rj->id(), ctx);
+                    _reversibleReactionsContainer.emplace_back(
+                            std::make_shared<ReversibleReactionConfig>(ri->id(), rj->id(), ctx)
+                    );
                 }
             }
         }
     }
 
     // look for duplicates
-    for (std::size_t i = 0; i < _reversibleReactions.size(); ++i) {
-        for (std::size_t j = i+1; j < _reversibleReactions.size(); ++j) {
-            const auto &revi = _reversibleReactions[i];
-            const auto &revj = _reversibleReactions[j];
-            if (equivalentReversibleReactions(revi, revj)) {
+    for (std::size_t i = 0; i < _reversibleReactionsContainer.size(); ++i) {
+        for (std::size_t j = i + 1; j < _reversibleReactionsContainer.size(); ++j) {
+            const auto &revi = _reversibleReactionsContainer[i];
+            const auto &revj = _reversibleReactionsContainer[j];
+            if (equivalentReversibleReactions(*revi, *revj)) {
                 throw std::logic_error("Duplicate found in reversible reactions. "
                                        "Registered reactions might be ambiguous with respect to reversibility.");
             };
         }
+    }
+
+    // create the map
+    for (const auto &rev : _reversibleReactionsContainer) {
+        _reversibleReactionsMap.emplace(std::make_pair(rev->forwardId, rev));
+        _reversibleReactionsMap.emplace(std::make_pair(rev->backwardId, rev));
     }
 }
 
