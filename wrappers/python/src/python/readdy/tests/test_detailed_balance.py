@@ -29,7 +29,7 @@ import readdy
 from readdy.util.testing_utils import ReaDDyTestCase
 
 
-class TestDetailedBalanceScheme(ReaDDyTestCase):
+class TestDetailedBalanceReactionHandler(ReaDDyTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -39,16 +39,16 @@ class TestDetailedBalanceScheme(ReaDDyTestCase):
         super().tearDownClass()
 
     def test_low_concentration_limit(self):
-        import readdy._internal.readdybinding.common as common
-        common.set_logging_level("trace", python_console_out=True)
         rds = readdy.ReactionDiffusionSystem(box_size=[10., 10., 10.], unit_system=None)
         rds.add_species("A", 1.)
         rds.add_species("B", 1.)
         rds.add_species("C", 1.)
         rds.reactions.add("fus: A +(3) B -> C", 10.)
         rds.reactions.add("fis: C -> A +(3) B", 2.)
+        rds.reactions.add("conversion: A -> C", 5.)
         rds.potentials.add_harmonic_repulsion("A", "B", 2., 3.)
-        simulation = readdy.DBSimulation("SingleCPU", rds._context, rds._unit_conf, diss_const=0.0003125)
+        simulation = rds.simulation("SingleCPU")
+        simulation.reaction_handler = "DetailedBalance"
         simulation.add_particle("A", [0.,0.,0.])
         simulation.add_particle("B", [0.,0.,0.])
-        simulation.run(10, 1e-1)
+        simulation.run(1000, 1e-1)

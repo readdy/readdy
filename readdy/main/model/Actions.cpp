@@ -50,10 +50,10 @@ reactions::Gillespie::Gillespie(scalar timeStep) : TimeStepDependentAction(timeS
 
 reactions::ReversibleReactionConfig::ReversibleReactionConfig(ReactionId forwardId, ReactionId backwardId,
                                                               const Context &ctx)
-        : forwardId(forwardId), backwardId(backwardId), ctx(ctx) {
+        : forwardId(forwardId), backwardId(backwardId) {
 
-    auto forwardReaction = ctx.reactions().byId(forwardId);
-    auto backwardReaction = ctx.reactions().byId(backwardId);
+    forwardReaction = ctx.reactions().byId(forwardId);
+    backwardReaction = ctx.reactions().byId(backwardId);
 
     // species
     numberLhsTypes = forwardReaction->nEducts();
@@ -62,6 +62,8 @@ reactions::ReversibleReactionConfig::ReversibleReactionConfig(ReactionId forward
     rhsTypes = backwardReaction->educts();
     if (numberLhsTypes == 2 and numberRhsTypes == 1) {
         reversibleType = ReversibleType::FusionFission;
+        lhsNames = {ctx.particle_types().nameOf(lhsTypes[0]), ctx.particle_types().nameOf(lhsTypes[1])};
+        rhsNames = {ctx.particle_types().nameOf(rhsTypes[0]), ""};
     } else if (numberLhsTypes == 1 and numberRhsTypes == 2) {
         reversibleType = ReversibleType::FusionFission;
         // in FusionFission the lhs is assumed to have two educts -> swap forward and backward and redetermine types
@@ -70,20 +72,43 @@ reactions::ReversibleReactionConfig::ReversibleReactionConfig(ReactionId forward
         lhsTypes = forwardReaction->educts();
         numberRhsTypes = backwardReaction->nEducts();
         rhsTypes = backwardReaction->educts();
+        lhsNames = {ctx.particle_types().nameOf(lhsTypes[0]), ctx.particle_types().nameOf(lhsTypes[1])};
+        rhsNames = {ctx.particle_types().nameOf(rhsTypes[0]), ""};
     } else if (numberLhsTypes == 1 and numberRhsTypes == 1) {
         reversibleType = ReversibleType::ConversionConversion;
+        lhsNames = {ctx.particle_types().nameOf(lhsTypes[0]), ""};
+        rhsNames = {ctx.particle_types().nameOf(rhsTypes[0]), ""};
     } else if (numberLhsTypes == 2 and numberRhsTypes == 2) {
         reversibleType = ReversibleType::EnzymaticEnzymatic;
+        lhsNames = {ctx.particle_types().nameOf(lhsTypes[0]), ctx.particle_types().nameOf(lhsTypes[1])};
+        rhsNames = {ctx.particle_types().nameOf(rhsTypes[0]), ctx.particle_types().nameOf(rhsTypes[1])};
     } else {
         throw std::logic_error("Type of reversible reaction cannot be determined");
     }
 
+    // check for reversibility in particle species
     if (not(lhsTypes == backwardReaction->products()) or not(rhsTypes == forwardReaction->products())) {
         if (reversibleType == ReversibleType::FusionFission and
-            (lhsTypes[0] == backwardReaction->products()[1] and lhsTypes[1] == backwardReaction->products()[0])) {
+            (lhsTypes[0] == backwardReaction->products()[1] and lhsTypes[1] == backwardReaction->products()[0]) and
+                (forwardReaction->products()[0] == backwardReaction->educts()[0])) {
             // FusionFission might have swapped order of lhs types forward and backward, which is fine
         } else {
             throw std::logic_error(fmt::format("The given reactions are not reversible w.r.t. particle species"));
+        }
+    }
+
+    // check for reversibility in weights for FusionFission
+    if (reversibleType == ReversibleType::FusionFission) {
+        if (forwardReaction->educts()[0] == backwardReaction->products()[0] and forwardReaction->educts()[1] == backwardReaction->products()[1]) {
+            // conventional order, forward weights must be backward weights
+            if (not (forwardReaction->weight1()==backwardReaction->weight1() and forwardReaction->weight2()==backwardReaction->weight2())) {
+                throw std::logic_error("The given reactions are not reversible with respect to weights");
+            }
+        } else if (forwardReaction->educts()[0] == backwardReaction->products()[1] and forwardReaction->educts()[1] == backwardReaction->products()[0]) {
+            // flipped order, forward weights must be flipped backward weights
+            if (not (forwardReaction->weight1()==backwardReaction->weight2() and forwardReaction->weight2()==backwardReaction->weight1())) {
+                throw std::logic_error("The given reactions are not reversible with respect to weights");
+            }
         }
     }
 
@@ -299,23 +324,21 @@ std::string reactions::ReversibleReactionConfig::describe() const {
 
     if (numberLhsTypes == 1) {
         description
-                << fmt::format("lhsTypes {} {}", ctx.particle_types().nameOf(lhsTypes[0]), readdy::util::str::newline);
+                << fmt::format("lhsTypes {} {}", lhsNames[0], readdy::util::str::newline);
     } else if (numberLhsTypes == 2) {
-        description << fmt::format("lhsTypes {} and {} {}", ctx.particle_types().nameOf(lhsTypes[0]),
-                                   ctx.particle_types().nameOf(lhsTypes[1]), readdy::util::str::newline);
+        description << fmt::format("lhsTypes {} and {} {}", lhsNames[0], lhsNames[1], readdy::util::str::newline);
     }
     if (numberRhsTypes == 1) {
         description
-                << fmt::format("rhsTypes {} {}", ctx.particle_types().nameOf(rhsTypes[0]), readdy::util::str::newline);
+                << fmt::format("rhsTypes {} {}", rhsNames[0], readdy::util::str::newline);
     } else if (numberRhsTypes == 2) {
-        description << fmt::format("rhsTypes {} and {} {}", ctx.particle_types().nameOf(rhsTypes[0]),
-                                   ctx.particle_types().nameOf(rhsTypes[1]), readdy::util::str::newline);
+        description << fmt::format("rhsTypes {} and {} {}", rhsNames[0], rhsNames[1], readdy::util::str::newline);
     }
 
     description << fmt::format("forwardReaction \"{}\"{}{}{}", forwardName,
-                               readdy::util::str::newline, *(ctx.reactions().byId(forwardId)), readdy::util::str::newline);
+                               readdy::util::str::newline, *forwardReaction, readdy::util::str::newline);
     description << fmt::format("backwardReaction \"{}\"{}{}{}", backwardName,
-                               readdy::util::str::newline, *(ctx.reactions().byId(backwardId)), readdy::util::str::newline);
+                               readdy::util::str::newline, *backwardReaction, readdy::util::str::newline);
     description << fmt::format("forwardId {} {}", forwardId, readdy::util::str::newline);
     description << fmt::format("backwardId {} {}", backwardId, readdy::util::str::newline);
 
@@ -368,11 +391,19 @@ void reactions::DetailedBalance::searchReversibleReactions(const Context &ctx) {
         for (const auto &reactionO1 : order1Flat) {
             if (reactionO2->nProducts() == 1 and reactionO1->nProducts() == 2) {
                 // also consider as reversible if for one reaction the educts are swapped
+                // for FusionFission also the weights must fit
                 if ((reactionO1->educts()[0] == reactionO2->products()[0]) and (
-                        ((reactionO2->educts()[0] == reactionO1->products()[0]) and
-                         (reactionO2->educts()[1] == reactionO1->products()[1])) or
-                        ((reactionO2->educts()[0] == reactionO1->products()[1]) and
-                         (reactionO2->educts()[0] == reactionO1->products()[1]))
+                        (
+                            (reactionO2->educts()[0] == reactionO1->products()[0]) and
+                            (reactionO2->educts()[1] == reactionO1->products()[1]) and
+                            (reactionO1->weight1() == reactionO2->weight1()) and
+                            (reactionO1->weight2() == reactionO2->weight2())
+                        ) or (
+                            (reactionO2->educts()[0] == reactionO1->products()[1]) and
+                            (reactionO2->educts()[0] == reactionO1->products()[1]) and
+                                (reactionO1->weight1() == reactionO2->weight2()) and
+                                (reactionO1->weight2() == reactionO2->weight1())
+                        )
                 )) {
                     _reversibleReactionsContainer.emplace_back(
                             std::make_shared<ReversibleReactionConfig>(reactionO2->id(), reactionO1->id(), ctx)
@@ -429,6 +460,33 @@ void reactions::DetailedBalance::searchReversibleReactions(const Context &ctx) {
         _reversibleReactionsMap.emplace(std::make_pair(rev->forwardId, rev));
         _reversibleReactionsMap.emplace(std::make_pair(rev->backwardId, rev));
     }
+
+    readdy::log::info(describe());
+}
+
+std::string reactions::DetailedBalance::describe() const {
+    std::stringstream ss;
+    if (!_reversibleReactionsContainer.empty()) {
+        ss << "- reversible reactions handled subject to detailed-balance:" << readdy::util::str::newline;
+        for (const auto &rev : _reversibleReactionsContainer) {
+            ss << "     * -> \"" << rev->forwardReaction->name() << "\" and <- \"" << rev->backwardReaction->name()
+               << "\"";
+            ss << ", with types: ";
+            switch (rev->reversibleType) {
+                case FusionFission:
+                    ss << fmt::format("{} + {} <--> {}", rev->lhsNames[0], rev->lhsNames[1], rev->rhsNames[0]);
+                    break;
+                case ConversionConversion:
+                    ss << fmt::format("{} <--> {}", rev->lhsNames[0], rev->rhsNames[0]);
+                    break;
+                case EnzymaticEnzymatic:
+                    ss << fmt::format("{} + {} <--> {} + {}", rev->lhsNames[0], rev->lhsNames[1],
+                                      rev->rhsNames[0], rev->rhsNames[1]);
+                    break;
+            }
+        }
+    }
+    return ss.str();
 }
 
 AddParticles::AddParticles(Kernel *const kernel, const std::vector<Particle> &particles)

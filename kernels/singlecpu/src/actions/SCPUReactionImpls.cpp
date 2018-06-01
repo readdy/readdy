@@ -367,12 +367,44 @@ void SCPUGillespie::perform(const util::PerformanceNode &node) {
     data->update(std::move(particlesUpdate));
 }
 
-ParticleBackup::ParticleBackup(unsigned int nParticles, ParticleBackup::index_type idx1,
-                               ParticleBackup::index_type idx2, particle_type_type t1, particle_type_type t2, Vec3 pos1,
-                               Vec3 pos2)
-        : nParticles(nParticles), idx1(idx1), idx2(idx2), t1(t1), t2(t2), pos1(pos1), pos2(pos2) {
-    if (!(nParticles == 1 || nParticles == 2)) {
-        throw std::runtime_error(fmt::format("nParticles in ParticleBackup must be either 1 or 2, but was {}", nParticles));
+ParticleBackup::ParticleBackup(event_t event,
+                               const readdy::model::actions::reactions::ReversibleReactionConfig *revReaction,
+                               const readdy::model::reactions::Reaction *reaction, const scpu_data *data) {
+    switch (revReaction->reversibleType) {
+        case readdy::model::actions::reactions::FusionFission: {
+            nParticles = event.nEducts;
+            idx1 = event.idx1;
+            t1 = event.t1;
+            idx2 = event.idx2;
+            t2 = event.t2;
+            pos1 = data->entry_at(idx1).position();
+            pos2 = data->entry_at(idx2).position();
+            break;
+        }
+        case readdy::model::actions::reactions::ConversionConversion: {
+            nParticles = 1;
+            idx1 = event.idx1;
+            t1 = event.t1;
+            pos1 = data->entry_at(idx1).position();
+            break;
+        }
+        case readdy::model::actions::reactions::EnzymaticEnzymatic:{
+            nParticles = 1;
+            // find out which particle is the catalyst in A + C -> B + C
+            if (event.t1 == reaction->educts()[1]) {
+                idx1 = event.idx2;
+                t1 = event.t2;
+                pos1 = data->entry_at(idx1).position();
+            } else if (event.t2 == reaction->educts()[1]){
+                idx1 = event.idx1;
+                t1 = event.t1;
+                pos1 = data->entry_at(idx1).position();
+            } else {
+                throw std::runtime_error("Should not get here");
+            }
+            break;
+        }
+        default: throw std::runtime_error("Should not get here");
     }
 }
 
@@ -417,9 +449,10 @@ void SCPUDetailedBalance::perform(const readdy::util::PerformanceNode &node) {
 
             if (isReversibleReaction) {
                 // Perform detailed balance method for reversible reaction event
-                const auto particleBackup = ParticleBackup(event.nEducts, event.idx1, event.idx2, event.t1, event.t2,
-                                                           data->entry_at(event.idx1).position(),
-                                                           data->entry_at(event.idx2).position());
+
+
+
+                const auto particleBackup = ParticleBackup(event, revReaction, reaction, data);
                 const auto energyBefore = stateModel.energy();
 
                 reaction_record record;
@@ -471,8 +504,12 @@ void SCPUDetailedBalance::perform(const readdy::util::PerformanceNode &node) {
                 if (readdy::model::rnd::uniform_real() < acceptance) {
                     // accept/do-nothing
                     log::trace("accept!");
-                    stateModel.reactionRecords().push_back(record);
-                    stateModel.reactionCounts().at(reaction->id())++;
+                    if (ctx.recordReactionsWithPositions()) {
+                        stateModel.reactionRecords().push_back(record);
+                    }
+                    if (ctx.recordReactionCounts()) {
+                        stateModel.reactionCounts().at(reaction->id())++;
+                    }
                 } else {
                     // reject/rollback
                     log::trace("reject! apply backward update");
@@ -661,24 +698,35 @@ std::pair<model::SCPUParticleData::entries_update, scalar> SCPUDetailedBalance::
             break;
         }
         case readdy::model::actions::reactions::EnzymaticEnzymatic: {
-            auto& entry1 = data->entry_at(event.idx1);
-            auto& entry2 = data->entry_at(event.idx2);
+            // find out which particle is the catalyst in A + C -> B + C
+            event_t::index_type catalystIdx;
+            event_t::index_type eductIdx;
+            if (event.t1 == reaction->educts()[1]) {
+                catalystIdx = event.idx1;
+                eductIdx = event.idx2;
+            } else if (event.t2 == reaction->educts()[1]){
+                catalystIdx = event.idx2;
+                eductIdx = event.idx1;
+            }
+
+            auto& eductEntry = data->entry_at(eductIdx);
+            auto& catalystEntry = data->entry_at(catalystIdx);
 
             // do not re-use entries for proper construction of backward update
-            readdy::model::Particle particle(entry1.position(), reaction->products()[0]);
+            readdy::model::Particle particle(eductEntry.position(), reaction->products()[0]);
             newParticles.emplace_back(particle);
-            decayedEntries.push_back(event.idx1);
+            decayedEntries.push_back(eductIdx);
             energyDelta = 0.;
 
             if(record) {
                 record->id = reaction->id();
                 record->type = static_cast<int>(reaction->type());
-                record->where = (entry1.position() + entry2.position()) / 2.;
+                record->where = (eductEntry.position() + catalystEntry.position()) / 2.;
                 bcs::fixPosition(record->where, box, pbc);
-                record->educts[0] = entry1.id;
-                record->educts[1] = entry2.id;
-                record->types_from[0] = entry1.type;
-                record->types_from[1] = entry2.type;
+                record->educts[0] = eductEntry.id;
+                record->educts[1] = catalystEntry.id;
+                record->types_from[0] = eductEntry.type;
+                record->types_from[1] = catalystEntry.type;
             }
 
             break;

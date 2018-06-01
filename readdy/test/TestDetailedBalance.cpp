@@ -350,6 +350,17 @@ TEST_P(TestDetailedBalanceWithKernels, SearchReversibleReactionsDuplicateReactio
     EXPECT_THROW({ auto &&reactions = kernel->actions().detailedBalance(1.); }, std::logic_error);
 }
 
+TEST_P(TestDetailedBalanceWithKernels, SearchReversibleReactionsWrongWeights) {
+    auto &ctx = kernel->context();
+    registerAbcSpecies(ctx);
+    ctx.reactions().addFusion("fusion", "A", "B", "C", 1., 2., 0.5, 0.5);
+    ctx.reactions().addFission("fission", "C", "A", "B", 1., 2., 0.3, 0.7);
+    ctx.configure();
+    auto &&reactions = kernel->actions().detailedBalance(1.);
+    const auto &reversibleReactions = reactions->reversibleReactions();
+    EXPECT_EQ(reversibleReactions.size(), 0);
+}
+
 
 auto abcFusionFissionContext = [](readdy::model::Context &ctx, readdy::scalar rateOn, readdy::scalar rateOff) {
     ctx.boxSize() = {{12, 12, 12}};
@@ -368,7 +379,9 @@ auto abcFusionFissionContext = [](readdy::model::Context &ctx, readdy::scalar ra
     ctx.configure();
 };
 
-auto perform = [](readdy::model::Kernel *kernel, size_t nSteps, readdy::scalar timeStep) {
+
+
+auto perform = [](readdy::model::Kernel *kernel, size_t nSteps, readdy::scalar timeStep, bool withIntegrator = false) {
     auto &&integrator = kernel->actions().eulerBDIntegrator(timeStep);
     auto &&forces = kernel->actions().calculateForces();
     using update_nl = readdy::model::actions::UpdateNeighborList;
@@ -381,7 +394,9 @@ auto perform = [](readdy::model::Kernel *kernel, size_t nSteps, readdy::scalar t
     forces->perform();
     kernel->evaluateObservables(0);
     for (size_t t = 1; t < nSteps + 1; t++) {
-        //integrator->perform();
+        if (withIntegrator) {
+            integrator->perform();
+        }
         neighborList->perform();
         forces->perform();
         reactions->perform();
@@ -412,12 +427,12 @@ TEST_P(TestDetailedBalanceWithKernels, FusionThatShouldBeRejected) {
     });
     auto countsConnection = kernel->connectObservable(countsObs.get());
 
-    // @todo count the D
-    std::vector<std::string> typesToCount = {"A", "B", "C"};
+    std::vector<std::string> typesToCount = {"A", "B", "C", "D"};
     auto numbersObs = kernel->observe().nParticles(1, typesToCount);
     numbersObs->setCallback([](const readdy::model::observables::NParticles::result_type &result) {
         EXPECT_EQ(result[0] + result[2], 1) << "conservation of A + C";
         EXPECT_EQ(result[1] + result[2], 1) << "conservation of B + C";
+        EXPECT_EQ(result[3], 500) << "conservation of D";
         if (result[0] + result[2] != 1) {
             readdy::log::trace("A {} B {} C {}", result[0], result[1], result[2]);
         }
@@ -462,12 +477,12 @@ TEST_P(TestDetailedBalanceWithKernels, FissionThatShouldBeRejected) {
     });
     auto countsConnection = kernel->connectObservable(countsObs.get());
 
-    // @todo count the D
-    std::vector<std::string> typesToCount = {"A", "B", "C"};
+    std::vector<std::string> typesToCount = {"A", "B", "C", "D"};
     auto numbersObs = kernel->observe().nParticles(1, typesToCount);
     numbersObs->setCallback([](const readdy::model::observables::NParticles::result_type &result) {
         EXPECT_EQ(result[0] + result[2], 1) << "conservation of A + C";
         EXPECT_EQ(result[1] + result[2], 1) << "conservation of B + C";
+        EXPECT_EQ(result[3], 500) << "conservation of D";
         if (result[0] + result[2] != 1) {
             readdy::log::trace("A {} B {} C {}", result[0], result[1], result[2]);
         }
@@ -516,7 +531,7 @@ TEST_P(TestDetailedBalanceWithKernels, ConservationOfParticles) {
     kernel->stateModel().addParticles(particlesB);
 
     readdy::scalar timeStep = 0.01;
-    perform(kernel.get(), 100, timeStep);
+    perform(kernel.get(), 100, timeStep, true);
 }
 
 TEST_P(TestDetailedBalanceWithKernels, FusionThatShouldBeAccepted) {
@@ -541,11 +556,12 @@ TEST_P(TestDetailedBalanceWithKernels, FusionThatShouldBeAccepted) {
     });
     auto countsConnection = kernel->connectObservable(countsObs.get());
 
-    std::vector<std::string> typesToCount = {"A", "B", "C"};
+    std::vector<std::string> typesToCount = {"A", "B", "C", "D"};
     auto numbersObs = kernel->observe().nParticles(1, typesToCount);
     numbersObs->setCallback([](const readdy::model::observables::NParticles::result_type &result) {
         EXPECT_EQ(result[0] + result[2], 1) << "conservation of A + C";
         EXPECT_EQ(result[1] + result[2], 1) << "conservation of B + C";
+        EXPECT_EQ(result[3], 500) << "conservation of D";
         if (result[0] + result[2] != 1) {
             readdy::log::trace("A {} B {} C {}", result[0], result[1], result[2]);
         }
@@ -589,11 +605,12 @@ TEST_P(TestDetailedBalanceWithKernels, FissionThatShouldBeAccepted) {
     });
     auto countsConnection = kernel->connectObservable(countsObs.get());
 
-    std::vector<std::string> typesToCount = {"A", "B", "C"};
+    std::vector<std::string> typesToCount = {"A", "B", "C", "D"};
     auto numbersObs = kernel->observe().nParticles(1, typesToCount);
     numbersObs->setCallback([](const readdy::model::observables::NParticles::result_type &result) {
         EXPECT_EQ(result[0] + result[2], 1) << "conservation of A + C";
         EXPECT_EQ(result[1] + result[2], 1) << "conservation of B + C";
+        EXPECT_EQ(result[3], 500) << "conservation of D";
         if (result[0] + result[2] != 1) {
             readdy::log::trace("A {} B {} C {}", result[0], result[1], result[2]);
         }
@@ -603,6 +620,237 @@ TEST_P(TestDetailedBalanceWithKernels, FissionThatShouldBeAccepted) {
     const auto idc = ctx.particle_types().idOf("C");
     const auto idd = ctx.particle_types().idOf("D");
     kernel->stateModel().addParticle({{-0.1, -0.1, -0.1}, idc});
+
+    // induce rejection by many repulsing particles in the vicinity
+    for (std::size_t i = 0; i < 500; ++i) {
+        auto pos = m::rnd::normal3(0., 1.);
+        kernel->stateModel().addParticle({pos, idd});
+    }
+
+    readdy::scalar timeStep = 0.1;
+    perform(kernel.get(), 1, timeStep);
+}
+
+TEST_P(TestDetailedBalanceWithKernels, MixedNonReversibleAndReversible) {
+    auto &ctx = kernel->context();
+    abcFusionFissionContext(ctx, 100., 10.);
+    ctx.reactions().add("nonRevConversion: A -> B", 10.);
+    ctx.reactions().add("nonRevEnzymatic: B +(2) C -> A + C", 10.);
+    // A + B + 2*C = const
+
+    std::vector<std::string> typesToCount = {"A", "B", "C"};
+    auto numbersObs = kernel->observe().nParticles(1, typesToCount);
+    numbersObs->setCallback([](const readdy::model::observables::NParticles::result_type &result) {
+        EXPECT_EQ(result[0] + result[1] + 2*result[2], 40) << "conservation of A + B + 2C";
+    });
+    auto numbersConnection = kernel->connectObservable(numbersObs.get());
+
+    const auto ida = ctx.particle_types().idOf("A");
+    const auto idb = ctx.particle_types().idOf("B");
+    const int n_particles = 20;
+    std::vector<readdy::model::Particle> particlesA;
+    std::vector<readdy::model::Particle> particlesB;
+    for (auto i = 0; i < n_particles; ++i) {
+        particlesA.emplace_back(readdy::model::rnd::normal3<readdy::scalar>(), ida);
+        particlesB.emplace_back(readdy::model::rnd::normal3<readdy::scalar>(), idb);
+    }
+    kernel->stateModel().addParticles(particlesA);
+    kernel->stateModel().addParticles(particlesB);
+
+    readdy::scalar timeStep = 0.1;
+    perform(kernel.get(), 1000, timeStep, true);
+}
+
+auto abConversionContext = [](readdy::model::Context &ctx, readdy::scalar rateOn, readdy::scalar rateOff) {
+    ctx.boxSize() = {{12, 12, 12}};
+    ctx.particle_types().add("A", 1.);
+    ctx.particle_types().add("B", 1.);
+    readdy::scalar interactionDistance = 2.;
+    ctx.potentials().addHarmonicRepulsion("A", "B", 10., interactionDistance);
+    ctx.potentials().addHarmonicRepulsion("B", "B", 10., interactionDistance);
+    ctx.potentials().addHarmonicRepulsion("A", "A", 10., interactionDistance);
+    ctx.reactions().addConversion("convAB", "A", "B", rateOn);
+    ctx.reactions().addConversion("convBA", "B", "A", rateOff);
+    ctx.configure();
+};
+
+TEST_P(TestDetailedBalanceWithKernels, ConversionThatShouldBeAccepted) {
+    auto &ctx = kernel->context();
+    abConversionContext(ctx, 1e15, 1e-15);
+    ctx.particle_types().add("D", 0.);
+    ctx.potentials().addHarmonicRepulsion("A", "D", 10., 2.); // A and D interact, thus the initial state is unfavorable
+
+    const auto idForward = ctx.reactions().idOf("convAB");
+    const auto idBackward = ctx.reactions().idOf("convBA");
+
+    auto countsObs = kernel->observe().reactionCounts(1);
+    countsObs->setCallback([&idForward, &idBackward](const readdy::model::observables::ReactionCounts::result_type &result) {
+        if (result.empty()) {
+            readdy::log::trace("reaction counts is empty, no reaction handler ran so far, skip test");
+            return;
+        }
+        EXPECT_EQ(result.at(idBackward), 0);
+        EXPECT_EQ(result.at(idForward), 1);
+    });
+    auto countsConnection = kernel->connectObservable(countsObs.get());
+
+    std::vector<std::string> typesToCount = {"A", "B", "D"};
+    auto numbersObs = kernel->observe().nParticles(1, typesToCount);
+    numbersObs->setCallback([](const readdy::model::observables::NParticles::result_type &result) {
+        EXPECT_EQ(result[0] + result[1], 1) << "conservation of A + B";
+        EXPECT_EQ(result[2], 500) << "conservation of D";
+    });
+    auto numbersConnection = kernel->connectObservable(numbersObs.get());
+
+    const auto ida = ctx.particle_types().idOf("A");
+    const auto idd = ctx.particle_types().idOf("D");
+    kernel->stateModel().addParticle({{0., 0., 0.}, ida});
+
+    // induce rejection by many repulsing particles in the vicinity
+    for (std::size_t i = 0; i < 500; ++i) {
+        auto pos = m::rnd::normal3(0., 1.);
+        kernel->stateModel().addParticle({pos, idd});
+    }
+
+    readdy::scalar timeStep = 0.1;
+    perform(kernel.get(), 1, timeStep);
+}
+
+TEST_P(TestDetailedBalanceWithKernels, ConversionThatShouldBeRejected) {
+    auto &ctx = kernel->context();
+    abConversionContext(ctx, 1e15, 1e-15);
+    ctx.particle_types().add("D", 0.);
+    ctx.potentials().addHarmonicRepulsion("B", "D", 10., 2.);
+
+    const auto idForward = ctx.reactions().idOf("convAB");
+    const auto idBackward = ctx.reactions().idOf("convBA");
+
+    auto countsObs = kernel->observe().reactionCounts(1);
+    countsObs->setCallback([&idForward, &idBackward](const readdy::model::observables::ReactionCounts::result_type &result) {
+        if (result.empty()) {
+            readdy::log::trace("reaction counts is empty, no reaction handler ran so far, skip test");
+            return;
+        }
+        EXPECT_EQ(result.at(idBackward), 0);
+        EXPECT_EQ(result.at(idForward), 0);
+    });
+    auto countsConnection = kernel->connectObservable(countsObs.get());
+
+    std::vector<std::string> typesToCount = {"A", "B", "D"};
+    auto numbersObs = kernel->observe().nParticles(1, typesToCount);
+    numbersObs->setCallback([](const readdy::model::observables::NParticles::result_type &result) {
+        EXPECT_EQ(result[0] + result[1], 1) << "conservation of A + B";
+        EXPECT_EQ(result[2], 500) << "conservation of D";
+    });
+    auto numbersConnection = kernel->connectObservable(numbersObs.get());
+
+    const auto ida = ctx.particle_types().idOf("A");
+    const auto idd = ctx.particle_types().idOf("D");
+    kernel->stateModel().addParticle({{0., 0., 0.}, ida});
+
+    // induce rejection by many repulsing particles in the vicinity
+    for (std::size_t i = 0; i < 500; ++i) {
+        auto pos = m::rnd::normal3(0., 1.);
+        kernel->stateModel().addParticle({pos, idd});
+    }
+
+    readdy::scalar timeStep = 0.1;
+    perform(kernel.get(), 1, timeStep);
+}
+
+auto abEnzymaticContext = [](readdy::model::Context &ctx, readdy::scalar rateOn, readdy::scalar rateOff) {
+    ctx.boxSize() = {{12, 12, 12}};
+    ctx.particle_types().add("A", 1.);
+    ctx.particle_types().add("B", 1.);
+    ctx.particle_types().add("C", 1.);
+    readdy::scalar interactionDistance = 2.;
+    ctx.potentials().addHarmonicRepulsion("A", "B", 10., interactionDistance);
+    ctx.potentials().addHarmonicRepulsion("B", "B", 10., interactionDistance);
+    ctx.potentials().addHarmonicRepulsion("A", "A", 10., interactionDistance);
+    ctx.reactions().addEnzymatic("convAB", "C", "A", "B", rateOn, interactionDistance);
+    ctx.reactions().addEnzymatic("convBA", "C", "B", "A", rateOff, interactionDistance);
+    ctx.configure();
+};
+
+TEST_P(TestDetailedBalanceWithKernels, EnzymaticThatShouldBeAccepted) {
+    auto &ctx = kernel->context();
+    abEnzymaticContext(ctx, 1e15, 1e-15);
+    ctx.particle_types().add("D", 0.);
+    ctx.potentials().addHarmonicRepulsion("A", "D", 10., 2.); // A and D interact, thus the initial state is unfavorable
+
+    const auto idForward = ctx.reactions().idOf("convAB");
+    const auto idBackward = ctx.reactions().idOf("convBA");
+
+    auto countsObs = kernel->observe().reactionCounts(1);
+    countsObs->setCallback([&idForward, &idBackward](const readdy::model::observables::ReactionCounts::result_type &result) {
+        if (result.empty()) {
+            readdy::log::trace("reaction counts is empty, no reaction handler ran so far, skip test");
+            return;
+        }
+        EXPECT_EQ(result.at(idBackward), 0);
+        EXPECT_EQ(result.at(idForward), 1);
+    });
+    auto countsConnection = kernel->connectObservable(countsObs.get());
+
+    std::vector<std::string> typesToCount = {"A", "B", "C", "D"};
+    auto numbersObs = kernel->observe().nParticles(1, typesToCount);
+    numbersObs->setCallback([](const readdy::model::observables::NParticles::result_type &result) {
+        EXPECT_EQ(result[0] + result[1], 1) << "conservation of A + B";
+        EXPECT_EQ(result[2], 1) << "conservation of C";
+        EXPECT_EQ(result[3], 500) << "conservation of D";
+    });
+    auto numbersConnection = kernel->connectObservable(numbersObs.get());
+
+    const auto ida = ctx.particle_types().idOf("A");
+    const auto idc = ctx.particle_types().idOf("C");
+    const auto idd = ctx.particle_types().idOf("D");
+    kernel->stateModel().addParticle({{0., 0., 0.}, ida});
+    kernel->stateModel().addParticle({{0., 0., 1.}, idc});
+
+    // induce rejection by many repulsing particles in the vicinity
+    for (std::size_t i = 0; i < 500; ++i) {
+        auto pos = m::rnd::normal3(0., 1.);
+        kernel->stateModel().addParticle({pos, idd});
+    }
+
+    readdy::scalar timeStep = 0.1;
+    perform(kernel.get(), 1, timeStep);
+}
+
+TEST_P(TestDetailedBalanceWithKernels, EnzymaticThatShouldBeRejected) {
+    auto &ctx = kernel->context();
+    abEnzymaticContext(ctx, 1e15, 1e-15);
+    ctx.particle_types().add("D", 0.);
+    ctx.potentials().addHarmonicRepulsion("B", "D", 10., 2.); // A and D interact, thus the initial state is unfavorable
+
+    const auto idForward = ctx.reactions().idOf("convAB");
+    const auto idBackward = ctx.reactions().idOf("convBA");
+
+    auto countsObs = kernel->observe().reactionCounts(1);
+    countsObs->setCallback([&idForward, &idBackward](const readdy::model::observables::ReactionCounts::result_type &result) {
+        if (result.empty()) {
+            readdy::log::trace("reaction counts is empty, no reaction handler ran so far, skip test");
+            return;
+        }
+        EXPECT_EQ(result.at(idBackward), 0);
+        EXPECT_EQ(result.at(idForward), 0);
+    });
+    auto countsConnection = kernel->connectObservable(countsObs.get());
+
+    std::vector<std::string> typesToCount = {"A", "B", "C", "D"};
+    auto numbersObs = kernel->observe().nParticles(1, typesToCount);
+    numbersObs->setCallback([](const readdy::model::observables::NParticles::result_type &result) {
+        EXPECT_EQ(result[0] + result[1], 1) << "conservation of A + B";
+        EXPECT_EQ(result[2], 1) << "conservation of C";
+        EXPECT_EQ(result[3], 500) << "conservation of D";
+    });
+    auto numbersConnection = kernel->connectObservable(numbersObs.get());
+
+    const auto ida = ctx.particle_types().idOf("A");
+    const auto idc = ctx.particle_types().idOf("C");
+    const auto idd = ctx.particle_types().idOf("D");
+    kernel->stateModel().addParticle({{0., 0., 0.}, ida});
+    kernel->stateModel().addParticle({{0., 0., 1.}, idc});
 
     // induce rejection by many repulsing particles in the vicinity
     for (std::size_t i = 0; i < 500; ++i) {

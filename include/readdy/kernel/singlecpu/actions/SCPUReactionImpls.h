@@ -96,7 +96,8 @@ struct ParticleBackup {
     particle_type_type t1, t2;
     Vec3 pos1, pos2;
 
-    ParticleBackup(unsigned int nParticles, index_type idx1, index_type idx2, particle_type_type t1, particle_type_type t2, Vec3 pos1, Vec3 pos2);
+    ParticleBackup(Event event, const readdy::model::actions::reactions::ReversibleReactionConfig *revReaction,
+                   const readdy::model::reactions::Reaction *reaction, const scpu_data *data);
 };
 
 class SCPUDetailedBalance : public readdy::model::actions::reactions::DetailedBalance {
