@@ -21,15 +21,16 @@
 
 
 /**
- * This files contains a selection of possible programs that can be executed on a kernel:
- *   - TestProgram: Program that has no other operation than printing something to the log.
- *   - AddParticleProgram: A program with which particles can be added.
- *   - EulerBDIntegrator: A program that propagates the particles through the system. The update model program should be
- *                     called beforehand, such that forces are available.
- *   - UpdateNeighborList: A program that creates neighbor lists.
- *   - CalculateForces: A program that calculates forces for later use in, e.g., integration schemes.
- *   - DefaultReactionProgram: A program that executes the default reaction scheme.
- *   - CompartmentConversion: Perform instantaneous particle conversions depending on the particles' position.
+ * This files contains a selection of possible Actions that can be executed on a kernel:
+ *   - AddParticles: An action with which particles can be added.
+ *   - EulerBDIntegrator: Propagates the particles through the system.
+ *   - UpdateNeighborList: Creates and updates neighbor lists.
+ *   - CalculateForces: Calculates forces for later use in, e.g., integration schemes.
+ *   - UncontrolledApproximation: Executes reactions, resolving conflicts in an uncontrolled way.
+ *   - Gillespie: Executes reactions, sampling one reaction event after the other weighted with their rates.
+ *   - DetailedBalance: Executes reactions, and assures detailed balance for reversible reactions.
+ *   - EvaluateCompartments: Perform instantaneous particle conversions depending on the particles' position.
+ *   - EvaluateTopologyReactions: Execute reactions involving topologies.
  *
  * Further, specializations of ActionName<T> are declared.
  *

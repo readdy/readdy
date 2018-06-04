@@ -412,7 +412,7 @@ inline auto integrate(Func f, ScalarType lowerLimit, ScalarType upperLimit) {
 
 /**
  * Panel is associated with the range [lowerLimit, upperLimit] and saves the integral over this domain and
- * an error estimate. Panels are compared with respect to their relative error estimate.
+ * an error estimate. Panels are compared with respect to their absolute error estimate.
  */
 template<typename ScalarType>
 struct Panel {
@@ -445,7 +445,7 @@ struct Panel {
  * @param f the integrand
  * @param lowerLimit lower boundary of integration
  * @param upperLimit upper boundary of integration
- * @param desiredError result will be accurate up to this value if maxiter is not reached, by default machine precision
+ * @param desiredRelativeError result will be accurate up to this relative value if maxiter is not reached
  * @param maxiter the maximum iterations
  * @return a pair of (value of the integral, error estimate of the integral)
  */

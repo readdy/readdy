@@ -450,8 +450,6 @@ void SCPUDetailedBalance::perform(const readdy::util::PerformanceNode &node) {
             if (isReversibleReaction) {
                 // Perform detailed balance method for reversible reaction event
 
-
-
                 const auto particleBackup = ParticleBackup(event, revReaction, reaction, data);
                 const auto energyBefore = stateModel.energy();
 
@@ -468,7 +466,7 @@ void SCPUDetailedBalance::perform(const readdy::util::PerformanceNode &node) {
                 const auto updateRecord = data->update(std::move(forwardUpdate));
                 auto backwardUpdate = generateBackwardUpdate(particleBackup, updateRecord);
                 stateModel.updateNeighborList();
-                calculateForcesEnergies();
+                calculateEnergies();
 
                 scalar boltzmannFactor = 1.;
                 scalar prefactor = 1.;
@@ -513,10 +511,9 @@ void SCPUDetailedBalance::perform(const readdy::util::PerformanceNode &node) {
                 } else {
                     // reject/rollback
                     log::trace("reject! apply backward update");
-
                     data->update(std::move(backwardUpdate));
                     stateModel.updateNeighborList();
-                    calculateForcesEnergies();
+                    calculateEnergies();
                     if (energyBefore != stateModel.energy()) {
                         log::warn("reaction move was rejected but energy of state is different "
                                   "after rollback, was {}, is now {}", energyBefore, stateModel.energy());
@@ -540,12 +537,12 @@ void SCPUDetailedBalance::perform(const readdy::util::PerformanceNode &node) {
                 }
 
                 data->update(std::move(forwardUpdate));
-
-                calculateForcesEnergies();
+                stateModel.updateNeighborList();
+                calculateEnergies();
             }
         };
 
-        calculateForcesEnergies();
+        calculateEnergies();
         algo::performEvents(events, shouldEval, depending, eval);
 
     }
@@ -564,13 +561,6 @@ model::SCPUParticleData::entries_update SCPUDetailedBalance::generateBackwardUpd
         newParticles.emplace_back(p2);
     } else {
         throw std::runtime_error("Not gonna happen");
-    }
-    log::trace("generateBackwardUpdate: newParticles.size() {}, decayedEntries.size() {}", newParticles.size(),
-               decayedEntries.size());
-    log::trace("newParticles are ..");
-    for (const auto &entry : newParticles) {
-        log::trace("entry.position() {}, entry.type {}, entry.id {}, entry.deactivated {}", entry.position(),
-                   entry.type, entry.id, entry.deactivated);
     }
     return std::make_pair(std::move(newParticles), decayedEntries);
 }
@@ -597,10 +587,10 @@ std::pair<model::SCPUParticleData::entries_update, scalar> SCPUDetailedBalance::
         case readdy::model::actions::reactions::FusionFission: {
             if (event.nEducts == 1) {
                 // backward reaction C --> A + B
-                auto &entry1 = data->entry_at(event.idx1);
+                const auto &entry1 = data->entry_at(event.idx1);
                 auto n3 = readdy::model::rnd::normal3<readdy::scalar>(0, 1);
                 n3 /= std::sqrt(n3 * n3);
-                auto distance = reversibleReaction->drawFissionDistance();
+                const auto distance = reversibleReaction->drawFissionDistance();
                 Vec3 difference(distance, 0, 0); // orientation does not matter for energy
                 scalar energyGain = 0.; // calculate U_AB
                 for (const auto &p : reversibleReaction->lhsPotentials) {
@@ -634,16 +624,15 @@ std::pair<model::SCPUParticleData::entries_update, scalar> SCPUDetailedBalance::
                     record->types_from[1] = entry1.type;
                 }
             } else if (event.nEducts == 2) {
-                // forward reaction C --> A + B
-                auto &entry1 = data->entry_at(event.idx1);
-                auto &entry2 = data->entry_at(event.idx2);
+                // forward reaction A + B --> C
+                const auto &entry1 = data->entry_at(event.idx1);
+                const auto &entry2 = data->entry_at(event.idx2);
 
                 const auto e1Pos = entry1.pos;
                 const auto e2Pos = entry2.pos;
-                auto revReaction = _reversibleReactionsContainer.front();
                 const auto difference = bcs::shortestDifference(e1Pos, e2Pos, box, pbc);
                 scalar energyLoss = 0.; // calculate U_AB
-                for (const auto &p : revReaction->lhsPotentials) {
+                for (const auto &p : reversibleReaction->lhsPotentials) {
                     energyLoss += p->calculateEnergy(difference);
                 }
                 energyDelta = -1. * energyLoss;
@@ -676,7 +665,7 @@ std::pair<model::SCPUParticleData::entries_update, scalar> SCPUDetailedBalance::
             break;
         }
         case readdy::model::actions::reactions::ConversionConversion: {
-            auto &entry = data->entry_at(event.idx1);
+            const auto &entry = data->entry_at(event.idx1);
 
             // do not re-use entries for proper construction of backward update
             readdy::model::Particle particle(entry.position(), reaction->products()[0]);
@@ -709,8 +698,8 @@ std::pair<model::SCPUParticleData::entries_update, scalar> SCPUDetailedBalance::
                 eductIdx = event.idx1;
             }
 
-            auto& eductEntry = data->entry_at(eductIdx);
-            auto& catalystEntry = data->entry_at(catalystIdx);
+            const auto& eductEntry = data->entry_at(eductIdx);
+            const auto& catalystEntry = data->entry_at(catalystIdx);
 
             // do not re-use entries for proper construction of backward update
             readdy::model::Particle particle(eductEntry.position(), reaction->products()[0]);
@@ -734,12 +723,10 @@ std::pair<model::SCPUParticleData::entries_update, scalar> SCPUDetailedBalance::
         default: throw std::runtime_error("should not get here");
     }
 
-    log::trace("DB performEvent energyDelta {}, newParticles.size() {}, decayedEntries.size() {}",
-               energyDelta, newParticles.size(), decayedEntries.size());
     return std::make_pair(std::make_pair(std::move(newParticles), decayedEntries), energyDelta);
 }
 
-void SCPUDetailedBalance::calculateForcesEnergies() {
+void SCPUDetailedBalance::calculateEnergies() {
     const auto &context = kernel->context();
 
     auto &stateModel = kernel->getSCPUKernelStateModel();
@@ -747,23 +734,22 @@ void SCPUDetailedBalance::calculateForcesEnergies() {
     auto &neighborList = *stateModel.getNeighborList();
 
     stateModel.energy() = 0;
-    stateModel.virial() = Matrix33{{{0, 0, 0, 0, 0, 0, 0, 0, 0}}};
 
     const auto &potentials = context.potentials();
     auto &topologies = stateModel.topologies();
-    if (!potentials.potentialsOrder1().empty() || !potentials.potentialsOrder2().empty() || !topologies.empty()) {
+    if (!potentials.potentialsOrder1().empty() || !potentials.potentialsOrder2().empty()) {
         std::for_each(data.begin(), data.end(), [](auto &entry) {
             entry.force = {0, 0, 0};
         });
     }
 
-    // update forces and energy order 1 potentials
+    // update energy order 1 potentials
     if (!potentials.potentialsOrder1().empty()) {
         {
             std::transform(data.begin(), data.end(), data.begin(), [&potentials, &stateModel](auto &entry) {
                 if (!entry.deactivated) {
                     for (const auto &po1 : potentials.potentialsOf(entry.type)) {
-                        po1->calculateForceAndEnergy(entry.force, stateModel.energy(), entry.position());
+                        stateModel.energy() += po1->calculateEnergy(entry.position());
                     }
                 }
                 return entry;
@@ -771,7 +757,7 @@ void SCPUDetailedBalance::calculateForcesEnergies() {
         }
     }
 
-    // update forces and energy order 2 potentials
+    // update energy order 2 potentials
     if (!potentials.potentialsOrder2().empty()) {
         const auto &box = context.boxSize().data();
         const auto &pbc = context.periodicBoundaryConditions().data();
@@ -785,13 +771,11 @@ void SCPUDetailedBalance::calculateForcesEnergies() {
                     auto &neighborEntry = data.entry_at(neighbor);
                     auto itPot = pots.find(neighborEntry.type);
                     if (itPot != pots.end()) {
-                        Vec3 forceVec{0, 0, 0};
                         auto x_ij = bcs::shortestDifference(entry.position(), neighborEntry.position(), box, pbc);
                         for (const auto &potential : itPot->second) {
-                            potential->calculateForceAndEnergy(forceVec, stateModel.energy(), x_ij);
+                            stateModel.energy() += potential->calculateEnergy(x_ij);
+
                         }
-                        entry.force += forceVec;
-                        neighborEntry.force -= forceVec;
                     }
                 });
             }

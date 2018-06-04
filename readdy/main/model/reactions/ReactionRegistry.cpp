@@ -383,14 +383,6 @@ struct FindReactionById {
         };
     }
 
-    void assign(const Reaction* r2) {
-        reaction = r2;
-    }
-
-    void assign(const std::shared_ptr<Reaction> &r2) {
-        reaction = r2.get();
-    }
-
     const Reaction* result() {
         if (_found) {
             return reaction;
@@ -400,7 +392,15 @@ struct FindReactionById {
     }
 
 private:
-    Reaction::reaction_id id {0};
+    void assign(const Reaction* r2) {
+        reaction = r2;
+    }
+
+    void assign(const std::shared_ptr<const Reaction> &r2) {
+        reaction = r2.get();
+    }
+
+    const Reaction::reaction_id id;
     const Reaction* reaction = nullptr;
     bool _found = false;
 };

@@ -36,7 +36,7 @@ class Simulation(object):
 
     def __init__(self, kernel, context, unit_config, output_file="", integrator="EulerBDIntegrator",
                  reaction_handler="Gillespie", evaluate_topology_reactions=True, evaluate_forces=True,
-                 evaluate_observables=True, skin=0, simulation_scheme="ReaDDyScheme"):
+                 evaluate_observables=True, skin=0):
         """
         Creates a new simulation object
         :param kernel: the kernel to use
@@ -66,7 +66,7 @@ class Simulation(object):
         self._skin = 0
         self._integrator = "EulerBDIntegrator"
         self._reaction_handler = "Gillespie"
-        self._simulation_scheme = simulation_scheme
+        self._simulation_scheme = "ReaDDyScheme"
         self._output_file = ""
 
         self.output_file = output_file
@@ -79,7 +79,7 @@ class Simulation(object):
         self.evaluate_observables = evaluate_observables
         self.skin = skin
         self._show_progress = True
-        self._progress_output_stride = 100
+        self._progress_output_stride = 10
 
         self._progress = None
 
@@ -249,7 +249,7 @@ class Simulation(object):
             * DetailedBalance
         :param value: the reaction handler
         """
-        supported_reaction_handlers = ("Gillespie", "UncontrolledApproximation", "DetailedBalance")
+        supported_reaction_handlers = ("Gillespie", "UncontrolledApproximation", "DetailedBalance",)
         assert isinstance(value, str) and value in supported_reaction_handlers, \
             "the reaction handler can only be one of {}".format(",".join(supported_reaction_handlers))
         self._reaction_handler = value

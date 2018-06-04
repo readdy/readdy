@@ -93,7 +93,7 @@ reactions::ReversibleReactionConfig::ReversibleReactionConfig(ReactionId forward
                 (forwardReaction->products()[0] == backwardReaction->educts()[0])) {
             // FusionFission might have swapped order of lhs types forward and backward, which is fine
         } else {
-            throw std::logic_error(fmt::format("The given reactions are not reversible w.r.t. particle species"));
+            throw std::logic_error("The given reactions are not reversible with respect to particle species");
         }
     }
 
@@ -140,8 +140,7 @@ reactions::ReversibleReactionConfig::ReversibleReactionConfig(ReactionId forward
             }
             reactionRadius = forwardReaction->eductDistance();
             break;
-        default:
-            throw std::logic_error("Unknown type of reversible reaction");
+        default: throw std::logic_error("Unknown type of reversible reaction");
     }
 
     // potentials
@@ -389,8 +388,9 @@ void reactions::DetailedBalance::searchReversibleReactions(const Context &ctx) {
     // look for FusionFission
     for (const auto &reactionO2 : order2Flat) {
         for (const auto &reactionO1 : order1Flat) {
-            if (reactionO2->nProducts() == 1 and reactionO1->nProducts() == 2) {
-                // also consider as reversible if for one reaction the educts are swapped
+            if (reactionO2->nProducts() == 1 and reactionO1->nProducts() == 2 and
+                reactionO1->productDistance() == reactionO2->eductDistance()) {
+                // also consider as reversible if - for one reaction - the educts are swapped
                 // for FusionFission also the weights must fit
                 if ((reactionO1->educts()[0] == reactionO2->products()[0]) and (
                         (
@@ -433,7 +433,7 @@ void reactions::DetailedBalance::searchReversibleReactions(const Context &ctx) {
         for (std::size_t j = i + 1; j < order2Flat.size(); ++j) {
             const auto &ri = order2Flat[i];
             const auto &rj = order2Flat[j];
-            if (ri->nProducts() == 2 and rj->nProducts() == 2) {
+            if (ri->nProducts() == 2 and rj->nProducts() == 2 and ri->eductDistance()==rj->eductDistance()) {
                 if ((ri->educts() == rj->products()) and (ri->products() == rj->educts())) {
                     _reversibleReactionsContainer.emplace_back(
                             std::make_shared<ReversibleReactionConfig>(ri->id(), rj->id(), ctx)
@@ -455,7 +455,7 @@ void reactions::DetailedBalance::searchReversibleReactions(const Context &ctx) {
         }
     }
 
-    // create the map
+    // create the map for lookup during runtime
     for (const auto &rev : _reversibleReactionsContainer) {
         _reversibleReactionsMap.emplace(std::make_pair(rev->forwardId, rev));
         _reversibleReactionsMap.emplace(std::make_pair(rev->backwardId, rev));

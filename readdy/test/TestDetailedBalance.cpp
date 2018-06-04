@@ -421,9 +421,8 @@ TEST_P(TestDetailedBalanceWithKernels, FusionThatShouldBeRejected) {
             readdy::log::trace("reaction counts is empty, no reaction handler ran so far, skip test");
             return;
         }
-        EXPECT_EQ(result.at(idfus), 0) << "fusion shall not occur because it should be rejected";
-        EXPECT_EQ(result.at(idfis), 0) << "fission shall not occur because only one timestep "
-                                          "is performed in which a fusion is rejected";
+        EXPECT_EQ(result.at(idfus), 0) << "fusion shall not occur";
+        EXPECT_EQ(result.at(idfis), 0) << "fission shall not occur";
     });
     auto countsConnection = kernel->connectObservable(countsObs.get());
 
@@ -471,9 +470,8 @@ TEST_P(TestDetailedBalanceWithKernels, FissionThatShouldBeRejected) {
             readdy::log::trace("reaction counts is empty, no reaction handler ran so far, skip test");
             return;
         }
-        EXPECT_EQ(result.at(idfis), 0) << "fision shall not occur because it should be rejected";
-        EXPECT_EQ(result.at(idfus), 0) << "fusion shall not occur because only one timestep "
-                                          "is performed in which a fission is rejected";
+        EXPECT_EQ(result.at(idfis), 0) << "fission shall not occur";
+        EXPECT_EQ(result.at(idfus), 0) << "fusion shall not occur";
     });
     auto countsConnection = kernel->connectObservable(countsObs.get());
 
@@ -550,9 +548,8 @@ TEST_P(TestDetailedBalanceWithKernels, FusionThatShouldBeAccepted) {
             readdy::log::trace("reaction counts is empty, no reaction handler ran so far, skip test");
             return;
         }
-        EXPECT_EQ(result.at(idfus), 1) << "fusion shall not occur because it should be rejected";
-        EXPECT_EQ(result.at(idfis), 0) << "fission shall not occur because only one timestep "
-                                          "is performed in which a fusion occurs";
+        EXPECT_EQ(result.at(idfus), 1) << "fusion must occur";
+        EXPECT_EQ(result.at(idfis), 0) << "fission shall not occur";
     });
     auto countsConnection = kernel->connectObservable(countsObs.get());
 
@@ -599,9 +596,8 @@ TEST_P(TestDetailedBalanceWithKernels, FissionThatShouldBeAccepted) {
             readdy::log::trace("reaction counts is empty, no reaction handler ran so far, skip test");
             return;
         }
-        EXPECT_EQ(result.at(idfis), 1) << "fision shall not occur because it should be rejected";
-        EXPECT_EQ(result.at(idfus), 0) << "fusion shall not occur because only one timestep "
-                                          "is performed in which a fission is rejected";
+        EXPECT_EQ(result.at(idfis), 1) << "fission must occur";
+        EXPECT_EQ(result.at(idfus), 0) << "fusion shall not occur";
     });
     auto countsConnection = kernel->connectObservable(countsObs.get());
 
