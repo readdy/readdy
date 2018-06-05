@@ -125,18 +125,17 @@ inline void performEvents(Events &events, const ShouldEvaluate &shouldEvaluate, 
 
 template<typename ParticleContainer, typename EvaluateOnParticle, typename InteractionContainer,
         typename EvaluateOnInteraction, typename TopologyContainer, typename EvaluateOnTopology>
-inline void evaluateOnContainers(ParticleContainer &particleContainer,
+inline void evaluateOnContainers(ParticleContainer &&particleContainer,
                                  const EvaluateOnParticle &evaluateOnParticle,
-                                 const InteractionContainer &interactionContainer,
+                                 InteractionContainer &&interactionContainer,
                                  const EvaluateOnInteraction &evaluateOnInteraction,
-                                 const TopologyContainer &topologyContainer,
+                                 TopologyContainer &&topologyContainer,
                                  const EvaluateOnTopology &evaluateOnTopology,
-                                 const util::PerformanceNode &node
-) {
+                                 const util::PerformanceNode &node) {
     // Evaluate on particles
     {
         auto tEvaluateOnParticles = node.subnode("evaluate on particles").timeit();
-        std::for_each(particleContainer.begin(), particleContainer.end(), [&](auto &entry){
+        std::for_each(particleContainer.begin(), particleContainer.end(), [&](auto &&entry){
             if (!entry.deactivated) {
                 evaluateOnParticle(entry);
             }
@@ -149,9 +148,9 @@ inline void evaluateOnContainers(ParticleContainer &particleContainer,
         for (auto cell = 0_z; cell < interactionContainer.nCells(); ++cell) {
             for (auto it = interactionContainer.particlesBegin(cell); it != interactionContainer.particlesEnd(cell); ++it) {
                 auto pidx = *it;
-                auto &entry = particleContainer.entry_at(pidx);
+                auto &&entry = particleContainer.entry_at(pidx);
                 interactionContainer.forEachNeighbor(it, cell, [&](const std::size_t neighbor) {
-                    auto &neighborEntry = particleContainer.entry_at(neighbor);
+                    auto &&neighborEntry = particleContainer.entry_at(neighbor);
                     evaluateOnInteraction(entry, neighborEntry);
 
                 });
@@ -162,7 +161,7 @@ inline void evaluateOnContainers(ParticleContainer &particleContainer,
     // Evaluate on topologies
     {
         auto tTopologies = node.subnode("evaluate on topologies").timeit();
-        for (auto &topology : topologyContainer) {
+        for (auto &&topology : topologyContainer) {
             if (!topology->isDeactivated()) {
                 evaluateOnTopology(topology);
             }
