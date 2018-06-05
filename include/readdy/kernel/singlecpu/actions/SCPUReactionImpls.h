@@ -117,7 +117,7 @@ protected:
     SCPUKernel *const kernel;
 
     // calculate first-order interactions and second-order non-bonded interactions
-    void calculateEnergies();
+    void calculateEnergies(const util::PerformanceNode &node);
 
     std::pair<model::SCPUParticleData::entries_update, scalar>
     performReversibleReactionEvent(const Event &event,

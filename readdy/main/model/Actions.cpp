@@ -32,6 +32,7 @@
 #include <readdy/model/Kernel.h>
 #include <readdy/common/integration.h>
 #include <readdy/common/numeric.h>
+#include <readdy/model/actions/DetailedBalance.h>
 
 namespace readdy {
 namespace model {
@@ -83,7 +84,8 @@ reactions::ReversibleReactionConfig::ReversibleReactionConfig(ReactionId forward
         lhsNames = {ctx.particle_types().nameOf(lhsTypes[0]), ctx.particle_types().nameOf(lhsTypes[1])};
         rhsNames = {ctx.particle_types().nameOf(rhsTypes[0]), ctx.particle_types().nameOf(rhsTypes[1])};
     } else {
-        throw std::logic_error("Type of reversible reaction cannot be determined");
+        throw std::logic_error(fmt::format("Type of reversible reaction cannot be determined, method: {} file: {}",
+                                           "ReversibleReactionConfig::ReversibleReactionConfig", "Actions.cpp"));
     }
 
     // check for reversibility in particle species
@@ -93,21 +95,31 @@ reactions::ReversibleReactionConfig::ReversibleReactionConfig(ReactionId forward
                 (forwardReaction->products()[0] == backwardReaction->educts()[0])) {
             // FusionFission might have swapped order of lhs types forward and backward, which is fine
         } else {
-            throw std::logic_error("The given reactions are not reversible with respect to particle species");
+            throw std::logic_error(fmt::format(
+                    "The given reactions are not reversible with respect to particle species, method: {} file: {}",
+                    "ReversibleReactionConfig::ReversibleReactionConfig", "Actions.cpp"));
         }
     }
 
     // check for reversibility in weights for FusionFission
     if (reversibleType == ReversibleType::FusionFission) {
-        if (forwardReaction->educts()[0] == backwardReaction->products()[0] and forwardReaction->educts()[1] == backwardReaction->products()[1]) {
+        if (forwardReaction->educts()[0] == backwardReaction->products()[0] and
+            forwardReaction->educts()[1] == backwardReaction->products()[1]) {
             // conventional order, forward weights must be backward weights
-            if (not (forwardReaction->weight1()==backwardReaction->weight1() and forwardReaction->weight2()==backwardReaction->weight2())) {
-                throw std::logic_error("The given reactions are not reversible with respect to weights");
+            if (not (forwardReaction->weight1()==backwardReaction->weight1() and
+                     forwardReaction->weight2()==backwardReaction->weight2())) {
+                throw std::logic_error(fmt::format(
+                        "The given reactions are not reversible with respect to weights, method: {} file: {}",
+                        "ReversibleReactionConfig::ReversibleReactionConfig", "Actions.cpp"));
             }
-        } else if (forwardReaction->educts()[0] == backwardReaction->products()[1] and forwardReaction->educts()[1] == backwardReaction->products()[0]) {
+        } else if (forwardReaction->educts()[0] == backwardReaction->products()[1] and
+                   forwardReaction->educts()[1] == backwardReaction->products()[0]) {
             // flipped order, forward weights must be flipped backward weights
-            if (not (forwardReaction->weight1()==backwardReaction->weight2() and forwardReaction->weight2()==backwardReaction->weight1())) {
-                throw std::logic_error("The given reactions are not reversible with respect to weights");
+            if (not (forwardReaction->weight1()==backwardReaction->weight2() and
+                     forwardReaction->weight2()==backwardReaction->weight1())) {
+                throw std::logic_error(fmt::format(
+                        "The given reactions are not reversible with respect to weights, method: {} file: {}",
+                        "ReversibleReactionConfig::ReversibleReactionConfig", "Actions.cpp"));
             }
         }
     }
@@ -123,8 +135,11 @@ reactions::ReversibleReactionConfig::ReversibleReactionConfig(ReactionId forward
         case FusionFission:
             if (forwardReaction->eductDistance() != backwardReaction->productDistance()) {
                 throw std::logic_error(fmt::format("Reaction radii forward and backward must be equal,"
-                                                     "were {} and {}", forwardReaction->eductDistance(),
-                                                     backwardReaction->productDistance()));
+                                                   "were {} and {}, method: {} file: {}",
+                                                   forwardReaction->eductDistance(),
+                                                   backwardReaction->productDistance(),
+                                                   "ReversibleReactionConfig::ReversibleReactionConfig",
+                                                   "Actions.cpp"));
             }
             reactionRadius = forwardReaction->eductDistance();
             break;
@@ -135,12 +150,17 @@ reactions::ReversibleReactionConfig::ReversibleReactionConfig(ReactionId forward
             // Note that Enzymatics only define the educt distance
             if (forwardReaction->eductDistance() != backwardReaction->eductDistance()) {
                 throw std::logic_error(fmt::format("Reaction radii forward and backward must be equal,"
-                                                     "were {} and {}", forwardReaction->eductDistance(),
-                                                     backwardReaction->eductDistance()));
+                                                   "were {} and {}, method: {} file: {}",
+                                                   forwardReaction->eductDistance(),
+                                                   backwardReaction->eductDistance(),
+                                                   "ReversibleReactionConfig::ReversibleReactionConfig",
+                                                   "Actions.cpp"));
             }
             reactionRadius = forwardReaction->eductDistance();
             break;
-        default: throw std::logic_error("Unknown type of reversible reaction");
+        default:
+            throw std::logic_error(fmt::format("Unknown type of reversible reaction, method: {} file: {}",
+                                               "ReversibleReactionConfig::ReversibleReactionConfig", "Actions.cpp"));
     }
 
     // potentials
@@ -155,7 +175,9 @@ reactions::ReversibleReactionConfig::ReversibleReactionConfig(ReactionId forward
             lhsPotentials = ctx.potentials().potentialsOf(lhsTypes[0], lhsTypes[1]);
             rhsPotentials = ctx.potentials().potentialsOf(rhsTypes[0], rhsTypes[1]);
             break;
-        default: throw std::logic_error("Unknown type of reversible reaction");
+        default:
+            throw std::logic_error(fmt::format("Unknown type of reversible reaction, method: {} file: {}",
+                                               "ReversibleReactionConfig::ReversibleReactionConfig", "Actions.cpp"));
     }
 
     // interaction radius and volume
@@ -203,7 +225,8 @@ reactions::ReversibleReactionConfig::ReversibleReactionConfig(ReactionId forward
 
     // effective lhs interaction volume
     {
-        const auto result = util::integration::integrateAdaptive(lhsIntegrand, 0., lhsInteractionRadius, desiredRelativeError, maxiter);
+        const auto result = util::integration::integrateAdaptive(lhsIntegrand, 0., lhsInteractionRadius,
+                                                                 desiredRelativeError, maxiter);
         const auto achievedRelativeError = result.second / result.first;
         if (achievedRelativeError > desiredRelativeError) {
             readdy::log::warn("Integration of potentials yielded larger error ({}) than desired ({}).",
@@ -214,7 +237,8 @@ reactions::ReversibleReactionConfig::ReversibleReactionConfig(ReactionId forward
 
     // effective rhs interaction volume
     {
-        const auto result = util::integration::integrateAdaptive(rhsIntegrand, 0., rhsInteractionRadius, desiredRelativeError, maxiter);
+        const auto result = util::integration::integrateAdaptive(rhsIntegrand, 0., rhsInteractionRadius,
+                                                                 desiredRelativeError, maxiter);
         const auto achievedRelativeError = result.second / result.first;
         if (achievedRelativeError> desiredRelativeError) {
             readdy::log::warn("Integration of potentials yielded larger error ({}) than desired ({}).",
@@ -225,7 +249,8 @@ reactions::ReversibleReactionConfig::ReversibleReactionConfig(ReactionId forward
 
     // effective lhs reaction volume
     {
-        const auto result = util::integration::integrateAdaptive(lhsIntegrand, 0., reactionRadius, desiredRelativeError, maxiter);
+        const auto result = util::integration::integrateAdaptive(lhsIntegrand, 0., reactionRadius, desiredRelativeError,
+                                                                 maxiter);
         const auto achievedRelativeError = result.second / result.first;
         if (achievedRelativeError> desiredRelativeError) {
             readdy::log::warn("Integration of potentials yielded larger error ({}) than desired ({}).",
@@ -236,7 +261,8 @@ reactions::ReversibleReactionConfig::ReversibleReactionConfig(ReactionId forward
 
     // effective rhs reaction volume
     {
-        const auto result = util::integration::integrateAdaptive(rhsIntegrand, 0., reactionRadius, desiredRelativeError, maxiter);
+        const auto result = util::integration::integrateAdaptive(rhsIntegrand, 0., reactionRadius, desiredRelativeError,
+                                                                 maxiter);
         const auto achievedRelativeError = result.second / result.first;
         if (achievedRelativeError> desiredRelativeError) {
             readdy::log::warn("Integration of potentials yielded larger error ({}) than desired ({}).",
@@ -266,9 +292,16 @@ reactions::ReversibleReactionConfig::ReversibleReactionConfig(ReactionId forward
             }
             cumulativeFissionProb.push_back(cumvalue);
         }
-        // normalize fission probability to 1
-        for (auto &p : cumulativeFissionProb) {
-            p = p / cumulativeFissionProb.back();
+        if (cumulativeFissionProb.back() >= 1e-16) {
+            // normalize fission probability to 1
+            for (auto &p : cumulativeFissionProb) {
+                p = p / cumulativeFissionProb.back();
+            }
+        } else {
+            // in case of small values, construct a cumulative that is zero everywhere and 1 in the last entry 
+            std::for_each(cumulativeFissionProb.begin(), cumulativeFissionProb.end() - 1,
+                          [](auto &entry) { entry = 0.; });
+            cumulativeFissionProb.back() = 1.;
         }
     }
 
@@ -283,7 +316,9 @@ reactions::ReversibleReactionConfig::ReversibleReactionConfig(ReactionId forward
         case EnzymaticEnzymatic:
             acceptancePrefactor = effectiveLhsReactionVolume / effectiveRhsReactionVolume;
             break;
-        default: throw std::logic_error("Unknown type of reversible reaction");
+        default:
+            throw std::logic_error(fmt::format("Unknown type of reversible reaction, method: {} file: {}",
+                                               "ReversibleReactionConfig::ReversibleReactionConfig", "Actions.cpp"));
     }
 
     totalVolume = ctx.boxVolume();
@@ -311,7 +346,9 @@ reactions::ReversibleReactionConfig::ReversibleReactionConfig(ReactionId forward
                                 (totalVolume - rhsInteractionVolume + effectiveRhsInteractionVolume);
             equilibriumConstant = macroBackwardRate / macroForwardRate;
             break;
-        default: throw std::logic_error("Unknown type of reversible reaction");
+        default:
+            throw std::logic_error(fmt::format("Unknown type of reversible reaction, method: {} file: {}",
+                                               "ReversibleReactionConfig::ReversibleReactionConfig", "Actions.cpp"));
     }
 }
 
@@ -449,8 +486,10 @@ void reactions::DetailedBalance::searchReversibleReactions(const Context &ctx) {
             const auto &revi = _reversibleReactionsContainer[i];
             const auto &revj = _reversibleReactionsContainer[j];
             if (equivalentReversibleReactions(*revi, *revj)) {
-                throw std::logic_error("Duplicate found in reversible reactions. "
-                                       "Registered reactions might be ambiguous with respect to reversibility.");
+                throw std::logic_error(fmt::format(
+                        "Duplicate found in reversible reactions. Registered reactions might be ambiguous "
+                        "with respect to reversibility. Method: {} file: {}",
+                        "DetailedBalance::searchReversibleReactions", "Actions.cpp"));
             };
         }
     }

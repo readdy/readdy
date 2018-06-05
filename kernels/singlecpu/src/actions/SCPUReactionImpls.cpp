@@ -21,11 +21,10 @@
 
 
 /**
- * << detailed description >>
- *
- * @file SingleCPUDefaultReactionProgram.cpp
- * @brief << brief description >>
+ * @file SCPUReactionImpls.cpp
+ * @brief Implementations of reaction algorithms for the SingleCPU kernel
  * @author clonker
+ * @author chrisfroe
  * @date 21.06.16
  */
 
@@ -400,11 +399,15 @@ ParticleBackup::ParticleBackup(event_t event,
                 t1 = event.t1;
                 pos1 = data->entry_at(idx1).position();
             } else {
-                throw std::runtime_error("Should not get here");
+                throw std::runtime_error(
+                        fmt::format("None of the event's particles could be identified as catalyst, method: {} file: {}",
+                                    "ParticleBackup::ParticleBackup", "SCPUReactionImpls.cpp"));
             }
             break;
         }
-        default: throw std::runtime_error("Should not get here");
+        default:
+            throw std::runtime_error(fmt::format("Unknown type of reversible reaction, method: {} file: {}",
+                                                 "ParticleBackup::ParticleBackup", "SCPUReactionImpls.cpp"));
     }
 }
 
@@ -428,12 +431,11 @@ void SCPUDetailedBalance::perform(const readdy::util::PerformanceNode &node) {
     std::vector<event_t> events;
     gatherEvents(kernel, *nl, *data, alpha, events);
 
-    const auto filterEventsInAdvance = false;
     const auto approximateRate = false;
 
     {
         auto shouldEval = [&](const event_t &event) {
-            return filterEventsInAdvance || shouldPerformEvent(event.rate, timeStep, approximateRate);
+            return shouldPerformEvent(event.rate, timeStep, approximateRate);
         };
 
         auto depending = [&](const event_t &e1, const event_t &e2) {
@@ -466,7 +468,7 @@ void SCPUDetailedBalance::perform(const readdy::util::PerformanceNode &node) {
                 const auto updateRecord = data->update(std::move(forwardUpdate));
                 auto backwardUpdate = generateBackwardUpdate(particleBackup, updateRecord);
                 stateModel.updateNeighborList();
-                calculateEnergies();
+                calculateEnergies(node);
 
                 scalar boltzmannFactor = 1.;
                 scalar prefactor = 1.;
@@ -494,7 +496,10 @@ void SCPUDetailedBalance::perform(const readdy::util::PerformanceNode &node) {
                         boltzmannFactor = std::exp(-1. / ctx.kBT() * (stateModel.energy() - energyBefore));
                         break;
                     }
-                    default: throw std::runtime_error("Should not get here");
+                    default:
+                        throw std::runtime_error(fmt::format("Unknown type of reversible reaction, method: {} file: {}",
+                                                             "SCPUDetailedBalance::perform::eval",
+                                                             "SCPUReactionImpls.cpp"));
                 }
                 const scalar acceptance = std::min(1., prefactor * boltzmannFactor);
                 log::trace("Acceptance for current event is {}", acceptance);
@@ -513,7 +518,7 @@ void SCPUDetailedBalance::perform(const readdy::util::PerformanceNode &node) {
                     log::trace("reject! apply backward update");
                     data->update(std::move(backwardUpdate));
                     stateModel.updateNeighborList();
-                    calculateEnergies();
+                    calculateEnergies(node);
                     if (energyBefore != stateModel.energy()) {
                         log::warn("reaction move was rejected but energy of state is different "
                                   "after rollback, was {}, is now {}", energyBefore, stateModel.energy());
@@ -523,13 +528,15 @@ void SCPUDetailedBalance::perform(const readdy::util::PerformanceNode &node) {
                 // Perform vanilla Doi model with direct update to data structure
                 model::SCPUParticleData::entries_update forwardUpdate;
 
-                if(ctx.recordReactionsWithPositions()) {
+                if (ctx.recordReactionsWithPositions()) {
                     reaction_record record;
                     record.id = reaction->id();
-                    performReaction(*data, event.idx1, event.idx2, forwardUpdate.first, forwardUpdate.second, reaction, ctx, &record);
+                    performReaction(*data, event.idx1, event.idx2, forwardUpdate.first, forwardUpdate.second, reaction,
+                                    ctx, &record);
                     stateModel.reactionRecords().push_back(record);
                 } else {
-                    performReaction(*data, event.idx1, event.idx2, forwardUpdate.first, forwardUpdate.second, reaction, ctx, nullptr);
+                    performReaction(*data, event.idx1, event.idx2, forwardUpdate.first, forwardUpdate.second, reaction,
+                                    ctx, nullptr);
                 }
 
                 if(ctx.recordReactionCounts()) {
@@ -538,18 +545,22 @@ void SCPUDetailedBalance::perform(const readdy::util::PerformanceNode &node) {
 
                 data->update(std::move(forwardUpdate));
                 stateModel.updateNeighborList();
-                calculateEnergies();
+                calculateEnergies(node);
             }
         };
 
-        calculateEnergies();
+        calculateEnergies(node);
         algo::performEvents(events, shouldEval, depending, eval);
 
     }
 }
 
-model::SCPUParticleData::entries_update SCPUDetailedBalance::generateBackwardUpdate(const ParticleBackup &particleBackup, const std::vector<model::SCPUParticleData::entry_index> &updateRecord) const {
-    std::vector<scpu_data::entry_index> decayedEntries = updateRecord; // the entries that were created by the forward update
+model::SCPUParticleData::entries_update
+SCPUDetailedBalance::generateBackwardUpdate(
+        const ParticleBackup &particleBackup,
+        const std::vector<model::SCPUParticleData::entry_index> &updateRecord) const {
+    // the entries that were created by the forward update
+    std::vector<scpu_data::entry_index> decayedEntries = updateRecord;
     scpu_data::new_entries newParticles{};
     if (particleBackup.nParticles == 1) {
         readdy::model::Particle p(particleBackup.pos1, particleBackup.t1);
@@ -560,7 +571,9 @@ model::SCPUParticleData::entries_update SCPUDetailedBalance::generateBackwardUpd
         newParticles.emplace_back(p1);
         newParticles.emplace_back(p2);
     } else {
-        throw std::runtime_error("Not gonna happen");
+        throw std::runtime_error(
+                fmt::format("Particle backup can only contain information on one or two particles, method: {} file: {}",
+                            "SCPUDetailedBalance::generateBackwardUpdate", "SCPUReactionImpls.cpp"));
     }
     return std::make_pair(std::move(newParticles), decayedEntries);
 }
@@ -569,7 +582,9 @@ std::pair<model::SCPUParticleData::entries_update, scalar> SCPUDetailedBalance::
         const Event &event, const readdy::model::actions::reactions::ReversibleReactionConfig *reversibleReaction,
         const readdy::model::reactions::Reaction *reaction, reaction_record *record) {
     if (reversibleReaction == nullptr) {
-        throw std::runtime_error("Reaction is not reversible");
+        throw std::runtime_error(fmt::format("Reaction is not reversible, method: {} file: {}",
+                                             "SCPUDetailedBalance::performReversibleReactionEvent",
+                                             "SCPUReactionImpls.cpp"));
     }
 
     auto &model = kernel->getSCPUKernelStateModel();
@@ -720,67 +735,51 @@ std::pair<model::SCPUParticleData::entries_update, scalar> SCPUDetailedBalance::
 
             break;
         }
-        default: throw std::runtime_error("should not get here");
+        default:
+            throw std::runtime_error(fmt::format("Unknown type of reversible reaction, method: {} file: {}",
+                                                 "SCPUDetailedBalance::performReversibleReactionEvent",
+                                                 "SCPUReactionImpls.cpp"));
     }
 
     return std::make_pair(std::make_pair(std::move(newParticles), decayedEntries), energyDelta);
 }
 
-void SCPUDetailedBalance::calculateEnergies() {
+void SCPUDetailedBalance::calculateEnergies(const util::PerformanceNode &node) {
     const auto &context = kernel->context();
 
     auto &stateModel = kernel->getSCPUKernelStateModel();
     auto &data = *stateModel.getParticleData();
     auto &neighborList = *stateModel.getNeighborList();
+    const auto &potentials = context.potentials();
 
     stateModel.energy() = 0;
 
-    const auto &potentials = context.potentials();
-    auto &topologies = stateModel.topologies();
-    if (!potentials.potentialsOrder1().empty() || !potentials.potentialsOrder2().empty()) {
-        std::for_each(data.begin(), data.end(), [](auto &entry) {
-            entry.force = {0, 0, 0};
-        });
-    }
-
-    // update energy order 1 potentials
-    if (!potentials.potentialsOrder1().empty()) {
-        {
-            std::transform(data.begin(), data.end(), data.begin(), [&potentials, &stateModel](auto &entry) {
-                if (!entry.deactivated) {
-                    for (const auto &po1 : potentials.potentialsOf(entry.type)) {
-                        stateModel.energy() += po1->calculateEnergy(entry.position());
-                    }
-                }
-                return entry;
-            });
+    // calculate energies for particles
+    auto order1eval = [&](auto &entry){
+        for (const auto &po1 : potentials.potentialsOf(entry.type)) {
+            stateModel.energy() += po1->calculateEnergy(entry.position());
         }
-    }
+    };
 
-    // update energy order 2 potentials
-    if (!potentials.potentialsOrder2().empty()) {
-        const auto &box = context.boxSize().data();
-        const auto &pbc = context.periodicBoundaryConditions().data();
+    // calculate energies for particle pairs
+    const auto &box = context.boxSize().data();
+    const auto &pbc = context.periodicBoundaryConditions().data();
 
-        for (auto cell = 0_z; cell < neighborList.nCells(); ++cell) {
-            for (auto it = neighborList.particlesBegin(cell); it != neighborList.particlesEnd(cell); ++it) {
-                auto pidx = *it;
-                auto &entry = data.entry_at(pidx);
-                const auto &pots = potentials.potentialsOrder2(entry.type);
-                neighborList.forEachNeighbor(it, cell, [&](const std::size_t neighbor) {
-                    auto &neighborEntry = data.entry_at(neighbor);
-                    auto itPot = pots.find(neighborEntry.type);
-                    if (itPot != pots.end()) {
-                        auto x_ij = bcs::shortestDifference(entry.position(), neighborEntry.position(), box, pbc);
-                        for (const auto &potential : itPot->second) {
-                            stateModel.energy() += potential->calculateEnergy(x_ij);
-
-                        }
-                    }
-                });
+    auto order2eval = [&](auto &entry, auto &neighborEntry) {
+        const auto &pots = potentials.potentialsOrder2(entry.type);
+        auto itPot = pots.find(neighborEntry.type);
+        if (itPot != std::end(pots)) {
+            auto x_ij = bcs::shortestDifference(entry.position(), neighborEntry.position(), box, pbc);
+            for (const auto &potential : itPot->second) {
+                stateModel.energy() += potential->calculateEnergy(x_ij);
             }
         }
-    }
+    };
+
+    auto topologyEval = [](auto &topology){ /* noop */ };
+    SCPUStateModel::topologies_vec emptyContainer = {};
+
+    algo::evaluateOnContainers(data, order1eval, neighborList, order2eval, emptyContainer, topologyEval, node);
 }
 
 std::pair<const readdy::model::actions::reactions::ReversibleReactionConfig *, const readdy::model::reactions::Reaction *>

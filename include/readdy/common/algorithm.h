@@ -36,6 +36,7 @@
 #include <algorithm>
 
 #include "common.h"
+#include <readdy/common/Timer.h>
 #include "../model/RandomProvider.h"
 
 namespace readdy {
@@ -121,6 +122,54 @@ inline void performEvents(Events &events, const ShouldEvaluate &shouldEvaluate, 
         }
     }
 }
+
+template<typename ParticleContainer, typename EvaluateOnParticle, typename InteractionContainer,
+        typename EvaluateOnInteraction, typename TopologyContainer, typename EvaluateOnTopology>
+inline void evaluateOnContainers(ParticleContainer &particleContainer,
+                                 const EvaluateOnParticle &evaluateOnParticle,
+                                 const InteractionContainer &interactionContainer,
+                                 const EvaluateOnInteraction &evaluateOnInteraction,
+                                 const TopologyContainer &topologyContainer,
+                                 const EvaluateOnTopology &evaluateOnTopology,
+                                 const util::PerformanceNode &node
+) {
+    // Evaluate on particles
+    {
+        auto tEvaluateOnParticles = node.subnode("evaluate on particles").timeit();
+        std::for_each(particleContainer.begin(), particleContainer.end(), [&](auto &entry){
+            if (!entry.deactivated) {
+                evaluateOnParticle(entry);
+            }
+        });
+    }
+
+    // Evaluate on interactions
+    {
+        auto tEvaluateOnInteractions = node.subnode("evaluate on interactions").timeit();
+        for (auto cell = 0_z; cell < interactionContainer.nCells(); ++cell) {
+            for (auto it = interactionContainer.particlesBegin(cell); it != interactionContainer.particlesEnd(cell); ++it) {
+                auto pidx = *it;
+                auto &entry = particleContainer.entry_at(pidx);
+                interactionContainer.forEachNeighbor(it, cell, [&](const std::size_t neighbor) {
+                    auto &neighborEntry = particleContainer.entry_at(neighbor);
+                    evaluateOnInteraction(entry, neighborEntry);
+
+                });
+            }
+        }
+    }
+
+    // Evaluate on topologies
+    {
+        auto tTopologies = node.subnode("evaluate on topologies").timeit();
+        for (auto &topology : topologyContainer) {
+            if (!topology->isDeactivated()) {
+                evaluateOnTopology(topology);
+            }
+        }
+    }
+}
+
 
 }
 }
