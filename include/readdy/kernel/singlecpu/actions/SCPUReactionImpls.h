@@ -31,6 +31,7 @@
 
 #include <readdy/model/actions/Actions.h>
 #include <readdy/kernel/singlecpu/SCPUKernel.h>
+#include "SCPUReactionUtils.h"
 
 namespace readdy {
 namespace kernel {
@@ -87,6 +88,50 @@ public:
 protected:
     SCPUKernel *const kernel;
 };
+
+struct ParticleBackup {
+    std::uint8_t nParticles; // either 1 or 2
+    using index_type = model::SCPUParticleData::entry_index;
+    index_type idx1, idx2;
+    particle_type_type t1, t2;
+    Vec3 pos1, pos2;
+
+    ParticleBackup(Event event, const readdy::model::actions::reactions::ReversibleReactionConfig *revReaction,
+                   const readdy::model::reactions::Reaction *reaction, const scpu_data *data);
+};
+
+class SCPUDetailedBalance : public readdy::model::actions::reactions::DetailedBalance {
+    using scpu_data = readdy::kernel::scpu::model::SCPUParticleData;
+    using fix_pos = readdy::model::Context::fix_pos_fun;
+    using reaction_type = readdy::model::reactions::ReactionType;
+public:
+    SCPUDetailedBalance(SCPUKernel *const kernel, scalar timeStep)
+            : readdy::model::actions::reactions::DetailedBalance(timeStep), kernel(kernel) {
+        kernel->context().configure();
+        searchReversibleReactions(kernel->context());
+    };
+
+    void perform(const util::PerformanceNode &node) override;
+
+protected:
+    SCPUKernel *const kernel;
+
+    // calculate first-order interactions and second-order non-bonded interactions
+    void calculateEnergies(const util::PerformanceNode &node);
+
+    std::pair<model::SCPUParticleData::entries_update, scalar>
+    performReversibleReactionEvent(const Event &event,
+                                   const readdy::model::actions::reactions::ReversibleReactionConfig *reversibleReaction,
+                                   const readdy::model::reactions::Reaction *reaction, reaction_record *record);
+
+    model::SCPUParticleData::entries_update
+    generateBackwardUpdate(const ParticleBackup &particleBackup,
+                           const std::vector<model::SCPUParticleData::entry_index> &updateRecord) const;
+
+    std::pair<const readdy::model::actions::reactions::ReversibleReactionConfig *, const readdy::model::reactions::Reaction *>
+    findReversibleReaction(const Event &event);
+};
+
 }
 }
 }

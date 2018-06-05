@@ -40,6 +40,15 @@ struct TestReactions : KernelTest {
 
 };
 
+struct TestReactionsWithHandler : public ::testing::TestWithParam<::testing::tuple<std::string, std::string>> {
+    readdy::plugin::KernelProvider::kernel_ptr kernel;
+    std::string reactionHandlerName;
+
+    explicit TestReactionsWithHandler() : kernel(
+            readdy::plugin::KernelProvider::getInstance().create(::testing::get<0>(GetParam()))),
+                                          reactionHandlerName(::testing::get<1>(GetParam())) {}
+};
+
 TEST_P(TestReactions, TestConstantNumberOfParticleType) {
     // scenario: two particle types A and B, which can form a complex AB which after a time is going to dissolve back
     // into A and B. Therefore, the numbers #(A) + #(AB) and #(B) + #(AB) must remain constant.
@@ -148,53 +157,61 @@ TEST_P(TestReactions, FusionFissionWeights) {
     }
 }
 
-TEST_P(TestReactions, FusionThroughBoundary) {
-    auto &ctx = kernel->context();
-    ctx.boxSize() = {{10, 10, 10}};
-    ctx.periodicBoundaryConditions() = {true, true, true};
-    ctx.particle_types().add("A", 0.);
-    ctx.reactions().add("fus: A +(2) A -> A", 1e16);
+TEST_P(TestReactionsWithHandler, FusionThroughBoundary) {
+    if (kernel->getName() == "CPU" and reactionHandlerName == "DetailedBalance") {
+        // @todo implement for CPU as well
+    } else {
+        auto &ctx = kernel->context();
+        ctx.boxSize() = {{10, 10, 10}};
+        ctx.periodicBoundaryConditions() = {true, true, true};
+        ctx.particle_types().add("A", 0.);
+        ctx.reactions().add("fus: A +(2) A -> A", 1e16);
 
-    auto &&neighborList = kernel->actions().updateNeighborList();
-    auto &&reactions = kernel->actions().uncontrolledApproximation(1);
-    // resulting particle should be at 4.9
-    kernel->stateModel().addParticle({4.5, 4.5, 4.5, ctx.particle_types().idOf("A")});
-    kernel->stateModel().addParticle({-4.7, -4.7, -4.7, ctx.particle_types().idOf("A")});
-    kernel->context().configure();
-    neighborList->perform();
-    reactions->perform();
+        auto &&reactions = kernel->actions().createReactionScheduler(reactionHandlerName, 1);
+        auto &&neighborList = kernel->actions().updateNeighborList();
+        // resulting particle should be at 4.9
+        kernel->stateModel().addParticle({4.5, 4.5, 4.5, ctx.particle_types().idOf("A")});
+        kernel->stateModel().addParticle({-4.7, -4.7, -4.7, ctx.particle_types().idOf("A")});
+        kernel->context().configure();
+        neighborList->perform();
+        reactions->perform();
 
-    const auto particles = kernel->stateModel().getParticles();
-    EXPECT_EQ(particles.size(), 1);
-    const auto &pos = particles[0].getPos();
-    EXPECT_NEAR(pos.x, 4.9, 0.00001);
-    EXPECT_NEAR(pos.y, 4.9, 0.00001);
-    EXPECT_NEAR(pos.z, 4.9, 0.00001);
+        const auto particles = kernel->stateModel().getParticles();
+        EXPECT_EQ(particles.size(), 1);
+        const auto &pos = particles[0].getPos();
+        EXPECT_NEAR(pos.x, 4.9, 0.00001);
+        EXPECT_NEAR(pos.y, 4.9, 0.00001);
+        EXPECT_NEAR(pos.z, 4.9, 0.00001);
+    }
 }
 
-TEST_P(TestReactions, FissionNearBoundary) {
-    auto &ctx = kernel->context();
-    ctx.boxSize() = {{10, 10, 10}};
-    ctx.periodicBoundaryConditions() = {true, true, true};
-    ctx.particle_types().add("A", 0.);
-    ctx.reactions().add("fus: A -> A +(2) A", 1e16);
+TEST_P(TestReactionsWithHandler, FissionNearBoundary) {
+    if (kernel->getName() == "CPU" and reactionHandlerName == "DetailedBalance") {
+        // @todo implement for CPU as well
+    } else {
+        auto &ctx = kernel->context();
+        ctx.boxSize() = {{10, 10, 10}};
+        ctx.periodicBoundaryConditions() = {true, true, true};
+        ctx.particle_types().add("A", 0.);
+        ctx.reactions().add("fis: A -> A +(2) A", 1e16);
 
-    auto &&neighborList = kernel->actions().updateNeighborList();
-    auto &&reactions = kernel->actions().uncontrolledApproximation(1);
-    // one product will be in negative-x halfspace, the other in positive-x halfspace
-    kernel->stateModel().addParticle({-4.9999999, 0, 0, ctx.particle_types().idOf("A")});
-    kernel->context().configure();
-    neighborList->perform();
-    reactions->perform();
+        auto &&reactions = kernel->actions().createReactionScheduler(reactionHandlerName, 1);
+        auto &&neighborList = kernel->actions().updateNeighborList();
+        // one product will be in negative-x halfspace, the other in positive-x halfspace
+        kernel->stateModel().addParticle({-4.9999999, 0, 0, ctx.particle_types().idOf("A")});
+        kernel->context().configure();
+        neighborList->perform();
+        reactions->perform();
 
-    const auto particles = kernel->stateModel().getParticles();
-    EXPECT_EQ(particles.size(), 2);
-    const auto &pos1 = particles[0].getPos();
-    const auto &pos2 = particles[1].getPos();
-    if (pos1.x <= 0.) {
-        EXPECT_GT(pos2.x, 0.);
-    } else if (pos1.x >= 0.) {
-        EXPECT_LT(pos2.x, 0.);
+        const auto particles = kernel->stateModel().getParticles();
+        EXPECT_EQ(particles.size(), 2);
+        const auto &pos1 = particles[0].getPos();
+        const auto &pos2 = particles[1].getPos();
+        if (pos1.x <= 0.) {
+            EXPECT_GT(pos2.x, 0.);
+        } else if (pos1.x >= 0.) {
+            EXPECT_LT(pos2.x, 0.);
+        }
     }
 }
 
@@ -236,6 +253,12 @@ TEST_P(TestReactions, FissionNearBoundary) {
     }
 }*/
 
+
 INSTANTIATE_TEST_CASE_P(TestReactionsCore, TestReactions,
                         ::testing::ValuesIn(readdy::testing::getKernelsToTest()));
+
+INSTANTIATE_TEST_CASE_P(TestReactionsCore, TestReactionsWithHandler,
+                        ::testing::Combine(::testing::ValuesIn(readdy::testing::getKernelsToTest()),
+                                           ::testing::Values("UncontrolledApproximation", "Gillespie",
+                                                             "DetailedBalance")));
 }

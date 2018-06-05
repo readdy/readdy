@@ -21,23 +21,25 @@
 
 
 /**
- * This files contains a selection of possible programs that can be executed on a kernel:
- *   - TestProgram: Program that has no other operation than printing something to the log.
- *   - AddParticleProgram: A program with which particles can be added.
- *   - EulerBDIntegrator: A program that propagates the particles through the system. The update model program should be
- *                     called beforehand, such that forces are available.
- *   - UpdateNeighborList: A program that creates neighbor lists.
- *   - CalculateForces: A program that calculates forces for later use in, e.g., integration schemes.
- *   - DefaultReactionProgram: A program that executes the default reaction scheme.
- *   - CompartmentConversion: Perform instantaneous particle conversions depending on the particles' position.
+ * This files contains a selection of possible Actions that can be executed on a kernel:
+ *   - AddParticles: An action with which particles can be added.
+ *   - EulerBDIntegrator: Propagates the particles through the system.
+ *   - UpdateNeighborList: Creates and updates neighbor lists.
+ *   - CalculateForces: Calculates forces for later use in, e.g., integration schemes.
+ *   - UncontrolledApproximation: Executes reactions, resolving conflicts in an uncontrolled way.
+ *   - Gillespie: Executes reactions, sampling one reaction event after the other weighted with their rates.
+ *   - DetailedBalance: Executes reactions, and assures detailed balance for reversible reactions.
+ *   - EvaluateCompartments: Perform instantaneous particle conversions depending on the particles' position.
+ *   - EvaluateTopologyReactions: Execute reactions involving topologies.
  *
- * Further, specializations of ProgramName<T> are declared.
+ * Further, specializations of ActionName<T> are declared.
  *
- * @file Programs.h
- * @brief Declaration of all globally available programs.
+ * @file Actions.h
+ * @brief Declaration of all globally available actions.
  * @author clonker
+ * @author chrisfroe
  * @date 11.04.16
- * @todo provide more detailed descriptions for some of the programs
+ * @todo provide more detailed descriptions for some of the actions
  */
 #pragma once
 
@@ -45,6 +47,10 @@
 #include <readdy/model/Particle.h>
 #include <readdy/model/actions/Action.h>
 #include <readdy/model/observables/Observable.h>
+#include <readdy/model/reactions/Reaction.h>
+#include <readdy/model/potentials/PotentialOrder2.h>
+#include <readdy/model/Context.h>
+#include <readdy/model/actions/DetailedBalance.h>
 
 #if READDY_OSX || READDY_WINDOWS
 #include <functional>
@@ -121,6 +127,27 @@ public:
     explicit Gillespie(scalar timeStep);
 };
 
+
+class DetailedBalance : public TimeStepDependentAction {
+public:
+    explicit DetailedBalance(scalar timeStep);
+
+    const std::vector<std::shared_ptr<const ReversibleReactionConfig>> &reversibleReactions() const {
+        return _reversibleReactionsContainer;
+    }
+    
+    std::string describe() const;
+
+protected:
+    void searchReversibleReactions(const Context& ctx);
+
+    std::vector<std::shared_ptr<const ReversibleReactionConfig>> _reversibleReactionsContainer;
+    // the map provides a view on the container for quick runtime lookup,
+    // usually two (unidirectional) reaction ids point to the same ReversibleReactionConfig
+    std::unordered_map<model::reactions::Reaction::reaction_id, std::shared_ptr<const ReversibleReactionConfig>>
+            _reversibleReactionsMap;
+};
+
 NAMESPACE_END(reactions)
 
 NAMESPACE_BEGIN(top)
@@ -166,6 +193,11 @@ getActionName(typename std::enable_if<std::is_base_of<reactions::UncontrolledApp
 template<typename T>
 const std::string getActionName(typename std::enable_if<std::is_base_of<reactions::Gillespie, T>::value>::type * = 0) {
     return "Gillespie";
+}
+
+template<typename T>
+const std::string getActionName(typename std::enable_if<std::is_base_of<reactions::DetailedBalance, T>::value>::type * = 0) {
+    return "DetailedBalance";
 }
 
 template<typename T>

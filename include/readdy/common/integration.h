@@ -373,6 +373,12 @@ constexpr std::array<ScalarType, 50> weightsGauss201 = {
  */
 template<typename Func, typename ScalarType>
 inline auto integrate(Func f, ScalarType lowerLimit, ScalarType upperLimit) {
+    if (lowerLimit > upperLimit) {
+        throw std::invalid_argument("lower limit cannot be larger than upper limit");
+    } else if (lowerLimit == upperLimit) {
+        return std::make_pair(static_cast<ScalarType>(0.), static_cast<ScalarType>(0.));
+    }
+
     const ScalarType midpoint = (lowerLimit + upperLimit) / 2.;
     const ScalarType halfInterval = (upperLimit - lowerLimit) / 2.;
 
@@ -406,13 +412,17 @@ inline auto integrate(Func f, ScalarType lowerLimit, ScalarType upperLimit) {
 
 /**
  * Panel is associated with the range [lowerLimit, upperLimit] and saves the integral over this domain and
- * an error estimate. Panels are compared with respect to their error estimate.
+ * an error estimate. Panels are compared with respect to their absolute error estimate.
  */
 template<typename ScalarType>
 struct Panel {
     explicit Panel(ScalarType lowerLimit, ScalarType upperLimit, ScalarType integral, ScalarType absoluteErrorEstimate)
             : lowerLimit(lowerLimit), upperLimit(upperLimit), integral(integral),
-              absoluteErrorEstimate(absoluteErrorEstimate) {};
+              absoluteErrorEstimate(absoluteErrorEstimate), relativeErrorEstimate(absoluteErrorEstimate / std::abs(integral)) {
+        if (lowerLimit > upperLimit) {
+            throw std::invalid_argument("Limits in a Panel must be ordered");
+        }
+    };
 
     bool operator<(const Panel<ScalarType> &other) const {
         return absoluteErrorEstimate < other.absoluteErrorEstimate;
@@ -422,6 +432,7 @@ struct Panel {
     ScalarType upperLimit;
     ScalarType integral;
     ScalarType absoluteErrorEstimate;
+    ScalarType relativeErrorEstimate;
 };
 
 /**
@@ -434,28 +445,33 @@ struct Panel {
  * @param f the integrand
  * @param lowerLimit lower boundary of integration
  * @param upperLimit upper boundary of integration
- * @param desiredError result will be accurate up to this value if maxiter is not reached, by default machine precision
+ * @param desiredRelativeError result will be accurate up to this relative value if maxiter is not reached
  * @param maxiter the maximum iterations
  * @return a pair of (value of the integral, error estimate of the integral)
  */
 template<typename Func, typename ScalarType>
 inline auto integrateAdaptive(Func f, ScalarType lowerLimit, ScalarType upperLimit,
-                                ScalarType desiredError = std::numeric_limits<ScalarType>::epsilon(),
-                                std::size_t maxiter = 100) {
+                              ScalarType desiredRelativeError = std::numeric_limits<ScalarType>::epsilon(),
+                              std::size_t maxiter = 100) {
     std::vector<Panel<ScalarType>> panels;
 
     const auto initialResult = integrate(f, lowerLimit, upperLimit);
     panels.push_back(Panel<ScalarType>(lowerLimit, upperLimit, initialResult.first, initialResult.second));
 
-    ScalarType totalError = panels.front().absoluteErrorEstimate;
     ScalarType totalIntegral = panels.front().integral;
+    ScalarType totalAbsoluteError = panels.front().absoluteErrorEstimate;
+    if (totalIntegral==0 and totalAbsoluteError==0) {
+        return std::make_pair(totalIntegral, totalAbsoluteError);
+    }
+    ScalarType totalRelativeError = totalAbsoluteError / totalIntegral;
+
 
     std::size_t iter = 0;
-    while (totalError > desiredError && iter < maxiter) {
+    while (totalRelativeError > desiredRelativeError && iter < maxiter) {
         std::sort(panels.begin(), panels.end());
 
         {
-            const auto &panel = panels.front();
+            const auto &panel = panels.back();
             const ScalarType midpoint = (panel.lowerLimit + panel.upperLimit) / 2.;
 
             const auto lowerResult = integrate(f, panel.lowerLimit, midpoint);
@@ -464,22 +480,27 @@ inline auto integrateAdaptive(Func f, ScalarType lowerLimit, ScalarType upperLim
             const auto upperResult = integrate(f, midpoint, panel.upperLimit);
             Panel<ScalarType> upperPanel(midpoint, panel.upperLimit, upperResult.first, upperResult.second);
 
-            panels.erase(panels.begin());
+            panels.pop_back();
             panels.push_back(lowerPanel);
             panels.push_back(upperPanel);
         }
 
         {
-            totalError = std::accumulate(panels.begin(), panels.end(), 0.,
-                                         [](ScalarType sum, const Panel<ScalarType> &p) { return sum + p.absoluteErrorEstimate; });
             totalIntegral = std::accumulate(panels.begin(), panels.end(), 0.,
-                                         [](ScalarType sum, const Panel<ScalarType> &p) { return sum + p.integral; });
+                                            [](ScalarType sum, const Panel<ScalarType> &p) {
+                                                return sum + p.integral;
+                                            });
+            totalAbsoluteError = std::accumulate(panels.begin(), panels.end(), 0.,
+                                                 [](ScalarType sum, const Panel<ScalarType> &p) {
+                                                     return sum + p.absoluteErrorEstimate;
+                                                 });
+            totalRelativeError = totalAbsoluteError / totalIntegral;
         }
 
         ++iter;
     }
 
-    return std::make_pair(totalIntegral, totalError);
+    return std::make_pair(totalIntegral, totalAbsoluteError);
 }
 
 }

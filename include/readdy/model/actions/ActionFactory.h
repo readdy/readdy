@@ -49,7 +49,8 @@ public:
         return {
                 getActionName<AddParticles>(), getActionName<EulerBDIntegrator>(), getActionName<CalculateForces>(),
                 getActionName<UpdateNeighborList>(), getActionName<reactions::UncontrolledApproximation>(),
-                getActionName<reactions::Gillespie>(), /*getActionName<reactions::GillespieParallel>(),*/
+                getActionName<reactions::Gillespie>(), getActionName<reactions::DetailedBalance>(),
+                /*getActionName<reactions::GillespieParallel>(),*/
                 /*getActionName<reactions::NextSubvolumes>(),*/ getActionName<top::EvaluateTopologyReactions>()
         };
     }
@@ -71,6 +72,9 @@ public:
         }
         if(name == getActionName<reactions::UncontrolledApproximation>()) {
             return std::unique_ptr<TimeStepDependentAction>(uncontrolledApproximation(timeStep));
+        }
+        if(name==getActionName<reactions::DetailedBalance>()) {
+            return std::unique_ptr<TimeStepDependentAction>(detailedBalance(timeStep));
         }
         log::critical("Requested reaction scheduler \"{}\" is not available, returning nullptr", name);
         return nullptr;
@@ -100,6 +104,8 @@ public:
     virtual std::unique_ptr<reactions::UncontrolledApproximation> uncontrolledApproximation(scalar timeStep) const = 0;
 
     virtual std::unique_ptr<reactions::Gillespie> gillespie(scalar timeStep) const = 0;
+
+    virtual std::unique_ptr<reactions::DetailedBalance> detailedBalance(scalar timeStep) const = 0;
 
     virtual std::unique_ptr<top::EvaluateTopologyReactions> evaluateTopologyReactions(scalar timeStep) const = 0;
 

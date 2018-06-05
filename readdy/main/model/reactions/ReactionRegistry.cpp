@@ -362,6 +362,48 @@ struct FindName {
         };
     }
 };
+
+struct FindReactionById {
+    explicit FindReactionById(Reaction::reaction_id id) : id(id) {}
+
+    bool found() const {
+        return _found;
+    }
+
+    template<typename T>
+    void operator()(const T &r) {
+        if (r->id() == id) {
+            if (not _found) {
+                _found = true;
+                assign(r);
+            } else {
+                throw std::runtime_error(
+                        fmt::format("reaction was already found, there cannot exist two with the same id ({})", id));
+            }
+        };
+    }
+
+    const Reaction* result() {
+        if (_found) {
+            return reaction;
+        } else {
+            throw std::runtime_error(fmt::format("reaction with id {} was not found", id));
+        }
+    }
+
+private:
+    void assign(const Reaction* r2) {
+        reaction = r2;
+    }
+
+    void assign(const std::shared_ptr<const Reaction> &r2) {
+        reaction = r2.get();
+    }
+
+    const Reaction::reaction_id id;
+    const Reaction* reaction = nullptr;
+    bool _found = false;
+};
 }
 
 bool ReactionRegistry::reactionNameExists(const std::string &name) const {
@@ -399,6 +441,19 @@ ReactionRegistry::reaction_id ReactionRegistry::idOf(const std::string &name) co
         return findId.id;
     } else {
         throw std::runtime_error(fmt::format("no reaction with name {} exists", name));
+    }
+}
+
+const ReactionRegistry::reaction* ReactionRegistry::byId(ReactionRegistry::reaction_id id) const {
+    FindReactionById findReaction(id);
+    readdy::util::collections::for_each_value_ref(one_educt_registry_internal, findReaction);
+    readdy::util::collections::for_each_value_ref(one_educt_registry_external, findReaction);
+    readdy::util::collections::for_each_value_ref(two_educts_registry_internal, findReaction);
+    readdy::util::collections::for_each_value_ref(two_educts_registry_external, findReaction);
+    if (findReaction.found()) {
+        return findReaction.result();
+    } else {
+        throw std::runtime_error(fmt::format("no reaction with id {} exists", id));
     }
 }
 

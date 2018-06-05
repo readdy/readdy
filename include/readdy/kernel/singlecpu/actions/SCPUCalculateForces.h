@@ -32,6 +32,7 @@
 #include <readdy/model/actions/Actions.h>
 #include <readdy/kernel/singlecpu/SCPUKernel.h>
 #include <readdy/common/boundary_condition_operations.h>
+#include <readdy/common/algorithm.h>
 
 namespace readdy {
 namespace kernel {
@@ -89,71 +90,50 @@ private:
             });
         }
 
-        // update forces and energy order 1 potentials
-        if (!potentials.potentialsOrder1().empty()) {
-            {
-                auto tFirstOrder = node.subnode("first order").timeit();
-                std::transform(data.begin(), data.end(), data.begin(), [&potentials, &stateModel](auto &entry) {
-                    if (!entry.deactivated) {
-                        for (const auto &po1 : potentials.potentialsOf(entry.type)) {
-                            po1->calculateForceAndEnergy(entry.force, stateModel.energy(), entry.position());
-                        }
-                    }
-                    return entry;
-                });
+        auto order1eval = [&](auto &entry){
+            for (const auto &po1 : potentials.potentialsOf(entry.type)) {
+                po1->calculateForceAndEnergy(entry.force, stateModel.energy(), entry.position());
             }
-        }
+        };
 
-        // update forces and energy order 2 potentials
-        if (!potentials.potentialsOrder2().empty()) {
-            auto tSecondOrder = node.subnode("second order").timeit();
+        // order 2 eval
+        const auto &box = context.boxSize().data();
+        const auto &pbc = context.periodicBoundaryConditions().data();
 
-            const auto &box = context.boxSize().data();
-            const auto &pbc = context.periodicBoundaryConditions().data();
-            for (auto cell = 0_z; cell < neighborList.nCells(); ++cell) {
-                for (auto it = neighborList.particlesBegin(cell); it != neighborList.particlesEnd(cell); ++it) {
-                    auto pidx = *it;
-                    auto &entry = data.entry_at(pidx);
-                    const auto &pots = potentials.potentialsOrder2(entry.type);
-                    neighborList.forEachNeighbor(it, cell, [&](const std::size_t neighbor) {
-                        auto &neighborEntry = data.entry_at(neighbor);
-                        auto itPot = pots.find(neighborEntry.type);
-                        if (itPot != std::end(pots)) {
-                            Vec3 forceVec{0, 0, 0};
-                            auto x_ij = bcs::shortestDifference(entry.position(), neighborEntry.position(), box, pbc);
-                            for (const auto &potential : itPot->second) {
-                                potential->calculateForceAndEnergy(forceVec, stateModel.energy(), x_ij);
-                            }
-                            entry.force += forceVec;
-                            neighborEntry.force -= forceVec;
-                            detail::computeVirial<COMPUTE_VIRIAL>(x_ij, forceVec, stateModel.virial());
-                        }
-                    });
+        auto order2eval = [&](auto &entry, auto &neighborEntry) {
+            const auto &pots = potentials.potentialsOrder2(entry.type);
+            auto itPot = pots.find(neighborEntry.type);
+            if (itPot != std::end(pots)) {
+                Vec3 forceVec{0, 0, 0};
+                auto x_ij = bcs::shortestDifference(entry.position(), neighborEntry.position(), box, pbc);
+                for (const auto &potential : itPot->second) {
+                    potential->calculateForceAndEnergy(forceVec, stateModel.energy(), x_ij);
                 }
+                entry.force += forceVec;
+                neighborEntry.force -= forceVec;
+                detail::computeVirial<COMPUTE_VIRIAL>(x_ij, forceVec, stateModel.virial());
             }
-        }
-        // update forces and energy for topologies
-        {
-            auto tTopologies = node.subnode("topologies").timeit();
-            auto taf = kernel->getTopologyActionFactory();
-            for (auto &topology : topologies) {
-                if (!topology->isDeactivated()) {
-                    // calculate bonded potentials
-                    for (const auto &bondedPot : topology->getBondedPotentials()) {
-                        auto energy = bondedPot->createForceAndEnergyAction(taf)->perform(topology.get());
-                        stateModel.energy() += energy;
-                    }
-                    for (const auto &anglePot : topology->getAnglePotentials()) {
-                        auto energy = anglePot->createForceAndEnergyAction(taf)->perform(topology.get());
-                        stateModel.energy() += energy;
-                    }
-                    for (const auto &torsionPot : topology->getTorsionPotentials()) {
-                        auto energy = torsionPot->createForceAndEnergyAction(taf)->perform(topology.get());
-                        stateModel.energy() += energy;
-                    }
-                }
+        };
+
+
+        // topology eval
+        auto taf = kernel->getTopologyActionFactory();
+        auto topologyEval = [&](auto &topology){
+            for (const auto &bondedPot : topology->getBondedPotentials()) {
+                auto energy = bondedPot->createForceAndEnergyAction(taf)->perform(topology.get());
+                stateModel.energy() += energy;
             }
-        }
+            for (const auto &anglePot : topology->getAnglePotentials()) {
+                auto energy = anglePot->createForceAndEnergyAction(taf)->perform(topology.get());
+                stateModel.energy() += energy;
+            }
+            for (const auto &torsionPot : topology->getTorsionPotentials()) {
+                auto energy = torsionPot->createForceAndEnergyAction(taf)->perform(topology.get());
+                stateModel.energy() += energy;
+            }
+        };
+
+        readdy::algo::evaluateOnContainers(data, order1eval, neighborList, order2eval, topologies, topologyEval, node);
     }
     SCPUKernel *kernel;
 };

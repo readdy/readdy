@@ -97,13 +97,15 @@ void performReaction(
             auto n3 = readdy::model::rnd::normal3<readdy::scalar>(0, 1);
             n3 /= std::sqrt(n3 * n3);
 
-            readdy::model::Particle p(entry1.position() - reaction->weight2() * reaction->productDistance() * n3,
+            const auto distance =
+                    reaction->productDistance() * std::cbrt(readdy::model::rnd::uniform_real<readdy::scalar>(0, 1));
+            readdy::model::Particle p(entry1.position() - reaction->weight2() * distance * n3,
                                       reaction->products()[1]);
             bcs::fixPosition(p.getPos(), box, pbc);
             newEntries.emplace_back(p);
 
             entry1.type = reaction->products()[0];
-            entry1.pos += reaction->weight1() * reaction->productDistance() * n3;
+            entry1.pos += reaction->weight1() * distance * n3;
             entry1.id = readdy::model::Particle::nextId();
             bcs::fixPosition(entry1.pos, box, pbc);
             if(record) {

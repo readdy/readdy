@@ -81,6 +81,11 @@ std::unique_ptr<model::actions::top::EvaluateTopologyReactions>
 CPUActionFactory::evaluateTopologyReactions(scalar timeStep) const {
     return {std::make_unique<top::CPUEvaluateTopologyReactions>(kernel, timeStep)};
 }
+
+std::unique_ptr<readdy::model::actions::reactions::DetailedBalance>
+CPUActionFactory::detailedBalance(scalar timeStep) const {
+    throw std::invalid_argument("DetailedBalance reaction handler not implemented for CPU");
+}
 }
 }
 }

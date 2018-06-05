@@ -86,6 +86,11 @@ SCPUActionFactory::evaluateTopologyReactions(scalar timeStep) const {
     return {std::make_unique<top::SCPUEvaluateTopologyReactions>(kernel, timeStep)};
 }
 
+std::unique_ptr<readdy::model::actions::reactions::DetailedBalance>
+SCPUActionFactory::detailedBalance(scalar timeStep) const {
+    return {std::make_unique<reactions::SCPUDetailedBalance>(kernel, timeStep)};
+}
+
 }
 }
 }

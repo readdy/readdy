@@ -246,9 +246,10 @@ class Simulation(object):
         Sets the reaction handler. Currently supported:
             * Gillespie
             * UncontrolledApproximation
+            * DetailedBalance
         :param value: the reaction handler
         """
-        supported_reaction_handlers = ("Gillespie", "UncontrolledApproximation",)
+        supported_reaction_handlers = ("Gillespie", "UncontrolledApproximation", "DetailedBalance",)
         assert isinstance(value, str) and value in supported_reaction_handlers, \
             "the reaction handler can only be one of {}".format(",".join(supported_reaction_handlers))
         self._reaction_handler = value
