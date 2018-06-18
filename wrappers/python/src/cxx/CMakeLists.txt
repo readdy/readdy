@@ -25,10 +25,12 @@ ADD_DEFINITIONS(-DREADDY_WITH_PYTHON)
 
 set(SOURCE_FILES
         ReaddyBinding.cpp
+        common/common.h
         common/CommonModule.cpp
         common/ExportIO.cpp
         common/ReadableReactionRecord.h
         common/ReadableReactionRecord.cpp
+        common/ReadableParticle.h
         common/SpdlogPythonSink.h
         common/Utils.cpp
         api/ExportObservables.h

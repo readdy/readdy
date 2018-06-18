@@ -34,6 +34,7 @@
 #include <readdy/io/BloscFilter.h>
 #include <pybind11/numpy.h>
 #include "SpdlogPythonSink.h"
+#include "ReadableParticle.h"
 
 namespace py = pybind11;
 using rvp = py::return_value_policy;
@@ -46,8 +47,6 @@ using rvp = py::return_value_policy;
 void exportIO(py::module &);
 
 void exportUtils(py::module& m);
-
-using np_array = py::array_t<readdy::scalar, py::array::c_style>;
 
 void exportCommon(py::module& common) {
     using namespace pybind11::literals;
@@ -162,6 +161,11 @@ void exportCommon(py::module& common) {
                     return self.data().count();
                 });
     }
+
+    py::class_<rpy::ReadableParticle>(common, "Particle")
+            .def_property_readonly("pos", &rpy::ReadableParticle::pos)
+            .def_property_readonly("type", &rpy::ReadableParticle::type)
+            .def_property_readonly("id", &rpy::ReadableParticle::id);
 
     py::class_<readdy::Vec3>(common, "Vec")
             .def(py::init<readdy::scalar, readdy::scalar, readdy::scalar>())
