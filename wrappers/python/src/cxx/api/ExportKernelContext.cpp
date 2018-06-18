@@ -120,11 +120,11 @@ void exportKernelContext(py::module &module) {
                     const Vec3 &origin, scalar radius) {
                      return self.addSphericalBarrier(particleType, height, width, origin, radius);
                  })
-            .def("add_external_order1", [](PotentialRegistry& self, readdy::model::potentials::PotentialOrder1& pot) {
-                return self.addUserDefined(&pot);
+            .def("add_external_order1", [](PotentialRegistry& self, readdy::model::potentials::PotentialOrder1* pot) {
+                return self.addUserDefined(pot);
             })
-            .def("add_external_order2", [](PotentialRegistry& self, readdy::model::potentials::PotentialOrder2& pot) {
-                return self.addUserDefined(&pot);
+            .def("add_external_order2", [](PotentialRegistry& self, readdy::model::potentials::PotentialOrder2* pot) {
+                return self.addUserDefined(pot);
             });
 
     py::class_<readdy::api::Bond>(module, "BondedPotentialConfiguration")
