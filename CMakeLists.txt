@@ -302,6 +302,10 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
     #                                   #
     #####################################
     IF(READDY_BUILD_SHARED_COMBINED)
+        INSTALL (
+                DIRECTORY ${CMAKE_SOURCE_DIR}/include/
+                DESTINATION include
+                FILES_MATCHING PATTERN "*.h*")
         INSTALL(TARGETS ${READDY_PROJECT_NAME}
                 RUNTIME DESTINATION bin
                 LIBRARY DESTINATION lib
