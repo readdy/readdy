@@ -306,6 +306,10 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
                 DIRECTORY ${CMAKE_SOURCE_DIR}/include/
                 DESTINATION include
                 FILES_MATCHING PATTERN "*.h*")
+        INSTALL (
+                DIRECTORY ${CMAKE_SOURCE_DIR}/libraries/h5rd/include/
+                DESTINATION include
+                FILES_MATCHING PATTERN "*.h*")
         INSTALL(TARGETS ${READDY_PROJECT_NAME}
                 RUNTIME DESTINATION bin
                 LIBRARY DESTINATION lib
