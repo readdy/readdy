@@ -43,10 +43,11 @@
 
 #pragma once
 
+#include <memory>
+
 #include <h5rd/h5rd.h>
 
 #include <readdy/common/common.h>
-#include <readdy/common/make_unique.h>
 #include <readdy/common/signals.h>
 #include <readdy/common/logging.h>
 #include <readdy/common/tuple_utils.h>

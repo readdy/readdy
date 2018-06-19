@@ -37,10 +37,10 @@
 #include <string>
 #include <ostream>
 #include <utility>
+#include <memory>
 #include <spdlog/fmt/ostr.h>
 #include <readdy/model/Particle.h>
 #include <readdy/model/RandomProvider.h>
-#include <readdy/common/make_unique.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
