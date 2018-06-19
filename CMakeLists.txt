@@ -320,6 +320,11 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
                 DESTINATION include
                 FILES_MATCHING PATTERN "*.h*"
         )
+        INSTALL (
+                DIRECTORY ${CMAKE_SOURCE_DIR}/libraries/spdlog/include/
+                DESTINATION include
+                FILES_MATCHING PATTERN "*.cc*"
+        )
         INSTALL(TARGETS ${READDY_PROJECT_NAME}
                 RUNTIME DESTINATION bin
                 LIBRARY DESTINATION lib
