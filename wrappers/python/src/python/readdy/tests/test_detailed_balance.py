@@ -51,4 +51,4 @@ class TestDetailedBalanceReactionHandler(ReaDDyTestCase):
         simulation.reaction_handler = "DetailedBalance"
         simulation.add_particle("A", [0.,0.,0.])
         simulation.add_particle("B", [0.,0.,0.])
-        simulation.run(1000, 1e-1)
+        simulation.run(1000, 1e-1, show_system=False)
