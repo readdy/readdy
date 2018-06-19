@@ -38,8 +38,8 @@ NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(util)
 
-scalar getRecommendedTimeStep(unsigned int N, Context&);
-scalar getMaximumDisplacement(Context&, scalar timeStep);
+//scalar getRecommendedTimeStep(unsigned int N, Context&);
+//scalar getMaximumDisplacement(Context&, scalar timeStep);
 
 constexpr inline std::array<const char*, 8> invalidCharacterSequences() {
     return {{"[", "]", "(", ")", "->", "--", ":", "+"}};

@@ -54,13 +54,6 @@ void PotentialOrder2Wrapper::calculateForce(Vec3 &force, const Vec3 &x_ij) const
     force += ((*calcForceFun)(x_ij)).cast<Vec3>();
 }
 
-void
-PotentialOrder2Wrapper::calculateForceAndEnergy(Vec3 &force, readdy::scalar &energy, const Vec3 &x_ij) const {
-    pybind11::gil_scoped_acquire lock;
-    energy += ((*calcEnergyFun)(x_ij)).cast<readdy::scalar>();
-    force += ((*calcForceFun)(x_ij)).cast<Vec3>();
-}
-
 readdy::scalar PotentialOrder2Wrapper::getCutoffRadiusSquared() const {
     return getCutoffRadius() * getCutoffRadius();
 }

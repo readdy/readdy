@@ -46,34 +46,22 @@ struct NOOPPotentialOrder2 : public readdy::model::potentials::PotentialOrder2 {
         return "NOOPPotential with types " + std::to_string(_particleType1) + ", " + std::to_string(_particleType2);
     }
 
-    virtual readdy::scalar getCutoffRadius() const override {
-        return cutoff;
-    }
-
-    virtual readdy::scalar calculateEnergy(const Vec3 &x_ij) const override {
+    readdy::scalar calculateEnergy(const Vec3 &x_ij) const override {
         return energy;
     }
 
-    virtual std::string type() const override {
+    std::string type() const override {
         return "noop pot";
     }
 
-    virtual void calculateForce(Vec3 &force, const Vec3 &x_ij) const override {
+    void calculateForce(Vec3 &force, const Vec3 &x_ij) const override {
         force[0] = NOOPPotentialOrder2::force;
         force[1] = NOOPPotentialOrder2::force;
         force[2] = NOOPPotentialOrder2::force;
     }
 
-    virtual void calculateForceAndEnergy(Vec3 &force, readdy::scalar &energy,
-                                         const Vec3 &x_ij) const override {
-        energy = NOOPPotentialOrder2::calculateEnergy(x_ij);
-        NOOPPotentialOrder2::calculateForce(force, x_ij);
-    }
-
-    virtual readdy::scalar getMaximalForce(readdy::scalar kbt) const noexcept override { return force; }
-
-    virtual readdy::scalar getCutoffRadiusSquared() const override {
-        return getCutoffRadius() * getCutoffRadius();
+    readdy::scalar getCutoffRadiusSquared() const override {
+        return cutoff*cutoff;
     }
 
     readdy::scalar cutoff, force, energy;

@@ -61,21 +61,6 @@ public:
         force += calculateForceInternal(position);
     }
 
-    void calculateForceAndEnergy(readdy::Vec3 &force, readdy::scalar &energy, const readdy::Vec3 &position) const override {
-        calculateForce(force, position);
-        energy += calculateEnergy(position);
-    }
-
-    readdy::scalar getRelevantLengthScale() const noexcept override {
-        py::gil_scoped_acquire gil;
-        PYBIND11_OVERLOAD_PURE_NAME(readdy::scalar, rdy_pot1, "get_relevant_length_scale", getRelevantLengthScale,);
-    }
-
-    readdy::scalar getMaximalForce(readdy::scalar kbt) const noexcept override {
-        py::gil_scoped_acquire gil;
-        PYBIND11_OVERLOAD_PURE_NAME(readdy::scalar, rdy_pot1, "get_maximal_force", getMaximalForce, kbt);
-    }
-
     std::string type() const override {
         return "Python defined potential of order 1";
     }
@@ -89,11 +74,6 @@ public:
 
     std::string describe() const override {
         return "User defined potential for types " + std::to_string(_particleType1) + " and " + std::to_string(_particleType2);
-    }
-
-    readdy::scalar getMaximalForce(readdy::scalar kbt) const noexcept override {
-        py::gil_scoped_acquire gil;
-        PYBIND11_OVERLOAD_PURE_NAME(readdy::scalar, rdy_pot2, "get_maximal_force", getMaximalForce, kbt);
     }
 
     readdy::scalar calculateEnergy(const readdy::Vec3 &x_ij) const override {
@@ -110,19 +90,9 @@ public:
         force += calculateForceInternal(x_ij);
     }
 
-    void calculateForceAndEnergy(readdy::Vec3 &force, readdy::scalar &energy, const readdy::Vec3 &x_ij) const override {
-        calculateForce(force, x_ij);
-        energy += calculateEnergy(x_ij);
-    }
-
     readdy::scalar getCutoffRadiusSquared() const override {
         const auto cutoff = getCutoffRadius();
         return cutoff * cutoff;
-    }
-
-    readdy::scalar getCutoffRadius() const override {
-        py::gil_scoped_acquire gil;
-        PYBIND11_OVERLOAD_PURE_NAME(readdy::scalar, rdy_pot2, "get_cutoff_radius", getCutoffRadius);
     }
 
     std::string type() const override {
@@ -145,13 +115,10 @@ void exportPotentials(py::module &proto) {
     py::class_<rdy_pot1, PyPotentialO1>(proto, "PotentialOrder1")
             .def(py::init<readdy::particle_type_type>())
             .def("calculate_energy", &rdy_pot1::calculateEnergy)
-            .def("calculate_force", &rdy_pot1::calculateForce)
-            .def("get_relevant_length_scale", &rdy_pot1::getRelevantLengthScale)
-            .def("get_maximal_force", &rdy_pot1::getMaximalForce);
+            .def("calculate_force", &rdy_pot1::calculateForce);
     py::class_<rdy_pot2, PyPotentialO2>(proto, "PotentialOrder2")
             .def(py::init<readdy::particle_type_type, readdy::particle_type_type>())
             .def("calculate_energy", &rdy_pot2::calculateEnergy)
             .def("calculate_force", &rdy_pot2::calculateForce)
-            .def("get_cutoff_radius", &rdy_pot2::getCutoffRadius)
-            .def("get_maximal_force", &rdy_pot2::getMaximalForce);
+            .def("get_cutoff_radius", &rdy_pot2::getCutoffRadius);
 }
