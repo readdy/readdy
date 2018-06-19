@@ -1,5 +1,9 @@
 # Changelog
 
+- simplified c++ potentials interface (#125)
+- python method to include potentials defined in a separate extension (#125)
+- added headers to conda package (#124) 
+
 ## 1.0.1
 - added assertions and tests for units (#101)
 - reworked cpu kernel (#103)
