@@ -190,12 +190,12 @@ class PotentialRegistry(object):
 
     def add_custom_external(self, particle_type, clazz, *args):
         """
-        This method allows for adding a custom potential to a simulation.  
+        This method allows to add a custom potential to a simulation. An example of how to define a custom potential
+        can be found in the source tree under examples/custom_potential.
         
-        :param particle_type:
-        :param clazz:
-        :param args: ...
-        :return:
+        :param particle_type: the particle type
+        :param clazz: class (not instance) of potential
+        :param args: additional arguments that get forwarded into the constructor of the potential
         """
         type_id = self._types.id_of(particle_type)
         instance = clazz(type_id, *args)
@@ -203,12 +203,13 @@ class PotentialRegistry(object):
 
     def add_custom_pair(self, particle_type1, particle_type2, clazz, *args):
         """
+        This method allows to add a custom potential to a simulation. An example of how to define a custom potential
+        can be found in the source tree under examples/custom_potential.
 
-        :param particle_type1:
-        :param particle_type2:
-        :param args: ...
-        :param clazz:
-        :return:
+        :param particle_type1: first particle type
+        :param particle_type2: second particle type
+        :param clazz: class (not instance) of potential
+        :param args: additional arguments that get forwarded into the constructor of the potential
         """
         type_id1 = self._types.id_of(particle_type1)
         type_id2 = self._types.id_of(particle_type2)
