@@ -49,9 +49,6 @@ SET(READDY_GENERATE_DOCUMENTATION_TARGET_ONLY OFF CACHE BOOL "If set to true, th
 # log configuration variables of interest
 SET(READDY_LOG_CMAKE_CONFIGURATION OFF CACHE BOOL "If turned on, the status of relevant cmake variables is logged at configuration time.")
 
-# include examples
-SET(READDY_BUILD_EXAMPLES OFF CACHE BOOL "Whether to build example targets")
-
 #####################################
 #                                   #
 # Basic setup of the project        #
@@ -160,8 +157,6 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
         ELSE()
             SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DREADDY_CPP11")
         ENDIF()
-    ELSE()
-        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DREADDY_CPP14")
     ENDIF()
     SET(EXTRA_COMPILE_FLAGS "")
     SET(EXTRA_LINK_FLAGS ${EXTRA_COMPILE_FLAGS})
@@ -352,15 +347,6 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
         ADD_TEST(NAME readdy-tests COMMAND runUnitTests)
         ADD_SUBDIRECTORY(kernels/singlecpu/test)
     ENDIF ()
-
-    #####################################
-    #                                   #
-    # readdy examples                   #
-    #                                   #
-    #####################################
-    if (READDY_BUILD_EXAMPLES)
-        ADD_SUBDIRECTORY(readdy/examples)
-    endif()
 
     #####################################
     #                                   #

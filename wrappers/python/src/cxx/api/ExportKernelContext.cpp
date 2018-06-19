@@ -122,10 +122,10 @@ void exportKernelContext(py::module &module) {
                  })
             .def("add_external_order1", [](PotentialRegistry& self, readdy::model::potentials::PotentialOrder1* pot) {
                 return self.addUserDefined(pot);
-            })
+            }, py::keep_alive<1, 2>())
             .def("add_external_order2", [](PotentialRegistry& self, readdy::model::potentials::PotentialOrder2* pot) {
                 return self.addUserDefined(pot);
-            });
+            }, py::keep_alive<1, 2>());
 
     py::class_<readdy::api::Bond>(module, "BondedPotentialConfiguration")
             .def(py::init([](scalar forceConstant, scalar length, const std::string &type) {
