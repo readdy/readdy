@@ -29,7 +29,8 @@
  * @date 03.06.16
  */
 
-#include <readdy/common/make_unique.h>
+#include <memory>
+
 #include <readdy/common/logging.h>
 #include <readdy/kernel/singlecpu/model/SCPUParticleData.h>
 

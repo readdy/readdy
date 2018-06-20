@@ -110,6 +110,11 @@ public:
             throw std::invalid_argument("requested deactivated entry");
         }
         const auto &boxSize = _context.get().boxSize();
+        if(!(-.5*boxSize[0] <= entry.pos.x && .5*boxSize[0] > entry.pos.x
+             && -.5*boxSize[1] <= entry.pos.y && .5*boxSize[1] > entry.pos.y
+             && -.5*boxSize[2] <= entry.pos.z && .5*boxSize[2] > entry.pos.z)) {
+            throw std::logic_error("CellLinkedList: requested neighbors of particle that was out of bounds.");
+        }
         const auto i = static_cast<std::size_t>(std::floor((entry.pos.x + .5 * boxSize[0]) / _cellSize.x));
         const auto j = static_cast<std::size_t>(std::floor((entry.pos.y + .5 * boxSize[1]) / _cellSize.y));
         const auto k = static_cast<std::size_t>(std::floor((entry.pos.z + .5 * boxSize[2]) / _cellSize.z));

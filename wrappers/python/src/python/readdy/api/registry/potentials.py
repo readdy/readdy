@@ -29,8 +29,9 @@ import numpy as _np
 from readdy.api.utils import vec3_of as _v3_of
 
 class PotentialRegistry(object):
-    def __init__(self, context_top_registry, units):
+    def __init__(self, context_top_registry, context_type_registry, units):
         self._registry = context_top_registry
+        self._types = context_type_registry
         self._units = units
 
     def add_box(self, particle_type, force_constant, origin, extent):
@@ -186,3 +187,31 @@ class PotentialRegistry(object):
         assert height > 0, "height has to be positive"
         assert width > 0, "width has to be positive"
         self._registry.add_spherical_barrier(particle_type, height, width, _v3_of(origin), radius)
+
+    def add_custom_external(self, particle_type, clazz, *args):
+        """
+        This method allows to add a custom potential to a simulation. An example of how to define a custom potential
+        can be found in the source tree under examples/custom_potential.
+        
+        :param particle_type: the particle type
+        :param clazz: class (not instance) of potential
+        :param args: additional arguments that get forwarded into the constructor of the potential
+        """
+        type_id = self._types.id_of(particle_type)
+        instance = clazz(type_id, *args)
+        self._registry.add_external_order1(instance)
+
+    def add_custom_pair(self, particle_type1, particle_type2, clazz, *args):
+        """
+        This method allows to add a custom potential to a simulation. An example of how to define a custom potential
+        can be found in the source tree under examples/custom_potential.
+
+        :param particle_type1: first particle type
+        :param particle_type2: second particle type
+        :param clazz: class (not instance) of potential
+        :param args: additional arguments that get forwarded into the constructor of the potential
+        """
+        type_id1 = self._types.id_of(particle_type1)
+        type_id2 = self._types.id_of(particle_type2)
+        instance = clazz(type_id1, type_id2, *args)
+        self._registry.add_external_order2(instance)

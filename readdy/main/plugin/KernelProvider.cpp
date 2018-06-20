@@ -25,8 +25,9 @@
 //
 
 #include <iostream>
+#include <memory>
+
 #include <readdy/common/Utils.h>
-#include <readdy/common/make_unique.h>
 #include <readdy/common/filesystem.h>
 #include <readdy/model/Kernel.h>
 #include <readdy/plugin/KernelProvider.h>

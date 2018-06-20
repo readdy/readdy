@@ -144,9 +144,16 @@ template<>
 void CompactCellLinkedList::fillBins<true>(const util::PerformanceNode &node) {
     auto t = node.timeit();
     const auto &boxSize = _context.get().boxSize();
+
+    auto particleInBox = [boxSize](const Vec3 &pos) {
+        return -.5*boxSize[0] <= pos.x && .5*boxSize[0] > pos.x
+               && -.5*boxSize[1] <= pos.y && .5*boxSize[1] > pos.y
+               && -.5*boxSize[2] <= pos.z && .5*boxSize[2] > pos.z;
+    };
+
     std::size_t pidx = 1;
     for (const auto &entry : _data.get()) {
-        if (!entry.deactivated) {
+        if (!entry.deactivated && particleInBox(entry.pos)) {
             const auto i = static_cast<std::size_t>(std::floor((entry.pos.x + .5 * boxSize[0]) / _cellSize.x));
             const auto j = static_cast<std::size_t>(std::floor((entry.pos.y + .5 * boxSize[1]) / _cellSize.y));
             const auto k = static_cast<std::size_t>(std::floor((entry.pos.z + .5 * boxSize[2]) / _cellSize.z));
@@ -178,16 +185,22 @@ void CompactCellLinkedList::fillBins<false>(const util::PerformanceNode &node) {
     const auto cellSize = _cellSize;
     const auto &cellIndex = _cellIndex;
 
+    auto particleInBox = [boxSize](const Vec3 &pos) {
+        return -.5*boxSize[0] <= pos.x && .5*boxSize[0] > pos.x
+               && -.5*boxSize[1] <= pos.y && .5*boxSize[1] > pos.y
+               && -.5*boxSize[2] <= pos.z && .5*boxSize[2] > pos.z;
+    };
+
     auto &list = _list;
     auto &head = _head;
 
-    auto worker = [&data, &cellIndex, cellSize, &list, &head, boxSize]
+    auto worker = [&data, &cellIndex, cellSize, &list, &head, boxSize, particleInBox]
             (std::size_t tid, std::size_t begin_pidx, std::size_t end_pidx) {
         auto it = data.begin() + begin_pidx - 1;
         auto pidx = begin_pidx;
         while (it != data.begin() + end_pidx - 1) {
             const auto &entry = *it;
-            if (!entry.deactivated) {
+            if (!entry.deactivated && particleInBox(entry.pos)) {
                 const auto i = static_cast<std::size_t>(std::floor((entry.pos.x + .5 * boxSize[0]) / cellSize.x));
                 const auto j = static_cast<std::size_t>(std::floor((entry.pos.y + .5 * boxSize[1]) / cellSize.y));
                 const auto k = static_cast<std::size_t>(std::floor((entry.pos.z + .5 * boxSize[2]) / cellSize.z));

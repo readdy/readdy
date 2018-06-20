@@ -43,7 +43,6 @@
 #endif
 
 #include "readdy/common/filesystem.h"
-#include "readdy/common/make_unique.h"
 #include "readdy/common/tinydir.h"
 
 namespace readdy {

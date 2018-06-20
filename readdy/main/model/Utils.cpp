@@ -40,7 +40,7 @@ namespace readdy {
 namespace model {
 namespace util {
 
-scalar  getMaximumDisplacement(Context& context, const scalar  timeStep) {
+/*scalar  getMaximumDisplacement(Context& context, const scalar  timeStep) {
     context.configure();
 
     scalar  kbt = context.kBT();
@@ -155,12 +155,12 @@ scalar  getRecommendedTimeStep(unsigned int N, Context& context) {
     tau /= (scalar ) N;
     log::debug("Estimated time step: {}", tau);
     return tau;
-}
+}*/
 
 void validateTypeName(const std::string &typeName) {
     const auto ics = invalidCharacterSequences();
     for(const auto &cs : ics) {
-        if(typeName.find(cs) != typeName.npos) {
+        if(typeName.find(cs) != std::string::npos) {
             std::stringstream ss;
             for(std::size_t i = 0; i < ics.size(); ++i) {
                 if(i > 0) ss << ", ";
@@ -172,7 +172,7 @@ void validateTypeName(const std::string &typeName) {
             ));
         }
     }
-    if(typeName.find(' ') == 0 || typeName.find(' ') == typeName.npos-1) {
+    if(typeName.find(' ') == 0 || typeName.find(' ') == std::string::npos-1) {
         throw std::invalid_argument(fmt::format("Type name \"{}\" contained leading/trailing whitespaces.", typeName));
     }
 }

@@ -58,14 +58,6 @@ public:
         return forceConstant;
     }
 
-    virtual scalar getRelevantLengthScale() const noexcept override {
-        return std::min(extent[0], std::min(extent[1], extent[2]));
-    }
-
-    virtual scalar getMaximalForce(scalar kbt) const noexcept override {
-        return 0;
-    }
-
     scalar calculateEnergy(const Vec3 &position) const override {
         scalar energy = 0;
 
@@ -94,11 +86,6 @@ public:
         }
     }
 
-    void calculateForceAndEnergy(Vec3 &force, scalar &energy, const Vec3 &position) const override {
-        energy += calculateEnergy(position);
-        calculateForce(force, position);
-    }
-
     std::string describe() const override;
 
     std::string type() const override;
@@ -115,15 +102,7 @@ public:
     SphereIn(particle_type_type particleType, scalar forceConstant, const Vec3& origin, scalar radius)
             : super(particleType), origin(origin), radius(radius), forceConstant(forceConstant) {}
 
-    virtual scalar getRelevantLengthScale() const noexcept override {
-        return radius;
-    }
-
-    virtual scalar getMaximalForce(scalar kbt) const noexcept override {
-        return 0;
-    }
-
-    scalar calculateEnergy(const Vec3 &position) const override {
+      scalar calculateEnergy(const Vec3 &position) const override {
         auto difference = position - origin;
         scalar distanceFromOrigin = difference.norm();
         scalar distanceFromSphere = distanceFromOrigin - radius;
@@ -143,16 +122,6 @@ public:
         }
     }
 
-    void calculateForceAndEnergy(Vec3 &force, scalar &energy, const Vec3 &position) const override {
-        auto difference = position - origin;
-        scalar distanceFromOrigin = difference.norm();
-        scalar distanceFromSphere = distanceFromOrigin - radius;
-        if (distanceFromSphere > 0) {
-            energy += 0.5 * forceConstant * distanceFromSphere * distanceFromSphere;
-            force += -1 * forceConstant * distanceFromSphere * difference / distanceFromOrigin;
-        }
-    }
-
     std::string describe() const override;
 
     std::string type() const override;
@@ -167,14 +136,6 @@ class SphereOut : public PotentialOrder1 {
 public:
     SphereOut(particle_type_type particleType, scalar forceConstant, const Vec3& origin, scalar radius)
             : super(particleType), forceConstant(forceConstant), origin(origin), radius(radius) {}
-
-    virtual scalar getRelevantLengthScale() const noexcept override {
-        return radius;
-    }
-
-    virtual scalar getMaximalForce(scalar kbt) const noexcept override{
-        return 0;
-    }
 
     scalar calculateEnergy(const Vec3 &position) const override {
         auto difference = position - origin;
@@ -192,16 +153,6 @@ public:
         scalar distanceFromOrigin = difference.norm();
         scalar distanceFromSphere = distanceFromOrigin - radius;
         if (distanceFromSphere < 0) {
-            force += -1 * forceConstant * distanceFromSphere * difference / distanceFromOrigin;
-        }
-    }
-
-    void calculateForceAndEnergy(Vec3 &force, scalar &energy, const Vec3 &position) const override {
-        auto difference = position - origin;
-        scalar distanceFromOrigin = difference.norm();
-        scalar distanceFromSphere = distanceFromOrigin - radius;
-        if (distanceFromSphere < 0) {
-            energy += 0.5 * forceConstant * distanceFromSphere * distanceFromSphere;
             force += -1 * forceConstant * distanceFromSphere * difference / distanceFromOrigin;
         }
     }
@@ -224,14 +175,6 @@ class SphericalBarrier : public PotentialOrder1 {
     using super = PotentialOrder1;
 public:
     SphericalBarrier(particle_type_type particleType, scalar height, scalar width, const Vec3 &origin, scalar radius);
-
-    virtual readdy::scalar getRelevantLengthScale() const noexcept override {
-        return width;
-    }
-
-    virtual readdy::scalar getMaximalForce(readdy::scalar kbt) const noexcept override {
-        return static_cast<scalar>(2. * height / width);
-    }
 
     readdy::scalar calculateEnergy(const Vec3 &position) const override {
         const auto difference = position - origin;
@@ -269,27 +212,6 @@ public:
             force += - effectiveForceConstant * (distance - radius - width) * difference / distance;
         } else {
             throw std::runtime_error("Critical error in calculateForce of spherical barrier");
-        }
-    }
-
-    void calculateForceAndEnergy(Vec3 &force, readdy::scalar &energy, const Vec3 &position) const override {
-        const auto difference = position - origin;
-        const auto distance = difference.norm();
-        if (distance < r1) {
-            // nothing happens
-        } else if (r4 <= distance) {
-            // nothing happens
-        } else if (r1 <= distance && distance < r2) {
-            force += - effectiveForceConstant * (distance - radius + width) * difference / distance;
-            energy += 0.5 * effectiveForceConstant * std::pow(distance - radius + width, 2.);
-        } else if (r2 <= distance && distance < r3) {
-            force += effectiveForceConstant * (distance - radius) * difference / distance;
-            energy += height - 0.5 * effectiveForceConstant * std::pow(distance - radius, 2.);
-        } else if (r3 <= distance && distance < r4) {
-            force += - effectiveForceConstant * (distance - radius - width) * difference / distance;
-            energy += 0.5 * effectiveForceConstant * std::pow(distance - radius - width, 2.);
-        } else {
-            throw std::runtime_error("Critical error in calculateForceAndEnergy of spherical barrier");
         }
     }
 

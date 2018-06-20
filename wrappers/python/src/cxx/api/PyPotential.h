@@ -48,18 +48,6 @@ public:
 
     void calculateForce(Vec3 &force, const Vec3 &x_ij) const override;
 
-    void calculateForceAndEnergy(Vec3 &force, readdy::scalar &energy, const Vec3 &x_ij) const override;
-
-    readdy::scalar getCutoffRadius() const override {
-        // todo!
-        return 50;
-    }
-
-    readdy::scalar getMaximalForce(readdy::scalar kbt) const noexcept override {
-        // todo!
-        return 0;
-    }
-
     readdy::scalar getCutoffRadiusSquared() const override;
 
     std::string type() const override;

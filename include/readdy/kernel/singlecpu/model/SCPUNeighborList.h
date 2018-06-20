@@ -238,9 +238,6 @@ public:
     };
 
     template<typename Function>
-    void forEachPair(const Function &function) const;
-
-    template<typename Function>
     void forEachNeighbor(BoxIterator particle, const Function &function) const;
 
     template<typename Function>
@@ -256,6 +253,11 @@ public:
             throw std::invalid_argument("requested deactivated entry");
         }
         const auto &boxSize = _context.get().boxSize();
+        if(!(-.5*boxSize[0] <= entry.pos.x && .5*boxSize[0] > entry.pos.x
+             && -.5*boxSize[1] <= entry.pos.y && .5*boxSize[1] > entry.pos.y
+             && -.5*boxSize[2] <= entry.pos.z && .5*boxSize[2] > entry.pos.z)) {
+            throw std::logic_error("CellLinkedList: requested neighbors of particle that was out of bounds.");
+        }
         const auto i = static_cast<std::size_t>(std::floor((entry.pos.x + .5 * boxSize[0]) / _cellSize.x));
         const auto j = static_cast<std::size_t>(std::floor((entry.pos.y + .5 * boxSize[1]) / _cellSize.y));
         const auto k = static_cast<std::size_t>(std::floor((entry.pos.z + .5 * boxSize[2]) / _cellSize.z));
@@ -285,16 +287,22 @@ protected:
             _list.resize(0);
             _list.resize(nParticles + 1);
             fillBins(node.subnode("fillBins"));
-            //fillTuples(node.subnode("fillTuples"));
         }
     };
 
     void fillBins(const util::PerformanceNode &node) {
         auto t = node.timeit();
         const auto &boxSize = _context.get().boxSize();
+
+        auto particleInBox = [boxSize](const Vec3 &pos) {
+            return -.5*boxSize[0] <= pos.x && .5*boxSize[0] > pos.x
+                   && -.5*boxSize[1] <= pos.y && .5*boxSize[1] > pos.y
+                   && -.5*boxSize[2] <= pos.z && .5*boxSize[2] > pos.z;
+        };
+
         std::size_t pidx = 1;
         for (const auto &entry : _data.get()) {
-            if (!entry.deactivated) {
+            if (!entry.deactivated && particleInBox(entry.pos)) {
                 const auto i = static_cast<std::size_t>(std::floor((entry.pos.x + .5 * boxSize[0]) / _cellSize.x));
                 const auto j = static_cast<std::size_t>(std::floor((entry.pos.y + .5 * boxSize[1]) / _cellSize.y));
                 const auto k = static_cast<std::size_t>(std::floor((entry.pos.z + .5 * boxSize[2]) / _cellSize.z));
@@ -305,8 +313,6 @@ protected:
             ++pidx;
         }
     }
-
-    void fillTuples(const util::PerformanceNode &node);
 
     HEAD _head;
     // particles, 1-indexed
@@ -329,8 +335,6 @@ protected:
 
     std::reference_wrapper<data_type> _data;
     std::reference_wrapper<const readdy::model::Context> _context;
-
-    std::vector<std::tuple<std::size_t, std::size_t>> pairs;
 };
 
 class BoxIterator {
@@ -422,33 +426,6 @@ inline void CellLinkedList::forEachNeighbor(BoxIterator particle, std::size_t ce
         std::for_each(particlesBegin(*itNeighCell), particlesEnd(*itNeighCell), function);
     }
 }
-
-inline void CellLinkedList::fillTuples(const util::PerformanceNode &node) {
-    auto t = node.timeit();
-    pairs.resize(0);
-    for (auto cell = 0_z; cell < nCells(); ++cell) {
-        for (auto it = particlesBegin(cell); it != particlesEnd(cell); ++it) {
-            for (auto it2 = std::next(it, 1_z); it2 != particlesEnd(cell); ++it2) {
-                pairs.emplace_back(std::forward_as_tuple(*it, *it2));
-            }
-            for (auto itNeighCell = neighborsBegin(cell); itNeighCell != neighborsEnd(cell); ++itNeighCell) {
-                for (auto it2 = particlesBegin(*itNeighCell); it2 != particlesEnd(*itNeighCell); ++it2) {
-                    pairs.emplace_back(std::forward_as_tuple(*it, *it2));
-                }
-            }
-        }
-    }
-}
-
-template<typename Function>
-inline void CellLinkedList::forEachPair(const Function &function) const {
-    for (auto cell = 0_z; cell < nCells(); ++cell) {
-        for (auto it = particlesBegin(cell); it != particlesEnd(cell); ++it) {
-            forEachNeighbor(it, cell, function);
-        }
-    }
-}
-
 
 }
 }

@@ -24,7 +24,8 @@
 // Created by clonker on 08.04.16.
 //
 
-#include <readdy/common/make_unique.h>
+#include <memory>
+
 #include <readdy/kernel/singlecpu/actions/SCPUActionFactory.h>
 #include <readdy/kernel/singlecpu/actions/SCPUEulerBDIntegrator.h>
 #include <readdy/kernel/singlecpu/actions/SCPUCalculateForces.h>

@@ -56,6 +56,12 @@ void ContiguousCellLinkedList::fillBins(const util::PerformanceNode &node) {
 
     auto boxSize = _context.get().boxSize();
 
+    auto particleInBox = [boxSize](const Vec3 &pos) {
+        return -.5*boxSize[0] <= pos.x && .5*boxSize[0] > pos.x
+               && -.5*boxSize[1] <= pos.y && .5*boxSize[1] > pos.y
+               && -.5*boxSize[2] <= pos.z && .5*boxSize[2] > pos.z;
+    };
+
     {
         auto &blockNParticles = _blockNParticles;
         const auto &data = _data.get();
@@ -64,7 +70,8 @@ void ContiguousCellLinkedList::fillBins(const util::PerformanceNode &node) {
         auto &bins = _bins;
         const auto &binsIndex = _binsIndex;
         auto worker =
-                [&data, &blockNParticles, &bins, cellIndex, cellSize, boxSize, nCells, binsIndex, maxParticlesPerCell]
+                [&data, &blockNParticles, &bins, cellIndex, cellSize, boxSize, nCells, binsIndex, maxParticlesPerCell,
+                        particleInBox]
                 (std::size_t tid, std::size_t begin_pidx, std::size_t end_pidx) {
             std::vector<count_type> cellCounts;
             cellCounts.resize(nCells);
@@ -72,7 +79,7 @@ void ContiguousCellLinkedList::fillBins(const util::PerformanceNode &node) {
             auto it = data.begin() + begin_pidx;
             auto pidx = begin_pidx;
             while (it != data.begin() + end_pidx) {
-                if (!it->deactivated) {
+                if (!it->deactivated && particleInBox(it->pos)) {
                     const auto i = static_cast<std::size_t>(std::floor((it->pos.x + .5 * boxSize[0]) / cellSize.x));
                     const auto j = static_cast<std::size_t>(std::floor((it->pos.y + .5 * boxSize[1]) / cellSize.y));
                     const auto k = static_cast<std::size_t>(std::floor((it->pos.z + .5 * boxSize[2]) / cellSize.z));
@@ -113,12 +120,18 @@ ContiguousCellLinkedList::count_type ContiguousCellLinkedList::getMaxCounts(cons
     const auto &cellIndex = _cellIndex;
     auto nCells = cellIndex.size();
 
+    auto particleInBox = [boxSize](const Vec3 &pos) {
+        return -.5*boxSize[0] <= pos.x && .5*boxSize[0] > pos.x
+               && -.5*boxSize[1] <= pos.y && .5*boxSize[1] > pos.y
+               && -.5*boxSize[2] <= pos.z && .5*boxSize[2] > pos.z;
+    };
+
     block_n_particles_type blockNParticles;
     blockNParticles.resize(nCells);
     std::for_each(blockNParticles.begin(), blockNParticles.end(), [](auto &x) { *x = 0; });
 
     {
-        auto worker = [&data, cellIndex, cellSize, boxSize, nCells, &blockNParticles]
+        auto worker = [&data, cellIndex, cellSize, boxSize, nCells, &blockNParticles, particleInBox]
                 (std::size_t tid, std::size_t begin_pidx, std::size_t end_pidx) {
             std::vector<count_type> cellCounts;
             cellCounts.resize(nCells);
@@ -126,7 +139,7 @@ ContiguousCellLinkedList::count_type ContiguousCellLinkedList::getMaxCounts(cons
             auto it = data.begin() + begin_pidx;
             while (it != data.begin() + end_pidx) {
                 const auto &entry = *it;
-                if (!entry.deactivated) {
+                if (!entry.deactivated && particleInBox(entry.pos)) {
                     const auto i = static_cast<std::size_t>(std::floor((entry.pos.x + .5 * boxSize[0]) / cellSize.x));
                     const auto j = static_cast<std::size_t>(std::floor((entry.pos.y + .5 * boxSize[1]) / cellSize.y));
                     const auto k = static_cast<std::size_t>(std::floor((entry.pos.z + .5 * boxSize[2]) / cellSize.z));

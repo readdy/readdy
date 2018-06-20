@@ -53,9 +53,10 @@ public:
 
     virtual void calculateForce(Vec3 &force, const Vec3 &position) const = 0;
 
-    virtual void calculateForceAndEnergy(Vec3 &force, scalar &energy, const Vec3 &position) const = 0;
-
-    virtual scalar getRelevantLengthScale() const noexcept = 0;
+    void calculateForceAndEnergy(Vec3 &force, scalar &energy, const Vec3 &position) const {
+        energy += calculateEnergy(position);
+        calculateForce(force, position);
+    };
 
     friend std::ostream &operator<<(std::ostream &os, const PotentialOrder1 &potential) {
         os << potential.describe();

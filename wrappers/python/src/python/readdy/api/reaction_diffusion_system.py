@@ -73,7 +73,8 @@ class ReactionDiffusionSystem(object):
             self._unit_conf = _UnitConfiguration(**args)
         self._compartment_registry = _CompartmentRegistry(self._context.compartments, self._unit_conf)
         self._topology_registry = _TopologyRegistry(self._context.topologies, self._unit_conf)
-        self._potential_registry = _PotentialRegistry(self._context.potentials, self._unit_conf)
+        self._potential_registry = _PotentialRegistry(self._context.potentials, self._context.particle_types,
+                                                      self._unit_conf)
         self._reaction_registry = _ReactionRegistry(self._context.reactions, self._unit_conf)
 
         if (temperature is not None) and (unit_system is None):

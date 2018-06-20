@@ -58,10 +58,6 @@ public:
         return _forceConstant;
     }
 
-    scalar getMaximalForce(scalar kbt) const noexcept override {
-        return _forceConstant * getCutoffRadius();
-    }
-
     scalar calculateEnergy(const Vec3 &x_ij) const override {
         auto distanceSquared = x_ij * x_ij;
         if (distanceSquared < _interactionDistanceSquared) {
@@ -81,21 +77,6 @@ public:
         } else {
             // nothing happens
         }
-    }
-
-    void calculateForceAndEnergy(Vec3 &force, scalar &energy, const Vec3 &x_ij) const override {
-        auto squared = x_ij * x_ij;
-        if (squared < _interactionDistanceSquared && squared > 0) {
-            squared = std::sqrt(squared);
-            energy += 0.5 * getForceConstant() * std::pow(squared - _interactionDistance, 2);
-            force += (getForceConstant() * (squared - _interactionDistance)) / squared * x_ij;
-        } else {
-            // nothing happens
-        }
-    }
-
-    scalar getCutoffRadius() const override {
-        return _interactionDistance;
     }
 
     scalar getCutoffRadiusSquared() const override {
@@ -129,12 +110,12 @@ public:
                                      scalar forceConstant, const Configuration &config)
             : super(type1, type2), forceConstant(forceConstant), conf(config) {};
 
-    scalar getMaximalForce(scalar kbt) const noexcept override {
+    /*scalar getMaximalForce(scalar kbt) const noexcept override {
         scalar fMax1 = forceConstant * conf.desiredParticleDistance;
         scalar fMax2 = 2 * conf.depthAtDesiredDistance *
                        (conf.noInteractionDistance - conf.desiredParticleDistance);
         return std::max(fMax1, fMax2);
-    }
+    }*/
 
     scalar calculateEnergy(const Vec3 &x_ij) const override {
         const auto dist = std::sqrt(x_ij * x_ij);
@@ -183,15 +164,6 @@ public:
         } else {
             // nothing happens
         }
-    }
-
-    void calculateForceAndEnergy(Vec3 &force, scalar &energy, const Vec3 &x_ij) const override {
-        energy += calculateEnergy(x_ij);
-        calculateForce(force, x_ij);
-    }
-
-    scalar getCutoffRadius() const override {
-        return conf.noInteractionDistance;
     }
 
     scalar getCutoffRadiusSquared() const override {
@@ -264,22 +236,9 @@ public:
         }
     }
 
-    void calculateForceAndEnergy(Vec3 &force, scalar &energy, const Vec3 &x_ij) const override {
-        energy += calculateEnergy(x_ij);
-        calculateForce(force, x_ij);
-    }
-
-    scalar getCutoffRadius() const override {
-        return cutoffDistance;
-    }
-
     scalar getCutoffRadiusSquared() const override {
         return cutoffDistanceSquared;
     }
-
-    scalar getMaximalForce(scalar kbt) const noexcept override {
-        return 0;
-    };
 
     std::string type() const override;
 
@@ -328,23 +287,10 @@ public:
         force += forceFactor * (- c_::one * x_ij / distance);
     }
 
-    void calculateForceAndEnergy(Vec3 &force, scalar &energy, const Vec3 &x_ij) const override {
-        calculateForce(force, x_ij);
-        energy += calculateEnergy(x_ij);
-    }
-
-    scalar getCutoffRadius() const override {
-        return cutoff;
-    }
-
     std::string describe() const override;
 
     scalar getCutoffRadiusSquared() const override {
         return cutoffSquared;
-    }
-
-    scalar getMaximalForce(scalar kbt) const noexcept override {
-        return 0;
     }
 
     std::string type() const override;

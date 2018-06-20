@@ -33,6 +33,9 @@
  */
 
 #pragma once
+
+#include <cmath>
+
 #include "Potential.h"
 
 NAMESPACE_BEGIN(readdy)
@@ -52,9 +55,14 @@ public:
 
     virtual void calculateForce(Vec3 &force, const Vec3 &x_ij) const = 0;
 
-    virtual void calculateForceAndEnergy(Vec3 &force, scalar &energy, const Vec3 &x_ij) const = 0;
+    void calculateForceAndEnergy(Vec3 &force, scalar &energy, const Vec3 &x_ij) const {
+        energy += calculateEnergy(x_ij);
+        calculateForce(force, x_ij);
+    };
 
-    virtual scalar getCutoffRadius() const = 0;
+    scalar getCutoffRadius() const {
+        return std::sqrt(getCutoffRadiusSquared());
+    };
 
     virtual scalar getCutoffRadiusSquared() const = 0;
 
