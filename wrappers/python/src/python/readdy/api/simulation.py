@@ -379,6 +379,8 @@ class Simulation(object):
 
         if show_system:
             print(self._simulation.context.describe())
+        else:
+            self._simulation.context.configure()
 
         timestep = self._unit_conf.convert(timestep, self.time_unit)
         assert timestep > 0.
