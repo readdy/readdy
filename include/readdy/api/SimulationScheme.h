@@ -407,6 +407,28 @@ public:
      * @return a unique pointer to the scheme instance
      */
     virtual std::unique_ptr<SchemeType> configure(scalar timeStep) {
+
+        {
+            const double threshold = .1;
+            const auto &reactionRegistry = scheme->kernel->context().reactions();
+            for(const auto &o1Reaction : reactionRegistry.order1Flat()) {
+                if (o1Reaction->rate() * timeStep > threshold) {
+                    throw std::logic_error(fmt::format(
+                            "Specified a reaction with rate {} and a timestep of {}. Thus, the inverse reaction rate "
+                            "is faster than the time step by a factor of {}.", o1Reaction->rate(), timeStep, 
+                            1./threshold));
+                }
+            }
+            for(const auto &o2Reaction : reactionRegistry.order2Flat()) {
+                if(o2Reaction->rate() * timeStep > threshold) {
+                    throw std::logic_error(fmt::format(
+                            "Specified a reaction with rate {} and a timestep of {}. Thus, the inverse reaction rate "
+                            "is faster than the time step by a factor of {}.", o2Reaction->rate(), timeStep,
+                            1./threshold));
+                }
+            }
+        }
+
         using default_integrator = readdy::model::actions::EulerBDIntegrator;
         using default_reactions = readdy::model::actions::reactions::Gillespie;
         using calculate_forces = readdy::model::actions::CalculateForces;
