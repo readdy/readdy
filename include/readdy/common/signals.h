@@ -91,16 +91,15 @@ public:
      * connections can be moved
      * @param rhs the other connection
      */
-    connection(connection &&rhs) : disconnector(std::move(rhs.disconnector)),
-                                   slots_container(std::move(rhs.slots_container)) {
-    }
+    connection(connection &&rhs) noexcept : disconnector(std::move(rhs.disconnector)), 
+                                            slots_container(std::move(rhs.slots_container)) { }
 
     /**
      * connections can be move-assigned
      * @param rhs the other connection
      * @return reference to this
      */
-    connection &operator=(connection &&rhs) {
+    connection &operator=(connection &&rhs) noexcept {
         disconnector = std::move(rhs.disconnector);
         slots_container = std::move(rhs.slots_container);
         return *this;
@@ -118,8 +117,8 @@ private:
      * @param slots_container the respective container
      * @param disconnector a disconnector
      */
-    connection(slots_container_type slots_container, disconnector_type disconnector)
-            : slots_container(slots_container), disconnector(disconnector) {
+    connection(const slots_container_type &slots_container, disconnector_type disconnector)
+            : slots_container(slots_container), disconnector(std::move(disconnector)) {
     }
 
 
