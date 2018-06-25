@@ -302,6 +302,11 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
                 DESTINATION include
                 FILES_MATCHING PATTERN "*.h*")
         INSTALL (
+                DIRECTORY ${CMAKE_SOURCE_DIR}/kernels/cpu/include/
+                DESTINATION include
+                FILES_MATCHING PATTERN "*.h*"
+        )
+        INSTALL (
                 DIRECTORY ${CMAKE_SOURCE_DIR}/libraries/h5rd/include/
                 DESTINATION include
                 FILES_MATCHING PATTERN "*.h*")
