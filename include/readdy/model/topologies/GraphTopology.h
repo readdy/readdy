@@ -63,7 +63,7 @@ public:
      * @param context the kernel's context
      * @param stateModel the kernel's state model
      */
-    GraphTopology(topology_type_type type, const particle_indices &particles, const types_vec &types,
+    GraphTopology(topology_type_id type, const particle_indices &particles, const types_vec &types,
                   const model::Context &context, const StateModel* stateModel);
 
     /**
@@ -75,7 +75,7 @@ public:
      * @param context the kernel's context
      * @param stateModel the kernels state model
      */
-    GraphTopology(topology_type_type type, particle_indices &&particles, topology_graph &&graph,
+    GraphTopology(topology_type_id type, particle_indices &&particles, topology_graph &&graph,
                   const model::Context &context, const StateModel* stateModel);
 
     virtual ~GraphTopology() = default;
@@ -98,7 +98,7 @@ public:
 
     void configure();
 
-    void updateReactionRates(const TopologyRegistry::structural_reactions &reactions) {
+    void updateReactionRates(const TopologyRegistry::StructuralReactionCollection &reactions) {
         _cumulativeRate = 0;
         _reaction_rates.resize(reactions.size());
         auto that = this;
@@ -136,13 +136,13 @@ public:
                         particle_index counterPart, particle_type_type counterPartType);
 
     void appendTopology(GraphTopology &other, particle_index otherParticle, particle_type_type otherNewParticleType,
-                        particle_index thisParticle, particle_type_type thisNewParticleType, topology_type_type newType);
+                        particle_index thisParticle, particle_type_type thisNewParticleType, topology_type_id newType);
 
-    const topology_type_type &type() const {
+    const topology_type_id &type() const {
         return _topology_type;
     }
 
-    topology_type_type &type() {
+    topology_type_id &type() {
         return _topology_type;
     }
 
@@ -176,7 +176,7 @@ protected:
     const model::StateModel *_stateModel;
     topology_reaction_rates _reaction_rates;
     topology_reaction_rate _cumulativeRate;
-    topology_type_type _topology_type;
+    topology_type_id _topology_type;
     bool deactivated{false};
 };
 

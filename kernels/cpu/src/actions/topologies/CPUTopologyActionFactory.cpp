@@ -71,6 +71,6 @@ top::reactions::actions::TopologyReactionActionFactory::action_ref
 readdy::kernel::cpu::actions::top::CPUTopologyActionFactory::createChangeTopologyType(top::GraphTopology *const topology,
                                                                                     const std::string &type_to) const {
     return std::make_unique<readdy::model::top::reactions::actions::ChangeTopologyType>(
-            topology, _context.get().topology_registry().idOf(type_to)
+            topology, _context.get().topologyRegistry().idOf(type_to)
     );
 }

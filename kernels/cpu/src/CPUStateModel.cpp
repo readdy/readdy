@@ -81,7 +81,7 @@ CPUStateModel::CPUStateModel(data_type &data, const readdy::model::Context &cont
 }
 
 readdy::model::top::GraphTopology *const
-CPUStateModel::addTopology(topology_type_type type, const std::vector<readdy::model::TopologyParticle> &particles) {
+CPUStateModel::addTopology(topology_type_id type, const std::vector<readdy::model::TopologyParticle> &particles) {
     std::vector<std::size_t> ids = getParticleData()->addTopologyParticles(particles);
     std::vector<particle_type_type> types;
     types.reserve(ids.size());

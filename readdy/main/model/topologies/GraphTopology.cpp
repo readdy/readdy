@@ -38,7 +38,7 @@ namespace readdy {
 namespace model {
 namespace top {
 
-GraphTopology::GraphTopology(topology_type_type type,
+GraphTopology::GraphTopology(topology_type_id type,
                              const Topology::particle_indices &particles, const types_vec &types,
                              const model::Context& context, const model::StateModel *stateModel)
         : Topology(particles), _context(context), _topology_type(type), _stateModel(stateModel) {
@@ -49,7 +49,7 @@ GraphTopology::GraphTopology(topology_type_type type,
     }
 }
 
-GraphTopology::GraphTopology(topology_type_type type,
+GraphTopology::GraphTopology(topology_type_id type,
                              Topology::particle_indices &&particles, graph::Graph &&graph,
                              const model::Context& context, const model::StateModel *stateModel)
         : Topology(std::move(particles)), _context(context), graph_(std::move(graph)), _topology_type(type),
@@ -78,7 +78,7 @@ void GraphTopology::configure() {
     std::unordered_map<api::AngleType, std::vector<pot::AngleConfiguration>, readdy::util::hash::EnumClassHash> angles;
     std::unordered_map<api::TorsionType, std::vector<pot::DihedralConfiguration>, readdy::util::hash::EnumClassHash> dihedrals;
 
-    const auto &config = context().topology_registry().potentialConfiguration();
+    const auto &config = context().topologyRegistry().potentialConfiguration();
 
     graph_.findNTuples([&](const topology_graph::edge &tuple) {
         auto v1 = std::get<0>(tuple);
@@ -212,7 +212,7 @@ void GraphTopology::appendParticle(particle_index newParticle, particle_type_typ
 
 void GraphTopology::appendTopology(GraphTopology &other, Topology::particle_index otherParticle,
                                    particle_type_type otherNewParticleType, Topology::particle_index thisParticle,
-                                   particle_type_type thisNewParticleType, topology_type_type newType) {
+                                   particle_type_type thisNewParticleType, topology_type_id newType) {
     auto &otherGraph = other.graph();
 
     if(!otherGraph.vertices().empty()) {

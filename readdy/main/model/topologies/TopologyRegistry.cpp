@@ -36,40 +36,16 @@
 namespace readdy {
 namespace model {
 namespace top {
-topology_type_type TopologyRegistry::counter = 0;
+topology_type_id TopologyRegistry::counter = 0;
 
-void TopologyRegistry::addStructuralReaction(topology_type_type type,
+void TopologyRegistry::addStructuralReaction(topology_type_id id,
                                              const reactions::StructuralTopologyReaction &reaction) {
-    auto it = _registry.find(type);
-    if (it != _registry.end()) {
-        it->second.structural_reactions.push_back(reaction);
-    } else {
-        throw std::invalid_argument(fmt::format("the requested type {} was not registered", type));
-    }
+    typeById(id).structuralReactions.push_back(reaction);
 }
 
-void TopologyRegistry::addStructuralReaction(topology_type_type type,
+void TopologyRegistry::addStructuralReaction(topology_type_id id,
                                              reactions::StructuralTopologyReaction &&reaction) {
-    auto it = _registry.find(type);
-    if (it != _registry.end()) {
-        it->second.structural_reactions.push_back(std::move(reaction));
-    } else {
-        throw std::invalid_argument(fmt::format("the requested type {} was not registered", type));
-    }
-}
-
-void TopologyRegistry::configure() {
-    _topologyReactionTypes.clear();
-    _containsStructuralReactions = false;
-
-    for (const auto &e : _registry) {
-        _containsStructuralReactions |= e.second.structural_reactions.empty();
-    }
-
-    for (const auto &entry : _spatialReactions) {
-        _topologyReactionTypes.emplace(std::get<0>(entry.first));
-        _topologyReactionTypes.emplace(std::get<2>(entry.first));
-    }
+    typeById(id).structuralReactions.push_back(std::move(reaction));
 }
 
 std::string TopologyRegistry::describe() const {
@@ -143,7 +119,7 @@ std::string TopologyRegistry::describe() const {
         description += fmt::format(" - topology types:{}", rus::newline);
         for (const auto &entry : _registry) {
             description += fmt::format("     * topology type \"{}\" with {} structural reactions{}",
-                                       entry.second.name, entry.second.structural_reactions.size(), rus::newline);
+                                       entry.name, entry.structuralReactions.size(), rus::newline);
         }
     }
 
@@ -182,10 +158,10 @@ std::string TopologyRegistry::describe() const {
     if(nStructuralReactions() > 0) {
         description += fmt::format(" - structural topology reactions:{}", rus::newline);
         for (const auto &entry : _registry) {
-            if(!entry.second.structural_reactions.empty()) {
+            if(!entry.structuralReactions.empty()) {
                 description += fmt::format("     - for topology type \"{}\" with {} structural reactions:{}",
-                                           entry.second.name, entry.second.structural_reactions.size(), rus::newline);
-                for (const auto &r : entry.second.structural_reactions) {
+                                           entry.name, entry.structuralReactions.size(), rus::newline);
+                for (const auto &r : entry.structuralReactions) {
                     description += fmt::format("         * reaction with roll_back = {} and create child topologies = {}{}",
                                                r.rolls_back_if_invalid(), r.creates_child_topologies_after_reaction(),
                                                rus::newline);
@@ -196,18 +172,19 @@ std::string TopologyRegistry::describe() const {
     return description;
 }
 
-readdy::topology_type_type TopologyRegistry::addType(const std::string &name, const structural_reactions &reactions) {
+readdy::topology_type_id TopologyRegistry::addType(const std::string &name,
+                                                   const StructuralReactionCollection &reactions) {
     util::validateTypeName(name);
-    using entry_type = type_registry::value_type;
+    using entry_type = TypeCollection::value_type;
     auto it = std::find_if(_registry.begin(), _registry.end(), [&name](const entry_type &entry) {
-        return entry.second.name == name;
+        return entry.name == name;
     });
     if (it == _registry.end()) {
         const auto type = counter++;
-        _registry[type] = {name, type, reactions};
+        _registry.emplace_back(name, type, reactions);
         return type;
     }
-    throw std::invalid_argument(fmt::format("The type {} already existed.", name));
+    throw std::invalid_argument(fmt::format("A type with name \"{}\" already existed.", name));
 }
 
 TopologyRegistry::TopologyRegistry(
@@ -219,7 +196,7 @@ void TopologyRegistry::addSpatialReaction(const std::string &name, const readdy:
                                           const readdy::util::particle_type_pair &types_to,
                                           const topology_type_pair &topology_types_to,
                                           scalar rate, scalar radius, reactions::STRMode mode) {
-    spatial_reaction reaction(name, types, topology_types, types_to, topology_types_to, rate, radius, mode);
+    SpatialReaction reaction(name, types, topology_types, types_to, topology_types_to, rate, radius, mode);
     addSpatialReaction(std::move(reaction));
 }
 
@@ -231,6 +208,8 @@ void TopologyRegistry::addSpatialReaction(const std::string &descriptor, scalar 
 void TopologyRegistry::addSpatialReaction(reactions::SpatialTopologyReaction &&reaction) {
     validateSpatialReaction(reaction);
     auto key = std::make_tuple(reaction.type1(), reaction.top_type1(), reaction.type2(), reaction.top_type2());
+    _spatialReactionTypes.emplace(reaction.type1());
+    _spatialReactionTypes.emplace(reaction.type2());
     _spatialReactions[key].push_back(std::move(reaction));
 }
 
@@ -247,7 +226,7 @@ void TopologyRegistry::addSpatialReaction(const std::string &name, const std::st
     addSpatialReaction(name, type_pair, top_pair, type_pair_to, top_pair_to, rate, radius, mode);
 }
 
-void TopologyRegistry::validateSpatialReaction(const spatial_reaction &reaction) const {
+void TopologyRegistry::validateSpatialReaction(const SpatialReaction &reaction) const {
     if (reaction.rate() <= 0) {
         throw std::invalid_argument("The rate of an structural topology reaction (" + reaction.name() +
                                     ") should always be positive");
@@ -269,11 +248,11 @@ void TopologyRegistry::validateSpatialReaction(const spatial_reaction &reaction)
     }
 
     {
-        using tr_entry = spatial_reaction_map::value_type;
+        using tr_entry = SpatialReactionMap::value_type;
         auto it = std::find_if(_spatialReactions.begin(), _spatialReactions.end(),
                                [&reaction](const tr_entry &e) -> bool {
                                    return std::find_if(e.second.begin(), e.second.end(),
-                                                       [&reaction](const spatial_reaction &tr) {
+                                                       [&reaction](const SpatialReaction &tr) {
                                                            return tr.name() == reaction.name();
                                                        }) != e.second.end();
                                });
@@ -334,9 +313,9 @@ void TopologyRegistry::configureTorsionPotential(const std::string &type1, const
             torsionAngle);
 }
 
-std::string TopologyRegistry::generateSpatialReactionRepresentation(const spatial_reaction &reaction) const {
+std::string TopologyRegistry::generateSpatialReactionRepresentation(const SpatialReaction &reaction) const {
     auto pName = [&](particle_type_type t) { return _typeRegistry.get().nameOf(t); };
-    auto tName = [&](topology_type_type t) { return nameOf(t); };
+    auto tName = [&](topology_type_id t) { return nameOf(t); };
 
     std::stringstream ss;
     ss << reaction.name() << ": ";
@@ -379,6 +358,3 @@ std::string TopologyRegistry::generateSpatialReactionRepresentation(const spatia
 }
 }
 }
-
-
-

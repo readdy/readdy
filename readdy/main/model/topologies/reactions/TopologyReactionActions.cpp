@@ -68,7 +68,7 @@ void RemoveEdge::undo() {
 }
 
 
-ChangeTopologyType::ChangeTopologyType(GraphTopology *topology, topology_type_type newType)
+ChangeTopologyType::ChangeTopologyType(GraphTopology *topology, topology_type_id newType)
         : TopologyReactionAction(topology), _newType(newType){}
 
 void ChangeTopologyType::execute() {

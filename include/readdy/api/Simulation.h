@@ -112,7 +112,7 @@ public:
      * @param reactions structual reactions of the type, can also be added with another call
      * @return internal id of the created type
      */
-    topology_type_type registerTopologyType(const std::string& name,
+    topology_type_id registerTopologyType(const std::string& name,
                                             const std::vector<model::top::reactions::StructuralTopologyReaction> &reactions = {});
 
     /**

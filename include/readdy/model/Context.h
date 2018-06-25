@@ -104,14 +104,6 @@ public:
 
     const scalar calculateMaxCutoff() const;
 
-    compartments::CompartmentRegistry &compartments() {
-        return _compartmentRegistry;
-    }
-
-    const compartments::CompartmentRegistry &compartments() const {
-        return _compartmentRegistry;
-    }
-
     /**
      * Method for sanity checking at least some parts of the configuration. It should only be called after configure().
      */
@@ -173,11 +165,19 @@ public:
         return _recordVirial;
     }
 
-    top::TopologyRegistry &topology_registry() {
+    compartments::CompartmentRegistry &compartments() {
+        return _compartmentRegistry;
+    }
+
+    const compartments::CompartmentRegistry &compartments() const {
+        return _compartmentRegistry;
+    }
+
+    top::TopologyRegistry &topologyRegistry() {
         return _topologyRegistry;
     }
 
-    const top::TopologyRegistry &topology_registry() const {
+    const top::TopologyRegistry &topologyRegistry() const {
         return _topologyRegistry;
     }
 

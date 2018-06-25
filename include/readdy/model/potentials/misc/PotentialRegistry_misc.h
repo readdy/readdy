@@ -146,7 +146,7 @@ inline std::string PotentialRegistry::describe() const {
     if (!potentialsOrder2().empty()) {
         description += fmt::format(" - potentials of order 2:{}", rus::newline);
         for (const auto &types : potentialsOrder2()) {
-            description += fmt::format("     * for types \"{}\" and \"{}\"{}", find_pot_name(std::get<0>(types.first)),
+            description += fmt::format(R"(     * for types "{}" and "{}"{})", find_pot_name(std::get<0>(types.first)),
                                        find_pot_name(std::get<1>(types.first)), rus::newline);
             for (auto pot : types.second) {
                 description += fmt::format("         * {}{}", pot->describe(), rus::newline);

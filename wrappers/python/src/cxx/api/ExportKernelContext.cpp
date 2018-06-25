@@ -207,7 +207,7 @@ void exportKernelContext(py::module &module) {
             .def_property_readonly("particle_types", [](KernelContext &self) -> ParticleTypeRegistry&  { return self.particle_types(); }, rvp::reference_internal)
             .def_property_readonly("reactions", [](KernelContext &self) -> ReactionRegistry& { return self.reactions(); }, rvp::reference_internal)
             .def_property_readonly("potentials", [](KernelContext &self) -> PotentialRegistry& { return self.potentials(); }, rvp::reference_internal)
-            .def_property_readonly("topologies", [](KernelContext &self) -> TopologyRegistry& { return self.topology_registry(); }, rvp::reference_internal)
+            .def_property_readonly("topologies", [](KernelContext &self) -> TopologyRegistry& { return self.topologyRegistry(); }, rvp::reference_internal)
             .def_property_readonly("compartments", [](KernelContext &self) -> CompartmentRegistry&  { return self.compartments(); }, rvp::reference_internal)
             .def_property_readonly("shortest_difference_fun", [](const KernelContext &self) -> std::function<Vec3(const Vec3&, const Vec3 &)> {
                 return [&self](const Vec3 &v1, const Vec3 &v2) {

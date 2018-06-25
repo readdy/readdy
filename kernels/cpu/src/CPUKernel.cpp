@@ -61,7 +61,7 @@ void CPUKernel::initialize() {
     }
     for (auto &top : _stateModel.topologies()) {
         top->configure();
-        top->updateReactionRates(context().topology_registry().structuralReactionsOf(top->type()));
+        top->updateReactionRates(context().topologyRegistry().structuralReactionsOf(top->type()));
     }
     _stateModel.reactionRecords().clear();
     _stateModel.resetReactionCounts();

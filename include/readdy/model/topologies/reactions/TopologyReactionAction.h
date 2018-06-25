@@ -194,7 +194,7 @@ public:
      * @param topology this topology
      * @param newType the target type
      */
-    ChangeTopologyType(GraphTopology *topology, topology_type_type newType);
+    ChangeTopologyType(GraphTopology *topology, topology_type_id newType);
 
     /**
      * execute me
@@ -210,11 +210,11 @@ private:
     /**
      * the target type
      */
-    topology_type_type _newType;
+    topology_type_id _newType;
     /**
      * the previous type, stored for undo
      */
-    topology_type_type _prevType {0};
+    topology_type_id _prevType {0};
 };
 
 NAMESPACE_END(actions)

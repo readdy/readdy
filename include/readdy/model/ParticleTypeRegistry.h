@@ -141,10 +141,6 @@ public:
 
     std::string describe() const;
 
-    void configure() {
-        /*no op*/
-    }
-
 private:
 
     particle_type_type _idOf(const std::string &name) const {

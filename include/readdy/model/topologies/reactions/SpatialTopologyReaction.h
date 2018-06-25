@@ -100,19 +100,19 @@ public:
         return _types_to;
     }
 
-    const topology_type_type top_type1() const {
+    const topology_type_id top_type1() const {
         return std::get<0>(_top_types);
     }
 
-    const topology_type_type top_type2() const {
+    const topology_type_id top_type2() const {
         return std::get<1>(_top_types);
     }
 
-    const topology_type_type top_type_to1() const {
+    const topology_type_id top_type_to1() const {
         return std::get<0>(_top_types_to);
     }
 
-    const topology_type_type top_type_to2() const {
+    const topology_type_id top_type_to2() const {
         return std::get<1>(_top_types_to);
     }
 

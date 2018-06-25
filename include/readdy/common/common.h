@@ -51,8 +51,8 @@ using Matrix33 = _internal::ReaDDyMatrix33<scalar>;
 using time_step_type = unsigned long;
 using particle_type_type = unsigned short;
 // signed short on purpose
-using topology_type_type = short;
-constexpr topology_type_type topology_type_empty = static_cast<topology_type_type>(-1);
+using topology_type_id = short;
+constexpr topology_type_id topology_type_empty = static_cast<topology_type_id>(-1);
 
 constexpr bool single_precision = std::is_same<scalar, float>::value;
 constexpr bool double_precision = std::is_same<scalar, double>::value;

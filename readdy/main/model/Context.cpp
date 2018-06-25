@@ -50,10 +50,8 @@ Context::Context()
 }
 
 void Context::configure() {
-    _particleTypeRegistry.configure();
     _potentialRegistry.configure();
     _reactionRegistry.configure();
-    _topologyRegistry.configure();
 
     validate();
 }

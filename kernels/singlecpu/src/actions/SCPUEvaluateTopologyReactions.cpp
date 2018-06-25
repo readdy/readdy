@@ -125,7 +125,7 @@ void SCPUEvaluateTopologyReactions::perform(const util::PerformanceNode &node) {
                 for (auto &&top : new_topologies) {
                     if (!top.isNormalParticle(*kernel)) {
                         // we have a new topology here, update data accordingly.
-                        top.updateReactionRates(context.topology_registry().structuralReactionsOf(top.type()));
+                        top.updateReactionRates(context.topologyRegistry().structuralReactionsOf(top.type()));
                         top.configure();
                         model.insert_topology(std::move(top));
                     } else {
@@ -141,7 +141,7 @@ void SCPUEvaluateTopologyReactions::perform(const util::PerformanceNode &node) {
 
 SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReactions::gatherEvents() {
     const auto& context = kernel->context();
-    const auto& topology_registry = context.topology_registry();
+    const auto& topology_registry = context.topologyRegistry();
     topology_reaction_events events;
     {
         rate_t current_cumulative_rate = 0;
@@ -180,7 +180,7 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
                     if(entry.deactivated || (tidx1 >= 0 && topologyDeactivated(static_cast<std::size_t>(tidx1)))) {
                         continue;
                     }
-                    topology_type_type tt1 = tidx1 >= 0 ? stateModel.topologies().at(static_cast<std::size_t>(tidx1))->type() : static_cast<topology_type_type>(-1);
+                    topology_type_id tt1 = tidx1 >= 0 ? stateModel.topologies().at(static_cast<std::size_t>(tidx1))->type() : static_cast<topology_type_id>(-1);
 
                     nl.forEachNeighbor(it, cell, [&](std::size_t neighborIdx) {
                         auto &neighbor = data.entry_at(neighborIdx);
@@ -191,7 +191,7 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
                                 return;
                             }
 
-                            topology_type_type tt2 = tidx2 >= 0 ? stateModel.topologies().at(static_cast<std::size_t>(tidx2))->type() : static_cast<topology_type_type>(-1);
+                            topology_type_id tt2 = tidx2 >= 0 ? stateModel.topologies().at(static_cast<std::size_t>(tidx2))->type() : static_cast<topology_type_id>(-1);
                             if(tt1 == -1 && tt2 == -1) return;
                             const auto &reactions = topology_registry.spatialReactionsByType(entry.type, tt1,
                                                                                              neighbor.type, tt2);
@@ -282,7 +282,7 @@ void SCPUEvaluateTopologyReactions::handleTopologyTopologyReaction(SCPUStateMode
                                                                    SCPUStateModel::topology_ref &t2,
                                                                    const SCPUEvaluateTopologyReactions::TREvent &event) {
     const auto& context = kernel->context();
-    const auto& top_registry = context.topology_registry();
+    const auto& top_registry = context.topologyRegistry();
     const auto& reaction = top_registry.spatialReactionsByType(event.t1, t1->type(), event.t2, t2->type()).at(event.reaction_idx);
 
     auto& model = kernel->getSCPUKernelStateModel();
@@ -336,17 +336,17 @@ void SCPUEvaluateTopologyReactions::handleTopologyTopologyReaction(SCPUStateMode
         t1->type() = top_type_to1;
         t2->type() = top_type_to2;
 
-        t2->updateReactionRates(context.topology_registry().structuralReactionsOf(t2->type()));
+        t2->updateReactionRates(context.topologyRegistry().structuralReactionsOf(t2->type()));
         t2->configure();
     }
-    t1->updateReactionRates(context.topology_registry().structuralReactionsOf(t1->type()));
+    t1->updateReactionRates(context.topologyRegistry().structuralReactionsOf(t1->type()));
     t1->configure();
 }
 
 void SCPUEvaluateTopologyReactions::handleTopologyParticleReaction(SCPUStateModel::topology_ref &topology,
                                                                    const SCPUEvaluateTopologyReactions::TREvent &event) {
     const auto& context = kernel->context();
-    const auto& top_registry = context.topology_registry();
+    const auto& top_registry = context.topologyRegistry();
     const auto& reaction = top_registry.spatialReactionsByType(event.t1, topology->type(), event.t2,
                                                                topology_type_empty).at(event.reaction_idx);
 
@@ -382,7 +382,7 @@ void SCPUEvaluateTopologyReactions::handleTopologyParticleReaction(SCPUStateMode
     } else {
         topology->type() = reaction.top_type_to2();
     }
-    topology->updateReactionRates(context.topology_registry().structuralReactionsOf(topology->type()));
+    topology->updateReactionRates(context.topologyRegistry().structuralReactionsOf(topology->type()));
     topology->configure();
 }
 
@@ -391,7 +391,7 @@ void SCPUEvaluateTopologyReactions::handleStructuralReaction(SCPUStateModel::top
                                                              const SCPUEvaluateTopologyReactions::TREvent &event,
                                                              SCPUStateModel::topology_ref &topology) const {
     const auto &context = kernel->context();
-    const auto &reactions = context.topology_registry().structuralReactionsOf(topology->type());
+    const auto &reactions = context.topologyRegistry().structuralReactionsOf(topology->type());
     const auto &reaction = reactions.at(static_cast<std::size_t>(event.reaction_idx));
     auto result = reaction.execute(*topology, kernel);
     /*if(result.size() != 2) {

@@ -83,14 +83,14 @@ TEST_P(TestObservables, Topologies) {
     ctx.particle_types().add("Topology Invalid Type", 1.0, readdy::model::particleflavor::TOPOLOGY);
     ctx.particle_types().add("A", 1.0, readdy::model::particleflavor::NORMAL);
 
-    ctx.topology_registry().configureBondPotential("Topology A", "Topology A", {10, 10});
-    ctx.topology_registry().configureBondPotential("Topology A", "Topology B", {10, 10});
-    ctx.topology_registry().configureBondPotential("Topology B", "Topology B", {10, 10});
+    ctx.topologyRegistry().configureBondPotential("Topology A", "Topology A", {10, 10});
+    ctx.topologyRegistry().configureBondPotential("Topology A", "Topology B", {10, 10});
+    ctx.topologyRegistry().configureBondPotential("Topology B", "Topology B", {10, 10});
 
     ctx.boxSize() = {{10, 10, 10}};
 
     std::size_t n_chain_elements = 50;
-    auto &toptypes = ctx.topology_registry();
+    auto &toptypes = ctx.topologyRegistry();
     toptypes.addType("TA");
 
     ctx.boxSize() = {{10, 10, 10}};
