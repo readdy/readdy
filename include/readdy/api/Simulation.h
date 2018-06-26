@@ -636,12 +636,10 @@ public:
     /**
      * This method yields a scheme configurator that can be used in fluent-api style to modify the simulation loop
      * with respect to the needs of the particular system.
-     * @tparam SchemeType the type of simulation loop, can be one of ReaDDyScheme (default) and AdvancedScheme
      * @param useDefaults whether to initialize the configurator with the default values that are used in the simple run
      * @return the configurator object
      */
-    template<typename SchemeType=readdy::api::ReaDDyScheme>
-    readdy::api::SchemeConfigurator<SchemeType> runScheme(bool useDefaults = true);
+    readdy::api::SchemeConfigurator runScheme(bool useDefaults = true);
 
     /**
      * Checks if the kernel is running on single precision.

@@ -40,7 +40,7 @@
 void exportSchemeApi(pybind11::module &module, const std::string &schemeName) {
     namespace py = pybind11;
     using namespace py::literals;
-    using conf = readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>;
+    using conf = readdy::api::SchemeConfigurator;
     py::class_<readdy::api::ReaDDyScheme>(module, schemeName.c_str())
             .def("set_progress_callback", [](readdy::api::ReaDDyScheme &self, const std::function<void(readdy::time_step_type)> &fun)  {
                 self.updateCallback() = fun;

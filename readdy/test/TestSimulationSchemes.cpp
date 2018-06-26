@@ -55,7 +55,7 @@ TEST_P(TestSchemes, SimulationObject) {
     /**
      * use ReaDDyScheme without defaults
      */
-    simulation.runScheme<readdy::api::ReaDDyScheme>(false)
+    simulation.runScheme(false)
             .withEulerBDIntegrator()
             .withReactionScheduler<readdy::model::actions::reactions::UncontrolledApproximation>()
             .configureAndRun(5, .5);
@@ -67,15 +67,6 @@ TEST_P(TestSchemes, SimulationObject) {
             .includeForces(false)
             .withEulerBDIntegrator()
             .withReactionScheduler<readdy::model::actions::reactions::UncontrolledApproximation>()
-            .configureAndRun(5, .5);
-
-    /**
-     * use AdvancedScheme
-     */
-    simulation.runScheme<readdy::api::AdvancedScheme>(false)
-            .includeForces(true)
-            .withEulerBDIntegrator()
-            .includeCompartments(true)
             .configureAndRun(5, .5);
 }
 
@@ -132,7 +123,7 @@ TEST_P(TestSchemes, SkinSizeSanity) {
     simulation.registerHarmonicRepulsionPotential("A", "A", 1., 2.);
     simulation.addParticle("A", 0., 0., 0.);
     simulation.addParticle("A", 1.5, 0., 0.);
-    readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme> configurator = simulation.runScheme(true);
+    readdy::api::SchemeConfigurator configurator = simulation.runScheme(true);
     configurator.withSkinSize(1.);
     auto scheme = configurator.configure(0.001);
     scheme->run(10);

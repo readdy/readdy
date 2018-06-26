@@ -318,7 +318,8 @@ class TestObservablesIO(ReaDDyTestCase):
         handle = sim.register_observable_reactions(1)
         with closing(io.File.create(fname)) as f:
             handle.enable_write_to_file(f, u"reactions", int(3))
-            sim.run_scheme_readdy(True).write_config_to_file(f).configure_and_run(n_timesteps, 1)
+            sim.run_scheme_readdy(True).write_config_to_file(f)\
+                .configure_and_run(n_timesteps, 1, False)
 
         type_str_to_id = ioutils.get_particle_types(fname)
 
@@ -386,7 +387,8 @@ class TestObservablesIO(ReaDDyTestCase):
         handle = sim.register_observable_reaction_counts(1)
         with closing(io.File.create(fname)) as f:
             handle.enable_write_to_file(f, u"reactions", int(3))
-            sim.run_scheme_readdy(True).write_config_to_file(f).with_reaction_scheduler("Gillespie").configure_and_run(n_timesteps, 1)
+            sim.run_scheme_readdy(True).write_config_to_file(f).with_reaction_scheduler("Gillespie")\
+                .configure_and_run(n_timesteps, 1, False)
 
         import readdy.util.io_utils as io_utils
         reactions = io_utils.get_reactions(fname)

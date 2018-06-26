@@ -175,7 +175,7 @@ TEST_P(TestTopologyReactionsExternal, TestGetTopologyForParticleDecay) {
 
     sim.registerStructuralTopologyReaction("TA", r);
 
-    sim.runScheme<api::ReaDDyScheme>(true).evaluateTopologyReactions().configureAndRun(35, 1.);
+    sim.runScheme(true).evaluateTopologyReactions().configureAndRun(35, 1.);
 
     log::trace("got n topologies: {}", sim.currentTopologies().size());
     for(auto top : sim.currentTopologies()) {

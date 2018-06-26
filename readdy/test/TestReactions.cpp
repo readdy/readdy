@@ -91,7 +91,7 @@ TEST_P(TestReactions, TestConstantNumberOfParticleType) {
 
     {
         readdy::util::PerformanceNode pn("", false);
-        auto conf = readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>(kernel.get(), pn);
+        auto conf = readdy::api::SchemeConfigurator(kernel.get(), pn);
         const auto progs = kernel->getAvailableActions();
         conf.configureAndRun(10, 1, false);
     }
@@ -152,7 +152,7 @@ TEST_P(TestReactions, FusionFissionWeights) {
 
     {
         readdy::util::PerformanceNode pn("", false);
-        readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>(kernel.get(), pn).configureAndRun(1, .5, false);
+        readdy::api::SchemeConfigurator(kernel.get(), pn).configureAndRun(1, .5, false);
     }
 }
 

@@ -42,19 +42,6 @@ class TestSchemeApi(ReaDDyTestCase):
             .configure(1)
         scheme.run(10)
 
-    def test_sanity_advanced(self):
-        simulation = Simulation()
-        simulation.set_kernel("SingleCPU")
-        configurator = simulation.run_scheme_advanced(False)
-        scheme = configurator \
-            .with_integrator("EulerBDIntegrator") \
-            .include_forces(False) \
-            .include_compartments(False) \
-            .with_reaction_scheduler("UncontrolledApproximation") \
-            .evaluate_observables(False) \
-            .configure(1)
-        scheme.run(10)
-
     def test_sanity_oneliner(self):
         simulation = Simulation()
         simulation.set_kernel("SingleCPU")
@@ -104,7 +91,7 @@ class TestSchemeApi(ReaDDyTestCase):
                 shall_stop[0] = True
 
         sim.register_observable_n_particles(1, ["A"], increment)
-        scheme = sim.run_scheme_readdy(True).configure(1.)
+        scheme = sim.run_scheme_readdy(True).configure(1., False)
         do_continue = lambda t: not shall_stop[0]
         scheme.run_with_criterion(do_continue)
         np.testing.assert_equal(counter[0], 4)

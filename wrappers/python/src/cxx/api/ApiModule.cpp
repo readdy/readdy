@@ -195,14 +195,8 @@ void exportApi(py::module &api) {
                 self.currentContext() = context;
             })
             .def("run_scheme_readdy", [](sim &self, bool defaults) {
-                     return std::make_unique<readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>>(
-                             self.runScheme<readdy::api::ReaDDyScheme>(defaults)
-                     );
-                 }, "defaults"_a = true
-            )
-            .def("run_scheme_advanced", [](sim &self, bool defaults) {
-                     return std::make_unique<readdy::api::SchemeConfigurator<readdy::api::AdvancedScheme>>(
-                             self.runScheme<readdy::api::AdvancedScheme>(defaults)
+                     return std::make_unique<readdy::api::SchemeConfigurator>(
+                             self.runScheme(defaults)
                      );
                  }, "defaults"_a = true
             )

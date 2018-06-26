@@ -206,7 +206,7 @@ TEST(TestNeighborListImpl, DiffusionAndReaction) {
 
     {
         readdy::util::PerformanceNode pn("", false);
-        auto conf = readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>(kernel.get(), pn);
+        auto conf = readdy::api::SchemeConfigurator(kernel.get(), pn);
         conf.withReactionScheduler<readdy::model::actions::reactions::Gillespie>();
         conf.withSkinSize(.1);
         conf.configureAndRun(100, .01);
@@ -269,7 +269,7 @@ TEST(TestNeighborListImpl, Diffusion) {
     auto connection = kernel->connectObservable(obs.get());
     {
         readdy::util::PerformanceNode pn("", false);
-        auto sc = readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>(kernel.get(), pn);
+        auto sc = readdy::api::SchemeConfigurator(kernel.get(), pn);
         sc.withReactionScheduler<readdy::model::actions::reactions::Gillespie>();
         sc.withSkinSize(.1);
         sc.configureAndRun(100, .01);

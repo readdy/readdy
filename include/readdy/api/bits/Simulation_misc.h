@@ -68,9 +68,8 @@ inline ObservableHandle Simulation::registerObservable(std::unique_ptr<T> observ
     return {uuid, pimpl->observables.at(uuid).get()};
 }
 
-template<typename SchemeType>
-inline readdy::api::SchemeConfigurator<SchemeType> Simulation::runScheme(bool useDefaults) {
+inline readdy::api::SchemeConfigurator Simulation::runScheme(bool useDefaults) {
     ensureKernelSelected();
-    return readdy::api::SchemeConfigurator<SchemeType>(getSelectedKernel(), pimpl->performanceRoot, useDefaults);
+    return readdy::api::SchemeConfigurator(getSelectedKernel(), pimpl->performanceRoot, useDefaults);
 }
 NAMESPACE_END(readdy)

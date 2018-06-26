@@ -266,15 +266,14 @@ class Simulation(object):
     @simulation_scheme.setter
     def simulation_scheme(self, value):
         """
-        Set the simulation scheme to use in the run loop. Thus far there is the `DefaultScheme` and the
-        `AdvancedScheme`.
+        Set the simulation scheme to use in the run loop. Thus far there is the `DefaultScheme`.
 
         :param value: the scheme
         """
-        if value in ("ReaDDyScheme", "AdvancedScheme"):
+        if value in ("ReaDDyScheme",):
             self._simulation_scheme = value
         else:
-            raise ValueError("Simulation scheme value can only be one of \"ReaDDyScheme\" and \"AdvancedScheme\".")
+            raise ValueError("Simulation scheme value can only be \"ReaDDyScheme\".")
 
     @property
     def kernel_configuration(self):
@@ -390,8 +389,6 @@ class Simulation(object):
 
         if self.simulation_scheme == 'ReaDDyScheme':
             conf = self._simulation.run_scheme_readdy(False)
-        elif self.simulation_scheme == 'AdvancedScheme':
-            conf = self._simulation.run_scheme_advanced(False).include_compartments()
         else:
             raise ValueError("Invalid simulation scheme type: {}".format(self.simulation_scheme))
 

@@ -61,12 +61,6 @@
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(api)
-/**
- * declaration of the scheme configurator
- * @tparam SchemeType the type of scheme
- */
-template<typename SchemeType>
-class SchemeConfigurator;
 
 /**
  * superclass for all simulation schemes
@@ -132,7 +126,6 @@ public:
 
 
 protected:
-    template<typename SchemeType>
     friend class SchemeConfigurator;
 
     /**
@@ -263,10 +256,7 @@ struct identity { typedef T type; };
  * The scheme configurator, enabling fluent-api style configuration of the simulation scheme.
  * @tparam SchemeType the scheme type
  */
-template<typename SchemeType>
 class SchemeConfigurator {
-    static_assert(std::is_base_of<SimulationScheme, SchemeType>::value,
-                  "SchemeType must inherit from readdy::api::SimulationScheme");
 public:
 
     /**
@@ -277,7 +267,7 @@ public:
      * @param useDefaults whether to use defaults
      */
     explicit SchemeConfigurator(model::Kernel *const kernel, util::PerformanceNode &perfRoot, bool useDefaults = true)
-            : scheme(std::make_unique<SchemeType>(kernel, perfRoot)), useDefaults(useDefaults) {}
+            : scheme(std::make_unique<ReaDDyScheme>(kernel, perfRoot)), useDefaults(useDefaults) {}
 
     /**
      * Instruct the configurator that the simulation loop should use the provided integrator instance
@@ -406,7 +396,7 @@ public:
      * @param timeStep the time step
      * @return a unique pointer to the scheme instance
      */
-    virtual std::unique_ptr<SchemeType> configure(scalar timeStep, bool checkTimeStep = true) {
+    virtual std::unique_ptr<ReaDDyScheme> configure(scalar timeStep, bool checkTimeStep = true) {
 
         {
             const double threshold = .1;
@@ -416,16 +406,16 @@ public:
                     if (o1Reaction->rate() * timeStep > threshold) {
                         throw std::logic_error(fmt::format(
                                 "Specified a reaction with rate {} and a timestep of {}. Thus, the inverse "
-                                "reaction rate is faster than the time step by a factor of {}.", o1Reaction->rate(),
-                                timeStep, 1. / threshold));
+                                "reaction rate is faster than the time step by at least a factor of {}.",
+                                o1Reaction->rate(), timeStep, 1. / threshold));
                     }
                 }
                 for (const auto &o2Reaction : reactionRegistry.order2Flat()) {
                     if (o2Reaction->rate() * timeStep > threshold) {
                         throw std::logic_error(fmt::format(
                                 "Specified a reaction with rate {} and a timestep of {}. Thus, the inverse "
-                                "reaction rate is faster than the time step by a factor of {}.", o2Reaction->rate(),
-                                timeStep, 1. / threshold));
+                                "reaction rate is faster than the time step by at least a factor of {}.",
+                                o2Reaction->rate(), timeStep, 1. / threshold));
                     }
                 }
             }
@@ -458,7 +448,7 @@ public:
         if (scheme->integrator) scheme->integrator->setTimeStep(timeStep);
         if (scheme->reactionScheduler) scheme->reactionScheduler->setTimeStep(timeStep);
         if (scheme->evaluateTopologyReactions) scheme->evaluateTopologyReactions->setTimeStep(timeStep);
-        std::unique_ptr<SchemeType> ptr = std::move(scheme);
+        std::unique_ptr<ReaDDyScheme> ptr = std::move(scheme);
         scheme = nullptr;
         return ptr;
     }
@@ -500,196 +490,11 @@ protected:
     /**
      * the resulting scheme instance
      */
-    std::unique_ptr<SchemeType> scheme = nullptr;
+    std::unique_ptr<ReaDDyScheme> scheme = nullptr;
     /**
      * the skin size, has to be saved until the neighbor list actions are created
      */
     scalar skinSize = 0;
-};
-
-class AdvancedScheme : public SimulationScheme {
-public:
-    explicit AdvancedScheme(model::Kernel *const kernel, util::PerformanceNode &performanceRoot) : SimulationScheme(kernel, performanceRoot) {};
-
-    using SimulationScheme::run;
-
-    void run(const continue_fun &fun) override {
-        auto runTimer = _performanceRoot.timeit();
-        kernel->initialize();
-        if(configGroup) {
-            model::ioutils::writeSimulationSetup(*configGroup, kernel->context());
-        }
-        if (initNeighborList) initNeighborList->perform(_performanceRoot.subnode("initNeighborList"));
-        if (forces) forces->perform(_performanceRoot.subnode("forces"));
-        if (evaluateObservables) kernel->evaluateObservables(start);
-        time_step_type t = start;
-        while (fun(t)) {
-            if (integrator) integrator->perform(_performanceRoot.subnode("integrator"));
-            if (compartments) compartments->perform(_performanceRoot.subnode("compartments"));
-            if (neighborList) neighborList->perform(_performanceRoot.subnode("neighborList"));
-            // if (forces) forces->perform();
-
-            if (reactionScheduler) reactionScheduler->perform(_performanceRoot.subnode("reactionScheduler"));
-            if (evaluateTopologyReactions) evaluateTopologyReactions->perform(_performanceRoot.subnode("evaluateTopologyReactions"));
-            if (compartments) compartments->perform(_performanceRoot.subnode("compartments"));
-            if (neighborList) neighborList->perform(_performanceRoot.subnode("neighborList"));
-            if (forces) forces->perform(_performanceRoot.subnode("forces"));
-            if (evaluateObservables) kernel->evaluateObservables(t + 1);
-            ++t;
-        }
-
-        if (clearNeighborList) clearNeighborList->perform(_performanceRoot.subnode("clearNeighborList"));
-        start = t;
-        kernel->finalize();
-        log::info("Simulation completed");
-    }
-
-protected:
-
-    template<typename SchemeType>
-    friend
-    class SchemeConfigurator;
-
-    std::unique_ptr<model::actions::EvaluateCompartments> compartments = nullptr;
-};
-
-template<>
-class SchemeConfigurator<AdvancedScheme> {
-public:
-    explicit SchemeConfigurator(model::Kernel *const kernel, util::PerformanceNode& perfRoot, bool useDefaults = true)
-            : scheme(std::make_unique<AdvancedScheme>(kernel, perfRoot)), useDefaults(useDefaults) {}
-
-    SchemeConfigurator &includeCompartments(bool include = true) {
-        if (include) {
-            scheme->compartments = scheme->kernel->actions().evaluateCompartments();
-        } else {
-            scheme->compartments = nullptr;
-        }
-        includeCompartmentsSet = true;
-        return *this;
-    }
-
-    SchemeConfigurator &withIntegrator(std::unique_ptr<model::actions::TimeStepDependentAction> integrator) {
-        scheme->integrator = std::move(integrator);
-        return *this;
-    }
-
-    SchemeConfigurator &withEulerBDIntegrator() {
-        scheme->integrator = scheme->kernel->actions().eulerBDIntegrator(c_::zero);
-        return *this;
-    }
-
-    SchemeConfigurator &withIntegrator(const std::string &integratorName) {
-        scheme->integrator = scheme->kernel->actions().createIntegrator(integratorName, c_::zero);
-        return *this;
-    }
-
-
-    template<typename ReactionSchedulerType>
-    SchemeConfigurator &withReactionScheduler() {
-        return withReactionScheduler(detail::identity<ReactionSchedulerType>());
-    }
-
-    SchemeConfigurator &evaluateTopologyReactions(bool evaluate = true) {
-        if(evaluate) {
-            scheme->evaluateTopologyReactions = scheme->kernel->actions().evaluateTopologyReactions(c_::zero);
-        } else {
-            scheme->evaluateTopologyReactions = nullptr;
-        }
-        return *this;
-    }
-
-    SchemeConfigurator &withReactionScheduler(std::unique_ptr<model::actions::TimeStepDependentAction> reactionScheduler) {
-        scheme->reactionScheduler = std::move(reactionScheduler);
-        return *this;
-    }
-
-    SchemeConfigurator &withReactionScheduler(const std::string &name) {
-        scheme->reactionScheduler = scheme->kernel->actions().createReactionScheduler(name, c_::zero);
-        return *this;
-    }
-
-    SchemeConfigurator &evaluateObservables(bool evaluate = true) {
-        scheme->evaluateObservables = evaluate;
-        evaluateObservablesSet = true;
-        return *this;
-    }
-
-    SchemeConfigurator &includeForces(bool include = true) {
-        if (include) {
-            scheme->forces = scheme->kernel->actions().calculateForces();
-        } else {
-            scheme->forces = nullptr;
-        }
-        includeForcesSet = true;
-        return *this;
-    }
-
-    SchemeConfigurator &writeConfigToFile(File& file) {
-        scheme->configGroup = std::make_unique<h5rd::Group>(file.createGroup("readdy/config"));
-        return *this;
-    }
-
-    SchemeConfigurator &withSkinSize(scalar skin = 0) {
-        skinSize = skin;
-        return *this;
-    }
-
-    std::unique_ptr<AdvancedScheme> configure(scalar timeStep) {
-        if (useDefaults) {
-            if (!scheme->integrator) {
-                scheme->integrator = scheme->kernel->actions().eulerBDIntegrator(timeStep);
-            }
-            if (!scheme->reactionScheduler) {
-                scheme->reactionScheduler = scheme->kernel->actions().gillespie(timeStep);
-            }
-            if (!evaluateObservablesSet) {
-                scheme->evaluateObservables = true;
-            }
-            if (!scheme->forces && !includeForcesSet) {
-                scheme->forces = scheme->kernel->actions().calculateForces();
-            }
-            if (!scheme->compartments && !includeCompartmentsSet) {
-                scheme->compartments = nullptr;
-            }
-        }
-        if (scheme->forces || scheme->reactionScheduler) {
-            using ops = model::actions::UpdateNeighborList::Operation;
-            scheme->initNeighborList = scheme->kernel->actions().updateNeighborList(ops::init, skinSize);
-            scheme->neighborList = scheme->kernel->actions().updateNeighborList(ops::update, skinSize);
-            scheme->clearNeighborList = scheme->kernel->actions().updateNeighborList(ops::clear, skinSize);
-        }
-        if (scheme->integrator) scheme->integrator->setTimeStep(timeStep);
-        if (scheme->reactionScheduler) scheme->reactionScheduler->setTimeStep(timeStep);
-        if (scheme->evaluateTopologyReactions) scheme->evaluateTopologyReactions->setTimeStep(timeStep);
-        std::unique_ptr<AdvancedScheme> ptr = std::move(scheme);
-        scheme = nullptr;
-        return ptr;
-    }
-
-    void configureAndRun(time_step_type steps, scalar timeStep) {
-        configure(timeStep)->SimulationScheme::run(steps);
-    }
-
-protected:
-
-    SchemeConfigurator &withReactionScheduler(detail::identity<model::actions::reactions::Gillespie>) {
-        scheme->reactionScheduler = scheme->kernel->actions().gillespie(c_::zero);
-        return *this;
-    }
-
-    SchemeConfigurator &withReactionScheduler(detail::identity<model::actions::reactions::UncontrolledApproximation>) {
-        scheme->reactionScheduler = scheme->kernel->actions().uncontrolledApproximation(c_::zero);
-        return *this;
-    }
-
-    std::unique_ptr<AdvancedScheme> scheme = nullptr;
-    bool useDefaults;
-    bool evaluateObservablesSet = false;
-    bool includeForcesSet = false;
-    bool includeCompartmentsSet = false;
-    scalar skinSize = 0;
-
 };
 
 NAMESPACE_END(api)
