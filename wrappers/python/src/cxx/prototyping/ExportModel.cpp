@@ -65,7 +65,7 @@ void exportModelClasses(py::module &proto) {
     using namespace pybind11::literals;
 
     py::class_<particle_t>(proto, "Particle")
-            .def(py::init<readdy::scalar, readdy::scalar, readdy::scalar, readdy::particle_type_type>(), "x"_a, "y"_a, "z"_a, "type"_a)
+            .def(py::init<readdy::scalar, readdy::scalar, readdy::scalar, readdy::ParticleTypeId>(), "x"_a, "y"_a, "z"_a, "type"_a)
             .def_property_readonly("pos", [](particle_t &self) { return self.getPos(); })
             .def_property_readonly("type", &particle_t::getType)
             .def_property_readonly("id", &particle_t::getId, rvp::reference_internal)

@@ -101,7 +101,7 @@ void Simulation::addParticle(const std::string &type, scalar x, scalar y, scalar
 
 }
 
-particle_type_type
+ParticleTypeId
 Simulation::registerParticleType(const std::string &name, const scalar diffusionCoefficient,
                                  readdy::model::particle_flavor flavor) {
     ensureKernelSelected();
@@ -402,7 +402,7 @@ readdy::plugin::KernelProvider::raw_kernel_ptr Simulation::setKernel(plugin::Ker
     return pimpl->kernel.get();
 }
 
-readdy::topology_type_id Simulation::registerTopologyType(const std::string &name,
+readdy::TopologyTypeId Simulation::registerTopologyType(const std::string &name,
                                                             const std::vector<model::top::reactions::StructuralTopologyReaction> &reactions) {
     ensureKernelSelected();
     return getSelectedKernel()->context().topologyRegistry().addType(name, reactions);

@@ -38,7 +38,7 @@ namespace actions {
 namespace reactions {
 
 Event::Event(std::uint8_t nEducts, std::uint8_t nProducts, index_type idx1, index_type idx2, scalar reactionRate,
-             scalar cumulativeRate, reaction_index_type reactionIdx, particle_type_type t1, particle_type_type t2)
+             scalar cumulativeRate, reaction_index_type reactionIdx, ParticleTypeId t1, ParticleTypeId t2)
         : nEducts(nEducts), nProducts(nProducts), idx1(idx1), idx2(idx2), rate(reactionRate),
           cumulativeRate(cumulativeRate), reactionIndex(reactionIdx), t1(t1), t2(t2) {
 }

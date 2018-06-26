@@ -50,7 +50,7 @@ using data_t = cpu::data::NLDataContainer;
 struct TestNeighborList : ::testing::Test {
 
     std::unique_ptr<cpu::CPUKernel> kernel;
-    readdy::particle_type_type typeIdA;
+    readdy::ParticleTypeId typeIdA;
 
     std::unique_ptr<readdy::testing::NOOPPotentialOrder2> noop;
 

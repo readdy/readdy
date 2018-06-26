@@ -30,6 +30,8 @@
 #include "gtest/gtest.h"
 #include <readdy/model/Context.h>
 #include <gmock/gmock-matchers.h>
+#include <readdy/model/reactions/Reaction.h>
+#include <readdy/testing/NOOPPotential.h>
 
 namespace {
 
@@ -212,6 +214,195 @@ TEST(Context, Topologies) {
         ASSERT_EQ(reaction.radius(), 20);
         ASSERT_TRUE(reaction.allow_self_connection());
         ASSERT_EQ(reaction.mode(), readdy::model::top::reactions::STRMode::TT_FUSION_ALLOW_SELF);
+    }
+}
+
+
+TEST(Context, ReactionDescriptorAddReactions) {
+    const auto prepareCtx = [](Context &ctx, const std::string& descriptor, readdy::scalar rate){
+        ctx.particle_types().add("A", 1.);
+        ctx.particle_types().add("B", 1.);
+        ctx.particle_types().add("C", 1.);
+        ctx.reactions().add(descriptor, rate);
+        ctx.configure();
+    };
+    {
+        Context ctx;
+        auto decay = "mydecay:A->";
+        prepareCtx(ctx, decay, 2.);
+        const auto &r = ctx.reactions().order1ByName("mydecay");
+        ASSERT_NE(r, nullptr);
+        EXPECT_EQ(r->type(), readdy::model::reactions::ReactionType::Decay);
+        EXPECT_EQ(r->nEducts(), 1);
+        EXPECT_EQ(r->nProducts(), 0);
+        EXPECT_EQ(r->educts()[0], ctx.particle_types().idOf("A"));
+        EXPECT_EQ(r->rate(), 2.);
+    }
+    {
+        Context ctx;
+        auto conversion = "myconv: A -> B";
+        prepareCtx(ctx, conversion, 3.);
+        const auto &r = ctx.reactions().order1ByName("myconv");
+        ASSERT_NE(r, nullptr);
+        EXPECT_EQ(r->type(), readdy::model::reactions::ReactionType::Conversion);
+        EXPECT_EQ(r->nEducts(), 1);
+        EXPECT_EQ(r->nProducts(), 1);
+        EXPECT_EQ(r->educts()[0], ctx.particle_types().idOf("A"));
+        EXPECT_EQ(r->products()[0], ctx.particle_types().idOf("B"));
+        EXPECT_EQ(r->rate(), 3.);
+    }
+    {
+        Context ctx;
+        auto fusion = "myfus: B +(1.2) B -> C [0.5, 0.5]";
+        prepareCtx(ctx, fusion, 4.);
+        const auto &r = ctx.reactions().order2ByName("myfus");
+        ASSERT_NE(r, nullptr);
+        EXPECT_EQ(r->type(), readdy::model::reactions::ReactionType::Fusion);
+        EXPECT_EQ(r->nEducts(), 2);
+        EXPECT_EQ(r->nProducts(), 1);
+        EXPECT_EQ(r->educts()[0], ctx.particle_types().idOf("B"));
+        EXPECT_EQ(r->educts()[1], ctx.particle_types().idOf("B"));
+        EXPECT_EQ(r->products()[0], ctx.particle_types().idOf("C"));
+        EXPECT_EQ(r->eductDistance(), 1.2);
+        EXPECT_EQ(r->weight1(), 0.5);
+        EXPECT_EQ(r->weight2(), 0.5);
+        EXPECT_EQ(r->rate(), 4.);
+    }
+    {
+        Context ctx;
+        auto fission = "myfiss: B -> C +(3.0) B [0.1, 0.9]";
+        prepareCtx(ctx, fission, 5.);
+        const auto &r = ctx.reactions().order1ByName("myfiss");
+        ASSERT_NE(r, nullptr);
+        EXPECT_EQ(r->type(), readdy::model::reactions::ReactionType::Fission);
+        EXPECT_EQ(r->nEducts(), 1);
+        EXPECT_EQ(r->nProducts(), 2);
+        EXPECT_EQ(r->educts()[0], ctx.particle_types().idOf("B"));
+        EXPECT_EQ(r->products()[0], ctx.particle_types().idOf("C"));
+        EXPECT_EQ(r->products()[1], ctx.particle_types().idOf("B"));
+        EXPECT_EQ(r->productDistance(), 3.0);
+        EXPECT_EQ(r->weight1(), 0.1);
+        EXPECT_EQ(r->weight2(), 0.9);
+        EXPECT_EQ(r->rate(), 5.);
+    }
+    {
+        Context ctx;
+        auto enzymatic = "myenz:A +(1.5) C -> B + C";
+        prepareCtx(ctx, enzymatic, 6.);
+        const auto &r = ctx.reactions().order2ByName("myenz");
+        ASSERT_NE(r, nullptr);
+        EXPECT_EQ(r->type(), readdy::model::reactions::ReactionType::Enzymatic);
+        EXPECT_EQ(r->nEducts(), 2);
+        EXPECT_EQ(r->nProducts(), 2);
+        EXPECT_EQ(r->educts()[0], ctx.particle_types().idOf("A"));
+        EXPECT_EQ(r->educts()[1], ctx.particle_types().idOf("C"));
+        EXPECT_EQ(r->products()[0], ctx.particle_types().idOf("B"));
+        EXPECT_EQ(r->products()[1], ctx.particle_types().idOf("C"));
+        EXPECT_EQ(r->eductDistance(), 1.5);
+        EXPECT_EQ(r->rate(), 6.);
+    }
+    {
+        Context ctx;
+        auto enzymatic = "eat:B +(1) A -> A + A";
+        prepareCtx(ctx, enzymatic, 7.);
+        const auto &r = ctx.reactions().order2ByName("eat");
+        ASSERT_NE(r, nullptr);
+        EXPECT_EQ(r->type(), readdy::model::reactions::ReactionType::Enzymatic);
+        EXPECT_EQ(r->nEducts(), 2);
+        EXPECT_EQ(r->nProducts(), 2);
+        EXPECT_EQ(r->educts()[0], ctx.particle_types().idOf("B"));
+        EXPECT_EQ(r->educts()[1], ctx.particle_types().idOf("A"));
+        EXPECT_EQ(r->products()[0], ctx.particle_types().idOf("A"));
+        EXPECT_EQ(r->products()[1], ctx.particle_types().idOf("A"));
+        EXPECT_EQ(r->eductDistance(), 1.);
+        EXPECT_EQ(r->rate(), 7.);
+    }
+}
+
+TEST(Context, ReactionDescriptorInvalidInputs) {
+    Context ctx;
+    ctx.particle_types().add("A", 1.);
+    ctx.particle_types().add("B", 1.);
+    std::vector<std::string> inv = {"myinvalid: + A -> B", "noarrow: A B", " : Noname ->", "weights: A + A -> A [0.1, ]", "blub: A (3)+ A -> B", "eat: A +(1) B -> A + A"};
+    for (const auto &i : inv) {
+        EXPECT_ANY_THROW(ctx.reactions().add(i, 42.));
+    }
+    ctx.configure();
+    EXPECT_EQ(ctx.reactions().nOrder1(), 0);
+    EXPECT_EQ(ctx.reactions().nOrder2(), 0);
+}
+
+TEST(Context, ReactionNameExists) {
+    Context ctx;
+    ctx.particle_types().add("A", 1.);
+    ctx.reactions().add("bla: A->", 1.);
+    EXPECT_ANY_THROW(ctx.reactions().add("bla: A->", 1.));
+}
+
+TEST(Context, ReactionNameAndId) {
+    Context ctx;
+    ctx.particle_types().add("A", 1.);
+    ctx.reactions().add("foo: A->", 1.);
+    ctx.reactions().add("bla: A+(1)A->A", 1.);
+    const auto idFoo = ctx.reactions().idOf("foo");
+    const auto idBla = ctx.reactions().idOf("bla");
+    EXPECT_GE(idFoo, 0);
+    EXPECT_GE(idBla, 0);
+    EXPECT_EQ(ctx.reactions().nameOf(idFoo), "foo");
+    EXPECT_EQ(ctx.reactions().nameOf(idBla), "bla");
+}
+
+TEST(Context, GetAllReactions) {
+    Context ctx;
+    ctx.particle_types().add("A", 1.);
+    ctx.reactions().add("foo: A->", 1.);
+    ctx.reactions().add("bla: A+(1)A->A", 1.);
+    ctx.reactions().addConversion("conv1", "A", "A", 1.);
+    ctx.reactions().addConversion("conv2", "A", "A", 1.);
+    ctx.reactions().addFusion("fusion", "A","A", "A", 1., 1.);
+    ctx.configure();
+    const auto &o1flat = ctx.reactions().order1Flat();
+    const auto &o2flat = ctx.reactions().order2Flat();
+    EXPECT_EQ(o1flat.size() + o2flat.size(), 5);
+}
+
+TEST(Context, GetReactionById) {
+    Context ctx;
+    ctx.particle_types().add("A", 1.);
+    ctx.reactions().add("foo: A->", 1.);
+    ctx.reactions().add("bla: A+(1)A->A", 1.);
+    ctx.configure();
+    auto idFoo = ctx.reactions().idOf("foo");
+    auto idBla = ctx.reactions().idOf("bla");
+    auto foo = ctx.reactions().byId(idFoo);
+    auto bla = ctx.reactions().byId(idBla);
+    EXPECT_EQ(foo->name(), "foo");
+    EXPECT_EQ(bla->name(), "bla");
+}
+
+TEST(Context, PotentialOrder2Map) {
+    Context ctx;
+    ctx.particle_types().add("a", 1.);
+    ctx.particle_types().add("b", 1.);
+    auto noop = std::make_unique<readdy::testing::NOOPPotentialOrder2>(
+            ctx.particle_types()("a"), ctx.particle_types()("b"));
+    ctx.potentials().addUserDefined(noop.get());
+    auto noop2 = std::make_unique<readdy::testing::NOOPPotentialOrder2>(
+            ctx.particle_types()("b"),ctx.particle_types()("a"));
+    ctx.potentials().addUserDefined(noop2.get());
+
+    ctx.potentials().addScreenedElectrostatics("a", "b", 1., 1., 1., 1., 3, .1);
+    {
+        const auto &vector = ctx.potentials().potentialsOf("b", "a");
+        EXPECT_EQ(vector.size(), 3);
+        EXPECT_EQ(vector[0], noop.get());
+        EXPECT_EQ(vector[1], noop2.get());
+    }
+    {
+        const auto &vector = ctx.potentials().potentialsOf("a", "b");
+        EXPECT_EQ(vector.size(), 3);
+        EXPECT_EQ(vector[0], noop.get());
+        EXPECT_EQ(vector[1], noop2.get());
     }
 }
 

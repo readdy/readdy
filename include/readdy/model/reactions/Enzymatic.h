@@ -39,7 +39,7 @@ NAMESPACE_BEGIN(reactions)
 class Enzymatic : public Reaction {
 
 public:
-    Enzymatic(const std::string &name, particle_type_type catalyst, particle_type_type from, particle_type_type to,
+    Enzymatic(const std::string &name, ParticleTypeId catalyst, ParticleTypeId from, ParticleTypeId to,
               const scalar rate, const scalar eductDistance) :
             Reaction(name, rate, eductDistance, 0, 2, 2) {
         _educts = {from, catalyst};
@@ -47,15 +47,15 @@ public:
     }
 
 
-    const particle_type_type getCatalyst() const {
+    const ParticleTypeId getCatalyst() const {
         return _educts[1];
     }
 
-    const particle_type_type getFrom() const {
+    const ParticleTypeId getFrom() const {
         return _educts[0];
     }
 
-    const particle_type_type getTo() const {
+    const ParticleTypeId getTo() const {
         return _products[0];
     }
 

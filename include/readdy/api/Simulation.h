@@ -112,7 +112,7 @@ public:
      * @param reactions structual reactions of the type, can also be added with another call
      * @return internal id of the created type
      */
-    topology_type_id registerTopologyType(const std::string& name,
+    TopologyTypeId registerTopologyType(const std::string& name,
                                             const std::vector<model::top::reactions::StructuralTopologyReaction> &reactions = {});
 
     /**
@@ -241,7 +241,7 @@ public:
      * @param radius the particle's radius, important for some potentials (like, e.g., harmonic repulsion)
      * @param flavor the particle's flavor, one of NORMAL and TOPOLOGY; defaulting to NORMAL
      */
-    particle_type_type
+    ParticleTypeId
     registerParticleType(const std::string &name, scalar diffusionCoefficient,
                          readdy::model::particle_flavor flavor = readdy::model::particleflavor::NORMAL);
 

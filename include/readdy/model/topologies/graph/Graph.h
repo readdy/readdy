@@ -117,7 +117,7 @@ public:
         throw std::invalid_argument("graph did not contain the particle index " + std::to_string(particleIndex));
     }
 
-    void addVertex(std::size_t particleIndex, particle_type_type particleType) {
+    void addVertex(std::size_t particleIndex, ParticleTypeId particleType) {
         _vertices.emplace_back(particleIndex, particleType);
     }
 

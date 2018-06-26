@@ -59,7 +59,7 @@ class ReactionRegistry {
 public:
     using reaction_o1_registry = std::unordered_map<particle::type_type, rea_raw_ptr_vec>;
     using reaction_o2_registry = util::particle_type_pair_unordered_map<rea_raw_ptr_vec>;
-    using reaction_o2_types = std::unordered_set<particle_type_type>;
+    using reaction_o2_types = std::unordered_set<ParticleTypeId>;
 
     using reactions = rea_raw_ptr_vec;
 
@@ -149,7 +149,7 @@ public:
         return order2ByType(_types.get().idOf(type1), _types.get().idOf(type2));
     }
 
-    bool isReactionOrder2Type(particle_type_type type) const {
+    bool isReactionOrder2Type(ParticleTypeId type) const {
         return _reaction_o2_types.find(type) != _reaction_o2_types.end();
     }
 
@@ -165,7 +165,7 @@ public:
         return addConversion(name, _types.get().idOf(from), _types.get().idOf(to), rate);
     }
 
-    reaction_id addConversion(const std::string &name, particle_type_type from, particle_type_type to, scalar rate) {
+    reaction_id addConversion(const std::string &name, ParticleTypeId from, ParticleTypeId to, scalar rate) {
         return emplaceReaction(std::make_shared<Conversion>(name, from, to, rate));
     }
 
@@ -175,8 +175,8 @@ public:
                             rate, eductDistance);
     }
 
-    reaction_id addEnzymatic(const std::string &name, particle_type_type catalyst, particle_type_type from,
-                             particle_type_type to, scalar rate, scalar eductDistance) {
+    reaction_id addEnzymatic(const std::string &name, ParticleTypeId catalyst, ParticleTypeId from,
+                             ParticleTypeId to, scalar rate, scalar eductDistance) {
         return emplaceReaction(std::make_shared<Enzymatic>(name, catalyst, from, to, rate, eductDistance));
     }
 
@@ -187,8 +187,8 @@ public:
                           productDistance, weight1, weight2);
     }
 
-    reaction_id addFission(const std::string &name, particle_type_type from, particle_type_type to1,
-                           particle_type_type to2, scalar rate, scalar productDistance,
+    reaction_id addFission(const std::string &name, ParticleTypeId from, ParticleTypeId to1,
+                           ParticleTypeId to2, scalar rate, scalar productDistance,
                            scalar weight1 = 0.5, scalar weight2 = 0.5) {
         return emplaceReaction(std::make_shared<Fission>(name, from, to1, to2, rate, productDistance, weight1, weight2));
     }
@@ -200,8 +200,8 @@ public:
                          eductDistance, weight1, weight2);
     }
 
-    reaction_id addFusion(const std::string &name, particle_type_type from1, particle_type_type from2,
-                          particle_type_type to, scalar rate, scalar eductDistance,
+    reaction_id addFusion(const std::string &name, ParticleTypeId from1, ParticleTypeId from2,
+                          ParticleTypeId to, scalar rate, scalar eductDistance,
                           scalar weight1 = 0.5, scalar weight2 = 0.5) {
         return emplaceReaction(std::make_shared<Fusion>(name, from1, from2, to, rate, eductDistance, weight1, weight2));
     }
@@ -210,7 +210,7 @@ public:
         return addDecay(name, _types.get().idOf(type), rate);
     }
 
-    reaction_id addDecay(const std::string &name, particle_type_type type, scalar rate) {
+    reaction_id addDecay(const std::string &name, ParticleTypeId type, scalar rate) {
         return emplaceReaction(std::make_shared<Decay>(name, type, rate));
     }
 

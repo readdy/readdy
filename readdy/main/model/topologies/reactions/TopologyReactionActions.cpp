@@ -42,7 +42,7 @@ namespace actions {
 TopologyReactionAction::TopologyReactionAction(GraphTopology *const topology) : topology(topology){ }
 
 ChangeParticleType::ChangeParticleType(GraphTopology *const topology, const vertex &v,
-                                       const particle_type_type &type_to)
+                                       const ParticleTypeId &type_to)
         : TopologyReactionAction(topology), _vertex(v), type_to(type_to), previous_type(type_to){}
 
 AddEdge::AddEdge(GraphTopology *const topology, const edge &edge)
@@ -68,7 +68,7 @@ void RemoveEdge::undo() {
 }
 
 
-ChangeTopologyType::ChangeTopologyType(GraphTopology *topology, topology_type_id newType)
+ChangeTopologyType::ChangeTopologyType(GraphTopology *topology, TopologyTypeId newType)
         : TopologyReactionAction(topology), _newType(newType){}
 
 void ChangeTopologyType::execute() {

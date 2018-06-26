@@ -54,7 +54,7 @@ struct SCPUEvaluateTopologyReactions::TREvent {
     std::size_t topology_idx{0};
     std::ptrdiff_t topology_idx2{-1};
     std::size_t reaction_idx{0};
-    particle_type_type t1{0}, t2{0};
+    ParticleTypeId t1{0}, t2{0};
     // idx1 is always the particle that belongs to a topology
     index_type idx1{0}, idx2{0};
     bool spatial {false};
@@ -180,7 +180,7 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
                     if(entry.deactivated || (tidx1 >= 0 && topologyDeactivated(static_cast<std::size_t>(tidx1)))) {
                         continue;
                     }
-                    topology_type_id tt1 = tidx1 >= 0 ? stateModel.topologies().at(static_cast<std::size_t>(tidx1))->type() : static_cast<topology_type_id>(-1);
+                    TopologyTypeId tt1 = tidx1 >= 0 ? stateModel.topologies().at(static_cast<std::size_t>(tidx1))->type() : static_cast<TopologyTypeId>(-1);
 
                     nl.forEachNeighbor(it, cell, [&](std::size_t neighborIdx) {
                         auto &neighbor = data.entry_at(neighborIdx);
@@ -191,7 +191,7 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
                                 return;
                             }
 
-                            topology_type_id tt2 = tidx2 >= 0 ? stateModel.topologies().at(static_cast<std::size_t>(tidx2))->type() : static_cast<topology_type_id>(-1);
+                            TopologyTypeId tt2 = tidx2 >= 0 ? stateModel.topologies().at(static_cast<std::size_t>(tidx2))->type() : static_cast<TopologyTypeId>(-1);
                             if(tt1 == -1 && tt2 == -1) return;
                             const auto &reactions = topology_registry.spatialReactionsByType(entry.type, tt1,
                                                                                              neighbor.type, tt2);
@@ -348,7 +348,7 @@ void SCPUEvaluateTopologyReactions::handleTopologyParticleReaction(SCPUStateMode
     const auto& context = kernel->context();
     const auto& top_registry = context.topologyRegistry();
     const auto& reaction = top_registry.spatialReactionsByType(event.t1, topology->type(), event.t2,
-                                                               topology_type_empty).at(event.reaction_idx);
+                                                               EmptyTopologyId).at(event.reaction_idx);
 
     auto& model = kernel->getSCPUKernelStateModel();
     auto& data = *model.getParticleData();

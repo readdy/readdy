@@ -55,7 +55,7 @@ struct CPUEvaluateTopologyReactions::TREvent {
     std::ptrdiff_t topology_idx2{-1};
 
     std::size_t reaction_idx{0};
-    particle_type_type t1{0}, t2{0};
+    ParticleTypeId t1{0}, t2{0};
     // idx1 is always the particle that belongs to a topology
     index_type idx1{0}, idx2{0};
     bool spatial {false};
@@ -234,12 +234,12 @@ CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReacti
                                 // use symmetry or skip entirely
                                 return;
                             }
-                            topology_type_id tt1 = hasEntryTop ? topologies.at(
+                            TopologyTypeId tt1 = hasEntryTop ? topologies.at(
                                     static_cast<std::size_t>(entry.topology_index))->type()
-                                                                 : static_cast<topology_type_id>(-1);
-                            topology_type_id tt2 = hasNeighborTop ? topologies.at(
+                                                                 : static_cast<TopologyTypeId>(-1);
+                            TopologyTypeId tt2 = hasNeighborTop ? topologies.at(
                                     static_cast<std::size_t>(neighbor.topology_index))->type()
-                                                                    : static_cast<topology_type_id>(-1);
+                                                                    : static_cast<TopologyTypeId>(-1);
 
                             const auto distSquared = bcs::distSquared(entry.pos, neighbor.pos, box, pbc);
                             std::size_t reaction_index = 0;
@@ -305,7 +305,7 @@ void CPUEvaluateTopologyReactions::handleTopologyParticleReaction(CPUStateModel:
     const auto& context = kernel->context();
     const auto& top_registry = context.topologyRegistry();
     const auto& reaction = top_registry.spatialReactionsByType(event.t1, topology->type(), event.t2,
-                                                               topology_type_empty).at(event.reaction_idx);
+                                                               EmptyTopologyId).at(event.reaction_idx);
 
     auto& model = kernel->getCPUKernelStateModel();
     auto& data = *model.getParticleData();

@@ -220,7 +220,7 @@ void exportApi(py::module &api) {
             .def("available_kernels", &kp::availableKernels);
 
     py::class_<pot2>(api, "Pot2")
-            .def(py::init<readdy::particle_type_type, readdy::particle_type_type, py::object, py::object>())
+            .def(py::init<readdy::ParticleTypeId, readdy::ParticleTypeId, py::object, py::object>())
             .def("calc_energy", &pot2::calculateEnergy, "x_ij"_a)
             .def("calc_force", &pot2::calculateForce, "force"_a, "x_ij"_a);
 

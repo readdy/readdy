@@ -95,7 +95,7 @@ public:
      * @param vertex the vertex
      * @param type_to the target type
      */
-    ChangeParticleType(const vertex_ref &vertex, particle_type_type type_to) : _vertex(vertex), _type_to(type_to) {}
+    ChangeParticleType(const vertex_ref &vertex, ParticleTypeId type_to) : _vertex(vertex), _type_to(type_to) {}
 
     /**
      * Create the corresponding action.
@@ -109,7 +109,7 @@ public:
 
 private:
     vertex_ref _vertex;
-    particle_type_type _type_to;
+    ParticleTypeId _type_to;
 };
 
 class ChangeTopologyType : public Operation {

@@ -45,7 +45,7 @@ public:
     MeanSquaredDisplacement(Kernel *kernel, stride_type stride, std::vector<std::string> typesToCount,
                             Particles *particlesObservable);
 
-    MeanSquaredDisplacement(Kernel *kernel, stride_type stride, const std::vector<particle_type_type> &typesToCount,
+    MeanSquaredDisplacement(Kernel *kernel, stride_type stride, const std::vector<ParticleTypeId> &typesToCount,
                             Particles *particlesObservable);
 
     void evaluate() override = 0;
@@ -53,7 +53,7 @@ public:
     std::string type() const override;
 
 protected:
-    std::vector<particle_type_type> typesToCount;
+    std::vector<ParticleTypeId> typesToCount;
 };
 
 template<typename ParentObs>

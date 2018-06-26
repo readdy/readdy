@@ -67,7 +67,7 @@ public:
      * constructs a vertex to a graph
      * @param particleIndex the particle index this vertex belongs to
      */
-    Vertex(std::size_t particleIndex, particle_type_type particleType)
+    Vertex(std::size_t particleIndex, ParticleTypeId particleType)
             : particleIndex(particleIndex), particleType_(particleType) {}
 
     Vertex(const Vertex &) = delete;
@@ -126,11 +126,11 @@ public:
         return neighbors_;
     }
 
-    const particle_type_type &particleType() const {
+    const ParticleTypeId &particleType() const {
         return particleType_;
     }
 
-    void setParticleType(particle_type_type type) {
+    void setParticleType(ParticleTypeId type) {
         particleType_ = type;
     }
 
@@ -147,7 +147,7 @@ private:
      */
     std::vector<vertex_ptr> neighbors_{};
 
-    particle_type_type particleType_ {0};
+    ParticleTypeId particleType_ {0};
 };
 
 NAMESPACE_END(graph)

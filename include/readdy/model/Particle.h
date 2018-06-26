@@ -47,7 +47,7 @@ public:
 
     using id_type = unsigned long;
     using pos_type = Vec3;
-    using type_type = particle_type_type;
+    using type_type = ParticleTypeId;
 
     Particle(scalar x, scalar y, scalar z, type_type type)
             : id(std::atomic_fetch_add<unsigned long>(&id_counter, 1L)), pos(x, y, z), type(type) {};

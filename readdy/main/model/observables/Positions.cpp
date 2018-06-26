@@ -52,7 +52,7 @@ Positions::Positions(Kernel *const kernel, stride_type stride,
                   _internal::util::transformTypes2(typesToCount, kernel->context())) {}
 
 Positions::Positions(Kernel *const kernel, stride_type stride,
-                     std::vector<particle_type_type> typesToCount) :
+                     std::vector<ParticleTypeId> typesToCount) :
         Observable(kernel, stride), typesToCount(std::move(typesToCount)), pimpl(std::make_unique<Impl>()) {}
 
 void Positions::append() {

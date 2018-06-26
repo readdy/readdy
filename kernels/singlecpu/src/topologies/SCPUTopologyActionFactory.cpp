@@ -72,7 +72,7 @@ SCPUTopologyActionFactory::createCalculateCosineDihedralPotential(
 
 SCPUTopologyActionFactory::action_ref
 SCPUTopologyActionFactory::createChangeParticleType(top::GraphTopology *const topology, const vertex &v,
-                                                    const particle_type_type &type_to) const {
+                                                    const ParticleTypeId &type_to) const {
     return std::make_unique<reactions::op::SCPUChangeParticleType>(
             kernel->getSCPUKernelStateModel().getParticleData(), topology, v, type_to
     );

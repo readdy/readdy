@@ -65,12 +65,12 @@ struct Event {
     std::uint8_t nProducts;
     index_type idx1, idx2;
     reaction_index_type reactionIndex;
-    particle_type_type t1, t2;
+    ParticleTypeId t1, t2;
     scalar rate;
     scalar cumulativeRate;
 
     Event(unsigned int nEducts, unsigned int nProducts, index_type idx1, index_type idx2, scalar reactionRate,
-          scalar cumulativeRate, reaction_index_type reactionIdx, particle_type_type t1, particle_type_type t2);
+          scalar cumulativeRate, reaction_index_type reactionIdx, ParticleTypeId t1, ParticleTypeId t2);
 
     friend std::ostream &operator<<(std::ostream &, const Event &);
 
@@ -93,7 +93,7 @@ struct ParticleBackup {
     std::uint8_t nParticles; // either 1 or 2
     using index_type = model::SCPUParticleData::entry_index;
     index_type idx1, idx2;
-    particle_type_type t1, t2;
+    ParticleTypeId t1, t2;
     Vec3 pos1, pos2;
 
     ParticleBackup(Event event, const readdy::model::actions::reactions::ReversibleReactionConfig *revReaction,

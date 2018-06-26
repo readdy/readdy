@@ -41,8 +41,8 @@ namespace thd = readdy::util::thread;
 
 using entries_it = CPUStateModel::data_type::Entries::iterator;
 using topologies_it = std::vector<std::unique_ptr<readdy::model::top::GraphTopology>>::const_iterator;
-using pot1Map = readdy::model::potentials::PotentialRegistry::potential_o1_registry;
-using pot2Map = readdy::model::potentials::PotentialRegistry::potential_o2_registry;
+using pot1Map = readdy::model::potentials::PotentialRegistry::PotentialsO1Map;
+using pot2Map = readdy::model::potentials::PotentialRegistry::PotentialsO2Map;
 using dist_fun = readdy::model::Context::shortest_dist_fun;
 
 const std::vector<Vec3> CPUStateModel::getParticlePositions() const {
@@ -81,9 +81,9 @@ CPUStateModel::CPUStateModel(data_type &data, const readdy::model::Context &cont
 }
 
 readdy::model::top::GraphTopology *const
-CPUStateModel::addTopology(topology_type_id type, const std::vector<readdy::model::TopologyParticle> &particles) {
+CPUStateModel::addTopology(TopologyTypeId type, const std::vector<readdy::model::TopologyParticle> &particles) {
     std::vector<std::size_t> ids = getParticleData()->addTopologyParticles(particles);
-    std::vector<particle_type_type> types;
+    std::vector<ParticleTypeId> types;
     types.reserve(ids.size());
     for (const auto &p : particles) {
         types.push_back(p.getType());

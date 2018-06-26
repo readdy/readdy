@@ -52,8 +52,8 @@ struct RadialDistribution::Impl {
 };
 
 RadialDistribution::RadialDistribution(Kernel *const kernel, stride_type stride,
-                                       std::vector<scalar> binBorders, std::vector<particle_type_type> typeCountFrom,
-                                       std::vector<particle_type_type> typeCountTo, scalar particleToDensity)
+                                       std::vector<scalar> binBorders, std::vector<ParticleTypeId> typeCountFrom,
+                                       std::vector<ParticleTypeId> typeCountTo, scalar particleToDensity)
         : Observable(kernel, stride), typeCountFrom(std::move(typeCountFrom)), typeCountTo(std::move(typeCountTo)),
           particleToDensity(particleToDensity), pimpl(std::make_unique<Impl>()) {
     setBinBorders(binBorders);

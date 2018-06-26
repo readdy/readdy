@@ -44,7 +44,7 @@ NAMESPACE_BEGIN(observables)
 class RadialDistribution : public Observable<std::pair<std::vector<scalar>, std::vector<scalar>>> {
 public:
     RadialDistribution(Kernel *kernel, stride_type stride, std::vector<scalar> binBorders,
-                       std::vector<particle_type_type> typeCountFrom, std::vector<particle_type_type> typeCountTo,
+                       std::vector<ParticleTypeId> typeCountFrom, std::vector<ParticleTypeId> typeCountTo,
                        scalar particleToDensity);
 
     RadialDistribution(Kernel *kernel, stride_type stride, const std::vector<scalar> &binBorders,
@@ -73,7 +73,7 @@ protected:
     std::unique_ptr<Impl> pimpl;
     std::vector<scalar> binBorders;
     std::vector<scalar> counts;
-    std::vector<particle_type_type> typeCountFrom, typeCountTo;
+    std::vector<ParticleTypeId> typeCountFrom, typeCountTo;
     scalar particleToDensity;
     readdy::io::BloscFilter bloscFilter;
 };

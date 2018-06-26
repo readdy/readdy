@@ -56,9 +56,9 @@ public:
         std::size_t seed{0};
         // auto sorted_quadruple = call(sortTypeQuadruple, quadruple);
         if (std::get<0>(tuple) > std::get<N - 1>(tuple)) {
-            for_each_in_tuple_reverse(tuple, [&seed](particle_type_type ptt) { hash::combine(seed, ptt); });
+            for_each_in_tuple_reverse(tuple, [&seed](ParticleTypeId ptt) { hash::combine(seed, ptt); });
         } else {
-            for_each_in_tuple(tuple, [&seed](particle_type_type ptt) { hash::combine(seed, ptt); });
+            for_each_in_tuple(tuple, [&seed](ParticleTypeId ptt) { hash::combine(seed, ptt); });
         }
         return seed;
     }
@@ -69,7 +69,7 @@ class ForwardTupleHasher {
 public:
     std::size_t operator()(const T& tuple) const {
         std::size_t seed {0};
-        for_each_in_tuple(tuple, [&seed](particle_type_type ptt) { hash::combine(seed, ptt); });
+        for_each_in_tuple(tuple, [&seed](ParticleTypeId ptt) { hash::combine(seed, ptt); });
         return seed;
     }
 };
@@ -97,20 +97,20 @@ public:
     }
 };
 
-using particle_type_pair = std::tuple<particle_type_type, particle_type_type>;
+using particle_type_pair = std::tuple<ParticleTypeId, ParticleTypeId>;
 using particle_type_pair_hasher = ForwardBackwardTupleHasher<particle_type_pair>;
 using particle_type_pair_equal_to = ForwardBackwardTupleEquality<particle_type_pair>;
 template<typename T> using particle_type_pair_unordered_map = std::unordered_map<particle_type_pair, T, particle_type_pair_hasher, particle_type_pair_equal_to>;
-using particle_type_triple = std::tuple<particle_type_type, particle_type_type, particle_type_type>;
+using particle_type_triple = std::tuple<ParticleTypeId, ParticleTypeId, ParticleTypeId>;
 using particle_type_triple_hasher = ForwardBackwardTupleHasher<particle_type_triple>;
 using particle_type_triple_equal_to = ForwardBackwardTupleEquality<particle_type_triple>;
 template<typename T> using particle_type_triple_unordered_map = std::unordered_map<particle_type_triple, T, particle_type_triple_hasher, particle_type_triple_equal_to>;
-using particle_type_quadruple = std::tuple<particle_type_type, particle_type_type, particle_type_type, particle_type_type>;
+using particle_type_quadruple = std::tuple<ParticleTypeId, ParticleTypeId, ParticleTypeId, ParticleTypeId>;
 using particle_type_quadruple_hasher = ForwardBackwardTupleHasher<particle_type_quadruple>;
 using particle_type_quadruple_equal_to = ForwardBackwardTupleEquality<particle_type_quadruple>;
 template<typename T> using particle_type_quadruple_unordered_map = std::unordered_map<particle_type_quadruple, T, particle_type_quadruple_hasher, particle_type_quadruple_equal_to>;
 
-inline particle_type_triple sortTypeTriple(particle_type_type t1, particle_type_type t2, particle_type_type t3) {
+inline particle_type_triple sortTypeTriple(ParticleTypeId t1, ParticleTypeId t2, ParticleTypeId t3) {
     if (t1 > t2) {
         std::swap(t1, t2);
     }
@@ -124,7 +124,7 @@ inline particle_type_triple sortTypeTriple(particle_type_type t1, particle_type_
 }
 
 inline particle_type_quadruple
-sortTypeQuadruple(particle_type_type t1, particle_type_type t2, particle_type_type t3, particle_type_type t4) {
+sortTypeQuadruple(ParticleTypeId t1, ParticleTypeId t2, ParticleTypeId t3, ParticleTypeId t4) {
     // divide into two sets {a, b} and {c, d} and sort them separately
     if (t1 > t2) {
         std::swap(t1, t2);

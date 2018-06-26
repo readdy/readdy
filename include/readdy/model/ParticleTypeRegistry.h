@@ -63,7 +63,7 @@ struct ParticleTypeInfo {
     std::string name;
     scalar diffusionConstant;
     particle_flavor flavor;
-    particle_type_type typeId;
+    ParticleTypeId typeId;
 
     ParticleTypeInfo(const std::string &name, scalar diffusionConstant,
                      particle_flavor flavor, Particle::type_type typeId);
@@ -72,7 +72,7 @@ struct ParticleTypeInfo {
 class ParticleTypeRegistry {
 public:
 
-    using type_map = std::unordered_map<std::string, particle_type_type>;
+    using type_map = std::unordered_map<std::string, ParticleTypeId>;
 
     ParticleTypeRegistry() = default;
 
@@ -86,11 +86,11 @@ public:
 
     ~ParticleTypeRegistry() = default;
 
-    particle_type_type idOf(const std::string &name) const {
+    ParticleTypeId idOf(const std::string &name) const {
         return _idOf(name);
     }
 
-    particle_type_type operator()(const std::string &name) const {
+    ParticleTypeId operator()(const std::string &name) const {
         return idOf(name);
     }
 
@@ -112,7 +112,7 @@ public:
         return diffusionConstantOf(idOf(particleType));
     }
 
-    scalar diffusionConstantOf(particle_type_type particleType) const {
+    scalar diffusionConstantOf(ParticleTypeId particleType) const {
         return particle_info_.at(particleType).diffusionConstant;
     }
 
@@ -120,15 +120,15 @@ public:
         return n_types_;
     }
 
-    std::vector<particle_type_type> typesFlat() const {
-        std::vector<particle_type_type> v;
+    std::vector<ParticleTypeId> typesFlat() const {
+        std::vector<ParticleTypeId> v;
         std::transform(std::begin(type_mapping_), std::end(type_mapping_), std::back_inserter(v), [](const auto &e) {
             return e.second;
         });
         return v;
     }
 
-    std::string nameOf(particle_type_type id) const {
+    std::string nameOf(ParticleTypeId id) const {
         auto it = std::find_if(std::begin(type_mapping_), std::end(type_mapping_), [id](const auto &e) {
             return e.second == id;
         });
@@ -143,7 +143,7 @@ public:
 
 private:
 
-    particle_type_type _idOf(const std::string &name) const {
+    ParticleTypeId _idOf(const std::string &name) const {
         auto it = type_mapping_.find(name);
         if (it == type_mapping_.end()) {
             throw std::invalid_argument(
@@ -154,9 +154,9 @@ private:
     }
 
     std::size_t n_types_ = 0;
-    particle_type_type type_counter_ = 0;
+    ParticleTypeId type_counter_ = 0;
     type_map type_mapping_ {};
-    std::unordered_map<particle_type_type, ParticleTypeInfo> particle_info_ {};
+    std::unordered_map<ParticleTypeId, ParticleTypeInfo> particle_info_ {};
 
 };
 

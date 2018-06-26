@@ -55,11 +55,11 @@ struct TopologyType {
 
     TopologyType() = default;
 
-    TopologyType(std::string name, topology_type_id type, StructuralReactionCollection collection)
+    TopologyType(std::string name, TopologyTypeId type, StructuralReactionCollection collection)
             : name(std::move(name)), type(type), structuralReactions(std::move(collection)) {}
 
     std::string name{""};
-    topology_type_id type{0};
+    TopologyTypeId type{0};
     StructuralReactionCollection structuralReactions{};
 };
 
@@ -69,7 +69,7 @@ public:
     using SpatialReaction = reactions::SpatialTopologyReaction;
     using SpatialReactionMap = topology_particle_type_tuple_umap<std::vector<SpatialReaction>>;
     using SpatialReactionCollection = SpatialReactionMap::mapped_type;
-    using SpatialReactionTypeIds = std::unordered_set<particle_type_type>;
+    using SpatialReactionTypeIds = std::unordered_set<ParticleTypeId>;
 
     using StructuralReaction = TopologyType::StructuralReaction;
     using StructuralReactionCollection = TopologyType::StructuralReactionCollection;
@@ -88,11 +88,11 @@ public:
 
     ~TopologyRegistry() = default;
 
-    topology_type_id addType(const std::string &name, const StructuralReactionCollection &reactions = {});
+    TopologyTypeId addType(const std::string &name, const StructuralReactionCollection &reactions = {});
 
-    void addStructuralReaction(topology_type_id type, const reactions::StructuralTopologyReaction &reaction);
+    void addStructuralReaction(TopologyTypeId type, const reactions::StructuralTopologyReaction &reaction);
 
-    void addStructuralReaction(topology_type_id type, reactions::StructuralTopologyReaction &&reaction);
+    void addStructuralReaction(TopologyTypeId type, reactions::StructuralTopologyReaction &&reaction);
 
     void addStructuralReaction(const std::string &type, const reactions::StructuralTopologyReaction &reaction) {
         addStructuralReaction(idOf(type), reaction);
@@ -102,7 +102,7 @@ public:
         addStructuralReaction(idOf(type), std::forward<reactions::StructuralTopologyReaction>(reaction));
     }
 
-    TopologyType &typeById(topology_type_id type) {
+    TopologyType &typeById(TopologyTypeId type) {
         auto it = std::find_if(std::begin(_registry), std::end(_registry), [type](const auto &e) {
             return e.type == type;
         });
@@ -112,7 +112,7 @@ public:
         throw std::invalid_argument(fmt::format("the requested type {} was not registered", type));
     }
 
-    const TopologyType &typeById(topology_type_id type) const {
+    const TopologyType &typeById(TopologyTypeId type) const {
         auto it = std::find_if(std::begin(_registry), std::end(_registry), [type](const auto &e) {
             return e.type == type;
         });
@@ -130,7 +130,7 @@ public:
 
     const TypeCollection &types() const { return _registry; }
 
-    const std::string &nameOf(topology_type_id type) const {
+    const std::string &nameOf(TopologyTypeId type) const {
         auto it = std::find_if(std::begin(_registry), std::end(_registry), [type](const auto &e) {
             return e.type == type;
         });
@@ -140,8 +140,8 @@ public:
         throw std::invalid_argument(fmt::format("The requested type id {} did not exist.", type));
     }
 
-    topology_type_id idOf(const std::string &name) const {
-        if (name.empty()) return topology_type_empty;
+    TopologyTypeId idOf(const std::string &name) const {
+        if (name.empty()) return EmptyTopologyId;
         using entry_type = TypeCollection::value_type;
         auto it = std::find_if(std::begin(_registry), std::end(_registry), [&name](const auto &e) {
             return e.name == name;
@@ -156,7 +156,7 @@ public:
         return _registry.empty();
     }
 
-    const TopologyType::StructuralReactionCollection &structuralReactionsOf(topology_type_id type) const {
+    const TopologyType::StructuralReactionCollection &structuralReactionsOf(TopologyTypeId type) const {
         auto it = std::find_if(_registry.begin(), _registry.end(), [type](const auto &e) {
             return e.type == type;
         });
@@ -232,8 +232,8 @@ public:
                 _typeRegistry.get().idOf(particleType2), idOf(topologyType2));
     }
 
-    const SpatialReactionCollection &spatialReactionsByType(particle_type_type t1, topology_type_id tt1,
-                                                    particle_type_type t2, topology_type_id tt2) const {
+    const SpatialReactionCollection &spatialReactionsByType(ParticleTypeId t1, TopologyTypeId tt1,
+                                                    ParticleTypeId t2, TopologyTypeId tt2) const {
         auto it = _spatialReactions.find(std::make_tuple(t1, tt1, t2, tt2));
         return it != _spatialReactions.end() ? it->second : _defaultTopologyReactions;
     }
@@ -253,7 +253,7 @@ public:
         return isSpatialReactionType(_typeRegistry.get().idOf(name));
     }
 
-    bool isSpatialReactionType(particle_type_type type) const {
+    bool isSpatialReactionType(ParticleTypeId type) const {
         return _spatialReactionTypes.find(type) != _spatialReactionTypes.end();
     }
 
@@ -282,7 +282,7 @@ public:
     }
 
 private:
-    static topology_type_id counter;
+    static TopologyTypeId counter;
 
     TypeCollection _registry{};
 

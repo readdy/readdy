@@ -113,11 +113,11 @@ void exportPotentials(py::module &proto) {
             .def("get_name", &pot::getPotentialName < pot::WeakInteractionPiecewiseHarmonic > );
 
     py::class_<rdy_pot1, PyPotentialO1>(proto, "PotentialOrder1")
-            .def(py::init<readdy::particle_type_type>())
+            .def(py::init<readdy::ParticleTypeId>())
             .def("calculate_energy", &rdy_pot1::calculateEnergy)
             .def("calculate_force", &rdy_pot1::calculateForce);
     py::class_<rdy_pot2, PyPotentialO2>(proto, "PotentialOrder2")
-            .def(py::init<readdy::particle_type_type, readdy::particle_type_type>())
+            .def(py::init<readdy::ParticleTypeId, readdy::ParticleTypeId>())
             .def("calculate_energy", &rdy_pot2::calculateEnergy)
             .def("calculate_force", &rdy_pot2::calculateForce)
             .def("get_cutoff_radius", &rdy_pot2::getCutoffRadius);

@@ -54,7 +54,7 @@ void Particles::initializeDataSet(File &file, const std::string &dataSetName, st
     h5rd::dimensions fs = {flushStride};
     h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
     auto group = file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName);
-    pimpl->dataSetTypes = group.createVLENDataSet<particle_type_type>("types", fs, dims);
+    pimpl->dataSetTypes = group.createVLENDataSet<ParticleTypeId>("types", fs, dims);
     pimpl->dataSetIds = group.createVLENDataSet<particle_t::id_type>("ids", fs, dims);
     pimpl->dataSetPositions = group.createVLENDataSet("positions", fs, dims,
                                                       h5rd::NativeArrayDataSetType<scalar, 3>(group.parentFile()),

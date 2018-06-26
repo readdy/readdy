@@ -38,7 +38,7 @@ namespace readdy {
 namespace model {
 namespace top {
 
-GraphTopology::GraphTopology(topology_type_id type,
+GraphTopology::GraphTopology(TopologyTypeId type,
                              const Topology::particle_indices &particles, const types_vec &types,
                              const model::Context& context, const model::StateModel *stateModel)
         : Topology(particles), _context(context), _topology_type(type), _stateModel(stateModel) {
@@ -49,7 +49,7 @@ GraphTopology::GraphTopology(topology_type_id type,
     }
 }
 
-GraphTopology::GraphTopology(topology_type_id type,
+GraphTopology::GraphTopology(TopologyTypeId type,
                              Topology::particle_indices &&particles, graph::Graph &&graph,
                              const model::Context& context, const model::StateModel *stateModel)
         : Topology(std::move(particles)), _context(context), graph_(std::move(graph)), _topology_type(type),
@@ -191,8 +191,8 @@ const bool GraphTopology::isNormalParticle(const Kernel &k) const {
     return false;
 }
 
-void GraphTopology::appendParticle(particle_index newParticle, particle_type_type newParticleType,
-                                   particle_index counterPart, particle_type_type counterPartType) {
+void GraphTopology::appendParticle(particle_index newParticle, ParticleTypeId newParticleType,
+                                   particle_index counterPart, ParticleTypeId counterPartType) {
     auto it = std::find(particles.begin(), particles.end(), counterPart);
     if(it != particles.end()) {
         auto counterPartIdx = std::distance(particles.begin(), it);
@@ -211,8 +211,8 @@ void GraphTopology::appendParticle(particle_index newParticle, particle_type_typ
 }
 
 void GraphTopology::appendTopology(GraphTopology &other, Topology::particle_index otherParticle,
-                                   particle_type_type otherNewParticleType, Topology::particle_index thisParticle,
-                                   particle_type_type thisNewParticleType, topology_type_id newType) {
+                                   ParticleTypeId otherNewParticleType, Topology::particle_index thisParticle,
+                                   ParticleTypeId thisNewParticleType, TopologyTypeId newType) {
     auto &otherGraph = other.graph();
 
     if(!otherGraph.vertices().empty()) {

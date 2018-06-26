@@ -123,11 +123,11 @@ public:
         return os;
     }
 
-    const std::array<particle_type_type, 2> &educts() const {
+    const std::array<ParticleTypeId, 2> &educts() const {
         return _educts;
     };
 
-    const std::array<particle_type_type, 2> &products() const {
+    const std::array<ParticleTypeId, 2> &products() const {
         return _products;
     };
 
@@ -145,8 +145,8 @@ protected:
 
     std::uint8_t _nEducts;
     std::uint8_t _nProducts;
-    std::array<particle_type_type, 2> _educts {{0, 0}};
-    std::array<particle_type_type, 2> _products {{0, 0}};
+    std::array<ParticleTypeId, 2> _educts {{0, 0}};
+    std::array<ParticleTypeId, 2> _products {{0, 0}};
     std::string _name;
     reaction_id _id;
     scalar _rate;

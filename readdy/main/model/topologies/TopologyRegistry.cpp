@@ -36,14 +36,14 @@
 namespace readdy {
 namespace model {
 namespace top {
-topology_type_id TopologyRegistry::counter = 0;
+TopologyTypeId TopologyRegistry::counter = 0;
 
-void TopologyRegistry::addStructuralReaction(topology_type_id id,
+void TopologyRegistry::addStructuralReaction(TopologyTypeId id,
                                              const reactions::StructuralTopologyReaction &reaction) {
     typeById(id).structuralReactions.push_back(reaction);
 }
 
-void TopologyRegistry::addStructuralReaction(topology_type_id id,
+void TopologyRegistry::addStructuralReaction(TopologyTypeId id,
                                              reactions::StructuralTopologyReaction &&reaction) {
     typeById(id).structuralReactions.push_back(std::move(reaction));
 }
@@ -172,7 +172,7 @@ std::string TopologyRegistry::describe() const {
     return description;
 }
 
-readdy::topology_type_id TopologyRegistry::addType(const std::string &name,
+readdy::TopologyTypeId TopologyRegistry::addType(const std::string &name,
                                                    const StructuralReactionCollection &reactions) {
     util::validateTypeName(name);
     using entry_type = TypeCollection::value_type;
@@ -314,8 +314,8 @@ void TopologyRegistry::configureTorsionPotential(const std::string &type1, const
 }
 
 std::string TopologyRegistry::generateSpatialReactionRepresentation(const SpatialReaction &reaction) const {
-    auto pName = [&](particle_type_type t) { return _typeRegistry.get().nameOf(t); };
-    auto tName = [&](topology_type_id t) { return nameOf(t); };
+    auto pName = [&](ParticleTypeId t) { return _typeRegistry.get().nameOf(t); };
+    auto tName = [&](TopologyTypeId t) { return nameOf(t); };
 
     std::stringstream ss;
     ss << reaction.name() << ": ";

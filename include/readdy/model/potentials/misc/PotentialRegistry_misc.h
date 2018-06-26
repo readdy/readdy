@@ -40,50 +40,29 @@ namespace readdy {
 namespace model {
 namespace potentials {
 
-inline PotentialRegistry::id_type PotentialRegistry::addUserDefined(potentials::PotentialOrder2 *potential) {
-    auto id = potential->getId();
-    auto type1Id = potential->particleType1();
-    auto type2Id = potential->particleType2();
-    auto pp = std::tie(type1Id, type2Id);
-    if (potentialO2RegistryExternal.find(pp) == potentialO2RegistryExternal.end()) {
-        potentialO2RegistryExternal.emplace(pp, pot_ptr_vec2_external());
-    }
-    potentialO2RegistryExternal[pp].push_back(potential);
-    return id;
-}
-
-inline PotentialRegistry::id_type PotentialRegistry::addUserDefined(potentials::PotentialOrder1 *potential) {
-    auto typeId = potential->particleType();
-    if (potentialO1RegistryExternal.find(typeId) == potentialO1RegistryExternal.end()) {
-        potentialO1RegistryExternal.emplace(std::make_pair(typeId, pot_ptr_vec1_external()));
-    }
-    potentialO1RegistryExternal[typeId].push_back(potential);
-    return potential->getId();
-}
-
-inline void PotentialRegistry::remove(const Potential::id_type handle) {
-    for (auto &entry : potentialO1RegistryInternal) {
+inline void PotentialRegistry::remove(const PotentialId handle) {
+    for (auto &entry : _ownPotentialsO1) {
         entry.second.erase(std::remove_if(entry.second.begin(), entry.second.end(),
                                           [=](const std::shared_ptr<potentials::PotentialOrder1> &p) -> bool {
                                               return handle == p->getId();
                                           }
         ), entry.second.end());
     }
-    for (auto &entry : potentialO2RegistryInternal) {
+    for (auto &entry : _ownPotentialsP2) {
         entry.second.erase(std::remove_if(entry.second.begin(), entry.second.end(),
                                           [=](const std::shared_ptr<potentials::PotentialOrder2> &p) -> bool {
                                               return handle == p->getId();
                                           }
         ), entry.second.end());
     }
-    for (auto &entry : potentialO1RegistryExternal) {
+    for (auto &entry : _potentialsO1) {
         entry.second.erase(std::remove_if(entry.second.begin(), entry.second.end(),
                                           [=](potentials::PotentialOrder1 *p) -> bool {
                                               return handle == p->getId();
                                           }
         ), entry.second.end());
     }
-    for (auto &entry : potentialO2RegistryExternal) {
+    for (auto &entry : _potentialsO2) {
         entry.second.erase(std::remove_if(entry.second.begin(), entry.second.end(),
                                           [=](potentials::PotentialOrder2 *p) -> bool {
                                               return handle == p->getId();
@@ -92,42 +71,9 @@ inline void PotentialRegistry::remove(const Potential::id_type handle) {
     }
 }
 
-inline void PotentialRegistry::configure() {
-    namespace coll = readdy::util::collections;
-    using pair = util::particle_type_pair;
-    using pot1 = potentials::PotentialOrder1;
-    using pot1_ptr = std::shared_ptr<potentials::PotentialOrder1>;
-    using pot2_ptr = std::shared_ptr<potentials::PotentialOrder2>;
-    using pot2 = potentials::PotentialOrder2;
-    potentialO1Registry.clear();
-    potentialO2Registry.clear();
-    _alternativeO2Registry.clear();
-
-    coll::for_each_value(potentialO1RegistryInternal, [&](const particle_type_type type, const pot1_ptr &ptr) {
-        (potentialO1Registry)[type].push_back(ptr.get());
-    });
-    coll::for_each_value(potentialO2RegistryInternal, [&](const pair &type, const pot2_ptr &ptr) {
-        (potentialO2Registry)[type].push_back(ptr.get());
-        _alternativeO2Registry[std::get<0>(type)][std::get<1>(type)].push_back(ptr.get());
-        if(std::get<0>(type) != std::get<1>(type)) {
-            _alternativeO2Registry[std::get<1>(type)][std::get<0>(type)].push_back(ptr.get());
-        }
-    });
-    coll::for_each_value(potentialO1RegistryExternal, [&](const particle_type_type type, pot1 *ptr) {
-        (potentialO1Registry)[type].push_back(ptr);
-    });
-    coll::for_each_value(potentialO2RegistryExternal, [&](const pair &type, pot2 *ptr) {
-        (potentialO2Registry)[type].push_back(ptr);
-        _alternativeO2Registry[std::get<0>(type)][std::get<1>(type)].push_back(ptr);
-        if(std::get<0>(type) != std::get<1>(type)) {
-            _alternativeO2Registry[std::get<1>(type)][std::get<0>(type)].push_back(ptr);
-        }
-    });
-}
-
 inline std::string PotentialRegistry::describe() const {
     namespace rus = readdy::util::str;
-    auto find_pot_name = [this](particle_type_type type) -> const std::string {
+    auto find_pot_name = [this](ParticleTypeId type) -> const std::string {
         for (auto &&t : _types.get().typeMapping()) {
             if (t.second == type) return t.first;
         }

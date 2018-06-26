@@ -43,10 +43,10 @@ NAMESPACE_BEGIN(potentials)
 
 class Potential {
 public:
-    using id_type = short;
-    using order_type = std::uint8_t;
+    using PotentialId = short;
+    using PotentialOrder = std::uint8_t;
 
-    explicit Potential(order_type order) : _order(order), _id(counter++) { }
+    explicit Potential(PotentialOrder order) : _order(order), _id(counter++) { }
 
     Potential(const Potential&) = default;
     Potential& operator=(const Potential&) = delete;
@@ -55,11 +55,11 @@ public:
 
     virtual ~Potential() = default;
 
-    const id_type getId() const {
+    const PotentialId getId() const {
         return _id;
     }
 
-    order_type getOrder() const {
+    PotentialOrder getOrder() const {
         return _order;
     }
 
@@ -73,10 +73,10 @@ public:
     }
 
 private:
-    static id_type counter;
+    static PotentialId counter;
 
-    order_type _order;
-    id_type _id;
+    PotentialOrder _order;
+    PotentialId _id;
 };
 
 NAMESPACE_END(potentials)

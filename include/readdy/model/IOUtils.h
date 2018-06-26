@@ -55,8 +55,8 @@ struct ReactionInfo {
     scalar rate {0};
     scalar educt_distance {0};
     scalar product_distance {0};
-    std::array<particle_type_type, 2> educt_types {{0, 0}};
-    std::array<particle_type_type, 2> product_types {{0, 0}};
+    std::array<ParticleTypeId, 2> educt_types {{0, 0}};
+    std::array<ParticleTypeId, 2> product_types {{0, 0}};
 };
 struct ParticleTypeInfo {
     const char* name;

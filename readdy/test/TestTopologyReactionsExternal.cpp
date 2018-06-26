@@ -321,7 +321,7 @@ TEST_P(TestTopologyReactionsExternal, DefinitionParser) {
         ASSERT_EQ(r.type1(), context.particle_types().idOf("p1"));
         ASSERT_EQ(r.type2(), context.particle_types().idOf("p2"));
         ASSERT_EQ(r.top_type_to1(), context.topologyRegistry().idOf("T3"));
-        ASSERT_EQ(r.top_type_to2(), readdy::topology_type_empty);
+        ASSERT_EQ(r.top_type_to2(), readdy::EmptyTopologyId);
         ASSERT_EQ(r.type_to1(), context.particle_types().idOf("p3"));
         ASSERT_EQ(r.type_to2(), context.particle_types().idOf("p4"));
         ASSERT_EQ(r.name(), "topology-topology fusion type1");
@@ -336,7 +336,7 @@ TEST_P(TestTopologyReactionsExternal, DefinitionParser) {
         ASSERT_EQ(r.type1(), context.particle_types().idOf("p1"));
         ASSERT_EQ(r.type2(), context.particle_types().idOf("p2"));
         ASSERT_EQ(r.top_type_to1(), context.topologyRegistry().idOf("T3"));
-        ASSERT_EQ(r.top_type_to2(), readdy::topology_type_empty);
+        ASSERT_EQ(r.top_type_to2(), readdy::EmptyTopologyId);
         ASSERT_EQ(r.type_to1(), context.particle_types().idOf("p3"));
         ASSERT_EQ(r.type_to2(), context.particle_types().idOf("p4"));
         ASSERT_EQ(r.name(), "topology-topology fusion type2");
@@ -362,11 +362,11 @@ TEST_P(TestTopologyReactionsExternal, DefinitionParser) {
         auto r = parser.parse("topology-particle fusion type: T1 (p1) + (p2) -> T2 (p3--p4)", 10., 11.);
         ASSERT_EQ(r.mode(), readdy::model::top::reactions::STRMode::TP_FUSION);
         ASSERT_EQ(r.top_type1(), context.topologyRegistry().idOf("T1"));
-        ASSERT_EQ(r.top_type2(), readdy::topology_type_empty);
+        ASSERT_EQ(r.top_type2(), readdy::EmptyTopologyId);
         ASSERT_EQ(r.type1(), context.particle_types().idOf("p1"));
         ASSERT_EQ(r.type2(), context.particle_types().idOf("p2"));
         ASSERT_EQ(r.top_type_to1(), context.topologyRegistry().idOf("T2"));
-        ASSERT_EQ(r.top_type_to2(), readdy::topology_type_empty);
+        ASSERT_EQ(r.top_type_to2(), readdy::EmptyTopologyId);
         ASSERT_EQ(r.type_to1(), context.particle_types().idOf("p3"));
         ASSERT_EQ(r.type_to2(), context.particle_types().idOf("p4"));
         ASSERT_EQ(r.name(), "topology-particle fusion type");
@@ -377,11 +377,11 @@ TEST_P(TestTopologyReactionsExternal, DefinitionParser) {
         auto r = parser.parse("topology-particle enzymatic type: T1 (p1) + (p2) -> T2 (p3) + (p4)", 10., 11.);
         ASSERT_EQ(r.mode(), readdy::model::top::reactions::STRMode::TP_ENZYMATIC);
         ASSERT_EQ(r.top_type1(), context.topologyRegistry().idOf("T1"));
-        ASSERT_EQ(r.top_type2(), readdy::topology_type_empty);
+        ASSERT_EQ(r.top_type2(), readdy::EmptyTopologyId);
         ASSERT_EQ(r.type1(), context.particle_types().idOf("p1"));
         ASSERT_EQ(r.type2(), context.particle_types().idOf("p2"));
         ASSERT_EQ(r.top_type_to1(), context.topologyRegistry().idOf("T2"));
-        ASSERT_EQ(r.top_type_to2(), readdy::topology_type_empty);
+        ASSERT_EQ(r.top_type_to2(), readdy::EmptyTopologyId);
         ASSERT_EQ(r.type_to1(), context.particle_types().idOf("p3"));
         ASSERT_EQ(r.type_to2(), context.particle_types().idOf("p4"));
         ASSERT_EQ(r.name(), "topology-particle enzymatic type");

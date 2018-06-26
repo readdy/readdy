@@ -49,7 +49,7 @@ using dihedral_bond = readdy::model::top::pot::CosineDihedralPotential;
 
 TEST(TestTopologyGraphs, TestQuadruple) {
     readdy::util::particle_type_quadruple_hasher hasher;
-    std::array<readdy::particle_type_type, 4> range{1, 2, 3, 4};
+    std::array<readdy::ParticleTypeId, 4> range{1, 2, 3, 4};
     do {
         std::stringstream ss;
         ss << range[0] << ", " << range[1] << ", " << range[2] << ", " << range[3];
@@ -62,7 +62,7 @@ TEST(TestTopologyGraphs, TestQuadruple) {
 
 TEST(TestTopologyGraphs, TestTriple) {
     readdy::util::particle_type_triple_hasher hasher;
-    std::array<readdy::particle_type_type, 3> range{1, 2, 3};
+    std::array<readdy::ParticleTypeId, 3> range{1, 2, 3};
     do {
         std::stringstream ss;
         ss << range[0] << ", " << range[1] << ", " << range[2];

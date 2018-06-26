@@ -50,7 +50,6 @@ Context::Context()
 }
 
 void Context::configure() {
-    _potentialRegistry.configure();
     _reactionRegistry.configure();
 
     validate();

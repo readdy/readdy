@@ -67,7 +67,7 @@ public:
      * @return a unique pointer to the action
      */
     virtual action_ref createChangeParticleType(GraphTopology *const topology, const vertex &v,
-                                                  const particle_type_type &type_to) const = 0;
+                                                  const ParticleTypeId &type_to) const = 0;
 
     /**
      * creates an action that adds an edge in the topology

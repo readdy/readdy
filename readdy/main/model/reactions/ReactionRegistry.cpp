@@ -81,7 +81,7 @@ void ReactionRegistry::configure() {
     _reaction_o2_types.clear();
 
     coll::for_each_value(one_educt_registry_internal,
-                         [&](const particle_type_type type, const reaction1ptr &ptr) {
+                         [&](const ParticleTypeId type, const reaction1ptr &ptr) {
                              (one_educt_registry)[type].push_back(ptr.get());
                          });
     coll::for_each_value(two_educts_registry_internal, [&](const pair &type, const reaction2ptr &r) {
@@ -90,7 +90,7 @@ void ReactionRegistry::configure() {
         _reaction_o2_types.emplace(std::get<1>(type));
     });
     coll::for_each_value(one_educt_registry_external,
-                         [&](const particle_type_type type, reaction *ptr) {
+                         [&](const ParticleTypeId type, reaction *ptr) {
                              (one_educt_registry)[type].push_back(ptr);
                          });
     coll::for_each_value(two_educts_registry_external, [&](const pair &type, reaction *r) {
@@ -104,7 +104,7 @@ void ReactionRegistry::configure() {
 std::string ReactionRegistry::describe() const {
     namespace rus = readdy::util::str;
     std::string description;
-    auto nameOf = [&](particle_type_type t) {return _types.get().nameOf(t);};
+    auto nameOf = [&](ParticleTypeId t) {return _types.get().nameOf(t);};
 
     if (!one_educt_registry.empty()) {
         description += fmt::format(" - unimolecular reactions:{}", rus::newline);

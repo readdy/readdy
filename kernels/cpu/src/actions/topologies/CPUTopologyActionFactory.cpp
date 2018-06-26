@@ -63,7 +63,7 @@ ctop::CPUTopologyActionFactory::createCalculateCosineDihedralPotential(
 ctop::CPUTopologyActionFactory::action_ref
 ctop::CPUTopologyActionFactory::createChangeParticleType(
         top::GraphTopology *const topology, const vertex &v,
-        const readdy::particle_type_type &type_to) const {
+        const readdy::ParticleTypeId &type_to) const {
     return std::make_unique<reactions::op::CPUChangeParticleType>(&_data.get(), topology, v, type_to);
 }
 

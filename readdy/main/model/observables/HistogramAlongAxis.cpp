@@ -47,7 +47,7 @@ struct HistogramAlongAxis::Impl {
 };
 
 HistogramAlongAxis::HistogramAlongAxis(readdy::model::Kernel *const kernel, stride_type stride,
-                                       std::vector<scalar> binBorders, std::set<particle_type_type> typesToCount,
+                                       std::vector<scalar> binBorders, std::set<ParticleTypeId> typesToCount,
                                        unsigned int axis)
         : Observable(kernel, stride), binBorders(binBorders), typesToCount(std::move(typesToCount)), axis(axis),
           pimpl(std::make_unique<Impl>()) {

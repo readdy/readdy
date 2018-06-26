@@ -51,7 +51,7 @@ struct Event {
     readdy::scalar cumulativeRate;
 
     Event(std::uint8_t nEducts, std::uint8_t nProducts, index_type idx1, index_type idx2, readdy::scalar reactionRate,
-          readdy::scalar cumulativeRate, reaction_index_type reactionIdx, particle_type_type t1, particle_type_type t2);
+          readdy::scalar cumulativeRate, reaction_index_type reactionIdx, ParticleTypeId t1, ParticleTypeId t2);
 
     friend std::ostream &operator<<(std::ostream &, const Event &);
 

@@ -86,7 +86,7 @@ class CPUChangeParticleType : public readdy::model::top::reactions::actions::Cha
     CPUStateModel::data_type *const data;
 public:
     CPUChangeParticleType(CPUStateModel::data_type *data, model::top::GraphTopology *topology, const vertex &v,
-                          const particle_type_type &type_to);
+                          const ParticleTypeId &type_to);
 
     void execute() override;
 
