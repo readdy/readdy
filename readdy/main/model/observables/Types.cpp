@@ -53,7 +53,7 @@ CompoundH5Types getVec3Types(h5rd::Object::ParentFileRef ref) {
 CompoundH5Types getReactionRecordTypes(h5rd::Object::ParentFileRef ref) {
     using entry = readdy::model::reactions::ReactionRecord;
     NativeCompoundType nct = NativeCompoundTypeBuilder(sizeof(entry), std::move(ref))
-            .insert<decltype(std::declval<entry>().id)>("reaction_id", offsetof(entry, id))
+            .insert<decltype(std::declval<entry>().id)>("ReactionId", offsetof(entry, id))
             .insert<decltype(std::declval<entry>().type)>("reaction_type", offsetof(entry, type))
             .insertStdArray<decltype(std::declval<entry>().educts)>("educts", offsetof(entry, educts))
             .insertStdArray<decltype(std::declval<entry>().products)>("products", offsetof(entry, products))

@@ -69,7 +69,6 @@ TEST_P(TestTopologyReactionsExternal, TestTopologyEnzymaticReaction) {
             model::Particle(c_::zero, c_::zero, c_::zero, ctx.particle_types().idOf("A"))
     );
     kernel->context().reactions().addEnzymatic("TopologyEnzymatic", "Topology A", "A", "B", 1e16, 1.0);
-    ctx.configure();
 
     auto particles_beforehand = kernel->stateModel().getParticles();
 
@@ -309,7 +308,6 @@ TEST_P(TestTopologyReactionsExternal, DefinitionParser) {
     context.particle_types().add("p2", 1.);
     context.particle_types().add("p3", 1.);
     context.particle_types().add("p4", 1.);
-    context.configure();
 
     readdy::model::top::reactions::STRParser parser (context.topologyRegistry());
 

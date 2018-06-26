@@ -46,7 +46,6 @@ TEST(TestNeighborListIterator, BoxIterator) {
     context.particle_types().add("A", 1.0);
     context.reactions().addFusion("fusion", "A", "A", "A", 1.0, 1.0);
     context.boxSize() = {5., 5., 5.};
-    context.configure();
 
     std::size_t n = 5;
 
@@ -100,7 +99,6 @@ TEST(TestNeighborListIterator, BoxIteratorEmptyBox) {
     context.particle_types().add("A", 1.0);
     context.reactions().addFusion("fusion", "A", "A", "A", 1.0, 1.0);
     context.boxSize() = {5., 5., 5.};
-    context.configure();
 
     ccll.setUp(0, 1, {});
     ccll.update({});

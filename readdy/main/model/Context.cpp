@@ -49,12 +49,6 @@ Context::Context()
           _kernelConfiguration{} {
 }
 
-void Context::configure() {
-    _reactionRegistry.configure();
-
-    validate();
-}
-
 void Context::setKernelConfiguration(const std::string &s) {
     _kernelConfiguration = nlohmann::json::parse(s);
 }
@@ -108,7 +102,6 @@ void Context::validate() const {
 
 std::string Context::describe() {
     namespace rus = readdy::util::str;
-    configure();
     std::string description;
     description += fmt::format("Configured kernel context with:{}", rus::newline);
     description += fmt::format("--------------------------------{}", rus::newline);

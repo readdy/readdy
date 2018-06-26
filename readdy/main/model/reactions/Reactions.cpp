@@ -36,7 +36,7 @@ namespace readdy {
 namespace model {
 namespace reactions {
 
-Reaction::reaction_id Reaction::counter = 0;
+Reaction::ReactionId Reaction::counter = 0;
 
 }
 }

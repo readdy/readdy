@@ -101,7 +101,6 @@ TEST_P(TestTopologies, BondedPotential) {
 
     auto conn = kernel->connectObservable(fObs.get());
 
-    ctx.configure();
     auto calculateForces = kernel->actions().calculateForces();
     calculateForces->perform();
     kernel->evaluateObservables(1);
@@ -146,7 +145,6 @@ TEST_P(TestTopologies, AnglePotential) {
 
     auto conn = kernel->connectObservable(fObs.get());
 
-    ctx.configure();
     auto calculateForces = kernel->actions().calculateForces();
     calculateForces->perform();
     kernel->evaluateObservables(1);
@@ -188,7 +186,6 @@ TEST_P(TestTopologies, MoreComplicatedAnglePotential) {
 
     auto conn = kernel->connectObservable(fObs.get());
 
-    ctx.configure();
     auto calculateForces = kernel->actions().calculateForces();
     calculateForces->perform();
     kernel->evaluateObservables(1);
@@ -248,7 +245,6 @@ TEST_P(TestTopologies, DihedralPotential) {
 
     auto conn = kernel->connectObservable(fObs.get());
     auto calculateForces = kernel->actions().calculateForces();
-    ctx.configure();
     calculateForces->perform();
     kernel->evaluateObservables(1);
 
@@ -291,7 +287,6 @@ TEST_P(TestTopologies, DihedralPotentialSteeperAngle) {
 
     auto conn = kernel->connectObservable(fObs.get());
     auto calculateForces = kernel->actions().calculateForces();
-    ctx.configure();
     calculateForces->perform();
     kernel->evaluateObservables(1);
 

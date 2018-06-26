@@ -65,7 +65,7 @@ inline std::ostream& operator<<(std::ostream& os, const ReversibleType& reversib
 }
 
 struct ReversibleReactionConfig {
-    using ReactionId = readdy::model::reactions::Reaction::reaction_id;
+    using ReactionId = readdy::model::reactions::Reaction::ReactionId;
     using pot = readdy::model::potentials::PotentialOrder2 *;
 
     ReactionId forwardId;

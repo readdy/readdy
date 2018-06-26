@@ -289,7 +289,6 @@ TEST_P(TestObservables, TestForcesObservable) {
     using update_nl = readdy::model::actions::UpdateNeighborList;
     auto &&nl = kernel->actions().updateNeighborList();
     auto &&forces = kernel->actions().calculateForces();
-    kernel->context().configure();
     kernel->initialize();
     {
         auto obsC = kernel->observe().forces(1, std::vector<std::string>{"C"});

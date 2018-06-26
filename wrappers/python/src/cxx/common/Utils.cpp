@@ -317,7 +317,7 @@ std::vector<std::vector<rpy::ReadableReactionRecord>> read_reactions_obs(const s
     auto reactionInfoH5Type = readdy::model::ioutils::getReactionInfoMemoryType(f->ref());
 
     // get reaction info from config
-    std::unordered_map<readdy::model::reactions::Reaction::reaction_id, readdy::model::ioutils::ReactionInfo>
+    std::unordered_map<readdy::model::reactions::Reaction::ReactionId, readdy::model::ioutils::ReactionInfo>
             reactionsMap;
     {
         std::vector<readdy::model::ioutils::ReactionInfo> reactionInfo;

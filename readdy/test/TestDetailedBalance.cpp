@@ -57,7 +57,6 @@ TEST(TestDetailedBalance, ReversibleReactionConfigValuesFusionFission) {
     ctx.potentials().addHarmonicRepulsion("A", "B", 2., 3.);
     ctx.reactions().add("fusion: A +(5) B -> C", 1.);
     ctx.reactions().add("fission: C -> A +(5) B", 2.);
-    ctx.configure();
 
     auto idFusion = ctx.reactions().idOf("fusion");
     auto idFission = ctx.reactions().idOf("fission");
@@ -87,7 +86,6 @@ TEST(TestDetailedBalance, ReversibleReactionConfigValuesConversionConversion) {
     registerAbcSpecies(ctx);
     ctx.reactions().add("forward: A -> B", 1.);
     ctx.reactions().add("backward: B -> A", 2.);
-    ctx.configure();
 
     auto idForward = ctx.reactions().idOf("forward");
     auto idBackward = ctx.reactions().idOf("backward");
@@ -123,7 +121,6 @@ TEST(TestDetailedBalance, ReversibleReactionConfigValuesEnzymaticEnzymatic) {
     ctx.potentials().addHarmonicRepulsion("B", "C", 2., 3.);
     ctx.reactions().add("forward: A +(5) C -> B + C", 1.);
     ctx.reactions().add("backward: B +(5) C -> A + C", 2.);
-    ctx.configure();
 
     auto idForward = ctx.reactions().idOf("forward");
     auto idBackward = ctx.reactions().idOf("backward");
@@ -160,7 +157,6 @@ TEST(TestDetailedBalance, ReversibleReactionConfigFalseInput) {
         registerAbcSpecies(ctx);
         ctx.reactions().add("forward: A +(4) C -> B + C", 1.);
         ctx.reactions().add("backward: B +(5) C -> A + C", 2.);
-        ctx.configure();
         auto idForward = ctx.reactions().idOf("forward");
         auto idBackward = ctx.reactions().idOf("backward");
         EXPECT_THROW(r::ReversibleReactionConfig conf(idForward, idBackward, ctx), std::logic_error);
@@ -172,7 +168,6 @@ TEST(TestDetailedBalance, ReversibleReactionConfigFalseInput) {
         registerAbcSpecies(ctx);
         ctx.reactions().add("forward: A -> B", 1.);
         ctx.reactions().add("backward: B -> C", 2.);
-        ctx.configure();
         auto idForward = ctx.reactions().idOf("forward");
         auto idBackward = ctx.reactions().idOf("backward");
         EXPECT_THROW(r::ReversibleReactionConfig conf(idForward, idBackward, ctx), std::logic_error);
@@ -184,7 +179,6 @@ TEST(TestDetailedBalance, ReversibleReactionConfigFalseInput) {
         registerAbcSpecies(ctx);
         ctx.reactions().add("forward: A +(2) B -> C", 1.);
         ctx.reactions().add("backward: C -> A +(2) A", 2.);
-        ctx.configure();
         auto idForward = ctx.reactions().idOf("forward");
         auto idBackward = ctx.reactions().idOf("backward");
         EXPECT_THROW(r::ReversibleReactionConfig conf(idForward, idBackward, ctx), std::logic_error);
@@ -196,7 +190,6 @@ TEST(TestDetailedBalance, ReversibleReactionConfigFalseInput) {
         registerAbcSpecies(ctx);
         ctx.reactions().add("forward: A +(2) B -> C", 1.);
         ctx.reactions().add("backward: C -> A +(3) B", 2.);
-        ctx.configure();
         auto idForward = ctx.reactions().idOf("forward");
         auto idBackward = ctx.reactions().idOf("backward");
         EXPECT_THROW(r::ReversibleReactionConfig conf(idForward, idBackward, ctx), std::logic_error);
@@ -210,7 +203,6 @@ TEST(TestDetailedBalance, ReversibleReactionConfigValidCases) {
         registerAbcSpecies(ctx);
         ctx.reactions().add("forward: C -> B +(2) A", 2.);
         ctx.reactions().add("backward: A +(2) B -> C", 1.);
-        ctx.configure();
         auto idForward = ctx.reactions().idOf("forward");
         auto idBackward = ctx.reactions().idOf("backward");
         EXPECT_NO_THROW(r::ReversibleReactionConfig conf(idForward, idBackward, ctx));
@@ -221,7 +213,6 @@ TEST(TestDetailedBalance, ReversibleReactionConfigValidCases) {
         registerAbcSpecies(ctx);
         ctx.reactions().add("forward: A +(4) C -> B + C", 1.);
         ctx.reactions().add("backward: B +(4) C -> A + C", 2.);
-        ctx.configure();
         auto idForward = ctx.reactions().idOf("forward");
         auto idBackward = ctx.reactions().idOf("backward");
         r::ReversibleReactionConfig conf(idForward, idBackward, ctx);
@@ -234,7 +225,6 @@ TEST_P(TestDetailedBalanceWithKernels, SearchReversibleReactionsEnzymaticEnzymat
     registerAbcSpecies(ctx);
     ctx.reactions().add("forward: A +(4) C -> B + C", 1.);
     ctx.reactions().add("backward: B +(4) C -> A + C", 2.);
-    ctx.configure();
     auto &&reactions = kernel->actions().detailedBalance(1.);
     const auto &reversibleReactions = reactions->reversibleReactions();
     EXPECT_EQ(reversibleReactions.size(), 1);
@@ -246,7 +236,6 @@ TEST_P(TestDetailedBalanceWithKernels, SearchReversibleReactionsFusionFission) {
     registerAbcSpecies(ctx);
     ctx.reactions().add("fusion: A +(2) B -> C", 1.);
     ctx.reactions().add("fission: C -> A +(2) B", 2.);
-    ctx.configure();
     auto &&reactions = kernel->actions().detailedBalance(1.);
     const auto &reversibleReactions = reactions->reversibleReactions();
     EXPECT_EQ(reversibleReactions.size(), 1);
@@ -258,7 +247,6 @@ TEST_P(TestDetailedBalanceWithKernels, SearchReversibleReactionsFissionFusion) {
     registerAbcSpecies(ctx);
     ctx.reactions().add("fission: C -> A +(2) B", 2.);
     ctx.reactions().add("fusion: B +(2) A -> C", 1.);
-    ctx.configure();
     auto &&reactions = kernel->actions().detailedBalance(1.);
     const auto &reversibleReactions = reactions->reversibleReactions();
     EXPECT_EQ(reversibleReactions.size(), 1);
@@ -277,7 +265,7 @@ TEST_P(TestDetailedBalanceWithKernels, SearchReversibleReactionsMichaelisMenten)
     ctx.reactions().add("fission2: C -> A +(3) D", 3.);
     ctx.reactions().add("fusion2: A +(3) D -> C", 4.);
     ctx.reactions().add("shortcut: B -> D", 5.);
-    ctx.configure();
+    
     auto &&reactions = kernel->actions().detailedBalance(1.);
     const auto &reversibleReactions = reactions->reversibleReactions();
     EXPECT_EQ(reversibleReactions.size(), 2);
@@ -315,7 +303,7 @@ TEST_P(TestDetailedBalanceWithKernels, SearchReversibleReactionsManyMixed) {
     ctx.reactions().add("convRev1: A -> B", 7.);
     ctx.reactions().add("convRev2: B -> A", 8.);
     ctx.reactions().add("convNonRev: C -> B", 9.);
-    ctx.configure();
+    
     auto &&reactions = kernel->actions().detailedBalance(1.);
     const auto &reversibleReactions = reactions->reversibleReactions();
     EXPECT_EQ(reversibleReactions.size(), 3);
@@ -346,7 +334,7 @@ TEST_P(TestDetailedBalanceWithKernels, SearchReversibleReactionsDuplicateReactio
     ctx.reactions().add("fusion: A +(2) B -> C", 2.);
     ctx.reactions().add("fission: C -> A +(2) B", 1.);
     ctx.reactions().add("anotherFusion: A +(2) B -> C", 2.);
-    ctx.configure();
+    
     EXPECT_THROW({ auto &&reactions = kernel->actions().detailedBalance(1.); }, std::logic_error);
 }
 
@@ -355,7 +343,7 @@ TEST_P(TestDetailedBalanceWithKernels, SearchReversibleReactionsWrongWeights) {
     registerAbcSpecies(ctx);
     ctx.reactions().addFusion("fusion", "A", "B", "C", 1., 2., 0.5, 0.5);
     ctx.reactions().addFission("fission", "C", "A", "B", 1., 2., 0.3, 0.7);
-    ctx.configure();
+    
     auto &&reactions = kernel->actions().detailedBalance(1.);
     const auto &reversibleReactions = reactions->reversibleReactions();
     EXPECT_EQ(reversibleReactions.size(), 0);
@@ -376,7 +364,7 @@ auto abcFusionFissionContext = [](readdy::model::Context &ctx, readdy::scalar ra
     ctx.potentials().addHarmonicRepulsion("C", "C", 10., 2. * 1.2599210498948732);
     ctx.reactions().addFission("fission", "C", "A", "B", rateOff, reactionRadius);
     ctx.reactions().addFusion("fusion", "A", "B", "C", rateOn, reactionRadius);
-    ctx.configure();
+    
 };
 
 
@@ -667,7 +655,7 @@ auto abConversionContext = [](readdy::model::Context &ctx, readdy::scalar rateOn
     ctx.potentials().addHarmonicRepulsion("A", "A", 10., interactionDistance);
     ctx.reactions().addConversion("convAB", "A", "B", rateOn);
     ctx.reactions().addConversion("convBA", "B", "A", rateOff);
-    ctx.configure();
+    
 };
 
 TEST_P(TestDetailedBalanceWithKernels, ConversionThatShouldBeAccepted) {
@@ -765,7 +753,7 @@ auto abEnzymaticContext = [](readdy::model::Context &ctx, readdy::scalar rateOn,
     ctx.potentials().addHarmonicRepulsion("A", "A", 10., interactionDistance);
     ctx.reactions().addEnzymatic("convAB", "C", "A", "B", rateOn, interactionDistance);
     ctx.reactions().addEnzymatic("convBA", "C", "B", "A", rateOff, interactionDistance);
-    ctx.configure();
+    
 };
 
 TEST_P(TestDetailedBalanceWithKernels, EnzymaticThatShouldBeAccepted) {

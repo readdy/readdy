@@ -117,8 +117,6 @@ TEST_P(TestCLL, Insert) {
     context.periodicBoundaryConditions()[1] = periodic;
     context.periodicBoundaryConditions()[2] = periodic;
 
-    context.configure();
-
     kernel::cpu::thread_pool pool (readdy_default_n_threads());
 
     kernel::cpu::data::DefaultDataContainer data (context, pool);
@@ -172,8 +170,6 @@ void insertAndDearviateTestImpl(std::uint8_t radius) {
             data.removeEntry(i);
         }
     }
-
-    context.configure();
 
     CLL nl(data, context, pool);
     nl.setUp(0, radius, {});
@@ -246,8 +242,6 @@ void diffuseTestImpl(std::uint8_t radius) {
                                  model::rnd::uniform_real<scalar>(-5, 5), id);
         data.addParticle(particle);
     }
-
-    context.configure();
 
     CLL nl(data, context, pool);
     nl.setUp(0, radius, {});

@@ -71,10 +71,7 @@ TEST_F(TestKernelContext, PeriodicBoundary) {
 TEST_F(TestKernelContext, DistanceFunctions) {
     m::Context ctx;
     ctx.periodicBoundaryConditions() = {{true, true, true}};
-    ctx.boxSize() = {{2, 2, 2}};
-    ctx.configure();
     ctx.boxSize() = {{4, 4, 4}};
-    ctx.configure();
     readdy::Vec3 v1(-1.5, -1.5, 0.);
     readdy::Vec3 v2(+1.5, +1.5, 0.);
     EXPECT_NEAR(readdy::bcs::distSquared(v1, v2, ctx.boxSize().data(), ctx.periodicBoundaryConditions().data()), 2., 1e-9);
@@ -126,7 +123,6 @@ TEST_P(TestKernelContextWithKernels, PotentialOrder1Map) {
 
         uuid2_1 = kernel->context().potentials().addHarmonicRepulsion("A", "C", 0, 4.0);
         uuid2_2 = kernel->context().potentials().addHarmonicRepulsion("B", "C", 0, 5.0);
-        ctx.configure();
     }
     // test that order 1 potentials are set up correctly
     {
@@ -171,7 +167,6 @@ TEST_P(TestKernelContextWithKernels, PotentialOrder1Map) {
     std::for_each(idsToRemove.begin(), idsToRemove.end(), [&](const short id) { ctx.potentials().remove(id); });
     {
         // only one potential for particle type B has a different uuid
-        ctx.configure();
         EXPECT_EQ(ctx.potentials().potentialsOf("A").size(), 0);
         EXPECT_EQ(ctx.potentials().potentialsOf("B").size(), 1);
         EXPECT_EQ(ctx.potentials().potentialsOf("C").size(), 0);
@@ -179,7 +174,6 @@ TEST_P(TestKernelContextWithKernels, PotentialOrder1Map) {
 
         // remove 2nd potential
         ctx.potentials().remove(uuid2_2);
-        ctx.configure();
         EXPECT_EQ(ctx.potentials().potentialsOf("A", "C").size(), 1);
         EXPECT_EQ(ctx.potentials().potentialsOf("B", "C").size(), 0);
     }

@@ -140,7 +140,6 @@ TEST_P(TestTopologyReactions, ChangeParticleType) {
         reaction.raise_if_invalid();
         kernel->context().topologyRegistry().addStructuralReaction(tid, reaction);
     }
-    kernel->context().configure();
     const auto& reactions = kernel->context().topologyRegistry().structuralReactionsOf(tid);
     topology->updateReactionRates(reactions);
     EXPECT_EQ(topology->rates().at(0), 5) << "Expected (constant) rate: 5";
@@ -200,7 +199,6 @@ TEST_P(TestTopologyReactions, AddEdgeNamed) {
         reaction.raise_if_invalid();
         kernel->context().topologyRegistry().addStructuralReaction(tid, reaction);
     }
-    kernel->context().configure();
     const auto &reactions = kernel->context().topologyRegistry().structuralReactionsOf(tid);
     topology->updateReactionRates(reactions);
     auto result = reactions.back().execute(*topology, kernel.get());
@@ -314,7 +312,6 @@ TEST_P(TestTopologyReactions, RemoveEdgeRollback) {
         reaction.roll_back_if_invalid();
         toptypes.addStructuralReaction("TA", reaction);
     }
-    context.configure();
     topology->updateReactionRates(toptypes.structuralReactionsOf("TA"));
     model::top::Topology::particle_indices particles;
     {

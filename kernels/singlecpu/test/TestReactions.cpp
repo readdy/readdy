@@ -60,7 +60,6 @@ TEST(SingleCPUTestReactions, TestDecay) {
     const auto typeId = kernel->context().particle_types().idOf("X");
     std::vector<readdy::model::Particle> particlesToBeginWith{n_particles, {0, 0, 0, typeId}};
     kernel->stateModel().addParticles(particlesToBeginWith);
-    kernel->context().configure();
     initNeighborList->perform();
     for (size_t t = 0; t < 20; t++) {
 
@@ -141,8 +140,6 @@ TEST(SingleCPUTestReactions, TestMultipleReactionTypes) {
     auto pred_contains_C = [=](const readdy::model::Particle &p) { return p.getType() == typeId_C; };
     auto pred_contains_D = [=](const readdy::model::Particle &p) { return p.getType() == typeId_D; };
     auto pred_contains_E = [=](const readdy::model::Particle &p) { return p.getType() == typeId_E; };
-
-    kernel->context().configure();
 
     for (unsigned int t = 0; t < 4; t++) {
 

@@ -54,15 +54,15 @@ void exportKernelContext(py::module &module) {
 
     py::class_<ReactionRegistry>(module, "ReactionRegistry")
             .def("add", &ReactionRegistry::add)
-            .def("add_conversion", (ReactionRegistry::reaction_id(ReactionRegistry::*)(
+            .def("add_conversion", (ReactionRegistry::ReactionId(ReactionRegistry::*)(
     const std::string &, const std::string &, const std::string &, scalar)) &ReactionRegistry::addConversion)
-    .def("add_enzymatic", (ReactionRegistry::reaction_id(ReactionRegistry::*)(
+    .def("add_enzymatic", (ReactionRegistry::ReactionId(ReactionRegistry::*)(
     const std::string &, const std::string &, const std::string &, const std::string &, scalar, scalar)) &ReactionRegistry::addEnzymatic)
-    .def("add_fission", (ReactionRegistry::reaction_id(ReactionRegistry::*)(
+    .def("add_fission", (ReactionRegistry::ReactionId(ReactionRegistry::*)(
     const std::string &, const std::string &, const std::string &, const std::string &, scalar, scalar, scalar, scalar)) &ReactionRegistry::addFission)
-    .def("add_fusion", (ReactionRegistry::reaction_id(ReactionRegistry::*)(
+    .def("add_fusion", (ReactionRegistry::ReactionId(ReactionRegistry::*)(
     const std::string &, const std::string &, const std::string &, const std::string &, scalar, scalar, scalar, scalar)) &ReactionRegistry::addFusion)
-    .def("add_decay", (ReactionRegistry::reaction_id(ReactionRegistry::*)(
+    .def("add_decay", (ReactionRegistry::ReactionId(ReactionRegistry::*)(
     const std::string &, const std::string &, scalar)) &ReactionRegistry::addDecay);
 
     py::class_<ParticleTypeRegistry>(module, "ParticleTypeRegistry")
@@ -193,7 +193,6 @@ void exportKernelContext(py::module &module) {
                           [](KernelContext &self, KernelContext::PeriodicBoundaryConditions pbc) {
                               self.periodicBoundaryConditions() = pbc;
                           })
-            .def("configure", &KernelContext::configure)
             .def("describe", &KernelContext::describe)
             .def("bounding_box_vertices", &KernelContext::getBoxBoundingVertices)
             .def("calculate_max_cutoff", &KernelContext::calculateMaxCutoff)

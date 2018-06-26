@@ -237,7 +237,6 @@ TEST(CPUTestReactions, TestDecay) {
     const auto typeId = kernel->context().particle_types().idOf("X");
     std::vector<readdy::model::Particle> particlesToBeginWith{n_particles, {0, 0, 0, typeId}};
     kernel->stateModel().addParticles(particlesToBeginWith);
-    kernel->context().configure();
     neighborList->perform();
     for (size_t t = 0; t < 20; t++) {
 
@@ -303,7 +302,6 @@ TEST(CPUTestReactions, TestGillespieParallel) {
     kernel->stateModel().addParticle({0, 0, static_cast<scalar>(5), typeA});            // 9
     kernel->stateModel().addParticle({0, 0, static_cast<scalar>(5.5), typeA});          // 10
 
-    kernel->context().configure();
     // a box width in z direction of 12 should divide into two boxes of 5x5x6
     {
         fix_n_threads n_threads{kernel.get(), 2};

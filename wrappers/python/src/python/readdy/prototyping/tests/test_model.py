@@ -56,7 +56,6 @@ class TestModel(ReaDDyTestCase):
     def test_kernel_context_fix_position_fun(self):
         self.ctx.box_size = [1, 1, 1]
         self.ctx.pbc = [True, True, True]
-        self.ctx.configure()
         fix_pos = self.ctx.fix_position_fun
         v_outside = cmn.Vec(4, 4, 4)
         fix_pos(v_outside)
@@ -68,7 +67,6 @@ class TestModel(ReaDDyTestCase):
     def test_kernel_context_shortest_difference(self):
         self.ctx.box_size = [2, 2, 2]
         self.ctx.pbc = [True, True, True]
-        self.ctx.configure()
         diff = self.ctx.shortest_difference_fun
         np.testing.assert_equal(diff(cmn.Vec(0, 0, 0), cmn.Vec(1, 0, 0)), cmn.Vec(1, 0, 0),
                                 err_msg="both vectors were already inside the domain")
@@ -112,7 +110,6 @@ class TestModel(ReaDDyTestCase):
         self.ctx.potentials.add_external_order1(pot)
         particles = [pr.Particle(0, 0, .5, self.ctx.particle_types.id_of("A"))]
         self.model.get_particle_data().add_particles(particles)
-        self.ctx.configure()
 
     def test_potential_order_2(self):
         self.ctx.box_size = [2, 2, 2]
@@ -145,7 +142,6 @@ class TestModel(ReaDDyTestCase):
         particles = [pr.Particle(0, 0, 0, self.ctx.particle_types.id_of("A")),
                      pr.Particle(1, 1, 1, self.ctx.particle_types.id_of("B"))]
         self.model.get_particle_data().add_particles(particles)
-        self.ctx.configure()
 
     def test_potential_registry(self):
         self.ctx.particle_types.add("A", 1.0, 0)

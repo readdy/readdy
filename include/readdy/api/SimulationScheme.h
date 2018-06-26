@@ -406,25 +406,27 @@ public:
      * @param timeStep the time step
      * @return a unique pointer to the scheme instance
      */
-    virtual std::unique_ptr<SchemeType> configure(scalar timeStep) {
+    virtual std::unique_ptr<SchemeType> configure(scalar timeStep, bool checkTimeStep = true) {
 
         {
             const double threshold = .1;
             const auto &reactionRegistry = scheme->kernel->context().reactions();
-            for(const auto &o1Reaction : reactionRegistry.order1Flat()) {
-                if (o1Reaction->rate() * timeStep > threshold) {
-                    throw std::logic_error(fmt::format(
-                            "Specified a reaction with rate {} and a timestep of {}. Thus, the inverse reaction rate "
-                            "is faster than the time step by a factor of {}.", o1Reaction->rate(), timeStep, 
-                            1./threshold));
+            if(checkTimeStep) {
+                for (const auto &o1Reaction : reactionRegistry.order1Flat()) {
+                    if (o1Reaction->rate() * timeStep > threshold) {
+                        throw std::logic_error(fmt::format(
+                                "Specified a reaction with rate {} and a timestep of {}. Thus, the inverse "
+                                "reaction rate is faster than the time step by a factor of {}.", o1Reaction->rate(),
+                                timeStep, 1. / threshold));
+                    }
                 }
-            }
-            for(const auto &o2Reaction : reactionRegistry.order2Flat()) {
-                if(o2Reaction->rate() * timeStep > threshold) {
-                    throw std::logic_error(fmt::format(
-                            "Specified a reaction with rate {} and a timestep of {}. Thus, the inverse reaction rate "
-                            "is faster than the time step by a factor of {}.", o2Reaction->rate(), timeStep,
-                            1./threshold));
+                for (const auto &o2Reaction : reactionRegistry.order2Flat()) {
+                    if (o2Reaction->rate() * timeStep > threshold) {
+                        throw std::logic_error(fmt::format(
+                                "Specified a reaction with rate {} and a timestep of {}. Thus, the inverse "
+                                "reaction rate is faster than the time step by a factor of {}.", o2Reaction->rate(),
+                                timeStep, 1. / threshold));
+                    }
                 }
             }
         }
@@ -467,8 +469,8 @@ public:
      * @param timeStep the time step
      * @see configure(timeStep)
      */
-    void configureAndRun(const time_step_type steps, scalar timeStep) {
-        configure(timeStep)->run(steps);
+    void configureAndRun(const time_step_type steps, scalar timeStep, bool checkTimeStep=true) {
+        configure(timeStep, checkTimeStep)->run(steps);
     }
 
 protected:

@@ -51,11 +51,6 @@
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 
-NAMESPACE_BEGIN(detail)
-template<typename T, typename... Args>
-struct get_reaction_dispatcher;
-NAMESPACE_END(detail)
-
 /**
  * Base class of kernels.
  * A Kernel is used to execute Actions, i.e., instances of readdy::model::actions::Action.
@@ -180,7 +175,6 @@ public:
     virtual readdy::model::top::TopologyActionFactory *const getTopologyActionFactory() = 0;
 
     virtual void initialize() {
-        context().configure();
         log::debug(context().describe());
     };
 

@@ -105,16 +105,9 @@ public:
     const scalar calculateMaxCutoff() const;
 
     /**
-     * Method for sanity checking at least some parts of the configuration. It should only be called after configure().
+     * Method for sanity checking some parts of the configuration.
      */
     void validate() const;
-
-    /**
-     * Copy the reactions and potentials of the internal and external registries into the actual registries, which
-     * is used during the run of the simulation. This step is necessary before the simulation can start. Otherwise the
-     * registered reactions and potentials will not take effect.
-     */
-    void configure();
 
     /**
      * Construct a string that describes the context, i.e. particle types, reactions, potentials and topologies.

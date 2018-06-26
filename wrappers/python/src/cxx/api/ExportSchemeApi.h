@@ -37,26 +37,25 @@
 #include "PyFunction.h"
 
 
-template<typename SchemeType>
 void exportSchemeApi(pybind11::module &module, const std::string &schemeName) {
     namespace py = pybind11;
     using namespace py::literals;
-    using conf = readdy::api::SchemeConfigurator<SchemeType>;
-    py::class_<SchemeType>(module, schemeName.c_str())
-            .def("set_progress_callback", [](SchemeType &self, const std::function<void(readdy::time_step_type)> &fun)  {
+    using conf = readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>;
+    py::class_<readdy::api::ReaDDyScheme>(module, schemeName.c_str())
+            .def("set_progress_callback", [](readdy::api::ReaDDyScheme &self, const std::function<void(readdy::time_step_type)> &fun)  {
                 self.updateCallback() = fun;
             })
-            .def("set_progress_output_stride", [](SchemeType &self, std::size_t stride) {
+            .def("set_progress_output_stride", [](readdy::api::ReaDDyScheme &self, std::size_t stride) {
                 self.progressOutputStride() = stride;
             })
-            .def("run", [](SchemeType& self, const readdy::time_step_type steps) {
+            .def("run", [](readdy::api::ReaDDyScheme& self, const readdy::time_step_type steps) {
                 py::gil_scoped_release release;
                 self.run(steps);
             }, "n_steps"_a)
-            .def("run_with_criterion", [](SchemeType& self, pybind11::object continuingCriterion) {
+            .def("run_with_criterion", [](readdy::api::ReaDDyScheme& self, pybind11::object continuingCriterion) {
                 py::gil_scoped_release release;
                 auto pyFun = readdy::rpy::PyFunction<bool(const readdy::time_step_type current)>(continuingCriterion);
-                self.run(std::move(pyFun));
+                self.run(pyFun);
             }, "continuing_criterion"_a);
     std::string configuratorName =  schemeName + "Configurator";
     py::class_<conf>(module, configuratorName.c_str())
@@ -75,52 +74,11 @@ void exportSchemeApi(pybind11::module &module, const std::string &schemeName) {
             .def("evaluate_observables", &conf::evaluateObservables, py::return_value_policy::reference_internal,
                  "do_evaluate"_a = true)
             .def("with_skin_size", &conf::withSkinSize, py::return_value_policy::reference_internal, "skin_size"_a = -1)
-            .def("configure", &conf::configure, "time_step"_a)
-            .def("configure_and_run", [](conf& self, const readdy::time_step_type steps, readdy::scalar dt) {
+            .def("configure", &conf::configure, "time_step"_a, "validate_time_step"_a=true)
+            .def("configure_and_run", [](conf& self, const readdy::time_step_type steps, readdy::scalar dt, bool validate_dt) {
                 py::gil_scoped_release release;
-                self.configureAndRun(steps, dt);
-            }, "n_time_steps"_a, "time_step"_a);
+                self.configureAndRun(steps, dt, validate_dt);
+            }, "n_time_steps"_a, "time_step"_a, "validate_time_step"_a=true);
 }
-
-template<>
-void exportSchemeApi<readdy::api::AdvancedScheme>(pybind11::module &module, const std::string &schemeName) {
-    namespace py = pybind11;
-    using namespace py::literals;
-    using scheme_t = readdy::api::AdvancedScheme;
-    using conf = readdy::api::SchemeConfigurator<scheme_t>;
-    py::class_<scheme_t>(module, schemeName.c_str())
-            .def("set_progress_callback", [](scheme_t &self, const std::function<void(readdy::time_step_type)> &fun)  {
-                self.updateCallback() = fun;
-            })
-            .def("run", [](scheme_t& self, const readdy::time_step_type steps) {
-                py::gil_scoped_release release;
-                self.run(steps);
-            }, "n_steps"_a)
-            .def("run_with_criterion", [](scheme_t& self, pybind11::object continuingCriterion) {
-                py::gil_scoped_release release;
-                self.run(readdy::rpy::PyFunction<bool(const readdy::time_step_type current)>(continuingCriterion));
-            }, "continue_criterion"_a);
-    std::string configuratorName =  schemeName + "Configurator";
-    py::class_<conf>(module, configuratorName.c_str())
-            .def("with_integrator",
-                 [](conf &self, std::string name) -> conf & { return self.withIntegrator(name); },
-                 py::return_value_policy::reference_internal, "integrator_name"_a)
-            .def("include_forces", &conf::includeForces, py::return_value_policy::reference_internal, "do_include"_a = true)
-            .def("include_compartments", &conf::includeCompartments, py::return_value_policy::reference_internal, "do_include"_a = true)
-            .def("with_reaction_scheduler",
-                 [](conf &self, std::string name) -> conf & {
-                     return (self.withReactionScheduler(name));
-                 },
-                 py::return_value_policy::reference_internal, "reaction_scheduler_name"_a)
-            .def("write_config_to_file", &conf::writeConfigToFile, py::return_value_policy::reference_internal, "file"_a)
-            .def("evaluate_observables", &conf::evaluateObservables, py::return_value_policy::reference_internal, "do_evaluate"_a = true)
-            .def("evaluate_topology_reactions", &conf::evaluateTopologyReactions, py::return_value_policy::reference_internal, "evaluate"_a = true)
-            .def("with_skin_size", &conf::withSkinSize, py::return_value_policy::reference_internal, "skin_size"_a = -1)
-            .def("configure", &conf::configure, "time_step"_a)
-            .def("configure_and_run", [](conf& self, const readdy::time_step_type steps, readdy::scalar dt) {
-                py::gil_scoped_release release;
-                self.configureAndRun(steps, dt);
-            }, "n_time_steps"_a, "time_step"_a);
-};
 
 #endif //READDY_MAIN_EXPORTSCHEMEAPI_H

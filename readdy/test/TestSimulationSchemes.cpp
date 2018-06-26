@@ -120,7 +120,7 @@ TEST_P(TestSchemes, ComplexStoppingCriterion) {
     auto shallContinue = [&doStop](readdy::time_step_type currentStep) {
         return !doStop;
     };
-    auto scheme = simulation.runScheme(true).configure(1.);
+    auto scheme = simulation.runScheme(true).configure(1., false);
     scheme->run(shallContinue);
     EXPECT_EQ(counter, 4);
 }

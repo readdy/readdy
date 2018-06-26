@@ -56,7 +56,6 @@ TEST_P(TestStateModel, CalculateForcesTwoParticles) {
     kernel->context().potentials().addHarmonicRepulsion("A", "A", 1.0, 2.0);
     kernel->context().potentials().addBox("A", .01, {-1.9, -1.9, -1.9}, {3.8, 3.8, 3.8});
 
-    ctx.configure();
     kernel->initialize();
     auto typeIdA = ctx.particle_types().idOf("A");
     auto twoParticles = std::vector<m::Particle> {m::Particle(0., 0., 0., typeIdA), m::Particle(0., 0., 1.8, typeIdA)};
@@ -105,7 +104,6 @@ TEST_P(TestStateModel, CalculateForcesRepulsion) {
     kernel->context().potentials().addBox("A", .01, {-4.9, -4.9, -4.9}, {9.8, 9.8, 9.8});
     kernel->context().potentials().addBox("B", .01, {-4.9, -4.9, -4.9}, {9.8, 9.8, 9.8});
 
-    ctx.configure();
     auto typeIdA = ctx.particle_types().idOf("A");
     auto typeIdB = ctx.particle_types().idOf("B");
     /**
@@ -219,7 +217,6 @@ TEST_P(TestStateModel, CalculateForcesNoForces) {
     ctx.periodicBoundaryConditions() = {{false, false, false}};
     ctx.potentials().addBox("A", .00000001, {-1.9, -1.9, -1.9}, {3.85, 3.85, 3.85});
     ctx.potentials().addBox("B", .00000001, {-1.9, -1.9, -1.9}, {3.85, 3.85, 3.85});
-    ctx.configure();
     auto typeIdA = ctx.particle_types().idOf("A");
     auto typeIdB = ctx.particle_types().idOf("B");
     auto particlesA = std::vector<m::Particle> {

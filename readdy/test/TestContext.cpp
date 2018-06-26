@@ -224,7 +224,6 @@ TEST(Context, ReactionDescriptorAddReactions) {
         ctx.particle_types().add("B", 1.);
         ctx.particle_types().add("C", 1.);
         ctx.reactions().add(descriptor, rate);
-        ctx.configure();
     };
     {
         Context ctx;
@@ -327,7 +326,6 @@ TEST(Context, ReactionDescriptorInvalidInputs) {
     for (const auto &i : inv) {
         EXPECT_ANY_THROW(ctx.reactions().add(i, 42.));
     }
-    ctx.configure();
     EXPECT_EQ(ctx.reactions().nOrder1(), 0);
     EXPECT_EQ(ctx.reactions().nOrder2(), 0);
 }
@@ -360,7 +358,6 @@ TEST(Context, GetAllReactions) {
     ctx.reactions().addConversion("conv1", "A", "A", 1.);
     ctx.reactions().addConversion("conv2", "A", "A", 1.);
     ctx.reactions().addFusion("fusion", "A","A", "A", 1., 1.);
-    ctx.configure();
     const auto &o1flat = ctx.reactions().order1Flat();
     const auto &o2flat = ctx.reactions().order2Flat();
     EXPECT_EQ(o1flat.size() + o2flat.size(), 5);
@@ -371,7 +368,6 @@ TEST(Context, GetReactionById) {
     ctx.particle_types().add("A", 1.);
     ctx.reactions().add("foo: A->", 1.);
     ctx.reactions().add("bla: A+(1)A->A", 1.);
-    ctx.configure();
     auto idFoo = ctx.reactions().idOf("foo");
     auto idBla = ctx.reactions().idOf("bla");
     auto foo = ctx.reactions().byId(idFoo);

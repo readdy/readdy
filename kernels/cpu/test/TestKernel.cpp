@@ -59,8 +59,6 @@ TEST(CPUTestKernel, TestKernelLoad) {
     readdy::log::debug("n_particles={}", particlesToBeginWith.size());
     kernel->stateModel().addParticles(particlesToBeginWith);
 
-    kernel->context().configure();
-
     neighborList->perform();
     for (size_t t = 0; t < 20; t++) {
 

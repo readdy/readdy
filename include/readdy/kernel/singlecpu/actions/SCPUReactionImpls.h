@@ -107,7 +107,6 @@ class SCPUDetailedBalance : public readdy::model::actions::reactions::DetailedBa
 public:
     SCPUDetailedBalance(SCPUKernel *const kernel, scalar timeStep)
             : readdy::model::actions::reactions::DetailedBalance(timeStep), kernel(kernel) {
-        kernel->context().configure();
         searchReversibleReactions(kernel->context());
     };
 

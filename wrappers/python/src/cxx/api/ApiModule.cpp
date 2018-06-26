@@ -64,8 +64,7 @@ enum class ParticleTypeFlavor {
 
 void exportApi(py::module &api) {
     using namespace pybind11::literals;
-    exportSchemeApi<readdy::api::ReaDDyScheme>(api, "ReaDDyScheme");
-    exportSchemeApi<readdy::api::AdvancedScheme>(api, "AdvancedScheme");
+    exportSchemeApi(api, "ReaDDyScheme");
 
     auto topologyModule = api.def_submodule("top");
     exportTopologies(topologyModule);

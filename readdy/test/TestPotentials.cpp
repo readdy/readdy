@@ -167,8 +167,6 @@ TEST_P(TestPotentials, TestLennardJonesRepellent) {
         collectedForces.insert(collectedForces.end(), result.begin(), result.end());
     });
     auto conn = kernel->connectObservable(fObs.get());
-    // configure the context
-    ctx.configure();
 
     // we need to update the neighbor list as this is a pair potential
     auto neighborList = kernel->actions().updateNeighborList(readdy::model::actions::UpdateNeighborList::init);
@@ -238,8 +236,6 @@ TEST_P(TestPotentials, ScreenedElectrostatics) {
         collectedForces.insert(collectedForces.end(), result.begin(), result.end());
     });
     auto conn = kernel->connectObservable(fObs.get());
-    // configure the context
-    ctx.configure();
 
     // we need to update the neighbor list as this is a pair potential
     auto neighborList = kernel->actions().updateNeighborList();
@@ -293,8 +289,6 @@ TEST_P(TestPotentials, SphericalMembrane) {
         collectedForces.insert(collectedForces.end(), result.begin(), result.end());
     });
     auto conn = kernel->connectObservable(fObs.get());
-    // configure the context
-    ctx.configure();
 
     // we need to update the neighbor list as this is a pair potential
     auto neighborList = kernel->actions().updateNeighborList();
@@ -349,8 +343,6 @@ TEST_P(TestPotentials, SphericalBarrier) {
         collectedForces.insert(collectedForces.end(), result.begin(), result.end());
     });
     auto connForces = kernel->connectObservable(fObs.get());
-
-    ctx.configure();
 
     kernel->initialize();
 

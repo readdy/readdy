@@ -93,7 +93,7 @@ TEST_P(TestReactions, TestConstantNumberOfParticleType) {
         readdy::util::PerformanceNode pn("", false);
         auto conf = readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>(kernel.get(), pn);
         const auto progs = kernel->getAvailableActions();
-        conf.configureAndRun(10, 1);
+        conf.configureAndRun(10, 1, false);
     }
 
 }
@@ -115,7 +115,6 @@ TEST_P(TestReactions, FusionFissionWeights) {
     context.particle_types().add("F", 0.0);
     context.periodicBoundaryConditions() = {{true, true, true}};
     context.boxSize() = {{20, 20, 20}};
-    context.configure();
 
     const readdy::scalar weightF {static_cast<readdy::scalar>(0)};
     const readdy::scalar weightA  {static_cast<readdy::scalar>(1.)};
@@ -153,7 +152,7 @@ TEST_P(TestReactions, FusionFissionWeights) {
 
     {
         readdy::util::PerformanceNode pn("", false);
-        readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>(kernel.get(), pn).configureAndRun(1, .5);
+        readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>(kernel.get(), pn).configureAndRun(1, .5, false);
     }
 }
 
@@ -172,7 +171,6 @@ TEST_P(TestReactionsWithHandler, FusionThroughBoundary) {
         // resulting particle should be at 4.9
         kernel->stateModel().addParticle({4.5, 4.5, 4.5, ctx.particle_types().idOf("A")});
         kernel->stateModel().addParticle({-4.7, -4.7, -4.7, ctx.particle_types().idOf("A")});
-        kernel->context().configure();
         neighborList->perform();
         reactions->perform();
 
@@ -199,7 +197,6 @@ TEST_P(TestReactionsWithHandler, FissionNearBoundary) {
         auto &&neighborList = kernel->actions().updateNeighborList();
         // one product will be in negative-x halfspace, the other in positive-x halfspace
         kernel->stateModel().addParticle({-4.9999999, 0, 0, ctx.particle_types().idOf("A")});
-        kernel->context().configure();
         neighborList->perform();
         reactions->perform();
 

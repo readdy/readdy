@@ -64,7 +64,6 @@ struct TestNeighborList : ::testing::Test {
         noop = std::make_unique<readdy::testing::NOOPPotentialOrder2>(a_id, a_id, 1.1, 0., 0.);
         ctx.potentials().addUserDefined(noop.get());
         typeIdA = ctx.particle_types().idOf("A");
-        ctx.configure();
     }
 
 };
@@ -127,7 +126,6 @@ TEST_F(TestNeighborList, OneDirection) {
     ctx.boxSize() = {{1.2, 1.1, 2.8}};
     ctx.periodicBoundaryConditions() = {{false, false, true}};
     ctx.potentials().addBox("A", .0, {-.4, -.4, -1.3}, {.4, .4, 1.3});
-    ctx.configure();
 
     readdy::kernel::cpu::thread_pool pool (readdy::readdy_default_n_threads());
     nl_t list(*kernel->getCPUKernelStateModel().getParticleData(), ctx, pool);
