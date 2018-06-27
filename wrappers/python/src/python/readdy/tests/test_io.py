@@ -75,21 +75,20 @@ class TestSchemeApi(ReaDDyTestCase):
             np.testing.assert_equal("A", f["readdy/config/particle_types"][0]["name"])
 
     def test_write_flat_trajectory(self):
-        traj_fname = os.path.join(self.dir, "flat_traj.h5")
-        simulation = Simulation("SingleCPU")
-        simulation.context.box_size = [5.,5.,5.]
-        simulation.context.particle_types.add("A", 0.0)
+        import readdy
+        rds = readdy.ReactionDiffusionSystem([5, 5, 5])
+        rds.add_species("A", 0.)
+        simulation = rds.simulation()
+        simulation.output_file = os.path.join(self.dir, "flat_traj.h5")
 
         def callback(_):
             simulation.add_particle("A", common.Vec(0, 0, 0))
 
-        simulation.register_observable_n_particles(1, ["A"], callback)
-        traj_handle = simulation.register_observable_flat_trajectory(1)
-        with closing(io.File.create(traj_fname, io.FileFlag.OVERWRITE)) as f:
-            traj_handle.enable_write_to_file(f, u"", int(3))
-            simulation.run_scheme_readdy(True).configure(1).run(20)
+        simulation.observe.number_of_particles(1, ["A"], callback=callback)
+        simulation.record_trajectory(1)
+        simulation.run(20, 1, show_system=False)
 
-        r = TrajectoryReader(traj_fname)
+        r = TrajectoryReader(simulation.output_file)
         trajectory_items = r[:]
         for idx, items in enumerate(trajectory_items):
             np.testing.assert_equal(len(items), idx+1)

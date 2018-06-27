@@ -135,35 +135,35 @@ protected:
     /**
      * the integrator to use
      */
-    std::unique_ptr<model::actions::TimeStepDependentAction> _integrator {nullptr};
+    std::shared_ptr<model::actions::TimeStepDependentAction> _integrator {nullptr};
     /**
      * how to evaluate forces
      */
-    std::unique_ptr<model::actions::Action> _forces {nullptr};
+    std::shared_ptr<model::actions::Action> _forces {nullptr};
     /**
      * how to evaluate particle-particle reactions
      */
-    std::unique_ptr<model::actions::TimeStepDependentAction> _reactions {nullptr};
+    std::shared_ptr<model::actions::TimeStepDependentAction> _reactions {nullptr};
     /**
      * initialize the neighbor list
      */
-    std::unique_ptr<model::actions::UpdateNeighborList> _initNeighborList {nullptr};
+    std::shared_ptr<model::actions::UpdateNeighborList> _initNeighborList {nullptr};
     /**
      * update the neighbor list
      */
-    std::unique_ptr<model::actions::UpdateNeighborList> _neighborList {nullptr};
+    std::shared_ptr<model::actions::UpdateNeighborList> _neighborList {nullptr};
     /**
      * clear the neighbor list
      */
-    std::unique_ptr<model::actions::UpdateNeighborList> _clearNeighborList {nullptr};
+    std::shared_ptr<model::actions::UpdateNeighborList> _clearNeighborList {nullptr};
     /**
      * how to evaluate topology reactions (structural and spatial)
      */
-    std::unique_ptr<model::actions::top::EvaluateTopologyReactions> _topologyReactions {nullptr};
+    std::shared_ptr<model::actions::top::EvaluateTopologyReactions> _topologyReactions {nullptr};
     /**
      * reference to a hdf5-group holding some configurationn values
      */
-    std::unique_ptr<h5rd::Group> configGroup = nullptr;
+    std::shared_ptr<h5rd::Group> configGroup = nullptr;
     /**
      * the update callback function, called every 100 time steps if running the simulation for a fixed number of steps
      */
@@ -306,7 +306,7 @@ public:
      * @param integrator the integrator
      * @return reference to self
      */
-    SchemeConfigurator &withIntegrator(std::unique_ptr<model::actions::TimeStepDependentAction> integrator) {
+    SchemeConfigurator &withIntegrator(std::shared_ptr<model::actions::TimeStepDependentAction> integrator) {
         scheme->_integrator = std::move(integrator);
         return *this;
     }
@@ -343,12 +343,11 @@ public:
 
     /**
      * Instruct the configurator that the simulation loop should use the provided reaction scheduler instance.
-     * @param reactionScheduler the reaction scheduler instance
+     * @param scheduler the reaction scheduler instance
      * @return reference to self
      */
-    SchemeConfigurator &withReactionScheduler(
-            std::unique_ptr<model::actions::TimeStepDependentAction> reactionScheduler) {
-        scheme->_reactions = std::move(reactionScheduler);
+    SchemeConfigurator &withReactionScheduler(std::shared_ptr<model::actions::TimeStepDependentAction> scheduler) {
+        scheme->_reactions = std::move(scheduler);
         return *this;
     }
 

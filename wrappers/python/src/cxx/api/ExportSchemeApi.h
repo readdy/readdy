@@ -56,7 +56,16 @@ void exportSchemeApi(pybind11::module &module, const std::string &schemeName) {
                 py::gil_scoped_release release;
                 auto pyFun = readdy::rpy::PyFunction<bool(const readdy::time_step_type current)>(continuingCriterion);
                 self.run(pyFun);
-            }, "continuing_criterion"_a);
+            }, "continuing_criterion"_a)
+            .def("initialize", &readdy::api::ReaDDyScheme::initialize)
+            .def("initialize_neighbor_list", &readdy::api::ReaDDyScheme::initializeNeighborList)
+            .def("update_neighbor_list", &readdy::api::ReaDDyScheme::updateNeighborList)
+            .def("clear_neighbor_list", &readdy::api::ReaDDyScheme::clearNeighborList)
+            .def("forces", &readdy::api::ReaDDyScheme::forces)
+            .def("evaluate_observables", &readdy::api::ReaDDyScheme::evaluateObservables)
+            .def("integrator", &readdy::api::ReaDDyScheme::integrator)
+            .def("reactions", &readdy::api::ReaDDyScheme::reactions)
+            .def("topology_reactions", &readdy::api::ReaDDyScheme::topologyReactions);
     std::string configuratorName =  schemeName + "Configurator";
     py::class_<conf>(module, configuratorName.c_str())
             .def("with_integrator",
