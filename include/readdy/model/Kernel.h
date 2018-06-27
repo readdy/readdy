@@ -79,7 +79,7 @@ public:
      *
      * @return The name
      */
-    const std::string &getName() const override {
+    const std::string &name() const override {
         return _name;
     };
 
@@ -127,13 +127,13 @@ public:
      * Adds a particle of the type "type" at position "pos".
      */
     readdy::model::Particle::id_type addParticle(const std::string &type, const Vec3 &pos) {
-        readdy::model::Particle particle {pos[0], pos[1], pos[2], context().particle_types().idOf(type)};
+        readdy::model::Particle particle {pos[0], pos[1], pos[2], context().particleTypes().idOf(type)};
         stateModel().addParticle(particle);
         return particle.getId();
     };
 
     TopologyParticle createTopologyParticle(const std::string &type, const Vec3 &pos) const {
-        const auto& info = context().particle_types().infoOf(type);
+        const auto& info = context().particleTypes().infoOf(type);
         if(info.flavor != particleflavor::TOPOLOGY) {
             throw std::invalid_argument("You can only create topology particles of a type that is topology flavored.");
         }
@@ -177,8 +177,6 @@ public:
     virtual void initialize() {
         log::debug(context().describe());
     };
-
-    virtual void finalize() {};
 
     bool singlePrecision() const noexcept {
         return readdy::single_precision;

@@ -106,8 +106,8 @@ TEST_P(TestCLL, Insert) {
     using namespace readdy;
 
     model::Context context;
-    context.particle_types().add("Test", 1.);
-    auto id = context.particle_types().idOf("Test");
+    context.particleTypes().add("Test", 1.);
+    auto id = context.particleTypes().idOf("Test");
     context.reactions().addFusion("Fusion", id, id, id, 1., 1.);
     context.boxSize()[0] = 10;
     context.boxSize()[1] = 10;
@@ -140,8 +140,8 @@ void insertAndDearviateTestImpl(std::uint8_t radius) {
     using namespace readdy;
 
     model::Context context;
-    context.particle_types().add("Test", 1.);
-    auto id = context.particle_types().idOf("Test");
+    context.particleTypes().add("Test", 1.);
+    auto id = context.particleTypes().idOf("Test");
     scalar cutoff = 1;
     context.reactions().addFusion("Fusion", id, id, id, 1., cutoff);
     context.boxSize()[0] = 10;
@@ -219,8 +219,8 @@ void diffuseTestImpl(std::uint8_t radius) {
     using namespace readdy;
 
     model::Context context;
-    context.particle_types().add("Test", 1.);
-    auto id = context.particle_types().idOf("Test");
+    context.particleTypes().add("Test", 1.);
+    auto id = context.particleTypes().idOf("Test");
     scalar cutoff = 1;
     context.reactions().addFusion("Fusion", id, id, id, 1., cutoff);
     context.boxSize()[0] = 10;

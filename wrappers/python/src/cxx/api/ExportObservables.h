@@ -49,7 +49,7 @@ using obs_handle_t = readdy::ObservableHandle;
 
 inline obs_handle_t registerObservable_Reactions(sim &self, unsigned int stride,
                                                  const py::object& callback = py::none()) {
-    self.currentContext().recordReactionsWithPositions() = true;
+    self.context().recordReactionsWithPositions() = true;
     auto obs = self.observe().reactions(stride);
     if (callback.is_none()) {
         return self.registerObservable(std::move(obs));
@@ -58,7 +58,7 @@ inline obs_handle_t registerObservable_Reactions(sim &self, unsigned int stride,
             py::gil_scoped_acquire gil;
             std::vector<rpy::ReadableReactionRecord> converted {};
             converted.reserve(reactions.size());
-            const auto &reactionRegistry = self.currentContext().reactions();
+            const auto &reactionRegistry = self.context().reactions();
             for(const auto &reaction : reactions) {
                 auto name = reactionRegistry.nameOf(reaction.id);
                 converted.emplace_back(rpy::convert(reaction, name));
@@ -87,7 +87,7 @@ inline obs_handle_t registerObservable_Topologies(sim &self, readdy::stride_type
 
 inline obs_handle_t registerObservable_ReactionCounts(sim &self, unsigned int stride,
                                                       const py::object& callback = py::none()) {
-    self.currentContext().recordReactionCounts() = true;
+    self.context().recordReactionCounts() = true;
     auto obs = self.observe().reactionCounts(stride);
     if (callback.is_none()) {
         return self.registerObservable(std::move(obs));
@@ -95,7 +95,7 @@ inline obs_handle_t registerObservable_ReactionCounts(sim &self, unsigned int st
         auto internalCallback = [&self, callback](const readdy::model::observables::ReactionCounts::result_type &counts) mutable {
             py::gil_scoped_acquire gil;
             std::unordered_map<std::string, std::size_t> converted;
-            const auto &reactionRegistry = self.currentContext().reactions();
+            const auto &reactionRegistry = self.context().reactions();
             for(const auto &e : counts) {
                 converted[reactionRegistry.nameOf(e.first)] = e.second;
             }
@@ -134,7 +134,7 @@ inline obs_handle_t registerObservable_Particles(sim &self, unsigned int stride,
             std::get<2>(result) = std::get<2>(r);
 
             auto &names = std::get<0>(result);
-            const auto &types = self.currentContext().particle_types();
+            const auto &types = self.context().particleTypes();
 
             for(const auto particleType : std::get<0>(r)) {
                 names.push_back(types.nameOf(particleType));
@@ -242,11 +242,10 @@ template <typename type_, typename... options>
 void exportObservables(py::module &apiModule, py::class_<type_, options...> &simulation) {
     using namespace pybind11::literals;
     py::class_<obs_handle_t>(apiModule, "ObservableHandle")
-            .def(py::init<>())
             .def("enable_write_to_file", &obs_handle_t::enableWriteToFile, "file"_a, "data_set_name"_a, "chunk_size"_a)
             .def("flush", &obs_handle_t::flush)
             .def("__repr__", [](const obs_handle_t &self) {
-                return "ObservableHandle(id=" + std::to_string(self.getId()) + ")";
+                return "ObservableHandle(type=" + self.type() + ")";
             });
 
     using record_t = readdy::model::reactions::ReactionRecord;
@@ -287,9 +286,6 @@ void exportObservables(py::module &apiModule, py::class_<type_, options...> &sim
             .def("register_observable_trajectory", &registerObservable_Trajectory, "stride"_a)
             .def("register_observable_flat_trajectory", &registerObservable_FlatTrajectory, "stride"_a)
             .def("register_observable_virial", &registerObservable_Virial, "stride"_a, "callback"_a=py::none())
-            .def("register_observable_topologies", &registerObservable_Topologies, "stride"_a, "callback"_a=py::none())
-            .def("deregister_observable", [](sim &self, const obs_handle_t &handle) {
-                self.deregisterObservable(handle.getId());
-            }, "handle"_a);
+            .def("register_observable_topologies", &registerObservable_Topologies, "stride"_a, "callback"_a=py::none());
 }
 #endif //READDY_MAIN_EXPORTOBSERVABLES_H

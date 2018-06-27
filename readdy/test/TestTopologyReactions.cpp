@@ -46,10 +46,10 @@ protected:
     void SetUp() override {
         if (kernel->supportsTopologies()) {
             auto &ctx = kernel->context();
-            ctx.particle_types().add("Topology A", 1.0, readdy::model::particleflavor::TOPOLOGY);
-            ctx.particle_types().add("Topology B", 1.0, readdy::model::particleflavor::TOPOLOGY);
-            ctx.particle_types().add("Topology Invalid Type", 1.0, readdy::model::particleflavor::TOPOLOGY);
-            ctx.particle_types().add("A", 1.0, readdy::model::particleflavor::NORMAL);
+            ctx.particleTypes().add("Topology A", 1.0, readdy::model::particleflavor::TOPOLOGY);
+            ctx.particleTypes().add("Topology B", 1.0, readdy::model::particleflavor::TOPOLOGY);
+            ctx.particleTypes().add("Topology Invalid Type", 1.0, readdy::model::particleflavor::TOPOLOGY);
+            ctx.particleTypes().add("A", 1.0, readdy::model::particleflavor::NORMAL);
 
             ctx.topologyRegistry().configureBondPotential("Topology A", "Topology A", {10, 10});
             ctx.topologyRegistry().configureBondPotential("Topology A", "Topology B", {10, 10});
@@ -63,9 +63,9 @@ protected:
 
 readdy::model::top::GraphTopology* setUpSmallTopology(readdy::model::Kernel* kernel, readdy::TopologyTypeId type) {
     auto &ctx = kernel->context();
-    topology_particle_t x_0{0, 0, 0, ctx.particle_types().idOf("Topology A")};
-    topology_particle_t x_1{0, 0, 0, ctx.particle_types().idOf("Topology A")};
-    topology_particle_t x_2{0, 0, 0, ctx.particle_types().idOf("Topology A")};
+    topology_particle_t x_0{0, 0, 0, ctx.particleTypes().idOf("Topology A")};
+    topology_particle_t x_1{0, 0, 0, ctx.particleTypes().idOf("Topology A")};
+    topology_particle_t x_2{0, 0, 0, ctx.particleTypes().idOf("Topology A")};
     auto topology = kernel->stateModel().addTopology(type, {x_0, x_1, x_2});
     {
         auto it = topology->graph().vertices().begin();
@@ -109,12 +109,12 @@ TEST(TestTopologyReactions, ModeFlags) {
 TEST_P(TestTopologyReactions, ChangeParticleType) {
     using namespace readdy;
     if (!kernel->supportsTopologies()) {
-        log::debug("kernel {} does not support topologies, thus skipping the test", kernel->getName());
+        log::debug("kernel {} does not support topologies, thus skipping the test", kernel->name());
         return;
     }
     auto tid = kernel->context().topologyRegistry().addType("Reactive Topology Type");
     auto topology = setUpSmallTopology(kernel.get(), tid);
-    const auto &types = kernel->context().particle_types();
+    const auto &types = kernel->context().particleTypes();
     {
         auto reactionFunction = [&](model::top::GraphTopology &top) {
             model::top::reactions::Recipe recipe (top);
@@ -168,7 +168,7 @@ TEST_P(TestTopologyReactions, ChangeParticleType) {
 TEST_P(TestTopologyReactions, GEXF) {
     using namespace readdy;
     if(!kernel->supportsTopologies()) {
-        log::debug("kernel {} does not support topologies, thus skipping the test", kernel->getName());
+        log::debug("kernel {} does not support topologies, thus skipping the test", kernel->name());
         return;
     }
     auto topology = setUpSmallTopology(kernel.get(), 0);
@@ -182,12 +182,12 @@ TEST_P(TestTopologyReactions, AddEdgeNamed) {
     // add edge between first and last vertex, creating a circular structure x_2 -> x_0 <-> x_1 <-> x_2 <- x_0
     using namespace readdy;
     if (!kernel->supportsTopologies()) {
-        log::debug("kernel {} does not support topologies, thus skipping the test", kernel->getName());
+        log::debug("kernel {} does not support topologies, thus skipping the test", kernel->name());
         return;
     }
     auto tid = kernel->context().topologyRegistry().addType("TA");
     auto topology = setUpSmallTopology(kernel.get(), tid);
-    const auto &types = kernel->context().particle_types();
+    const auto &types = kernel->context().particleTypes();
     {
         auto reactionFunction = [&](model::top::GraphTopology &top) {
             model::top::reactions::Recipe recipe (top);
@@ -211,7 +211,7 @@ TEST_P(TestTopologyReactions, AddEdgeIterator) {
     // add edge between first and last vertex, creating a circular structure x_2 -> x_0 <-> x_1 <-> x_2 <- x_0
     using namespace readdy;
     if (!kernel->supportsTopologies()) {
-        log::debug("kernel {} does not support topologies, thus skipping the test", kernel->getName());
+        log::debug("kernel {} does not support topologies, thus skipping the test", kernel->name());
         return;
     }
     auto tid = kernel->context().topologyRegistry().addType("TA");
@@ -239,7 +239,7 @@ TEST_P(TestTopologyReactions, AddEdgeIterator) {
 TEST_P(TestTopologyReactions, RemoveEdgeStraightforwardCase) {
     using namespace readdy;
     if (!kernel->supportsTopologies()) {
-        log::debug("kernel {} does not support topologies, thus skipping the test", kernel->getName());
+        log::debug("kernel {} does not support topologies, thus skipping the test", kernel->name());
         return;
     }
     kernel->context().topologyRegistry().addType("TA");
@@ -292,7 +292,7 @@ TEST_P(TestTopologyReactions, RemoveEdgeStraightforwardCase) {
 TEST_P(TestTopologyReactions, RemoveEdgeRollback) {
     using namespace readdy;
     if (!kernel->supportsTopologies()) {
-        log::debug("kernel {} does not support topologies, thus skipping the test", kernel->getName());
+        log::debug("kernel {} does not support topologies, thus skipping the test", kernel->name());
         return;
     }
 
@@ -332,7 +332,7 @@ TEST_P(TestTopologyReactions, RemoveEdgeRollback) {
 TEST_P(TestTopologyReactions, SplitUpChain) {
     using namespace readdy;
     if (!kernel->supportsTopologies()) {
-        log::debug("kernel {} does not support topologies, thus skipping the test", kernel->getName());
+        log::debug("kernel {} does not support topologies, thus skipping the test", kernel->name());
         return;
     }
 
@@ -347,7 +347,7 @@ TEST_P(TestTopologyReactions, SplitUpChain) {
     {
         topologyParticles.reserve(n_chain_elements);
         for (std::size_t i = 0; i < n_chain_elements; ++i) {
-            const auto id = ctx.particle_types().idOf("Topology A");
+            const auto id = ctx.particleTypes().idOf("Topology A");
             topologyParticles.emplace_back(-5 + i * 10. / static_cast<readdy::scalar>(n_chain_elements), 0, 0, id);
         }
     }
@@ -406,7 +406,6 @@ TEST_P(TestTopologyReactions, SplitUpChain) {
             forces->perform();
             kernel->evaluateObservables(time);
         }
-        kernel->finalize();
     }
 
     auto topologies = kernel->stateModel().getTopologies();
@@ -420,7 +419,7 @@ TEST_P(TestTopologyReactions, SplitUpChain) {
 TEST_P(TestTopologyReactions, SplitUpChainDecay) {
     using namespace readdy;
     if (!kernel->supportsTopologies()) {
-        log::debug("kernel {} does not support topologies, thus skipping the test", kernel->getName());
+        log::debug("kernel {} does not support topologies, thus skipping the test", kernel->name());
         return;
     }
 
@@ -434,7 +433,7 @@ TEST_P(TestTopologyReactions, SplitUpChainDecay) {
     {
         topologyParticles.reserve(n_chain_elements);
         for (std::size_t i = 0; i < n_chain_elements; ++i) {
-            const auto id = ctx.particle_types().idOf("Topology A");
+            const auto id = ctx.particleTypes().idOf("Topology A");
             topologyParticles.emplace_back(-5 + i * 10. / static_cast<readdy::scalar>(n_chain_elements), 0, 0, id);
         }
     }
@@ -483,7 +482,7 @@ TEST_P(TestTopologyReactions, SplitUpChainDecay) {
             model::top::reactions::Recipe recipe (top);
             if(top.graph().vertices().size() == 1) {
                 recipe.changeParticleType(top.graph().vertices().begin(),
-                                          kernel->context().particle_types().idOf("A"));
+                                          kernel->context().particleTypes().idOf("A"));
             } else {
                 throw std::logic_error("this reaction should only be executed when there is exactly "
                                                "one particle in the topology");
@@ -518,7 +517,6 @@ TEST_P(TestTopologyReactions, SplitUpChainDecay) {
             kernel->evaluateObservables(time);
 
         }
-        kernel->finalize();
     }
 
     EXPECT_EQ(kernel->stateModel().getTopologies().size(), 0);
@@ -527,16 +525,16 @@ TEST_P(TestTopologyReactions, SplitUpChainDecay) {
 TEST_P(TestTopologyReactions, ChainDecayIntegrationTest) {
     using namespace readdy;
     if (!kernel->supportsTopologies()) {
-        log::debug("kernel {} does not support topologies, thus skipping the test", kernel->getName());
+        log::debug("kernel {} does not support topologies, thus skipping the test", kernel->name());
         return;
     }
     auto &ctx = kernel->context();
     ctx.boxSize() = {{150, 150, 150}};
     ctx.periodicBoundaryConditions() = {{true, true, true}};
 
-    ctx.particle_types().add("Decay", 1.);
-    ctx.particle_types().addTopologyType("T", 1.);
-    ctx.particle_types().add("whatever", 1.);
+    ctx.particleTypes().add("Decay", 1.);
+    ctx.particleTypes().addTopologyType("T", 1.);
+    ctx.particleTypes().add("whatever", 1.);
     ctx.reactions().add("decay: Decay ->", 1000.);
     ctx.reactions().add("whatever: whatever ->", 1000.);
     ctx.potentials().addBox("Decay", 10, {-70, -70, -70}, {130, 130, 130});
@@ -566,13 +564,13 @@ TEST_P(TestTopologyReactions, ChainDecayIntegrationTest) {
     {
         topologyParticles.reserve(70);
         for (std::size_t i = 0; i < 70; ++i) {
-            const auto id = ctx.particle_types().idOf("T");
+            const auto id = ctx.particleTypes().idOf("T");
             topologyParticles.emplace_back(-5 + i * 10. / static_cast<readdy::scalar>(70), 0, 0, id);
         }
     }
 
     for(auto i = 0_z; i < 50; ++i) {
-        kernel->stateModel().addParticle(model::Particle(0, 0, 0, ctx.particle_types().idOf("whatever")));
+        kernel->stateModel().addParticle(model::Particle(0, 0, 0, ctx.particleTypes().idOf("whatever")));
     }
 
     auto topology = kernel->stateModel().addTopology(ctx.topologyRegistry().idOf("unstable"), topologyParticles);
@@ -606,7 +604,7 @@ TEST_P(TestTopologyReactions, ChainDecayIntegrationTest) {
                 kernel->stateModel().toDenseParticleIndices(topParticles.begin(), topParticles.end());
                 EXPECT_TRUE(std::find(topParticles.begin(), topParticles.end(),
                                       record.particleIndices.at(j)) != topParticles.end());
-                EXPECT_TRUE(particles.at(j).getType() == ctx.particle_types().idOf("T"));
+                EXPECT_TRUE(particles.at(j).getType() == ctx.particleTypes().idOf("T"));
             }
 
             for(const auto &edge : record.edges) {
@@ -644,17 +642,16 @@ TEST_P(TestTopologyReactions, ChainDecayIntegrationTest) {
             for(auto topPtr : kernel->stateModel().getTopologies()) {
                 // check that all topologies are just containing T particles and their edges are also fine
                 for(const auto &p : topPtr->fetchParticles()) {
-                    EXPECT_EQ(p.getType(), ctx.particle_types().idOf("T"));
+                    EXPECT_EQ(p.getType(), ctx.particleTypes().idOf("T"));
                 }
                 for(auto edge : topPtr->graph().edges()) {
                     auto v1 = std::get<0>(edge);
                     auto v2 = std::get<1>(edge);
-                    EXPECT_EQ(topPtr->particleForVertex(v1).getType(), ctx.particle_types().idOf("T"));
-                    EXPECT_EQ(topPtr->particleForVertex(v2).getType(), ctx.particle_types().idOf("T"));
+                    EXPECT_EQ(topPtr->particleForVertex(v1).getType(), ctx.particleTypes().idOf("T"));
+                    EXPECT_EQ(topPtr->particleForVertex(v2).getType(), ctx.particleTypes().idOf("T"));
                 }
             }
         }
-        kernel->finalize();
     }
 }
 

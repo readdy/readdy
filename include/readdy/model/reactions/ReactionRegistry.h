@@ -147,55 +147,99 @@ public:
 
     ReactionId add(const std::string &descriptor, scalar rate);
 
+    /**
+     * Method to register a conversion reaction "A->B".
+     * @param name the name of the reaction
+     * @param from the type of A
+     * @param to the type of B
+     * @param rate the rate at which this reaction is to be performed
+     * @return a uuid
+     */
     ReactionId addConversion(const std::string &name, const std::string &from, const std::string &to, scalar rate) {
         return addConversion(name, _types(from), _types(to), rate);
     }
-
     ReactionId addConversion(const std::string &name, ParticleTypeId from, ParticleTypeId to, scalar rate) {
         return emplaceReaction(std::make_shared<Conversion>(name, from, to, rate));
     }
 
+    /**
+     * Method to register an enzymatic reaction "A+C->B+C".
+     * @param name the name of the reaction
+     * @param catalyst the type of C
+     * @param from the type of A
+     * @param to the type of B
+     * @param rate the rate at which this reaction is to be performed
+     * @param eductDistance the distance at which B should be placed from C
+     * @return a uuid
+     */
     ReactionId addEnzymatic(const std::string &name, const std::string &catalyst, const std::string &from,
                              const std::string &to, scalar rate, scalar eductDistance) {
         return addEnzymatic(name, _types(catalyst), _types(from), _types(to),
                             rate, eductDistance);
     }
-
     ReactionId addEnzymatic(const std::string &name, ParticleTypeId catalyst, ParticleTypeId from,
                              ParticleTypeId to, scalar rate, scalar eductDistance) {
         return emplaceReaction(std::make_shared<Enzymatic>(name, catalyst, from, to, rate, eductDistance));
     }
 
+    /**
+     * Method to register a fission reaction "A->B+C".
+     * @param name the name of the reaction
+     * @param from the type of A
+     * @param to1 the type of B
+     * @param to2 the type of C
+     * @param rate the rate at which this reaction is to be performed
+     * @param productDistance the distance at which the products are placed
+     * @param weight1 the weight for particle B with respect to the product distance
+     * @param weight2 the weight for particle C with respect to the product distance
+     * @return a uuid
+     */
     ReactionId addFission(const std::string &name, const std::string &from, const std::string &to1,
                            const std::string &to2, scalar rate, scalar productDistance,
                            scalar weight1 = 0.5, scalar weight2 = 0.5) {
         return addFission(name, _types(from), _types(to1), _types(to2), rate,
                           productDistance, weight1, weight2);
     }
-
     ReactionId addFission(const std::string &name, ParticleTypeId from, ParticleTypeId to1,
                            ParticleTypeId to2, scalar rate, scalar productDistance,
                            scalar weight1 = 0.5, scalar weight2 = 0.5) {
         return emplaceReaction(std::make_shared<Fission>(name, from, to1, to2, rate, productDistance, weight1, weight2));
     }
 
+    /**
+     * Method to register a fusion reaction "A+B->C".
+     * @param name the name of the reaction
+     * @param from1 the type of A
+     * @param from2 the type of B
+     * @param to the type of C
+     * @param rate the rate at which this reaction is to be performed
+     * @param eductDistance the distance at which particles A and B become reactive
+     * @param weight1 the weight of A with respect to the placement of C
+     * @param weight2 the weight of B with respect to the placement of C
+     * @return a uuid
+     */
     ReactionId addFusion(const std::string &name, const std::string &from1, const std::string &from2,
                           const std::string &to, scalar rate, scalar eductDistance,
                           scalar weight1 = 0.5, scalar weight2 = 0.5) {
         return addFusion(name, _types(from1), _types(from2), _types(to), rate,
                          eductDistance, weight1, weight2);
     }
-
     ReactionId addFusion(const std::string &name, ParticleTypeId from1, ParticleTypeId from2,
                           ParticleTypeId to, scalar rate, scalar eductDistance,
                           scalar weight1 = 0.5, scalar weight2 = 0.5) {
         return emplaceReaction(std::make_shared<Fusion>(name, from1, from2, to, rate, eductDistance, weight1, weight2));
     }
 
+    /**
+     * Method to register a decay reaction.
+     * @param name the name of the reaction
+     * @param particleType the type for which this decay should be performed
+     * @param rate the rate
+     * @return a uuid
+     */
     ReactionId addDecay(const std::string &name, const std::string &type, scalar rate) {
         return addDecay(name, _types(type), rate);
     }
-
     ReactionId addDecay(const std::string &name, ParticleTypeId type, scalar rate) {
         return emplaceReaction(std::make_shared<Decay>(name, type, rate));
     }

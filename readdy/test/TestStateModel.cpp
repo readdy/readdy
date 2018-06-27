@@ -47,7 +47,7 @@ TEST_P(TestStateModel, CalculateForcesTwoParticles) {
     auto obs = kernel->observe().forces(1);
     auto conn = kernel->connectObservable(obs.get());
     // two A particles with radius 1. -> cutoff 2, distance 1.8 -> r-r_0 = 0.2 -> force = 0.2
-    ctx.particle_types().add("A", 1.0);
+    ctx.particleTypes().add("A", 1.0);
     ctx.boxSize() = {{4., 4., 4.}};
     ctx.periodicBoundaryConditions() = {{false, false, false}};
 
@@ -57,7 +57,7 @@ TEST_P(TestStateModel, CalculateForcesTwoParticles) {
     kernel->context().potentials().addBox("A", .01, {-1.9, -1.9, -1.9}, {3.8, 3.8, 3.8});
 
     kernel->initialize();
-    auto typeIdA = ctx.particle_types().idOf("A");
+    auto typeIdA = ctx.particleTypes().idOf("A");
     auto twoParticles = std::vector<m::Particle> {m::Particle(0., 0., 0., typeIdA), m::Particle(0., 0., 1.8, typeIdA)};
 
     stateModel.addParticles(twoParticles);
@@ -96,16 +96,16 @@ TEST_P(TestStateModel, CalculateForcesRepulsion) {
     // similar situation as before but now with repulsion between A and B
     auto obs = kernel->observe().forces(1);
     auto conn = kernel->connectObservable(obs.get());
-    ctx.particle_types().add("A", 1.0);
-    ctx.particle_types().add("B", 1.0);
+    ctx.particleTypes().add("A", 1.0);
+    ctx.particleTypes().add("B", 1.0);
     ctx.boxSize() = {{10., 10., 10.}};
     ctx.periodicBoundaryConditions() = {{true, true, false}};
     ctx.potentials().addHarmonicRepulsion("A", "B", 1.0, 3.0);
     kernel->context().potentials().addBox("A", .01, {-4.9, -4.9, -4.9}, {9.8, 9.8, 9.8});
     kernel->context().potentials().addBox("B", .01, {-4.9, -4.9, -4.9}, {9.8, 9.8, 9.8});
 
-    auto typeIdA = ctx.particle_types().idOf("A");
-    auto typeIdB = ctx.particle_types().idOf("B");
+    auto typeIdA = ctx.particleTypes().idOf("A");
+    auto typeIdB = ctx.particleTypes().idOf("B");
     /**
      * There are 6 particles. 0-2 are A particles. 3-5 are B particles.
      * The second B particle is a bit further away
@@ -211,14 +211,14 @@ TEST_P(TestStateModel, CalculateForcesNoForces) {
     // several particles without potentials -> forces must all be zero
     auto obs = kernel->observe().forces(1);
     auto conn = kernel->connectObservable(obs.get());
-    ctx.particle_types().add("A", 1.0);
-    ctx.particle_types().add("B", 1.0);
+    ctx.particleTypes().add("A", 1.0);
+    ctx.particleTypes().add("B", 1.0);
     ctx.boxSize() = {{4., 4., 4.}};
     ctx.periodicBoundaryConditions() = {{false, false, false}};
     ctx.potentials().addBox("A", .00000001, {-1.9, -1.9, -1.9}, {3.85, 3.85, 3.85});
     ctx.potentials().addBox("B", .00000001, {-1.9, -1.9, -1.9}, {3.85, 3.85, 3.85});
-    auto typeIdA = ctx.particle_types().idOf("A");
-    auto typeIdB = ctx.particle_types().idOf("B");
+    auto typeIdA = ctx.particleTypes().idOf("A");
+    auto typeIdB = ctx.particleTypes().idOf("B");
     auto particlesA = std::vector<m::Particle> {
             m::Particle(0, 0, 0, typeIdA), m::Particle(0, 0.8, 0, typeIdA), m::Particle(0.2, 0, -0.2, typeIdA)
     };

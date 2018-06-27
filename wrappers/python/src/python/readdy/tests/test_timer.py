@@ -29,23 +29,12 @@ from readdy.util.testing_utils import ReaDDyTestCase
 class TestTimer(ReaDDyTestCase):
 
     def test_timer_sanity(self):
-        simulation = Simulation()
-        simulation.set_kernel("CPU")
+        simulation = Simulation("CPU")
         scheme = simulation.run_scheme_readdy(True)
         scheme.configure_and_run(10, 0.1)
         root = simulation.performance_root()
         np.testing.assert_equal(root.count(), 1)
         np.testing.assert_equal(root.time() > 0., True)
-        if False:
-            print(root)
-            print(root[""])
-            print(root["integrator"])
-            print(root["integrator"].time())
-            print(root["integrator"].count())
-            integrator = root["integrator"]
-            print(integrator["/"])
-            print(integrator["/integrator"])
-            print(root.keys())
 
 if __name__ == '__main__':
     unittest.main()

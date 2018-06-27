@@ -38,7 +38,7 @@ TEST(SingleCPUTestReactions, TestDecay) {
     using particle_t = readdy::model::Particle;
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
     kernel->context().boxSize() = {{10, 10, 10}};
-    kernel->context().particle_types().add("X", .25);
+    kernel->context().particleTypes().add("X", .25);
     kernel->context().reactions().addDecay("X decay", "X", 1e16);
     kernel->context().reactions().addFission("X fission", "X", "X", "X", .5, .3);
 
@@ -57,7 +57,7 @@ TEST(SingleCPUTestReactions, TestDecay) {
     auto connection = kernel->connectObservable(pp_obs.get());
 
     const int n_particles = 200;
-    const auto typeId = kernel->context().particle_types().idOf("X");
+    const auto typeId = kernel->context().particleTypes().idOf("X");
     std::vector<readdy::model::Particle> particlesToBeginWith{n_particles, {0, 0, 0, typeId}};
     kernel->stateModel().addParticles(particlesToBeginWith);
     initNeighborList->perform();
@@ -108,11 +108,11 @@ TEST(SingleCPUTestReactions, TestMultipleReactionTypes) {
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
     kernel->context().boxSize() = {{10, 10, 10}};
 
-    kernel->context().particle_types().add("A", .25);
-    kernel->context().particle_types().add("B", .25);
-    kernel->context().particle_types().add("C", .25);
-    kernel->context().particle_types().add("D", .25);
-    kernel->context().particle_types().add("E", .25);
+    kernel->context().particleTypes().add("A", .25);
+    kernel->context().particleTypes().add("B", .25);
+    kernel->context().particleTypes().add("C", .25);
+    kernel->context().particleTypes().add("D", .25);
+    kernel->context().particleTypes().add("E", .25);
 
     kernel->context().reactions().addDecay("A decay", "A", 1e16);
     kernel->context().reactions().addFusion("B+C->E", "B", "C", "E", 1e16, 17);
@@ -125,11 +125,11 @@ TEST(SingleCPUTestReactions, TestMultipleReactionTypes) {
     auto &&neighborList = kernel->actions().updateNeighborList();
     auto &&reactions = kernel->actions().uncontrolledApproximation(1);
 
-    const auto typeId_A = kernel->context().particle_types().idOf("A");
-    const auto typeId_B = kernel->context().particle_types().idOf("B");
-    const auto typeId_C = kernel->context().particle_types().idOf("C");
-    const auto typeId_D = kernel->context().particle_types().idOf("D");
-    const auto typeId_E = kernel->context().particle_types().idOf("E");
+    const auto typeId_A = kernel->context().particleTypes().idOf("A");
+    const auto typeId_B = kernel->context().particleTypes().idOf("B");
+    const auto typeId_C = kernel->context().particleTypes().idOf("C");
+    const auto typeId_D = kernel->context().particleTypes().idOf("D");
+    const auto typeId_E = kernel->context().particleTypes().idOf("E");
 
     kernel->stateModel().addParticle({4, 4, 4, typeId_A});
     kernel->stateModel().addParticle({-2, 0, 0, typeId_B});

@@ -248,6 +248,10 @@ public:
         Observable::externalCallback = std::move(callbackFun);
     }
 
+    const callback_function &currentCallback() const {
+        return externalCallback;
+    }
+
     /**
      * Function that will evaluate the observable and trigger a callback if ObservableBase#shouldExecuteCallback()
      * is true.

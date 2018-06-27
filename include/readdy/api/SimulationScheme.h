@@ -135,31 +135,31 @@ protected:
     /**
      * the integrator to use
      */
-    std::unique_ptr<model::actions::TimeStepDependentAction> integrator {nullptr};
+    std::unique_ptr<model::actions::TimeStepDependentAction> _integrator {nullptr};
     /**
      * how to evaluate forces
      */
-    std::unique_ptr<model::actions::Action> forces {nullptr};
+    std::unique_ptr<model::actions::Action> _forces {nullptr};
     /**
      * how to evaluate particle-particle reactions
      */
-    std::unique_ptr<model::actions::TimeStepDependentAction> reactionScheduler {nullptr};
+    std::unique_ptr<model::actions::TimeStepDependentAction> _reactions {nullptr};
     /**
      * initialize the neighbor list
      */
-    std::unique_ptr<model::actions::UpdateNeighborList> initNeighborList {nullptr};
+    std::unique_ptr<model::actions::UpdateNeighborList> _initNeighborList {nullptr};
     /**
      * update the neighbor list
      */
-    std::unique_ptr<model::actions::UpdateNeighborList> neighborList {nullptr};
+    std::unique_ptr<model::actions::UpdateNeighborList> _neighborList {nullptr};
     /**
      * clear the neighbor list
      */
-    std::unique_ptr<model::actions::UpdateNeighborList> clearNeighborList {nullptr};
+    std::unique_ptr<model::actions::UpdateNeighborList> _clearNeighborList {nullptr};
     /**
      * how to evaluate topology reactions (structural and spatial)
      */
-    std::unique_ptr<model::actions::top::EvaluateTopologyReactions> evaluateTopologyReactions {nullptr};
+    std::unique_ptr<model::actions::top::EvaluateTopologyReactions> _topologyReactions {nullptr};
     /**
      * reference to a hdf5-group holding some configurationn values
      */
@@ -171,7 +171,7 @@ protected:
     /**
      * wheter to evaluate observables at all, also affects writing trajectories
      */
-    bool evaluateObservables = true;
+    bool _evaluateObservables = true;
     /**
      * the starting point
      */
@@ -213,36 +213,68 @@ public:
 
     using SimulationScheme::run;
 
+    void initialize() {
+        kernel->initialize();
+        if(configGroup) {
+            model::ioutils::writeSimulationSetup(*configGroup, kernel->context());
+        }
+    }
+
+    void initializeNeighborList() {
+        if (_initNeighborList) _initNeighborList->perform(_performanceRoot.subnode("initNeighborList"));
+    }
+
+    void updateNeighborList() {
+        if (_neighborList) _neighborList->perform(_performanceRoot.subnode("neighborList"));
+    }
+
+    void clearNeighborList() {
+        if (_clearNeighborList) _clearNeighborList->perform(_performanceRoot.subnode("clearNeighborList"));
+    }
+
+    void forces() {
+        if (_forces) _forces->perform(_performanceRoot.subnode("forces"));
+    }
+
+    void evaluateObservables(time_step_type t) {
+        if (_evaluateObservables) kernel->evaluateObservables(t);
+    }
+
+    void integrator() {
+        if (_integrator) _integrator->perform(_performanceRoot.subnode("integrator"));
+    }
+
+    void reactions() {
+        if (_reactions) _reactions->perform(_performanceRoot.subnode("reactionScheduler"));
+    }
+
+    void topologyReactions() {
+        if (_topologyReactions) _topologyReactions->perform(_performanceRoot.subnode("evaluateTopologyReactions"));
+    }
+
     /**
      * ReaDDy scheme implementation of the simulation loop
      * @param continueFun the continue function
      */
     void run(const continue_fun &continueFun) override {
         auto runTimer = _performanceRoot.timeit();
-        kernel->initialize();
-        if(configGroup) {
-            model::ioutils::writeSimulationSetup(*configGroup, kernel->context());
-        }
-
-        if (initNeighborList) initNeighborList->perform(_performanceRoot.subnode("initNeighborList"));
-        if (forces) forces->perform(_performanceRoot.subnode("forces"));
-        if (evaluateObservables) kernel->evaluateObservables(start);
+        initialize();
+        initializeNeighborList();
+        forces();
         time_step_type t = start;
+        evaluateObservables(t);
         while (continueFun(t)) {
-            if (integrator) integrator->perform(_performanceRoot.subnode("integrator"));
-            if (neighborList) neighborList->perform(_performanceRoot.subnode("neighborList"));
-            if (reactionScheduler) reactionScheduler->perform(_performanceRoot.subnode("reactionScheduler"));
-            if (evaluateTopologyReactions) evaluateTopologyReactions->perform(
-                        _performanceRoot.subnode("evaluateTopologyReactions")
-                );
-            if (neighborList) neighborList->perform(_performanceRoot.subnode("neighborList"));
-            if (forces) forces->perform(_performanceRoot.subnode("forces"));
-            if (evaluateObservables) kernel->evaluateObservables(t + 1);
+            integrator();
+            updateNeighborList();
+            reactions();
+            topologyReactions();
+            updateNeighborList();
+            forces();
+            evaluateObservables(t+1);
             ++t;
         }
-        if (clearNeighborList) clearNeighborList->perform(_performanceRoot.subnode("clearNeighborList"));
+        clearNeighborList();
         start = t;
-        kernel->finalize();
         log::info("Simulation completed");
     }
 };
@@ -275,7 +307,7 @@ public:
      * @return reference to self
      */
     SchemeConfigurator &withIntegrator(std::unique_ptr<model::actions::TimeStepDependentAction> integrator) {
-        scheme->integrator = std::move(integrator);
+        scheme->_integrator = std::move(integrator);
         return *this;
     }
 
@@ -285,7 +317,7 @@ public:
      * @return reference to self
      */
     SchemeConfigurator &withEulerBDIntegrator() {
-        scheme->integrator = scheme->kernel->actions().eulerBDIntegrator(0.);
+        scheme->_integrator = scheme->kernel->actions().eulerBDIntegrator(0.);
         return *this;
     }
 
@@ -295,7 +327,7 @@ public:
      * @return reference to self
      */
     SchemeConfigurator &withIntegrator(const std::string &integratorName) {
-        scheme->integrator = scheme->kernel->actions().createIntegrator(integratorName, 0.);
+        scheme->_integrator = scheme->kernel->actions().createIntegrator(integratorName, 0.);
         return *this;
     }
 
@@ -316,7 +348,7 @@ public:
      */
     SchemeConfigurator &withReactionScheduler(
             std::unique_ptr<model::actions::TimeStepDependentAction> reactionScheduler) {
-        scheme->reactionScheduler = std::move(reactionScheduler);
+        scheme->_reactions = std::move(reactionScheduler);
         return *this;
     }
 
@@ -326,7 +358,7 @@ public:
      * @return reference to self
      */
     SchemeConfigurator &withReactionScheduler(const std::string &name) {
-        scheme->reactionScheduler = scheme->kernel->actions().createReactionScheduler(name, 0.);
+        scheme->_reactions = scheme->kernel->actions().createReactionScheduler(name, 0.);
         return *this;
     }
 
@@ -337,9 +369,9 @@ public:
      */
     SchemeConfigurator &evaluateTopologyReactions(bool evaluate = true) {
         if(evaluate) {
-            scheme->evaluateTopologyReactions = scheme->kernel->actions().evaluateTopologyReactions(c_::zero);
+            scheme->_topologyReactions = scheme->kernel->actions().evaluateTopologyReactions(c_::zero);
         } else {
-            scheme->evaluateTopologyReactions = nullptr;
+            scheme->_topologyReactions = nullptr;
         }
         return *this;
     }
@@ -350,7 +382,7 @@ public:
      * @return reference to self
      */
     SchemeConfigurator &evaluateObservables(bool evaluate = true) {
-        scheme->evaluateObservables = evaluate;
+        scheme->_evaluateObservables = evaluate;
         evaluateObservablesSet = true;
         return *this;
     }
@@ -362,9 +394,9 @@ public:
      */
     SchemeConfigurator &includeForces(bool include = true) {
         if (include) {
-            scheme->forces = scheme->kernel->actions().calculateForces();
+            scheme->_forces = scheme->kernel->actions().calculateForces();
         } else {
-            scheme->forces = nullptr;
+            scheme->_forces = nullptr;
         }
         includeForcesSet = true;
         return *this;
@@ -396,7 +428,7 @@ public:
      * @param timeStep the time step
      * @return a unique pointer to the scheme instance
      */
-    virtual std::unique_ptr<ReaDDyScheme> configure(scalar timeStep, bool checkTimeStep = true) {
+    std::unique_ptr<ReaDDyScheme> configure(scalar timeStep, bool checkTimeStep = true) {
 
         {
             const double threshold = .1;
@@ -404,18 +436,16 @@ public:
             if(checkTimeStep) {
                 for (const auto &o1Reaction : reactionRegistry.order1Flat()) {
                     if (o1Reaction->rate() * timeStep > threshold) {
-                        throw std::logic_error(fmt::format(
-                                "Specified a reaction with rate {} and a timestep of {}. Thus, the inverse "
-                                "reaction rate is faster than the time step by at least a factor of {}.",
-                                o1Reaction->rate(), timeStep, 1. / threshold));
+                        log::warn("Specified a reaction with rate {} and a timestep of {}. Thus, the inverse "
+                                  "reaction rate is faster than the time step by at least a factor of {}.",
+                                  o1Reaction->rate(), timeStep, 1. / threshold);
                     }
                 }
                 for (const auto &o2Reaction : reactionRegistry.order2Flat()) {
                     if (o2Reaction->rate() * timeStep > threshold) {
-                        throw std::logic_error(fmt::format(
-                                "Specified a reaction with rate {} and a timestep of {}. Thus, the inverse "
-                                "reaction rate is faster than the time step by at least a factor of {}.",
-                                o2Reaction->rate(), timeStep, 1. / threshold));
+                        log::warn("Specified a reaction with rate {} and a timestep of {}. Thus, the inverse "
+                                  "reaction rate is faster than the time step by at least a factor of {}.",
+                                  o2Reaction->rate(), timeStep, 1. / threshold);
                     }
                 }
             }
@@ -426,28 +456,28 @@ public:
         using calculate_forces = readdy::model::actions::CalculateForces;
         using update_neighbor_list = readdy::model::actions::UpdateNeighborList;
         if (useDefaults) {
-            if (!scheme->integrator) {
-                scheme->integrator = scheme->kernel->actions().eulerBDIntegrator(timeStep);
+            if (!scheme->_integrator) {
+                scheme->_integrator = scheme->kernel->actions().eulerBDIntegrator(timeStep);
             }
-            if (!scheme->reactionScheduler) {
-                scheme->reactionScheduler = scheme->kernel->actions().gillespie(timeStep);
+            if (!scheme->_reactions) {
+                scheme->_reactions = scheme->kernel->actions().gillespie(timeStep);
             }
             if (!evaluateObservablesSet) {
-                scheme->evaluateObservables = true;
+                scheme->_evaluateObservables = true;
             }
-            if (!scheme->forces && !includeForcesSet) {
-                scheme->forces = scheme->kernel->actions().calculateForces();
+            if (!scheme->_forces && !includeForcesSet) {
+                scheme->_forces = scheme->kernel->actions().calculateForces();
             }
         }
-        if (scheme->forces || scheme->reactionScheduler) {
+        if (scheme->_forces || scheme->_reactions) {
             using ops = model::actions::UpdateNeighborList::Operation;
-            scheme->initNeighborList = scheme->kernel->actions().updateNeighborList(ops::init, skinSize);
-            scheme->neighborList = scheme->kernel->actions().updateNeighborList(ops::update, skinSize);
-            scheme->clearNeighborList = scheme->kernel->actions().updateNeighborList(ops::clear, skinSize);
+            scheme->_initNeighborList = scheme->kernel->actions().updateNeighborList(ops::init, skinSize);
+            scheme->_neighborList = scheme->kernel->actions().updateNeighborList(ops::update, skinSize);
+            scheme->_clearNeighborList = scheme->kernel->actions().updateNeighborList(ops::clear, skinSize);
         }
-        if (scheme->integrator) scheme->integrator->setTimeStep(timeStep);
-        if (scheme->reactionScheduler) scheme->reactionScheduler->setTimeStep(timeStep);
-        if (scheme->evaluateTopologyReactions) scheme->evaluateTopologyReactions->setTimeStep(timeStep);
+        if (scheme->_integrator) scheme->_integrator->setTimeStep(timeStep);
+        if (scheme->_reactions) scheme->_reactions->setTimeStep(timeStep);
+        if (scheme->_topologyReactions) scheme->_topologyReactions->setTimeStep(timeStep);
         std::unique_ptr<ReaDDyScheme> ptr = std::move(scheme);
         scheme = nullptr;
         return ptr;
@@ -466,12 +496,12 @@ public:
 protected:
 
     SchemeConfigurator &withReactionScheduler(detail::identity<model::actions::reactions::Gillespie>) {
-        scheme->reactionScheduler = scheme->kernel->actions().gillespie(c_::zero);
+        scheme->_reactions = scheme->kernel->actions().gillespie(c_::zero);
         return *this;
     }
 
     SchemeConfigurator &withReactionScheduler(detail::identity<model::actions::reactions::UncontrolledApproximation>) {
-        scheme->reactionScheduler = scheme->kernel->actions().uncontrolledApproximation(c_::zero);
+        scheme->_reactions = scheme->kernel->actions().uncontrolledApproximation(c_::zero);
         return *this;
     }
 

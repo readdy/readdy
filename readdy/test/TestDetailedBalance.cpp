@@ -44,9 +44,9 @@ namespace m = readdy::model;
 namespace r = m::actions::reactions;
 
 auto registerAbcSpecies = [](m::Context &ctx) {
-    ctx.particle_types().add("A", 1.);
-    ctx.particle_types().add("B", 1.);
-    ctx.particle_types().add("C", 1.);
+    ctx.particleTypes().add("A", 1.);
+    ctx.particleTypes().add("B", 1.);
+    ctx.particleTypes().add("C", 1.);
 };
 
 TEST(TestDetailedBalance, ReversibleReactionConfigValuesFusionFission) {
@@ -67,9 +67,9 @@ TEST(TestDetailedBalance, ReversibleReactionConfigValuesFusionFission) {
     EXPECT_FLOAT_EQ(conf.reactionRadius, 5.);
     EXPECT_EQ(conf.numberLhsTypes, 2);
     EXPECT_EQ(conf.numberRhsTypes, 1);
-    EXPECT_EQ(conf.rhsTypes[0], ctx.particle_types().idOf("C"));
-    EXPECT_EQ(conf.lhsTypes[0], ctx.particle_types().idOf("A"));
-    EXPECT_EQ(conf.lhsTypes[1], ctx.particle_types().idOf("B"));
+    EXPECT_EQ(conf.rhsTypes[0], ctx.particleTypes().idOf("C"));
+    EXPECT_EQ(conf.lhsTypes[0], ctx.particleTypes().idOf("A"));
+    EXPECT_EQ(conf.lhsTypes[1], ctx.particleTypes().idOf("B"));
     EXPECT_NEAR(conf.lhsInteractionVolume, 113.09733, 1e-4);
     EXPECT_NEAR(conf.effectiveLhsInteractionVolume, 68.09910, 1e-4);
     EXPECT_NEAR(conf.effectiveLhsReactionVolume, 478.60057, 1e-4);
@@ -93,8 +93,8 @@ TEST(TestDetailedBalance, ReversibleReactionConfigValuesConversionConversion) {
     EXPECT_NEAR(conf.totalVolume, 1000, 1e-4);
     EXPECT_EQ(conf.numberLhsTypes, 1);
     EXPECT_EQ(conf.numberRhsTypes, 1);
-    EXPECT_EQ(conf.lhsTypes[0], ctx.particle_types().idOf("A"));
-    EXPECT_EQ(conf.rhsTypes[0], ctx.particle_types().idOf("B"));
+    EXPECT_EQ(conf.lhsTypes[0], ctx.particleTypes().idOf("A"));
+    EXPECT_EQ(conf.rhsTypes[0], ctx.particleTypes().idOf("B"));
     EXPECT_FLOAT_EQ(conf.lhsInteractionRadius, 0.);
     EXPECT_FLOAT_EQ(conf.lhsInteractionVolume, 0.);
     EXPECT_FLOAT_EQ(conf.rhsInteractionRadius, 0.);
@@ -128,10 +128,10 @@ TEST(TestDetailedBalance, ReversibleReactionConfigValuesEnzymaticEnzymatic) {
     EXPECT_NEAR(conf.totalVolume, 1000, 1e-4);
     EXPECT_EQ(conf.numberLhsTypes, 2);
     EXPECT_EQ(conf.numberRhsTypes, 2);
-    EXPECT_EQ(conf.lhsTypes[0], ctx.particle_types().idOf("A"));
-    EXPECT_EQ(conf.rhsTypes[0], ctx.particle_types().idOf("B"));
-    EXPECT_EQ(conf.lhsTypes[1], ctx.particle_types().idOf("C"));
-    EXPECT_EQ(conf.rhsTypes[1], ctx.particle_types().idOf("C"));
+    EXPECT_EQ(conf.lhsTypes[0], ctx.particleTypes().idOf("A"));
+    EXPECT_EQ(conf.rhsTypes[0], ctx.particleTypes().idOf("B"));
+    EXPECT_EQ(conf.lhsTypes[1], ctx.particleTypes().idOf("C"));
+    EXPECT_EQ(conf.rhsTypes[1], ctx.particleTypes().idOf("C"));
     EXPECT_FLOAT_EQ(conf.lhsInteractionRadius, 3.);
     EXPECT_FLOAT_EQ(conf.lhsInteractionVolume, 4. / 3. * readdy::util::numeric::pi<readdy::scalar>() * std::pow(3., 3));
     EXPECT_FLOAT_EQ(conf.rhsInteractionRadius, 3.);
@@ -259,7 +259,7 @@ TEST_P(TestDetailedBalanceWithKernels, SearchReversibleReactionsMichaelisMenten)
     // add a non-reversible, B --> D
     auto &ctx = kernel->context();
     registerAbcSpecies(ctx);
-    ctx.particle_types().add("D", 1.);
+    ctx.particleTypes().add("D", 1.);
     ctx.reactions().add("fusion1: A +(2) B -> C", 2.);
     ctx.reactions().add("fission1: C -> A +(2) B", 1.);
     ctx.reactions().add("fission2: C -> A +(3) D", 3.);
@@ -352,9 +352,9 @@ TEST_P(TestDetailedBalanceWithKernels, SearchReversibleReactionsWrongWeights) {
 
 auto abcFusionFissionContext = [](readdy::model::Context &ctx, readdy::scalar rateOn, readdy::scalar rateOff) {
     ctx.boxSize() = {{12, 12, 12}};
-    ctx.particle_types().add("A", 1.);
-    ctx.particle_types().add("B", 1.);
-    ctx.particle_types().add("C", 1.);
+    ctx.particleTypes().add("A", 1.);
+    ctx.particleTypes().add("B", 1.);
+    ctx.particleTypes().add("C", 1.);
     readdy::scalar reactionRadius = 2.;
     ctx.potentials().addHarmonicRepulsion("A", "B", 10., reactionRadius);
     ctx.potentials().addHarmonicRepulsion("B", "B", 10., reactionRadius);
@@ -397,7 +397,7 @@ auto perform = [](readdy::model::Kernel *kernel, size_t nSteps, readdy::scalar t
 TEST_P(TestDetailedBalanceWithKernels, FusionThatShouldBeRejected) {
     auto &ctx = kernel->context();
     abcFusionFissionContext(ctx, 1e15, 1e-15); // high on rate, small off rate
-    ctx.particle_types().add("D", 0.);
+    ctx.particleTypes().add("D", 0.);
     ctx.potentials().addHarmonicRepulsion("C", "D", 10., 2.);
 
     const auto idfus = ctx.reactions().idOf("fusion");
@@ -426,9 +426,9 @@ TEST_P(TestDetailedBalanceWithKernels, FusionThatShouldBeRejected) {
     });
     auto numbersConnection = kernel->connectObservable(numbersObs.get());
 
-    const auto ida = ctx.particle_types().idOf("A");
-    const auto idb = ctx.particle_types().idOf("B");
-    const auto idd = ctx.particle_types().idOf("D");
+    const auto ida = ctx.particleTypes().idOf("A");
+    const auto idb = ctx.particleTypes().idOf("B");
+    const auto idd = ctx.particleTypes().idOf("D");
     kernel->stateModel().addParticle({{0.1, 0.1, 0.1}, ida});
     kernel->stateModel().addParticle({{-0.1, -0.1, -0.1}, idb});
 
@@ -445,7 +445,7 @@ TEST_P(TestDetailedBalanceWithKernels, FusionThatShouldBeRejected) {
 TEST_P(TestDetailedBalanceWithKernels, FissionThatShouldBeRejected) {
     auto &ctx = kernel->context();
     abcFusionFissionContext(ctx, 1e-15, 1e15); // very high off rate
-    ctx.particle_types().add("D", 0.);
+    ctx.particleTypes().add("D", 0.);
     ctx.potentials().addHarmonicRepulsion("A", "D", 10., 2.);
     ctx.potentials().addHarmonicRepulsion("B", "D", 10., 2.);
 
@@ -475,8 +475,8 @@ TEST_P(TestDetailedBalanceWithKernels, FissionThatShouldBeRejected) {
     });
     auto numbersConnection = kernel->connectObservable(numbersObs.get());
 
-    const auto idc = ctx.particle_types().idOf("C");
-    const auto idd = ctx.particle_types().idOf("D");
+    const auto idc = ctx.particleTypes().idOf("C");
+    const auto idd = ctx.particleTypes().idOf("D");
     kernel->stateModel().addParticle({{-0.1, -0.1, -0.1}, idc});
 
     // induce rejection by many repulsing particles in the vicinity
@@ -504,8 +504,8 @@ TEST_P(TestDetailedBalanceWithKernels, ConservationOfParticles) {
     });
     auto numbersConnection = kernel->connectObservable(numbersObs.get());
 
-    const auto ida = ctx.particle_types().idOf("A");
-    const auto idb = ctx.particle_types().idOf("B");
+    const auto ida = ctx.particleTypes().idOf("A");
+    const auto idb = ctx.particleTypes().idOf("B");
     const int n_particles = 20;
     std::vector<readdy::model::Particle> particlesA;
     std::vector<readdy::model::Particle> particlesB;
@@ -523,7 +523,7 @@ TEST_P(TestDetailedBalanceWithKernels, ConservationOfParticles) {
 TEST_P(TestDetailedBalanceWithKernels, FusionThatShouldBeAccepted) {
     auto &ctx = kernel->context();
     abcFusionFissionContext(ctx, 1e15, 1e-15); // high on rate, small off rate
-    ctx.particle_types().add("D", 0.);
+    ctx.particleTypes().add("D", 0.);
     ctx.potentials().addHarmonicRepulsion("A", "D", 10., 2.);
     ctx.potentials().addHarmonicRepulsion("B", "D", 10., 2.);
 
@@ -553,9 +553,9 @@ TEST_P(TestDetailedBalanceWithKernels, FusionThatShouldBeAccepted) {
     });
     auto numbersConnection = kernel->connectObservable(numbersObs.get());
 
-    const auto ida = ctx.particle_types().idOf("A");
-    const auto idb = ctx.particle_types().idOf("B");
-    const auto idd = ctx.particle_types().idOf("D");
+    const auto ida = ctx.particleTypes().idOf("A");
+    const auto idb = ctx.particleTypes().idOf("B");
+    const auto idd = ctx.particleTypes().idOf("D");
     kernel->stateModel().addParticle({{0.1, 0.1, 0.1}, ida});
     kernel->stateModel().addParticle({{-0.1, -0.1, -0.1}, idb});
 
@@ -572,7 +572,7 @@ TEST_P(TestDetailedBalanceWithKernels, FusionThatShouldBeAccepted) {
 TEST_P(TestDetailedBalanceWithKernels, FissionThatShouldBeAccepted) {
     auto &ctx = kernel->context();
     abcFusionFissionContext(ctx, 1e-15, 1e15); // very high off rate
-    ctx.particle_types().add("D", 0.);
+    ctx.particleTypes().add("D", 0.);
     ctx.potentials().addHarmonicRepulsion("C", "D", 10., 2.);
 
     const auto idfus = ctx.reactions().idOf("fusion");
@@ -601,8 +601,8 @@ TEST_P(TestDetailedBalanceWithKernels, FissionThatShouldBeAccepted) {
     });
     auto numbersConnection = kernel->connectObservable(numbersObs.get());
 
-    const auto idc = ctx.particle_types().idOf("C");
-    const auto idd = ctx.particle_types().idOf("D");
+    const auto idc = ctx.particleTypes().idOf("C");
+    const auto idd = ctx.particleTypes().idOf("D");
     kernel->stateModel().addParticle({{-0.1, -0.1, -0.1}, idc});
 
     // induce rejection by many repulsing particles in the vicinity
@@ -629,8 +629,8 @@ TEST_P(TestDetailedBalanceWithKernels, MixedNonReversibleAndReversible) {
     });
     auto numbersConnection = kernel->connectObservable(numbersObs.get());
 
-    const auto ida = ctx.particle_types().idOf("A");
-    const auto idb = ctx.particle_types().idOf("B");
+    const auto ida = ctx.particleTypes().idOf("A");
+    const auto idb = ctx.particleTypes().idOf("B");
     const int n_particles = 20;
     std::vector<readdy::model::Particle> particlesA;
     std::vector<readdy::model::Particle> particlesB;
@@ -647,8 +647,8 @@ TEST_P(TestDetailedBalanceWithKernels, MixedNonReversibleAndReversible) {
 
 auto abConversionContext = [](readdy::model::Context &ctx, readdy::scalar rateOn, readdy::scalar rateOff) {
     ctx.boxSize() = {{12, 12, 12}};
-    ctx.particle_types().add("A", 1.);
-    ctx.particle_types().add("B", 1.);
+    ctx.particleTypes().add("A", 1.);
+    ctx.particleTypes().add("B", 1.);
     readdy::scalar interactionDistance = 2.;
     ctx.potentials().addHarmonicRepulsion("A", "B", 10., interactionDistance);
     ctx.potentials().addHarmonicRepulsion("B", "B", 10., interactionDistance);
@@ -661,7 +661,7 @@ auto abConversionContext = [](readdy::model::Context &ctx, readdy::scalar rateOn
 TEST_P(TestDetailedBalanceWithKernels, ConversionThatShouldBeAccepted) {
     auto &ctx = kernel->context();
     abConversionContext(ctx, 1e15, 1e-15);
-    ctx.particle_types().add("D", 0.);
+    ctx.particleTypes().add("D", 0.);
     ctx.potentials().addHarmonicRepulsion("A", "D", 10., 2.); // A and D interact, thus the initial state is unfavorable
 
     const auto idForward = ctx.reactions().idOf("convAB");
@@ -686,8 +686,8 @@ TEST_P(TestDetailedBalanceWithKernels, ConversionThatShouldBeAccepted) {
     });
     auto numbersConnection = kernel->connectObservable(numbersObs.get());
 
-    const auto ida = ctx.particle_types().idOf("A");
-    const auto idd = ctx.particle_types().idOf("D");
+    const auto ida = ctx.particleTypes().idOf("A");
+    const auto idd = ctx.particleTypes().idOf("D");
     kernel->stateModel().addParticle({{0., 0., 0.}, ida});
 
     // induce rejection by many repulsing particles in the vicinity
@@ -703,7 +703,7 @@ TEST_P(TestDetailedBalanceWithKernels, ConversionThatShouldBeAccepted) {
 TEST_P(TestDetailedBalanceWithKernels, ConversionThatShouldBeRejected) {
     auto &ctx = kernel->context();
     abConversionContext(ctx, 1e15, 1e-15);
-    ctx.particle_types().add("D", 0.);
+    ctx.particleTypes().add("D", 0.);
     ctx.potentials().addHarmonicRepulsion("B", "D", 10., 2.);
 
     const auto idForward = ctx.reactions().idOf("convAB");
@@ -728,8 +728,8 @@ TEST_P(TestDetailedBalanceWithKernels, ConversionThatShouldBeRejected) {
     });
     auto numbersConnection = kernel->connectObservable(numbersObs.get());
 
-    const auto ida = ctx.particle_types().idOf("A");
-    const auto idd = ctx.particle_types().idOf("D");
+    const auto ida = ctx.particleTypes().idOf("A");
+    const auto idd = ctx.particleTypes().idOf("D");
     kernel->stateModel().addParticle({{0., 0., 0.}, ida});
 
     // induce rejection by many repulsing particles in the vicinity
@@ -744,9 +744,9 @@ TEST_P(TestDetailedBalanceWithKernels, ConversionThatShouldBeRejected) {
 
 auto abEnzymaticContext = [](readdy::model::Context &ctx, readdy::scalar rateOn, readdy::scalar rateOff) {
     ctx.boxSize() = {{12, 12, 12}};
-    ctx.particle_types().add("A", 1.);
-    ctx.particle_types().add("B", 1.);
-    ctx.particle_types().add("C", 1.);
+    ctx.particleTypes().add("A", 1.);
+    ctx.particleTypes().add("B", 1.);
+    ctx.particleTypes().add("C", 1.);
     readdy::scalar interactionDistance = 2.;
     ctx.potentials().addHarmonicRepulsion("A", "B", 10., interactionDistance);
     ctx.potentials().addHarmonicRepulsion("B", "B", 10., interactionDistance);
@@ -759,7 +759,7 @@ auto abEnzymaticContext = [](readdy::model::Context &ctx, readdy::scalar rateOn,
 TEST_P(TestDetailedBalanceWithKernels, EnzymaticThatShouldBeAccepted) {
     auto &ctx = kernel->context();
     abEnzymaticContext(ctx, 1e15, 1e-15);
-    ctx.particle_types().add("D", 0.);
+    ctx.particleTypes().add("D", 0.);
     ctx.potentials().addHarmonicRepulsion("A", "D", 10., 2.); // A and D interact, thus the initial state is unfavorable
 
     const auto idForward = ctx.reactions().idOf("convAB");
@@ -785,9 +785,9 @@ TEST_P(TestDetailedBalanceWithKernels, EnzymaticThatShouldBeAccepted) {
     });
     auto numbersConnection = kernel->connectObservable(numbersObs.get());
 
-    const auto ida = ctx.particle_types().idOf("A");
-    const auto idc = ctx.particle_types().idOf("C");
-    const auto idd = ctx.particle_types().idOf("D");
+    const auto ida = ctx.particleTypes().idOf("A");
+    const auto idc = ctx.particleTypes().idOf("C");
+    const auto idd = ctx.particleTypes().idOf("D");
     kernel->stateModel().addParticle({{0., 0., 0.}, ida});
     kernel->stateModel().addParticle({{0., 0., 1.}, idc});
 
@@ -804,7 +804,7 @@ TEST_P(TestDetailedBalanceWithKernels, EnzymaticThatShouldBeAccepted) {
 TEST_P(TestDetailedBalanceWithKernels, EnzymaticThatShouldBeRejected) {
     auto &ctx = kernel->context();
     abEnzymaticContext(ctx, 1e15, 1e-15);
-    ctx.particle_types().add("D", 0.);
+    ctx.particleTypes().add("D", 0.);
     ctx.potentials().addHarmonicRepulsion("B", "D", 10., 2.); // A and D interact, thus the initial state is unfavorable
 
     const auto idForward = ctx.reactions().idOf("convAB");
@@ -830,9 +830,9 @@ TEST_P(TestDetailedBalanceWithKernels, EnzymaticThatShouldBeRejected) {
     });
     auto numbersConnection = kernel->connectObservable(numbersObs.get());
 
-    const auto ida = ctx.particle_types().idOf("A");
-    const auto idc = ctx.particle_types().idOf("C");
-    const auto idd = ctx.particle_types().idOf("D");
+    const auto ida = ctx.particleTypes().idOf("A");
+    const auto idc = ctx.particleTypes().idOf("C");
+    const auto idd = ctx.particleTypes().idOf("D");
     kernel->stateModel().addParticle({{0., 0., 0.}, ida});
     kernel->stateModel().addParticle({{0., 0., 1.}, idc});
 

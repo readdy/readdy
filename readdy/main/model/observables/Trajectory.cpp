@@ -56,7 +56,7 @@ void Trajectory::evaluate() {
     result.clear();
     const auto &currentInput = kernel->stateModel().getParticles();
     std::for_each(currentInput.begin(), currentInput.end(), [this](const Particle &p) {
-        result.emplace_back(p, kernel->context().particle_types());
+        result.emplace_back(p, kernel->context().particleTypes());
     });
 }
 
@@ -124,7 +124,7 @@ void FlatTrajectory::evaluate() {
     result.clear();
     const auto &currentInput = kernel->stateModel().getParticles();
     std::for_each(currentInput.begin(), currentInput.end(), [this](const Particle &p) {
-        result.emplace_back(p, kernel->context().particle_types());
+        result.emplace_back(p, kernel->context().particleTypes());
     });
 }
 

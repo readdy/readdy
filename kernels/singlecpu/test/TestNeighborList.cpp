@@ -55,8 +55,8 @@ TEST_P(TestSCPUNeighborList, Diffuse) {
     kernel::scpu::SCPUKernel kernel;
 
     auto& context = kernel.context();
-    context.particle_types().add("Test", 1.);
-    auto id = context.particle_types().idOf("Test");
+    context.particleTypes().add("Test", 1.);
+    auto id = context.particleTypes().idOf("Test");
     scalar cutoff = 4;
     context.reactions().addFusion("Fusion", id, id, id, .001, cutoff);
     context.boxSize() = getTestingBoxSize();

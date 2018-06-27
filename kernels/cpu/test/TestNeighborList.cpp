@@ -56,14 +56,14 @@ struct TestNeighborList : ::testing::Test {
 
     TestNeighborList() : kernel(std::make_unique<cpu::CPUKernel>()) {
         auto &ctx = kernel->context();
-        ctx.particle_types().add("A", 1.);
-        auto a_id = ctx.particle_types()("A");
+        ctx.particleTypes().add("A", 1.);
+        auto a_id = ctx.particleTypes()("A");
         readdy::scalar eductDistance = 1.2;
         ctx.reactions().addFusion("test", "A", "A", "A", 0., eductDistance);
 
         noop = std::make_unique<readdy::testing::NOOPPotentialOrder2>(a_id, a_id, 1.1, 0., 0.);
         ctx.potentials().addUserDefined(noop.get());
-        typeIdA = ctx.particle_types().idOf("A");
+        typeIdA = ctx.particleTypes().idOf("A");
     }
 
 };
@@ -178,9 +178,9 @@ TEST(TestNeighborListImpl, DiffusionAndReaction) {
     std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
 
     // A is absorbed and created by F, while the number of F stays constant, this test spans multiple timesteps
-    kernel->context().particle_types().add("A", 0.05);
-    kernel->context().particle_types().add("F", 0.0);
-    kernel->context().particle_types().add("V", 0.0);
+    kernel->context().particleTypes().add("A", 0.05);
+    kernel->context().particleTypes().add("F", 0.0);
+    kernel->context().particleTypes().add("V", 0.0);
     kernel->context().periodicBoundaryConditions() = {{true, true, true}};
     kernel->context().boxSize() = {{100, 10, 10}};
 
@@ -219,9 +219,9 @@ TEST(TestNeighborListImpl, Diffusion) {
 
     // A is absorbed and created by F, while the number of F stays constant, this test spans multiple timesteps
     auto& context = kernel->context();
-    context.particle_types().add("A", 0.05);
-    context.particle_types().add("F", 0.0);
-    context.particle_types().add("V", 0.0);
+    context.particleTypes().add("A", 0.05);
+    context.particleTypes().add("F", 0.0);
+    context.particleTypes().add("V", 0.0);
 
     scalar cutoff = 2.0;
 
@@ -293,8 +293,8 @@ TEST_P(TestCPUNeighborList, Diffuse) {
     kernel::cpu::CPUKernel kernel;
 
     auto& context = kernel.context();
-    context.particle_types().add("Test", 1.);
-    auto id = context.particle_types().idOf("Test");
+    context.particleTypes().add("Test", 1.);
+    auto id = context.particleTypes().idOf("Test");
     scalar cutoff = 4;
     context.reactions().addFusion("Fusion", id, id, id, .001, cutoff);
     context.boxSize() = getTestingBoxSize();

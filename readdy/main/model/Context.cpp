@@ -77,7 +77,7 @@ void Context::validate() const {
                                     periodicBoundaryConditions().end(), true, std::logical_and<>());
     if(!periodic) {
         // check if there are box potentials for each particle type and that these box potentials are valid
-        for(const auto &entry : particle_types().typeMapping()) {
+        for(const auto &entry : particleTypes().typeMapping()) {
             auto ptype = entry.second;
             auto potIt = potentials().potentialsOrder1().find(ptype);
             bool valid = true;

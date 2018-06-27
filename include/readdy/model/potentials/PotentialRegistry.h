@@ -50,8 +50,6 @@ NAMESPACE_BEGIN(potentials)
 
 class PotentialRegistry {
 public:
-    using PotentialId = Potential::PotentialId;
-
     using PotentialsO1Collection = std::vector<PotentialOrder1 *>;
     using PotentialsO2Collection = std::vector<PotentialOrder2 *>;
 
@@ -60,139 +58,221 @@ public:
     using AltPotentialsO2Map = std::unordered_map<ParticleTypeId, std::unordered_map<ParticleTypeId, PotentialsO2Collection>>;
 
     explicit PotentialRegistry(std::reference_wrapper<const ParticleTypeRegistry> typeRegistry)
-    : _types(typeRegistry) {};
+            : _types(typeRegistry) {};
 
-    PotentialRegistry(const PotentialRegistry &) = default;
-
-    PotentialRegistry &operator=(const PotentialRegistry &) = default;
-
-    PotentialRegistry(PotentialRegistry &&) = default;
-
-    PotentialRegistry &operator=(PotentialRegistry &&) = default;
-
-    ~PotentialRegistry() = default;
-
-
-    PotentialId addUserDefined(potentials::PotentialOrder1 *potential) {
+    /**
+     * Adds a user defined external potential to the registry.
+     * @param potential the potential
+     */
+    void addUserDefined(potentials::PotentialOrder1 *potential) {
         return _registerO1(potential);
     }
 
-    PotentialId addUserDefined(potentials::PotentialOrder2 *potential) {
+    /**
+     * Adds a user defined pair potential to the registry.
+     * @param potential the potential
+     */
+    void addUserDefined(potentials::PotentialOrder2 *potential) {
         return _registerO2(potential);
     }
 
-    PotentialId addBox(const std::string &particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &extent) {
-        return addBox(_types(particleType), forceConstant, origin, extent);
+    /**
+     * Register a box potential, which is used to confine particles to a cuboid volume. The energy function
+     * increases quadratically with respect to the distance from the cuboid edges, resulting in a
+     * harmonic repulsion.
+     *
+     * @param particleType the particle type for which the box potential should take effect
+     * @param forceConstant the force constant determines the strength of repulsion
+     * @param origin the coordinate of the lower left corner of the box
+     * @param extent the extent from the origin
+     */
+    void addBox(const std::string &particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &extent) {
+        addBox(_types(particleType), forceConstant, origin, extent);
     }
-
-    PotentialId addBox(ParticleTypeId particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &extent) {
+    void addBox(ParticleTypeId particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &extent) {
         auto &pots = _ownPotentialsO1[particleType];
         pots.emplace_back(std::make_shared<Box>(particleType, forceConstant, origin, extent));
-        return _registerO1(pots.back().get());
+        _registerO1(pots.back().get());
     }
 
-    PotentialId addHarmonicRepulsion(const std::string &type1, const std::string &type2, scalar forceConstant,
-                                 scalar interactionDistance) {
-        return addHarmonicRepulsion(_types(type1), _types(type2), forceConstant, interactionDistance);
+    /**
+     * Register a harmonic repulsion potential.
+     *
+     * @param type1 first particle type
+     * @param type2 second particle type
+     * @param forceConstant the force constant
+     * @param interactionDistance the interaction distance
+     */
+    void addHarmonicRepulsion(const std::string &type1, const std::string &type2, scalar forceConstant,
+                              scalar interactionDistance) {
+        addHarmonicRepulsion(_types(type1), _types(type2), forceConstant, interactionDistance);
     }
-
-    PotentialId addHarmonicRepulsion(ParticleTypeId type1, ParticleTypeId type2, scalar forceConstant,
-                                 scalar interactionDistance) {
+    void addHarmonicRepulsion(ParticleTypeId type1, ParticleTypeId type2, scalar forceConstant,
+                              scalar interactionDistance) {
         auto &pots = _ownPotentialsP2[std::tie(type1, type2)];
         pots.emplace_back(std::make_shared<HarmonicRepulsion>(type1, type2, forceConstant, interactionDistance));
-        return _registerO2(pots.back().get());
+        _registerO2(pots.back().get());
     }
 
-    PotentialId addWeakInteractionPiecewiseHarmonic(ParticleTypeId type1, ParticleTypeId type2,
-                                                scalar forceConstant, scalar desiredDist, scalar depth, scalar cutoff) {
+    /**
+     * Register a weak interaction piecewise harmonic potential.
+     * @param particleTypeA particle type A
+     * @param particleTypeB particle type B
+     * @param forceConstant the force constant
+     * @param desiredParticleDistance the distance at which it is most favorable
+     *        for the particles to be (w.r.t. this potential)
+     * @param depth the depth of the energy well
+     * @param noInteractionDistance the distance at which this potential has no effect anymore
+     */
+    void addWeakInteractionPiecewiseHarmonic(ParticleTypeId type1, ParticleTypeId type2,
+                                             scalar forceConstant, scalar desiredDist, scalar depth, scalar cutoff) {
         WeakInteractionPiecewiseHarmonic::Configuration conf{desiredDist, depth, cutoff};
-        return addWeakInteractionPiecewiseHarmonic(type1, type2, forceConstant, conf);
+        addWeakInteractionPiecewiseHarmonic(type1, type2, forceConstant, conf);
     }
-
-    PotentialId addWeakInteractionPiecewiseHarmonic(const std::string &type1, const std::string &type2,
-                                                scalar forceConstant, scalar desiredDist, scalar depth, scalar cutoff) {
-        return addWeakInteractionPiecewiseHarmonic(_types(type1), _types(type2), forceConstant, desiredDist,
-                                                   depth, cutoff);
+    void addWeakInteractionPiecewiseHarmonic(const std::string &type1, const std::string &type2,
+                                             scalar forceConstant, scalar desiredDist, scalar depth, scalar cutoff) {
+        addWeakInteractionPiecewiseHarmonic(_types(type1), _types(type2), forceConstant, desiredDist,
+                                            depth, cutoff);
     }
-
-    PotentialId
+    void
     addWeakInteractionPiecewiseHarmonic(const std::string &type1, const std::string &type2, scalar forceConstant,
                                         const WeakInteractionPiecewiseHarmonic::Configuration &config) {
-        return addWeakInteractionPiecewiseHarmonic(_types(type1), _types(type2), forceConstant, config);
+        addWeakInteractionPiecewiseHarmonic(_types(type1), _types(type2), forceConstant, config);
     }
-
-    PotentialId
+    void
     addWeakInteractionPiecewiseHarmonic(ParticleTypeId type1, ParticleTypeId type2, scalar forceConstant,
                                         const WeakInteractionPiecewiseHarmonic::Configuration &config) {
         auto &pots = _ownPotentialsP2[std::tie(type1, type2)];
         pots.emplace_back(std::make_shared<WeakInteractionPiecewiseHarmonic>(type1, type2, forceConstant, config));
-        return _registerO2(pots.back().get());
+        _registerO2(pots.back().get());
     }
 
-    PotentialId addLennardJones(const std::string &type1, const std::string &type2, unsigned int m, unsigned int n,
-                            scalar cutoff, bool shift, scalar epsilon, scalar sigma) {
-        return addLennardJones(_types(type1), _types(type2), m, n, cutoff, shift, epsilon, sigma);
+    /**
+    * Constructs a Lennard-Jones-type potential between two particle types A and B (where possibly A = B) of the form
+    *
+    * \f[ V_{\mbox{LJ}}(r) = k(\epsilon , n, m) \left[ \left(\frac{\sigma}{r}\right)^m - \left(\frac{\sigma}{r}\right)^n \right], \f]
+    *
+    * where n,m are exponent 1 and 2, respectively, with m > n.
+    * If shift == true, it will be defined as
+    *
+    * \f[ V_{\mbox{LJ, shifted}}(r) = V_{\mbox{LJ}}(r) - V_{\mbox{LJ}}(r_{\mbox{cutoff}}) \f]
+    *
+    * for r <= cutoffDistance, which makes a difference in energy, but not in force.
+    *
+    * @param particleType1 particle type A
+    * @param particleType2 particle type B
+    * @param m first exponent
+    * @param n second exponent
+    * @param cutoffDistance the cutoff distance
+    * @param shift if it should be shifted or not
+    * @param epsilon the well depth
+    * @param sigma the distance at which the inter-particle potential is zero
+    */
+    void addLennardJones(const std::string &type1, const std::string &type2, unsigned int m, unsigned int n,
+                         scalar cutoff, bool shift, scalar epsilon, scalar sigma) {
+        addLennardJones(_types(type1), _types(type2), m, n, cutoff, shift, epsilon, sigma);
     }
-
-    PotentialId addLennardJones(ParticleTypeId type1, ParticleTypeId type2, unsigned int m, unsigned int n,
-                            scalar cutoff, bool shift, scalar epsilon, scalar sigma) {
+    void addLennardJones(ParticleTypeId type1, ParticleTypeId type2, unsigned int m, unsigned int n,
+                         scalar cutoff, bool shift, scalar epsilon, scalar sigma) {
         auto &pots = _ownPotentialsP2[std::tie(type1, type2)];
         pots.emplace_back(std::make_shared<LennardJones>(type1, type2, m, n, cutoff, shift, epsilon, sigma));
-        return _registerO2(pots.back().get());
+        _registerO2(pots.back().get());
     }
 
-    PotentialId addScreenedElectrostatics(const std::string &particleType1, const std::string &particleType2,
-                                      scalar electrostaticStrength, scalar inverseScreeningDepth,
-                                      scalar repulsionStrength, scalar repulsionDistance, unsigned int exponent,
-                                      scalar cutoff) {
-        return addScreenedElectrostatics(_types(particleType1), _types(particleType2), electrostaticStrength,
-                                         inverseScreeningDepth, repulsionStrength, repulsionDistance, exponent, cutoff);
+    /**
+     * Constructs a potential that describes screened electrostatics with a hard-core repulsion between two
+     * particle types A and B (where possibly A = B) of the form
+     *
+     * \f[ V(r) = C \frac{\exp(-\kappa r)}{r} + D\left(\frac{\sigma}{r}\right)^n, \f]
+     *
+     * where the first term is the electrostatic interaction, the constant C has the dimensions of an energy times distance. Its value
+     * can be positive or negative and depends on the valencies of the particles (see Debye-Hueckel theory). \f$\kappa\f$ is
+     * the inverse screening depth. The second term is a hard-core repulsion, that ensures
+     * that the potential does not diverge to negative infinity.
+     *
+     * @param particleType1 particle type A
+     * @param particleType2 particle type B
+     * @param electrostaticStrength C
+     * @param inverseScreeningDepth \f$\kappa\f$
+     * @param repulsionStrength D
+     * @param repulsionDistance \f$\sigma\f$
+     * @param exponent n
+     * @param cutoff the distance from which no energies and forces are calculated further
+     */
+    void addScreenedElectrostatics(const std::string &particleType1, const std::string &particleType2,
+                                   scalar electrostaticStrength, scalar inverseScreeningDepth,
+                                   scalar repulsionStrength, scalar repulsionDistance, unsigned int exponent,
+                                   scalar cutoff) {
+        addScreenedElectrostatics(_types(particleType1), _types(particleType2), electrostaticStrength,
+                                  inverseScreeningDepth, repulsionStrength, repulsionDistance, exponent, cutoff);
     }
-
-    PotentialId addScreenedElectrostatics(ParticleTypeId particleType1, ParticleTypeId particleType2,
-                                      scalar electrostaticStrength, scalar inverseScreeningDepth,
-                                      scalar repulsionStrength, scalar repulsionDistance, unsigned int exponent,
-                                      scalar cutoff) {
+    void addScreenedElectrostatics(ParticleTypeId particleType1, ParticleTypeId particleType2,
+                                   scalar electrostaticStrength, scalar inverseScreeningDepth,
+                                   scalar repulsionStrength, scalar repulsionDistance, unsigned int exponent,
+                                   scalar cutoff) {
         auto &pots = _ownPotentialsP2[std::tie(particleType1, particleType2)];
         pots.emplace_back(std::make_shared<ScreenedElectrostatics>(particleType1, particleType2, electrostaticStrength,
                                                                    inverseScreeningDepth, repulsionStrength,
                                                                    repulsionDistance, exponent, cutoff));
-        return _registerO2(pots.back().get());
+        _registerO2(pots.back().get());
     }
 
-    PotentialId addSphereOut(const std::string &particleType, scalar forceConstant, const Vec3 &origin, scalar radius) {
-        return addSphereOut(_types(particleType), forceConstant, origin, radius);
+    /**
+     * Register a sphere potential, which is used to confine particles outside a spherical volume. The energy function
+     * increases quadratically with respect to the distance from the sphere edge, resulting in a harmonic repulsion.
+     *
+     * @param particleType the particle type for which the potential should take effect
+     * @param forceConstant the force constant determines the strength of interaction, like a spring constant
+     * @param origin the center of the sphere
+     * @param radius the extent of the sphere
+     */
+    void addSphereOut(const std::string &particleType, scalar forceConstant, const Vec3 &origin, scalar radius) {
+        addSphereOut(_types(particleType), forceConstant, origin, radius);
     }
-
-    PotentialId addSphereOut(ParticleTypeId particleType, scalar forceConstant, const Vec3 &origin, scalar radius) {
+    void addSphereOut(ParticleTypeId particleType, scalar forceConstant, const Vec3 &origin, scalar radius) {
         auto &pots = _ownPotentialsO1[particleType];
         pots.emplace_back(std::make_shared<SphereOut>(particleType, forceConstant, origin, radius));
-        return _registerO1(pots.back().get());
+        _registerO1(pots.back().get());
     }
 
-    PotentialId addSphereIn(const std::string &particleType, scalar forceConstant, const Vec3 &origin, scalar radius) {
-        return addSphereIn(_types(particleType), forceConstant, origin, radius);
+    /**
+     * Register a sphere potential, which is used to confine particles inside a spherical volume. The energy function
+     * increases quadratically with respect to the distance from the sphere edge, resulting in a harmonic repulsion.
+     *
+     * @param particleType the particle type for which the sphere potential should take effect
+     * @param forceConstant the force constant determines the strength of repulsion
+     * @param origin the center of the sphere
+     * @param radius the extent of the sphere
+     */
+    void addSphereIn(const std::string &particleType, scalar forceConstant, const Vec3 &origin, scalar radius) {
+        addSphereIn(_types(particleType), forceConstant, origin, radius);
     }
-
-    PotentialId addSphereIn(ParticleTypeId particleType, scalar forceConstant, const Vec3 &origin, scalar radius) {
+    void addSphereIn(ParticleTypeId particleType, scalar forceConstant, const Vec3 &origin, scalar radius) {
         auto &pots = _ownPotentialsO1[particleType];
         pots.emplace_back(std::make_shared<SphereIn>(particleType, forceConstant, origin, radius));
-        return _registerO1(pots.back().get());
+        _registerO1(pots.back().get());
     }
 
-    PotentialId addSphericalBarrier(const std::string &particleType, scalar height, scalar width, const Vec3 &origin,
-                                scalar radius) {
-        return addSphericalBarrier(_types(particleType), height, width, origin, radius);
+    /**
+    * Register a spherical barrier potential. For positive height it represents a concentric barrier around the point origin
+    * with a certain radius. The potential consists of multiple harmonic snippets.
+    *
+    * @param particleType the particle type for which the potential should take effect
+    * @param origin the center of the sphere
+    * @param radius the radius of the sphere
+    * @param height the energetic height of the barrier, can be negative
+    * @param width width of the barrier, behaves like full-width-at-half-maximum (FWHM)
+    */
+    void addSphericalBarrier(const std::string &particleType, scalar height, scalar width, const Vec3 &origin,
+                             scalar radius) {
+        addSphericalBarrier(_types(particleType), height, width, origin, radius);
     }
-
-    PotentialId addSphericalBarrier(ParticleTypeId particleType, scalar height, scalar width, const Vec3 &origin,
-                                scalar radius) {
+    void addSphericalBarrier(ParticleTypeId particleType, scalar height, scalar width, const Vec3 &origin,
+                             scalar radius) {
         auto &pots = _ownPotentialsO1[particleType];
         pots.emplace_back(std::make_shared<SphericalBarrier>(particleType, height, width, origin, radius));
-        return _registerO1(pots.back().get());
+        _registerO1(pots.back().get());
     }
-
-    void remove(PotentialId handle);
 
     const PotentialsO1Collection &potentialsOf(const ParticleTypeId type) const {
         static const auto defaultValue = PotentialsO1Collection{};
@@ -245,23 +325,20 @@ private:
     OwnPotentialsO1Map _ownPotentialsO1{};
     OwnPotentialsO2Map _ownPotentialsP2{};
 
-    PotentialId _registerO1(PotentialOrder1 *potential) {
+    void _registerO1(PotentialOrder1 *potential) {
         auto typeId = potential->particleType();
         _potentialsO1[typeId].push_back(potential);
-        return potential->getId();
     }
 
-    PotentialId _registerO2(PotentialOrder2 *potential) {
-        auto id = potential->getId();
+    void _registerO2(PotentialOrder2 *potential) {
         auto type1Id = potential->particleType1();
         auto type2Id = potential->particleType2();
         auto pp = std::tie(type1Id, type2Id);
         _potentialsO2[pp].push_back(potential);
         _alternativeO2Registry[type1Id][type2Id].push_back(potential);
-        if(type1Id != type2Id) {
+        if (type1Id != type2Id) {
             _alternativeO2Registry[type2Id][type1Id].push_back(potential);
         }
-        return id;
     }
 
 };
@@ -269,5 +346,3 @@ private:
 NAMESPACE_END(potentials)
 NAMESPACE_END(model)
 NAMESPACE_END(readdy)
-
-#include "misc/PotentialRegistry_misc.h"

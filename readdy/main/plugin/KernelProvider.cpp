@@ -140,7 +140,7 @@ void KernelProvider::add(const std::string &sharedLib) {
             auto libPtr = it->second.lock();
             // load the kernel
             readdy::model::Kernel* kernel = libPtr->load<readdy::model::Kernel*()>("createKernel")();
-            log::debug("loaded kernel with name {}", kernel->getName());
+            log::debug("loaded kernel with name {}", kernel->name());
             return kernel_ptr(kernel, KernelDeleter{libPtr});
         }
 
@@ -148,7 +148,7 @@ void KernelProvider::add(const std::string &sharedLib) {
         pimpl->libs[sharedLib] = lib;
         // load the kernel
         readdy::model::Kernel* kernel = lib->load<readdy::model::Kernel*()>("createKernel")();
-        log::debug("loaded kernel with name {}", kernel->getName());
+        log::debug("loaded kernel with name {}", kernel->name());
         return kernel_ptr(kernel, KernelDeleter{lib});
     }));
 }

@@ -39,7 +39,7 @@ namespace top {
 namespace reactions {
 
 Recipe &Recipe::changeParticleType(const Recipe::vertex_ref &ref, const std::string &to) {
-    return changeParticleType(ref, _topology.get().context().particle_types().idOf(to));
+    return changeParticleType(ref, _topology.get().context().particleTypes().idOf(to));
 }
 
 

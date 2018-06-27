@@ -112,10 +112,6 @@ public:
 
     void initialize() override;
 
-    void finalize() override {
-        readdy::model::Kernel::finalize();
-    }
-
     thread_pool &pool() {
         return _pool;
     }

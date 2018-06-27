@@ -37,15 +37,21 @@
 #include <readdy/model/topologies/Utils.h>
 #include <readdy/common/FloatingPoints.h>
 
-class TestTopologyReactionsExternal : public KernelTest {
+class TestTopologyReactionsExternal : public ::testing::TestWithParam<std::string> {
+public:
+    readdy::Simulation simulation;
 protected:
+
+    TestTopologyReactionsExternal() : simulation(GetParam()) {}
+
     void SetUp() override {
-        auto &ctx = kernel->context();
-        ctx.particle_types().add("Topology A", 1.0, readdy::model::particleflavor::TOPOLOGY);
-        ctx.particle_types().add("Topology B", 1.0, readdy::model::particleflavor::TOPOLOGY);
-        ctx.particle_types().add("Topology Invalid Type", 1.0, readdy::model::particleflavor::TOPOLOGY);
-        ctx.particle_types().add("A", 1.0, readdy::model::particleflavor::NORMAL);
-        ctx.particle_types().add("B", 1.0, readdy::model::particleflavor::NORMAL);
+        auto &ctx = simulation.context();
+        ctx.topologyRegistry().addType("T");
+        ctx.particleTypes().add("Topology A", 1.0, readdy::model::particleflavor::TOPOLOGY);
+        ctx.particleTypes().add("Topology B", 1.0, readdy::model::particleflavor::TOPOLOGY);
+        ctx.particleTypes().add("Topology Invalid Type", 1.0, readdy::model::particleflavor::TOPOLOGY);
+        ctx.particleTypes().add("A", 1.0, readdy::model::particleflavor::NORMAL);
+        ctx.particleTypes().add("B", 1.0, readdy::model::particleflavor::NORMAL);
 
         ctx.topologyRegistry().configureBondPotential("Topology A", "Topology A", {10, 10});
         ctx.topologyRegistry().configureBondPotential("Topology A", "Topology B", {10, 10});
@@ -59,47 +65,43 @@ namespace {
 
 TEST_P(TestTopologyReactionsExternal, TestTopologyEnzymaticReaction) {
     using namespace readdy;
-    auto &ctx = kernel->context();
-    model::TopologyParticle x_0{c_::zero, c_::zero, c_::zero, ctx.particle_types().idOf("Topology A")};
+    auto &ctx = simulation.context();
+    model::TopologyParticle x_0{c_::zero, c_::zero, c_::zero, ctx.particleTypes().idOf("Topology A")};
     {
-        auto tid = kernel->context().topologyRegistry().addType("MyType");
-        kernel->stateModel().addTopology(tid, {x_0});
+        auto tid = ctx.topologyRegistry().addType("MyType");
+        simulation.stateModel().addTopology(tid, {x_0});
     }
-    kernel->stateModel().addParticle(
-            model::Particle(c_::zero, c_::zero, c_::zero, ctx.particle_types().idOf("A"))
+    simulation.stateModel().addParticle(
+            model::Particle(c_::zero, c_::zero, c_::zero, ctx.particleTypes().idOf("A"))
     );
-    kernel->context().reactions().addEnzymatic("TopologyEnzymatic", "Topology A", "A", "B", 1e16, 1.0);
+    ctx.reactions().addEnzymatic("TopologyEnzymatic", "Topology A", "A", "B", 1e16, 1.0);
 
-    auto particles_beforehand = kernel->stateModel().getParticles();
+    auto particles_beforehand = simulation.stateModel().getParticles();
 
     {
         std::size_t nNormalFlavor{0};
         for (const auto &p : particles_beforehand) {
-            if (ctx.particle_types().infoOf(p.getType()).flavor == readdy::model::particleflavor::NORMAL) {
+            if (ctx.particleTypes().infoOf(p.getType()).flavor == readdy::model::particleflavor::NORMAL) {
                 ++nNormalFlavor;
             }
         }
         ASSERT_EQ(nNormalFlavor, 1);
     }
 
-    kernel->initialize();
+    auto run = simulation.runScheme().withReactionScheduler("UncontrolledApproximation").configure(1.);
+    run->initializeNeighborList();
+    run->updateNeighborList();
+    run->reactions();
 
-    auto nlCreate = kernel->actions().updateNeighborList(readdy::model::actions::UpdateNeighborList::Operation::init);
-    auto nlUpdate = kernel->actions().updateNeighborList(readdy::model::actions::UpdateNeighborList::Operation::update);
-    auto action = kernel->actions().uncontrolledApproximation(1.0);
-    nlCreate->perform();
-    nlUpdate->perform();
-    action->perform();
-
-    auto particles = kernel->stateModel().getParticles();
+    auto particles = simulation.stateModel().getParticles();
 
     ASSERT_EQ(particles.size(), particles_beforehand.size());
     bool found {false};
     std::size_t nNormalFlavor {0};
     for(const auto& p : particles) {
-        if(ctx.particle_types().infoOf(p.getType()).flavor == readdy::model::particleflavor::NORMAL) {
+        if(ctx.particleTypes().infoOf(p.getType()).flavor == readdy::model::particleflavor::NORMAL) {
             ++nNormalFlavor;
-            found |= p.getType() == ctx.particle_types().idOf("B");
+            found |= p.getType() == ctx.particleTypes().idOf("B");
         }
     }
     ASSERT_EQ(nNormalFlavor, 1);
@@ -109,15 +111,13 @@ TEST_P(TestTopologyReactionsExternal, TestTopologyEnzymaticReaction) {
 TEST_P(TestTopologyReactionsExternal, TestGetTopologyForParticle) {
     // check that getTopologyForParticle does what it is supposed to do
     using namespace readdy;
-    auto &ctx = kernel->context();
-    model::TopologyParticle x_0{c_::zero, c_::zero, c_::zero, ctx.particle_types().idOf("Topology A")};
-    auto toplogy = kernel->stateModel().addTopology(0, {x_0});
-    kernel->stateModel().addParticle(
-            model::Particle(c_::zero, c_::zero, c_::zero, ctx.particle_types().idOf("A"))
-    );
+    auto &ctx = simulation.context();
+    model::TopologyParticle x_0{c_::zero, c_::zero, c_::zero, ctx.particleTypes().idOf("Topology A")};
+    auto toplogy = simulation.addTopology("T", {x_0});
+    simulation.addParticle("A", 0, 0, 0);
 
     for(auto particle : toplogy->getParticles()) {
-        auto returned_top = kernel->stateModel().getTopologyForParticle(particle);
+        auto returned_top = simulation.stateModel().getTopologyForParticle(particle);
         ASSERT_EQ(toplogy, returned_top);
     }
 }
@@ -126,16 +126,14 @@ TEST_P(TestTopologyReactionsExternal, TestGetTopologyForParticleDecay) {
     // check that the particles that are contained in (active) topologies point to their respective topologies, also
     // and especially after topology split reactions
     using namespace readdy;
-    Simulation sim;
-    auto simKernel = sim.setKernel(std::move(kernel));
-    sim.setPeriodicBoundary({{true, true, true}});
-    sim.setBoxSize(100, 100, 100);
-    sim.registerTopologyType("TA");
+    simulation.context().periodicBoundaryConditions() = {{true, true, true}};
+    simulation.context().boxSize() = {{100, 100, 100}};
+    simulation.context().topologyRegistry().addType("TA");
     //auto topAId = sim.registerParticleType("Topology A", 10., model::particleflavor::TOPOLOGY);
     //auto aId = sim.registerParticleType("A", 10.);
-    auto topAId = sim.currentContext().particle_types().idOf("Topology A");
-    auto aId = sim.currentContext().particle_types().idOf("A");
-    sim.configureTopologyBondPotential("Topology A", "Topology A", 10, 1);
+    auto topAId = simulation.context().particleTypes().idOf("Topology A");
+    auto aId = simulation.context().particleTypes().idOf("A");
+    simulation.context().topologyRegistry().configureBondPotential("Topology A", "Topology A", {10, 1});
 
     std::vector<model::TopologyParticle> topologyParticles;
     {
@@ -144,7 +142,7 @@ TEST_P(TestTopologyReactionsExternal, TestGetTopologyForParticleDecay) {
             topologyParticles.emplace_back(-49. + i, c_::zero, c_::zero, topAId);
         }
     }
-    auto toplogy = sim.addTopology("TA", topologyParticles);
+    auto toplogy = simulation.addTopology("TA", topologyParticles);
     {
         auto& graph = toplogy->graph();
         auto it1 = graph.vertices().begin();
@@ -173,14 +171,14 @@ TEST_P(TestTopologyReactionsExternal, TestGetTopologyForParticleDecay) {
         return recipe;
     }, .7};
 
-    sim.registerStructuralTopologyReaction("TA", r);
+    simulation.context().topologyRegistry().addStructuralReaction("TA", r);
 
-    sim.runScheme(true).evaluateTopologyReactions().configureAndRun(35, 1.);
+    simulation.runScheme(true).evaluateTopologyReactions().configureAndRun(35, 1.);
 
-    log::trace("got n topologies: {}", sim.currentTopologies().size());
-    for(auto top : sim.currentTopologies()) {
+    log::trace("got n topologies: {}", simulation.currentTopologies().size());
+    for(auto top : simulation.currentTopologies()) {
         for(const auto p : top->getParticles()) {
-            ASSERT_EQ(simKernel->stateModel().getTopologyForParticle(p), top);
+            ASSERT_EQ(simulation.stateModel().getTopologyForParticle(p), top);
         }
     }
 
@@ -188,21 +186,20 @@ TEST_P(TestTopologyReactionsExternal, TestGetTopologyForParticleDecay) {
 
 TEST_P(TestTopologyReactionsExternal, AttachParticle) {
     using namespace readdy;
-    Simulation sim;
-    auto kernel = sim.setKernel(plugin::KernelProvider::getInstance().create(this->kernel->getName()));
-    sim.setPeriodicBoundary({{true, true, true}});
-    sim.registerTopologyType("TA");
-    sim.setBoxSize(15, 15, 15);
-    sim.registerParticleType("middle", c_::zero, model::particleflavor::TOPOLOGY);
-    sim.registerParticleType("end", c_::zero, model::particleflavor::TOPOLOGY);
-    sim.registerParticleType("A", c_::zero);
-    sim.configureTopologyBondPotential("middle", "middle", .00000001, 1);
-    sim.configureTopologyBondPotential("middle", "end", .00000001, 1);
-    sim.configureTopologyBondPotential("end", "end", .00000001, 1);
+    Simulation simulation(this->simulation.selectedKernelType());
+    simulation.context().periodicBoundaryConditions() = {{true, true, true}};
+    simulation.context().topologyRegistry().addType("TA");
+    simulation.context().boxSize() = {{15, 15, 15}};
+    simulation.context().particleTypes().add("middle", c_::zero, model::particleflavor::TOPOLOGY);
+    simulation.context().particleTypes().add("end", c_::zero, model::particleflavor::TOPOLOGY);
+    simulation.context().particleTypes().add("A", c_::zero);
+    simulation.context().topologyRegistry().configureBondPotential("middle", "middle", {.00000001, 1});
+    simulation.context().topologyRegistry().configureBondPotential("middle", "end", {.00000001, 1});
+    simulation.context().topologyRegistry().configureBondPotential("end", "end", {.00000001, 1});
 
-    auto top = sim.addTopology("TA", {sim.createTopologyParticle("end", {c_::zero-c_::one, c_::zero, c_::zero}),
-                                      sim.createTopologyParticle("middle", {c_::zero, c_::zero, c_::zero}),
-                                      sim.createTopologyParticle("end", {c_::zero+c_::one, c_::zero, c_::zero})});
+    auto top = simulation.addTopology("TA", {simulation.createTopologyParticle("end", {c_::zero-c_::one, c_::zero, c_::zero}),
+                                             simulation.createTopologyParticle("middle", {c_::zero, c_::zero, c_::zero}),
+                                             simulation.createTopologyParticle("end", {c_::zero+c_::one, c_::zero, c_::zero})});
     {
         auto it = top->graph().vertices().begin();
         auto it2 = std::next(top->graph().vertices().begin());
@@ -212,28 +209,29 @@ TEST_P(TestTopologyReactionsExternal, AttachParticle) {
     }
 
     // register attach reaction that transforms (end, A) -> (middle, end)
-    sim.registerSpatialTopologyReaction("attach: TA (end) + (A) -> TA (middle--end)",1e10, c_::one + c_::half);
-    sim.addParticle("A", c_::zero - c_::two, c_::zero, c_::zero);
-    sim.addParticle("A", c_::zero - c_::three, c_::zero, c_::zero);
-    sim.addParticle("A", c_::zero - c_::four, c_::zero, c_::zero);
-    sim.addParticle("A", c_::zero + c_::two, c_::zero, c_::zero);
-    sim.addParticle("A", c_::zero + c_::three, c_::zero, c_::zero);
-    sim.addParticle("A", c_::zero + c_::four, c_::zero, c_::zero);
+    simulation.context().topologyRegistry().addSpatialReaction("attach: TA (end) + (A) -> TA (middle--end)",
+                                                        1e10, c_::one + c_::half);
+    simulation.addParticle("A", c_::zero - c_::two, c_::zero, c_::zero);
+    simulation.addParticle("A", c_::zero - c_::three, c_::zero, c_::zero);
+    simulation.addParticle("A", c_::zero - c_::four, c_::zero, c_::zero);
+    simulation.addParticle("A", c_::zero + c_::two, c_::zero, c_::zero);
+    simulation.addParticle("A", c_::zero + c_::three, c_::zero, c_::zero);
+    simulation.addParticle("A", c_::zero + c_::four, c_::zero, c_::zero);
 
-    sim.runScheme().evaluateTopologyReactions().configureAndRun(6, 1.);
+    simulation.runScheme().evaluateTopologyReactions().configureAndRun(6, 1.);
 
-    const auto& type_registry = kernel->context().particle_types();
+    const auto& type_registry = simulation.context().particleTypes();
 
-    EXPECT_TRUE(kernel->context().topologyRegistry().isSpatialReactionType("A"));
-    EXPECT_TRUE(kernel->context().topologyRegistry().isSpatialReactionType("end"));
-    EXPECT_FALSE(kernel->context().topologyRegistry().isSpatialReactionType("middle"));
-    EXPECT_EQ(kernel->context().calculateMaxCutoff(), c_::one + c_::half);
+    EXPECT_TRUE(simulation.context().topologyRegistry().isSpatialReactionType("A"));
+    EXPECT_TRUE(simulation.context().topologyRegistry().isSpatialReactionType("end"));
+    EXPECT_FALSE(simulation.context().topologyRegistry().isSpatialReactionType("middle"));
+    EXPECT_EQ(simulation.context().calculateMaxCutoff(), c_::one + c_::half);
 
-    EXPECT_EQ(sim.currentTopologies().size(), 1);
-    auto chainTop = sim.currentTopologies().at(0);
+    EXPECT_EQ(simulation.currentTopologies().size(), 1);
+    auto chainTop = simulation.currentTopologies().at(0);
     EXPECT_EQ(chainTop->getNParticles(), 3 /*original topology particles*/ + 6 /*attached particles*/);
 
-    auto top_particles = kernel->stateModel().getParticlesForTopology(*chainTop);
+    auto top_particles = simulation.stateModel().getParticlesForTopology(*chainTop);
 
     bool foundEndVertex {false};
     // check that graph is indeed linear
@@ -293,7 +291,7 @@ TEST_P(TestTopologyReactionsExternal, AttachParticle) {
 }
 
 TEST_P(TestTopologyReactionsExternal, DefinitionParser) {
-    auto &context = kernel->context();
+    auto &context = simulation.context();
     context.topologyRegistry().addType("1");
     context.topologyRegistry().addType("2");
     context.topologyRegistry().addType("3");
@@ -304,10 +302,10 @@ TEST_P(TestTopologyReactionsExternal, DefinitionParser) {
     context.topologyRegistry().addType("T2");
     context.topologyRegistry().addType("T3");
     context.topologyRegistry().addType("T4");
-    context.particle_types().add("p1", 1.);
-    context.particle_types().add("p2", 1.);
-    context.particle_types().add("p3", 1.);
-    context.particle_types().add("p4", 1.);
+    context.particleTypes().add("p1", 1.);
+    context.particleTypes().add("p2", 1.);
+    context.particleTypes().add("p3", 1.);
+    context.particleTypes().add("p4", 1.);
 
     readdy::model::top::reactions::STRParser parser (context.topologyRegistry());
 
@@ -316,12 +314,12 @@ TEST_P(TestTopologyReactionsExternal, DefinitionParser) {
         ASSERT_EQ(r.mode(), readdy::model::top::reactions::STRMode::TT_FUSION_ALLOW_SELF);
         ASSERT_EQ(r.top_type1(), context.topologyRegistry().idOf("T1"));
         ASSERT_EQ(r.top_type2(), context.topologyRegistry().idOf("T2"));
-        ASSERT_EQ(r.type1(), context.particle_types().idOf("p1"));
-        ASSERT_EQ(r.type2(), context.particle_types().idOf("p2"));
+        ASSERT_EQ(r.type1(), context.particleTypes().idOf("p1"));
+        ASSERT_EQ(r.type2(), context.particleTypes().idOf("p2"));
         ASSERT_EQ(r.top_type_to1(), context.topologyRegistry().idOf("T3"));
         ASSERT_EQ(r.top_type_to2(), readdy::EmptyTopologyId);
-        ASSERT_EQ(r.type_to1(), context.particle_types().idOf("p3"));
-        ASSERT_EQ(r.type_to2(), context.particle_types().idOf("p4"));
+        ASSERT_EQ(r.type_to1(), context.particleTypes().idOf("p3"));
+        ASSERT_EQ(r.type_to2(), context.particleTypes().idOf("p4"));
         ASSERT_EQ(r.name(), "topology-topology fusion type1");
         ASSERT_EQ(r.rate(), 10.);
         ASSERT_EQ(r.radius(), 11.);
@@ -331,12 +329,12 @@ TEST_P(TestTopologyReactionsExternal, DefinitionParser) {
         ASSERT_EQ(r.mode(), readdy::model::top::reactions::STRMode::TT_FUSION);
         ASSERT_EQ(r.top_type1(), context.topologyRegistry().idOf("T1"));
         ASSERT_EQ(r.top_type2(), context.topologyRegistry().idOf("T2"));
-        ASSERT_EQ(r.type1(), context.particle_types().idOf("p1"));
-        ASSERT_EQ(r.type2(), context.particle_types().idOf("p2"));
+        ASSERT_EQ(r.type1(), context.particleTypes().idOf("p1"));
+        ASSERT_EQ(r.type2(), context.particleTypes().idOf("p2"));
         ASSERT_EQ(r.top_type_to1(), context.topologyRegistry().idOf("T3"));
         ASSERT_EQ(r.top_type_to2(), readdy::EmptyTopologyId);
-        ASSERT_EQ(r.type_to1(), context.particle_types().idOf("p3"));
-        ASSERT_EQ(r.type_to2(), context.particle_types().idOf("p4"));
+        ASSERT_EQ(r.type_to1(), context.particleTypes().idOf("p3"));
+        ASSERT_EQ(r.type_to2(), context.particleTypes().idOf("p4"));
         ASSERT_EQ(r.name(), "topology-topology fusion type2");
         ASSERT_EQ(r.rate(), 10.);
         ASSERT_EQ(r.radius(), 11.);
@@ -346,12 +344,12 @@ TEST_P(TestTopologyReactionsExternal, DefinitionParser) {
         ASSERT_EQ(r.mode(), readdy::model::top::reactions::STRMode::TT_ENZYMATIC);
         ASSERT_EQ(r.top_type1(), context.topologyRegistry().idOf("T1"));
         ASSERT_EQ(r.top_type2(), context.topologyRegistry().idOf("T2"));
-        ASSERT_EQ(r.type1(), context.particle_types().idOf("p1"));
-        ASSERT_EQ(r.type2(), context.particle_types().idOf("p2"));
+        ASSERT_EQ(r.type1(), context.particleTypes().idOf("p1"));
+        ASSERT_EQ(r.type2(), context.particleTypes().idOf("p2"));
         ASSERT_EQ(r.top_type_to1(), context.topologyRegistry().idOf("T3"));
         ASSERT_EQ(r.top_type_to2(), context.topologyRegistry().idOf("T4"));
-        ASSERT_EQ(r.type_to1(), context.particle_types().idOf("p3"));
-        ASSERT_EQ(r.type_to2(), context.particle_types().idOf("p4"));
+        ASSERT_EQ(r.type_to1(), context.particleTypes().idOf("p3"));
+        ASSERT_EQ(r.type_to2(), context.particleTypes().idOf("p4"));
         ASSERT_EQ(r.name(), "topology-topology enzymatic type");
         ASSERT_EQ(r.rate(), 10.);
         ASSERT_EQ(r.radius(), 11.);
@@ -361,12 +359,12 @@ TEST_P(TestTopologyReactionsExternal, DefinitionParser) {
         ASSERT_EQ(r.mode(), readdy::model::top::reactions::STRMode::TP_FUSION);
         ASSERT_EQ(r.top_type1(), context.topologyRegistry().idOf("T1"));
         ASSERT_EQ(r.top_type2(), readdy::EmptyTopologyId);
-        ASSERT_EQ(r.type1(), context.particle_types().idOf("p1"));
-        ASSERT_EQ(r.type2(), context.particle_types().idOf("p2"));
+        ASSERT_EQ(r.type1(), context.particleTypes().idOf("p1"));
+        ASSERT_EQ(r.type2(), context.particleTypes().idOf("p2"));
         ASSERT_EQ(r.top_type_to1(), context.topologyRegistry().idOf("T2"));
         ASSERT_EQ(r.top_type_to2(), readdy::EmptyTopologyId);
-        ASSERT_EQ(r.type_to1(), context.particle_types().idOf("p3"));
-        ASSERT_EQ(r.type_to2(), context.particle_types().idOf("p4"));
+        ASSERT_EQ(r.type_to1(), context.particleTypes().idOf("p3"));
+        ASSERT_EQ(r.type_to2(), context.particleTypes().idOf("p4"));
         ASSERT_EQ(r.name(), "topology-particle fusion type");
         ASSERT_EQ(r.rate(), 10.);
         ASSERT_EQ(r.radius(), 11.);
@@ -376,12 +374,12 @@ TEST_P(TestTopologyReactionsExternal, DefinitionParser) {
         ASSERT_EQ(r.mode(), readdy::model::top::reactions::STRMode::TP_ENZYMATIC);
         ASSERT_EQ(r.top_type1(), context.topologyRegistry().idOf("T1"));
         ASSERT_EQ(r.top_type2(), readdy::EmptyTopologyId);
-        ASSERT_EQ(r.type1(), context.particle_types().idOf("p1"));
-        ASSERT_EQ(r.type2(), context.particle_types().idOf("p2"));
+        ASSERT_EQ(r.type1(), context.particleTypes().idOf("p1"));
+        ASSERT_EQ(r.type2(), context.particleTypes().idOf("p2"));
         ASSERT_EQ(r.top_type_to1(), context.topologyRegistry().idOf("T2"));
         ASSERT_EQ(r.top_type_to2(), readdy::EmptyTopologyId);
-        ASSERT_EQ(r.type_to1(), context.particle_types().idOf("p3"));
-        ASSERT_EQ(r.type_to2(), context.particle_types().idOf("p4"));
+        ASSERT_EQ(r.type_to1(), context.particleTypes().idOf("p3"));
+        ASSERT_EQ(r.type_to2(), context.particleTypes().idOf("p4"));
         ASSERT_EQ(r.name(), "topology-particle enzymatic type");
         ASSERT_EQ(r.rate(), 10.);
         ASSERT_EQ(r.radius(), 11.);
@@ -390,22 +388,19 @@ TEST_P(TestTopologyReactionsExternal, DefinitionParser) {
 
 TEST_P(TestTopologyReactionsExternal, AttachTopologies) {
     using namespace readdy;
-    Simulation sim;
-    auto kernel = sim.setKernel(plugin::KernelProvider::getInstance().create(this->kernel->getName()));
-    sim.setPeriodicBoundary({{true, true, true}});
-    sim.registerTopologyType("TA");
-    sim.setBoxSize(15, 15, 15);
-    sim.registerParticleType("middle", c_::zero, model::particleflavor::TOPOLOGY);
-    sim.registerParticleType("end", c_::zero, model::particleflavor::TOPOLOGY);
-    sim.configureTopologyBondPotential("middle", "middle", .00000001, 1);
-    sim.configureTopologyBondPotential("middle", "end", .00000001, 1);
-    sim.configureTopologyBondPotential("end", "end", .00000001, 1);
-
+    simulation.context().periodicBoundaryConditions() = {{true, true, true}};
+    simulation.context().topologyRegistry().addType("TA");
+    simulation.context().boxSize() = {{15, 15, 15}};
+    simulation.context().particleTypes().add("middle", c_::zero, model::particleflavor::TOPOLOGY);
+    simulation.context().particleTypes().add("end", c_::zero, model::particleflavor::TOPOLOGY);
+    simulation.context().topologyRegistry().configureBondPotential("middle", "middle", {.00000001, 1});
+    simulation.context().topologyRegistry().configureBondPotential("middle", "end", {.00000001, 1});
+    simulation.context().topologyRegistry().configureBondPotential("end", "end", {.00000001, 1});
 
     for(int i = 0; i < 3; ++i) {
-        auto top = sim.addTopology("TA", {sim.createTopologyParticle("end", {c_::zero - c_::four + 3*i, c_::zero, c_::zero}),
-                                          sim.createTopologyParticle("middle", {c_::zero - c_::three + 3*i, c_::zero, c_::zero}),
-                                          sim.createTopologyParticle("end", {c_::zero - c_::two + 3*i, c_::zero, c_::zero})});
+        auto top = simulation.addTopology("TA", {simulation.createTopologyParticle("end", {c_::zero - c_::four + 3*i, c_::zero, c_::zero}),
+                                                 simulation.createTopologyParticle("middle", {c_::zero - c_::three + 3*i, c_::zero, c_::zero}),
+                                                 simulation.createTopologyParticle("end", {c_::zero - c_::two + 3*i, c_::zero, c_::zero})});
         {
             auto it = top->graph().vertices().begin();
             auto it2 = std::next(top->graph().vertices().begin());
@@ -417,22 +412,22 @@ TEST_P(TestTopologyReactionsExternal, AttachTopologies) {
     }
 
     // register attach reaction that transforms (end, A) -> (middle, end)
-    sim.registerSpatialTopologyReaction("merge: TA (end) + TA (end) -> TA (middle--middle)", 1e3, c_::one + c_::half);
+    simulation.context().topologyRegistry().addSpatialReaction("merge: TA (end) + TA (end) -> TA (middle--middle)", 1e3, 1.5);
 
-    EXPECT_EQ(sim.currentTopologies().size(), 3);
-    sim.runScheme().evaluateTopologyReactions().configureAndRun(6, 1.);
+    EXPECT_EQ(simulation.currentTopologies().size(), 3);
+    simulation.runScheme().evaluateTopologyReactions().configureAndRun(6, 1.);
 
-    const auto& type_registry = kernel->context().particle_types();
+    const auto& type_registry = simulation.context().particleTypes();
 
-    EXPECT_TRUE(kernel->context().topologyRegistry().isSpatialReactionType("end"));
-    EXPECT_FALSE(kernel->context().topologyRegistry().isSpatialReactionType("middle"));
-    EXPECT_EQ(kernel->context().calculateMaxCutoff(), c_::one + c_::half);
+    EXPECT_TRUE(simulation.context().topologyRegistry().isSpatialReactionType("end"));
+    EXPECT_FALSE(simulation.context().topologyRegistry().isSpatialReactionType("middle"));
+    EXPECT_EQ(simulation.context().calculateMaxCutoff(), c_::one + c_::half);
 
-    EXPECT_EQ(sim.currentTopologies().size(), 1);
-    auto chainTop = sim.currentTopologies().at(0);
+    EXPECT_EQ(simulation.currentTopologies().size(), 1);
+    auto chainTop = simulation.currentTopologies().at(0);
     EXPECT_EQ(chainTop->getNParticles(), 3 /*original topology particles*/ + 6 /*attached particles*/);
 
-    auto top_particles = kernel->stateModel().getParticlesForTopology(*chainTop);
+    auto top_particles = simulation.stateModel().getParticlesForTopology(*chainTop);
 
     bool foundEndVertex {false};
     // check that graph is indeed linear

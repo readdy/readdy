@@ -59,9 +59,9 @@ TEST_P(TestReactions, TestConstantNumberOfParticleType) {
         return static_cast <readdy::scalar> (std::rand()) / (RAND_MAX / (upper - lower)) + lower;
     };
 
-    kernel->context().particle_types().add("A", 1.0);
-    kernel->context().particle_types().add("B", 1.0);
-    kernel->context().particle_types().add("AB", 0.0);
+    kernel->context().particleTypes().add("A", 1.0);
+    kernel->context().particleTypes().add("B", 1.0);
+    kernel->context().particleTypes().add("AB", 0.0);
     kernel->context().periodicBoundaryConditions() = {{true, true, true}};
     kernel->context().boxSize() = {{5, 5, 5}};
     kernel->context().reactions().addFusion("Form complex", "A", "B", "AB", .5, 1.0);
@@ -111,8 +111,8 @@ TEST_P(TestReactions, FusionFissionWeights) {
      * Idea: position F particles and remember their positions (ordered set), do ONE time-step and check if current positions are still the same.
      */
     auto &context = kernel->context();
-    context.particle_types().add("A", 0.5);
-    context.particle_types().add("F", 0.0);
+    context.particleTypes().add("A", 0.5);
+    context.particleTypes().add("F", 0.0);
     context.periodicBoundaryConditions() = {{true, true, true}};
     context.boxSize() = {{20, 20, 20}};
 
@@ -157,20 +157,20 @@ TEST_P(TestReactions, FusionFissionWeights) {
 }
 
 TEST_P(TestReactionsWithHandler, FusionThroughBoundary) {
-    if (kernel->getName() == "CPU" and reactionHandlerName == "DetailedBalance") {
+    if (kernel->name() == "CPU" and reactionHandlerName == "DetailedBalance") {
         // @todo implement for CPU as well
     } else {
         auto &ctx = kernel->context();
         ctx.boxSize() = {{10, 10, 10}};
         ctx.periodicBoundaryConditions() = {true, true, true};
-        ctx.particle_types().add("A", 0.);
+        ctx.particleTypes().add("A", 0.);
         ctx.reactions().add("fus: A +(2) A -> A", 1e16);
 
         auto &&reactions = kernel->actions().createReactionScheduler(reactionHandlerName, 1);
         auto &&neighborList = kernel->actions().updateNeighborList();
         // resulting particle should be at 4.9
-        kernel->stateModel().addParticle({4.5, 4.5, 4.5, ctx.particle_types().idOf("A")});
-        kernel->stateModel().addParticle({-4.7, -4.7, -4.7, ctx.particle_types().idOf("A")});
+        kernel->stateModel().addParticle({4.5, 4.5, 4.5, ctx.particleTypes().idOf("A")});
+        kernel->stateModel().addParticle({-4.7, -4.7, -4.7, ctx.particleTypes().idOf("A")});
         neighborList->perform();
         reactions->perform();
 
@@ -184,19 +184,19 @@ TEST_P(TestReactionsWithHandler, FusionThroughBoundary) {
 }
 
 TEST_P(TestReactionsWithHandler, FissionNearBoundary) {
-    if (kernel->getName() == "CPU" and reactionHandlerName == "DetailedBalance") {
+    if (kernel->name() == "CPU" and reactionHandlerName == "DetailedBalance") {
         // @todo implement for CPU as well
     } else {
         auto &ctx = kernel->context();
         ctx.boxSize() = {{10, 10, 10}};
         ctx.periodicBoundaryConditions() = {true, true, true};
-        ctx.particle_types().add("A", 0.);
+        ctx.particleTypes().add("A", 0.);
         ctx.reactions().add("fis: A -> A +(2) A", 1e16);
 
         auto &&reactions = kernel->actions().createReactionScheduler(reactionHandlerName, 1);
         auto &&neighborList = kernel->actions().updateNeighborList();
         // one product will be in negative-x halfspace, the other in positive-x halfspace
-        kernel->stateModel().addParticle({-4.9999999, 0, 0, ctx.particle_types().idOf("A")});
+        kernel->stateModel().addParticle({-4.9999999, 0, 0, ctx.particleTypes().idOf("A")});
         neighborList->perform();
         reactions->perform();
 

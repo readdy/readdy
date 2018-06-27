@@ -81,11 +81,11 @@ void writeGeneralContextInformation(h5rd::Group &group, const Context &context) 
 void writeParticleTypeInformation(h5rd::Group &group, const Context &context) {
     auto h5types = getParticleTypeInfoType(group.parentFile());
 
-    const auto &types = context.particle_types().typeMapping();
+    const auto &types = context.particleTypes().typeMapping();
     std::vector<ParticleTypeInfo> type_info_vec;
     for (const auto &p_type : types) {
         ParticleTypeInfo info{p_type.first.c_str(), p_type.second,
-                              context.particle_types().diffusionConstantOf(p_type.first)};
+                              context.particleTypes().diffusionConstantOf(p_type.first)};
         type_info_vec.push_back(info);
     }
     if (!type_info_vec.empty()) {

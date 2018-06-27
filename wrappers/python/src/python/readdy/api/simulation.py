@@ -56,8 +56,7 @@ class Simulation(object):
                              "are available.".format(kernel, ", ".join(['"{}"'.format(x) for x in available_kernels])))
         self._unit_conf = unit_config
         self._kernel = kernel
-        self._simulation = _Simulation()
-        self._simulation.set_kernel(kernel)
+        self._simulation = _Simulation(kernel)
         self._simulation.context = context
 
         self._evaluate_topology_reactions = True
@@ -375,6 +374,8 @@ class Simulation(object):
         import os
         from contextlib import closing
         import readdy._internal.readdybinding.common.io as io
+
+        self._simulation.context.validate()
 
         if show_system:
             print(self._simulation.context.describe())

@@ -185,7 +185,7 @@ std::vector<GraphTopology> GraphTopology::connectedComponents() {
 const bool GraphTopology::isNormalParticle(const Kernel &k) const {
     if(getNParticles() == 1){
         const auto particle_type = k.stateModel().getParticleType(particles.front());
-        const auto& info = k.context().particle_types().infoOf(particle_type);
+        const auto& info = k.context().particleTypes().infoOf(particle_type);
         return info.flavor == particleflavor::NORMAL;
     }
     return false;

@@ -81,7 +81,7 @@ TEST(Context, RecordStuff) {
 
 TEST(Context, Compartments) {
     Context context;
-    context.particle_types().add("A", 1.);
+    context.particleTypes().add("A", 1.);
     auto &compartments = context.compartments();
     auto id = compartments.addPlane({{"A", "A"}}, "Plane", {1., 0., 0.}, 10., true);
     ASSERT_EQ(compartments.get().size(), 1);
@@ -90,11 +90,11 @@ TEST(Context, Compartments) {
 
 TEST(Context, Topologies) {
     Context context;
-    context.particle_types().addTopologyType("A", 1.);
-    context.particle_types().addTopologyType("B", 1.);
-    context.particle_types().addTopologyType("C", 1.);
-    context.particle_types().add("P", 1.);
-    context.particle_types().add("Q", 1.);
+    context.particleTypes().addTopologyType("A", 1.);
+    context.particleTypes().addTopologyType("B", 1.);
+    context.particleTypes().addTopologyType("C", 1.);
+    context.particleTypes().add("P", 1.);
+    context.particleTypes().add("Q", 1.);
     auto &topologies = context.topologyRegistry();
 
     topologies.addType("T");
@@ -117,12 +117,12 @@ TEST(Context, Topologies) {
         // MyEnzymaticTP
         auto reaction = topologies.spatialReactionByName("MyEnzymaticTP");
         ASSERT_EQ(reaction.name(), "MyEnzymaticTP");
-        ASSERT_EQ(reaction.type1(), context.particle_types().idOf("A"));
-        ASSERT_EQ(reaction.type2(), context.particle_types().idOf("P"));
+        ASSERT_EQ(reaction.type1(), context.particleTypes().idOf("A"));
+        ASSERT_EQ(reaction.type2(), context.particleTypes().idOf("P"));
         ASSERT_EQ(reaction.top_type1(), topologies.idOf("T"));
         ASSERT_EQ(reaction.top_type_to1(), topologies.idOf("TT"));
-        ASSERT_EQ(reaction.type_to1(), context.particle_types().idOf("B"));
-        ASSERT_EQ(reaction.type_to2(), context.particle_types().idOf("Q"));
+        ASSERT_EQ(reaction.type_to1(), context.particleTypes().idOf("B"));
+        ASSERT_EQ(reaction.type_to2(), context.particleTypes().idOf("Q"));
         ASSERT_TRUE(reaction.is_topology_particle_reaction());
         ASSERT_FALSE(reaction.is_topology_topology_reaction());
         ASSERT_TRUE(reaction.is_enzymatic());
@@ -137,14 +137,14 @@ TEST(Context, Topologies) {
         // MyEnzymaticTT
         auto reaction = topologies.spatialReactionByName("MyEnzymaticTT");
         ASSERT_EQ(reaction.name(), "MyEnzymaticTT");
-        ASSERT_EQ(reaction.type1(), context.particle_types().idOf("A"));
-        ASSERT_EQ(reaction.type2(), context.particle_types().idOf("B"));
+        ASSERT_EQ(reaction.type1(), context.particleTypes().idOf("A"));
+        ASSERT_EQ(reaction.type2(), context.particleTypes().idOf("B"));
         ASSERT_EQ(reaction.top_type1(), topologies.idOf("T"));
         ASSERT_EQ(reaction.top_type2(), topologies.idOf("T"));
         ASSERT_EQ(reaction.top_type_to1(), topologies.idOf("TT"));
         ASSERT_EQ(reaction.top_type_to2(), topologies.idOf("TT"));
-        ASSERT_EQ(reaction.type_to1(), context.particle_types().idOf("B"));
-        ASSERT_EQ(reaction.type_to2(), context.particle_types().idOf("A"));
+        ASSERT_EQ(reaction.type_to1(), context.particleTypes().idOf("B"));
+        ASSERT_EQ(reaction.type_to2(), context.particleTypes().idOf("A"));
         ASSERT_FALSE(reaction.is_topology_particle_reaction());
         ASSERT_TRUE(reaction.is_topology_topology_reaction());
         ASSERT_TRUE(reaction.is_enzymatic());
@@ -159,12 +159,12 @@ TEST(Context, Topologies) {
         // MyTPFusion
         auto reaction = topologies.spatialReactionByName("MyTPFusion");
         ASSERT_EQ(reaction.name(), "MyTPFusion");
-        ASSERT_EQ(reaction.type1(), context.particle_types().idOf("A"));
-        ASSERT_EQ(reaction.type2(), context.particle_types().idOf("P"));
+        ASSERT_EQ(reaction.type1(), context.particleTypes().idOf("A"));
+        ASSERT_EQ(reaction.type2(), context.particleTypes().idOf("P"));
         ASSERT_EQ(reaction.top_type1(), topologies.idOf("T"));
         ASSERT_EQ(reaction.top_type_to1(), topologies.idOf("TT"));
-        ASSERT_EQ(reaction.type_to1(), context.particle_types().idOf("B"));
-        ASSERT_EQ(reaction.type_to2(), context.particle_types().idOf("B"));
+        ASSERT_EQ(reaction.type_to1(), context.particleTypes().idOf("B"));
+        ASSERT_EQ(reaction.type_to2(), context.particleTypes().idOf("B"));
         ASSERT_TRUE(reaction.is_topology_particle_reaction());
         ASSERT_FALSE(reaction.is_topology_topology_reaction());
         ASSERT_FALSE(reaction.is_enzymatic());
@@ -179,13 +179,13 @@ TEST(Context, Topologies) {
         // MyFusionReaction
         auto reaction = topologies.spatialReactionByName("MyFusionReaction");
         ASSERT_EQ(reaction.name(), "MyFusionReaction");
-        ASSERT_EQ(reaction.type1(), context.particle_types().idOf("A"));
-        ASSERT_EQ(reaction.type2(), context.particle_types().idOf("B"));
+        ASSERT_EQ(reaction.type1(), context.particleTypes().idOf("A"));
+        ASSERT_EQ(reaction.type2(), context.particleTypes().idOf("B"));
         ASSERT_EQ(reaction.top_type1(), topologies.idOf("T"));
         ASSERT_EQ(reaction.top_type2(), topologies.idOf("T"));
         ASSERT_EQ(reaction.top_type_to1(), topologies.idOf("TT"));
-        ASSERT_EQ(reaction.type_to1(), context.particle_types().idOf("B"));
-        ASSERT_EQ(reaction.type_to2(), context.particle_types().idOf("A"));
+        ASSERT_EQ(reaction.type_to1(), context.particleTypes().idOf("B"));
+        ASSERT_EQ(reaction.type_to2(), context.particleTypes().idOf("A"));
         ASSERT_FALSE(reaction.is_topology_particle_reaction());
         ASSERT_TRUE(reaction.is_topology_topology_reaction());
         ASSERT_FALSE(reaction.is_enzymatic());
@@ -199,13 +199,13 @@ TEST(Context, Topologies) {
         // MySelfFusionReaction
         auto reaction = topologies.spatialReactionByName("MySelfFusionReaction");
         ASSERT_EQ(reaction.name(), "MySelfFusionReaction");
-        ASSERT_EQ(reaction.type1(), context.particle_types().idOf("A"));
-        ASSERT_EQ(reaction.type2(), context.particle_types().idOf("B"));
+        ASSERT_EQ(reaction.type1(), context.particleTypes().idOf("A"));
+        ASSERT_EQ(reaction.type2(), context.particleTypes().idOf("B"));
         ASSERT_EQ(reaction.top_type1(), topologies.idOf("T"));
         ASSERT_EQ(reaction.top_type2(), topologies.idOf("T"));
         ASSERT_EQ(reaction.top_type_to1(), topologies.idOf("TT"));
-        ASSERT_EQ(reaction.type_to1(), context.particle_types().idOf("B"));
-        ASSERT_EQ(reaction.type_to2(), context.particle_types().idOf("A"));
+        ASSERT_EQ(reaction.type_to1(), context.particleTypes().idOf("B"));
+        ASSERT_EQ(reaction.type_to2(), context.particleTypes().idOf("A"));
         ASSERT_FALSE(reaction.is_topology_particle_reaction());
         ASSERT_TRUE(reaction.is_topology_topology_reaction());
         ASSERT_FALSE(reaction.is_enzymatic());
@@ -220,9 +220,9 @@ TEST(Context, Topologies) {
 
 TEST(Context, ReactionDescriptorAddReactions) {
     const auto prepareCtx = [](Context &ctx, const std::string& descriptor, readdy::scalar rate){
-        ctx.particle_types().add("A", 1.);
-        ctx.particle_types().add("B", 1.);
-        ctx.particle_types().add("C", 1.);
+        ctx.particleTypes().add("A", 1.);
+        ctx.particleTypes().add("B", 1.);
+        ctx.particleTypes().add("C", 1.);
         ctx.reactions().add(descriptor, rate);
     };
     {
@@ -234,7 +234,7 @@ TEST(Context, ReactionDescriptorAddReactions) {
         EXPECT_EQ(r->type(), readdy::model::reactions::ReactionType::Decay);
         EXPECT_EQ(r->nEducts(), 1);
         EXPECT_EQ(r->nProducts(), 0);
-        EXPECT_EQ(r->educts()[0], ctx.particle_types().idOf("A"));
+        EXPECT_EQ(r->educts()[0], ctx.particleTypes().idOf("A"));
         EXPECT_EQ(r->rate(), 2.);
     }
     {
@@ -246,8 +246,8 @@ TEST(Context, ReactionDescriptorAddReactions) {
         EXPECT_EQ(r->type(), readdy::model::reactions::ReactionType::Conversion);
         EXPECT_EQ(r->nEducts(), 1);
         EXPECT_EQ(r->nProducts(), 1);
-        EXPECT_EQ(r->educts()[0], ctx.particle_types().idOf("A"));
-        EXPECT_EQ(r->products()[0], ctx.particle_types().idOf("B"));
+        EXPECT_EQ(r->educts()[0], ctx.particleTypes().idOf("A"));
+        EXPECT_EQ(r->products()[0], ctx.particleTypes().idOf("B"));
         EXPECT_EQ(r->rate(), 3.);
     }
     {
@@ -259,9 +259,9 @@ TEST(Context, ReactionDescriptorAddReactions) {
         EXPECT_EQ(r->type(), readdy::model::reactions::ReactionType::Fusion);
         EXPECT_EQ(r->nEducts(), 2);
         EXPECT_EQ(r->nProducts(), 1);
-        EXPECT_EQ(r->educts()[0], ctx.particle_types().idOf("B"));
-        EXPECT_EQ(r->educts()[1], ctx.particle_types().idOf("B"));
-        EXPECT_EQ(r->products()[0], ctx.particle_types().idOf("C"));
+        EXPECT_EQ(r->educts()[0], ctx.particleTypes().idOf("B"));
+        EXPECT_EQ(r->educts()[1], ctx.particleTypes().idOf("B"));
+        EXPECT_EQ(r->products()[0], ctx.particleTypes().idOf("C"));
         EXPECT_EQ(r->eductDistance(), 1.2);
         EXPECT_EQ(r->weight1(), 0.5);
         EXPECT_EQ(r->weight2(), 0.5);
@@ -276,9 +276,9 @@ TEST(Context, ReactionDescriptorAddReactions) {
         EXPECT_EQ(r->type(), readdy::model::reactions::ReactionType::Fission);
         EXPECT_EQ(r->nEducts(), 1);
         EXPECT_EQ(r->nProducts(), 2);
-        EXPECT_EQ(r->educts()[0], ctx.particle_types().idOf("B"));
-        EXPECT_EQ(r->products()[0], ctx.particle_types().idOf("C"));
-        EXPECT_EQ(r->products()[1], ctx.particle_types().idOf("B"));
+        EXPECT_EQ(r->educts()[0], ctx.particleTypes().idOf("B"));
+        EXPECT_EQ(r->products()[0], ctx.particleTypes().idOf("C"));
+        EXPECT_EQ(r->products()[1], ctx.particleTypes().idOf("B"));
         EXPECT_EQ(r->productDistance(), 3.0);
         EXPECT_EQ(r->weight1(), 0.1);
         EXPECT_EQ(r->weight2(), 0.9);
@@ -293,10 +293,10 @@ TEST(Context, ReactionDescriptorAddReactions) {
         EXPECT_EQ(r->type(), readdy::model::reactions::ReactionType::Enzymatic);
         EXPECT_EQ(r->nEducts(), 2);
         EXPECT_EQ(r->nProducts(), 2);
-        EXPECT_EQ(r->educts()[0], ctx.particle_types().idOf("A"));
-        EXPECT_EQ(r->educts()[1], ctx.particle_types().idOf("C"));
-        EXPECT_EQ(r->products()[0], ctx.particle_types().idOf("B"));
-        EXPECT_EQ(r->products()[1], ctx.particle_types().idOf("C"));
+        EXPECT_EQ(r->educts()[0], ctx.particleTypes().idOf("A"));
+        EXPECT_EQ(r->educts()[1], ctx.particleTypes().idOf("C"));
+        EXPECT_EQ(r->products()[0], ctx.particleTypes().idOf("B"));
+        EXPECT_EQ(r->products()[1], ctx.particleTypes().idOf("C"));
         EXPECT_EQ(r->eductDistance(), 1.5);
         EXPECT_EQ(r->rate(), 6.);
     }
@@ -309,10 +309,10 @@ TEST(Context, ReactionDescriptorAddReactions) {
         EXPECT_EQ(r->type(), readdy::model::reactions::ReactionType::Enzymatic);
         EXPECT_EQ(r->nEducts(), 2);
         EXPECT_EQ(r->nProducts(), 2);
-        EXPECT_EQ(r->educts()[0], ctx.particle_types().idOf("B"));
-        EXPECT_EQ(r->educts()[1], ctx.particle_types().idOf("A"));
-        EXPECT_EQ(r->products()[0], ctx.particle_types().idOf("A"));
-        EXPECT_EQ(r->products()[1], ctx.particle_types().idOf("A"));
+        EXPECT_EQ(r->educts()[0], ctx.particleTypes().idOf("B"));
+        EXPECT_EQ(r->educts()[1], ctx.particleTypes().idOf("A"));
+        EXPECT_EQ(r->products()[0], ctx.particleTypes().idOf("A"));
+        EXPECT_EQ(r->products()[1], ctx.particleTypes().idOf("A"));
         EXPECT_EQ(r->eductDistance(), 1.);
         EXPECT_EQ(r->rate(), 7.);
     }
@@ -320,8 +320,8 @@ TEST(Context, ReactionDescriptorAddReactions) {
 
 TEST(Context, ReactionDescriptorInvalidInputs) {
     Context ctx;
-    ctx.particle_types().add("A", 1.);
-    ctx.particle_types().add("B", 1.);
+    ctx.particleTypes().add("A", 1.);
+    ctx.particleTypes().add("B", 1.);
     std::vector<std::string> inv = {"myinvalid: + A -> B", "noarrow: A B", " : Noname ->", "weights: A + A -> A [0.1, ]", "blub: A (3)+ A -> B", "eat: A +(1) B -> A + A"};
     for (const auto &i : inv) {
         EXPECT_ANY_THROW(ctx.reactions().add(i, 42.));
@@ -332,14 +332,14 @@ TEST(Context, ReactionDescriptorInvalidInputs) {
 
 TEST(Context, ReactionNameExists) {
     Context ctx;
-    ctx.particle_types().add("A", 1.);
+    ctx.particleTypes().add("A", 1.);
     ctx.reactions().add("bla: A->", 1.);
     EXPECT_ANY_THROW(ctx.reactions().add("bla: A->", 1.));
 }
 
 TEST(Context, ReactionNameAndId) {
     Context ctx;
-    ctx.particle_types().add("A", 1.);
+    ctx.particleTypes().add("A", 1.);
     ctx.reactions().add("foo: A->", 1.);
     ctx.reactions().add("bla: A+(1)A->A", 1.);
     const auto idFoo = ctx.reactions().idOf("foo");
@@ -352,7 +352,7 @@ TEST(Context, ReactionNameAndId) {
 
 TEST(Context, GetAllReactions) {
     Context ctx;
-    ctx.particle_types().add("A", 1.);
+    ctx.particleTypes().add("A", 1.);
     ctx.reactions().add("foo: A->", 1.);
     ctx.reactions().add("bla: A+(1)A->A", 1.);
     ctx.reactions().addConversion("conv1", "A", "A", 1.);
@@ -365,7 +365,7 @@ TEST(Context, GetAllReactions) {
 
 TEST(Context, GetReactionById) {
     Context ctx;
-    ctx.particle_types().add("A", 1.);
+    ctx.particleTypes().add("A", 1.);
     ctx.reactions().add("foo: A->", 1.);
     ctx.reactions().add("bla: A+(1)A->A", 1.);
     auto idFoo = ctx.reactions().idOf("foo");
@@ -378,13 +378,13 @@ TEST(Context, GetReactionById) {
 
 TEST(Context, PotentialOrder2Map) {
     Context ctx;
-    ctx.particle_types().add("a", 1.);
-    ctx.particle_types().add("b", 1.);
+    ctx.particleTypes().add("a", 1.);
+    ctx.particleTypes().add("b", 1.);
     auto noop = std::make_unique<readdy::testing::NOOPPotentialOrder2>(
-            ctx.particle_types()("a"), ctx.particle_types()("b"));
+            ctx.particleTypes()("a"), ctx.particleTypes()("b"));
     ctx.potentials().addUserDefined(noop.get());
     auto noop2 = std::make_unique<readdy::testing::NOOPPotentialOrder2>(
-            ctx.particle_types()("b"),ctx.particle_types()("a"));
+            ctx.particleTypes()("b"), ctx.particleTypes()("a"));
     ctx.potentials().addUserDefined(noop2.get());
 
     ctx.potentials().addScreenedElectrostatics("a", "b", 1., 1., 1., 1., 3, .1);
@@ -401,5 +401,11 @@ TEST(Context, PotentialOrder2Map) {
         EXPECT_EQ(vector[1], noop2.get());
     }
 }
+
+TEST(TestKernelContext, Copyable) {
+    Context context;
+    Context copy(context);
+}
+
 
 }

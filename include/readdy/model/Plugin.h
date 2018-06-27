@@ -41,7 +41,7 @@ NAMESPACE_BEGIN(model)
 
 class Plugin {
 public:
-    virtual const std::string &getName() const = 0;
+    virtual const std::string &name() const = 0;
 
     virtual ~Plugin() {};
 };

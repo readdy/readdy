@@ -257,15 +257,45 @@ public:
         return _spatialReactionTypes.find(type) != _spatialReactionTypes.end();
     }
 
-    /*
-     * Potentials
+    /**
+     * Configures a bond potential between a pair of particles with the given types. In order for the potential to come
+     * into effect, the particles have to be connected in the connectivity graph of their topology. The types can be
+     * reversed in order.
+     * @param type1 first type of the tuple
+     * @param type2 second type of the tuple
+     * @param forceConstant the stiffness of the potential
+     * @param length preferred distance between the particles with respect to this bond
+     * @param type type of bond, defaults to harmonic bond
      */
-
     void configureBondPotential(const std::string &type1, const std::string &type2, const api::Bond &bond);
 
+    /**
+     * Configures an angle potential between a triple of particles with the given types. In order for the potential to
+     * come into effect, the particles have to be connceted in the connectivity graph of their topology. The types
+     * can be reversed in order.
+     * @param type1 first type of the triple
+     * @param type2 second type of the triple, type of the middle particle
+     * @param type3 third type of the triple
+     * @param forceConstant stiffness of the potential
+     * @param equilibriumAngle the preferred angle between particles with respect to this potential
+     * @param type the type of angle potential, defaults to harmonic angle
+     */
     void configureAnglePotential(const std::string &type1, const std::string &type2, const std::string &type3,
                                  const api::Angle &angle);
 
+    /**
+     * Configures a torsion potential between a quadruple of particles with the given types. In order for the potential
+     * to come into effect, the particles have to be connected in the connectivity graph of their topology. The types
+     * can be reversed in order.
+     * @param type1 first type of the quadruple
+     * @param type2 second type of the quadruple
+     * @param type3 third type of the quadruple
+     * @param type4 fourth type of the quadruple
+     * @param forceConstant stiffness of the potential
+     * @param multiplicity number of minima in the energy function
+     * @param phi_0 reference torsion angle
+     * @param type the type of torsion potential, defaults to cosine dihedral
+     */
     void configureTorsionPotential(const std::string &type1, const std::string &type2, const std::string &type3,
                                    const std::string &type4, const api::TorsionAngle &torsionAngle);
 

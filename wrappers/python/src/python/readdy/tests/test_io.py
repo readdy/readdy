@@ -49,11 +49,10 @@ class TestSchemeApi(ReaDDyTestCase):
 
     def test_write_trajectory(self):
         traj_fname = os.path.join(self.dir, "traj.h5")
-        simulation = Simulation()
-        simulation.set_kernel("SingleCPU")
-        simulation.box_size = common.Vec(5,5,5)
-        simulation.register_particle_type("A", 0.0)
-        simulation.register_reaction_conversion("A->A", "A", "A", 1.)
+        simulation = Simulation("SingleCPU")
+        simulation.context.box_size = [5., 5., 5.]
+        simulation.context.particle_types.add("A", 0.0)
+        simulation.context.reactions.add_conversion("A->A", "A", "A", 1.)
 
         def callback(_):
             simulation.add_particle("A", common.Vec(0, 0, 0))
@@ -77,10 +76,9 @@ class TestSchemeApi(ReaDDyTestCase):
 
     def test_write_flat_trajectory(self):
         traj_fname = os.path.join(self.dir, "flat_traj.h5")
-        simulation = Simulation()
-        simulation.set_kernel("SingleCPU")
-        simulation.box_size = common.Vec(5,5,5)
-        simulation.register_particle_type("A", 0.0)
+        simulation = Simulation("SingleCPU")
+        simulation.context.box_size = [5.,5.,5.]
+        simulation.context.particle_types.add("A", 0.0)
 
         def callback(_):
             simulation.add_particle("A", common.Vec(0, 0, 0))
@@ -101,10 +99,9 @@ class TestSchemeApi(ReaDDyTestCase):
 
     def test_write_trajectory_as_observable(self):
         traj_fname = os.path.join(self.dir, "traj_as_obs.h5")
-        simulation = Simulation()
-        simulation.set_kernel("SingleCPU")
-        simulation.box_size = common.Vec(5,5,5)
-        simulation.register_particle_type("A", 0.0)
+        simulation = Simulation("SingleCPU")
+        simulation.context.box_size = [5., 5., 5.]
+        simulation.context.particle_types.add("A", 0.0)
 
         def callback(_):
             simulation.add_particle("A", common.Vec(0, 0, 0))

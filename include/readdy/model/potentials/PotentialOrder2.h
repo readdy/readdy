@@ -49,7 +49,7 @@ protected:
     using particle_type_type = readdy::model::Particle::type_type;
 public:
     PotentialOrder2(particle_type_type type1, particle_type_type type2)
-            : Potential(2), _particleType1(type1), _particleType2(type2) {}
+            : _particleType1(type1), _particleType2(type2) {}
 
     virtual scalar calculateEnergy(const Vec3 &x_ij) const = 0;
 

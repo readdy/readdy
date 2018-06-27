@@ -182,11 +182,11 @@ public:
         return _reactionRegistry;
     }
 
-    ParticleTypeRegistry &particle_types() {
+    ParticleTypeRegistry &particleTypes() {
         return _particleTypeRegistry;
     }
 
-    const ParticleTypeRegistry &particle_types() const {
+    const ParticleTypeRegistry &particleTypes() const {
         return _particleTypeRegistry;
     }
 

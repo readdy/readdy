@@ -45,21 +45,9 @@ using is_observable_type = std::enable_if_t<std::is_base_of<model::observables::
 class ObservableHandle {
 public:
     /**
-     * Type of an observable_id. Can be used to remove an observable from a Simulation instance.
-     */
-    using observable_id = std::size_t;
-
-    /**
      * Creates an empty observable handle.
      */
-    ObservableHandle();
-
-    /**
-     * Creates a new observable handle belonging to some existing observable instance
-     * @param id the id of that observable instance
-     * @param observable a pointer to the instance itself
-     */
-    ObservableHandle(observable_id id, model::observables::ObservableBase *observable);
+    explicit ObservableHandle(readdy::model::observables::ObservableBase *const obs) : _observable(obs) {};
 
     /**
      * This method sets up all required groups / data sets within the given hdf5 file for the observable to dump its
@@ -69,32 +57,40 @@ public:
      * @param dataSetName a custom data set name that will be used as postfix in the observable's group path
      * @param flushStride sets the hdf5 chunk size
      */
-    void enableWriteToFile(File &file, const std::string &dataSetName, unsigned int flushStride);
+    void enableWriteToFile(File &file, const std::string &dataSetName, unsigned int flushStride) {
+        if (_observable) {
+            _observable->enableWriteToFile(file, dataSetName, flushStride);
+        } else {
+            log::warn("You just tried to enable write to file on a user-provided observable instance, "
+                      "this is not supported!");
+        }
+    }
 
-    /**
-     * Retrieves the id of this handle's observable
-     * @return the id
-     */
-    observable_id getId() const;
-
-    std::string getType() const;
+    std::string type() const {
+        if(_observable) {
+            return _observable->type();
+        }
+        throw std::runtime_error("No observable attached to this handle, therefore no type");
+    }
 
     /**
      * Triggers a flush, i.e., everything that can be written will be written
      */
-    void flush();
+    void flush() {
+        if(_observable) {
+            _observable->flush();
+        }
+    }
+
+    readdy::model::observables::ObservableBase *const get() const {
+        return _observable;
+    }
 
 private:
     /**
-     * the id
-     */
-    observable_id id;
-    /**
      * a reference to the observable this handle belongs to
      */
-    readdy::model::observables::ObservableBase *const observable;
+    readdy::model::observables::ObservableBase *const _observable;
 };
 
 NAMESPACE_END(readdy)
-
-#include "bits/ObservableHandle_misc.h"

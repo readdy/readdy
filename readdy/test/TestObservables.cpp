@@ -43,9 +43,9 @@ class TestObservables : public KernelTest {
 
 TEST_P(TestObservables, TestParticlePositions) {
     const unsigned int n_particles = 100;
-    kernel->context().particle_types().add("type", 1.);
+    kernel->context().particleTypes().add("type", 1.);
     const readdy::scalar  timeStep = 1.0;
-    const auto particleTypeId = kernel->context().particle_types().idOf("type");
+    const auto particleTypeId = kernel->context().particleTypes().idOf("type");
     const auto particles = std::vector<m::Particle>(n_particles, m::Particle(0, 0, 0, particleTypeId));
     kernel->stateModel().addParticles(particles);
     auto &&obs = kernel->observe().positions(3);
@@ -78,10 +78,10 @@ TEST_P(TestObservables, TestParticlePositions) {
 TEST_P(TestObservables, Topologies) {
     using namespace readdy;
     auto &ctx = kernel->context();
-    ctx.particle_types().add("Topology A", 1.0, readdy::model::particleflavor::TOPOLOGY);
-    ctx.particle_types().add("Topology B", 1.0, readdy::model::particleflavor::TOPOLOGY);
-    ctx.particle_types().add("Topology Invalid Type", 1.0, readdy::model::particleflavor::TOPOLOGY);
-    ctx.particle_types().add("A", 1.0, readdy::model::particleflavor::NORMAL);
+    ctx.particleTypes().add("Topology A", 1.0, readdy::model::particleflavor::TOPOLOGY);
+    ctx.particleTypes().add("Topology B", 1.0, readdy::model::particleflavor::TOPOLOGY);
+    ctx.particleTypes().add("Topology Invalid Type", 1.0, readdy::model::particleflavor::TOPOLOGY);
+    ctx.particleTypes().add("A", 1.0, readdy::model::particleflavor::NORMAL);
 
     ctx.topologyRegistry().configureBondPotential("Topology A", "Topology A", {10, 10});
     ctx.topologyRegistry().configureBondPotential("Topology A", "Topology B", {10, 10});
@@ -98,7 +98,7 @@ TEST_P(TestObservables, Topologies) {
     {
         topologyParticles.reserve(n_chain_elements);
         for (std::size_t i = 0; i < n_chain_elements; ++i) {
-            const auto id = ctx.particle_types().idOf("Topology A");
+            const auto id = ctx.particleTypes().idOf("Topology A");
             topologyParticles.emplace_back(-5 + i * 10. / static_cast<readdy::scalar>(n_chain_elements), 0, 0, id);
         }
     }
@@ -147,7 +147,7 @@ TEST_P(TestObservables, Topologies) {
             model::top::reactions::Recipe recipe (top);
             if(top.graph().vertices().size() == 1) {
                 recipe.changeParticleType(top.graph().vertices().begin(),
-                                          kernel->context().particle_types().idOf("A"));
+                                          kernel->context().particleTypes().idOf("A"));
             } else {
                 throw std::logic_error("this reaction should only be executed when there is exactly "
                                                "one particle in the topology");
@@ -235,16 +235,15 @@ TEST_P(TestObservables, Topologies) {
             kernel->evaluateObservables(time);
 
         }
-        kernel->finalize();
     }
 }
 
 TEST_P(TestObservables, TestForcesObservable) {
     // Setup particles
-    kernel->context().particle_types().add("A", 42.);
-    kernel->context().particle_types().add("B", 1337.);
-    const auto typeIdA = kernel->context().particle_types().idOf("A");
-    const auto typeIdB = kernel->context().particle_types().idOf("B");
+    kernel->context().particleTypes().add("A", 42.);
+    kernel->context().particleTypes().add("B", 1337.);
+    const auto typeIdA = kernel->context().particleTypes().idOf("A");
+    const auto typeIdB = kernel->context().particleTypes().idOf("B");
     const unsigned int n_particles = 2; // There will be 55 Bs
     const auto particlesA = std::vector<m::Particle>(n_particles, m::Particle(0, 0, 0, typeIdA));
     const auto particlesB = std::vector<m::Particle>(n_particles + 5, m::Particle(0, 0, 0, typeIdB));
@@ -276,11 +275,11 @@ TEST_P(TestObservables, TestForcesObservable) {
     // Two particles C and C with radius 1 and harmonic repulsion at distance 1.5 -> force = kappa * (radiiSum - 1.5)
     kernel->context().periodicBoundaryConditions() = {{false, false, false}};
     kernel->context().boxSize() = {{5, 5, 5}};
-    kernel->context().particle_types().add("C", 1.);
+    kernel->context().particleTypes().add("C", 1.);
     kernel->context().potentials().addBox("A", .001, {-2.4, -2.4, -2.4}, {4.8, 4.8, 4.8});
     kernel->context().potentials().addBox("B", .001, {-2.4, -2.4, -2.4}, {4.8, 4.8, 4.8});
     kernel->context().potentials().addBox("C", .001, {-2.4, -2.4, -2.4}, {4.8, 4.8, 4.8});
-    const auto typeIdC = kernel->context().particle_types().idOf("C");
+    const auto typeIdC = kernel->context().particleTypes().idOf("C");
     const auto particlesC = std::vector<m::Particle>{m::Particle(0, 0, 0, typeIdC), m::Particle(0, -1.5, 0, typeIdC)};
     kernel->stateModel().addParticles(particlesC);
 

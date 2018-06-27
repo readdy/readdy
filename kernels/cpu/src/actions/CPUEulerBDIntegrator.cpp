@@ -55,7 +55,7 @@ void CPUEulerBDIntegrator::perform(const readdy::util::PerformanceNode &node) {
         const auto &pbc = context.periodicBoundaryConditions().data();
         for (auto it = entry_begin; it != entry_end; ++it, ++idx) {
             if(!it->deactivated) {
-                const scalar D = context.particle_types().diffusionConstantOf(it->type);
+                const scalar D = context.particleTypes().diffusionConstantOf(it->type);
                 const auto randomDisplacement = std::sqrt(2. * D * dt) * rnd::normal3<readdy::scalar>(0, 1);
                 const auto deterministicDisplacement = it->force * dt * D / kbt;
                 it->pos += randomDisplacement + deterministicDisplacement;
