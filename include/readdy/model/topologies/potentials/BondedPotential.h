@@ -56,13 +56,13 @@ public:
     using bond_configuration = BondConfiguration;
     using bond_configurations = std::vector<bond_configuration>;
 
-    explicit BondedPotential(const bond_configurations &bonds) : TopologyPotential(), bonds(bonds) {}
+    explicit BondedPotential(bond_configurations bonds) : TopologyPotential(), bonds(std::move(bonds)) {}
 
     BondedPotential(const BondedPotential&) = default;
     BondedPotential& operator=(const BondedPotential&) = delete;
     BondedPotential(BondedPotential&&) = default;
     BondedPotential& operator=(BondedPotential&&) = delete;
-    virtual ~BondedPotential() = default;
+    ~BondedPotential() override = default;
 
     const bond_configurations &getBonds() const {
         return bonds;
@@ -93,8 +93,7 @@ public:
         force += (2. * bond.forceConstant * (norm - bond.length) / norm) * x_ij;
     }
 
-    virtual std::unique_ptr<EvaluatePotentialAction>
-    createForceAndEnergyAction(const TopologyActionFactory *const) override;
+    std::unique_ptr<EvaluatePotentialAction> createForceAndEnergyAction(const TopologyActionFactory *) override;
 
 };
 

@@ -64,7 +64,6 @@ class AddParticles : public Action {
 
 public:
     AddParticles(Kernel *kernel, const std::vector<Particle> &particles);
-    AddParticles(Kernel *kernel, const Particle& particle);
 
     void perform(const util::PerformanceNode &node) override;
 
@@ -91,8 +90,6 @@ public:
 
     explicit UpdateNeighborList(Operation operation = Operation::init, scalar skinSize = 0);
 
-    virtual bool supportsSkin() const = 0;
-
 
 protected:
     const Operation operation;
@@ -104,22 +101,7 @@ NAMESPACE_BEGIN(reactions)
 class UncontrolledApproximation : public TimeStepDependentAction {
 
 public:
-    using reaction_11 = std::function<model::Particle(const model::Particle &)>;
-    using reaction_12 = std::function<void(const model::Particle &, model::Particle &, model::Particle &)>;
-    using reaction_21 = std::function<model::Particle(const model::Particle &, const model::Particle &)>;
-    using reaction_22 = std::function<void(const model::Particle &, const model::Particle &, model::Particle &,
-                                           model::Particle &)>;
-
     explicit UncontrolledApproximation(scalar timeStep);
-
-    virtual void registerReactionScheme_11(const std::string &reactionName, reaction_11 fun) = 0;
-
-    virtual void registerReactionScheme_12(const std::string &reactionName, reaction_12 fun) = 0;
-
-    virtual void registerReactionScheme_21(const std::string &reactionName, reaction_21 fun) = 0;
-
-    virtual void registerReactionScheme_22(const std::string &reactionName, reaction_22 fun) = 0;
-
 };
 
 class Gillespie : public TimeStepDependentAction {

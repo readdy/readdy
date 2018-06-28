@@ -71,9 +71,7 @@ public:
         return _products[1];
     }
 
-    virtual const ReactionType type() const override {
-        return ReactionType::Fission;
-    }
+    const ReactionType type() const override { return ReactionType::Fission; }
 
 };
 NAMESPACE_END(reactions)

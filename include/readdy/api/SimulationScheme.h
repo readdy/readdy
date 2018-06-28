@@ -474,9 +474,9 @@ public:
             scheme->_neighborList = scheme->kernel->actions().updateNeighborList(ops::update, skinSize);
             scheme->_clearNeighborList = scheme->kernel->actions().updateNeighborList(ops::clear, skinSize);
         }
-        if (scheme->_integrator) scheme->_integrator->setTimeStep(timeStep);
-        if (scheme->_reactions) scheme->_reactions->setTimeStep(timeStep);
-        if (scheme->_topologyReactions) scheme->_topologyReactions->setTimeStep(timeStep);
+        if (scheme->_integrator) scheme->_integrator->timeStep() = timeStep;
+        if (scheme->_reactions) scheme->_reactions->timeStep() = timeStep;
+        if (scheme->_topologyReactions) scheme->_topologyReactions->timeStep() = timeStep;
         std::unique_ptr<ReaDDyScheme> ptr = std::move(scheme);
         scheme = nullptr;
         return ptr;

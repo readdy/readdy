@@ -69,7 +69,7 @@ public:
         return _products[0];
     }
 
-    virtual const ReactionType type() const override {
+    const ReactionType type() const override {
         return ReactionType::Fusion;
     }
 

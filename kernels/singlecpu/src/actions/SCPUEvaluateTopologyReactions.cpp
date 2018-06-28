@@ -88,7 +88,7 @@ void SCPUEvaluateTopologyReactions::perform(const util::PerformanceNode &node) {
             std::vector<readdy::model::top::GraphTopology> new_topologies;
 
             auto shouldEval = [this](const TREvent &event) {
-                return performReactionEvent<false>(event.rate, timeStep);
+                return performReactionEvent<false>(event.rate, _timeStep);
             };
             auto depending = [this](const TREvent &e1, const TREvent &e2) {
                 return eventsDependent(e1, e2);

@@ -46,7 +46,7 @@ void CPUEulerBDIntegrator::perform(const readdy::util::PerformanceNode &node) {
     const auto &context = kernel->context();
     using iter_t = data::EntryDataContainer::iterator;
 
-    const auto dt = timeStep;
+    const auto dt = timeStep();
 
     auto worker = [&context, data, dt](std::size_t, std::size_t beginIdx, iter_t entry_begin, iter_t entry_end)  {
         const auto kbt = context.kBT();

@@ -38,7 +38,6 @@ namespace py = pybind11;
 
 void exportCommon(py::module&);
 void exportApi(py::module&);
-void exportPrototyping(py::module&);
 
 PYBIND11_MODULE (readdybinding, m) {
     py::options options;
@@ -51,5 +50,4 @@ PYBIND11_MODULE (readdybinding, m) {
     auto prototyping = m.def_submodule("prototyping", "ReaDDy prototyping python module");
     exportCommon(common);
     exportApi(api);
-    exportPrototyping(prototyping);
 }

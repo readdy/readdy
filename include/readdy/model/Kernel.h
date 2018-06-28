@@ -103,17 +103,6 @@ public:
     };
 
     /**
-     * Registers an observable to the kernel signal.
-     */
-    virtual std::tuple<std::unique_ptr<observables::ObservableWrapper>, readdy::signals::scoped_connection>
-    registerObservable(const observables::observable_type &observable, unsigned int stride) {
-        auto &&wrap = std::make_unique<observables::ObservableWrapper>(this, observable, stride);
-        auto &&connection = connectObservable(wrap.get());
-        return std::make_tuple(std::move(wrap), std::move(connection));
-    };
-
-
-    /**
      * Returns a vector containing all available program names for this specific kernel instance.
      *
      * @see createProgram(name)

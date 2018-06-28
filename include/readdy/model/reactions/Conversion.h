@@ -46,17 +46,11 @@ public:
         _products = {typeTo};
     }
 
-    const ParticleTypeId getTypeFrom() const {
-        return _educts[0];
-    }
+    const ParticleTypeId getTypeFrom() const { return _educts[0]; }
 
-    const ParticleTypeId getTypeTo() const {
-        return _products[0];
-    }
+    const ParticleTypeId getTypeTo() const { return _products[0]; }
 
-    virtual const ReactionType type() const override {
-        return ReactionType::Conversion;
-    }
+    const ReactionType type() const override { return ReactionType::Conversion; }
 };
 NAMESPACE_END(reactions)
 NAMESPACE_END(model)

@@ -46,14 +46,6 @@ public:
 
     void perform(const util::PerformanceNode &node) override;
 
-    void registerReactionScheme_11(const std::string &reactionName, reaction_11 fun) override;
-
-    void registerReactionScheme_12(const std::string &reactionName, reaction_12 fun) override;
-
-    void registerReactionScheme_21(const std::string &reactionName, reaction_21 fun) override;
-
-    void registerReactionScheme_22(const std::string &reactionName, reaction_22 fun) override;
-
 protected:
     SCPUKernel *const kernel;
 };

@@ -91,7 +91,7 @@ void CPUEvaluateTopologyReactions::perform(const util::PerformanceNode &node) {
 
             {
                 auto shouldEval = [this](const TREvent &event) {
-                    return performReactionEvent<false>(event.rate, timeStep);
+                    return performReactionEvent<false>(event.rate, timeStep());
                 };
                 auto depending = [this](const TREvent &e1, const TREvent &e2) {
                     return eventsDependent(e1, e2);

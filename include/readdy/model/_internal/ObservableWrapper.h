@@ -41,9 +41,8 @@ NAMESPACE_BEGIN(observables)
 
 class ObservableWrapper : public ObservableBase {
 public:
-    ObservableWrapper(Kernel *kernel,
-                      const observables::observable_type &observable, unsigned int stride = 1)
-            : ObservableBase(kernel, stride), observable(observable) {};
+    ObservableWrapper(Kernel *kernel, observables::observable_type observable, stride_type stride = 1)
+            : ObservableBase(kernel, stride), observable(std::move(observable)) {};
 
     void operator()(time_step_type t) {
         callback(t);

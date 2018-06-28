@@ -47,21 +47,13 @@ public:
     }
 
 
-    const ParticleTypeId getCatalyst() const {
-        return _educts[1];
-    }
+    const ParticleTypeId getCatalyst() const { return _educts[1]; }
 
-    const ParticleTypeId getFrom() const {
-        return _educts[0];
-    }
+    const ParticleTypeId getFrom() const { return _educts[0]; }
 
-    const ParticleTypeId getTo() const {
-        return _products[0];
-    }
+    const ParticleTypeId getTo() const { return _products[0]; }
 
-    virtual const ReactionType type() const override {
-        return ReactionType::Enzymatic;
-    }
+    const ReactionType type() const override { return ReactionType::Enzymatic; }
 };
 NAMESPACE_END(reactions)
 NAMESPACE_END(model)
