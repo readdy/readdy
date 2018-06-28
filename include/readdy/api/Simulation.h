@@ -133,7 +133,7 @@ public:
      */
     template<typename T>
     ObservableHandle registerObservable(std::unique_ptr<T> observable, detail::is_observable_type<T>* = 0) {
-        return registerObservable(std::move(observable), observable->currentCallback());;
+        return registerObservable(std::move(observable), [](const typename T::result_type & /*unused*/) {});
     }
 
     /**

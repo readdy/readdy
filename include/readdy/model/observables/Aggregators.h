@@ -72,7 +72,7 @@ public:
             kernel, stride,
             parentObs) {}
 
-    virtual void evaluate() {
+    void evaluate() override {
         const auto &currentInput = std::get<0>(this->parentObservables)->getResult();
         auto &resultTimes = std::get<0>(this->result);
         auto &resultValues = std::get<1>(this->result);
