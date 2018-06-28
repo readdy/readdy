@@ -254,27 +254,6 @@ class Simulation(object):
         self._reaction_handler = value
 
     @property
-    def simulation_scheme(self):
-        """
-        Returns the currently selected simulation scheme.
-
-        :return: the scheme
-        """
-        return self._simulation_scheme
-
-    @simulation_scheme.setter
-    def simulation_scheme(self, value):
-        """
-        Set the simulation scheme to use in the run loop. Thus far there is the `DefaultScheme`.
-
-        :param value: the scheme
-        """
-        if value in ("ReaDDyScheme",):
-            self._simulation_scheme = value
-        else:
-            raise ValueError("Simulation scheme value can only be \"ReaDDyScheme\".")
-
-    @property
     def kernel_configuration(self):
         """
         Returns the kernel configuration. If the CPU kernel was selected, this gives ability to select the number
@@ -388,34 +367,29 @@ class Simulation(object):
 
         self._simulation.set_kernel_config(self.kernel_configuration.to_json())
 
-        if self.simulation_scheme == 'ReaDDyScheme':
-            conf = self._simulation.run_scheme_readdy(False)
-        else:
-            raise ValueError("Invalid simulation scheme type: {}".format(self.simulation_scheme))
-
-        conf = conf.with_integrator(self.integrator) \
-            .include_forces(self.evaluate_forces) \
-            .evaluate_topology_reactions(self.evaluate_topology_reactions) \
-            .with_reaction_scheduler(self.reaction_handler) \
-            .with_skin_size(self._skin) \
-            .evaluate_observables(self.evaluate_observables)
+        loop = self._simulation.create_loop(timestep)
+        loop.use_integrator(self.integrator)
+        loop.evaluate_forces(self.evaluate_forces)
+        loop.evaluate_topology_reactions(self.evaluate_topology_reactions, timestep)
+        loop.use_reaction_scheduler(self.reaction_handler)
+        loop.skin_size = self._skin
+        loop.evaluate_observables(self.evaluate_topology_reactions)
 
         if self.output_file is not None and len(self.output_file) > 0:
             with closing(io.File.create(self.output_file)) as f:
                 for name, chunk_size, handle in self._observables._observable_handles:
                     handle.enable_write_to_file(f, name, chunk_size)
-                scheme = conf.write_config_to_file(f).configure(timestep)
+                loop.write_config_to_file(f)
                 if self.show_progress:
                     self._progress = _SimulationProgress(n_steps // self._progress_output_stride)
-                    scheme.set_progress_callback(self._progress.callback)
-                    scheme.set_progress_output_stride(self._progress_output_stride)
-                scheme.run(n_steps)
+                    loop.progress_callback = self._progress.callback
+                    loop.progress_output_stride = self._progress_output_stride
+                loop.run(n_steps)
         else:
-            scheme = conf.configure(timestep)
             if self.show_progress:
                 self._progress = _SimulationProgress(n_steps // self._progress_output_stride)
-                scheme.set_progress_callback(self._progress.callback)
-                scheme.set_progress_output_stride(self._progress_output_stride)
-            scheme.run(n_steps)
+                loop.progress_callback = self._progress.callback
+                loop.progress_output_stride = self._progress_output_stride
+            loop.run(n_steps)
         if self.show_progress:
             self._progress.finish()

@@ -35,7 +35,7 @@
 #include <cmath>
 
 #include <gtest/gtest.h>
-#include <readdy/api/SimulationScheme.h>
+#include <readdy/api/SimulationLoop.h>
 #include <readdy/kernel/cpu/CPUKernel.h>
 #include <readdy/testing/NOOPPotential.h>
 
@@ -204,10 +204,10 @@ TEST(TestNeighborListImpl, DiffusionAndReaction) {
 
     {
         readdy::util::PerformanceNode pn("", false);
-        auto conf = readdy::api::SchemeConfigurator(kernel.get(), pn);
-        conf.withReactionScheduler<readdy::model::actions::reactions::Gillespie>();
-        conf.withSkinSize(.1);
-        conf.configureAndRun(100, .01);
+        readdy::api::SimulationLoop loop (kernel.get(), .01, pn);
+        loop.useReactionScheduler("Gillespie");
+        loop.skinSize() = .1;
+        loop.run(100);
     }
 }
 
@@ -267,10 +267,10 @@ TEST(TestNeighborListImpl, Diffusion) {
     auto connection = kernel->connectObservable(obs.get());
     {
         readdy::util::PerformanceNode pn("", false);
-        auto sc = readdy::api::SchemeConfigurator(kernel.get(), pn);
-        sc.withReactionScheduler<readdy::model::actions::reactions::Gillespie>();
-        sc.withSkinSize(.1);
-        sc.configureAndRun(100, .01);
+        readdy::api::SimulationLoop loop(kernel.get(), .01, pn);
+        loop.useReactionScheduler("Gillespie");
+        loop.skinSize() = .1;
+        loop.run(100);
     }
 }
 

@@ -46,28 +46,6 @@ public:
     explicit TestSchemes() : simulation(GetParam()) {}
 };
 
-TEST_P(TestSchemes, SimulationObject) {
-    simulation.context().boxSize() = {{1, 1, 1}};
-    simulation.runScheme().configureAndRun(5, .5);
-
-    /**
-     * use ReaDDyScheme without defaults
-     */
-    simulation.runScheme(false)
-            .withEulerBDIntegrator()
-            .withReactionScheduler<readdy::model::actions::reactions::UncontrolledApproximation>()
-            .configureAndRun(5, .5);
-
-    /**
-     * default: readdy scheme, use defaults = true
-     */
-    simulation.runScheme()
-            .includeForces(false)
-            .withEulerBDIntegrator()
-            .withReactionScheduler<readdy::model::actions::reactions::UncontrolledApproximation>()
-            .configureAndRun(5, .5);
-}
-
 TEST_P(TestSchemes, CorrectNumberOfTimesteps) {
     unsigned int counter = 0;
     auto increment = [&counter](readdy::model::observables::NParticles::result_type result) {
@@ -87,8 +65,8 @@ TEST_P(TestSchemes, StoppingCriterionSimple) {
     auto shallContinue = [](readdy::time_step_type currentStep) {
         return currentStep < 5;
     };
-    auto scheme = simulation.runScheme(true).configure(0.1);
-    scheme->run(shallContinue);
+    auto loop = simulation.createLoop(.1);
+    loop.run(shallContinue);
     EXPECT_EQ(counter, 6);
 }
 
@@ -109,8 +87,7 @@ TEST_P(TestSchemes, ComplexStoppingCriterion) {
     auto shallContinue = [&doStop](readdy::time_step_type currentStep) {
         return !doStop;
     };
-    auto scheme = simulation.runScheme(true).configure(1., false);
-    scheme->run(shallContinue);
+    simulation.createLoop(1.).run(shallContinue);
     EXPECT_EQ(counter, 4);
 }
 
@@ -121,10 +98,9 @@ TEST_P(TestSchemes, SkinSizeSanity) {
     simulation.context().potentials().addHarmonicRepulsion("A", "A", 1., 2.);
     simulation.addParticle("A", 0., 0., 0.);
     simulation.addParticle("A", 1.5, 0., 0.);
-    readdy::api::SchemeConfigurator configurator = simulation.runScheme(true);
-    configurator.withSkinSize(1.);
-    auto scheme = configurator.configure(0.001);
-    scheme->run(10);
+    auto loop = simulation.createLoop(.001);
+    loop.skinSize() = 1.;
+    loop.run(10);
 }
 
 INSTANTIATE_TEST_CASE_P(TestSchemesCore, TestSchemes, ::testing::ValuesIn(readdy::testing::getKernelsToTest()));

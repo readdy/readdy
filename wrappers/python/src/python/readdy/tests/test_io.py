@@ -61,7 +61,9 @@ class TestSchemeApi(ReaDDyTestCase):
         traj_handle = simulation.register_observable_trajectory(0)
         with closing(io.File.create(traj_fname, io.FileFlag.OVERWRITE)) as f:
             traj_handle.enable_write_to_file(f, u"", 3)
-            simulation.run_scheme_readdy(True).write_config_to_file(f).configure(1, False).run(20)
+            loop = simulation.create_loop(1.)
+            loop.write_config_to_file(f)
+            loop.run(20)
 
         r = TrajectoryReader(traj_fname)
         trajectory_items = r[:]
@@ -109,7 +111,7 @@ class TestSchemeApi(ReaDDyTestCase):
 
         with closing(io.File.create(traj_fname, io.FileFlag.OVERWRITE)) as f:
             traj_handle.enable_write_to_file(f, u"", int(3))
-            simulation.run_scheme_readdy(True).configure(1).run(20)
+            simulation.run(20, 1)
 
         r = TrajectoryReader(traj_fname)
         trajectory_items = r[:]

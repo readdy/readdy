@@ -30,7 +30,7 @@
  */
 
 #include <readdy/plugin/KernelProvider.h>
-#include <readdy/api/SimulationScheme.h>
+#include <readdy/api/SimulationLoop.h>
 #include <readdy/testing/KernelTest.h>
 #include <readdy/testing/Utils.h>
 
@@ -91,9 +91,7 @@ TEST_P(TestReactions, TestConstantNumberOfParticleType) {
 
     {
         readdy::util::PerformanceNode pn("", false);
-        auto conf = readdy::api::SchemeConfigurator(kernel.get(), pn);
-        const auto progs = kernel->getAvailableActions();
-        conf.configureAndRun(10, 1, false);
+        readdy::api::SimulationLoop(kernel.get(), 1, pn).run(10);
     }
 
 }
@@ -152,7 +150,7 @@ TEST_P(TestReactions, FusionFissionWeights) {
 
     {
         readdy::util::PerformanceNode pn("", false);
-        readdy::api::SchemeConfigurator(kernel.get(), pn).configureAndRun(1, .5, false);
+        readdy::api::SimulationLoop(kernel.get(), .1, pn).run(1);
     }
 }
 

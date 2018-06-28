@@ -90,10 +90,13 @@ public:
 
     explicit UpdateNeighborList(Operation operation = Operation::init, scalar skinSize = 0);
 
+    scalar &skin() { return skinSize; }
+
+    const scalar &skin() const { return skinSize; }
 
 protected:
-    const Operation operation;
-    const scalar skinSize;
+    Operation operation;
+    scalar skinSize;
 };
 
 NAMESPACE_BEGIN(reactions)
@@ -117,11 +120,11 @@ public:
     const std::vector<std::shared_ptr<const ReversibleReactionConfig>> &reversibleReactions() const {
         return _reversibleReactionsContainer;
     }
-    
+
     std::string describe() const;
 
 protected:
-    void searchReversibleReactions(const Context& ctx);
+    void searchReversibleReactions(const Context &ctx);
 
     std::vector<std::shared_ptr<const ReversibleReactionConfig>> _reversibleReactionsContainer;
     // the map provides a view on the container for quick runtime lookup,
@@ -178,12 +181,14 @@ const std::string getActionName(typename std::enable_if<std::is_base_of<reaction
 }
 
 template<typename T>
-const std::string getActionName(typename std::enable_if<std::is_base_of<reactions::DetailedBalance, T>::value>::type * = 0) {
+const std::string
+getActionName(typename std::enable_if<std::is_base_of<reactions::DetailedBalance, T>::value>::type * = 0) {
     return "DetailedBalance";
 }
 
 template<typename T>
-const std::string getActionName(typename std::enable_if<std::is_base_of<top::EvaluateTopologyReactions, T>::value>::type * = 0) {
+const std::string
+getActionName(typename std::enable_if<std::is_base_of<top::EvaluateTopologyReactions, T>::value>::type * = 0) {
     return "EvaluateTopologyReactions";
 }
 

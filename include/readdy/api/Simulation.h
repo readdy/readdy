@@ -35,7 +35,7 @@
 
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/model/Kernel.h>
-#include <readdy/api/SimulationScheme.h>
+#include <readdy/api/SimulationLoop.h>
 #include <readdy/model/topologies/reactions/StructuralTopologyReaction.h>
 #include "ObservableHandle.h"
 
@@ -49,7 +49,6 @@ NAMESPACE_BEGIN(readdy)
  */
 class Simulation {
 public:
-
     /**
      * Type of an observable callback corresponding to a certain observable
      */
@@ -61,7 +60,8 @@ public:
     /**
      * The default constructor.
      */
-    explicit Simulation(const std::string &kernel) : Simulation(plugin::KernelProvider::getInstance().create(kernel)) {};
+    explicit Simulation(const std::string &kernel) : Simulation(
+            plugin::KernelProvider::getInstance().create(kernel)) {};
 
     /**
      * Creates a topology particle of a certain type at a position without adding it to the simulation box yet.
@@ -93,7 +93,7 @@ public:
      * @return a pointer to the instance of topology that was created
      * @see createTopologyParticle(type, pos)
      */
-    readdy::model::top::GraphTopology *addTopology(const std::string& type,
+    readdy::model::top::GraphTopology *addTopology(const std::string &type,
                                                    const std::vector<readdy::model::TopologyParticle> &particles) {
         if (kernelSupportsTopologies()) {
             auto typeId = _kernel->context().topologyRegistry().idOf(type);
@@ -132,7 +132,7 @@ public:
      * @return a uuid with which the observable is associated
      */
     template<typename T>
-    ObservableHandle registerObservable(std::unique_ptr<T> observable, detail::is_observable_type<T>* = 0) {
+    ObservableHandle registerObservable(std::unique_ptr<T> observable, detail::is_observable_type<T> * = 0) {
         return registerObservable(std::move(observable), [](const typename T::result_type & /*unused*/) {});
     }
 
@@ -146,7 +146,7 @@ public:
      */
     template<typename T>
     ObservableHandle registerObservable(std::unique_ptr<T> observable, const observable_callback<T> &callback,
-                                        detail::is_observable_type<T>* = 0) {
+                                        detail::is_observable_type<T> * = 0) {
         auto connection = _kernel->connectObservable(observable.get());
         observable->callback() = callback;
         _observables.push_back(std::move(observable));
@@ -230,17 +230,11 @@ public:
      * @see runScheme()
      */
     virtual void run(time_step_type steps, scalar timeStep) {
-        runScheme().configure(timeStep)->run(steps);
+        createLoop(timeStep).run(steps);
     }
 
-    /**
-     * This method yields a scheme configurator that can be used in fluent-api style to modify the simulation loop
-     * with respect to the needs of the particular system.
-     * @param useDefaults whether to initialize the configurator with the default values that are used in the simple run
-     * @return the configurator object
-     */
-    readdy::api::SchemeConfigurator runScheme(bool useDefaults = true) {
-        return readdy::api::SchemeConfigurator(_kernel.get(), _performanceRoot, useDefaults);
+    api::SimulationLoop createLoop(scalar timeStep) {
+        return api::SimulationLoop(_kernel.get(), timeStep, _performanceRoot);
     }
 
     /**
@@ -282,13 +276,12 @@ public:
     const model::StateModel &stateModel() const {
         return _kernel->stateModel();
     }
-private:
 
+private:
     plugin::KernelProvider::kernel_ptr _kernel;
     std::vector<std::unique_ptr<readdy::model::observables::ObservableBase>> _observables{};
     std::vector<readdy::signals::scoped_connection> _observableConnections{};
     util::PerformanceNode _performanceRoot{"simulation", true};
-
 };
 
 NAMESPACE_END(readdy)

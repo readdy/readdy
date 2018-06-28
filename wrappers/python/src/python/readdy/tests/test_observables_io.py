@@ -67,7 +67,7 @@ class TestObservablesIO(ReaDDyTestCase):
         n_timesteps = 19
         with closing(io.File.create(fname)) as f:
             handle.enable_write_to_file(f, u"particle_positions", int(3))
-            sim.run_scheme_readdy(True).configure(0).run(n_timesteps)
+            sim.run(n_timesteps, 0)
             handle.flush()
 
         with h5py.File(fname, "r") as f2:
@@ -102,7 +102,7 @@ class TestObservablesIO(ReaDDyTestCase):
         handle = sim.register_observable_virial(1, virial_callback)
         with closing(io.File.create(fname)) as f:
             handle.enable_write_to_file(f, u"virial", int(3))
-            sim.run_scheme_readdy(True).configure(.1).run(10)
+            sim.run(10, .1)
             handle.flush()
 
         with h5py.File(fname, "r") as f2:
@@ -128,7 +128,7 @@ class TestObservablesIO(ReaDDyTestCase):
         handle = sim.register_observable_virial(1, virial_callback)
         with closing(io.File.create(fname)) as f:
             handle.enable_write_to_file(f, u"virial", int(3))
-            sim.run_scheme_readdy(True).configure(.1).run(10)
+            sim.run(10, .1)
             handle.flush()
 
         with h5py.File(fname, "r") as f2:
@@ -150,7 +150,9 @@ class TestObservablesIO(ReaDDyTestCase):
         n_timesteps = 19
         with closing(io.File.create(fname)) as f:
             handle.enable_write_to_file(f, u"particles", int(3))
-            sim.run_scheme_readdy(True).write_config_to_file(f).configure(0).run(n_timesteps)
+            loop = sim.create_loop(0)
+            loop.write_config_to_file(f)
+            loop.run(n_timesteps)
             handle.flush()
 
         from readdy.util.io_utils import get_particle_types
@@ -315,8 +317,9 @@ class TestObservablesIO(ReaDDyTestCase):
         handle = sim.register_observable_reactions(1)
         with closing(io.File.create(fname)) as f:
             handle.enable_write_to_file(f, u"reactions", int(3))
-            sim.run_scheme_readdy(True).write_config_to_file(f)\
-                .configure_and_run(n_timesteps, 1, False)
+            loop = sim.create_loop(1)
+            loop.write_config_to_file(f)
+            loop.run(n_timesteps)
 
         type_str_to_id = ioutils.get_particle_types(fname)
 
@@ -383,8 +386,10 @@ class TestObservablesIO(ReaDDyTestCase):
         handle = sim.register_observable_reaction_counts(1)
         with closing(io.File.create(fname)) as f:
             handle.enable_write_to_file(f, u"reactions", int(3))
-            sim.run_scheme_readdy(True).write_config_to_file(f).with_reaction_scheduler("Gillespie")\
-                .configure_and_run(n_timesteps, 1, False)
+            loop = sim.create_loop(1)
+            loop.use_reaction_scheduler("Gillespie")
+            loop.write_config_to_file(f)
+            loop.run(1)
 
         import readdy.util.io_utils as io_utils
         reactions = io_utils.get_reactions(fname)
@@ -422,7 +427,7 @@ class TestObservablesIO(ReaDDyTestCase):
         n_timesteps = 19
         with closing(io.File.create(fname)) as f:
             handle.enable_write_to_file(f, u"forces", int(3))
-            sim.run_scheme_readdy(True).configure(1).run(n_timesteps)
+            sim.run(n_timesteps, 1.)
             handle.flush()
 
         with h5py.File(fname, "r") as f2:

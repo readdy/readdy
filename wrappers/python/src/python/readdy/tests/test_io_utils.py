@@ -59,7 +59,9 @@ class TestIOUtils(ReaDDyTestCase):
         educt_distance = 0.2
         sim.context.reactions.add_fusion("B+C->A", "B", "C", "A", fusion_rate, educt_distance, .5, .5)
         with contextlib.closing(io.File.create(cls.fname)) as f:
-            sim.run_scheme_readdy(True).write_config_to_file(f).configure_and_run(1, 0.1)
+            loop = sim.create_loop(.1)
+            loop.write_config_to_file(f)
+            loop.run(1)
 
     @classmethod
     def tearDownClass(cls):

@@ -123,12 +123,7 @@ void exportApi(py::module &api) {
             }, [](sim &self, const readdy::model::Context &context) {
                 self.context() = context;
             })
-            .def("run_scheme_readdy", [](sim &self, bool defaults) {
-                     return std::make_unique<readdy::api::SchemeConfigurator>(
-                             self.runScheme(defaults)
-                     );
-                 }, "defaults"_a = true
-            )
+            .def("create_loop", &sim::createLoop, py::keep_alive<0, 1>(), py::return_value_policy::reference_internal)
             .def("run", [](sim &self, const readdy::time_step_type steps, const readdy::scalar timeStep) {
                 py::gil_scoped_release release;
                 self.run(steps, timeStep);

@@ -37,4 +37,4 @@
 
 #include "api/ObservableHandle.h"
 #include "api/Simulation.h"
-#include "api/SimulationScheme.h"
+#include "readdy/api/SimulationLoop.h"

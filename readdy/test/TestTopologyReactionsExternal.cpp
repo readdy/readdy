@@ -88,10 +88,11 @@ TEST_P(TestTopologyReactionsExternal, TestTopologyEnzymaticReaction) {
         ASSERT_EQ(nNormalFlavor, 1);
     }
 
-    auto run = simulation.runScheme().withReactionScheduler("UncontrolledApproximation").configure(1.);
-    run->initializeNeighborList();
-    run->updateNeighborList();
-    run->reactions();
+    auto loop = simulation.createLoop(1.);
+    loop.useReactionScheduler("UncontrolledApproximation");
+    loop.runInitializeNeighborList();
+    loop.runUpdateNeighborList();
+    loop.runReactions();
 
     auto particles = simulation.stateModel().getParticles();
 
@@ -173,7 +174,7 @@ TEST_P(TestTopologyReactionsExternal, TestGetTopologyForParticleDecay) {
 
     simulation.context().topologyRegistry().addStructuralReaction("TA", r);
 
-    simulation.runScheme(true).evaluateTopologyReactions().configureAndRun(35, 1.);
+    simulation.run(35, 1.);
 
     log::trace("got n topologies: {}", simulation.currentTopologies().size());
     for(auto top : simulation.currentTopologies()) {
@@ -218,7 +219,7 @@ TEST_P(TestTopologyReactionsExternal, AttachParticle) {
     simulation.addParticle("A", c_::zero + c_::three, c_::zero, c_::zero);
     simulation.addParticle("A", c_::zero + c_::four, c_::zero, c_::zero);
 
-    simulation.runScheme().evaluateTopologyReactions().configureAndRun(6, 1.);
+    simulation.run(6, 1.);
 
     const auto& type_registry = simulation.context().particleTypes();
 
@@ -415,7 +416,7 @@ TEST_P(TestTopologyReactionsExternal, AttachTopologies) {
     simulation.context().topologyRegistry().addSpatialReaction("merge: TA (end) + TA (end) -> TA (middle--middle)", 1e3, 1.5);
 
     EXPECT_EQ(simulation.currentTopologies().size(), 3);
-    simulation.runScheme().evaluateTopologyReactions().configureAndRun(6, 1.);
+    simulation.run(6, 1.);
 
     const auto& type_registry = simulation.context().particleTypes();
 
