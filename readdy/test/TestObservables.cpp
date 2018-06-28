@@ -172,7 +172,7 @@ TEST_P(TestObservables, Topologies) {
         std::size_t n_time_steps = 500;
 
         auto obs = kernel->observe().topologies(1);
-        obs->setCallback([&](const model::observables::Topologies::result_type &value) {
+        obs->callback() = ([&](const model::observables::Topologies::result_type &value) {
             auto tops = kernel->stateModel().getTopologies();
             ASSERT_EQ(value.size(), tops.size());
             for(auto its = std::make_pair(tops.begin(), value.begin()); its.first != tops.end(); ++its.first, ++its.second) {

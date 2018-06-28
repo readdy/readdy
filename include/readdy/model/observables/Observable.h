@@ -240,18 +240,14 @@ public:
         return result;
     }
 
-    /**
-     * Set a callback to this observable, which will be invoked every time the observable is evaluated.
-     * @param callbackFun the callback function
-     */
-    void setCallback(const callback_function &callbackFun) {
-        Observable::externalCallback = std::move(callbackFun);
-    }
-
-    const callback_function &currentCallback() const {
+    callback_function &callback() {
         return externalCallback;
     }
-
+    
+    const callback_function &callback() const {
+        return externalCallback;
+    }
+    
     /**
      * Function that will evaluate the observable and trigger a callback if ObservableBase#shouldExecuteCallback()
      * is true.

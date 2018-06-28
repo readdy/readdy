@@ -51,9 +51,9 @@ TEST(SingleCPUTestReactions, TestDecay) {
     auto &&reactions = kernel->actions().uncontrolledApproximation(timeStep);
 
     auto pp_obs = kernel->observe().positions(1);
-    pp_obs->setCallback([](const readdy::model::observables::Positions::result_type &t) {
+    pp_obs->callback() = [](const readdy::model::observables::Positions::result_type &t) {
         readdy::log::trace("got n particles={}", t.size());
-    });
+    };
     auto connection = kernel->connectObservable(pp_obs.get());
 
     const int n_particles = 200;

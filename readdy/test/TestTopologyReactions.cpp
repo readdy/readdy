@@ -586,7 +586,7 @@ TEST_P(TestTopologyReactions, ChainDecayIntegrationTest) {
 
     auto topsobs = kernel->observe().topologies(1);
     auto connection = kernel->connectObservable(topsobs.get());
-    topsobs->setCallback([&](const model::observables::Topologies::result_type &result) {
+    topsobs->callback() = [&](const model::observables::Topologies::result_type &result) {
         auto tops = kernel->stateModel().getTopologies();
         EXPECT_EQ(result.size(), tops.size());
         for(std::size_t i = 0; i < tops.size(); ++i) {
@@ -618,7 +618,7 @@ TEST_P(TestTopologyReactions, ChainDecayIntegrationTest) {
             }
 
         }
-    });
+    };
 
     {
         auto integrator = kernel->actions().createIntegrator("EulerBDIntegrator", 1e-2);

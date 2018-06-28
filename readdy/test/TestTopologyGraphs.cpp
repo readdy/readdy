@@ -259,11 +259,11 @@ TEST_P(TestTopologyGraphs, BondedPotential) {
     top->configure();
     auto fObs = kernel->observe().forces(1);
     std::vector<readdy::Vec3> collectedForces;
-    fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_type &result) {
+    fObs->callback() = [&collectedForces](const readdy::model::observables::Forces::result_type &result) {
         for (const auto &force : result) {
             collectedForces.push_back(force);
         }
-    });
+    };
 
     auto conn = kernel->connectObservable(fObs.get());
 
@@ -299,11 +299,11 @@ TEST_P(TestTopologyGraphs, MoreComplicatedAnglePotential) {
     top->configure();
     auto fObs = kernel->observe().forces(1);
     std::vector<readdy::Vec3> collectedForces;
-    fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_type &result) {
+    fObs->callback() = [&collectedForces](const readdy::model::observables::Forces::result_type &result) {
         for (const auto &force : result) {
             collectedForces.push_back(force);
         }
-    });
+    };
 
     auto conn = kernel->connectObservable(fObs.get());
 
@@ -350,11 +350,11 @@ TEST_P(TestTopologyGraphs, DihedralPotentialSteeperAngle) {
     top->configure();
     auto fObs = kernel->observe().forces(1);
     std::vector<readdy::Vec3> collectedForces;
-    fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_type &result) {
+    fObs->callback() = [&collectedForces](const readdy::model::observables::Forces::result_type &result) {
         for (const auto &force : result) {
             collectedForces.push_back(force);
         }
-    });
+    };
 
     auto conn = kernel->connectObservable(fObs.get());
 

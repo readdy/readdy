@@ -148,7 +148,7 @@ public:
     ObservableHandle registerObservable(std::unique_ptr<T> observable, const observable_callback<T> &callback,
                                         detail::is_observable_type<T>* = 0) {
         auto connection = _kernel->connectObservable(observable.get());
-        observable->setCallback(callback);
+        observable->callback() = callback;
         _observables.push_back(std::move(observable));
         _observableConnections.push_back(std::move(connection));
         return ObservableHandle{_observables.back().get()};

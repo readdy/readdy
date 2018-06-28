@@ -78,7 +78,7 @@ TEST_P(TestReactions, TestConstantNumberOfParticleType) {
 
     auto obs = kernel->observe().nParticles(1, std::vector<std::string>({"A", "B", "AB"}));
     auto conn = kernel->connectObservable(obs.get());
-    obs->setCallback([&n_A, &n_B](const n_particles_obs::result_type &result) {
+    obs->callback() = [&n_A, &n_B](const n_particles_obs::result_type &result) {
         if (result.size() == 2) {
             EXPECT_EQ(n_A, result[0] + result[2])
                                 << "Expected #(A)+#(AB)==" << n_A << ", but #(A)=" << result[0] << ", #(AB)="
@@ -87,7 +87,7 @@ TEST_P(TestReactions, TestConstantNumberOfParticleType) {
                                 << "Expected #(B)+#(AB)==" << n_B << ", but #(B)=" << result[1] << ", #(AB)="
                                 << result[2];
         }
-    });
+    };
 
     {
         readdy::util::PerformanceNode pn("", false);
@@ -132,7 +132,7 @@ TEST_P(TestReactions, FusionFissionWeights) {
     }
 
     auto obs = kernel->observe().positions(1, std::vector<std::string>({"F"}));
-    obs->setCallback(
+    obs->callback() =
             [&fPositions, this](const readdy::model::observables::Positions::result_type &result) {
                 std::set<readdy::Vec3, Vec3ProjectedLess> checklist;
                 for (const auto &pos : result) {
@@ -147,7 +147,7 @@ TEST_P(TestReactions, FusionFissionWeights) {
                     ++itCheck;
                 }
             }
-    );
+    ;
     auto connection = kernel->connectObservable(obs.get());
 
     {
