@@ -41,7 +41,7 @@ namespace model {
 namespace observables {
 
 using data_set = h5rd::DataSet;
-using data_set_map = std::unordered_map<reactions::Reaction::reaction_id, std::unique_ptr<data_set>>;
+using data_set_map = std::unordered_map<reactions::Reaction::ReactionId, std::unique_ptr<data_set>>;
 
 struct ReactionCounts::Impl {
     std::unique_ptr<h5rd::Group> group;

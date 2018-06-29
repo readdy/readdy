@@ -35,7 +35,7 @@
 #include <cmath>
 
 #include <gtest/gtest.h>
-#include <readdy/api/SimulationScheme.h>
+#include <readdy/api/SimulationLoop.h>
 #include <readdy/kernel/cpu/CPUKernel.h>
 #include <readdy/testing/NOOPPotential.h>
 
@@ -50,21 +50,20 @@ using data_t = cpu::data::NLDataContainer;
 struct TestNeighborList : ::testing::Test {
 
     std::unique_ptr<cpu::CPUKernel> kernel;
-    readdy::particle_type_type typeIdA;
+    readdy::ParticleTypeId typeIdA;
 
     std::unique_ptr<readdy::testing::NOOPPotentialOrder2> noop;
 
     TestNeighborList() : kernel(std::make_unique<cpu::CPUKernel>()) {
         auto &ctx = kernel->context();
-        ctx.particle_types().add("A", 1.);
-        auto a_id = ctx.particle_types()("A");
+        ctx.particleTypes().add("A", 1.);
+        auto a_id = ctx.particleTypes()("A");
         readdy::scalar eductDistance = 1.2;
         ctx.reactions().addFusion("test", "A", "A", "A", 0., eductDistance);
 
         noop = std::make_unique<readdy::testing::NOOPPotentialOrder2>(a_id, a_id, 1.1, 0., 0.);
         ctx.potentials().addUserDefined(noop.get());
-        typeIdA = ctx.particle_types().idOf("A");
-        ctx.configure();
+        typeIdA = ctx.particleTypes().idOf("A");
     }
 
 };
@@ -127,7 +126,6 @@ TEST_F(TestNeighborList, OneDirection) {
     ctx.boxSize() = {{1.2, 1.1, 2.8}};
     ctx.periodicBoundaryConditions() = {{false, false, true}};
     ctx.potentials().addBox("A", .0, {-.4, -.4, -1.3}, {.4, .4, 1.3});
-    ctx.configure();
 
     readdy::kernel::cpu::thread_pool pool (readdy::readdy_default_n_threads());
     nl_t list(*kernel->getCPUKernelStateModel().getParticleData(), ctx, pool);
@@ -180,9 +178,9 @@ TEST(TestNeighborListImpl, DiffusionAndReaction) {
     std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
 
     // A is absorbed and created by F, while the number of F stays constant, this test spans multiple timesteps
-    kernel->context().particle_types().add("A", 0.05);
-    kernel->context().particle_types().add("F", 0.0);
-    kernel->context().particle_types().add("V", 0.0);
+    kernel->context().particleTypes().add("A", 0.05);
+    kernel->context().particleTypes().add("F", 0.0);
+    kernel->context().particleTypes().add("V", 0.0);
     kernel->context().periodicBoundaryConditions() = {{true, true, true}};
     kernel->context().boxSize() = {{100, 10, 10}};
 
@@ -199,19 +197,17 @@ TEST(TestNeighborListImpl, DiffusionAndReaction) {
     }
 
     auto obs = kernel->observe().nParticles(1, std::vector<std::string>({"F", "A"}));
-    obs->setCallback(
-            [&](const readdy::model::observables::NParticles::result_type &result) {
-                EXPECT_EQ(result[0], 100);
-            }
-    );
+    obs->callback() = [&](const readdy::model::observables::NParticles::result_type &result) {
+        EXPECT_EQ(result[0], 100);
+    };
     auto connection = kernel->connectObservable(obs.get());
 
     {
         readdy::util::PerformanceNode pn("", false);
-        auto conf = readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>(kernel.get(), pn);
-        conf.withReactionScheduler<readdy::model::actions::reactions::Gillespie>();
-        conf.withSkinSize(.1);
-        conf.configureAndRun(100, .01);
+        readdy::api::SimulationLoop loop (kernel.get(), .01, pn);
+        loop.useReactionScheduler("Gillespie");
+        loop.skinSize() = .1;
+        loop.run(100);
     }
 }
 
@@ -221,9 +217,9 @@ TEST(TestNeighborListImpl, Diffusion) {
 
     // A is absorbed and created by F, while the number of F stays constant, this test spans multiple timesteps
     auto& context = kernel->context();
-    context.particle_types().add("A", 0.05);
-    context.particle_types().add("F", 0.0);
-    context.particle_types().add("V", 0.0);
+    context.particleTypes().add("A", 0.05);
+    context.particleTypes().add("F", 0.0);
+    context.particleTypes().add("V", 0.0);
 
     scalar cutoff = 2.0;
 
@@ -239,7 +235,7 @@ TEST(TestNeighborListImpl, Diffusion) {
         kernel->addParticle("A", n3(0., 1.));
     }
     auto obs = kernel->observe().nParticles(1);
-    obs->setCallback(
+    obs->callback() = (
             [&](const readdy::model::observables::NParticles::result_type &) {
                 const auto neighbor_list = kernel->getCPUKernelStateModel().getNeighborList();
 
@@ -271,10 +267,10 @@ TEST(TestNeighborListImpl, Diffusion) {
     auto connection = kernel->connectObservable(obs.get());
     {
         readdy::util::PerformanceNode pn("", false);
-        auto sc = readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>(kernel.get(), pn);
-        sc.withReactionScheduler<readdy::model::actions::reactions::Gillespie>();
-        sc.withSkinSize(.1);
-        sc.configureAndRun(100, .01);
+        readdy::api::SimulationLoop loop(kernel.get(), .01, pn);
+        loop.useReactionScheduler("Gillespie");
+        loop.skinSize() = .1;
+        loop.run(100);
     }
 }
 
@@ -295,8 +291,8 @@ TEST_P(TestCPUNeighborList, Diffuse) {
     kernel::cpu::CPUKernel kernel;
 
     auto& context = kernel.context();
-    context.particle_types().add("Test", 1.);
-    auto id = context.particle_types().idOf("Test");
+    context.particleTypes().add("Test", 1.);
+    auto id = context.particleTypes().idOf("Test");
     scalar cutoff = 4;
     context.reactions().addFusion("Fusion", id, id, id, .001, cutoff);
     context.boxSize() = getTestingBoxSize();

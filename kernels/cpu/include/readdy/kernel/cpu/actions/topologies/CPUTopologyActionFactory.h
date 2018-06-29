@@ -57,7 +57,7 @@ public:
     createCalculateCosineDihedralPotential(const cos_dihedral *potential) const override;
 
     action_ref createChangeParticleType(top::GraphTopology* topology, const vertex &v,
-                                        const particle_type_type &type_to) const override;
+                                        const ParticleTypeId &type_to) const override;
 
     action_ref createChangeTopologyType(top::GraphTopology *topology, const std::string &type_to) const override;
 

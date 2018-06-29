@@ -40,7 +40,7 @@ NAMESPACE_BEGIN(reactions)
 class Fusion : public Reaction {
     using super = Reaction;
 public:
-    Fusion(const std::string &name, particle_type_type from1, particle_type_type from2, particle_type_type to,
+    Fusion(const std::string &name, ParticleTypeId from1, ParticleTypeId from2, ParticleTypeId to,
            const scalar rate, const scalar eductDistance, const scalar weight1 = 0.5,
            const scalar weight2 = 0.5) : Reaction(name, rate, eductDistance, 0, 2, 1){
         super::_weight1 = weight1;
@@ -57,19 +57,19 @@ public:
         }
     }
 
-    const particle_type_type getFrom1() const {
+    const ParticleTypeId getFrom1() const {
         return _educts[0];
     }
 
-    const particle_type_type getFrom2() const {
+    const ParticleTypeId getFrom2() const {
         return _educts[1];
     }
 
-    const particle_type_type getTo() const {
+    const ParticleTypeId getTo() const {
         return _products[0];
     }
 
-    virtual const ReactionType type() const override {
+    const ReactionType type() const override {
         return ReactionType::Fusion;
     }
 

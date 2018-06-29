@@ -68,7 +68,7 @@ public:
 
 class TimeStepDependentAction : public Action {
 public:
-    explicit TimeStepDependentAction(scalar timeStep) : timeStep(timeStep) {}
+    explicit TimeStepDependentAction(scalar timeStep) : _timeStep(timeStep) {}
 
     TimeStepDependentAction(const TimeStepDependentAction&) = default;
     TimeStepDependentAction&operator=(const TimeStepDependentAction&) = default;
@@ -77,16 +77,11 @@ public:
 
     ~TimeStepDependentAction() override = default;
 
-    scalar getTimeStep() const {
-        return timeStep;
-    }
-
-    void setTimeStep(scalar timeStep) {
-        TimeStepDependentAction::timeStep = timeStep;
-    }
+    scalar &timeStep() { return _timeStep; }
+    const scalar &timeStep() const { return _timeStep; }
 
 protected:
-    scalar timeStep;
+    scalar _timeStep;
 };
 
 NAMESPACE_END(actions)

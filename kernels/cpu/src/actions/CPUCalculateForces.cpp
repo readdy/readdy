@@ -217,7 +217,7 @@ template<bool COMPUTE_VIRIAL>
 void CPUCalculateForces::calculate_order2(std::size_t, nl_bounds nlBounds,
                                           CPUStateModel::data_type *data, const CPUStateModel::neighbor_list &nl,
                                           std::promise<scalar> &energyPromise, std::promise<Matrix33> &virialPromise,
-                                          model::potentials::PotentialRegistry::potential_o2_registry pot2,
+                                          model::potentials::PotentialRegistry::PotentialsO2Map pot2,
                                           model::Context::BoxSize box, model::Context::PeriodicBoundaryConditions pbc) {
     scalar energyUpdate = 0.0;
     Matrix33 virialUpdate{{{0, 0, 0, 0, 0, 0, 0, 0, 0}}};
@@ -302,7 +302,7 @@ void CPUCalculateForces::calculate_topologies(std::size_t, top_bounds topBounds,
 
 void CPUCalculateForces::calculate_order1(std::size_t, data_bounds dataBounds,
                                           std::promise<scalar> &energyPromise, CPUStateModel::data_type *data,
-                                          model::potentials::PotentialRegistry::potential_o1_registry pot1) {
+                                          model::potentials::PotentialRegistry::PotentialsO1Map pot1) {
     scalar energyUpdate = 0.0;
 
     //

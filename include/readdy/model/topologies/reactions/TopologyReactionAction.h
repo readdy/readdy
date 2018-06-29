@@ -118,7 +118,7 @@ public:
      * @param v the vertex pointing to the particle whose type should be changed
      * @param type_to the target type
      */
-    ChangeParticleType(GraphTopology *topology, const vertex &v, const particle_type_type &type_to);
+    ChangeParticleType(GraphTopology *topology, const vertex &v, const ParticleTypeId &type_to);
 
 protected:
     /**
@@ -128,11 +128,11 @@ protected:
     /**
      * the target type
      */
-    particle_type_type type_to;
+    ParticleTypeId type_to;
     /**
      * the previous particle type, stored for undo
      */
-    particle_type_type previous_type;
+    ParticleTypeId previous_type;
 };
 
 class AddEdge : public TopologyReactionAction {
@@ -194,7 +194,7 @@ public:
      * @param topology this topology
      * @param newType the target type
      */
-    ChangeTopologyType(GraphTopology *topology, topology_type_type newType);
+    ChangeTopologyType(GraphTopology *topology, TopologyTypeId newType);
 
     /**
      * execute me
@@ -210,11 +210,11 @@ private:
     /**
      * the target type
      */
-    topology_type_type _newType;
+    TopologyTypeId _newType;
     /**
      * the previous type, stored for undo
      */
-    topology_type_type _prevType {0};
+    TopologyTypeId _prevType {0};
 };
 
 NAMESPACE_END(actions)

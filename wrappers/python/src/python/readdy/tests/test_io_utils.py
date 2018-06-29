@@ -49,18 +49,19 @@ class TestIOUtils(ReaDDyTestCase):
         cls.dir = tempfile.mkdtemp("test-config-io")
         cls.fname = os.path.join(cls.dir, "test_io_utils.h5")
 
-        sim = api.Simulation()
-        sim.set_kernel("CPU")
-        sim.register_particle_type("A", 1.)
-        sim.register_particle_type("B", 2.)
-        sim.register_particle_type("C", 3.)
-        sim.register_reaction_conversion("mylabel", "A", "B", .00001)
-        sim.register_reaction_conversion("A->B", "A", "B", 1.)
+        sim = api.Simulation("CPU")
+        sim.context.particle_types.add("A", 1.)
+        sim.context.particle_types.add("B", 2.)
+        sim.context.particle_types.add("C", 3.)
+        sim.context.reactions.add_conversion("mylabel", "A", "B", .00001)
+        sim.context.reactions.add_conversion("A->B", "A", "B", 1.)
         fusion_rate = 0.4
         educt_distance = 0.2
-        sim.register_reaction_fusion("B+C->A", "B", "C", "A", fusion_rate, educt_distance, .5, .5)
+        sim.context.reactions.add_fusion("B+C->A", "B", "C", "A", fusion_rate, educt_distance, .5, .5)
         with contextlib.closing(io.File.create(cls.fname)) as f:
-            sim.run_scheme_readdy(True).write_config_to_file(f).configure_and_run(1, 0.1)
+            loop = sim.create_loop(.1)
+            loop.write_config_to_file(f)
+            loop.run(1)
 
     @classmethod
     def tearDownClass(cls):

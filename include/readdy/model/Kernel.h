@@ -51,11 +51,6 @@
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 
-NAMESPACE_BEGIN(detail)
-template<typename T, typename... Args>
-struct get_reaction_dispatcher;
-NAMESPACE_END(detail)
-
 /**
  * Base class of kernels.
  * A Kernel is used to execute Actions, i.e., instances of readdy::model::actions::Action.
@@ -84,7 +79,7 @@ public:
      *
      * @return The name
      */
-    const std::string &getName() const override {
+    const std::string &name() const override {
         return _name;
     };
 
@@ -108,17 +103,6 @@ public:
     };
 
     /**
-     * Registers an observable to the kernel signal.
-     */
-    virtual std::tuple<std::unique_ptr<observables::ObservableWrapper>, readdy::signals::scoped_connection>
-    registerObservable(const observables::observable_type &observable, unsigned int stride) {
-        auto &&wrap = std::make_unique<observables::ObservableWrapper>(this, observable, stride);
-        auto &&connection = connectObservable(wrap.get());
-        return std::make_tuple(std::move(wrap), std::move(connection));
-    };
-
-
-    /**
      * Returns a vector containing all available program names for this specific kernel instance.
      *
      * @see createProgram(name)
@@ -132,13 +116,13 @@ public:
      * Adds a particle of the type "type" at position "pos".
      */
     readdy::model::Particle::id_type addParticle(const std::string &type, const Vec3 &pos) {
-        readdy::model::Particle particle {pos[0], pos[1], pos[2], context().particle_types().idOf(type)};
+        readdy::model::Particle particle {pos[0], pos[1], pos[2], context().particleTypes().idOf(type)};
         stateModel().addParticle(particle);
         return particle.getId();
     };
 
     TopologyParticle createTopologyParticle(const std::string &type, const Vec3 &pos) const {
-        const auto& info = context().particle_types().infoOf(type);
+        const auto& info = context().particleTypes().infoOf(type);
         if(info.flavor != particleflavor::TOPOLOGY) {
             throw std::invalid_argument("You can only create topology particles of a type that is topology flavored.");
         }
@@ -180,11 +164,8 @@ public:
     virtual readdy::model::top::TopologyActionFactory *const getTopologyActionFactory() = 0;
 
     virtual void initialize() {
-        context().configure();
         log::debug(context().describe());
     };
-
-    virtual void finalize() {};
 
     bool singlePrecision() const noexcept {
         return readdy::single_precision;

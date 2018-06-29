@@ -80,7 +80,7 @@ public:
         particleData.clear();
     }
 
-    readdy::model::top::GraphTopology *const addTopology(topology_type_type type, const std::vector<readdy::model::TopologyParticle> &particles) override;
+    readdy::model::top::GraphTopology *const addTopology(TopologyTypeId type, const std::vector<readdy::model::TopologyParticle> &particles) override;
 
     const std::vector<Vec3> getParticlePositions() const override;
 
@@ -88,7 +88,7 @@ public:
         return particleData.getParticle(index);
     }
 
-    particle_type_type getParticleType(std::size_t index) const override {
+    ParticleTypeId getParticleType(std::size_t index) const override {
         return getParticleData()->entry_at(index).type;
     }
 

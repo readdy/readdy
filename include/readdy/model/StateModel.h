@@ -61,7 +61,7 @@ public:
 
     virtual Particle getParticleForIndex(std::size_t index) const = 0;
 
-    virtual particle_type_type getParticleType(std::size_t index) const = 0;
+    virtual ParticleTypeId getParticleType(std::size_t index) const = 0;
 
     virtual void initializeNeighborList(scalar skin) = 0;
 
@@ -73,7 +73,7 @@ public:
 
     virtual void addParticles(const std::vector<Particle> &p) = 0;
 
-    virtual readdy::model::top::GraphTopology *const addTopology(topology_type_type type, const std::vector<TopologyParticle> &particles) = 0;
+    virtual readdy::model::top::GraphTopology *const addTopology(TopologyTypeId type, const std::vector<TopologyParticle> &particles) = 0;
 
     virtual std::vector<Particle> getParticlesForTopology(const top::GraphTopology &topology) const;
 

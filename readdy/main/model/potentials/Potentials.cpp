@@ -35,7 +35,36 @@ namespace readdy {
 namespace model {
 namespace potentials {
 
-short Potential::counter = 0;
+std::string PotentialRegistry::describe() const {
+    namespace rus = readdy::util::str;
+    auto find_pot_name = [this](ParticleTypeId type) -> const std::string {
+        for (auto &&t : _types.get().typeMapping()) {
+            if (t.second == type) return t.first;
+        }
+        return "";
+    };
+    std::string description;
+    if (!potentialsOrder1().empty()) {
+        description += fmt::format(" - potentials of order 1:{}", rus::newline);
+        for (const auto &types : potentialsOrder1()) {
+            description += fmt::format("     * for type \"{}\"{}", find_pot_name(types.first), rus::newline);
+            for (auto pot : types.second) {
+                description += fmt::format("         * {}{}", pot->describe(), rus::newline);
+            }
+        }
+    }
+    if (!potentialsOrder2().empty()) {
+        description += fmt::format(" - potentials of order 2:{}", rus::newline);
+        for (const auto &types : potentialsOrder2()) {
+            description += fmt::format(R"(     * for types "{}" and "{}"{})", find_pot_name(std::get<0>(types.first)),
+                                       find_pot_name(std::get<1>(types.first)), rus::newline);
+            for (auto pot : types.second) {
+                description += fmt::format("         * {}{}", pot->describe(), rus::newline);
+            }
+        }
+    }
+    return description;
+}
 
 /////////////////////////////////////////////////////////////////////////////
 //

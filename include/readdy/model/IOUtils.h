@@ -49,14 +49,14 @@ NAMESPACE_BEGIN(ioutils)
 struct ReactionInfo {
     const char* name {""};
     // std::size_t index {0}; // identify reaction in map of vectors, e.g. for reaction records
-    reactions::Reaction::reaction_id id {0}; // global unique reaction id
+    reactions::Reaction::ReactionId id {0}; // global unique reaction id
     std::size_t n_educts {0};
     std::size_t n_products {0};
     scalar rate {0};
     scalar educt_distance {0};
     scalar product_distance {0};
-    std::array<particle_type_type, 2> educt_types {{0, 0}};
-    std::array<particle_type_type, 2> product_types {{0, 0}};
+    std::array<ParticleTypeId, 2> educt_types {{0, 0}};
+    std::array<ParticleTypeId, 2> product_types {{0, 0}};
 };
 struct ParticleTypeInfo {
     const char* name;

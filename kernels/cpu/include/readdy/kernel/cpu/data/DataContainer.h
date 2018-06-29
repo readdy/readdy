@@ -252,7 +252,7 @@ struct Entry {
     explicit Entry(const Particle &particle)
             : pos(particle.getPos()), force(), type(particle.getType()), deactivated(false), id(particle.getId()) {}
 
-    Entry(Particle::pos_type pos, particle_type_type type, Particle::id_type id)
+    Entry(Particle::pos_type pos, ParticleTypeId type, Particle::id_type id)
             : pos(pos), type(type), id(id), deactivated(false) {}
 
     Entry(const Entry &) = default;

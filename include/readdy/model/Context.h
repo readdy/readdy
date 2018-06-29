@@ -104,25 +104,10 @@ public:
 
     const scalar calculateMaxCutoff() const;
 
-    compartments::CompartmentRegistry &compartments() {
-        return _compartmentRegistry;
-    }
-
-    const compartments::CompartmentRegistry &compartments() const {
-        return _compartmentRegistry;
-    }
-
     /**
-     * Method for sanity checking at least some parts of the configuration. It should only be called after configure().
+     * Method for sanity checking some parts of the configuration.
      */
     void validate() const;
-
-    /**
-     * Copy the reactions and potentials of the internal and external registries into the actual registries, which
-     * is used during the run of the simulation. This step is necessary before the simulation can start. Otherwise the
-     * registered reactions and potentials will not take effect.
-     */
-    void configure();
 
     /**
      * Construct a string that describes the context, i.e. particle types, reactions, potentials and topologies.
@@ -173,11 +158,19 @@ public:
         return _recordVirial;
     }
 
-    top::TopologyRegistry &topology_registry() {
+    compartments::CompartmentRegistry &compartments() {
+        return _compartmentRegistry;
+    }
+
+    const compartments::CompartmentRegistry &compartments() const {
+        return _compartmentRegistry;
+    }
+
+    top::TopologyRegistry &topologyRegistry() {
         return _topologyRegistry;
     }
 
-    const top::TopologyRegistry &topology_registry() const {
+    const top::TopologyRegistry &topologyRegistry() const {
         return _topologyRegistry;
     }
 
@@ -189,11 +182,11 @@ public:
         return _reactionRegistry;
     }
 
-    ParticleTypeRegistry &particle_types() {
+    ParticleTypeRegistry &particleTypes() {
         return _particleTypeRegistry;
     }
 
-    const ParticleTypeRegistry &particle_types() const {
+    const ParticleTypeRegistry &particleTypes() const {
         return _particleTypeRegistry;
     }
 

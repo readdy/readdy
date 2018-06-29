@@ -49,15 +49,6 @@ Context::Context()
           _kernelConfiguration{} {
 }
 
-void Context::configure() {
-    _particleTypeRegistry.configure();
-    _potentialRegistry.configure();
-    _reactionRegistry.configure();
-    _topologyRegistry.configure();
-
-    validate();
-}
-
 void Context::setKernelConfiguration(const std::string &s) {
     _kernelConfiguration = nlohmann::json::parse(s);
 }
@@ -86,7 +77,7 @@ void Context::validate() const {
                                     periodicBoundaryConditions().end(), true, std::logical_and<>());
     if(!periodic) {
         // check if there are box potentials for each particle type and that these box potentials are valid
-        for(const auto &entry : particle_types().typeMapping()) {
+        for(const auto &entry : particleTypes().typeMapping()) {
             auto ptype = entry.second;
             auto potIt = potentials().potentialsOrder1().find(ptype);
             bool valid = true;
@@ -111,7 +102,6 @@ void Context::validate() const {
 
 std::string Context::describe() {
     namespace rus = readdy::util::str;
-    configure();
     std::string description;
     description += fmt::format("Configured kernel context with:{}", rus::newline);
     description += fmt::format("--------------------------------{}", rus::newline);

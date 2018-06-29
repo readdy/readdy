@@ -57,10 +57,6 @@ SCPUUpdateNeighborList::SCPUUpdateNeighborList(SCPUKernel *const kernel, core_ac
         : UpdateNeighborList(op, skinSize), kernel(kernel){
 }
 
-bool SCPUUpdateNeighborList::supportsSkin() const {
-    return true;
-}
-
 }
 }
 }

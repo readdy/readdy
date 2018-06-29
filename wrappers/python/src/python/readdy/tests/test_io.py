@@ -49,11 +49,10 @@ class TestSchemeApi(ReaDDyTestCase):
 
     def test_write_trajectory(self):
         traj_fname = os.path.join(self.dir, "traj.h5")
-        simulation = Simulation()
-        simulation.set_kernel("SingleCPU")
-        simulation.box_size = common.Vec(5,5,5)
-        simulation.register_particle_type("A", 0.0)
-        simulation.register_reaction_conversion("A->A", "A", "A", 1.)
+        simulation = Simulation("SingleCPU")
+        simulation.context.box_size = [5., 5., 5.]
+        simulation.context.particle_types.add("A", 0.0)
+        simulation.context.reactions.add_conversion("A->A", "A", "A", 1.)
 
         def callback(_):
             simulation.add_particle("A", common.Vec(0, 0, 0))
@@ -62,7 +61,9 @@ class TestSchemeApi(ReaDDyTestCase):
         traj_handle = simulation.register_observable_trajectory(0)
         with closing(io.File.create(traj_fname, io.FileFlag.OVERWRITE)) as f:
             traj_handle.enable_write_to_file(f, u"", 3)
-            simulation.run_scheme_readdy(True).write_config_to_file(f).configure(1).run(20)
+            loop = simulation.create_loop(1.)
+            loop.write_config_to_file(f)
+            loop.run(20)
 
         r = TrajectoryReader(traj_fname)
         trajectory_items = r[:]
@@ -76,22 +77,19 @@ class TestSchemeApi(ReaDDyTestCase):
             np.testing.assert_equal("A", f["readdy/config/particle_types"][0]["name"])
 
     def test_write_flat_trajectory(self):
-        traj_fname = os.path.join(self.dir, "flat_traj.h5")
-        simulation = Simulation()
-        simulation.set_kernel("SingleCPU")
-        simulation.box_size = common.Vec(5,5,5)
-        simulation.register_particle_type("A", 0.0)
+        import readdy
+        rds = readdy.ReactionDiffusionSystem([5, 5, 5])
+        rds.add_species("A", 0.)
+        simulation = rds.simulation()
+        simulation.output_file = os.path.join(self.dir, "flat_traj.h5")
 
         def callback(_):
             simulation.add_particle("A", common.Vec(0, 0, 0))
+        simulation.observe.number_of_particles(1, ["A"], callback=callback)
+        simulation.record_trajectory(1)
+        simulation.run(20, 1, show_system=False)
 
-        simulation.register_observable_n_particles(1, ["A"], callback)
-        traj_handle = simulation.register_observable_flat_trajectory(1)
-        with closing(io.File.create(traj_fname, io.FileFlag.OVERWRITE)) as f:
-            traj_handle.enable_write_to_file(f, u"", int(3))
-            simulation.run_scheme_readdy(True).configure(1).run(20)
-
-        r = TrajectoryReader(traj_fname)
+        r = TrajectoryReader(simulation.output_file)
         trajectory_items = r[:]
         for idx, items in enumerate(trajectory_items):
             np.testing.assert_equal(len(items), idx+1)
@@ -101,10 +99,9 @@ class TestSchemeApi(ReaDDyTestCase):
 
     def test_write_trajectory_as_observable(self):
         traj_fname = os.path.join(self.dir, "traj_as_obs.h5")
-        simulation = Simulation()
-        simulation.set_kernel("SingleCPU")
-        simulation.box_size = common.Vec(5,5,5)
-        simulation.register_particle_type("A", 0.0)
+        simulation = Simulation("SingleCPU")
+        simulation.context.box_size = [5., 5., 5.]
+        simulation.context.particle_types.add("A", 0.0)
 
         def callback(_):
             simulation.add_particle("A", common.Vec(0, 0, 0))
@@ -114,7 +111,7 @@ class TestSchemeApi(ReaDDyTestCase):
 
         with closing(io.File.create(traj_fname, io.FileFlag.OVERWRITE)) as f:
             traj_handle.enable_write_to_file(f, u"", int(3))
-            simulation.run_scheme_readdy(True).configure(1).run(20)
+            simulation.run(20, 1)
 
         r = TrajectoryReader(traj_fname)
         trajectory_items = r[:]

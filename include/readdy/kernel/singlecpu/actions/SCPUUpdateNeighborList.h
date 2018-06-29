@@ -45,8 +45,6 @@ public:
 
     void perform(const util::PerformanceNode &node) override;
 
-    bool supportsSkin() const override;
-
 private:
     SCPUKernel *const kernel;
 };

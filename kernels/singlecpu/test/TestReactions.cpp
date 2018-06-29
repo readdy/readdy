@@ -38,7 +38,7 @@ TEST(SingleCPUTestReactions, TestDecay) {
     using particle_t = readdy::model::Particle;
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
     kernel->context().boxSize() = {{10, 10, 10}};
-    kernel->context().particle_types().add("X", .25);
+    kernel->context().particleTypes().add("X", .25);
     kernel->context().reactions().addDecay("X decay", "X", 1e16);
     kernel->context().reactions().addFission("X fission", "X", "X", "X", .5, .3);
 
@@ -51,16 +51,15 @@ TEST(SingleCPUTestReactions, TestDecay) {
     auto &&reactions = kernel->actions().uncontrolledApproximation(timeStep);
 
     auto pp_obs = kernel->observe().positions(1);
-    pp_obs->setCallback([](const readdy::model::observables::Positions::result_type &t) {
+    pp_obs->callback() = [](const readdy::model::observables::Positions::result_type &t) {
         readdy::log::trace("got n particles={}", t.size());
-    });
+    };
     auto connection = kernel->connectObservable(pp_obs.get());
 
     const int n_particles = 200;
-    const auto typeId = kernel->context().particle_types().idOf("X");
+    const auto typeId = kernel->context().particleTypes().idOf("X");
     std::vector<readdy::model::Particle> particlesToBeginWith{n_particles, {0, 0, 0, typeId}};
     kernel->stateModel().addParticles(particlesToBeginWith);
-    kernel->context().configure();
     initNeighborList->perform();
     for (size_t t = 0; t < 20; t++) {
 
@@ -109,11 +108,11 @@ TEST(SingleCPUTestReactions, TestMultipleReactionTypes) {
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
     kernel->context().boxSize() = {{10, 10, 10}};
 
-    kernel->context().particle_types().add("A", .25);
-    kernel->context().particle_types().add("B", .25);
-    kernel->context().particle_types().add("C", .25);
-    kernel->context().particle_types().add("D", .25);
-    kernel->context().particle_types().add("E", .25);
+    kernel->context().particleTypes().add("A", .25);
+    kernel->context().particleTypes().add("B", .25);
+    kernel->context().particleTypes().add("C", .25);
+    kernel->context().particleTypes().add("D", .25);
+    kernel->context().particleTypes().add("E", .25);
 
     kernel->context().reactions().addDecay("A decay", "A", 1e16);
     kernel->context().reactions().addFusion("B+C->E", "B", "C", "E", 1e16, 17);
@@ -126,11 +125,11 @@ TEST(SingleCPUTestReactions, TestMultipleReactionTypes) {
     auto &&neighborList = kernel->actions().updateNeighborList();
     auto &&reactions = kernel->actions().uncontrolledApproximation(1);
 
-    const auto typeId_A = kernel->context().particle_types().idOf("A");
-    const auto typeId_B = kernel->context().particle_types().idOf("B");
-    const auto typeId_C = kernel->context().particle_types().idOf("C");
-    const auto typeId_D = kernel->context().particle_types().idOf("D");
-    const auto typeId_E = kernel->context().particle_types().idOf("E");
+    const auto typeId_A = kernel->context().particleTypes().idOf("A");
+    const auto typeId_B = kernel->context().particleTypes().idOf("B");
+    const auto typeId_C = kernel->context().particleTypes().idOf("C");
+    const auto typeId_D = kernel->context().particleTypes().idOf("D");
+    const auto typeId_E = kernel->context().particleTypes().idOf("E");
 
     kernel->stateModel().addParticle({4, 4, 4, typeId_A});
     kernel->stateModel().addParticle({-2, 0, 0, typeId_B});
@@ -141,8 +140,6 @@ TEST(SingleCPUTestReactions, TestMultipleReactionTypes) {
     auto pred_contains_C = [=](const readdy::model::Particle &p) { return p.getType() == typeId_C; };
     auto pred_contains_D = [=](const readdy::model::Particle &p) { return p.getType() == typeId_D; };
     auto pred_contains_E = [=](const readdy::model::Particle &p) { return p.getType() == typeId_E; };
-
-    kernel->context().configure();
 
     for (unsigned int t = 0; t < 4; t++) {
 

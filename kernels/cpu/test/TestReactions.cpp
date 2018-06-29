@@ -71,9 +71,9 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
     auto kernel = std::make_unique<readdy::kernel::cpu::CPUKernel>();
     kernel->context().periodicBoundaryConditions() = {{false, false, false}};
     kernel->context().boxSize() = {{100, 100, 100}};
-    kernel->context().particle_types().add("A", .1); // type id 0
-    kernel->context().particle_types().add("B", .1); // type id 1
-    kernel->context().particle_types().add("C", .1); // type id 2
+    kernel->context().particleTypes().add("A", .1); // type id 0
+    kernel->context().particleTypes().add("B", .1); // type id 1
+    kernel->context().particleTypes().add("C", .1); // type id 2
 
     // test conversion
     {
@@ -218,7 +218,7 @@ TEST(CPUTestReactions, TestDecay) {
     using particle_t = readdy::model::Particle;
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
     kernel->context().boxSize() = {{10, 10, 10}};
-    kernel->context().particle_types().add("X", .25);
+    kernel->context().particleTypes().add("X", .25);
     kernel->context().reactions().addDecay("X decay", "X", 1e16);
     kernel->context().reactions().addFission("X fission", "X", "X", "X", .5, .3);
 
@@ -228,16 +228,15 @@ TEST(CPUTestReactions, TestDecay) {
     auto &&reactions = kernel->actions().gillespie(1);
 
     auto pp_obs = kernel->observe().positions(1);
-    pp_obs->setCallback([](const readdy::model::observables::Positions::result_type &t) {
+    pp_obs->callback() = ([](const readdy::model::observables::Positions::result_type &t) {
         /* ignore */
     });
     auto connection = kernel->connectObservable(pp_obs.get());
 
     const int n_particles = 200;
-    const auto typeId = kernel->context().particle_types().idOf("X");
+    const auto typeId = kernel->context().particleTypes().idOf("X");
     std::vector<readdy::model::Particle> particlesToBeginWith{n_particles, {0, 0, 0, typeId}};
     kernel->stateModel().addParticles(particlesToBeginWith);
-    kernel->context().configure();
     neighborList->perform();
     for (size_t t = 0; t < 20; t++) {
 
@@ -271,9 +270,9 @@ TEST(CPUTestReactions, TestGillespieParallel) {
     kernel->context().boxSize() = {{10, 10, 30}};
     kernel->context().periodicBoundaryConditions() = {{true, true, false}};
 
-    kernel->context().particle_types().add("A", .25);
-    kernel->context().particle_types().add("B", .25);
-    kernel->context().particle_types().add("C", .25);
+    kernel->context().particleTypes().add("A", .25);
+    kernel->context().particleTypes().add("B", .25);
+    kernel->context().particleTypes().add("C", .25);
     kernel->context().potentials().addBox("A", .0001, {-4.9, -4.9, -14.9}, {9.8, 9.8, 29.8});
     kernel->context().potentials().addBox("B", .0001, {-4.9, -4.9, -14.9}, {9.8, 9.8, 29.8});
     kernel->context().potentials().addBox("C", .0001, {-4.9, -4.9, -14.9}, {9.8, 9.8, 29.8});
@@ -282,9 +281,9 @@ TEST(CPUTestReactions, TestGillespieParallel) {
     kernel->context().reactions().addFusion("very unlikely", "A", "C", "A", std::numeric_limits<readdy::scalar>::min(), reactionRadius);
     kernel->context().reactions().addFusion("dummy reaction", "A", "B", "A", 0.0, reactionRadius);
 
-    const auto typeA = kernel->context().particle_types().idOf("A");
-    const auto typeB = kernel->context().particle_types().idOf("B");
-    const auto typeC = kernel->context().particle_types().idOf("C");
+    const auto typeA = kernel->context().particleTypes().idOf("A");
+    const auto typeB = kernel->context().particleTypes().idOf("B");
+    const auto typeC = kernel->context().particleTypes().idOf("C");
 
     // this particle goes right into the middle, i.e., into the halo region
     kernel->stateModel().addParticle({0, 0, 0, typeA});            // 0
@@ -303,7 +302,6 @@ TEST(CPUTestReactions, TestGillespieParallel) {
     kernel->stateModel().addParticle({0, 0, static_cast<scalar>(5), typeA});            // 9
     kernel->stateModel().addParticle({0, 0, static_cast<scalar>(5.5), typeA});          // 10
 
-    kernel->context().configure();
     // a box width in z direction of 12 should divide into two boxes of 5x5x6
     {
         fix_n_threads n_threads{kernel.get(), 2};

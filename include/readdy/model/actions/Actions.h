@@ -64,7 +64,6 @@ class AddParticles : public Action {
 
 public:
     AddParticles(Kernel *kernel, const std::vector<Particle> &particles);
-    AddParticles(Kernel *kernel, const Particle& particle);
 
     void perform(const util::PerformanceNode &node) override;
 
@@ -91,12 +90,13 @@ public:
 
     explicit UpdateNeighborList(Operation operation = Operation::init, scalar skinSize = 0);
 
-    virtual bool supportsSkin() const = 0;
+    scalar &skin() { return skinSize; }
 
+    const scalar &skin() const { return skinSize; }
 
 protected:
-    const Operation operation;
-    const scalar skinSize;
+    Operation operation;
+    scalar skinSize;
 };
 
 NAMESPACE_BEGIN(reactions)
@@ -104,22 +104,7 @@ NAMESPACE_BEGIN(reactions)
 class UncontrolledApproximation : public TimeStepDependentAction {
 
 public:
-    using reaction_11 = std::function<model::Particle(const model::Particle &)>;
-    using reaction_12 = std::function<void(const model::Particle &, model::Particle &, model::Particle &)>;
-    using reaction_21 = std::function<model::Particle(const model::Particle &, const model::Particle &)>;
-    using reaction_22 = std::function<void(const model::Particle &, const model::Particle &, model::Particle &,
-                                           model::Particle &)>;
-
     explicit UncontrolledApproximation(scalar timeStep);
-
-    virtual void registerReactionScheme_11(const std::string &reactionName, reaction_11 fun) = 0;
-
-    virtual void registerReactionScheme_12(const std::string &reactionName, reaction_12 fun) = 0;
-
-    virtual void registerReactionScheme_21(const std::string &reactionName, reaction_21 fun) = 0;
-
-    virtual void registerReactionScheme_22(const std::string &reactionName, reaction_22 fun) = 0;
-
 };
 
 class Gillespie : public TimeStepDependentAction {
@@ -135,16 +120,16 @@ public:
     const std::vector<std::shared_ptr<const ReversibleReactionConfig>> &reversibleReactions() const {
         return _reversibleReactionsContainer;
     }
-    
+
     std::string describe() const;
 
 protected:
-    void searchReversibleReactions(const Context& ctx);
+    void searchReversibleReactions(const Context &ctx);
 
     std::vector<std::shared_ptr<const ReversibleReactionConfig>> _reversibleReactionsContainer;
     // the map provides a view on the container for quick runtime lookup,
     // usually two (unidirectional) reaction ids point to the same ReversibleReactionConfig
-    std::unordered_map<model::reactions::Reaction::reaction_id, std::shared_ptr<const ReversibleReactionConfig>>
+    std::unordered_map<model::reactions::Reaction::ReactionId, std::shared_ptr<const ReversibleReactionConfig>>
             _reversibleReactionsMap;
 };
 
@@ -196,12 +181,14 @@ const std::string getActionName(typename std::enable_if<std::is_base_of<reaction
 }
 
 template<typename T>
-const std::string getActionName(typename std::enable_if<std::is_base_of<reactions::DetailedBalance, T>::value>::type * = 0) {
+const std::string
+getActionName(typename std::enable_if<std::is_base_of<reactions::DetailedBalance, T>::value>::type * = 0) {
     return "DetailedBalance";
 }
 
 template<typename T>
-const std::string getActionName(typename std::enable_if<std::is_base_of<top::EvaluateTopologyReactions, T>::value>::type * = 0) {
+const std::string
+getActionName(typename std::enable_if<std::is_base_of<top::EvaluateTopologyReactions, T>::value>::type * = 0) {
     return "EvaluateTopologyReactions";
 }
 

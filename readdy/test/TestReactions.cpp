@@ -30,7 +30,7 @@
  */
 
 #include <readdy/plugin/KernelProvider.h>
-#include <readdy/api/SimulationScheme.h>
+#include <readdy/api/SimulationLoop.h>
 #include <readdy/testing/KernelTest.h>
 #include <readdy/testing/Utils.h>
 
@@ -59,9 +59,9 @@ TEST_P(TestReactions, TestConstantNumberOfParticleType) {
         return static_cast <readdy::scalar> (std::rand()) / (RAND_MAX / (upper - lower)) + lower;
     };
 
-    kernel->context().particle_types().add("A", 1.0);
-    kernel->context().particle_types().add("B", 1.0);
-    kernel->context().particle_types().add("AB", 0.0);
+    kernel->context().particleTypes().add("A", 1.0);
+    kernel->context().particleTypes().add("B", 1.0);
+    kernel->context().particleTypes().add("AB", 0.0);
     kernel->context().periodicBoundaryConditions() = {{true, true, true}};
     kernel->context().boxSize() = {{5, 5, 5}};
     kernel->context().reactions().addFusion("Form complex", "A", "B", "AB", .5, 1.0);
@@ -78,7 +78,7 @@ TEST_P(TestReactions, TestConstantNumberOfParticleType) {
 
     auto obs = kernel->observe().nParticles(1, std::vector<std::string>({"A", "B", "AB"}));
     auto conn = kernel->connectObservable(obs.get());
-    obs->setCallback([&n_A, &n_B](const n_particles_obs::result_type &result) {
+    obs->callback() = [&n_A, &n_B](const n_particles_obs::result_type &result) {
         if (result.size() == 2) {
             EXPECT_EQ(n_A, result[0] + result[2])
                                 << "Expected #(A)+#(AB)==" << n_A << ", but #(A)=" << result[0] << ", #(AB)="
@@ -87,13 +87,11 @@ TEST_P(TestReactions, TestConstantNumberOfParticleType) {
                                 << "Expected #(B)+#(AB)==" << n_B << ", but #(B)=" << result[1] << ", #(AB)="
                                 << result[2];
         }
-    });
+    };
 
     {
         readdy::util::PerformanceNode pn("", false);
-        auto conf = readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>(kernel.get(), pn);
-        const auto progs = kernel->getAvailableActions();
-        conf.configureAndRun(10, 1);
+        readdy::api::SimulationLoop(kernel.get(), 1, pn).run(10);
     }
 
 }
@@ -111,11 +109,10 @@ TEST_P(TestReactions, FusionFissionWeights) {
      * Idea: position F particles and remember their positions (ordered set), do ONE time-step and check if current positions are still the same.
      */
     auto &context = kernel->context();
-    context.particle_types().add("A", 0.5);
-    context.particle_types().add("F", 0.0);
+    context.particleTypes().add("A", 0.5);
+    context.particleTypes().add("F", 0.0);
     context.periodicBoundaryConditions() = {{true, true, true}};
     context.boxSize() = {{20, 20, 20}};
-    context.configure();
 
     const readdy::scalar weightF {static_cast<readdy::scalar>(0)};
     const readdy::scalar weightA  {static_cast<readdy::scalar>(1.)};
@@ -133,7 +130,7 @@ TEST_P(TestReactions, FusionFissionWeights) {
     }
 
     auto obs = kernel->observe().positions(1, std::vector<std::string>({"F"}));
-    obs->setCallback(
+    obs->callback() =
             [&fPositions, this](const readdy::model::observables::Positions::result_type &result) {
                 std::set<readdy::Vec3, Vec3ProjectedLess> checklist;
                 for (const auto &pos : result) {
@@ -148,31 +145,30 @@ TEST_P(TestReactions, FusionFissionWeights) {
                     ++itCheck;
                 }
             }
-    );
+    ;
     auto connection = kernel->connectObservable(obs.get());
 
     {
         readdy::util::PerformanceNode pn("", false);
-        readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>(kernel.get(), pn).configureAndRun(1, .5);
+        readdy::api::SimulationLoop(kernel.get(), .1, pn).run(1);
     }
 }
 
 TEST_P(TestReactionsWithHandler, FusionThroughBoundary) {
-    if (kernel->getName() == "CPU" and reactionHandlerName == "DetailedBalance") {
+    if (kernel->name() == "CPU" and reactionHandlerName == "DetailedBalance") {
         // @todo implement for CPU as well
     } else {
         auto &ctx = kernel->context();
         ctx.boxSize() = {{10, 10, 10}};
         ctx.periodicBoundaryConditions() = {true, true, true};
-        ctx.particle_types().add("A", 0.);
+        ctx.particleTypes().add("A", 0.);
         ctx.reactions().add("fus: A +(2) A -> A", 1e16);
 
         auto &&reactions = kernel->actions().createReactionScheduler(reactionHandlerName, 1);
         auto &&neighborList = kernel->actions().updateNeighborList();
         // resulting particle should be at 4.9
-        kernel->stateModel().addParticle({4.5, 4.5, 4.5, ctx.particle_types().idOf("A")});
-        kernel->stateModel().addParticle({-4.7, -4.7, -4.7, ctx.particle_types().idOf("A")});
-        kernel->context().configure();
+        kernel->stateModel().addParticle({4.5, 4.5, 4.5, ctx.particleTypes().idOf("A")});
+        kernel->stateModel().addParticle({-4.7, -4.7, -4.7, ctx.particleTypes().idOf("A")});
         neighborList->perform();
         reactions->perform();
 
@@ -186,20 +182,19 @@ TEST_P(TestReactionsWithHandler, FusionThroughBoundary) {
 }
 
 TEST_P(TestReactionsWithHandler, FissionNearBoundary) {
-    if (kernel->getName() == "CPU" and reactionHandlerName == "DetailedBalance") {
+    if (kernel->name() == "CPU" and reactionHandlerName == "DetailedBalance") {
         // @todo implement for CPU as well
     } else {
         auto &ctx = kernel->context();
         ctx.boxSize() = {{10, 10, 10}};
         ctx.periodicBoundaryConditions() = {true, true, true};
-        ctx.particle_types().add("A", 0.);
+        ctx.particleTypes().add("A", 0.);
         ctx.reactions().add("fis: A -> A +(2) A", 1e16);
 
         auto &&reactions = kernel->actions().createReactionScheduler(reactionHandlerName, 1);
         auto &&neighborList = kernel->actions().updateNeighborList();
         // one product will be in negative-x halfspace, the other in positive-x halfspace
-        kernel->stateModel().addParticle({-4.9999999, 0, 0, ctx.particle_types().idOf("A")});
-        kernel->context().configure();
+        kernel->stateModel().addParticle({-4.9999999, 0, 0, ctx.particleTypes().idOf("A")});
         neighborList->perform();
         reactions->perform();
 

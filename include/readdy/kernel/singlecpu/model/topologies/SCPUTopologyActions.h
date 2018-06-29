@@ -146,7 +146,7 @@ class SCPUChangeParticleType : public readdy::model::top::reactions::actions::Ch
     SCPUParticleData *const data;
 public:
     SCPUChangeParticleType(SCPUParticleData *const data, top::GraphTopology *const topology, const vertex &v,
-                           const particle_type_type &type_to) : ChangeParticleType(topology, v, type_to), data(data) {}
+                           const ParticleTypeId &type_to) : ChangeParticleType(topology, v, type_to), data(data) {}
 
     void execute() override {
         const auto idx = topology->getParticles().at(_vertex->particleIndex);

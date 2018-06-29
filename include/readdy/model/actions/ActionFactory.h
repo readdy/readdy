@@ -50,37 +50,35 @@ public:
                 getActionName<AddParticles>(), getActionName<EulerBDIntegrator>(), getActionName<CalculateForces>(),
                 getActionName<UpdateNeighborList>(), getActionName<reactions::UncontrolledApproximation>(),
                 getActionName<reactions::Gillespie>(), getActionName<reactions::DetailedBalance>(),
-                /*getActionName<reactions::GillespieParallel>(),*/
-                /*getActionName<reactions::NextSubvolumes>(),*/ getActionName<top::EvaluateTopologyReactions>()
+                getActionName<top::EvaluateTopologyReactions>()
         };
     }
 
     /*
      * Convenience stuff
      */
-    std::unique_ptr<TimeStepDependentAction> createIntegrator(const std::string& name, scalar timeStep) {
-        if(name == getActionName<EulerBDIntegrator>()) {
+    std::unique_ptr<TimeStepDependentAction> createIntegrator(const std::string &name, scalar timeStep) {
+        if (name == getActionName<EulerBDIntegrator>()) {
             return std::unique_ptr<TimeStepDependentAction>(eulerBDIntegrator(timeStep));
         }
-        log::critical("Requested integrator \"{}\" is not available, returning nullptr", name);
-        return nullptr;
+        throw std::invalid_argument("Requested integrator " + name + " is not available.");
     }
 
-    std::unique_ptr<TimeStepDependentAction> createReactionScheduler(const std::string& name, scalar timeStep) {
-        if(name == getActionName<reactions::Gillespie>()) {
+    std::unique_ptr<TimeStepDependentAction> createReactionScheduler(const std::string &name, scalar timeStep) {
+        if (name == getActionName<reactions::Gillespie>()) {
             return std::unique_ptr<TimeStepDependentAction>(gillespie(timeStep));
         }
-        if(name == getActionName<reactions::UncontrolledApproximation>()) {
+        if (name == getActionName<reactions::UncontrolledApproximation>()) {
             return std::unique_ptr<TimeStepDependentAction>(uncontrolledApproximation(timeStep));
         }
-        if(name==getActionName<reactions::DetailedBalance>()) {
+        if (name == getActionName<reactions::DetailedBalance>()) {
             return std::unique_ptr<TimeStepDependentAction>(detailedBalance(timeStep));
         }
-        log::critical("Requested reaction scheduler \"{}\" is not available, returning nullptr", name);
-        return nullptr;
+        throw std::invalid_argument("Requested reaction scheduler " + name + " is not available.");
     }
 
     virtual std::unique_ptr<AddParticles> addParticles(const std::vector<Particle> &particles) const = 0;
+
     std::unique_ptr<AddParticles> addParticles(const Particle &particle) const {
         return addParticles(std::vector<Particle>{particle});
     }
@@ -95,6 +93,7 @@ public:
     std::unique_ptr<UpdateNeighborList> updateNeighborList(UpdateNeighborList::Operation op) const {
         return updateNeighborList(op, 0);
     };
+
     std::unique_ptr<UpdateNeighborList> updateNeighborList() const {
         return updateNeighborList(UpdateNeighborList::Operation::init, 0);
     };

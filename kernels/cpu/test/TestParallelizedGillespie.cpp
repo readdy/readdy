@@ -37,12 +37,11 @@ namespace {
 TEST(TestParallelGillespie, Sanity) {
     readdy::kernel::cpu::CPUKernel kernel;
     kernel.context().boxSize() = {{10, 10, 11}};
-    kernel.context().particle_types().add("A", 10.0);
+    kernel.context().particleTypes().add("A", 10.0);
     kernel.context().reactions().addFusion("Fusion", "A", "A", "A", 10, 1.0);
     kernel.addParticle("A", {-5, .2, -5.5});
     kernel.addParticle("A", {-5, .2, 5.5});
     kernel.addParticle("A", {-5, .2, 0});
-    kernel.context().configure();
     kernel.initialize();
     kernel.getCPUKernelStateModel().initializeNeighborList(0.);
 

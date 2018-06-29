@@ -245,7 +245,7 @@ public:
      * @param kernel the kernel
      * @return a vector of child topologies if they were created in the process
      */
-    std::vector<GraphTopology> execute(GraphTopology &topology, const Kernel *const kernel) const;
+    std::vector<GraphTopology> execute(GraphTopology &topology, const Kernel * kernel) const;
 
 private:
     /**

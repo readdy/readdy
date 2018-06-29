@@ -48,7 +48,7 @@ TEST(Kernel, LoadingNonexistingPlugin) {
 TEST(Kernel, LoadingExistingPlugin) {
     plug::KernelProvider::getInstance().add("bar", [] { return new readdy::testing::KernelMock("bar"); });
     auto kk_ptr = plug::KernelProvider::getInstance().create("bar");
-    EXPECT_STREQ("bar", kk_ptr.get()->getName().c_str());
+    EXPECT_STREQ("bar", kk_ptr.get()->name().c_str());
 }
 
 TEST(KernelProvider, SanityCheckDefaultDirectory) {
@@ -77,7 +77,7 @@ TEST(KernelProvider, TestLoadPluginsFromDirectory) {
 
 TEST(KernelProvider, TestFoo) {
     auto k = plug::KernelProvider::getInstance().create("SingleCPU");
-    auto name = k.get()->getName();
+    auto name = k.get()->name();
     readdy::log::debug("foo name: {}", name);
 }
 

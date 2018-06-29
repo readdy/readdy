@@ -43,17 +43,16 @@ TEST(TestNeighborListIterator, BoxIterator) {
     kernel::cpu::data::DefaultDataContainer data (context, pool);
     kernel::cpu::nl::CompactCellLinkedList ccll(data, context, pool);
 
-    context.particle_types().add("A", 1.0);
+    context.particleTypes().add("A", 1.0);
     context.reactions().addFusion("fusion", "A", "A", "A", 1.0, 1.0);
     context.boxSize() = {5., 5., 5.};
-    context.configure();
 
     std::size_t n = 5;
 
     {
         std::vector<model::Particle> particles;
         for(auto i = 0; i < n; ++i) {
-            particles.emplace_back(0, 0, 0, context.particle_types().idOf("A"));
+            particles.emplace_back(0, 0, 0, context.particleTypes().idOf("A"));
         }
         data.addParticles(particles);
     }
@@ -97,10 +96,9 @@ TEST(TestNeighborListIterator, BoxIteratorEmptyBox) {
     kernel::cpu::data::DefaultDataContainer data (context, pool);
     kernel::cpu::nl::CompactCellLinkedList ccll(data, context, pool);
 
-    context.particle_types().add("A", 1.0);
+    context.particleTypes().add("A", 1.0);
     context.reactions().addFusion("fusion", "A", "A", "A", 1.0, 1.0);
     context.boxSize() = {5., 5., 5.};
-    context.configure();
 
     ccll.setUp(0, 1, {});
     ccll.update({});

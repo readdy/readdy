@@ -44,7 +44,7 @@ class Compartment {
 public:
     using id_type = short;
     using label_conversion_map = std::unordered_map<std::string, std::string>;
-    using conversion_map = std::unordered_map<particle_type_type, particle_type_type>;
+    using conversion_map = std::unordered_map<ParticleTypeId, ParticleTypeId>;
 
     Compartment(conversion_map conversions, std::string typeName,
                 std::string uniqueName)

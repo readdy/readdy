@@ -47,68 +47,35 @@ namespace readdy {
 namespace model {
 namespace reactions {
 
-ReactionRegistry::reaction_id ReactionRegistry::emplaceReaction(const std::shared_ptr<Reaction> &reaction) {
+const ReactionRegistry::ReactionsCollection ReactionRegistry::DEFAULT_REACTIONS = {};
+
+ReactionRegistry::ReactionId ReactionRegistry::emplaceReaction(const std::shared_ptr<Reaction> &reaction) {
     if (reactionNameExists(reaction->name())) {
         throw std::invalid_argument(fmt::format("A reaction with the name {} exists already", reaction->name()));
     }
-    reaction_id id = reaction->id();
+    ReactionId id = reaction->id();
     if (reaction->nEducts() == 1) {
         auto t = reaction->educts()[0];
-        if (one_educt_registry_internal.find(t) == one_educt_registry_internal.end()) {
-            one_educt_registry_internal.emplace(t, rea_ptr_vec());
-        }
-        one_educt_registry_internal[t].push_back(reaction);
+        _ownO1Reactions[t].push_back(reaction);
+        _o1Reactions[t].push_back(_ownO1Reactions[t].back().get());
         _n_order1 += 1;
     } else {
-        const auto pp = std::make_tuple(reaction->educts()[0], reaction->educts()[1]);
-        if (two_educts_registry_internal.find(pp) == two_educts_registry_internal.end()) {
-            two_educts_registry_internal.emplace(pp, rea_ptr_vec());
-        }
-        two_educts_registry_internal[pp].push_back(reaction);
+        auto pp = std::make_tuple(reaction->educts()[0], reaction->educts()[1]);
+        _ownO2Reactions[pp].push_back(reaction);
+        _o2Reactions[pp].push_back(_ownO2Reactions[pp].back().get());
         _n_order2 += 1;
     }
     return id;
 }
 
-void ReactionRegistry::configure() {
-    namespace coll = readdy::util::collections;
-    using pair = readdy::util::particle_type_pair;
-    using reaction1ptr = std::shared_ptr<reaction>;
-    using reaction2ptr = std::shared_ptr<reaction>;
-
-    one_educt_registry.clear();
-    two_educts_registry.clear();
-    _reaction_o2_types.clear();
-
-    coll::for_each_value(one_educt_registry_internal,
-                         [&](const particle_type_type type, const reaction1ptr &ptr) {
-                             (one_educt_registry)[type].push_back(ptr.get());
-                         });
-    coll::for_each_value(two_educts_registry_internal, [&](const pair &type, const reaction2ptr &r) {
-        (two_educts_registry)[type].push_back(r.get());
-        _reaction_o2_types.emplace(std::get<0>(type));
-        _reaction_o2_types.emplace(std::get<1>(type));
-    });
-    coll::for_each_value(one_educt_registry_external,
-                         [&](const particle_type_type type, reaction *ptr) {
-                             (one_educt_registry)[type].push_back(ptr);
-                         });
-    coll::for_each_value(two_educts_registry_external, [&](const pair &type, reaction *r) {
-        (two_educts_registry)[type].push_back(r);
-        _reaction_o2_types.emplace(std::get<0>(type));
-        _reaction_o2_types.emplace(std::get<1>(type));
-    });
-
-}
-
 std::string ReactionRegistry::describe() const {
     namespace rus = readdy::util::str;
     std::string description;
-    auto nameOf = [&](particle_type_type t) {return _types.get().nameOf(t);};
+    auto nameOf = [&](ParticleTypeId t) {return _types.get().nameOf(t);};
 
-    if (!one_educt_registry.empty()) {
+    if (!_o1Reactions.empty()) {
         description += fmt::format(" - unimolecular reactions:{}", rus::newline);
-        for (const auto &entry : one_educt_registry) {
+        for (const auto &entry : _o1Reactions) {
             for (const auto reaction : entry.second) {
                 const auto &educts = reaction->educts();
                 const auto &products = reaction->products();
@@ -140,9 +107,9 @@ std::string ReactionRegistry::describe() const {
             }
         }
     }
-    if (!two_educts_registry.empty()) {
+    if (!_o2Reactions.empty()) {
         description += fmt::format(" - bimolecular reactions:{}", rus::newline);
-        for (const auto &entry : two_educts_registry) {
+        for (const auto &entry : _o2Reactions) {
             for (const auto reaction : entry.second) {
                 const auto &educts = reaction->educts();
                 const auto &products = reaction->products();
@@ -175,34 +142,23 @@ std::string ReactionRegistry::describe() const {
     return description;
 }
 
-const short ReactionRegistry::addExternal(reaction *r) {
-    if (r->nEducts() == 1) {
-        one_educt_registry_external[r->educts()[0]].push_back(r);
-        _n_order1 += 1;
-        return r->id();
-    }
-    two_educts_registry_external[std::tie(r->educts()[0], r->educts()[1])].push_back(r);
-    _n_order2 += 1;
-    return r->id();
-}
-
-ReactionRegistry::reaction_id ReactionRegistry::add(const std::string &descriptor, scalar rate) {
+ReactionRegistry::ReactionId ReactionRegistry::add(const std::string &descriptor, scalar rate) {
     namespace mutil = readdy::model::util;
     namespace rutil = readdy::util;
     log::trace("begin parsing \"{}\"", descriptor);
     auto arrowPos = descriptor.find(mutil::arrow);
-    if (arrowPos == descriptor.npos) {
+    if (arrowPos == std::string::npos) {
         throw std::invalid_argument(fmt::format(
                 "the descriptor must contain an arrow (\"{}\") to indicate lhs and rhs.", mutil::arrow
         ));
     }
-    if (descriptor.find(mutil::arrow, arrowPos + 1) != descriptor.npos) {
+    if (descriptor.find(mutil::arrow, arrowPos + 1) != std::string::npos) {
         throw std::invalid_argument(fmt::format(
                 "the descriptor must not contain more than one arrow (\"{}\").", mutil::arrow
         ));
     }
     auto lhs = descriptor.substr(0, arrowPos);
-    auto rhs = descriptor.substr(arrowPos + std::strlen(mutil::arrow), descriptor.npos);
+    auto rhs = descriptor.substr(arrowPos + std::strlen(mutil::arrow), std::string::npos);
 
     rutil::str::trim(lhs);
     rutil::str::trim(rhs);
@@ -210,11 +166,11 @@ ReactionRegistry::reaction_id ReactionRegistry::add(const std::string &descripto
     std::string name;
     {
         auto colonPos = lhs.find(':');
-        if (colonPos == lhs.npos) {
+        if (colonPos == std::string::npos) {
             throw std::invalid_argument("The descriptor did not contain a colon ':' to specify the end of the name.");
         }
         name = rutil::str::trim_copy(lhs.substr(0, colonPos));
-        lhs = rutil::str::trim_copy(lhs.substr(colonPos + 1, lhs.npos));
+        lhs = rutil::str::trim_copy(lhs.substr(colonPos + 1, std::string::npos));
     }
 
     // some helper functions
@@ -234,7 +190,7 @@ ReactionRegistry::reaction_id ReactionRegistry::add(const std::string &descripto
         if (std::regex_search(s, weightsMatch, bracketsContentRegex)) {
             auto weightsString = rutil::str::trim_copy(weightsMatch.str());
             auto commaPos = weightsString.find(',');
-            if (commaPos == weightsString.npos) {
+            if (commaPos == std::string::npos) {
                 throw std::invalid_argument(fmt::format("The term \"{}\" did not contain a comma ','", s));
             }
             auto w1 = rutil::str::trim_copy(weightsString.substr(1, commaPos));
@@ -250,13 +206,13 @@ ReactionRegistry::reaction_id ReactionRegistry::add(const std::string &descripto
         std::string reactionRadius;
         if (searchRadius) {
             auto closingParentheses = s.find(')');
-            if (closingParentheses == s.npos) {
+            if (closingParentheses == std::string::npos) {
                 throw std::invalid_argument(fmt::format("The side (\"{}\") did not contain a ')'.", s));
             }
-            pType2 = rutil::str::trim_copy(s.substr(closingParentheses + 1, s.npos));
+            pType2 = rutil::str::trim_copy(s.substr(closingParentheses + 1, std::string::npos));
             reactionRadius = getReactionRadius(s);
         } else {
-            pType2 = rutil::str::trim_copy(s.substr(plusPos + 1, s.npos));
+            pType2 = rutil::str::trim_copy(s.substr(plusPos + 1, std::string::npos));
         }
         return std::make_tuple(pType1, pType2, reactionRadius);
     };
@@ -265,7 +221,7 @@ ReactionRegistry::reaction_id ReactionRegistry::add(const std::string &descripto
     scalar weight1{0.5}, weight2{0.5};
     {
         auto bracketPos = rhs.find('[');
-        if (bracketPos != rhs.npos) {
+        if (bracketPos != std::string::npos) {
             std::tie(w1, w2) = getWeights(rhs);
             weight1 = static_cast<scalar>(std::stod(w1));
             weight2 = static_cast<scalar>(std::stod(w2));
@@ -277,7 +233,7 @@ ReactionRegistry::reaction_id ReactionRegistry::add(const std::string &descripto
     std::string educt1, educt2, eductDistance;
     {
         auto plusPos = lhs.find('+');
-        if (plusPos == lhs.npos) {
+        if (plusPos == std::string::npos) {
             numberEducts = 1;
             educt1 = lhs;
         } else {
@@ -296,7 +252,7 @@ ReactionRegistry::reaction_id ReactionRegistry::add(const std::string &descripto
             return addDecay(name, educt1, rate);
         } else {
             auto plusPos = rhs.find('+');
-            if (plusPos == rhs.npos) {
+            if (plusPos == std::string::npos) {
                 // numberProducts = 1 -> either conversion or fusion
                 product1 = rhs;
                 if (numberEducts == 1) {
@@ -332,10 +288,10 @@ ReactionRegistry::reaction_id ReactionRegistry::add(const std::string &descripto
 
 namespace {
 struct FindId {
-    explicit FindId(std::string name, Reaction::reaction_id &id) : name(std::move(name)), id(id) {}
+    explicit FindId(std::string name, Reaction::ReactionId &id) : name(std::move(name)), id(id) {}
 
     std::string name {""};
-    std::reference_wrapper<Reaction::reaction_id> id;
+    std::reference_wrapper<Reaction::ReactionId> id;
     std::shared_ptr<bool> found = std::make_shared<bool>(false);
 
     template<typename T>
@@ -348,9 +304,9 @@ struct FindId {
 };
 
 struct FindName {
-    explicit FindName(Reaction::reaction_id id, std::string &name) : id(id), name(name) {}
+    explicit FindName(Reaction::ReactionId id, std::string &name) : id(id), name(name) {}
 
-    Reaction::reaction_id id {0};
+    Reaction::ReactionId id {0};
     std::reference_wrapper<std::string> name;
     std::shared_ptr<bool> found = std::make_shared<bool>(false);
 
@@ -364,7 +320,7 @@ struct FindName {
 };
 
 struct FindReactionById {
-    explicit FindReactionById(Reaction::reaction_id id) : id(id) {}
+    explicit FindReactionById(Reaction::ReactionId id) : id(id) {}
 
     bool found() const {
         return _found;
@@ -400,29 +356,25 @@ private:
         reaction = r2.get();
     }
 
-    const Reaction::reaction_id id;
+    const Reaction::ReactionId id;
     const Reaction* reaction = nullptr;
     bool _found = false;
 };
 }
 
 bool ReactionRegistry::reactionNameExists(const std::string &name) const {
-    Reaction::reaction_id id;
+    Reaction::ReactionId id;
     FindId findId(name, id);
-    readdy::util::collections::for_each_value_ref(one_educt_registry_internal, findId);
-    readdy::util::collections::for_each_value_ref(one_educt_registry_external, findId);
-    readdy::util::collections::for_each_value_ref(two_educts_registry_internal, findId);
-    readdy::util::collections::for_each_value_ref(two_educts_registry_external, findId);
+    readdy::util::collections::for_each_value_ref(_ownO1Reactions, findId);
+    readdy::util::collections::for_each_value_ref(_ownO2Reactions, findId);
     return *(findId.found);
 }
 
-std::string ReactionRegistry::nameOf(ReactionRegistry::reaction_id id) const {
+std::string ReactionRegistry::nameOf(ReactionRegistry::ReactionId id) const {
     std::string name;
     FindName findName(id, name);
-    readdy::util::collections::for_each_value_ref(one_educt_registry_internal, findName);
-    readdy::util::collections::for_each_value_ref(one_educt_registry_external, findName);
-    readdy::util::collections::for_each_value_ref(two_educts_registry_internal, findName);
-    readdy::util::collections::for_each_value_ref(two_educts_registry_external, findName);
+    readdy::util::collections::for_each_value_ref(_ownO1Reactions, findName);
+    readdy::util::collections::for_each_value_ref(_ownO2Reactions, findName);
     if (*(findName.found)) {
         return name;
     } else {
@@ -430,13 +382,11 @@ std::string ReactionRegistry::nameOf(ReactionRegistry::reaction_id id) const {
     }
 }
 
-ReactionRegistry::reaction_id ReactionRegistry::idOf(const std::string &name) const {
-    Reaction::reaction_id id;
+ReactionRegistry::ReactionId ReactionRegistry::idOf(const std::string &name) const {
+    Reaction::ReactionId id;
     FindId findId(name, id);
-    readdy::util::collections::for_each_value_ref(one_educt_registry_internal, findId);
-    readdy::util::collections::for_each_value_ref(one_educt_registry_external, findId);
-    readdy::util::collections::for_each_value_ref(two_educts_registry_internal, findId);
-    readdy::util::collections::for_each_value_ref(two_educts_registry_external, findId);
+    readdy::util::collections::for_each_value_ref(_ownO1Reactions, findId);
+    readdy::util::collections::for_each_value_ref(_ownO2Reactions, findId);
     if (*(findId.found)) {
         return findId.id;
     } else {
@@ -444,12 +394,10 @@ ReactionRegistry::reaction_id ReactionRegistry::idOf(const std::string &name) co
     }
 }
 
-const ReactionRegistry::reaction* ReactionRegistry::byId(ReactionRegistry::reaction_id id) const {
+const Reaction* ReactionRegistry::byId(ReactionRegistry::ReactionId id) const {
     FindReactionById findReaction(id);
-    readdy::util::collections::for_each_value_ref(one_educt_registry_internal, findReaction);
-    readdy::util::collections::for_each_value_ref(one_educt_registry_external, findReaction);
-    readdy::util::collections::for_each_value_ref(two_educts_registry_internal, findReaction);
-    readdy::util::collections::for_each_value_ref(two_educts_registry_external, findReaction);
+    readdy::util::collections::for_each_value_ref(_ownO1Reactions, findReaction);
+    readdy::util::collections::for_each_value_ref(_ownO2Reactions, findReaction);
     if (findReaction.found()) {
         return findReaction.result();
     } else {

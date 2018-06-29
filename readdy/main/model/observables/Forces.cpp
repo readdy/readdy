@@ -50,7 +50,7 @@ Forces::Forces(Kernel *const kernel, stride_type stride, std::vector<std::string
         : Forces(kernel, stride,
                  _internal::util::transformTypes2(typesToCount, kernel->context())) {}
 
-Forces::Forces(Kernel *const kernel, stride_type stride, const std::vector<particle_type_type> &typesToCount)
+Forces::Forces(Kernel *const kernel, stride_type stride, const std::vector<ParticleTypeId> &typesToCount)
         : Observable(kernel, stride), typesToCount(typesToCount), pimpl(std::make_unique<Impl>()) {}
 
 Forces::Forces(Kernel *const kernel, stride_type stride) : Observable(kernel, stride), typesToCount({}),

@@ -42,7 +42,7 @@ namespace actions {
 namespace reactions {
 
 Event::Event(unsigned int nEducts, unsigned int nProducts, index_type idx1, index_type idx2, scalar reactionRate,
-             scalar cumulativeRate, reaction_index_type reactionIdx, particle_type_type t1, particle_type_type t2)
+             scalar cumulativeRate, reaction_index_type reactionIdx, ParticleTypeId t1, ParticleTypeId t2)
         : nEducts(nEducts), nProducts(nProducts), idx1(idx1), idx2(idx2), rate(reactionRate),
           cumulativeRate(cumulativeRate), reactionIndex(reactionIdx), t1(t1), t2(t2) {
 }
@@ -146,7 +146,7 @@ void SCPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
         stateModel.resetReactionCounts();
     }
     auto &data = *stateModel.getParticleData();
-    auto events = findEvents(kernel, timeStep, false);
+    auto events = findEvents(kernel, timeStep(), false);
 
     // shuffle reactions
     std::shuffle(events.begin(), events.end(), std::mt19937(std::random_device()()));
@@ -202,26 +202,6 @@ void SCPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
         }
         data.update(std::make_pair(std::move(newParticles), std::move(decayedEntries)));
     }
-}
-
-void SCPUUncontrolledApproximation::registerReactionScheme_11(const std::string &reactionName,
-                                                              readdy::model::actions::reactions::UncontrolledApproximation::reaction_11) {
-
-}
-
-void SCPUUncontrolledApproximation::registerReactionScheme_12(const std::string &reactionName,
-                                                              readdy::model::actions::reactions::UncontrolledApproximation::reaction_12) {
-
-}
-
-void SCPUUncontrolledApproximation::registerReactionScheme_21(const std::string &reactionName,
-                                                              readdy::model::actions::reactions::UncontrolledApproximation::reaction_21) {
-
-}
-
-void SCPUUncontrolledApproximation::registerReactionScheme_22(const std::string &reactionName,
-                                                              readdy::model::actions::reactions::UncontrolledApproximation::reaction_22) {
-
 }
 
 void gatherEvents(SCPUKernel const *const kernel,
@@ -360,7 +340,7 @@ void SCPUGillespie::perform(const util::PerformanceNode &node) {
     scalar alpha = 0.0;
     std::vector<event_t> events;
     gatherEvents(kernel, *nl, *data, alpha, events);
-    auto particlesUpdate = handleEventsGillespie(kernel, timeStep, false, false, std::move(events));
+    auto particlesUpdate = handleEventsGillespie(kernel, timeStep(), false, false, std::move(events));
 
     // update data structure
     data->update(std::move(particlesUpdate));
@@ -435,7 +415,7 @@ void SCPUDetailedBalance::perform(const readdy::util::PerformanceNode &node) {
 
     {
         auto shouldEval = [&](const event_t &event) {
-            return shouldPerformEvent(event.rate, timeStep, approximateRate);
+            return shouldPerformEvent(event.rate, timeStep(), approximateRate);
         };
 
         auto depending = [&](const event_t &e1, const event_t &e2) {

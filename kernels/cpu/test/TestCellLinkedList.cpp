@@ -106,8 +106,8 @@ TEST_P(TestCLL, Insert) {
     using namespace readdy;
 
     model::Context context;
-    context.particle_types().add("Test", 1.);
-    auto id = context.particle_types().idOf("Test");
+    context.particleTypes().add("Test", 1.);
+    auto id = context.particleTypes().idOf("Test");
     context.reactions().addFusion("Fusion", id, id, id, 1., 1.);
     context.boxSize()[0] = 10;
     context.boxSize()[1] = 10;
@@ -116,8 +116,6 @@ TEST_P(TestCLL, Insert) {
     context.periodicBoundaryConditions()[0] = periodic;
     context.periodicBoundaryConditions()[1] = periodic;
     context.periodicBoundaryConditions()[2] = periodic;
-
-    context.configure();
 
     kernel::cpu::thread_pool pool (readdy_default_n_threads());
 
@@ -142,8 +140,8 @@ void insertAndDearviateTestImpl(std::uint8_t radius) {
     using namespace readdy;
 
     model::Context context;
-    context.particle_types().add("Test", 1.);
-    auto id = context.particle_types().idOf("Test");
+    context.particleTypes().add("Test", 1.);
+    auto id = context.particleTypes().idOf("Test");
     scalar cutoff = 1;
     context.reactions().addFusion("Fusion", id, id, id, 1., cutoff);
     context.boxSize()[0] = 10;
@@ -172,8 +170,6 @@ void insertAndDearviateTestImpl(std::uint8_t radius) {
             data.removeEntry(i);
         }
     }
-
-    context.configure();
 
     CLL nl(data, context, pool);
     nl.setUp(0, radius, {});
@@ -223,8 +219,8 @@ void diffuseTestImpl(std::uint8_t radius) {
     using namespace readdy;
 
     model::Context context;
-    context.particle_types().add("Test", 1.);
-    auto id = context.particle_types().idOf("Test");
+    context.particleTypes().add("Test", 1.);
+    auto id = context.particleTypes().idOf("Test");
     scalar cutoff = 1;
     context.reactions().addFusion("Fusion", id, id, id, 1., cutoff);
     context.boxSize()[0] = 10;
@@ -246,8 +242,6 @@ void diffuseTestImpl(std::uint8_t radius) {
                                  model::rnd::uniform_real<scalar>(-5, 5), id);
         data.addParticle(particle);
     }
-
-    context.configure();
 
     CLL nl(data, context, pool);
     nl.setUp(0, radius, {});

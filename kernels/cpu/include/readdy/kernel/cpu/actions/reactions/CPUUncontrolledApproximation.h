@@ -45,23 +45,6 @@ public:
 
     void perform(const util::PerformanceNode &node) override;
 
-    void registerReactionScheme_11(const std::string &reactionName, reaction_11 fun) override {
-        throw std::runtime_error("not supported for cpu kernel thus far");
-    }
-
-    void registerReactionScheme_12(const std::string &reactionName, reaction_12 fun) override {
-        throw std::runtime_error("not supported for cpu kernel thus far");
-    }
-
-    void registerReactionScheme_21(const std::string &reactionName, reaction_21 fun) override {
-        throw std::runtime_error("not supported for cpu kernel thus far");
-
-    }
-
-    void registerReactionScheme_22(const std::string &reactionName, reaction_22 fun) override {
-        throw std::runtime_error("not supported for cpu kernel thus far");
-    }
-
 protected:
     CPUKernel *const kernel;
 };

@@ -60,22 +60,22 @@ void CPUGillespie::perform(const util::PerformanceNode &node) {
         stateModel.reactionRecords().clear();
         if(ctx.recordReactionCounts()) {
             auto &counts = stateModel.reactionCounts();
-            auto particlesUpdate = handleEventsGillespie(kernel, timeStep, false, false, std::move(events),
+            auto particlesUpdate = handleEventsGillespie(kernel, timeStep(), false, false, std::move(events),
                                                          &stateModel.reactionRecords(), &counts);
             data->update(std::move(particlesUpdate));
         } else {
-            auto particlesUpdate = handleEventsGillespie(kernel, timeStep, false, false, std::move(events),
+            auto particlesUpdate = handleEventsGillespie(kernel, timeStep(), false, false, std::move(events),
                                                          &stateModel.reactionRecords(), nullptr);
             data->update(std::move(particlesUpdate));
         }
     } else {
         if(ctx.recordReactionCounts()) {
             auto &counts = stateModel.reactionCounts();
-            auto particlesUpdate = handleEventsGillespie(kernel, timeStep, false, false, std::move(events),
+            auto particlesUpdate = handleEventsGillespie(kernel, timeStep(), false, false, std::move(events),
                                                          nullptr, &counts);
             data->update(std::move(particlesUpdate));
         } else {
-            auto particlesUpdate = handleEventsGillespie(kernel, timeStep, false, false, std::move(events),
+            auto particlesUpdate = handleEventsGillespie(kernel, timeStep(), false, false, std::move(events),
                                                          nullptr, nullptr);
             data->update(std::move(particlesUpdate));
         }

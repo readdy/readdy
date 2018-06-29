@@ -61,8 +61,7 @@ inline std::ostream& operator<<(std::ostream& os, const ReactionType& reactionTy
 
 class Reaction {
 public:
-    using rnd_normal = std::function<Vec3(const scalar, const scalar)>;
-    using reaction_id = unsigned short;
+    using ReactionId = unsigned short;
 
     Reaction(std::string name, scalar rate, scalar eductDistance, scalar productDistance, std::uint8_t nEducts,
              std::uint8_t nProducts)
@@ -78,7 +77,7 @@ public:
         return _name;
     }
 
-    const reaction_id id() const {
+    const ReactionId id() const {
         return _id;
     }
 
@@ -123,11 +122,11 @@ public:
         return os;
     }
 
-    const std::array<particle_type_type, 2> &educts() const {
+    const std::array<ParticleTypeId, 2> &educts() const {
         return _educts;
     };
 
-    const std::array<particle_type_type, 2> &products() const {
+    const std::array<ParticleTypeId, 2> &products() const {
         return _products;
     };
 
@@ -141,14 +140,14 @@ public:
 
 
 protected:
-    static reaction_id counter;
+    static ReactionId counter;
 
     std::uint8_t _nEducts;
     std::uint8_t _nProducts;
-    std::array<particle_type_type, 2> _educts {{0, 0}};
-    std::array<particle_type_type, 2> _products {{0, 0}};
+    std::array<ParticleTypeId, 2> _educts {{0, 0}};
+    std::array<ParticleTypeId, 2> _products {{0, 0}};
     std::string _name;
-    reaction_id _id;
+    ReactionId _id;
     scalar _rate;
     scalar _eductDistance, _eductDistanceSquared;
     scalar _productDistance;

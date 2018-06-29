@@ -39,8 +39,8 @@ NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(top)
 
-using topology_type_pair = std::tuple<topology_type_type, topology_type_type>;
-using topology_particle_type_tuple = std::tuple<particle_type_type, topology_type_type, particle_type_type, topology_type_type>;
+using topology_type_pair = std::tuple<TopologyTypeId, TopologyTypeId>;
+using topology_particle_type_tuple = std::tuple<ParticleTypeId, TopologyTypeId, ParticleTypeId, TopologyTypeId>;
 
 NAMESPACE_BEGIN(detail)
 

@@ -172,7 +172,7 @@ convert_xyz(const std::string &h5name, const std::string &trajName, const std::s
     }
 
     // map from type name to max number of particles in traj
-    std::unordered_map<readdy::particle_type_type, std::size_t> maxCounts;
+    std::unordered_map<readdy::ParticleTypeId, std::size_t> maxCounts;
     for (const auto &type : types) {
         maxCounts[type.type_id] = 0;
         readdy::log::debug("got type {} with id {} and D {}", type.name, type.type_id, type.diffusion_constant);
@@ -190,7 +190,7 @@ convert_xyz(const std::string &h5name, const std::string &trajName, const std::s
     auto trajectoryEntryTypes = readdy::model::observables::util::getTrajectoryEntryTypes(f->ref());
     traj.read("records", entries, &std::get<0>(trajectoryEntryTypes), &std::get<1>(trajectoryEntryTypes));
 
-    std::unordered_map<readdy::particle_type_type, std::size_t> typeMapping(types.size());
+    std::unordered_map<readdy::ParticleTypeId, std::size_t> typeMapping(types.size());
     {
         std::size_t i = 0;
         for (const auto &type : types) {
@@ -317,7 +317,7 @@ std::vector<std::vector<rpy::ReadableReactionRecord>> read_reactions_obs(const s
     auto reactionInfoH5Type = readdy::model::ioutils::getReactionInfoMemoryType(f->ref());
 
     // get reaction info from config
-    std::unordered_map<readdy::model::reactions::Reaction::reaction_id, readdy::model::ioutils::ReactionInfo>
+    std::unordered_map<readdy::model::reactions::Reaction::ReactionId, readdy::model::ioutils::ReactionInfo>
             reactionsMap;
     {
         std::vector<readdy::model::ioutils::ReactionInfo> reactionInfo;

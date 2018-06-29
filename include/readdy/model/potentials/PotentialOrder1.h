@@ -47,7 +47,7 @@ class PotentialOrder1 : public Potential {
 protected:
     using particle_type_type = readdy::model::Particle::type_type;
 public:
-    explicit PotentialOrder1(particle_type_type ptype) : Potential(1), _particleType(ptype) {}
+    explicit PotentialOrder1(particle_type_type ptype) : _particleType(ptype) {}
 
     virtual scalar calculateEnergy(const Vec3 &position) const = 0;
 

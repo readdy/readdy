@@ -55,7 +55,7 @@ void ParticleTypeRegistry::add(const std::string &name, const scalar diffusionCo
             }
         }
     }
-    particle_type_type t_id = type_counter_++;
+    ParticleTypeId t_id = type_counter_++;
     type_mapping_.emplace(name, t_id);
     particle_info_.emplace(std::make_pair(t_id, ParticleTypeInfo{name, diffusionConst, flavor, t_id}));
     n_types_++;

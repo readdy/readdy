@@ -43,8 +43,8 @@ class TestPotentials : public KernelTest {
 };
 
 void setupParticles(readdy::model::Kernel &kernel) {
-    kernel.context().particle_types().add("A", static_cast<readdy::scalar>(1.));
-    kernel.context().particle_types().add("B", static_cast<readdy::scalar>(0.1));
+    kernel.context().particleTypes().add("A", static_cast<readdy::scalar>(1.));
+    kernel.context().particleTypes().add("B", static_cast<readdy::scalar>(0.1));
     kernel.context().periodicBoundaryConditions() = {{false, false, false}};
     const unsigned int nParticlesA = 10;
     const unsigned int nParticlesB = 10;
@@ -88,7 +88,7 @@ TEST_P(TestPotentials, TestParticlesStayInBox) {
     readdy::Vec3 lowerBound{static_cast<readdy::scalar>(-2.5), static_cast<readdy::scalar>(-2.5),
                                    static_cast<readdy::scalar>(-2.5)},
             upperBound{2.5, 2.5, 2.5};
-    ppObs->setCallback([lowerBound, upperBound](readdy::model::observables::Positions::result_type currentResult) {
+    ppObs->callback() = [lowerBound, upperBound](readdy::model::observables::Positions::result_type currentResult) {
         readdy::Vec3 avg{0, 0, 0};
         bool allWithinBounds = true;
         for (auto &&v : currentResult) {
@@ -98,7 +98,7 @@ TEST_P(TestPotentials, TestParticlesStayInBox) {
         avg /= currentResult.size();
         if (!allWithinBounds) readdy::log::debug("Average position: {}", avg);
         ASSERT_TRUE(allWithinBounds);
-    });
+    };
     auto connection = kernel->connectObservable(ppObs.get());
     run(*kernel, timeStep);
 }
@@ -117,7 +117,7 @@ TEST_P(TestPotentials, TestParticleStayInSphere) {
     auto ppObs = kernel->observe().positions(1);
     const readdy::scalar maxDistFromOrigin = 4.0; // at kbt=1 and force_const=20 the RMSD in a well potential would be ~0.2
     const readdy::scalar maxDistFromOriginSquared = maxDistFromOrigin * maxDistFromOrigin;
-    ppObs->setCallback([maxDistFromOriginSquared](readdy::model::observables::Positions::result_type currentResult) {
+    ppObs->callback() = [maxDistFromOriginSquared](readdy::model::observables::Positions::result_type currentResult) {
         readdy::Vec3 avg{0, 0, 0};
         bool allWithinBounds = true;
         for (auto &&v : currentResult) {
@@ -128,7 +128,7 @@ TEST_P(TestPotentials, TestParticleStayInSphere) {
         avg /= currentResult.size();
         if (!allWithinBounds) readdy::log::debug("Average position: {}", avg);
         ASSERT_TRUE(allWithinBounds);
-    });
+    };
     auto connection = kernel->connectObservable(ppObs.get());
     run(*kernel, timeStep);
 }
@@ -138,7 +138,7 @@ TEST_P(TestPotentials, TestLennardJonesRepellent) {
     // test system where the particles are closer together than they should be, i.e., the force should be repellent
     auto& ctx = kernel->context();
     // one particle type A
-    ctx.particle_types().add("A", 1.0);
+    ctx.particleTypes().add("A", 1.0);
     // large enough box
     ctx.boxSize() = {{10, 10, 10}};
     // particles are aligned in the x-y plane and have a distance of .09
@@ -155,20 +155,18 @@ TEST_P(TestPotentials, TestLennardJonesRepellent) {
     // record ids
     auto pObs = kernel->observe().particles(1);
     std::vector<readdy::model::Particle::id_type> ids;
-    pObs->setCallback([&ids](const readdy::model::observables::Particles::result_type& result) {
+    pObs->callback() = [&ids](const readdy::model::observables::Particles::result_type& result) {
         const auto& recordedIds = std::get<1>(result);
         ids.insert(ids.end(), recordedIds.begin(), recordedIds.end());
-    });
+    };
     auto connParticles = kernel->connectObservable(pObs.get());
     // also record forces
     auto fObs = kernel->observe().forces(1);
     std::vector<readdy::Vec3> collectedForces;
-    fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_type& result) {
+    fObs->callback() = [&collectedForces](const readdy::model::observables::Forces::result_type& result) {
         collectedForces.insert(collectedForces.end(), result.begin(), result.end());
-    });
+    };
     auto conn = kernel->connectObservable(fObs.get());
-    // configure the context
-    ctx.configure();
 
     // we need to update the neighbor list as this is a pair potential
     auto neighborList = kernel->actions().updateNeighborList(readdy::model::actions::UpdateNeighborList::init);
@@ -209,7 +207,7 @@ TEST_P(TestPotentials, ScreenedElectrostatics) {
     auto calculateForces = kernel->actions().calculateForces();
     auto &ctx = kernel->context();
     ctx.periodicBoundaryConditions() = {{false, false, false}};
-    ctx.particle_types().add("A", 1.0);
+    ctx.particleTypes().add("A", 1.0);
     ctx.boxSize() = {{10, 10, 10}};
     ctx.potentials().addBox("A", .001, {-4.9, -4.9, -4.9}, {9.8, 9.8, 9.8});
     // distance of particles is 2.56515106768
@@ -226,20 +224,18 @@ TEST_P(TestPotentials, ScreenedElectrostatics) {
     // record ids to get data-structure-indexes of the two particles later on
     auto pObs = kernel->observe().particles(1);
     std::vector<readdy::model::Particle::id_type> ids;
-    pObs->setCallback([&ids](const readdy::model::observables::Particles::result_type &result) {
+    pObs->callback() = [&ids](const readdy::model::observables::Particles::result_type &result) {
         const auto &recordedIds = std::get<1>(result);
         ids.insert(ids.end(), recordedIds.begin(), recordedIds.end());
-    });
+    };
     auto connParticles = kernel->connectObservable(pObs.get());
     // also record forces
     auto fObs = kernel->observe().forces(1);
     std::vector<readdy::Vec3> collectedForces;
-    fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_type &result) {
+    fObs->callback() = [&collectedForces](const readdy::model::observables::Forces::result_type &result) {
         collectedForces.insert(collectedForces.end(), result.begin(), result.end());
-    });
+    };
     auto conn = kernel->connectObservable(fObs.get());
-    // configure the context
-    ctx.configure();
 
     // we need to update the neighbor list as this is a pair potential
     auto neighborList = kernel->actions().updateNeighborList();
@@ -267,7 +263,7 @@ TEST_P(TestPotentials, ScreenedElectrostatics) {
 TEST_P(TestPotentials, SphericalMembrane) {
     // Combine SphereIn and SphereOut to build a 2D spherical manifold
     auto &ctx = kernel->context();
-    ctx.particle_types().add("A", 1.0);
+    ctx.particleTypes().add("A", 1.0);
     ctx.boxSize() =  {{10, 10, 10}};
     // add two particles, one outside, one inside the sphere
     auto id0 = kernel->addParticle("A", {2., 1., 1.});
@@ -281,20 +277,18 @@ TEST_P(TestPotentials, SphericalMembrane) {
     // record ids to get data-structure-indexes of the two particles later on
     auto pObs = kernel->observe().particles(1);
     std::vector<readdy::model::Particle::id_type> ids;
-    pObs->setCallback([&ids](const readdy::model::observables::Particles::result_type &result) {
+    pObs->callback() = [&ids](const readdy::model::observables::Particles::result_type &result) {
         const auto &recordedIds = std::get<1>(result);
         ids.insert(ids.end(), recordedIds.begin(), recordedIds.end());
-    });
+    };
     auto connParticles = kernel->connectObservable(pObs.get());
     // also record forces
     auto fObs = kernel->observe().forces(1);
     std::vector<readdy::Vec3> collectedForces;
-    fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_type &result) {
+    fObs->callback() = [&collectedForces](const readdy::model::observables::Forces::result_type &result) {
         collectedForces.insert(collectedForces.end(), result.begin(), result.end());
-    });
+    };
     auto conn = kernel->connectObservable(fObs.get());
-    // configure the context
-    ctx.configure();
 
     // we need to update the neighbor list as this is a pair potential
     auto neighborList = kernel->actions().updateNeighborList();
@@ -324,7 +318,7 @@ TEST_P(TestPotentials, SphericalMembrane) {
 TEST_P(TestPotentials, SphericalBarrier) {
     auto &ctx = kernel->context();
     auto calculateForces = kernel->actions().calculateForces();
-    ctx.particle_types().add("A", 1.0);
+    ctx.particleTypes().add("A", 1.0);
     ctx.boxSize() = {{10, 10, 10}};
     // add two particles, one on the outer edge getting pushed outside, one inside the sphere unaffected
     auto id0 = kernel->addParticle("A", {2.1, 1., 1.});
@@ -337,20 +331,18 @@ TEST_P(TestPotentials, SphericalBarrier) {
     // record ids to get data-structure-indexes of the two particles later on
     auto pObs = kernel->observe().particles(1);
     std::vector<readdy::model::Particle::id_type> ids;
-    pObs->setCallback([&ids](const readdy::model::observables::Particles::result_type &result) {
+    pObs->callback() = [&ids](const readdy::model::observables::Particles::result_type &result) {
         const auto &recordedIds = std::get<1>(result);
         ids.insert(ids.end(), recordedIds.begin(), recordedIds.end());
-    });
+    };
     auto connParticles = kernel->connectObservable(pObs.get());
     // also record forces
     auto fObs = kernel->observe().forces(1);
     std::vector<readdy::Vec3> collectedForces;
-    fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_type &result) {
+    fObs->callback() = [&collectedForces](const readdy::model::observables::Forces::result_type &result) {
         collectedForces.insert(collectedForces.end(), result.begin(), result.end());
-    });
+    };
     auto connForces = kernel->connectObservable(fObs.get());
-
-    ctx.configure();
 
     kernel->initialize();
 

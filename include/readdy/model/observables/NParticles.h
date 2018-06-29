@@ -47,7 +47,7 @@ public:
 
     NParticles(Kernel* kernel, stride_type stride, std::vector<std::string> typesToCount);
 
-    NParticles(Kernel* kernel, stride_type stride, std::vector<particle_type_type> typesToCount);
+    NParticles(Kernel* kernel, stride_type stride, std::vector<ParticleTypeId> typesToCount);
 
     NParticles(const NParticles&) = delete;
 
@@ -69,7 +69,7 @@ protected:
 
     void append() override;
 
-    std::vector<particle_type_type> typesToCount;
+    std::vector<ParticleTypeId> typesToCount;
 };
 
 NAMESPACE_END(observables)

@@ -95,7 +95,7 @@ public:
      * @param vertex the vertex
      * @param type_to the target type
      */
-    ChangeParticleType(const vertex_ref &vertex, particle_type_type type_to) : _vertex(vertex), _type_to(type_to) {}
+    ChangeParticleType(const vertex_ref &vertex, ParticleTypeId type_to) : _vertex(vertex), _type_to(type_to) {}
 
     /**
      * Create the corresponding action.
@@ -103,13 +103,13 @@ public:
      * @param factory the action factory
      * @return a pointer to the change particle type action
      */
-    virtual action_ptr create_action(topology_ref topology, factory_ref factory) const override {
+    action_ptr create_action(topology_ref topology, factory_ref factory) const override {
         return factory->createChangeParticleType(topology, _vertex, _type_to);
     }
 
 private:
     vertex_ref _vertex;
-    particle_type_type _type_to;
+    ParticleTypeId _type_to;
 };
 
 class ChangeTopologyType : public Operation {
@@ -118,7 +118,7 @@ public:
      * Creates an action that changes the topology type of the belonging topology.
      * @param type_to the target type
      */
-    explicit ChangeTopologyType(const std::string &type_to) : _type_to(type_to) {};
+    explicit ChangeTopologyType(std::string type_to) : _type_to(std::move(type_to)) {};
 
     /**
      * Create the corresponding action.
@@ -126,7 +126,7 @@ public:
      * @param factory the action factory
      * @return a pointer to the action
      */
-    virtual action_ptr create_action(topology_ref topology, factory_ref factory) const override {
+    action_ptr create_action(topology_ref topology, factory_ref factory) const override {
         return factory->createChangeTopologyType(topology, _type_to);
     }
 
@@ -140,7 +140,7 @@ public:
      * Adds the specified edge on the graph.
      * @param edge the edge
      */
-    explicit AddEdge(const edge &edge) : _edge(edge) {};
+    explicit AddEdge(edge edge) : _edge(std::move(edge)) {};
 
     /**
      * Create the corresponding action
@@ -148,7 +148,7 @@ public:
      * @param factory the action factory
      * @return a pointer to the respective action
      */
-    virtual action_ptr create_action(topology_ref topology, factory_ref factory) const override {
+    action_ptr create_action(topology_ref topology, factory_ref factory) const override {
         return factory->createAddEdge(topology, _edge);
     }
 
@@ -162,7 +162,7 @@ public:
      * Operation for removing the specified edge on the graph.
      * @param edge the edge
      */
-    explicit RemoveEdge(const edge &edge) : _edge(edge) {};
+    explicit RemoveEdge(edge edge) : _edge(std::move(edge)) {};
 
     /**
      * Create the corresponding action
@@ -170,7 +170,7 @@ public:
      * @param factory the action factory
      * @return a pointer to the respective action
      */
-    virtual action_ptr create_action(topology_ref topology, factory_ref factory) const override {
+    action_ptr create_action(topology_ref topology, factory_ref factory) const override {
         return factory->createRemoveEdge(topology, _edge);
     }
 

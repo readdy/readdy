@@ -66,9 +66,9 @@ const std::vector<readdy::model::Particle> SCPUStateModel::getParticles() const 
 }
 
 
-readdy::model::top::GraphTopology *const SCPUStateModel::addTopology(topology_type_type type, const std::vector<readdy::model::TopologyParticle> &particles) {
+readdy::model::top::GraphTopology *const SCPUStateModel::addTopology(TopologyTypeId type, const std::vector<readdy::model::TopologyParticle> &particles) {
     std::vector<std::size_t> ids = particleData.addTopologyParticles(particles);
-    std::vector<particle_type_type> types;
+    std::vector<ParticleTypeId> types;
     types.reserve(ids.size());
     for (const auto &p : particles) {
         types.push_back(p.getType());

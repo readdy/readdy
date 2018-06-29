@@ -49,10 +49,10 @@ using stride_type = std::uint32_t;
 using Vec3 = _internal::ReaDDyVec3<scalar>;
 using Matrix33 = _internal::ReaDDyMatrix33<scalar>;
 using time_step_type = unsigned long;
-using particle_type_type = unsigned short;
-// signed short on purpose
-using topology_type_type = short;
-constexpr topology_type_type topology_type_empty = static_cast<topology_type_type>(-1);
+using ParticleTypeId = unsigned short;
+// signed short as sometimes it is needed to have a "blank" topology type (corresponding to -1)
+using TopologyTypeId = short;
+constexpr TopologyTypeId EmptyTopologyId = static_cast<TopologyTypeId>(-1);
 
 constexpr bool single_precision = std::is_same<scalar, float>::value;
 constexpr bool double_precision = std::is_same<scalar, double>::value;

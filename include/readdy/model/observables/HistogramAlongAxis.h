@@ -44,7 +44,7 @@ class HistogramAlongAxis : public Observable<std::vector<scalar>> {
 
 public:
     HistogramAlongAxis(readdy::model::Kernel *kernel, stride_type stride,
-                       std::vector<scalar> binBorders, std::set<particle_type_type> typesToCount,
+                       std::vector<scalar> binBorders, std::set<ParticleTypeId> typesToCount,
                        unsigned int axis);
 
     HistogramAlongAxis(Kernel *kernel, stride_type stride, std::vector<scalar> binBorders,
@@ -65,7 +65,7 @@ protected:
     void append() override;
 
     std::vector<scalar> binBorders;
-    std::set<particle_type_type> typesToCount;
+    std::set<ParticleTypeId> typesToCount;
 
     unsigned int axis;
 

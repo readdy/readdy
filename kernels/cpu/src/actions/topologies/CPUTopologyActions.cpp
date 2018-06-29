@@ -118,7 +118,7 @@ namespace op {
 CPUChangeParticleType::CPUChangeParticleType(CPUStateModel::data_type *const data,
                                              model::top::GraphTopology *const topology,
                                              const model::top::reactions::actions::TopologyReactionAction::vertex &v,
-                                             const particle_type_type &type_to)
+                                             const ParticleTypeId &type_to)
         : ChangeParticleType(topology, v, type_to), data(data) {}
 
 void CPUChangeParticleType::execute() {

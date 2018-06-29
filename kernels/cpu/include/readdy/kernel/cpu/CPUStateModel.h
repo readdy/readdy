@@ -167,7 +167,7 @@ public:
     };
 
     readdy::model::top::GraphTopology *const
-    addTopology(topology_type_type type, const std::vector<readdy::model::TopologyParticle> &particles) override;
+    addTopology(TopologyTypeId type, const std::vector<readdy::model::TopologyParticle> &particles) override;
 
     std::vector<readdy::model::reactions::ReactionRecord> &reactionRecords() {
         return _observableData.reactionRecords;
@@ -191,7 +191,7 @@ public:
         return _data.get().getParticle(index);
     };
 
-    particle_type_type getParticleType(std::size_t index) const override {
+    ParticleTypeId getParticleType(std::size_t index) const override {
         return _data.get().entry_at(index).type;
     };
 

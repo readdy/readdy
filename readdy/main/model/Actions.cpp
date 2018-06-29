@@ -63,8 +63,8 @@ reactions::ReversibleReactionConfig::ReversibleReactionConfig(ReactionId forward
     rhsTypes = backwardReaction->educts();
     if (numberLhsTypes == 2 and numberRhsTypes == 1) {
         reversibleType = ReversibleType::FusionFission;
-        lhsNames = {ctx.particle_types().nameOf(lhsTypes[0]), ctx.particle_types().nameOf(lhsTypes[1])};
-        rhsNames = {ctx.particle_types().nameOf(rhsTypes[0]), ""};
+        lhsNames = {ctx.particleTypes().nameOf(lhsTypes[0]), ctx.particleTypes().nameOf(lhsTypes[1])};
+        rhsNames = {ctx.particleTypes().nameOf(rhsTypes[0]), ""};
     } else if (numberLhsTypes == 1 and numberRhsTypes == 2) {
         reversibleType = ReversibleType::FusionFission;
         // in FusionFission the lhs is assumed to have two educts -> swap forward and backward and redetermine types
@@ -73,16 +73,16 @@ reactions::ReversibleReactionConfig::ReversibleReactionConfig(ReactionId forward
         lhsTypes = forwardReaction->educts();
         numberRhsTypes = backwardReaction->nEducts();
         rhsTypes = backwardReaction->educts();
-        lhsNames = {ctx.particle_types().nameOf(lhsTypes[0]), ctx.particle_types().nameOf(lhsTypes[1])};
-        rhsNames = {ctx.particle_types().nameOf(rhsTypes[0]), ""};
+        lhsNames = {ctx.particleTypes().nameOf(lhsTypes[0]), ctx.particleTypes().nameOf(lhsTypes[1])};
+        rhsNames = {ctx.particleTypes().nameOf(rhsTypes[0]), ""};
     } else if (numberLhsTypes == 1 and numberRhsTypes == 1) {
         reversibleType = ReversibleType::ConversionConversion;
-        lhsNames = {ctx.particle_types().nameOf(lhsTypes[0]), ""};
-        rhsNames = {ctx.particle_types().nameOf(rhsTypes[0]), ""};
+        lhsNames = {ctx.particleTypes().nameOf(lhsTypes[0]), ""};
+        rhsNames = {ctx.particleTypes().nameOf(rhsTypes[0]), ""};
     } else if (numberLhsTypes == 2 and numberRhsTypes == 2) {
         reversibleType = ReversibleType::EnzymaticEnzymatic;
-        lhsNames = {ctx.particle_types().nameOf(lhsTypes[0]), ctx.particle_types().nameOf(lhsTypes[1])};
-        rhsNames = {ctx.particle_types().nameOf(rhsTypes[0]), ctx.particle_types().nameOf(rhsTypes[1])};
+        lhsNames = {ctx.particleTypes().nameOf(lhsTypes[0]), ctx.particleTypes().nameOf(lhsTypes[1])};
+        rhsNames = {ctx.particleTypes().nameOf(rhsTypes[0]), ctx.particleTypes().nameOf(rhsTypes[1])};
     } else {
         throw std::logic_error(fmt::format("Type of reversible reaction cannot be determined, method: {} file: {}",
                                            "ReversibleReactionConfig::ReversibleReactionConfig", "Actions.cpp"));
@@ -530,9 +530,6 @@ std::string reactions::DetailedBalance::describe() const {
 
 AddParticles::AddParticles(Kernel *const kernel, const std::vector<Particle> &particles)
         : particles(particles), kernel(kernel) {}
-
-AddParticles::AddParticles(Kernel *const kernel, const Particle &particle)
-        : AddParticles(kernel, std::vector<Particle>{particle}) {}
 
 void AddParticles::perform(const util::PerformanceNode &node) {
     auto t = node.timeit();

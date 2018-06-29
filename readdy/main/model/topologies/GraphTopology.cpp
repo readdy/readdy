@@ -38,7 +38,7 @@ namespace readdy {
 namespace model {
 namespace top {
 
-GraphTopology::GraphTopology(topology_type_type type,
+GraphTopology::GraphTopology(TopologyTypeId type,
                              const Topology::particle_indices &particles, const types_vec &types,
                              const model::Context& context, const model::StateModel *stateModel)
         : Topology(particles), _context(context), _topology_type(type), _stateModel(stateModel) {
@@ -49,7 +49,7 @@ GraphTopology::GraphTopology(topology_type_type type,
     }
 }
 
-GraphTopology::GraphTopology(topology_type_type type,
+GraphTopology::GraphTopology(TopologyTypeId type,
                              Topology::particle_indices &&particles, graph::Graph &&graph,
                              const model::Context& context, const model::StateModel *stateModel)
         : Topology(std::move(particles)), _context(context), graph_(std::move(graph)), _topology_type(type),
@@ -78,7 +78,7 @@ void GraphTopology::configure() {
     std::unordered_map<api::AngleType, std::vector<pot::AngleConfiguration>, readdy::util::hash::EnumClassHash> angles;
     std::unordered_map<api::TorsionType, std::vector<pot::DihedralConfiguration>, readdy::util::hash::EnumClassHash> dihedrals;
 
-    const auto &config = context().topology_registry().potentialConfiguration();
+    const auto &config = context().topologyRegistry().potentialConfiguration();
 
     graph_.findNTuples([&](const topology_graph::edge &tuple) {
         auto v1 = std::get<0>(tuple);
@@ -185,14 +185,14 @@ std::vector<GraphTopology> GraphTopology::connectedComponents() {
 const bool GraphTopology::isNormalParticle(const Kernel &k) const {
     if(getNParticles() == 1){
         const auto particle_type = k.stateModel().getParticleType(particles.front());
-        const auto& info = k.context().particle_types().infoOf(particle_type);
+        const auto& info = k.context().particleTypes().infoOf(particle_type);
         return info.flavor == particleflavor::NORMAL;
     }
     return false;
 }
 
-void GraphTopology::appendParticle(particle_index newParticle, particle_type_type newParticleType,
-                                   particle_index counterPart, particle_type_type counterPartType) {
+void GraphTopology::appendParticle(particle_index newParticle, ParticleTypeId newParticleType,
+                                   particle_index counterPart, ParticleTypeId counterPartType) {
     auto it = std::find(particles.begin(), particles.end(), counterPart);
     if(it != particles.end()) {
         auto counterPartIdx = std::distance(particles.begin(), it);
@@ -211,8 +211,8 @@ void GraphTopology::appendParticle(particle_index newParticle, particle_type_typ
 }
 
 void GraphTopology::appendTopology(GraphTopology &other, Topology::particle_index otherParticle,
-                                   particle_type_type otherNewParticleType, Topology::particle_index thisParticle,
-                                   particle_type_type thisNewParticleType, topology_type_type newType) {
+                                   ParticleTypeId otherNewParticleType, Topology::particle_index thisParticle,
+                                   ParticleTypeId thisNewParticleType, TopologyTypeId newType) {
     auto &otherGraph = other.graph();
 
     if(!otherGraph.vertices().empty()) {

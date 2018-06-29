@@ -161,6 +161,7 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
     SET(EXTRA_COMPILE_FLAGS "")
     SET(EXTRA_LINK_FLAGS ${EXTRA_COMPILE_FLAGS})
     IF(APPLE)
+        SET(CMAKE_MACOSX_RPATH 1)
         IF (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
             SET(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
             # SET(EXTRA_COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS} -stdlib=libc++")
@@ -301,6 +302,11 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
                 DIRECTORY ${CMAKE_SOURCE_DIR}/include/
                 DESTINATION include
                 FILES_MATCHING PATTERN "*.h*")
+        INSTALL (
+                DIRECTORY ${CMAKE_SOURCE_DIR}/kernels/cpu/include/
+                DESTINATION include
+                FILES_MATCHING PATTERN "*.h*"
+        )
         INSTALL (
                 DIRECTORY ${CMAKE_SOURCE_DIR}/libraries/h5rd/include/
                 DESTINATION include

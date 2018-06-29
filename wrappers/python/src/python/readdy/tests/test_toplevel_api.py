@@ -433,14 +433,6 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
     def test_topology_observable_cpu(self):
         self._run_topology_observable_test_for("CPU")
 
-    def test_too_large_reaction_rates_and_too_large_time_step(self):
-        system = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.])
-        system.add_species("A")
-        system.reactions.add("fancy: A+(.1)A->A+A", 10000)
-        sim = system.simulation()
-        with self.assertRaises(Exception):
-            sim.run(10, timestep=1e5, show_system=False)
-
     def _run_readwrite_test_for(self, kernel, reaction_handler):
         traj_fname = os.path.join(self.tempdir, "traj_{}_{}.h5".format(kernel, reaction_handler))
         traj_fname2 = os.path.join(self.tempdir, "traj2_{}_{}.h5".format(kernel, reaction_handler))

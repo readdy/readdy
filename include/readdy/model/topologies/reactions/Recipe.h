@@ -69,7 +69,7 @@ public:
 
     Recipe &changeParticleType(const vertex_ref &ref, const std::string &to);
 
-    Recipe &changeParticleType(const vertex_ref &ref, const particle_type_type &to) {
+    Recipe &changeParticleType(const vertex_ref &ref, const ParticleTypeId &to) {
         _steps.push_back(std::make_shared<op::ChangeParticleType>(ref, to));
         return *this;
     }

@@ -44,6 +44,8 @@ NAMESPACE_BEGIN(compartments)
 class CompartmentRegistry {
 public:
 
+    using CompartmentVector = std::vector<std::shared_ptr<readdy::model::compartments::Compartment>>;
+
     explicit CompartmentRegistry(const ParticleTypeRegistry &types);
 
     Compartment::id_type addSphere(const Compartment::conversion_map &conversions, const std::string &uniqueName,
@@ -65,16 +67,16 @@ public:
     }
 
 
-    const auto &get() const {
+    const CompartmentVector &get() const {
         return _compartments;
     }
 
-    auto &get() {
+    CompartmentVector &get() {
         return _compartments;
     }
 
 private:
-    std::vector<std::shared_ptr<readdy::model::compartments::Compartment>> _compartments;
+     CompartmentVector _compartments;
 
     std::reference_wrapper<const ParticleTypeRegistry> _types;
 };

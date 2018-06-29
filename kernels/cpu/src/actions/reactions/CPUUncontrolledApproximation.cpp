@@ -157,13 +157,13 @@ void CPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
             auto nlNext = std::min(it_nl + nlGrainSize, nl->nCells());
             auto bounds_nl = std::make_tuple(it_nl, nlNext);
 
-            pool.push(findEvents, it, itNext, bounds_nl, kernel, timeStep, false, std::cref(*nl),
+            pool.push(findEvents, it, itNext, bounds_nl, kernel, timeStep(), false, std::cref(*nl),
                       std::ref(promises.at(i)), std::ref(n_events_promises.at(i)));
 
             it = itNext;
             it_nl = nlNext;
         }
-        pool.push(findEvents, it, data.cend(), std::make_tuple(it_nl, nl->nCells()), kernel, timeStep, false,
+        pool.push(findEvents, it, data.cend(), std::make_tuple(it_nl, nl->nCells()), kernel, timeStep(), false,
                   std::cref(*nl), std::ref(promises.back()), std::ref(n_events_promises.back()));
     }
 

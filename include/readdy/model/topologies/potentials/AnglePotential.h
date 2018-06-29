@@ -48,7 +48,7 @@ public:
 
     AnglePotential() : TopologyPotential() {}
 
-    virtual ~AnglePotential() = default;
+    ~AnglePotential() override = default;
 };
 
 struct AngleConfiguration {
@@ -66,16 +66,16 @@ public:
     using angle = AngleConfiguration;
     using angle_configurations = std::vector<AngleConfiguration>;
 
-    explicit HarmonicAnglePotential(const angle_configurations &angles) : AnglePotential(), angles(angles) {}
+    explicit HarmonicAnglePotential(angle_configurations angles) : AnglePotential(), angles(std::move(angles)) {}
     HarmonicAnglePotential(const HarmonicAnglePotential&) = default;
     HarmonicAnglePotential& operator=(const HarmonicAnglePotential&) = delete;
     HarmonicAnglePotential(HarmonicAnglePotential&&) = default;
     HarmonicAnglePotential& operator=(HarmonicAnglePotential&&) = delete;
 
-    virtual ~HarmonicAnglePotential() = default;
+    ~HarmonicAnglePotential() override = default;
 
-    virtual std::unique_ptr<EvaluatePotentialAction>
-    createForceAndEnergyAction(const TopologyActionFactory *const factory) override;
+    std::unique_ptr<EvaluatePotentialAction>
+    createForceAndEnergyAction(const TopologyActionFactory *factory) override;
 
     const angle_configurations &getAngles() const {
         return angles;

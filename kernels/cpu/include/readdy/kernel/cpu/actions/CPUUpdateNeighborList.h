@@ -60,10 +60,6 @@ public:
 
     }
 
-    bool supportsSkin() const override {
-        return true;
-    }
-
 private:
     CPUKernel *kernel;
 };

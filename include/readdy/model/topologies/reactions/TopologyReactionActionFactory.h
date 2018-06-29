@@ -66,8 +66,8 @@ public:
      * @param type_to the target type
      * @return a unique pointer to the action
      */
-    virtual action_ref createChangeParticleType(GraphTopology *const topology, const vertex &v,
-                                                  const particle_type_type &type_to) const = 0;
+    virtual action_ref createChangeParticleType(GraphTopology *topology, const vertex &v,
+                                                const ParticleTypeId &type_to) const = 0;
 
     /**
      * creates an action that adds an edge in the topology
@@ -95,7 +95,7 @@ public:
      * @param type_to the target type
      * @return a unique pointer to the action
      */
-    virtual action_ref createChangeTopologyType(GraphTopology *const topology, const std::string& type_to) const = 0;
+    virtual action_ref createChangeTopologyType(GraphTopology *topology, const std::string& type_to) const = 0;
 
 };
 

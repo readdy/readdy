@@ -46,7 +46,7 @@ public:
 
     Forces(Kernel* kernel, stride_type stride, std::vector<std::string> typesToCount);
 
-    Forces(Kernel* kernel, stride_type stride, const std::vector<particle_type_type> &typesToCount);
+    Forces(Kernel* kernel, stride_type stride, const std::vector<ParticleTypeId> &typesToCount);
 
     Forces(const Forces&) = delete;
     Forces& operator=(const Forces&) = delete;
@@ -67,7 +67,7 @@ protected:
     struct Impl;
     std::unique_ptr<Impl> pimpl;
 
-    std::vector<particle_type_type> typesToCount;
+    std::vector<ParticleTypeId> typesToCount;
 };
 NAMESPACE_END(observables)
 NAMESPACE_END(model)

@@ -154,10 +154,10 @@ SpatialTopologyReaction STRParser::parse(const std::string &descriptor, scalar r
 
     if(lhs_t2.empty()) {
         // we are in the topology-particle case
-        reaction._top_types = std::make_tuple(_topology_registry.get().idOf(lhs_t1), topology_type_empty);
+        reaction._top_types = std::make_tuple(_topology_registry.get().idOf(lhs_t1), EmptyTopologyId);
         reaction._types = std::make_tuple(particle_types.idOf(lhs_p1), particle_types.idOf(lhs_p2));
         reaction._types_to = std::make_tuple(particle_types.idOf(rhs_p1), particle_types.idOf(rhs_p2));
-        reaction._top_types_to = std::make_tuple(_topology_registry.get().idOf(rhs_t1), topology_type_empty);
+        reaction._top_types_to = std::make_tuple(_topology_registry.get().idOf(rhs_t1), EmptyTopologyId);
         if(rhs_fusion) {
             // we are in the fusion case
             reaction._mode = STRMode::TP_FUSION;
@@ -178,7 +178,7 @@ SpatialTopologyReaction STRParser::parse(const std::string &descriptor, scalar r
             } else {
                 reaction._mode = STRMode::TT_FUSION;
             }
-            reaction._top_types_to = std::make_tuple(_topology_registry.get().idOf(rhs_t1), topology_type_empty);
+            reaction._top_types_to = std::make_tuple(_topology_registry.get().idOf(rhs_t1), EmptyTopologyId);
         } else {
             // we are in the enzymatic case
             reaction._mode = STRMode::TT_ENZYMATIC;

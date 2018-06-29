@@ -42,7 +42,7 @@ NAMESPACE_BEGIN(reactions)
 class Fission : public Reaction {
     using super = Reaction;
 public:
-    Fission(const std::string &name, particle_type_type from, particle_type_type to1, particle_type_type to2,
+    Fission(const std::string &name, ParticleTypeId from, ParticleTypeId to1, ParticleTypeId to2,
             const scalar rate, const scalar productDistance, const scalar weight1 = 0.5,
             const scalar weight2 = 0.5) :
             Reaction(name, rate, 0, productDistance, 1, 2) {
@@ -59,21 +59,19 @@ public:
         }
     }
 
-    const particle_type_type getFrom() const {
+    const ParticleTypeId getFrom() const {
         return _educts[0];
     }
 
-    const particle_type_type getTo1() const {
+    const ParticleTypeId getTo1() const {
         return _products[0];
     }
 
-    const particle_type_type getTo2() const {
+    const ParticleTypeId getTo2() const {
         return _products[1];
     }
 
-    virtual const ReactionType type() const override {
-        return ReactionType::Fission;
-    }
+    const ReactionType type() const override { return ReactionType::Fission; }
 
 };
 NAMESPACE_END(reactions)

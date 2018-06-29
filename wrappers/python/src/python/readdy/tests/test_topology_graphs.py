@@ -28,23 +28,24 @@ Created on 24.03.17
 from __future__ import print_function
 
 import unittest
+
 import numpy as np
 import readdy._internal.readdybinding.common as common
-from readdy._internal.readdybinding.api import Simulation
+from readdy._internal.readdybinding.api import BondedPotentialConfiguration
 from readdy._internal.readdybinding.api import ParticleTypeFlavor
+from readdy._internal.readdybinding.api import Simulation
 
 from readdy.util.testing_utils import ReaDDyTestCase
 
 
 class TestTopologyGraphs(ReaDDyTestCase):
     def test_sanity(self):
-        sim = Simulation()
-        sim.set_kernel("SingleCPU")
-        sim.box_size = common.Vec(10, 10, 10)
+        sim = Simulation("SingleCPU")
+        sim.context.box_size = [10., 10., 10.]
         np.testing.assert_equal(sim.kernel_supports_topologies(), True)
-        sim.register_topology_type("TA")
-        sim.register_particle_type("T", 1.0, flavor=ParticleTypeFlavor.TOPOLOGY)
-        sim.configure_topology_bond_potential("T", "T", 10., 11.)
+        sim.context.topologies.add_type("TA")
+        sim.context.particle_types.add("T", 1.0, flavor=ParticleTypeFlavor.TOPOLOGY)
+        sim.context.topologies.configure_bond_potential("T", "T", BondedPotentialConfiguration(10., 11., "harmonic"))
         particles = [sim.create_topology_particle("T", common.Vec(x, 0, 0)) for x in range(4)]
         top = sim.add_topology("TA", particles)
         graph = top.get_graph()
@@ -72,16 +73,15 @@ class TestTopologyGraphs(ReaDDyTestCase):
                 np.testing.assert_equal(len(v.neighbors()), 1)
                 np.testing.assert_equal(2 in [vv.get().particle_index for vv in v], True)
         top.configure()
-        sim.run_scheme_readdy(True).configure_and_run(0, 1)
+        sim.run(0, 1)
 
     def test_unconnected_graph(self):
-        sim = Simulation()
-        sim.set_kernel("SingleCPU")
-        sim.register_topology_type("TA")
-        sim.box_size = common.Vec(10, 10, 10)
+        sim = Simulation("SingleCPU")
+        sim.context.topologies.add_type("TA")
+        sim.context.box_size = [10., 10., 10.]
         np.testing.assert_equal(sim.kernel_supports_topologies(), True)
-        sim.register_particle_type("T", 1.0, flavor=ParticleTypeFlavor.TOPOLOGY)
-        sim.configure_topology_bond_potential("T", "T", 10., 11.)
+        sim.context.particle_types.add("T", 1.0, flavor=ParticleTypeFlavor.TOPOLOGY)
+        sim.context.topologies.configure_bond_potential("T", "T", BondedPotentialConfiguration(10, 11, "harmonic"))
         particles = [sim.create_topology_particle("T", common.Vec(0, 0, 0)) for _ in range(4)]
         top = sim.add_topology("TA", particles)
         graph = top.get_graph()
@@ -91,14 +91,13 @@ class TestTopologyGraphs(ReaDDyTestCase):
             top.configure()
 
     def test_unbonded_edge(self):
-        sim = Simulation()
-        sim.set_kernel("SingleCPU")
-        sim.box_size = common.Vec(10, 10, 10)
-        sim.register_topology_type("TA")
+        sim = Simulation("SingleCPU")
+        sim.context.box_size = [10., 10., 10.]
+        sim.context.topologies.add_type("TA")
         np.testing.assert_equal(sim.kernel_supports_topologies(), True)
-        sim.register_particle_type("T", 1.0, flavor=ParticleTypeFlavor.TOPOLOGY)
-        sim.register_particle_type("D", 1.0, flavor=ParticleTypeFlavor.TOPOLOGY)
-        sim.configure_topology_bond_potential("T", "T", 10., 11.)
+        sim.context.particle_types.add("T", 1.0, flavor=ParticleTypeFlavor.TOPOLOGY)
+        sim.context.particle_types.add("D", 1.0, flavor=ParticleTypeFlavor.TOPOLOGY)
+        sim.context.topologies.configure_bond_potential("T", "T", BondedPotentialConfiguration(10., 11., "harmonic"))
         particles = [sim.create_topology_particle("T", common.Vec(0, 0, 0)) for _ in range(3)]
         particles.append(sim.create_topology_particle("D", common.Vec(0, 0, 0)))
         top = sim.add_topology("TA", particles)

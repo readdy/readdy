@@ -36,7 +36,7 @@ class TestAggregators : public KernelTest {
 };
 
 TEST_P(TestAggregators, TestMeanSquaredDisplacement) {
-    kernel->context().particle_types().add("A", 1.);
+    kernel->context().particleTypes().add("A", 1.);
     for (auto i=0; i<5; ++i) kernel->addParticle("A", readdy::Vec3(0, 0, 0));
     auto obs = kernel->observe().particles(1);
     auto msd = kernel->observe().msd(1, std::vector<std::string>(), obs.get());
@@ -64,7 +64,7 @@ TEST_P(TestAggregators, TestMeanSquaredDisplacement) {
 }
 
 TEST_P(TestAggregators, TestTrivial) {
-    kernel->context().particle_types().add("A", 1.);
+    kernel->context().particleTypes().add("A", 1.);
     for (auto i=0; i<5; ++i) kernel->addParticle("A", readdy::Vec3(4, 2, 0));
     auto obs = kernel->observe().positions(1);
     auto traj = kernel->observe().collect(1, obs.get());

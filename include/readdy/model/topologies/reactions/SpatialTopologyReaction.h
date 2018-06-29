@@ -76,11 +76,11 @@ public:
         return _name;
     }
 
-    const particle_type_type type1() const {
+    const ParticleTypeId type1() const {
         return std::get<0>(_types);
     }
 
-    const particle_type_type type2() const {
+    const ParticleTypeId type2() const {
         return std::get<1>(_types);
     }
 
@@ -88,11 +88,11 @@ public:
         return _types;
     }
 
-    const particle_type_type type_to1() const {
+    const ParticleTypeId type_to1() const {
         return std::get<0>(_types_to);
     }
 
-    const particle_type_type type_to2() const {
+    const ParticleTypeId type_to2() const {
         return std::get<1>(_types_to);
     }
 
@@ -100,24 +100,24 @@ public:
         return _types_to;
     }
 
-    const topology_type_type top_type1() const {
+    const TopologyTypeId top_type1() const {
         return std::get<0>(_top_types);
     }
 
-    const topology_type_type top_type2() const {
+    const TopologyTypeId top_type2() const {
         return std::get<1>(_top_types);
     }
 
-    const topology_type_type top_type_to1() const {
+    const TopologyTypeId top_type_to1() const {
         return std::get<0>(_top_types_to);
     }
 
-    const topology_type_type top_type_to2() const {
+    const TopologyTypeId top_type_to2() const {
         return std::get<1>(_top_types_to);
     }
 
     bool is_topology_particle_reaction() const {
-        return top_type2() == topology_type_empty;
+        return top_type2() == EmptyTopologyId;
     }
 
     bool is_topology_topology_reaction() const {

@@ -40,17 +40,13 @@ NAMESPACE_BEGIN(reactions)
 class Decay : public Reaction {
 
 public:
-    Decay(const std::string &name, particle_type_type typeFrom, const scalar rate) : Reaction(name, rate, 0, 0, 1, 0) {
+    Decay(const std::string &name, ParticleTypeId typeFrom, const scalar rate) : Reaction(name, rate, 0, 0, 1, 0) {
         _educts[0] = typeFrom;
     }
 
-    const particle_type_type getTypeFrom() const {
-        return _educts[0];
-    }
+    const ParticleTypeId getTypeFrom() const { return _educts[0]; }
 
-    virtual const ReactionType type() const override {
-        return ReactionType::Decay;
-    }
+    const ReactionType type() const override { return ReactionType::Decay; }
 };
 NAMESPACE_END(reactions)
 NAMESPACE_END(model)

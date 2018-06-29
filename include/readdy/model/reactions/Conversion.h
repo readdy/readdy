@@ -40,23 +40,17 @@ NAMESPACE_BEGIN(reactions)
 class Conversion : public Reaction {
 
 public:
-    Conversion(const std::string &name, particle_type_type typeFrom, particle_type_type typeTo, const scalar rate) :
+    Conversion(const std::string &name, ParticleTypeId typeFrom, ParticleTypeId typeTo, const scalar rate) :
             Reaction(name, rate, 0, 0, 1, 1) {
         _educts = {typeFrom};
         _products = {typeTo};
     }
 
-    const particle_type_type getTypeFrom() const {
-        return _educts[0];
-    }
+    const ParticleTypeId getTypeFrom() const { return _educts[0]; }
 
-    const particle_type_type getTypeTo() const {
-        return _products[0];
-    }
+    const ParticleTypeId getTypeTo() const { return _products[0]; }
 
-    virtual const ReactionType type() const override {
-        return ReactionType::Conversion;
-    }
+    const ReactionType type() const override { return ReactionType::Conversion; }
 };
 NAMESPACE_END(reactions)
 NAMESPACE_END(model)

@@ -49,7 +49,7 @@ struct ReactionRecord {
     /**
      * unique reaction id
      */
-    readdy::model::reactions::Reaction::reaction_id id {0};
+    readdy::model::reactions::Reaction::ReactionId id {0};
 
     friend std::ostream &operator<<(std::ostream &os, const ReactionRecord &record) {
         auto type = ReactionType(record.type);
@@ -82,7 +82,7 @@ struct ReactionRecord {
     };
 };
 
-using reaction_counts_map = std::unordered_map<reactions::Reaction::reaction_id, std::size_t>;
+using reaction_counts_map = std::unordered_map<reactions::Reaction::ReactionId, std::size_t>;
 
 NAMESPACE_END(reactions)
 NAMESPACE_END(model)

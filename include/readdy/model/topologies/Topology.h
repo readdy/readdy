@@ -64,9 +64,7 @@ public:
     using torsion_potential = pot::TorsionPotential;
     using cos_dihedral = TopologyActionFactory::cos_dihedral;
 
-    Topology(particle_indices &&p) : particles(std::move(p)) { };
-
-    Topology(const particle_indices &particles) : particles(particles) { }
+    explicit Topology(particle_indices particles) : particles(std::move(particles)) { }
 
     Topology(const Topology &) = delete;
 
