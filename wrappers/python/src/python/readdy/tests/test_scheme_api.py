@@ -32,31 +32,12 @@ from readdy.util.testing_utils import ReaDDyTestCase
 class TestSchemeApi(ReaDDyTestCase):
     def test_sanity(self):
         simulation = Simulation("SingleCPU")
-        configurator = simulation.run_scheme_readdy(False)
-        scheme = configurator \
-            .with_integrator("EulerBDIntegrator") \
-            .include_forces(False) \
-            .with_reaction_scheduler("UncontrolledApproximation") \
-            .evaluate_observables(False) \
-            .configure(1)
-        scheme.run(10)
-
-    def test_sanity_oneliner(self):
-        simulation = Simulation("SingleCPU")
-
-        simulation.run_scheme_readdy(False) \
-            .with_integrator("EulerBDIntegrator") \
-            .include_forces(False) \
-            .with_reaction_scheduler("UncontrolledApproximation") \
-            .evaluate_observables(False) \
-            .configure_and_run(10, 1)
-
-        simulation.run_scheme_readdy(False) \
-            .with_integrator("EulerBDIntegrator") \
-            .include_forces(False) \
-            .with_reaction_scheduler("UncontrolledApproximation") \
-            .evaluate_observables(False) \
-            .configure(1).run(10)
+        loop = simulation.create_loop(1.)
+        loop.use_integrator("EulerBDIntegrator")
+        loop.evaluate_forces(False)
+        loop.use_reaction_scheduler("UncontrolledApproximation")
+        loop.evaluate_observables(False)
+        loop.run(10)
 
     def test_interrupt_simple(self):
         sim = Simulation("SingleCPU")
@@ -68,9 +49,8 @@ class TestSchemeApi(ReaDDyTestCase):
             counter[0] += 1
 
         sim.register_observable_n_particles(1, ["A"], increment)
-        scheme = sim.run_scheme_readdy(True).configure(0.1)
         do_continue = lambda t: t < 5
-        scheme.run_with_criterion(do_continue)
+        sim.create_loop(.1).run_with_criterion(do_continue)
         np.testing.assert_equal(counter[0], 6)
 
     def test_interrupt_maxparticles(self):
@@ -87,9 +67,9 @@ class TestSchemeApi(ReaDDyTestCase):
                 shall_stop[0] = True
 
         sim.register_observable_n_particles(1, ["A"], increment)
-        scheme = sim.run_scheme_readdy(True).configure(1., False)
+        loop = sim.create_loop(1.)
         do_continue = lambda t: not shall_stop[0]
-        scheme.run_with_criterion(do_continue)
+        loop.run_with_criterion(do_continue)
         np.testing.assert_equal(counter[0], 4)
 
 

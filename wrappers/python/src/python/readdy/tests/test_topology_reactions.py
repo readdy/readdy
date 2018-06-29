@@ -120,7 +120,7 @@ class TestTopologyReactions(ReaDDyTestCase):
 
         np.testing.assert_equal(1, len(sim.current_topologies()))
 
-        sim.run_scheme_readdy(True).evaluate_topology_reactions().configure_and_run(int(500), float(1.0))
+        sim.run(500, 1.)
 
         np.testing.assert_equal(0, len(sim.current_topologies()))
 

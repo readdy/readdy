@@ -30,8 +30,7 @@ class TestTimer(ReaDDyTestCase):
 
     def test_timer_sanity(self):
         simulation = Simulation("CPU")
-        scheme = simulation.run_scheme_readdy(True)
-        scheme.configure_and_run(10, 0.1)
+        simulation.run(10, .1)
         root = simulation.performance_root()
         np.testing.assert_equal(root.count(), 1)
         np.testing.assert_equal(root.time() > 0., True)
