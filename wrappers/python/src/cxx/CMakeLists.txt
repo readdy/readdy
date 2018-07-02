@@ -38,8 +38,6 @@ set(SOURCE_FILES
         api/ExportTopologies.cpp
         api/ExportKernelContext.cpp
         api/PyFunction.h
-        api/PyPotential.h
-        api/PyPotential.cpp
         api/ApiModule.cpp)
 pybind11_add_module(readdybinding ${SOURCE_FILES})
 target_include_directories(readdybinding PUBLIC "${READDY_INCLUDE_DIRS}")

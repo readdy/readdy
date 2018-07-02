@@ -28,7 +28,6 @@
 #include <readdy/api/Simulation.h>
 #include <readdy/common/nodelete.h>
 #include "ExportSchemeApi.h"
-#include "PyPotential.h"
 #include "ExportObservables.h"
 
 namespace py = pybind11;
@@ -37,7 +36,6 @@ using rvp = py::return_value_policy;
 using sim = readdy::Simulation;
 using kp = readdy::plugin::KernelProvider;
 using vec = readdy::Vec3;
-using pot2 = readdy::rpy::PotentialOrder2Wrapper;
 using model = readdy::model::StateModel;
 using ctx = readdy::model::Context;
 using kern = readdy::model::Kernel;
@@ -45,10 +43,6 @@ using kern = readdy::model::Kernel;
 void exportTopologies(py::module &);
 
 void exportKernelContext(py::module &);
-
-void registerPotentialOrder2(sim &self, pot2 *potential) {
-    self.context().potentials().addUserDefined(potential);
-}
 
 std::string getSelectedKernelType(sim &self) { /* discard const reference */ return self.selectedKernelType(); }
 
@@ -135,11 +129,6 @@ void exportApi(py::module &api) {
             .def_static("get", &kp::getInstance, rvp::reference)
             .def("load_from_dir", &kp::loadKernelsFromDirectory, "directory"_a)
             .def("available_kernels", &kp::availableKernels);
-
-    py::class_<pot2>(api, "Pot2")
-            .def(py::init<readdy::ParticleTypeId, readdy::ParticleTypeId, py::object, py::object>())
-            .def("calc_energy", &pot2::calculateEnergy, "x_ij"_a)
-            .def("calc_force", &pot2::calculateForce, "force"_a, "x_ij"_a);
 
     py::class_<kern>(api, "Kernel").def("get_name", &kern::name, rvp::reference);
 }
