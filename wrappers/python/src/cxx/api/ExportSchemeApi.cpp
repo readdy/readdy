@@ -45,7 +45,7 @@ void exportSchemeApi(pybind11::module &module) {
     using namespace py::literals;
     using Loop = readdy::api::SimulationLoop;
 
-    py::class_<UserAction, std::shared_ptr<UserAction>>(module, "UserDefinedAction");
+    py::class_<UserAction, std::shared_ptr<UserAction>> userAction (module, "UserDefinedAction");
 
     py::class_<Loop>(module, "SimulationLoop")
             .def_property("progress_callback", [](const Loop& self) { return self.progressCallback(); },
@@ -78,7 +78,7 @@ void exportSchemeApi(pybind11::module &module) {
             .def("use_integrator", [](Loop &self, std::shared_ptr<UserAction> integrator) {
                 integrator->kernel() = self.kernel();
                 self.integrator() = integrator;
-            }, py::keep_alive<0, 1>())
+            }, py::keep_alive<1, 2>())
             .def("evaluate_forces", &Loop::evaluateForces, "evaluate"_a)
             .def("use_reaction_scheduler", [](Loop &self, std::string name) {
                      return self.useReactionScheduler(name, self.timeStep());
@@ -86,7 +86,7 @@ void exportSchemeApi(pybind11::module &module) {
             .def("use_reaction_scheduler", [](Loop &self, std::shared_ptr<UserAction> reactionScheduler) {
                 reactionScheduler->kernel() = self.kernel();
                 self.reactionScheduler() = reactionScheduler;
-            })
+            }, py::keep_alive<1, 2>())
             .def("write_config_to_file", &Loop::writeConfigToFile, py::return_value_policy::reference_internal, "file"_a)
             .def("evaluate_topology_reactions", [](Loop &self, bool evaluate, py::object timeStep) {
                 self.evaluateTopologyReactions(evaluate, timeStep.is_none() ? self.timeStep() : timeStep.cast<readdy::scalar>());
