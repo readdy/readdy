@@ -34,12 +34,10 @@ set(SOURCE_FILES
         common/SpdlogPythonSink.h
         common/Utils.cpp
         api/ExportObservables.h
-        api/ExportSchemeApi.h
+        api/ExportSchemeApi.cpp
         api/ExportTopologies.cpp
         api/ExportKernelContext.cpp
         api/PyFunction.h
-        api/PyPotential.h
-        api/PyPotential.cpp
         api/ApiModule.cpp)
 pybind11_add_module(readdybinding ${SOURCE_FILES})
 target_include_directories(readdybinding PUBLIC "${READDY_INCLUDE_DIRS}")

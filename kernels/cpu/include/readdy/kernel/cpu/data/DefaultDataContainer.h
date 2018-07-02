@@ -33,7 +33,6 @@
 #pragma once
 
 #include <readdy/model/Particle.h>
-#include <hilbert.h>
 #include <readdy/kernel/cpu/pool.h>
 #include <readdy/common/boundary_condition_operations.h>
 #include "DataContainer.h"
@@ -133,7 +132,7 @@ public:
                          _context.get().periodicBoundaryConditions().data());
     };
 
-    void hilbertSort(scalar gridWidth) {
+    /*void hilbertSort(scalar gridWidth) {
         if(!empty()) {
             using indices_it = std::vector<std::size_t>::iterator;
             std::vector<std::size_t> hilbert_indices;
@@ -184,7 +183,7 @@ public:
             reorderSignal->fire_signal(inverseIndices);
             readdy::util::collections::reorder_destructive(inverseIndices.begin(), inverseIndices.end(), begin());
         }
-    };
+    };*/
 
 };
 

@@ -277,6 +277,14 @@ public:
     scalar timeStep() const {
         return _timeStep;
     }
+    
+    model::Kernel *const kernel() {
+        return _kernel;
+    }
+    
+    const model::Kernel *const kernel() const {
+        return _kernel;
+    }
 
 protected:
     model::Kernel *const _kernel;

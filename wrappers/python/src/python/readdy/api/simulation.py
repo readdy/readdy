@@ -28,6 +28,7 @@ from readdy.api.conf.KernelConfiguration import CPUKernelConfiguration as _CPUKe
 from readdy.api.conf.KernelConfiguration import NOOPKernelConfiguration as _NOOPKernelConfiguration
 from readdy.api.registry.observables import Observables as _Observables
 from readdy._internal.readdybinding.api import Simulation as _Simulation
+from readdy._internal.readdybinding.api import UserDefinedAction as _UserDefinedAction
 from readdy.api.utils import vec3_of as _v3_of
 from readdy.util.progress import SimulationProgress as _SimulationProgress
 from readdy._internal.readdybinding.api import KernelProvider as _KernelProvider
@@ -226,8 +227,8 @@ class Simulation(object):
         :param value: the integrator
         """
         supported_integrators = ("EulerBDIntegrator",)
-        assert isinstance(value, str) and value in supported_integrators, \
-            "the integrator can only be one of {}".format(",".join(supported_integrators))
+        assert (isinstance(value, str) and value in supported_integrators) or isinstance(value, _UserDefinedAction), \
+            "the integrator can only be one of {} or a user defined integrator.".format(",".join(supported_integrators))
         self._integrator = value
 
     @property
@@ -249,8 +250,10 @@ class Simulation(object):
         :param value: the reaction handler
         """
         supported_reaction_handlers = ("Gillespie", "UncontrolledApproximation", "DetailedBalance",)
-        assert isinstance(value, str) and value in supported_reaction_handlers, \
-            "the reaction handler can only be one of {}".format(",".join(supported_reaction_handlers))
+        assert (isinstance(value, str) and value in supported_reaction_handlers) or \
+               isinstance(value, _UserDefinedAction), \
+            "the reaction handler can only be one of {} or a user defined reaction handler"\
+                .format(",".join(supported_reaction_handlers))
         self._reaction_handler = value
 
     @property
