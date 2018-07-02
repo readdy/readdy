@@ -34,10 +34,11 @@
 
 #include <pybind11/pybind11.h>
 #include <readdy/api/SimulationLoop.h>
+#include <readdy/model/actions/UserDefinedAction.h>
 #include "PyFunction.h"
 
 
-void exportSchemeApi(pybind11::module &module, const std::string &schemeName) {
+void exportSchemeApi(pybind11::module &module) {
     namespace py = pybind11;
     using namespace py::literals;
     using Loop = readdy::api::SimulationLoop;
@@ -70,14 +71,16 @@ void exportSchemeApi(pybind11::module &module, const std::string &schemeName) {
             .def("use_integrator", [](Loop &self, std::string name) {
                 self.useIntegrator(name, self.timeStep());
             })
-            .def("use_integrator", [](Loop &self, Loop::TimeStepActionPtr integrator) {
+            .def("use_integrator", [](Loop &self, std::shared_ptr<readdy::model::actions::UserDefinedAction> integrator) {
+                integrator->kernel() = self.kernel();
                 self.integrator() = integrator;
             }, py::keep_alive<0, 1>())
             .def("evaluate_forces", &Loop::evaluateForces, "evaluate"_a)
             .def("use_reaction_scheduler", [](Loop &self, std::string name) {
                      return self.useReactionScheduler(name, self.timeStep());
                  }, "reaction_scheduler_name"_a)
-            .def("use_reaction_scheduler", [](Loop &self, Loop::TimeStepActionPtr reactionScheduler) {
+            .def("use_reaction_scheduler", [](Loop &self, std::shared_ptr<readdy::model::actions::UserDefinedAction> reactionScheduler) {
+                reactionScheduler->kernel() = self.kernel();
                 self.reactionScheduler() = reactionScheduler;
             })
             .def("write_config_to_file", &Loop::writeConfigToFile, py::return_value_policy::reference_internal, "file"_a)

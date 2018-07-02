@@ -50,13 +50,6 @@ public:
 
     Action() = default;
 
-    Action(const Action&) = default;
-    Action& operator=(const Action&) = default;
-    Action(Action&&) = default;
-    Action& operator=(Action&&) = default;
-
-    virtual ~Action() = default;
-
     virtual void perform(const util::PerformanceNode &node) = 0;
 
     void perform() {
@@ -69,13 +62,6 @@ public:
 class TimeStepDependentAction : public Action {
 public:
     explicit TimeStepDependentAction(scalar timeStep) : _timeStep(timeStep) {}
-
-    TimeStepDependentAction(const TimeStepDependentAction&) = default;
-    TimeStepDependentAction&operator=(const TimeStepDependentAction&) = default;
-    TimeStepDependentAction(TimeStepDependentAction&&) = default;
-    TimeStepDependentAction& operator=(TimeStepDependentAction&&) = default;
-
-    ~TimeStepDependentAction() override = default;
 
     scalar &timeStep() { return _timeStep; }
     const scalar &timeStep() const { return _timeStep; }

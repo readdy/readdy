@@ -27,7 +27,6 @@
 
 #include <readdy/api/Simulation.h>
 #include <readdy/common/nodelete.h>
-#include "ExportSchemeApi.h"
 #include "ExportObservables.h"
 
 namespace py = pybind11;
@@ -41,7 +40,7 @@ using ctx = readdy::model::Context;
 using kern = readdy::model::Kernel;
 
 void exportTopologies(py::module &);
-
+void exportSchemeApi(py::module &);
 void exportKernelContext(py::module &);
 
 std::string getSelectedKernelType(sim &self) { /* discard const reference */ return self.selectedKernelType(); }
@@ -55,11 +54,10 @@ enum class ParticleTypeFlavor {
 
 void exportApi(py::module &api) {
     using namespace pybind11::literals;
-    exportSchemeApi(api, "ReaDDyScheme");
 
+    exportSchemeApi(api);
     auto topologyModule = api.def_submodule("top");
     exportTopologies(topologyModule);
-
     exportKernelContext(api);
 
     py::enum_<ParticleTypeFlavor>(api, "ParticleTypeFlavor")
