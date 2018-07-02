@@ -51,7 +51,7 @@ public:
             const std::size_t grainSize = size / granularity;
 
             std::size_t idx = 0;
-            for (auto i = 0_z; i < granularity-1; ++i) {
+            for (std::size_t i = 0; i < granularity-1; ++i) {
                 auto itNext = it + grainSize;
                 if(it != itNext) {
                     waitingFutures.emplace_back(pool.push(worker, idx, it, itNext));
@@ -69,5 +69,5 @@ public:
 
 PYBIND11_MODULE (custom_integrator_example, m) {
     py::module::import("readdy");
-    py::class_<EBDIntegrator, std::shared_ptr<EBDIntegrator>>(m, "EBDIntegrator").def(py::init<readdy::scalar>());
+    py::class_<EBDIntegrator, readdy::model::actions::UserDefinedAction, std::shared_ptr<EBDIntegrator>>(m, "EBDIntegrator").def(py::init<readdy::scalar>());
 }

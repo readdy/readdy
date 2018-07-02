@@ -37,11 +37,15 @@
 #include <readdy/model/actions/UserDefinedAction.h>
 #include "PyFunction.h"
 
+using UserAction = readdy::model::actions::UserDefinedAction;
+
 
 void exportSchemeApi(pybind11::module &module) {
     namespace py = pybind11;
     using namespace py::literals;
     using Loop = readdy::api::SimulationLoop;
+
+    py::class_<UserAction, std::shared_ptr<UserAction>>(module, "UserDefinedAction");
 
     py::class_<Loop>(module, "SimulationLoop")
             .def_property("progress_callback", [](const Loop& self) { return self.progressCallback(); },
@@ -71,7 +75,7 @@ void exportSchemeApi(pybind11::module &module) {
             .def("use_integrator", [](Loop &self, std::string name) {
                 self.useIntegrator(name, self.timeStep());
             })
-            .def("use_integrator", [](Loop &self, std::shared_ptr<readdy::model::actions::UserDefinedAction> integrator) {
+            .def("use_integrator", [](Loop &self, std::shared_ptr<UserAction> integrator) {
                 integrator->kernel() = self.kernel();
                 self.integrator() = integrator;
             }, py::keep_alive<0, 1>())
@@ -79,7 +83,7 @@ void exportSchemeApi(pybind11::module &module) {
             .def("use_reaction_scheduler", [](Loop &self, std::string name) {
                      return self.useReactionScheduler(name, self.timeStep());
                  }, "reaction_scheduler_name"_a)
-            .def("use_reaction_scheduler", [](Loop &self, std::shared_ptr<readdy::model::actions::UserDefinedAction> reactionScheduler) {
+            .def("use_reaction_scheduler", [](Loop &self, std::shared_ptr<UserAction> reactionScheduler) {
                 reactionScheduler->kernel() = self.kernel();
                 self.reactionScheduler() = reactionScheduler;
             })

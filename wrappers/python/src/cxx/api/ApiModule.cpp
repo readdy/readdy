@@ -27,6 +27,7 @@
 
 #include <readdy/api/Simulation.h>
 #include <readdy/common/nodelete.h>
+#include <readdy/model/actions/UserDefinedAction.h>
 #include "ExportObservables.h"
 
 namespace py = pybind11;
