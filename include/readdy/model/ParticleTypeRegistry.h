@@ -112,7 +112,15 @@ public:
         return diffusionConstantOf(idOf(particleType));
     }
 
+    scalar& diffusionConstantOf(const std::string &particleType) {
+        return diffusionConstantOf(idOf(particleType));
+    }
+
     scalar diffusionConstantOf(ParticleTypeId particleType) const {
+        return particle_info_.at(particleType).diffusionConstant;
+    }
+
+    scalar& diffusionConstantOf(ParticleTypeId particleType) {
         return particle_info_.at(particleType).diffusionConstant;
     }
 

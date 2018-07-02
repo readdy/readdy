@@ -47,6 +47,23 @@ class TestTopLevelAPI(ReaDDyTestCase):
         np.testing.assert_equal(rds.temperature, 293. * rds.temperature_unit)
         np.testing.assert_almost_equal(rds.kbt.magnitude, (2.4361374086224026 * rds.energy_unit).magnitude)
 
+    def test_room_temperature_kbt(self):
+        rds = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.], room_temperature_diffusion=True)
+        rds.temperature = 123
+        rds.add_species("A", 1.)
+        rds.add_topology_species("T", 2.5)
+        np.testing.assert_almost_equal(rds.diffusion_constants['A'].magnitude, 1. * 123. / 293.)
+        np.testing.assert_almost_equal(rds.diffusion_constants['T'].magnitude, 2.5 * 123. / 293.)
+        with self.assertRaises(Exception):
+            rds.diffusion_constants['A'] = 10.
+        rds.temperature = 200
+        np.testing.assert_almost_equal(rds.diffusion_constants["A"].magnitude, 1. * (123. / 293.) * (200. / 123.))
+        np.testing.assert_almost_equal(rds.diffusion_constants["T"].magnitude, 2.5 * (123. / 293.) * (200. / 123.))
+
+    def test_room_temperature_kbt_no_units(self):
+        with self.assertRaises(Exception):
+            readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.], room_temperature_diffusion=True, unit_system=None)
+
     def test_temperature_unitless(self):
         rds = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.], unit_system=None)
         rds.kbt = 2.436

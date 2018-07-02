@@ -32,6 +32,7 @@ from readdy._internal.readdybinding.api import Context as _Context
 from readdy._internal.readdybinding.api import ParticleTypeFlavor as _ParticleTypeFlavor
 
 from readdy.api.utils import vec3_of as _v3_of
+from readdy.util.frozen_dict import FrozenDict as _FrozenDict
 from readdy.api.conf.UnitConfiguration import UnitConfiguration as _UnitConfiguration
 from readdy.api.conf.UnitConfiguration import NoUnitConfiguration as _NoUnitConfiguration
 
@@ -45,7 +46,8 @@ __all__ = ['ReactionDiffusionSystem']
 
 
 class ReactionDiffusionSystem(object):
-    def __init__(self, box_size, temperature=None, periodic_boundary_conditions=None, unit_system='default'):
+    def __init__(self, box_size, temperature=None, periodic_boundary_conditions=None, unit_system='default',
+                 room_temperature_diffusion=False):
         """
         Constructs a new reaction diffusion system, starting point for all reaction diffusion simulations.
 
@@ -76,6 +78,11 @@ class ReactionDiffusionSystem(object):
         self._potential_registry = _PotentialRegistry(self._context.potentials, self._context.particle_types,
                                                       self._unit_conf)
         self._reaction_registry = _ReactionRegistry(self._context.reactions, self._unit_conf)
+
+        self._room_temperature_diffusion = room_temperature_diffusion
+        if self._room_temperature_diffusion and not self.temperature_unit != 1.:
+            raise ValueError("If diffusion constants shall be interpreted with respect to room temperature, a unit"
+                             " system must be provided.")
 
         if (temperature is not None) and (unit_system is None):
             raise ValueError(
@@ -138,6 +145,30 @@ class ReactionDiffusionSystem(object):
         """
         return self._unit_conf.temperature_unit
 
+    def _update_kbt(self, value):
+        old_kbt = self._context.kbt
+        value = self._unit_conf.convert(value, self.energy_unit)
+        self._context.kbt = value
+        if self._room_temperature_diffusion:
+            ptypes = self._context.particle_types
+            mapping = ptypes.type_mapping
+            for type_name in mapping.keys():
+                D_old = ptypes.diffusion_constant_of(type_name)
+                D_new = self._convert_diffusion_constant_to_internal(D_old, old_kbt=old_kbt)
+                ptypes.set_diffusion_constant_of(type_name, D_new)
+
+    @property
+    def diffusion_constants(self):
+        """
+        Yields a map (type name) -> (diffusion constant).
+        """
+        result = {}
+        ptypes = self._context.particle_types
+        mapping = ptypes.type_mapping
+        for type_name in mapping.keys():
+            result[type_name] = ptypes.diffusion_constant_of(type_name) * self._unit_conf.diffusion_constant_unit
+        return _FrozenDict(result)
+
     @property
     def kbt(self):
         """
@@ -155,7 +186,7 @@ class ReactionDiffusionSystem(object):
         if not isinstance(self._unit_conf, _NoUnitConfiguration):
             raise ValueError("Setting kbt is only supported in a unitless system. Set the temperature instead.")
         value = self._unit_conf.convert(value, self.energy_unit)
-        self._context.kbt = value
+        self._update_kbt(value)
 
     @property
     def temperature(self):
@@ -169,19 +200,25 @@ class ReactionDiffusionSystem(object):
         else:
             raise ValueError("No temperature unit was set. In a unitless system, refer to kbt instead.")
 
+    def _temperature_to_kbt(self, value):
+        if self.temperature_unit != 1.:
+            value = self._unit_conf.convert(value, self.temperature_unit)
+            kbt = self._unit_conf.convert(value * self.temperature_unit * self._unit_conf.boltzmann
+                                          * self._unit_conf.avogadro, self.energy_unit)
+            return kbt * self._unit_conf.energy_unit
+        raise ValueError("No temperature unit was set.")
+
     @temperature.setter
     def temperature(self, value):
         """
         Sets the temperature of the system.
         :param value: the new temperature [temperature]
         """
-        value = self._unit_conf.convert(value, self.temperature_unit)
         if self.temperature_unit != 1:
-            kbt = self._unit_conf.convert(value * self.temperature_unit * self._unit_conf.boltzmann
-                                          * self._unit_conf.avogadro, self.energy_unit)
+            kbt = self._temperature_to_kbt(value)
         else:
             raise ValueError("No temperature unit was set. In a unitless system, refer to kbt instead.")
-        self._context.kbt = kbt
+        self._update_kbt(kbt)
 
     @property
     def box_size(self):
@@ -251,13 +288,29 @@ class ReactionDiffusionSystem(object):
         """
         return self._context.box_volume() * (self.length_unit ** 3)
 
+    def _convert_diffusion_constant_to_internal(self, value, old_kbt=None):
+        # rescale D
+        diffusion_constant = self._unit_conf.convert(value, self._unit_conf.diffusion_constant_unit)
+        # equip D with corresponding unit
+        diffusion_constant *= self._unit_conf.diffusion_constant_unit
+        # potentially reinterpret D
+        if self._room_temperature_diffusion:
+            if old_kbt is None:
+                old_kbt = self._temperature_to_kbt(293. * self.units.kelvin)
+            else:
+                old_kbt = self._unit_conf.convert(old_kbt, self._unit_conf.energy_unit) * self._unit_conf.energy_unit
+            diffusion_constant = diffusion_constant * self.kbt / old_kbt
+        # convert to internal magnitude
+        diffusion_constant = self._unit_conf.convert(diffusion_constant, self._unit_conf.diffusion_constant_unit)
+        return diffusion_constant
+
     def add_species(self, name, diffusion_constant=1.):
         """
         Adds a species to the system.
         :param name: The species' name.
         :param diffusion_constant: The species' diffusion constant [length**2/time]
         """
-        diffusion_constant = self._unit_conf.convert(diffusion_constant, self._unit_conf.diffusion_constant_unit)
+        diffusion_constant = self._convert_diffusion_constant_to_internal(diffusion_constant)
         self._context.particle_types.add(name, diffusion_constant, _ParticleTypeFlavor.NORMAL)
 
     def add_topology_species(self, name, diffusion_constant=1.):
@@ -266,7 +319,7 @@ class ReactionDiffusionSystem(object):
         :param name: The species' name
         :param diffusion_constant: The species' diffusion constant [length**2/time]
         """
-        diffusion_constant = self._unit_conf.convert(diffusion_constant, self._unit_conf.diffusion_constant_unit)
+        diffusion_constant = self._convert_diffusion_constant_to_internal(diffusion_constant)
         self._context.particle_types.add(name, diffusion_constant, _ParticleTypeFlavor.TOPOLOGY)
 
     def registered_species(self):
