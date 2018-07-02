@@ -71,6 +71,9 @@ void exportKernelContext(py::module &module) {
             .def("diffusion_constant_of", [](const ParticleTypeRegistry &self, const std::string &type) {
                 return self.diffusionConstantOf(type);
             })
+            .def("set_diffusion_constant_of", [](ParticleTypeRegistry &self, const std::string &type, scalar value){
+                self.diffusionConstantOf(type) = value;
+            })
             .def("n_types", &ParticleTypeRegistry::nTypes)
             .def("name_of", &ParticleTypeRegistry::nameOf)
             .def_property_readonly("type_mapping", &ParticleTypeRegistry::typeMapping, rvp::reference_internal);
