@@ -44,8 +44,8 @@ NAMESPACE_BEGIN(pot)
 class CalculateHarmonicBondPotential : public EvaluatePotentialAction {
 public:
     using harmonic_bond = HarmonicBondPotential;
-    CalculateHarmonicBondPotential(const Context *const context) : EvaluatePotentialAction(context) {}
-    virtual ~CalculateHarmonicBondPotential() = default;
+    explicit CalculateHarmonicBondPotential(const Context *const context) : EvaluatePotentialAction(context) {}
+    ~CalculateHarmonicBondPotential() override = default;
 };
 
 class CalculateHarmonicAnglePotential : public EvaluatePotentialAction {
@@ -53,11 +53,7 @@ public:
     using harmonic_angle = HarmonicAnglePotential;
 
     explicit CalculateHarmonicAnglePotential(const Context *const context) : EvaluatePotentialAction(context) {}
-    CalculateHarmonicAnglePotential(const CalculateHarmonicAnglePotential&) = default;
-    CalculateHarmonicAnglePotential& operator=(const CalculateHarmonicAnglePotential&) = default;
-    CalculateHarmonicAnglePotential(CalculateHarmonicAnglePotential&&) = default;
-    CalculateHarmonicAnglePotential& operator=(CalculateHarmonicAnglePotential&&) = default;
-    virtual ~CalculateHarmonicAnglePotential() = default;
+    ~CalculateHarmonicAnglePotential() override = default;
 };
 
 class CalculateCosineDihedralPotential : public EvaluatePotentialAction {
@@ -65,11 +61,7 @@ public:
     using cos_dihedral = CosineDihedralPotential;
 
     explicit CalculateCosineDihedralPotential(const Context *const context) : EvaluatePotentialAction(context) {}
-    CalculateCosineDihedralPotential(const CalculateCosineDihedralPotential&) = default;
-    CalculateCosineDihedralPotential& operator=(const CalculateCosineDihedralPotential&) = default;
-    CalculateCosineDihedralPotential(CalculateCosineDihedralPotential&&) = default;
-    CalculateCosineDihedralPotential& operator=(CalculateCosineDihedralPotential&&) = default;
-    virtual ~CalculateCosineDihedralPotential() = default;
+    ~CalculateCosineDihedralPotential() override = default;
 };
 
 NAMESPACE_END(pot)

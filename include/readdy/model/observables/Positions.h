@@ -58,7 +58,7 @@ public:
     Positions(Positions&&) = default;
     Positions& operator=(Positions&&) = delete;
 
-    virtual ~Positions();
+    ~Positions() override;
 
 protected:
 

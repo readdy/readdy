@@ -43,7 +43,6 @@
 #include <readdy/model/StateModel.h>
 #include <readdy/model/Context.h>
 #include <readdy/model/observables/ObservableFactory.h>
-#include <readdy/model/_internal/ObservableWrapper.h>
 #include <readdy/model/actions/ActionFactory.h>
 #include <readdy/model/topologies/TopologyActionFactory.h>
 #include <readdy/model/_internal/Util.h>

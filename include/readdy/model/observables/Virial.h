@@ -45,12 +45,7 @@ public:
 
     Virial(Kernel* kernel, stride_type stride);
 
-    Virial(Virial &&) = default;
-    Virial& operator=(Virial &&) = default;
-    Virial(const Virial &) = delete;
-    Virial &operator=(const Virial &) = delete;
-
-    ~Virial();
+    ~Virial() override;
 
     std::string type() const override;
 

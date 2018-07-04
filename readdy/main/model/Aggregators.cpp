@@ -43,7 +43,7 @@ MeanSquaredDisplacement::MeanSquaredDisplacement(Kernel *const kernel, stride_ty
                                   particlesObservable) {}
 
 MeanSquaredDisplacement::MeanSquaredDisplacement(Kernel *const kernel, stride_type stride,
-                                                 const std::vector<ParticleTypeId> &typesToCount,
+                                                 std::vector<ParticleTypeId> typesToCount,
                                                  Particles *particlesObservable)
         : Combiner(kernel, stride, particlesObservable), typesToCount(std::move(typesToCount)) {}
 

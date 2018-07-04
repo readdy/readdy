@@ -445,7 +445,7 @@ std::tuple<std::vector<readdy::time_step_type>, std::vector<std::vector<Topology
             edgesIt += 2;
 
             for(std::size_t i = 0; i < nEdges; ++i) {
-                currentRecord.edges.push_back(std::make_tuple(*edgesIt, *(edgesIt+1)));
+                currentRecord.edges.emplace_back(*edgesIt, *(edgesIt+1));
                 edgesIt += 2;
             }
 

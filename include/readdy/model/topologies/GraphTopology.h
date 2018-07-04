@@ -78,7 +78,7 @@ public:
     GraphTopology(TopologyTypeId type, particle_indices &&particles, topology_graph &&graph,
                   const model::Context &context, const StateModel* stateModel);
 
-    virtual ~GraphTopology() = default;
+    ~GraphTopology() override = default;
 
     GraphTopology(GraphTopology &&) = default;
 

@@ -45,7 +45,7 @@ class Topologies : public Observable<std::vector<top::TopologyRecord>> {
 public:
     explicit Topologies(Kernel *kernel, stride_type stride);
 
-    ~Topologies();
+    ~Topologies() override;
 
     void evaluate() override;
 
