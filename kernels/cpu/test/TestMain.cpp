@@ -40,13 +40,6 @@ int perform_tests(int argc, char **argv) {
 }
 
 int main(int argc, char **argv) {
-    spdlog::set_sync_mode();
-    auto console = spdlog::stdout_color_mt("console");
-    console->set_level(spdlog::level::warn);
-    console->set_pattern("[          ] [%Y-%m-%d %H:%M:%S] [%t] [%l] %v");
-
-    int result = perform_tests(argc, argv);
-
-    spdlog::drop_all();
-    return result;
+    readdy::log::console()->set_level(spdlog::level::warn);
+    return perform_tests(argc, argv);
 }

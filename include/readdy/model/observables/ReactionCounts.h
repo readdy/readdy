@@ -57,7 +57,7 @@ public:
 
     ReactionCounts &operator=(ReactionCounts &&) = delete;
 
-    virtual ~ReactionCounts();
+    ~ReactionCounts() override;
 
     void flush() override;
 

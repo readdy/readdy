@@ -59,7 +59,7 @@ public:
 
     void flush() override;
 
-    virtual ~NParticles();
+    ~NParticles() override;
 
 protected:
     struct Impl;

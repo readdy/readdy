@@ -50,7 +50,7 @@ public:
     Particles(Particles&&) = default;
     Particles& operator=(Particles&&) = delete;
 
-    virtual ~Particles();
+    ~Particles() override;
 
     void flush() override;
 

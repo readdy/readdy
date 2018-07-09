@@ -53,7 +53,7 @@ public:
     Forces(Forces&&) = default;
     Forces& operator=(Forces&&) = delete;
 
-    virtual ~Forces();
+    ~Forces() override;
 
     std::string type() const override;
 

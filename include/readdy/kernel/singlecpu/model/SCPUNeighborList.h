@@ -362,7 +362,7 @@ public:
 
     ~BoxIterator() = default;
 
-    BoxIterator operator++(int) {
+    const BoxIterator operator++(int) {
         BoxIterator tmp(*this);
         operator++();
         return tmp;

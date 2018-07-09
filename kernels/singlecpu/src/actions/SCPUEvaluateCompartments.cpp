@@ -43,9 +43,9 @@ void SCPUEvaluateCompartments::perform(const util::PerformanceNode &node) {
     auto data = kernel->getSCPUKernelStateModel().getParticleData();
     for(auto& entry : *data) {
         if(!entry.is_deactivated()) {
-            for (auto i=0; i<compartments.size(); ++i) {
-                if (compartments[i]->isContained(entry.position())) {
-                    const auto& conversions = compartments[i]->getConversions();
+            for (const auto &compartment : compartments) {
+                if (compartment->isContained(entry.position())) {
+                    const auto& conversions = compartment->getConversions();
                     auto it = conversions.find(entry.type);
                     if (it != conversions.end()) {
                         entry.type = it->second;

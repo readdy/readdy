@@ -33,6 +33,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
+#include <pybind11/iostream.h>
 
 #include <fstream>
 #include <utility>
@@ -445,7 +446,7 @@ std::tuple<std::vector<readdy::time_step_type>, std::vector<std::vector<Topology
             edgesIt += 2;
 
             for(std::size_t i = 0; i < nEdges; ++i) {
-                currentRecord.edges.push_back(std::make_tuple(*edgesIt, *(edgesIt+1)));
+                currentRecord.edges.emplace_back(*edgesIt, *(edgesIt+1));
                 edgesIt += 2;
             }
 
@@ -596,4 +597,5 @@ void exportUtils(py::module &m) {
     m.def("read_trajectory", &read_trajectory, "filename"_a, "name"_a);
     m.def("read_topologies_observable", &readTopologies, "filename"_a, "groupname"_a);
     m.def("read_reaction_observable", &read_reactions_obs, "filename"_a, "name"_a);
+    py::add_ostream_redirect(m, "ostream_redirect");
 }

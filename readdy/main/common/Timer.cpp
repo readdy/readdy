@@ -68,9 +68,9 @@ std::vector<std::string> PerformanceNode::parse(const std::string &path) const {
     std::vector<std::string> labels;
     std::string residualPath(path);
     auto slashPos = residualPath.find(slash);
-    while (slashPos != residualPath.npos) {
+    while (slashPos != std::string::npos) {
         auto lhs = residualPath.substr(0, slashPos);
-        auto rhs = residualPath.substr(slashPos + std::strlen(slash), residualPath.npos);
+        auto rhs = residualPath.substr(slashPos + std::strlen(slash), std::string::npos);
         util::str::trim(lhs);
         util::str::trim(rhs);
         residualPath = rhs;
@@ -98,9 +98,9 @@ const PerformanceNode &PerformanceNode::child(const std::string &path) const {
         return *this;
     }
     auto slashPos = trimmedPath.find(slash);
-    if (slashPos != trimmedPath.npos) {
+    if (slashPos != std::string::npos) {
         if (slashPos == 0) {
-            auto rootPath = trimmedPath.substr(std::strlen(slash), trimmedPath.npos);
+            auto rootPath = trimmedPath.substr(std::strlen(slash), std::string::npos);
             return _root.get().child(rootPath);
         } else {
             const auto &labels = parse(trimmedPath);
@@ -112,10 +112,10 @@ const PerformanceNode &PerformanceNode::child(const std::string &path) const {
 }
 
 std::string PerformanceNode::validateName(const std::string &name) const {
-    if (name.find(slash) != name.npos) {
+    if (name.find(slash) != std::string::npos) {
         throw std::invalid_argument(fmt::format("name \"{}\" contains forbidden char {}", name, slash));
     }
-    if (name.find(' ') == 0 || name.find(' ') == name.npos - 1) {
+    if (name.find(' ') == 0 || name.find(' ') == std::string::npos - 1) {
         throw std::invalid_argument(fmt::format("name \"{}\" contains leading/trailing whitespaces.", name));
     }
     return util::str::trim_copy(name);

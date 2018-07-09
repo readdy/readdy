@@ -52,7 +52,7 @@ public:
 
     void flush() override;
 
-    virtual ~HistogramAlongAxis();
+    ~HistogramAlongAxis() override;
 
     std::string type() const override;
 

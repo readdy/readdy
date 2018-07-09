@@ -33,21 +33,21 @@
 
 #include <readdy/common/logging.h>
 #include <iostream>
+#include <spdlog/sinks/ostream_sink.h>
 
 namespace readdy {
 namespace log {
 
-#ifdef READDY_DEBUG
 std::shared_ptr<spdlog::logger> console() {
     static auto logger = spdlog::get("console");
     if (!logger) {
         spdlog::set_sync_mode();
-        logger = spdlog::stdout_color_mt("console");
-        logger->set_pattern("[          ] [%Y-%m-%d %H:%M:%S] [%t] [%l] %v");
+        auto ostream_sink = std::make_shared<spdlog::sinks::ostream_sink_mt> (std::cout);
+        logger = std::make_shared<spdlog::logger>("console", ostream_sink);
+        logger->set_pattern("[%Y-%m-%d %H:%M:%S] [%l] %v");
     }
     return logger;
 }
-#endif
 
 }
 }

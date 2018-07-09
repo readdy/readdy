@@ -51,13 +51,13 @@ public:
     using cos_dihedral = CalculateCosineDihedralPotential::cos_dihedral;
 
     virtual std::unique_ptr<CalculateHarmonicBondPotential>
-    createCalculateHarmonicBondPotential(const harmonic_bond *const) const = 0;
+    createCalculateHarmonicBondPotential(const harmonic_bond *) const = 0;
 
     virtual std::unique_ptr<CalculateHarmonicAnglePotential>
-    createCalculateHarmonicAnglePotential(const harmonic_angle *const) const = 0;
+    createCalculateHarmonicAnglePotential(const harmonic_angle *) const = 0;
 
     virtual std::unique_ptr<CalculateCosineDihedralPotential>
-    createCalculateCosineDihedralPotential(const cos_dihedral *const) const = 0;
+    createCalculateCosineDihedralPotential(const cos_dihedral *) const = 0;
 };
 
 NAMESPACE_END(pot)

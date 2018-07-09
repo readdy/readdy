@@ -53,13 +53,13 @@ public:
 
     const static std::string TRAJECTORY_GROUP_PATH;
 
-    Trajectory(model::Kernel *const kernel, unsigned int stride);
+    Trajectory(model::Kernel * kernel, unsigned int stride);
 
-    ~Trajectory();
+    ~Trajectory() override;
 
-    virtual void evaluate() override;
+    void evaluate() override;
 
-    virtual void flush() override;
+    void flush() override;
 
     std::string type() const override;
 
@@ -76,15 +76,15 @@ class FlatTrajectory : public Observable<std::vector<TrajectoryEntry>> {
     using super = Observable<std::vector<TrajectoryEntry>>;
 public:
 
-    FlatTrajectory(Kernel *const kernel, unsigned int stride);
+    FlatTrajectory(Kernel* kernel, unsigned int stride);
 
-    ~FlatTrajectory();
+    ~FlatTrajectory() override;
 
     FlatTrajectory(FlatTrajectory&&);
 
-    virtual void evaluate() override;
+    void evaluate() override;
 
-    virtual void flush() override;
+    void flush() override;
 
     std::string type() const override;
 

@@ -121,7 +121,7 @@ void CPUEvaluateTopologyReactions::perform(const util::PerformanceNode &node) {
                     }
                 };
 
-                auto postPerform = [&](const TREvent &event, std::size_t nDeactivated) {
+                /*auto postPerform = [&](const TREvent &event, std::size_t nDeactivated) {
                     for(auto it = events.begin(); it < events.end() - nDeactivated; ++it) {
                         if (eventsDependent(event, *it)) {
                             //log::critical("here ya go ye filth: {}", sss.str());
@@ -133,7 +133,7 @@ void CPUEvaluateTopologyReactions::perform(const util::PerformanceNode &node) {
                                                                event.topology_idx, event.topology_idx2, it->topology_idx, it->topology_idx2, event.idx1, event.idx2, it->idx1, it->idx2, ss.str()));
                         }
                     }
-                };
+                };*/
                 algo::performEvents(events, shouldEval, depending, eval);
             }
 

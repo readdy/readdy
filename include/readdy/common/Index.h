@@ -103,23 +103,6 @@ public:
     Index() : _size(), n_elems(0) {}
 
     /**
-     * we can copy this
-     */
-    Index<Dims>(const Index<Dims> &) = default;
-    /**
-     * we can copy assign this
-     */
-    Index<Dims> &operator=(const Index<Dims> &) = default;
-    /**
-     * we can move this
-     */
-    Index<Dims>(Index<Dims> &&) = default;
-    /**
-     * we can move assign this
-     */
-    Index<Dims> &operator=(Index<Dims> &&) = default;
-
-    /**
      * Constructs an index object with a number of size_t arguments that must coincide with the number of dimensions,
      * specifying the grid.
      * @tparam Args the argument types, must all be size_t

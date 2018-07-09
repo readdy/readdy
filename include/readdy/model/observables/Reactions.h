@@ -55,7 +55,7 @@ public:
 
     Reactions &operator=(Reactions &&) = delete;
 
-    virtual ~Reactions();
+    ~Reactions() override;
 
     std::string type() const override;
 

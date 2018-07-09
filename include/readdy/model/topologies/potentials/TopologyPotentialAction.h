@@ -63,7 +63,7 @@ public:
 
     ~EvaluatePotentialAction() override = default;
 
-    virtual scalar perform(const Topology* const topology) = 0;
+    virtual scalar perform(const Topology*topology) = 0;
 };
 
 NAMESPACE_END(pot)

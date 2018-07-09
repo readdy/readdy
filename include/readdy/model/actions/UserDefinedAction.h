@@ -25,7 +25,7 @@ public:
     }
     
 protected:
-    model::Kernel *_kernel;
+    model::Kernel *_kernel {nullptr};
 };
 
 }
