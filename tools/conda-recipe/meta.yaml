@@ -34,8 +34,6 @@ requirements:
     - progress_reporter
     - pint
     - hdf5
-    - networkx
-    - matplotlib
     - zlib 1.2.*
     - libgcc # [linux]
     - vs2015_runtime  # [win]
