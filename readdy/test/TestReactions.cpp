@@ -55,8 +55,10 @@ TEST_P(TestReactions, TestConstantNumberOfParticleType) {
 
     using n_particles_obs = readdy::model::observables::NParticles;
 
-    auto stdRand = [](readdy::scalar lower = 0.0, readdy::scalar upper = 1.0) -> readdy::scalar {
-        return static_cast <readdy::scalar> (std::rand()) / (RAND_MAX / (upper - lower)) + lower;
+    std::random_device rd;
+    std::uniform_real_distribution<readdy::scalar> dist(-2.5, 2.5);
+    auto stdRand = [&dist, &rd]() -> readdy::scalar {
+        return dist(rd);
     };
 
     kernel->context().particleTypes().add("A", 1.0);
@@ -71,8 +73,8 @@ TEST_P(TestReactions, TestConstantNumberOfParticleType) {
     unsigned long n_B = n_A;
 
     for (unsigned long i = 0; i < n_A; ++i) {
-        kernel->addParticle("A", {stdRand(-2.5, 2.5), stdRand(-2.5, 2.5), stdRand(-2.5, 2.5)});
-        kernel->addParticle("B", {stdRand(-2.5, 2.5), stdRand(-2.5, 2.5), stdRand(-2.5, 2.5)});
+        kernel->addParticle("A", {stdRand(), stdRand(), stdRand()});
+        kernel->addParticle("B", {stdRand(), stdRand(), stdRand()});
     }
 
 

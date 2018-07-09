@@ -69,7 +69,7 @@ SpatialTopologyReaction STRParser::parse(const std::string &descriptor, scalar r
     std::string name;
     {
         auto colonPos = lhs.find(':');
-        if (colonPos == std::__1::basic_string<char>::npos) {
+        if (colonPos == std::string::npos) {
             throw std::invalid_argument("The descriptor did not contain a colon ':' to specify the end of the name.");
         }
         name = rutil::str::trim_copy(lhs.substr(0, colonPos));
