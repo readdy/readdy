@@ -44,7 +44,7 @@ std::shared_ptr<spdlog::logger> console() {
         spdlog::set_sync_mode();
         auto ostream_sink = std::make_shared<spdlog::sinks::ostream_sink_mt> (std::cout);
         logger = std::make_shared<spdlog::logger>("console", ostream_sink);
-        logger->set_pattern("[          ] [%Y-%m-%d %H:%M:%S] [%t] [%l] %v");
+        logger->set_pattern("[%Y-%m-%d %H:%M:%S] [%l] %v");
     }
     return logger;
 }
