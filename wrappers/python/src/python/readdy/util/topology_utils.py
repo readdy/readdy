@@ -1,8 +1,7 @@
-import matplotlib.pyplot as plt
-import networkx as nx
-
-
 def plot_networkx_topology_graph(topology):
+    import matplotlib.pyplot as plt
+    import networkx as nx
+
     G = nx.Graph()
     top_graph = topology.get_graph()
     labels = {}
@@ -29,6 +28,9 @@ def plot_networkx_topology_graph(topology):
 
 
 def plot_networkx_graph(G):
+    import matplotlib.pyplot as plt
+    import networkx as nx
+
     pos = nx.spring_layout(G)  # positions for all nodes
     labels = {}
     for node in G.nodes():
@@ -42,7 +44,9 @@ def plot_networkx_graph(G):
 
 
 def plot_gexf_string(string):
+    import networkx as nx
     from io import StringIO
+
     strio = StringIO(u"%s" % string)
     graph = nx.read_gexf(strio, relabel=False)
     plot_networkx_graph(graph)
