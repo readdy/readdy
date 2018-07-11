@@ -130,6 +130,9 @@ void exportKernelContext(py::module &module) {
                 return self.addUserDefined(pot);
             }, py::keep_alive<1, 2>());
 
+    py::class_<readdy::model::potentials::PotentialOrder1>(module, "PotentialOrder1");
+    py::class_<readdy::model::potentials::PotentialOrder2>(module, "PotentialOrder2");
+
     py::class_<readdy::api::Bond>(module, "BondedPotentialConfiguration")
             .def(py::init([](scalar forceConstant, scalar length, const std::string &type) {
                 if(type != "harmonic") {
