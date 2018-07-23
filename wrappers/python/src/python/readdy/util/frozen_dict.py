@@ -1,3 +1,5 @@
+# CC1 license
+
 # taken from https://stackoverflow.com/a/2704866/2871028
 
 import collections
