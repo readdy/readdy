@@ -59,7 +59,7 @@ struct TrajectoryEntry {
     TrajectoryEntry() = default;
 
     explicit TrajectoryEntry(const readdy::model::Particle &p, const readdy::model::ParticleTypeRegistry& ptr)
-            : typeId(p.getType()), id(p.getId()), pos(p.getPos()), flavor(ptr.infoOf(p.getType()).flavor) {}
+            : typeId(p.type()), id(p.id()), pos(p.pos()), flavor(ptr.infoOf(p.type()).flavor) {}
 
     readdy::model::Particle::type_type typeId {0};
     readdy::model::Particle::id_type id {0};

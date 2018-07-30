@@ -96,9 +96,9 @@ void exportTopologies(py::module &m) {
     using namespace py::literals;
 
     py::class_<topology_particle>(m, "TopologyParticle")
-            .def("get_position", [](topology_particle &self) { return self.getPos(); })
-            .def("get_type", [](topology_particle &self) { return self.getType(); })
-            .def("get_id", [](topology_particle &self) { return self.getId(); });
+            .def("get_position", [](topology_particle &self) { return self.pos(); })
+            .def("get_type", [](topology_particle &self) { return self.type(); })
+            .def("get_id", [](topology_particle &self) { return self.id(); });
 
     py::class_<reaction_function_sink>(m, "ReactionFunction").def(py::init<py::function>());
     py::class_<rate_function_sink>(m, "RateFunction").def(py::init<py::function>());
@@ -213,7 +213,7 @@ void exportTopologies(py::module &m) {
                 :return: the particles
             )topdoc")
             .def("particle_type_of_vertex", [](const topology &self, const vertex &v) -> std::string {
-                return self.context().particleTypes().nameOf(self.particleForVertex(v).getType());
+                return self.context().particleTypes().nameOf(self.particleForVertex(v).type());
             }, R"topdoc(
                Retrieves the particle type corresponding to a vertex.
 
@@ -221,7 +221,7 @@ void exportTopologies(py::module &m) {
                :return: the particle type
             )topdoc")
             .def("position_of_vertex", [](const topology &self, const vertex &v) -> readdy::Vec3 {
-                return self.particleForVertex(v).getPos();
+                return self.particleForVertex(v).pos();
             }, R"topdoc(
                 Retrieves the position of the particle corresponding to the given vertex.
 
@@ -229,7 +229,7 @@ void exportTopologies(py::module &m) {
                 :return: the position
             )topdoc")
             .def("particle_id_of_vertex", [](const topology &self, const vertex &v) -> readdy::model::Particle::id_type {
-                return self.particleForVertex(v).getId();
+                return self.particleForVertex(v).id();
             }, R"topdoc(
                 Retrieves the id of the particle corresponding to the given vertex.
 
@@ -237,7 +237,7 @@ void exportTopologies(py::module &m) {
                 :return: the id
             )topdoc")
             .def("particle_type_of_vertex", [](const topology &self, const vertex::vertex_ptr &v) -> std::string {
-                return self.context().particleTypes().nameOf(self.particleForVertex(v).getType());
+                return self.context().particleTypes().nameOf(self.particleForVertex(v).type());
             }, R"topdoc(
                Retrieves the particle type corresponding to a vertex.
 
@@ -245,7 +245,7 @@ void exportTopologies(py::module &m) {
                :return: the particle type
             )topdoc")
             .def("position_of_vertex", [](const topology &self, const vertex::vertex_ptr &v) -> readdy::Vec3 {
-                return self.particleForVertex(v).getPos();
+                return self.particleForVertex(v).pos();
             }, R"topdoc(
                 Retrieves the position of the particle corresponding to the given vertex.
 
@@ -253,7 +253,7 @@ void exportTopologies(py::module &m) {
                 :return: the position
             )topdoc")
             .def("particle_id_of_vertex", [](const topology &self, const vertex::vertex_ptr &v) -> readdy::model::Particle::id_type {
-                return self.particleForVertex(v).getId();
+                return self.particleForVertex(v).id();
             }, R"topdoc(
                 Retrieves the id of the particle corresponding to the given vertex.
 
@@ -308,7 +308,7 @@ void exportTopologies(py::module &m) {
             .def("get", [](const vertex::vertex_ptr &edge) -> const vertex & { return *edge; }, rvp::reference_internal);
 
     py::class_<vertex>(m, "Vertex")
-            .def("particle_type", &vertex::particleType, R"topdoc(
+            .def("particle_type", [](const vertex &self) { return self.particleType(); }, R"topdoc(
                 Yields this vertex' corresponding particle type.
 
                 :return: the particle type

@@ -610,12 +610,12 @@ std::pair<model::SCPUParticleData::entries_update, scalar> SCPUDetailedBalance::
                 // which is required for constructing the appropriate backward update
                 readdy::model::Particle p1(entry1.position() - reaction->weight2() * distance * n3,
                                            reaction->products()[1]);
-                bcs::fixPosition(p1.getPos(), box, pbc);
+                bcs::fixPosition(p1.pos(), box, pbc);
                 newParticles.emplace_back(p1);
 
                 readdy::model::Particle p2(entry1.position() + reaction->weight1() * distance * n3,
                                            reaction->products()[0]);
-                bcs::fixPosition(p2.getPos(), box, pbc);
+                bcs::fixPosition(p2.pos(), box, pbc);
 
                 newParticles.emplace_back(p2);
                 decayedEntries.push_back(event.idx1);
@@ -652,7 +652,7 @@ std::pair<model::SCPUParticleData::entries_update, scalar> SCPUDetailedBalance::
 
                 // do not re-use entries for proper construction of backward update
                 readdy::model::Particle particle(position, reaction->products()[0]);
-                bcs::fixPosition(particle.getPos(), box, pbc);
+                bcs::fixPosition(particle.pos(), box, pbc);
 
                 newParticles.emplace_back(particle);
                 decayedEntries.push_back(event.idx1);

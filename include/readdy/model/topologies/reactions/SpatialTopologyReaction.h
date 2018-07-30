@@ -149,6 +149,10 @@ public:
         return _rate;
     }
 
+    scalar &rate() {
+        return _rate;
+    }
+
     const scalar radius() const {
         return _radius;
     }

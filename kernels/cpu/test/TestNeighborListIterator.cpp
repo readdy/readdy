@@ -72,7 +72,7 @@ TEST(TestNeighborListIterator, BoxIterator) {
 
     std::vector<model::Particle::id_type> ids;
     for(std::size_t i=0; i < n; ++i){
-        ids.push_back(data.getParticle(i).getId());
+        ids.push_back(data.getParticle(i).id());
     }
 
     ccll.setUp(0, 1, {});

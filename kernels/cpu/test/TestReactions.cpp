@@ -180,13 +180,13 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
             if (e1.type == enzymatic.getCatalyst()) {
                 EXPECT_EQ(enzymatic.getCatalyst(), e1.type);
                 EXPECT_EQ(enzymatic.getTo(), e2.type);
-                EXPECT_EQ(p_C.getPos(), e1.pos);
-                EXPECT_EQ(p_A.getPos(), e2.pos);
+                EXPECT_EQ(p_C.pos(), e1.pos);
+                EXPECT_EQ(p_A.pos(), e2.pos);
             } else {
                 EXPECT_EQ(enzymatic.getCatalyst(), e2.type);
                 EXPECT_EQ(enzymatic.getTo(), e1.type);
-                EXPECT_EQ(p_C.getPos(), e2.pos);
-                EXPECT_EQ(p_A.getPos(), e1.pos);
+                EXPECT_EQ(p_C.pos(), e2.pos);
+                EXPECT_EQ(p_A.pos(), e1.pos);
             }
         }
     }
@@ -209,13 +209,13 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
             if (e1.type == enzymatic.getCatalyst()) {
                 EXPECT_EQ(enzymatic.getCatalyst(), e1.type);
                 EXPECT_EQ(enzymatic.getTo(), e2.type);
-                EXPECT_EQ(p_C.getPos(), e1.pos);
-                EXPECT_EQ(p_A.getPos(), e2.pos);
+                EXPECT_EQ(p_C.pos(), e1.pos);
+                EXPECT_EQ(p_A.pos(), e2.pos);
             } else {
                 EXPECT_EQ(enzymatic.getCatalyst(), e2.type);
                 EXPECT_EQ(enzymatic.getTo(), e1.type);
-                EXPECT_EQ(p_C.getPos(), e2.pos);
-                EXPECT_EQ(p_A.getPos(), e1.pos);
+                EXPECT_EQ(p_C.pos(), e2.pos);
+                EXPECT_EQ(p_A.pos(), e1.pos);
             }
         }
     }
@@ -350,28 +350,28 @@ TEST(CPUTestReactions, TestGillespieParallel) {
         for (auto p : particles) readdy::log::debug("particle {}", p);
         EXPECT_EQ(7, particles.size());
         EXPECT_TRUE(std::find_if(particles.begin(), particles.end(), [=](const particle_t &p) -> bool {
-            return p.getType() == typeB && p.getPos() == vec_t(0, 0, -1.7);
+            return p.type() == typeB && p.pos() == vec_t(0, 0, -1.7);
         }) != particles.end()) << "Particle with type B should not interact with the others and thus stay where it is";
         EXPECT_TRUE(std::find_if(particles.begin(), particles.end(), [=](const particle_t &p) -> bool {
-            return p.getType() == typeC && p.getPos() == vec_t(0, 0, .7);
+            return p.type() == typeC && p.pos() == vec_t(0, 0, .7);
         }) != particles.end()) << "The particle of type C is -very- unlikely to react, thus it should stay where it is";
         EXPECT_TRUE(std::find_if(particles.begin(), particles.end(), [=](const particle_t &p) -> bool {
-            return p.getType() == typeC && p.getPos() == vec_t(0, 0, -1.6);
+            return p.type() == typeC && p.pos() == vec_t(0, 0, -1.6);
         }) != particles.end()) << "The particle of type C is -very- unlikely to react, thus it should stay where it is";
         EXPECT_TRUE(std::find_if(particles.begin(), particles.end(), [=](const particle_t &p) -> bool {
-            return p.getType() == typeA && p.getPos() == vec_t(0, 0, -5.25);
+            return p.type() == typeA && p.pos() == vec_t(0, 0, -5.25);
         }) != particles.end()) << "This particle should be placed between the particles 7 and 8 (see above).";
         EXPECT_TRUE(std::find_if(particles.begin(), particles.end(), [=](const particle_t &p) -> bool {
-            return p.getType() == typeA && p.getPos() == vec_t(0, 0, -.35);
+            return p.type() == typeA && p.pos() == vec_t(0, 0, -.35);
         }) != particles.end()) << "This particle should be placed between the particles 1 and 0 (see above).";
         auto it = std::find_if(particles.begin(), particles.end(), [=](const particle_t &p) -> bool {
             auto fpa = readdy::fp::FloatingPoint<readdy::scalar>(1.65);
-            auto fpb = readdy::fp::FloatingPoint<readdy::scalar>(p.getPos().z);
-            return p.getType() == typeA && fpa.AlmostEquals(fpb);
+            auto fpb = readdy::fp::FloatingPoint<readdy::scalar>(p.pos().z);
+            return p.type() == typeA && fpa.AlmostEquals(fpb);
         });
         EXPECT_TRUE(it != particles.end()) << "This particle should be placed between the particles 4 and 5 (see above).";
         EXPECT_TRUE(std::find_if(particles.begin(), particles.end(), [=](const particle_t &p) -> bool {
-            return p.getType() == typeA && p.getPos() == vec_t(0, 0, 5.25);
+            return p.type() == typeA && p.pos() == vec_t(0, 0, 5.25);
         }) != particles.end()) << "This particle should be placed between the particles 9 and 10 (see above).";
     }
 }

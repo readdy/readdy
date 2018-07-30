@@ -1,5 +1,6 @@
 # Changelog
 
+- added modifying access to reaction rates (#137)
 - simplified c++ potentials interface (#125)
 - python method to include potentials defined in a separate extension (#125)
 - added headers to conda package (#124) 

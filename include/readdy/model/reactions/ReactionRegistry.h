@@ -108,6 +108,15 @@ public:
         throw std::invalid_argument(fmt::format("No first order reaction with name \"{}\" found.", name));
     }
 
+    Reaction* order1ByName(const std::string &name) {
+        for (auto &mapEntry : _o1Reactions) {
+            for (auto &reaction : mapEntry.second) {
+                if (reaction->name() == name) return reaction;
+            }
+        }
+        throw std::invalid_argument(fmt::format("No first order reaction with name \"{}\" found.", name));
+    }
+
     const ReactionsCollection &order1ByType(const ParticleTypeId type) const {
         return readdy::util::collections::getOrDefault(_o1Reactions, type, DEFAULT_REACTIONS);
     }
@@ -133,6 +142,15 @@ public:
     const Reaction* order2ByName(const std::string &name) const {
         for (const auto &mapEntry : _o2Reactions) {
             for (const auto &reaction : mapEntry.second) {
+                if (reaction->name() == name) return reaction;
+            }
+        }
+        throw std::invalid_argument(fmt::format("No second order reaction with name \"{}\" found.", name));
+    }
+
+    Reaction* order2ByName(const std::string &name) {
+        for (auto &mapEntry : _o2Reactions) {
+            for (auto &reaction : mapEntry.second) {
                 if (reaction->name() == name) return reaction;
             }
         }

@@ -132,7 +132,7 @@ public:
         auto it_entries = begin();
         std::size_t idx = 0;
         for(; it_entries != end(); ++it_entries, ++idx) {
-            if(!it_entries->deactivated && it_entries->id == particle.getId()) {
+            if(!it_entries->deactivated && it_entries->id == particle.id()) {
                 _blanks.push_back(idx);
                 it_entries->deactivated = true;
                 return;
@@ -262,7 +262,7 @@ struct Entry {
     using Particle = readdy::model::Particle;
 
     explicit Entry(const Particle &particle)
-            : pos(particle.getPos()), force(), type(particle.getType()), deactivated(false), id(particle.getId()) {}
+            : pos(particle.pos()), force(), type(particle.type()), deactivated(false), id(particle.id()) {}
 
     Entry(Particle::pos_type pos, ParticleTypeId type, Particle::id_type id)
             : pos(pos), type(type), id(id), deactivated(false) {}

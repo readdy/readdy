@@ -94,7 +94,7 @@ TEST_P(TestTopologyReactionsExternal, TestTopologyEnzymaticReaction) {
     {
         std::size_t nNormalFlavor{0};
         for (const auto &p : particles_beforehand) {
-            if (ctx.particleTypes().infoOf(p.getType()).flavor == readdy::model::particleflavor::NORMAL) {
+            if (ctx.particleTypes().infoOf(p.type()).flavor == readdy::model::particleflavor::NORMAL) {
                 ++nNormalFlavor;
             }
         }
@@ -113,9 +113,9 @@ TEST_P(TestTopologyReactionsExternal, TestTopologyEnzymaticReaction) {
     bool found {false};
     std::size_t nNormalFlavor {0};
     for(const auto& p : particles) {
-        if(ctx.particleTypes().infoOf(p.getType()).flavor == readdy::model::particleflavor::NORMAL) {
+        if(ctx.particleTypes().infoOf(p.type()).flavor == readdy::model::particleflavor::NORMAL) {
             ++nNormalFlavor;
-            found |= p.getType() == ctx.particleTypes().idOf("B");
+            found |= p.type() == ctx.particleTypes().idOf("B");
         }
     }
     ASSERT_EQ(nNormalFlavor, 1);
@@ -257,12 +257,12 @@ TEST_P(TestTopologyReactionsExternal, AttachParticle) {
 
             EXPECT_EQ(v_end.neighbors().size(), 1);
 
-            EXPECT_EQ(top_particles.at(idx).getType(), type_registry.idOf("end"));
+            EXPECT_EQ(top_particles.at(idx).type(), type_registry.idOf("end"));
 
             using flouble = fp::FloatingPoint<scalar>;
-            flouble x_end (top_particles.at(idx).getPos().x);
-            flouble y_end (top_particles.at(idx).getPos().y);
-            flouble z_end (top_particles.at(idx).getPos().z);
+            flouble x_end (top_particles.at(idx).pos().x);
+            flouble y_end (top_particles.at(idx).pos().y);
+            flouble z_end (top_particles.at(idx).pos().z);
             EXPECT_TRUE(x_end.AlmostEquals(flouble{c_::four}) || x_end.AlmostEquals(flouble{-c_::four}))
                                 << "the end particle of our topology sausage should be either at x=4 or x=-4";
             EXPECT_TRUE(y_end.AlmostEquals(flouble{c_::zero})) << "no diffusion going on";
@@ -277,10 +277,10 @@ TEST_P(TestTopologyReactionsExternal, AttachParticle) {
                 auto next_idx = std::distance(chainTop->graph().vertices().begin(), next_neighbor);
                 const auto& next_particle = top_particles.at(static_cast<std::size_t>(next_idx));
                 auto predicted_pos = factor*c_::four - factor*(i+1)*c_::one;
-                auto actual_pos = next_particle.getPos().x;
+                auto actual_pos = next_particle.pos().x;
                 EXPECT_TRUE((flouble(actual_pos).AlmostEquals(flouble(predicted_pos))));
-                EXPECT_TRUE((flouble(next_particle.getPos().y)).AlmostEquals(flouble(c_::zero)));
-                EXPECT_TRUE((flouble(next_particle.getPos().z)).AlmostEquals(flouble(c_::zero)));
+                EXPECT_TRUE((flouble(next_particle.pos().y)).AlmostEquals(flouble(c_::zero)));
+                EXPECT_TRUE((flouble(next_particle.pos().z)).AlmostEquals(flouble(c_::zero)));
                 if(next_neighbor->particleType() == type_registry.idOf("middle")) {
                     EXPECT_EQ(next_neighbor->neighbors().size(), 2);
                     if(next_neighbor->neighbors().at(0) == prev_neighbor) {
@@ -453,12 +453,12 @@ TEST_P(TestTopologyReactionsExternal, AttachTopologies) {
 
             EXPECT_EQ(v_end.neighbors().size(), 1);
 
-            EXPECT_EQ(top_particles.at(idx).getType(), type_registry.idOf("end"));
+            EXPECT_EQ(top_particles.at(idx).type(), type_registry.idOf("end"));
 
             using flouble = fp::FloatingPoint<scalar>;
-            flouble x_end (top_particles.at(idx).getPos().x);
-            flouble y_end (top_particles.at(idx).getPos().y);
-            flouble z_end (top_particles.at(idx).getPos().z);
+            flouble x_end (top_particles.at(idx).pos().x);
+            flouble y_end (top_particles.at(idx).pos().y);
+            flouble z_end (top_particles.at(idx).pos().z);
             EXPECT_TRUE(x_end.AlmostEquals(flouble{c_::four}) || x_end.AlmostEquals(flouble{-c_::four}))
                                 << "the end particle of our topology sausage should be either at x=4 or x=-4";
             EXPECT_TRUE(y_end.AlmostEquals(flouble{c_::zero})) << "no diffusion going on";
@@ -473,10 +473,10 @@ TEST_P(TestTopologyReactionsExternal, AttachTopologies) {
                 auto next_idx = std::distance(chainTop->graph().vertices().begin(), next_neighbor);
                 const auto& next_particle = top_particles.at(static_cast<std::size_t>(next_idx));
                 auto predicted_pos = factor*c_::four - factor*(i+1)*c_::one;
-                auto actual_pos = next_particle.getPos().x;
+                auto actual_pos = next_particle.pos().x;
                 EXPECT_TRUE((flouble(actual_pos).AlmostEquals(flouble(predicted_pos))));
-                EXPECT_TRUE((flouble(next_particle.getPos().y)).AlmostEquals(flouble(c_::zero)));
-                EXPECT_TRUE((flouble(next_particle.getPos().z)).AlmostEquals(flouble(c_::zero)));
+                EXPECT_TRUE((flouble(next_particle.pos().y)).AlmostEquals(flouble(c_::zero)));
+                EXPECT_TRUE((flouble(next_particle.pos().z)).AlmostEquals(flouble(c_::zero)));
                 if(next_neighbor->particleType() == type_registry.idOf("middle")) {
                     EXPECT_EQ(next_neighbor->neighbors().size(), 2);
                     if(next_neighbor->neighbors().at(0) == prev_neighbor) {

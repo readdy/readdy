@@ -148,11 +148,11 @@ TEST(SingleCPUTestReactions, TestMultipleReactionTypes) {
     kernel->stateModel().addParticle({-2, 0, 0, typeId_B});
     kernel->stateModel().addParticle({2, 0, 0, typeId_C});
 
-    auto pred_contains_A = [=](const readdy::model::Particle &p) { return p.getType() == typeId_A; };
-    auto pred_contains_B = [=](const readdy::model::Particle &p) { return p.getType() == typeId_B; };
-    auto pred_contains_C = [=](const readdy::model::Particle &p) { return p.getType() == typeId_C; };
-    auto pred_contains_D = [=](const readdy::model::Particle &p) { return p.getType() == typeId_D; };
-    auto pred_contains_E = [=](const readdy::model::Particle &p) { return p.getType() == typeId_E; };
+    auto pred_contains_A = [=](const readdy::model::Particle &p) { return p.type() == typeId_A; };
+    auto pred_contains_B = [=](const readdy::model::Particle &p) { return p.type() == typeId_B; };
+    auto pred_contains_C = [=](const readdy::model::Particle &p) { return p.type() == typeId_C; };
+    auto pred_contains_D = [=](const readdy::model::Particle &p) { return p.type() == typeId_D; };
+    auto pred_contains_E = [=](const readdy::model::Particle &p) { return p.type() == typeId_E; };
 
     for (unsigned int t = 0; t < 4; t++) {
 

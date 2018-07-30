@@ -248,6 +248,9 @@ public:
             runForces();
             time_step_type t = start;
             runEvaluateObservables(t);
+            std::for_each(std::begin(_callbacks), std::end(_callbacks), [t](const auto& callback) {
+                callback(t);
+            });
             while (continueFun(t)) {
                 runIntegrator();
                 if (requiresNeighborList) runUpdateNeighborList();
@@ -256,6 +259,9 @@ public:
                 if (requiresNeighborList) runUpdateNeighborList();
                 runForces();
                 runEvaluateObservables(t + 1);
+                std::for_each(std::begin(_callbacks), std::end(_callbacks), [t](const auto& callback) {
+                    callback(t+1);
+                });
                 ++t;
             }
             if (requiresNeighborList) runClearNeighborList();
@@ -299,6 +305,10 @@ public:
         return _kernel;
     }
 
+    void addCallback(std::function<void(time_step_type)> f) {
+        _callbacks.emplace_back(std::move(f));
+    }
+
 protected:
     model::Kernel *const _kernel;
     std::shared_ptr<model::actions::TimeStepDependentAction> _integrator{nullptr};
@@ -317,6 +327,8 @@ protected:
     const util::PerformanceNode &_performanceRoot;
     std::function<void(time_step_type)> _progressCallback;
     scalar _timeStep;
+
+    std::vector<std::function<void(time_step_type)>> _callbacks;
 };
 
 NAMESPACE_END(api)

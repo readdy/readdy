@@ -143,8 +143,8 @@ public:
         return particleType_;
     }
 
-    void setParticleType(ParticleTypeId type) {
-        particleType_ = type;
+    ParticleTypeId &particleType() {
+        return particleType_;
     }
 
     /**

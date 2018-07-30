@@ -63,8 +63,8 @@ struct Entry {
     using topology_index_type = std::ptrdiff_t;
 
     explicit Entry(const particle_type &particle)
-            : pos(particle.getPos()), force(force_type()), type(particle.getType()), deactivated(false),
-              displacement(0), id(particle.getId()) {}
+            : pos(particle.pos()), force(force_type()), type(particle.type()), deactivated(false),
+              displacement(0), id(particle.id()) {}
 
     Entry(const Entry &) = default;
 

@@ -140,7 +140,7 @@ TEST_P(TestReactions, FusionFissionWeights) {
         auto fPos = n3(static_cast<readdy::scalar>(0.), static_cast<readdy::scalar>(0.8));
         kernel->addParticle("F", fPos);
         // fPos
-        fPositions.emplace(kernel->stateModel().getParticles().back().getPos());
+        fPositions.emplace(kernel->stateModel().getParticles().back().pos());
         kernel->addParticle("A", n3(static_cast<readdy::scalar>(0.), static_cast<readdy::scalar>(1.)));
     }
 
@@ -189,7 +189,7 @@ TEST_P(TestReactionsWithHandler, FusionThroughBoundary) {
 
         const auto particles = kernel->stateModel().getParticles();
         EXPECT_EQ(particles.size(), 1);
-        const auto &pos = particles[0].getPos();
+        const auto &pos = particles[0].pos();
         EXPECT_NEAR(pos.x, 4.9, 0.00001);
         EXPECT_NEAR(pos.y, 4.9, 0.00001);
         EXPECT_NEAR(pos.z, 4.9, 0.00001);
@@ -215,8 +215,8 @@ TEST_P(TestReactionsWithHandler, FissionNearBoundary) {
 
         const auto particles = kernel->stateModel().getParticles();
         EXPECT_EQ(particles.size(), 2);
-        const auto &pos1 = particles[0].getPos();
-        const auto &pos2 = particles[1].getPos();
+        const auto &pos1 = particles[0].pos();
+        const auto &pos2 = particles[1].pos();
         if (pos1.x <= 0.) {
             EXPECT_GT(pos2.x, 0.);
         } else if (pos1.x >= 0.) {
