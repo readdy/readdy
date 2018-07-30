@@ -84,7 +84,7 @@ readdy::model::top::GraphTopology *const SCPUStateModel::addTopology(TopologyTyp
     std::vector<ParticleTypeId> types;
     types.reserve(ids.size());
     for (const auto &p : particles) {
-        types.push_back(p.getType());
+        types.push_back(p.type());
     }
     auto it = _topologies.emplace_back(
             std::make_unique<topology>(type, std::move(ids), std::move(types), _context.get(), this)

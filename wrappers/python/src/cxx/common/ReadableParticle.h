@@ -50,8 +50,8 @@ namespace rpy {
 class ReadableParticle {
 public:
     ReadableParticle(const readdy::model::Particle &particle, const readdy::model::Context &context)
-            : _pos(3, particle.getPos().data.data()), _type(context.particleTypes().nameOf(particle.getType())),
-              _id(particle.getId()) {}
+            : _pos(3, particle.pos().data.data()), _type(context.particleTypes().nameOf(particle.type())),
+              _id(particle.id()) {}
 
     const auto &pos() const {
         return _pos;

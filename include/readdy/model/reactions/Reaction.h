@@ -98,6 +98,10 @@ public:
         return _rate;
     }
 
+    scalar &rate() {
+        return _rate;
+    }
+
     std::uint8_t nEducts() const {
         return _nEducts;
     }

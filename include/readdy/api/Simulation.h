@@ -178,8 +178,8 @@ public:
         std::vector<Vec3> positions;
         positions.reserve(particles.size());
         for (const auto &p : particles) {
-            if (p.getType() == typeId) {
-                positions.push_back(p.getPos());
+            if (p.type() == typeId) {
+                positions.push_back(p.pos());
             }
         }
         return positions;

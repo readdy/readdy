@@ -77,7 +77,7 @@ void RadialDistribution::evaluate() {
         std::fill(counts.begin(), counts.end(), 0);
         const auto particles = kernel->stateModel().getParticles();
         auto isInCollection = [](const readdy::model::Particle &p, const auto &collection) {
-            return std::find(collection.begin(), collection.end(), p.getType()) != collection.end();
+            return std::find(collection.begin(), collection.end(), p.type()) != collection.end();
         };
         const auto nFromParticles = std::count_if(particles.begin(), particles.end(),
                                                   [this, isInCollection](const readdy::model::Particle &p) {
@@ -89,8 +89,8 @@ void RadialDistribution::evaluate() {
             for (auto &&pFrom : particles) {
                 if (isInCollection(pFrom, typeCountFrom)) {
                     for (auto &&pTo : particles) {
-                        if (isInCollection(pTo, typeCountTo) && pFrom.getId() != pTo.getId()) {
-                            const auto dist = sqrt(bcs::distSquared(pFrom.getPos(), pTo.getPos(), box, pbc));
+                        if (isInCollection(pTo, typeCountTo) && pFrom.id() != pTo.id()) {
+                            const auto dist = sqrt(bcs::distSquared(pFrom.pos(), pTo.pos(), box, pbc));
                             auto upperBound = std::upper_bound(binBorders.begin(), binBorders.end(), dist);
                             if (upperBound != binBorders.end()) {
                                 const auto binBordersIdx = upperBound - binBorders.begin();

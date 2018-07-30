@@ -130,7 +130,7 @@ public:
     readdy::model::Particle::id_type addParticle(const std::string &type, const Vec3 &pos) {
         readdy::model::Particle particle {pos[0], pos[1], pos[2], context().particleTypes().idOf(type)};
         stateModel().addParticle(particle);
-        return particle.getId();
+        return particle.id();
     };
 
     TopologyParticle createTopologyParticle(const std::string &type, const Vec3 &pos) const {

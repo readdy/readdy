@@ -136,7 +136,7 @@ CPUChangeParticleType::CPUChangeParticleType(CPUStateModel::data_type *const dat
 
 void CPUChangeParticleType::execute() {
     const auto idx = topology->getParticles().at(_vertex->particleIndex);
-    _vertex->setParticleType(previous_type);
+    _vertex->particleType() = previous_type;
     std::swap(data->entry_at(idx).type, previous_type);
 }
 

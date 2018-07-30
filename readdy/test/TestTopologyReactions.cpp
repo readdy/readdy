@@ -163,8 +163,8 @@ TEST_P(TestTopologyReactions, ChangeParticleType) {
         ASSERT_EQ(result.size(), 0) << "reaction is in-place, expect empty return vector";
         auto particles = kernel->stateModel().getParticlesForTopology(*topology);
         auto v = topology->graph().vertices().begin();
-        ASSERT_EQ(particles[v->particleIndex].getType(), types.idOf("Topology B"));
-        ASSERT_EQ(v->particleType(), particles[v->particleIndex].getType()) << "expect that the particle type in "
+        ASSERT_EQ(particles[v->particleIndex].type(), types.idOf("Topology B"));
+        ASSERT_EQ(v->particleType(), particles[v->particleIndex].type()) << "expect that the particle type in "
                             "the graph representation and the particle data coincide";
     }
     {
@@ -172,8 +172,8 @@ TEST_P(TestTopologyReactions, ChangeParticleType) {
         ASSERT_EQ(result.size(), 0) << "reaction is in-place, expect empty return vector";
         auto particles = kernel->stateModel().getParticlesForTopology(*topology);
         auto v = topology->graph().vertices().begin();
-        ASSERT_EQ(particles[v->particleIndex].getType(), types.idOf("Topology A"));
-        ASSERT_EQ(v->particleType(), particles[v->particleIndex].getType()) << "expect that the particle type in "
+        ASSERT_EQ(particles[v->particleIndex].type(), types.idOf("Topology A"));
+        ASSERT_EQ(v->particleType(), particles[v->particleIndex].type()) << "expect that the particle type in "
                             "the graph representation and the particle data coincide";
     }
 }
@@ -617,7 +617,7 @@ TEST_P(TestTopologyReactions, ChainDecayIntegrationTest) {
                 kernel->stateModel().toDenseParticleIndices(topParticles.begin(), topParticles.end());
                 EXPECT_TRUE(std::find(topParticles.begin(), topParticles.end(),
                                       record.particleIndices.at(j)) != topParticles.end());
-                EXPECT_TRUE(particles.at(j).getType() == ctx.particleTypes().idOf("T"));
+                EXPECT_TRUE(particles.at(j).type() == ctx.particleTypes().idOf("T"));
             }
 
             for(const auto &edge : record.edges) {
@@ -655,13 +655,13 @@ TEST_P(TestTopologyReactions, ChainDecayIntegrationTest) {
             for(auto topPtr : kernel->stateModel().getTopologies()) {
                 // check that all topologies are just containing T particles and their edges are also fine
                 for(const auto &p : topPtr->fetchParticles()) {
-                    EXPECT_EQ(p.getType(), ctx.particleTypes().idOf("T"));
+                    EXPECT_EQ(p.type(), ctx.particleTypes().idOf("T"));
                 }
                 for(auto edge : topPtr->graph().edges()) {
                     auto v1 = std::get<0>(edge);
                     auto v2 = std::get<1>(edge);
-                    EXPECT_EQ(topPtr->particleForVertex(v1).getType(), ctx.particleTypes().idOf("T"));
-                    EXPECT_EQ(topPtr->particleForVertex(v2).getType(), ctx.particleTypes().idOf("T"));
+                    EXPECT_EQ(topPtr->particleForVertex(v1).type(), ctx.particleTypes().idOf("T"));
+                    EXPECT_EQ(topPtr->particleForVertex(v2).type(), ctx.particleTypes().idOf("T"));
                 }
             }
         }

@@ -114,7 +114,7 @@ void performReaction(
                     reaction->productDistance() * std::cbrt(readdy::model::rnd::uniform_real<readdy::scalar>(0, 1));
             readdy::model::Particle p(entry1.position() - reaction->weight2() * distance * n3,
                                       reaction->products()[1]);
-            bcs::fixPosition(p.getPos(), box, pbc);
+            bcs::fixPosition(p.pos(), box, pbc);
             newEntries.emplace_back(p);
 
             entry1.type = reaction->products()[0];
@@ -123,7 +123,7 @@ void performReaction(
             bcs::fixPosition(entry1.pos, box, pbc);
             if(record) {
                 record->products[0] = entry1.id;
-                record->products[1] = p.getId();
+                record->products[1] = p.id();
             }
             break;
         }

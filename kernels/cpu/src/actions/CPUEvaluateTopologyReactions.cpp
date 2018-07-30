@@ -341,7 +341,7 @@ void CPUEvaluateTopologyReactions::handleTopologyParticleReaction(CPUStateModel:
         if(reaction.is_fusion()) {
             topology->appendParticle(event.idx2, entry2Type, event.idx1, entry1Type);
         } else {
-            topology->vertexForParticle(event.idx1)->setParticleType(entry1Type);
+            topology->vertexForParticle(event.idx1)->particleType() = entry1Type;
         }
     } else {
         throw std::logic_error("this branch should never be reached as topology-topology reactions are "
@@ -393,11 +393,11 @@ void CPUEvaluateTopologyReactions::handleTopologyTopologyReaction(CPUStateModel:
             auto v1 = t1->vertexForParticle(event.idx1);
             auto v2 = t1->vertexForParticle(event.idx2);
             if(entry1Type == reaction.type1() && t1->type() == reaction.top_type1()) {
-                v1->setParticleType(reaction.type_to1());
-                v2->setParticleType(reaction.type_to2());
+                v1->particleType() = reaction.type_to1();
+                v2->particleType() = reaction.type_to2();
             } else {
-                v1->setParticleType(reaction.type_to2());
-                v2->setParticleType(reaction.type_to1());
+                v1->particleType() = reaction.type_to2();
+                v2->particleType() = reaction.type_to1();
             }
             if(!t1->graph().containsEdge(v1, v2)) {
                 t1->graph().addEdge(v1, v2);
@@ -412,8 +412,8 @@ void CPUEvaluateTopologyReactions::handleTopologyTopologyReaction(CPUStateModel:
             topologies.erase(topologies.begin() + event.topology_idx2);
         }
     } else {
-        t1->vertexForParticle(event.idx1)->setParticleType(entry1Type);
-        t2->vertexForParticle(event.idx2)->setParticleType(entry2Type);
+        t1->vertexForParticle(event.idx1)->particleType() = entry1Type;
+        t2->vertexForParticle(event.idx2)->particleType() = entry2Type;
         t1->type() = top_type_to1;
         t2->type() = top_type_to2;
 

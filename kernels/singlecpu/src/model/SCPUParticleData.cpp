@@ -82,7 +82,7 @@ void SCPUParticleData::removeParticle(const SCPUParticleData::particle_type &par
     auto it_entries = begin();
     std::size_t idx = 0;
     for(; it_entries != end(); ++it_entries, ++idx) {
-        if(!it_entries->is_deactivated() && it_entries->id == particle.getId()) {
+        if(!it_entries->is_deactivated() && it_entries->id == particle.id()) {
             _blanks.push_back(idx);
             it_entries->deactivated = true;
             return;

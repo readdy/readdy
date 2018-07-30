@@ -44,6 +44,8 @@
 
 
 #include <unordered_set>
+#include <readdy/api/SimulationLoop.h>
+#include <readdy/api/Simulation.h>
 #include "gtest/gtest.h"
 #include "readdy/common/algorithm.h"
 
@@ -57,6 +59,39 @@ struct Event {
     scalar rate;
     scalar cumulativeRate;
 };
+
+TEST(TestLoop, Loop) {
+Simulation sim ("SingleCPU");
+sim.context().topologyRegistry().addType("Polymer");
+sim.context().particleTypes().addTopologyType("A", 1);
+sim.context().particleTypes().add("B", 1.);
+sim.context().topologyRegistry().addSpatialReaction("Attach: Polymer(A) + (B) -> Polymer(A--A)", 1., 5.);
+sim.context().reactions().add("myfus: B +(5) B -> B", 10);
+sim.context().reactions().add("myconv: B -> B", 10);
+
+sim.addParticle("B", 0., 0., 0.);
+sim.addTopology("Polymer", {sim.createTopologyParticle("A", {0., 0., 0.})});
+sim.context().topologyRegistry().configureBondPotential("A", "A", {10., 10.});
+
+auto loop = sim.createLoop(1.5);
+
+loop.addCallback([&](const auto t) {
+    // triggers evaluation of rate functions for each topology
+    for (auto topology : sim.stateModel().getTopologies()) {
+        topology->updateReactionRates(
+                sim.context().topologyRegistry().structuralReactionsOf(topology->type())
+        );
+    }
+    // change spatial topology reaction rate
+    sim.context().topologyRegistry().spatialReactionByName("Attach").rate() = 5000;
+    // change unimolecular reaction rate
+    sim.context().reactions().order1ByName("myconv")->rate() = 100;
+    // change bimolecular reaction rate
+    sim.context().reactions().order2ByName("myfus")->rate() = 100;
+});
+
+loop.run(500);
+}
 
 TEST(TestAlgorithms, EvaluateAll) {
     auto n = 1000U;

@@ -147,7 +147,7 @@ TEST_F(TestNeighborList, OneDirection) {
             m::Particle(0, 0, -1.1, typeIdA), m::Particle(0, 0, .4, typeIdA), m::Particle(0, 0, 1.1, typeIdA)
     };
     std::vector<std::size_t> ids(particles.size());
-    std::transform(particles.begin(), particles.end(), ids.begin(), [](const m::Particle& p) {return p.getId();});
+    std::transform(particles.begin(), particles.end(), ids.begin(), [](const m::Particle& p) {return p.id();});
     auto &data = list.data();
     data.addParticles(particles);
 

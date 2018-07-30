@@ -105,9 +105,11 @@ void GraphTopology::configure() {
             }
         } else {
             std::ostringstream ss;
+            auto p1 = particleForVertex(v1);
+            auto p2 = particleForVertex(v2);
 
-            ss << "The edge " << v1->particleIndex;
-            ss << " -- " << v2->particleIndex;
+            ss << "The edge " << v1->particleIndex << " (" << context().particleTypes().nameOf(p1.type()) << ")";
+            ss << " -- " << v2->particleIndex << " (" << context().particleTypes().nameOf(p1.type()) << ")";
             ss << " has no bond configured!";
 
             throw std::invalid_argument(ss.str());
@@ -215,7 +217,7 @@ void GraphTopology::appendParticle(particle_index newParticle, ParticleTypeId ne
 
         auto newParticleIt = std::prev(graph().vertices().end());
         auto otherParticleIt = std::next(graph().vertices().begin(), counterPartIdx);
-        otherParticleIt->setParticleType(counterPartType);
+        otherParticleIt->particleType() = counterPartType;
 
         graph().addEdge(newParticleIt, otherParticleIt);
     } else {
@@ -251,8 +253,8 @@ void GraphTopology::appendTopology(GraphTopology &other, Topology::particle_inde
 
         // add edge between the formerly two topologies
         graph().addEdge(other_vert, this_vert);
-        other_vert->setParticleType(otherNewParticleType);
-        this_vert->setParticleType(thisNewParticleType);
+        other_vert->particleType() = otherNewParticleType;
+        this_vert->particleType() = thisNewParticleType;
 
         _topology_type = newType;
     } else {
