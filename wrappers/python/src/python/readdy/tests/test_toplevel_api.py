@@ -51,7 +51,7 @@ ut = readdy.units
 
 class TestTopLevelAPI(ReaDDyTestCase):
     """
-    A bunch of sanity checks
+    A bunch of sanity checks and tests regarding physical units
     """
 
     def test_temperature(self):
@@ -90,7 +90,60 @@ class TestTopLevelAPI(ReaDDyTestCase):
         rds = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.], unit_system={'length_unit': 'kilometer'})
         rds = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.], unit_system={'time_unit': 'hour'})
         rds = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.], unit_system={'energy_unit': 'kcal/mol'})
+        rds = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.], unit_system={'energy_unit': 'joule'})
         rds = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.], unit_system={'temperature_unit': 'rankine'})
+
+    def test_system_with_wrong_unit_dimensions(self):
+        with self.assertRaises(ValueError):
+            rds = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.], unit_system={'energy_unit': 'rankine'})
+
+        with self.assertRaises(ValueError):
+            rds = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.], unit_system={'length_unit': 'kiloseconds'})
+
+        with self.assertRaises(ValueError):
+            rds = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.], unit_system={'time_unit': 'kilonanometer'})
+
+        with self.assertRaises(ValueError):
+            rds = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.], unit_system={'temperature_unit': 'second'})
+
+    def test_change_temperature(self):
+        rds1 = readdy.ReactionDiffusionSystem(box_size=[10., 10., 10.], temperature=300.)
+        rds1.temperature = 293.
+        self.assertEquals(rds1.temperature.magnitude, 293.)
+
+        rds2 = readdy.ReactionDiffusionSystem(box_size=[10., 10., 10.], temperature=300.,
+                                              unit_system={'energy_unit': 'joule'})
+        rds2.temperature = 293.
+        self.assertEquals(rds2.temperature.magnitude, 293.)
+
+        rds3 = readdy.ReactionDiffusionSystem(box_size=[10., 10., 10.], temperature=30. * readdy.units.kelvin,
+                                              unit_system={'energy_unit': 'joule'})
+        rds3.temperature = 293.
+        self.assertEquals(rds3.temperature.magnitude, 293.)
+
+        rds4 = readdy.ReactionDiffusionSystem(box_size=[10., 10., 10.], temperature=300.)
+        rds4.temperature = 293. * readdy.units.rankine
+        self.assertAlmostEqual(rds4.temperature.magnitude, 162.77, delta=0.1)
+
+    def test_change_temperature_wrong_dimension(self):
+        rds = readdy.ReactionDiffusionSystem(box_size=[10., 10., 10.], temperature=300.)
+        with self.assertRaises(ValueError):
+            rds.temperature = 293. * readdy.units.joule
+
+    def test_add_species_wrong_dimension(self):
+        rds = readdy.ReactionDiffusionSystem(box_size=[10., 10., 10.])
+        with self.assertRaises(ValueError):
+            rds.add_species("A", diffusion_constant=1. * readdy.units.nanometer / readdy.units.second)
+
+    def test_change_kbt_unitless_wrong_dimension(self):
+        rds = readdy.ReactionDiffusionSystem(box_size=[10., 10., 10.], unit_system=None)
+        with self.assertRaises(ValueError):
+            rds.kbt = 2.437 * readdy.units.parse_expression("kJ/mol")
+
+    def test_add_species_unitless_wrong_dimension(self):
+        rds = readdy.ReactionDiffusionSystem(box_size=[10., 10., 10.], unit_system=None)
+        with self.assertRaises(ValueError):
+            rds.add_species("A", diffusion_constant=1. * readdy.units.nanometer ** 2 / readdy.units.second)
 
     def test_box_size(self):
         rds = readdy.ReactionDiffusionSystem([1., 2., 3.], unit_system=None)

@@ -209,15 +209,15 @@ class ReactionDiffusionSystem(object):
         """
         kbt = self.kbt
         if self.temperature_unit != 1.:
-            return (kbt / (self._unit_conf.boltzmann * self._unit_conf.avogadro)).to(self.temperature_unit)
+            return kbt.to(self.temperature_unit)  # pint's boltzmann context does this for free
         else:
             raise ValueError("No temperature unit was set. In a unitless system, refer to kbt instead.")
 
     def _temperature_to_kbt(self, value):
         if self.temperature_unit != 1.:
             value = self._unit_conf.convert(value, self.temperature_unit)
-            kbt = self._unit_conf.convert(value * self.temperature_unit * self._unit_conf.boltzmann
-                                          * self._unit_conf.avogadro, self.energy_unit)
+            kbt = self._unit_conf.convert(
+                value * self.temperature_unit * self._unit_conf.boltzmann, self.energy_unit)
             return kbt * self._unit_conf.energy_unit
         raise ValueError("No temperature unit was set.")
 
@@ -225,7 +225,7 @@ class ReactionDiffusionSystem(object):
     def temperature(self, value):
         """
         Sets the temperature of the system.
-        :param value: the new temperature [temperature]
+        :param value: the new temperature, either a number or a Quantity with units of dimension [temperature]
         """
         if self.temperature_unit != 1:
             kbt = self._temperature_to_kbt(value)
