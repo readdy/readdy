@@ -340,7 +340,7 @@ void SCPUEvaluateTopologyReactions::handleTopologyTopologyReaction(SCPUStateMode
                 data.entry_at(pidx).topology_index = event.topology_idx;
             }
             auto &topologies = model.topologies();
-            t1->appendTopology(*t2, event.idx2, entry2Type, event.idx1, entry1Type, top_type_to1);
+            t1->appendTopology(*t2, event.idx2, entry2Type, event.idx1, entry1Type, reaction.top_type_to1());
             topologies.erase(topologies.begin() + event.topology_idx2);
         }
     } else {
