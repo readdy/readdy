@@ -197,6 +197,8 @@ public:
 
     readdy::model::top::GraphTopology *getTopologyForParticle(readdy::model::top::Topology::particle_index particle) override;
 
+    void clear() override;
+
 private:
     model::SCPUParticleData particleData {};
     std::unique_ptr<model::CellLinkedList> neighborList;

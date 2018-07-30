@@ -105,6 +105,8 @@ public:
 
     virtual void toDenseParticleIndices(std::vector<std::size_t>::iterator begin,
                                         std::vector<std::size_t>::iterator end) const = 0;
+
+    virtual void clear() = 0;
 };
 
 NAMESPACE_END(model)

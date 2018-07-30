@@ -188,6 +188,15 @@ void CPUStateModel::toDenseParticleIndices(std::vector<std::size_t>::iterator be
     });
 }
 
+void CPUStateModel::clear() {
+    getParticleData()->clear();
+    topologies().clear();
+    reactionRecords().clear();
+    resetReactionCounts();
+    virial() = {};
+    energy() = 0;
+}
+
 
 }
 }

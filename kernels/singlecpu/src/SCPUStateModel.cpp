@@ -175,6 +175,15 @@ void SCPUStateModel::toDenseParticleIndices(std::vector<std::size_t>::iterator b
     });
 }
 
+void SCPUStateModel::clear() {
+    particleData.clear();
+    _topologies.clear();
+    reactionRecords().clear();
+    resetReactionCounts();
+    virial() = {};
+    energy() = 0;
+}
+
 }
 }
 }
