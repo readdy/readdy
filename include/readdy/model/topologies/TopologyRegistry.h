@@ -262,6 +262,17 @@ public:
         throw std::invalid_argument("No reaction with name \"" + name + "\" registered.");
     }
 
+    SpatialReaction &spatialReactionByName(const std::string &name) {
+        for(auto &e : _spatialReactions) {
+            for(auto &reaction : e.second) {
+                if(reaction.name() == name) {
+                    return reaction;
+                }
+            }
+        }
+        throw std::invalid_argument("No reaction with name \"" + name + "\" registered.");
+    }
+
     bool isSpatialReactionType(const std::string &name) const {
         return isSpatialReactionType(_typeRegistry.get().idOf(name));
     }
