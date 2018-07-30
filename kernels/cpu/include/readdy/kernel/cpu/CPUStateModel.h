@@ -227,6 +227,8 @@ public:
     void toDenseParticleIndices(std::vector<std::size_t>::iterator begin,
                                 std::vector<std::size_t>::iterator end) const override;
 
+    void clear() override;
+
 private:
     data::ObservableData _observableData;
     std::reference_wrapper<thread_pool> _pool;
