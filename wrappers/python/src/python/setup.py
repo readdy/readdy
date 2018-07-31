@@ -103,7 +103,7 @@ metadata = dict(
     name='ReaDDy',
     version=__version__[1:] if __version__.startswith("v") else __version__,
     package_dir={'': get_package_dir()},
-    package_data={'readdy._internal': ["*"]},
+    package_data={'readdy._internal': ["*"], 'readdy.api.conf': ['readdy_units.txt', 'constants_en.txt']},
     packages=find_packages(where=get_package_dir()),
     cmdclass={'build': ReaDDyBuild, 'install': ReaDDyInstall}
 )

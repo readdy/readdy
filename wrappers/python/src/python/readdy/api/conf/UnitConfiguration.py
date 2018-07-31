@@ -49,8 +49,25 @@ class UnitConfiguration(object):
         self._time_unit = _ureg.parse_units(time_unit)
         self._energy_unit = _ureg.parse_units(energy_unit)
         self._temperature_unit = _ureg.parse_units(temperature_unit)
-        self._boltzmann = _ureg.parse_units('boltzmann_constant')
-        self._avogadro = _ureg.parse_units('avogadro_number')
+
+        self._boltzmann = _ureg.parse_expression('boltzmann_constant')
+
+        length_dim = self._length_unit.dimensionality
+        valid = (len(length_dim) == 1 and '[length]' in length_dim and length_dim['[length]'] == 1)
+        if not valid:
+            raise ValueError("Given length unit has wrong dimensions")
+
+        time_dim = self._time_unit.dimensionality
+        valid = (len(time_dim) == 1 and '[time]' in time_dim and time_dim['[time]'] == 1)
+        if not valid:
+            raise ValueError("Given time unit has wrong dimensions")
+
+        energy_dim = self._energy_unit.dimensionality
+        valid = (len(energy_dim) == 3 and energy_dim['[length]'] == 2
+                 and energy_dim['[time]'] == -2 and energy_dim['[mass]'] == 1)
+        if not valid:
+            raise ValueError("Given energy unit has wrong dimensions")
+
 
     @property
     def reg(self):
@@ -59,10 +76,6 @@ class UnitConfiguration(object):
     @property
     def boltzmann(self):
         return self._boltzmann
-
-    @property
-    def avogadro(self):
-        return self._avogadro
 
     @property
     def temperature_unit(self):
@@ -115,6 +128,8 @@ class UnitConfiguration(object):
     def convert(self, value, target_units):
         if not isinstance(value, _Q_):
             return value
+        if not (value.dimensionality == target_units.dimensionality):
+            raise ValueError("Conversion of value to target_units requires same physical dimensionality")
         return value.to(target_units).magnitude
 
 
@@ -127,6 +142,6 @@ class NoUnitConfiguration(UnitConfiguration):
         self._energy_unit = 1.
 
     def convert(self, value, target_units):
-        if not isinstance(value, _Q_):
-            return value
-        return value.magnitude
+        if isinstance(value, _Q_):
+            raise ValueError("With no units defined, enter numbers only")
+        return value

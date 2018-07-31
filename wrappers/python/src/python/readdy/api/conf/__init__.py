@@ -36,8 +36,17 @@
 Created on 26.09.17
 
 @author: clonker
+@author: chrisfroe
 """
 
+import os
 from pint import UnitRegistry
-ureg = UnitRegistry()
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+unit_definitions = os.path.join(current_dir, 'readdy_units.txt')
+ureg = UnitRegistry(unit_definitions)
+
+# enable automatic conversion from energy to temperature and vice versa
+ureg.enable_contexts("boltzmann")
+
 Q_ = ureg.Quantity

@@ -36,6 +36,7 @@
 Created on 10.10.17
 
 @author: clonker
+@author: chrisfroe
 """
 
 import readdy
@@ -50,7 +51,7 @@ class TestUnits(ReaDDyTestCase):
 
     def test_unit_configuration_sanity(self):
         conf = UnitConfiguration()
-        reg = pint.UnitRegistry()
+        reg = conf.reg
         np.testing.assert_equal(1 * conf.length_unit, 1 * reg.nanometer)
         np.testing.assert_equal(1 * conf.time_unit, 1 * reg.nanoseconds)
         np.testing.assert_equal(1 * conf.energy_unit, 1 * reg.kilojoule / reg.mol)
@@ -62,7 +63,7 @@ class TestUnits(ReaDDyTestCase):
         np.testing.assert_almost_equal(a.magnitude, b.magnitude)
 
     def test_force_constant_unit(self):
-        conf = UnitConfiguration()
+        conf = UnitConfiguration(length_unit='nanometer', energy_unit='kilojoule/mol')
         kunit = conf.energy_unit / conf.length_unit**2
         np.testing.assert_equal(kunit, conf.reg.parse_units("kilojoule/(mol * nanometer * nanometer)"))
 
@@ -74,3 +75,42 @@ class TestUnits(ReaDDyTestCase):
         sys = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.])
         angle = 180 * sys.units.degree
         np.testing.assert_equal(np.pi, angle.to(sys.units.radians).magnitude)
+
+    def test_kbt_with_mole_to_temperature(self):
+        """This tests the definition of moles in our `readdy_units.txt` and `constants_en.txt`"""
+        conf = UnitConfiguration()
+        reg = conf.reg
+        kbt = reg.parse_expression('2.437 * kilojoule / mole')
+        temperature = kbt / reg.boltzmann_constant
+        temperature = temperature.to(reg.kelvin)
+        self.assertAlmostEqual(temperature.magnitude, 293.1, delta=1.)
+
+    def test_force_constant_unit_with_moles(self):
+        """This tests the definition of moles in our `readdy_units.txt` and `constants_en.txt`"""
+        conf = UnitConfiguration()
+        reg = conf.reg
+        energy_unit = reg.parse_expression("2.437 * kilojoule / mol")
+        energy_unit = energy_unit.to("kilojoule")
+        length_unit = reg.parse_expression("1 * nanometer")
+        force_constant_unit = energy_unit / length_unit / length_unit
+        force_constant_unit_magnitude = force_constant_unit.magnitude
+
+        input_force_constant = 1e-20 * reg.joule / (reg.nanometer * reg.nanometer)
+        converted_force_constant = input_force_constant.m_as(force_constant_unit) / (force_constant_unit_magnitude)
+        self.assertAlmostEqual(converted_force_constant, 2.4711289659417317, delta=0.01)
+
+    def test_physical_dimensions(self):
+        """... of default unit configuration"""
+        conf = UnitConfiguration()
+        length_dim = conf.length_unit.dimensionality
+        valid = (len(length_dim) == 1 and '[length]' in length_dim and length_dim['[length]'] == 1)
+        self.assertTrue(valid)
+
+        time_dim = conf.time_unit.dimensionality
+        valid = (len(time_dim) == 1 and '[time]' in time_dim and time_dim['[time]'] == 1)
+        self.assertTrue(valid)
+
+        energy_dim = conf.energy_unit.dimensionality
+        valid = (len(energy_dim) == 3 and energy_dim['[length]'] == 2
+                 and energy_dim['[time]'] == -2 and energy_dim['[mass]'] == 1)
+        self.assertTrue(valid)
