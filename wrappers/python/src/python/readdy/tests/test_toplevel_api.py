@@ -372,8 +372,8 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
 
         def intermediate_reaction_function(topology):
             recipe = readdy.StructuralReactionRecipe(topology)
-            for i in range(len(topology.get_graph().get_vertices())):
-                recipe.change_particle_type(i, "unstable T")
+            for v in topology.graph.vertices:
+                recipe.change_particle_type(v, "unstable T")
             recipe.change_topology_type("unstable")
             return recipe
 

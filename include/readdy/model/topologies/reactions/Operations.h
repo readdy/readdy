@@ -125,6 +125,19 @@ private:
     ParticleTypeId _type_to;
 };
 
+class ChangeParticlePosition : public Operation {
+public:
+    ChangeParticlePosition(const vertex_ref &vertex, Vec3 position) : _vertex(vertex), _pos(position) {};
+
+    action_ptr create_action(topology_ref topology, factory_ref factory) const override {
+        return factory->createChangeParticlePosition(topology, _vertex, _pos);
+    }
+
+private:
+    vertex_ref _vertex;
+    Vec3 _pos;
+};
+
 class ChangeTopologyType : public Operation {
 public:
     /**

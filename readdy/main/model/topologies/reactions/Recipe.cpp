@@ -55,6 +55,29 @@ Recipe &Recipe::changeParticleType(const Recipe::vertex_ref &ref, const std::str
     return changeParticleType(ref, _topology.get().context().particleTypes().idOf(to));
 }
 
+Recipe &Recipe::changeParticleType(const Recipe::Vertex &vertex, const std::string &to) {
+    return changeParticleType(_topology.get().toVertexRef(vertex), to);
+}
+
+Recipe &Recipe::changeParticleType(const Recipe::Vertex &vertex, const ParticleTypeId &to) {
+    return changeParticleType(_topology.get().toVertexRef(vertex), to);
+}
+
+Recipe &Recipe::changeParticlePosition(const Recipe::Vertex &v, Vec3 pos) {
+    return changeParticlePosition(_topology.get().toVertexRef(v), pos);
+}
+
+Recipe &Recipe::addEdge(const Recipe::Vertex &v1, const Recipe::Vertex &v2) {
+    return addEdge(_topology.get().toVertexRef(v1), _topology.get().toVertexRef(v2));
+}
+
+Recipe &Recipe::removeEdge(const Recipe::Vertex &v1, const Recipe::Vertex &v2) {
+    return addEdge(_topology.get().toVertexRef(v1), _topology.get().toVertexRef(v2));
+}
+
+Recipe &Recipe::separateVertex(const Recipe::Vertex &vertex) {
+    return separateVertex(_topology.get().toVertexRef(vertex));
+}
 
 }
 }

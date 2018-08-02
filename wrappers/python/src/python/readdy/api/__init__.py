@@ -41,6 +41,6 @@ Created on 08.09.17
 from .reaction_diffusion_system import *
 from .simulation import *
 # elevate reaction recipe
-from .._internal.readdybinding.api.top import Recipe as StructuralReactionRecipe
+from .topology_reactions import StructuralReactionRecipe
 
 __all__ = ['reaction_diffusion_system', 'observables', 'simulation']

@@ -82,6 +82,8 @@ public:
     virtual action_ref createChangeParticleType(GraphTopology *topology, const vertex &v,
                                                 const ParticleTypeId &type_to) const = 0;
 
+    virtual action_ref createChangeParticlePosition(GraphTopology *topology, const vertex &v, Vec3 position) const = 0;
+
     /**
      * creates an action that adds an edge in the topology
      * @param topology the topology

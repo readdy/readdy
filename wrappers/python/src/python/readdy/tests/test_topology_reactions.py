@@ -43,6 +43,7 @@ from __future__ import print_function
 import unittest
 
 import numpy as np
+import readdy
 import readdy._internal.readdybinding.api.top as top
 import readdy._internal.readdybinding.common as common
 from readdy._internal.readdybinding.api import KernelProvider
@@ -54,8 +55,6 @@ from readdy.util.testing_utils import ReaDDyTestCase
 from readdy._internal.readdybinding.api import AnglePotentialConfiguration
 from readdy._internal.readdybinding.api import BondedPotentialConfiguration
 from readdy._internal.readdybinding.api import TorsionPotentialConfiguration
-
-import readdy
 
 
 class TestTopologyReactions(ReaDDyTestCase):
@@ -72,11 +71,11 @@ class TestTopologyReactions(ReaDDyTestCase):
 
     def _get_split_reaction(self):
         def reaction_function(topology):
-            recipe = top.Recipe(topology)
+            recipe = readdy.StructuralReactionRecipe(topology)
             if topology.get_n_particles() > 1:
                 edge = np.random.randint(0, topology.get_n_particles() - 1)
                 recipe.remove_edge(edge, edge + 1)
-            return recipe
+            return recipe._get()
 
         def rate_function(topology):
             if topology.get_n_particles() > 1:
@@ -94,10 +93,10 @@ class TestTopologyReactions(ReaDDyTestCase):
 
     def _get_decay_reaction(self):
         def reaction_function(topology):
-            recipe = top.Recipe(topology)
+            recipe = readdy.StructuralReactionRecipe(topology)
             if topology.get_n_particles() == 1:
                 recipe.change_particle_type(0, "B")
-            return recipe
+            return recipe._get()
 
         def rate_function(topology):
             return 1.0 if topology.get_n_particles() == 1 else 0
@@ -142,10 +141,10 @@ class TestTopologyReactions(ReaDDyTestCase):
             recipe = readdy.StructuralReactionRecipe(topology)
             edges = topology.get_graph().get_edges()
             edge = edges[1 + np.random.randint(0, len(edges)-2)]
-            recipe.remove_edge(edge)
+            recipe.remove_edge(edge[0], edge[1])
             recipe.change_particle_type(edge[0].get().particle_index, "Head")
             recipe.change_particle_type(edge[1].get().particle_index, "Head")
-            return recipe
+            return recipe._get()
 
         system = readdy.ReactionDiffusionSystem(box_size=[100, 100, 100])
         system.topologies.add_type("Polymer")

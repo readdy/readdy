@@ -147,6 +147,15 @@ protected:
     ParticleTypeId previous_type;
 };
 
+class ChangeParticlePosition : public TopologyReactionAction {
+public:
+    ChangeParticlePosition(GraphTopology *topology, const vertex &v, Vec3 posTo);
+
+protected:
+    vertex _vertex;
+    Vec3 _posTo;
+};
+
 class AddEdge : public TopologyReactionAction {
 public:
     /**

@@ -60,7 +60,8 @@ NAMESPACE_BEGIN(graph)
 class Graph {
 public:
 
-    using vertex_list = std::list<Vertex>;
+    using vertex = Vertex;
+    using vertex_list = std::list<vertex>;
     using vertex_ref = vertex_list::iterator;
     using vertex_cref = vertex_list::const_iterator;
 
@@ -107,6 +108,26 @@ public:
         return --vertices().end();
     }
 
+    vertex_ref toRef(const vertex &v) {
+        auto it = std::find(std::begin(_vertices), std::end(_vertices), v);
+        if (it != std::end(_vertices)) {
+            return {it};
+        }
+        throw std::invalid_argument(fmt::format(
+                "Provided vertex {} was not part of the graph, no ref could be created!", v
+        ));
+    }
+
+    vertex_cref toRef(const vertex &v) const {
+        auto it = std::find(std::begin(_vertices), std::end(_vertices), v);
+        if (it != std::end(_vertices)) {
+            return {it};
+        }
+        throw std::invalid_argument(fmt::format(
+                "Provided vertex {} was not part of the graph, no ref could be created!", v
+        ));
+    }
+
     bool containsEdge(const cedge& edge) const {
         const auto& v1 = std::get<0>(edge);
         const auto& v2 = std::get<1>(edge);
@@ -120,8 +141,8 @@ public:
         return containsEdge(std::tie(v1, v2));
     }
 
-    const Vertex &vertexForParticleIndex(std::size_t particleIndex) const {
-        auto it = std::find_if(_vertices.begin(), _vertices.end(), [particleIndex](const Vertex &vertex) {
+    const vertex &vertexForParticleIndex(std::size_t particleIndex) const {
+        auto it = std::find_if(_vertices.begin(), _vertices.end(), [particleIndex](const vertex &vertex) {
             return vertex.particleIndex == particleIndex;
         });
         if (it != _vertices.end()) {
@@ -226,7 +247,7 @@ private:
     }
 
     auto vertexItForParticleIndex(std::size_t particleIndex) -> decltype(_vertices.begin()) {
-        return std::find_if(_vertices.begin(), _vertices.end(), [particleIndex](const Vertex &vertex) {
+        return std::find_if(_vertices.begin(), _vertices.end(), [particleIndex](const vertex &vertex) {
             return vertex.particleIndex == particleIndex;
         });
     }
