@@ -173,6 +173,22 @@ public:
 
 };
 
+class SCPUChangeParticlePosition : public readdy::model::top::reactions::actions::ChangeParticlePosition {
+    SCPUParticleData *const data;
+public:
+    SCPUChangeParticlePosition(SCPUParticleData *const data, top::GraphTopology *const topology,
+                               const vertex &v, Vec3 posTo) : ChangeParticlePosition(topology, v, posTo), data(data) {}
+
+    void execute() override {
+        const auto idx = topology->getParticles().at(_vertex->particleIndex);
+        std::swap(data->entry_at(idx).pos, _posTo);
+    }
+
+    void undo() override {
+        execute();
+    }
+};
+
 NAMESPACE_END(op)
 NAMESPACE_END(reactions)
 

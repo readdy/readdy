@@ -107,6 +107,17 @@ public:
 
 };
 
+class CPUChangeParticlePosition : public readdy::model::top::reactions::actions::ChangeParticlePosition {
+    CPUStateModel::data_type *const data;
+public:
+    CPUChangeParticlePosition(CPUStateModel::data_type *data, model::top::GraphTopology *topology,
+                              const vertex &v, Vec3 position);
+
+    void execute() override;
+
+    void undo() override;
+};
+
 NAMESPACE_END(op)
 NAMESPACE_END(reactions)
 

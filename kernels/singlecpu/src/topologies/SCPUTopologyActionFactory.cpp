@@ -99,6 +99,15 @@ SCPUTopologyActionFactory::createChangeTopologyType(top::GraphTopology *const to
     );
 }
 
+top::reactions::actions::TopologyReactionActionFactory::action_ref
+SCPUTopologyActionFactory::createChangeParticlePosition(top::GraphTopology *topology,
+                                                        const vertex &v,
+                                                        Vec3 position) const {
+    return std::make_unique<reactions::op::SCPUChangeParticlePosition>(
+            kernel->getSCPUKernelStateModel().getParticleData(), topology, v, position
+    );
+}
+
 }
 }
 }

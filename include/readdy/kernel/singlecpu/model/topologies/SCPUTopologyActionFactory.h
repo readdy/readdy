@@ -75,6 +75,9 @@ public:
                                            const ParticleTypeId &type_to) const override;
 
     action_ref createChangeTopologyType(top::GraphTopology * topology, const std::string &type_to) const override;
+
+    action_ref
+    createChangeParticlePosition(top::GraphTopology *topology, const vertex &v, Vec3 position) const override;
 };
 
 NAMESPACE_END(top)

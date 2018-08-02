@@ -144,6 +144,20 @@ void CPUChangeParticleType::undo() {
     execute();
 }
 
+CPUChangeParticlePosition::CPUChangeParticlePosition(
+        CPUStateModel::data_type *const data, model::top::GraphTopology *topology,
+        const model::top::reactions::actions::TopologyReactionAction::vertex &v, Vec3 position)
+        : ChangeParticlePosition(topology, v, position), data(data) { }
+
+void CPUChangeParticlePosition::execute() {
+    const auto idx = topology->getParticles().at(_vertex->particleIndex);
+    std::swap(data->entry_at(idx).pos, _posTo);
+}
+
+void CPUChangeParticlePosition::undo() {
+    execute();
+}
+
 }
 }
 

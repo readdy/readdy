@@ -40,6 +40,6 @@ from .api.conf import ureg as units
 from readdy._version import __version__ as __version__
 
 # elevate reaction recipe
-from ._internal.readdybinding.api.top import Recipe as StructuralReactionRecipe
+from .api.topology_reactions import StructuralReactionRecipe
 
 __all__ = ['api', 'util']

@@ -183,6 +183,14 @@ public:
         return particleForVertex(*vertexRef);
     }
 
+    topology_graph::vertex_ref toVertexRef(const vertex &vertex) {
+        return graph_.toRef(vertex);
+    }
+
+    topology_graph::vertex_cref toVertexRef(const vertex &vertex) const {
+        return graph_.toRef(vertex);
+    }
+
 protected:
     topology_graph graph_;
     std::reference_wrapper<const model::Context> _context;

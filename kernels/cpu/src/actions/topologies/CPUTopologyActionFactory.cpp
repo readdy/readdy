@@ -87,3 +87,10 @@ readdy::kernel::cpu::actions::top::CPUTopologyActionFactory::createChangeTopolog
             topology, _context.get().topologyRegistry().idOf(type_to)
     );
 }
+
+top::reactions::actions::TopologyReactionActionFactory::action_ref
+readdy::kernel::cpu::actions::top::CPUTopologyActionFactory::createChangeParticlePosition(
+        top::GraphTopology *topology, const top::reactions::actions::TopologyReactionActionFactory::vertex &v,
+        readdy::Vec3 position) const {
+    return std::make_unique<reactions::op::CPUChangeParticlePosition>(&_data.get(), topology, v, position);
+}

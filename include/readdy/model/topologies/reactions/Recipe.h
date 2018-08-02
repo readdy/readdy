@@ -62,6 +62,7 @@ public:
 
     using reaction_operations = std::vector<op::Operation::Ref>;
     using topology_graph = actions::TopologyReactionAction::topology_graph;
+    using Vertex = topology_graph::vertex;
     using vertex_ref = topology_graph::vertex_ref;
     using vertex_cref = topology_graph::vertex_cref;
     using edge = topology_graph::edge;
@@ -79,10 +80,21 @@ public:
 
     ~Recipe() = default;
 
+    Recipe &changeParticleType(const Vertex &vertex, const std::string &to);
+
     Recipe &changeParticleType(const vertex_ref &ref, const std::string &to);
+
+    Recipe &changeParticleType(const Vertex &vertex, const ParticleTypeId &to);
 
     Recipe &changeParticleType(const vertex_ref &ref, const ParticleTypeId &to) {
         _steps.push_back(std::make_shared<op::ChangeParticleType>(ref, to));
+        return *this;
+    }
+
+    Recipe &changeParticlePosition(const Vertex &v, Vec3 pos);
+
+    Recipe &changeParticlePosition(const vertex_ref &ref, const Vec3 &pos) {
+        _steps.push_back(std::make_shared<op::ChangeParticlePosition>(ref, pos));
         return *this;
     }
 
@@ -95,6 +107,8 @@ public:
         return addEdge(std::tie(v1, v2));
     }
 
+    Recipe &addEdge(const Vertex &v1, const Vertex &v2);
+
     Recipe &removeEdge(const edge &edge) {
         _steps.push_back(std::make_shared<op::RemoveEdge>(edge));
         return *this;
@@ -104,13 +118,17 @@ public:
         return removeEdge(std::tie(v1, v2));
     }
 
+    Recipe &removeEdge(const Vertex &v1, const Vertex &v2);
+
     Recipe &separateVertex(const vertex_ref &vertex) {
         std::for_each(vertex->neighbors().begin(), vertex->neighbors().end(), [this, &vertex](const auto &neighbor) {
             this->removeEdge(std::make_tuple(vertex, neighbor));
         });
         return *this;
     }
-    
+
+    Recipe &separateVertex(const Vertex &vertex);
+
     Recipe &changeTopologyType(const std::string &type) {
         _steps.push_back(std::make_shared<op::ChangeTopologyType>(type));
         return *this;

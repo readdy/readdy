@@ -121,6 +121,12 @@ void exportTopologies(py::module &m) {
 
                  :param topology: The topology for which this recipe should be created.
             )topdoc", "topology"_a)
+            .def("change_particle_type", [](reaction_recipe &self, const vertex &v, const std::string &to) {
+                return self.changeParticleType(v, to);
+            }, py::return_value_policy::reference_internal)
+            .def("change_particle_type", [](reaction_recipe &self, const vertex::vertex_ptr &v, const std::string &to) {
+                return self.changeParticleType(v, to);
+            }, py::return_value_policy::reference_internal)
             .def("change_particle_type", [](reaction_recipe &self, const std::size_t vertex_index, const std::string &to) {
                 auto it = self.topology().graph().vertices().begin();
                 std::advance(it, vertex_index);
@@ -132,6 +138,14 @@ void exportTopologies(py::module &m) {
                 :param to: the target particle type
                 :return: a reference to this recipe to enable a fluent interface
             )topdoc", "vertex_index"_a, "to"_a, py::return_value_policy::reference_internal)
+            .def("change_particle_position", [](reaction_recipe &self, const vertex &v, readdy::Vec3 pos) {
+                return self.changeParticlePosition(v, pos);
+            }, py::return_value_policy::reference_internal)
+            .def("change_particle_position", [](reaction_recipe &self, const std::size_t vertex_index, readdy::Vec3 pos) -> reaction_recipe& {
+                auto it = self.topology().graph().vertices().begin();
+                std::advance(it, vertex_index);
+                return self.changeParticlePosition(it, pos);
+            }, py::return_value_policy::reference_internal)
             .def("add_edge", [](reaction_recipe &self, std::size_t v_index1, std::size_t v_index2) -> reaction_recipe& {
                 auto it1 = self.topology().graph().vertices().begin();
                 auto it2 = self.topology().graph().vertices().begin();
@@ -145,6 +159,12 @@ void exportTopologies(py::module &m) {
                 :param v_index2: index of the second vertex, as in `topology.get_graph().get_vertices()`
                 :return: a reference to this recipe to enable a fluent interface
             )topdoc", "v_index1"_a, "v_index2"_a, py::return_value_policy::reference_internal)
+            .def("add_edge", [](reaction_recipe &self, const vertex &v1, const vertex &v2) {
+                return self.addEdge(v1, v2);
+            }, py::return_value_policy::reference_internal)
+            .def("add_edge", [](reaction_recipe &self, const vertex::vertex_ptr &v1, const vertex::vertex_ptr &v2) {
+                return self.addEdge(v1, v2);
+            }, py::return_value_policy::reference_internal)
             .def("remove_edge", [](reaction_recipe &self, std::size_t v_index1, std::size_t v_index2) -> reaction_recipe& {
                 auto it1 = self.topology().graph().vertices().begin();
                 auto it2 = self.topology().graph().vertices().begin();
@@ -159,6 +179,12 @@ void exportTopologies(py::module &m) {
                 :param v_index2: index of the second vertex, as in `topology.get_graph().get_vertices()`
                 :return: a reference to this recipe to enable a fluent interface
             )topdoc", "v_index1"_a, "v_index2"_a, py::return_value_policy::reference_internal)
+            .def("remove_edge", [](reaction_recipe &self, const vertex &v1, const vertex &v2) {
+                return self.removeEdge(v1, v2);
+            }, py::return_value_policy::reference_internal)
+            .def("remove_edge", [](reaction_recipe &self, const vertex::vertex_ptr &v1, const vertex::vertex_ptr &v2) {
+                return self.removeEdge(v1, v2);
+            })
             .def("remove_edge", [](reaction_recipe &self, graph::edge edge) -> reaction_recipe& {
                 return self.removeEdge(edge);
             }, R"topdoc(
@@ -184,6 +210,12 @@ void exportTopologies(py::module &m) {
                 :param index: The vertex' index with respect to `topology.get_graph().get_vertices()`
                 :return: a reference to this recipe to enable a fluent interface
             )topdoc", "index"_a, py::return_value_policy::reference_internal)
+            .def("separate_vertex", [](reaction_recipe &self, const vertex &v) {
+                return self.separateVertex(v);
+            }, py::return_value_policy::reference_internal)
+            .def("separate_vertex", [](reaction_recipe &self, const vertex::vertex_ptr &v) {
+                return self.separateVertex(v);
+            }, py::return_value_policy::reference_internal)
             .def("change_topology_type", &reaction_recipe::changeTopologyType, R"topdoc(
                 Changes the type of the topology to the given type, potentially changing its structural and spatial
                 topology reactions.

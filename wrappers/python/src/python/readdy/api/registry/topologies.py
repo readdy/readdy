@@ -179,7 +179,7 @@ class TopologyRegistry(object):
         :param expect_connected: can trigger a raise if set to true and the topology's connectivity graph decayed into
                                  two or more independent components, depending on the value of `raise_if_invalid`.
         """
-        fun1, fun2 = _top.ReactionFunction(reaction_function), _top.RateFunction(rate_function)
+        fun1, fun2 = _top.ReactionFunction(lambda x: reaction_function(x)._get()), _top.RateFunction(rate_function)
         reaction = _top.StructuralTopologyReaction(fun1, fun2)
         if raise_if_invalid:
             reaction.raise_if_invalid()

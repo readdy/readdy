@@ -93,6 +93,8 @@ void ChangeTopologyType::undo() {
     topology->type() = _prevType;
 }
 
+ChangeParticlePosition::ChangeParticlePosition(GraphTopology *topology, const vertex &v, Vec3 posTo)
+        : TopologyReactionAction(topology), _vertex(v), _posTo(posTo) {}
 }
 }
 }
