@@ -194,7 +194,7 @@ class TestTopLevelAPI(ReaDDyTestCase):
 
         def reaction_fun(topology):
             return readdy.StructuralReactionRecipe(topology) \
-                .change_particle_type(0, "foo")
+                .change_particle_type(0, "foo").change_particle_position(0, [0., 0., .1])
 
         def rate_fun(topology):
             return len(topology.particles)
@@ -348,7 +348,7 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
         system.add_topology_species("T", diffusion_constant=1.)
         system.add_topology_species("unstable T", diffusion_constant=1.)
 
-        system.reactions.add("decay: Decay ->", .1)
+        system.reactions.add("decay: Decay ->", 1e20)
         system.potentials.add_box("Ligand", 10., [-70, -70, -70], [130, 130, 130])
         system.potentials.add_box("Decay", 10., [-70, -70, -70], [130, 130, 130])
         system.potentials.add_box("T", 10., [-70, -70, -70], [130, 130, 130])
@@ -389,6 +389,7 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
             index = np.random.randint(0, len(topology.particles))
             recipe.separate_vertex(index)
             recipe.change_particle_type(index, "Decay")
+            recipe.change_particle_position(index, [0, 0, 0])
             return recipe
 
         system.topologies.add_structural_reaction(topology_type="unstable",
@@ -420,6 +421,11 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
 
         assert len(time) == len(entries)
         assert len(topology_records) == len(entries)
+
+        for frame in entries:
+            for entry in frame:
+                if entry.type == 'Decay':
+                    np.testing.assert_array_almost_equal(entry.position, np.array([0, 0, 0]))
 
         for timestep, tops in zip(time, topology_records):
             current_edges = []
