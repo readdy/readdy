@@ -676,7 +676,7 @@ TEST_P(TestTopologyReactions, TTFusion) {
         return;
     }
 
-    auto sim = Simulation(kernel->name());
+    Simulation sim (kernel->name());
 
     sim.context().particleTypes().addTopologyType("X", 0);
     sim.context().particleTypes().addTopologyType("Y", 0);
@@ -717,7 +717,7 @@ TEST_P(TestTopologyReactions, TTSelfFusion) {
         return;
     }
 
-    auto sim = Simulation(kernel->name());
+    Simulation sim (kernel->name());
 
     sim.context().particleTypes().addTopologyType("X", 0);
     sim.context().particleTypes().addTopologyType("Y", 0);
