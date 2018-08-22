@@ -120,7 +120,7 @@ public:
 
     template<typename arithmetic, typename detail::is_arithmetic_type<arithmetic> = 0>
     ReaDDyMatrix &operator*=(const arithmetic a) {
-        std::transform(_data.begin(), _data.end(), _data.begin(), std::bind1st(std::multiplies<arithmetic>(), a));
+        std::transform(_data.begin(), _data.end(), _data.begin(), [a](auto b) { return a*b; });
         return *this;
     }
 
@@ -196,25 +196,25 @@ public:
 
     template<typename arithmetic, typename detail::is_arithmetic_type<arithmetic> = 0>
     ReaDDyVec3 &operator+=(arithmetic a) {
-        std::transform(data.begin(), data.end(), data.begin(), std::bind1st(std::plus<scalar>(), a));
+        std::transform(data.begin(), data.end(), data.begin(), [a](auto b) { return a+b; });
         return *this;
     }
 
     template<typename arithmetic, typename detail::is_arithmetic_type<arithmetic> = 0>
     ReaDDyVec3 &operator-=(arithmetic a) {
-        std::transform(data.begin(), data.end(), data.begin(), std::bind2nd(std::minus<scalar>(), a));
+        std::transform(data.begin(), data.end(), data.begin(), [a](auto b) { return b-a; });
         return *this;
     }
 
     template<typename arithmetic, typename detail::is_arithmetic_type<arithmetic> = 0>
     ReaDDyVec3 &operator*=(arithmetic a) {
-        std::transform(data.begin(), data.end(), data.begin(), std::bind1st(std::multiplies<scalar>(), a));
+        std::transform(data.begin(), data.end(), data.begin(), [a](auto b) { return a*b; });
         return *this;
     };
 
     template<typename arithmetic, typename detail::is_arithmetic_type<arithmetic> = 0>
     ReaDDyVec3 &operator/=(arithmetic a) {
-        std::transform(data.begin(), data.end(), data.begin(), std::bind2nd(std::divides<scalar>(), a));
+        std::transform(data.begin(), data.end(), data.begin(), [a](auto b) { return b/a; });
         return *this;
     };
 
