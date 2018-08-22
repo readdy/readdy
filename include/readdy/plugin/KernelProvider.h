@@ -193,7 +193,7 @@ public:
      * @param name the kernel name
      * @return a unique_ptr to the kernel instance, i.e., the caller has ownership
      */
-    kernel_ptr create(const std::string &name) const;
+    kernel_ptr create(std::string_view name) const;
 
 private:
     /**

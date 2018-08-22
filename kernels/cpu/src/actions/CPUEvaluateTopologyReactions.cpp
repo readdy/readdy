@@ -399,6 +399,7 @@ void CPUEvaluateTopologyReactions::handleTopologyTopologyReaction(CPUStateModel:
             if(!t1->graph().containsEdge(v1, v2)) {
                 t1->graph().addEdge(v1, v2);
             }
+            t1->type() = reaction.top_type_to1();
         } else {
             // merge topologies
             for(auto pidx : t2->getParticles()) {

@@ -82,6 +82,7 @@ std::string TopologyRegistry::describe() const {
                         case api::BondType::HARMONIC:
                             return "Harmonic";
                     }
+                    throw std::logic_error("Unknown bond type!");
                 };
                 for (const auto &bond : entry.second) {
                     description += fmt::format("             * {} bond with force constant {} and length {}{}",
@@ -100,6 +101,7 @@ std::string TopologyRegistry::describe() const {
                         case api::AngleType::HARMONIC:
                             return "Harmonic";
                     }
+                    throw std::logic_error("Unknown angle type!");
                 };
                 for (const auto &angle : entry.second) {
                     description += fmt::format(
@@ -118,6 +120,7 @@ std::string TopologyRegistry::describe() const {
                         case api::TorsionType::COS_DIHEDRAL:
                             return "Cosine-Dihedral";
                     }
+                    throw std::logic_error("Unknown dihedral type!");
                 };
                 for (const auto &dih : entry.second) {
                     description += fmt::format(

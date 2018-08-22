@@ -48,6 +48,7 @@
 #include <readdy/testing/KernelTest.h>
 #include <readdy/testing/Utils.h>
 #include <readdy/model/topologies/Utils.h>
+#include <readdy/api/Simulation.h>
 
 namespace {
 
@@ -668,7 +669,93 @@ TEST_P(TestTopologyReactions, ChainDecayIntegrationTest) {
     }
 }
 
+TEST_P(TestTopologyReactions, TTFusion) {
+    using namespace readdy;
+    if (!kernel->supportsTopologies()) {
+        log::debug("kernel {} does not support topologies, thus skipping the test", kernel->name());
+        return;
+    }
+
+    Simulation sim (kernel->name());
+
+    sim.context().particleTypes().addTopologyType("X", 0);
+    sim.context().particleTypes().addTopologyType("Y", 0);
+    sim.context().particleTypes().addTopologyType("Z", 0);
+    sim.context().topologyRegistry().addType("T");
+    sim.context().topologyRegistry().addType("T2");
+
+    sim.context().topologyRegistry().configureBondPotential("Y", "Z", {.1, .1});
+    sim.context().topologyRegistry().addSpatialReaction("connect: T(X) + T(X) -> T2(Y--Z) [self=true]", 1e10, 1.);
+
+    auto p1 = sim.createTopologyParticle("X", {0, 0, 0});
+    auto p2 = sim.createTopologyParticle("X", {0, 0, 0});
+    sim.addTopology("T", {p1});
+    sim.addTopology("T", {p2});
+
+    sim.createLoop(1e-3).run(1);
+
+    auto topologies = sim.currentTopologies();
+
+    EXPECT_EQ(topologies.size(), 1);
+    auto top = topologies.at(0);
+    EXPECT_EQ(top->type(), sim.context().topologyRegistry().idOf("T2"));
+    EXPECT_EQ(top->getNParticles(), 2);
+    auto particles = top->fetchParticles();
+    EXPECT_TRUE(particles[0].type() == sim.context().particleTypes().idOf("Y") ||
+                particles[0].type() == sim.context().particleTypes().idOf("Z"));
+    if(particles[0].type() == sim.context().particleTypes().idOf("Y")) {
+        EXPECT_TRUE(particles[1].type() == sim.context().particleTypes().idOf("Z"));
+    } else {
+        EXPECT_TRUE(particles[1].type() == sim.context().particleTypes().idOf("Y"));
+    }
+}
+
+TEST_P(TestTopologyReactions, TTSelfFusion) {
+    using namespace readdy;
+    if (!kernel->supportsTopologies()) {
+        log::debug("kernel {} does not support topologies, thus skipping the test", kernel->name());
+        return;
+    }
+
+    Simulation sim (kernel->name());
+
+    sim.context().particleTypes().addTopologyType("X", 0);
+    sim.context().particleTypes().addTopologyType("Y", 0);
+    sim.context().particleTypes().addTopologyType("Z", 0);
+    sim.context().topologyRegistry().addType("T");
+    sim.context().topologyRegistry().addType("T2");
+
+    sim.context().topologyRegistry().configureBondPotential("Y", "Z", {.01, .01});
+    sim.context().topologyRegistry().configureBondPotential("X", "X", {.01, .01});
+    sim.context().topologyRegistry().configureBondPotential("X", "Y", {.01, .01});
+    sim.context().topologyRegistry().configureBondPotential("X", "Z", {.01, .01});
+    sim.context().topologyRegistry().addSpatialReaction("connect: T(X) + T(X) -> T2(Y--Z) [self=true]", 1e10, 1.);
+
+    auto p1 = sim.createTopologyParticle("X", {0, 0, -.01});
+    auto p2 = sim.createTopologyParticle("X", {0, 0, 0});
+    auto p3 = sim.createTopologyParticle("X", {0, 0, .01});
+    auto t = sim.addTopology("T", {p1, p2, p3});
+    t->graph().addEdgeBetweenParticles(0, 1);
+    t->graph().addEdgeBetweenParticles(1, 2);
+
+    sim.createLoop(1e-3).run(1);
+
+    auto topologies = sim.currentTopologies();
+
+    EXPECT_EQ(topologies.size(), 1);
+    auto top = topologies.at(0);
+    EXPECT_EQ(top->type(), sim.context().topologyRegistry().idOf("T2"));
+    EXPECT_EQ(top->getNParticles(), 3);
+    auto particles = top->fetchParticles();
+    for (auto ptype : {"X", "Y", "Z"}) {
+        auto itX = std::find_if(particles.begin(), particles.end(), [&](const auto &p) {
+            return p.type() == sim.context().particleTypes().idOf(ptype);
+        });
+        ASSERT_NE(itX, particles.end()) << "at least one "+std::string(ptype)+" particle should be contained";
+        particles.erase(itX);
+    }
+}
+
 INSTANTIATE_TEST_CASE_P(TestTopologyReactionsKernelTests, TestTopologyReactions,
                         ::testing::ValuesIn(readdy::testing::getKernelsToTest()));
-
 }

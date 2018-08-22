@@ -55,7 +55,8 @@ namespace plugin {
 
 struct KernelProvider::Impl {
     std::unordered_map<std::string, std::weak_ptr<readdy::util::dll::shared_library>> libs {};
-    std::unordered_map<std::string, std::function<KernelProvider::kernel_ptr()>> factory {};
+    // use map to be able to use transparent comparator and therefore string_view lookup
+    std::map<std::string, std::function<KernelProvider::kernel_ptr()>, std::less<>> factory {};
 };
 
 KernelProvider &KernelProvider::getInstance() {
@@ -172,12 +173,12 @@ void KernelProvider::add(const std::string &name, const std::function<readdy::mo
     }));
 }
 
-KernelProvider::kernel_ptr KernelProvider::create(const std::string &name) const {
+KernelProvider::kernel_ptr KernelProvider::create(std::string_view name) const {
     auto it = pimpl->factory.find(name);
     if (it != pimpl->factory.end()) {
         return it->second();
     }
-    throw std::invalid_argument("Could not load plugin with name \"" + name + "\"");
+    throw std::invalid_argument(fmt::format("Could not load plugin with name \"{}\"", name));
 }
 
 std::vector<std::string> KernelProvider::availableKernels() const {

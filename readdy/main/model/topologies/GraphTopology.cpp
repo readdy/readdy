@@ -109,7 +109,7 @@ void GraphTopology::configure() {
             auto p2 = particleForVertex(v2);
 
             ss << "The edge " << v1->particleIndex << " (" << context().particleTypes().nameOf(p1.type()) << ")";
-            ss << " -- " << v2->particleIndex << " (" << context().particleTypes().nameOf(p1.type()) << ")";
+            ss << " -- " << v2->particleIndex << " (" << context().particleTypes().nameOf(p2.type()) << ")";
             ss << " has no bond configured!";
 
             throw std::invalid_argument(ss.str());
