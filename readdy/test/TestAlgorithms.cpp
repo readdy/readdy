@@ -71,7 +71,7 @@ sim.context().reactions().add("myconv: B -> B", 10);
 
 sim.addParticle("B", 0., 0., 0.);
 sim.addTopology("Polymer", {sim.createTopologyParticle("A", {0., 0., 0.})});
-sim.context().topologyRegistry().configureBondPotential("A", "A", {10., 10.});
+sim.context().topologyRegistry().configureBondPotential("A", "A", {0., 10.});
 
 auto loop = sim.createLoop(1.5);
 

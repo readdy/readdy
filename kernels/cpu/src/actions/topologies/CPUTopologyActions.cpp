@@ -60,6 +60,8 @@ readdy::scalar CPUCalculateHarmonicBondPotential::perform(const readdy::model::t
     scalar energy = 0;
     const auto &particleIndices = topology->getParticles();
     for (const auto &bond : potential->getBonds()) {
+        if(bond.forceConstant == 0) continue;
+
         Vec3 forceUpdate{0, 0, 0};
         auto &e1 = data->entry_at(particleIndices.at(bond.idx1));
         auto &e2 = data->entry_at(particleIndices.at(bond.idx2));

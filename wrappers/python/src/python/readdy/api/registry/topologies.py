@@ -69,8 +69,8 @@ class TopologyRegistry(object):
         """
         force_constant = self._units.convert(force_constant, self._units.force_constant_unit)
         length = self._units.convert(length, self._units.length_unit)
-        if force_constant <= 0:
-            raise ValueError("The force constant must be strictly positive.")
+        if force_constant < 0:
+            raise ValueError("The force constant must be non-negative.")
         if length < 0:
             raise ValueError("The length must be non-negative.")
         cfg = _BondedPotentialConfiguration(force_constant, length, "harmonic")

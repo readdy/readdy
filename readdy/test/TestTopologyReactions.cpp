@@ -684,7 +684,7 @@ TEST_P(TestTopologyReactions, TTFusion) {
     sim.context().topologyRegistry().addType("T");
     sim.context().topologyRegistry().addType("T2");
 
-    sim.context().topologyRegistry().configureBondPotential("Y", "Z", {.1, .1});
+    sim.context().topologyRegistry().configureBondPotential("Y", "Z", {0., .1});
     sim.context().topologyRegistry().addSpatialReaction("connect: T(X) + T(X) -> T2(Y--Z) [self=true]", 1e10, 1.);
 
     auto p1 = sim.createTopologyParticle("X", {0, 0, 0});
@@ -725,10 +725,10 @@ TEST_P(TestTopologyReactions, TTSelfFusion) {
     sim.context().topologyRegistry().addType("T");
     sim.context().topologyRegistry().addType("T2");
 
-    sim.context().topologyRegistry().configureBondPotential("Y", "Z", {.01, .01});
-    sim.context().topologyRegistry().configureBondPotential("X", "X", {.01, .01});
-    sim.context().topologyRegistry().configureBondPotential("X", "Y", {.01, .01});
-    sim.context().topologyRegistry().configureBondPotential("X", "Z", {.01, .01});
+    sim.context().topologyRegistry().configureBondPotential("Y", "Z", {.0, .01});
+    sim.context().topologyRegistry().configureBondPotential("X", "X", {.0, .01});
+    sim.context().topologyRegistry().configureBondPotential("X", "Y", {.0, .01});
+    sim.context().topologyRegistry().configureBondPotential("X", "Z", {.0, .01});
     sim.context().topologyRegistry().addSpatialReaction("connect: T(X) + T(X) -> T2(Y--Z) [self=true]", 1e10, 1.);
 
     auto p1 = sim.createTopologyParticle("X", {0, 0, -.01});
