@@ -83,9 +83,9 @@ public:
     Vertex(std::size_t particleIndex, ParticleTypeId particleType)
             : particleIndex(particleIndex), particleType_(particleType) {}
 
-    Vertex(const Vertex &) = delete;
+    Vertex(const Vertex &) = default;
 
-    Vertex &operator=(const Vertex &) = delete;
+    Vertex &operator=(const Vertex &) = default;
 
     Vertex(Vertex &&) = default;
 
