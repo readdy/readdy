@@ -54,7 +54,7 @@ namespace log {
 std::shared_ptr<spdlog::logger> console() {
     static auto logger = spdlog::get("console");
     if (!logger) {
-        spdlog::set_sync_mode();
+        //spdlog::set_sync_mode();
         auto ostream_sink = std::make_shared<spdlog::sinks::ostream_sink_mt> (std::cout);
         logger = std::make_shared<spdlog::logger>("console", ostream_sink);
         logger->set_pattern("[%Y-%m-%d %H:%M:%S] [%l] %v");

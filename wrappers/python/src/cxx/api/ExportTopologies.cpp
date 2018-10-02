@@ -40,7 +40,6 @@
  * @date 04.02.17
  */
 
-#include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <readdy/model/Particle.h>
 #include <readdy/model/topologies/GraphTopology.h>
@@ -297,18 +296,18 @@ void exportTopologies(py::module &m) {
             .def("validate", &topology::validate);
 
     py::class_<graph>(m, "Graph")
-            .def("get_vertices", [](graph &self) -> graph::vertex_list & { return self.vertices(); },
+            .def("get_vertices", [](graph &self) -> graph::vertex_list { return self.vertices(); },
             R"topdoc(
                 Yields a list of vertices contained in this graph.
 
                 :return: list of vertices
-            )topdoc",rvp::reference_internal)
-            .def_property_readonly("vertices", [](graph &self) -> graph::vertex_list & { return self.vertices(); },
+            )topdoc",rvp::copy)
+            .def_property_readonly("vertices", [](graph &self) -> graph::vertex_list { return self.vertices(); },
             R"topdoc(
                 Yields a list of vertices contained in this graph.
 
                 :return: list of vertices
-            )topdoc", rvp::reference_internal)
+            )topdoc", rvp::copy)
             .def("get_edges", [](graph &self) -> std::vector<graph::edge> {
                 return self.edges();
             }, R"topdoc(
@@ -349,7 +348,7 @@ void exportTopologies(py::module &m) {
                 Yields this vertex' neighbors.
 
                 :return: this vertex' neighbors.
-            )topdoc", rvp::reference_internal)
+            )topdoc", rvp::copy)
             .def("__len__", [](const vertex &v) { return v.neighbors().size(); }, R"topdoc(
                 Yields the number of neighbors of this vertex.
 

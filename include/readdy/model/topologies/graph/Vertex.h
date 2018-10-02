@@ -83,9 +83,9 @@ public:
     Vertex(std::size_t particleIndex, ParticleTypeId particleType)
             : particleIndex(particleIndex), particleType_(particleType) {}
 
-    Vertex(const Vertex &) = delete;
+    Vertex(const Vertex &) = default;
 
-    Vertex &operator=(const Vertex &) = delete;
+    Vertex &operator=(const Vertex &) = default;
 
     Vertex(Vertex &&) = default;
 
@@ -122,7 +122,7 @@ public:
         if (std::find(neighbors_.begin(), neighbors_.end(), edge) == neighbors_.end()) {
             neighbors_.push_back(edge);
         } else {
-            log::warn("tried to add an already existing edge ({} - {})", particleIndex, edge->particleIndex);
+            log::debug("tried to add an already existing edge ({} - {})", particleIndex, edge->particleIndex);
         }
     }
 
@@ -131,7 +131,7 @@ public:
         if ((it = std::find(neighbors_.begin(), neighbors_.end(), edge)) != neighbors_.end()) {
             neighbors_.erase(it);
         } else {
-            log::warn("tried to remove a non existing edge {} - {}", particleIndex, edge->particleIndex);
+            log::debug("tried to remove a non existing edge {} - {}", particleIndex, edge->particleIndex);
         }
     }
 

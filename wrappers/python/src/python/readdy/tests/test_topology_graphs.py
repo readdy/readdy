@@ -61,12 +61,14 @@ class TestTopologyGraphs(ReaDDyTestCase):
         sim.context.topologies.configure_bond_potential("T", "T", BondedPotentialConfiguration(10., 11., "harmonic"))
         particles = [sim.create_topology_particle("T", common.Vec(x, 0, 0)) for x in range(4)]
         top = sim.add_topology("TA", particles)
-        graph = top.get_graph()
+        graph = top.graph
         graph.add_edge(0, 1)
         graph.add_edge(1, 2)
         graph.add_edge(2, 3)
         np.testing.assert_equal(len(graph.get_vertices()), 4)
-        for v in graph.get_vertices():
+
+        for v in graph.vertices:
+
             if v.particle_index == 0:
                 np.testing.assert_equal(top.position_of_vertex(v), common.Vec(0, 0, 0))
                 np.testing.assert_equal(len(v.neighbors()), 1)

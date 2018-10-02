@@ -72,7 +72,7 @@ Recipe &Recipe::addEdge(const Recipe::Vertex &v1, const Recipe::Vertex &v2) {
 }
 
 Recipe &Recipe::removeEdge(const Recipe::Vertex &v1, const Recipe::Vertex &v2) {
-    return addEdge(_topology.get().toVertexRef(v1), _topology.get().toVertexRef(v2));
+    return removeEdge(_topology.get().toVertexRef(v1), _topology.get().toVertexRef(v2));
 }
 
 Recipe &Recipe::separateVertex(const Recipe::Vertex &vertex) {
