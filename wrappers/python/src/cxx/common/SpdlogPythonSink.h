@@ -48,7 +48,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/eval.h>
 #include <spdlog/spdlog.h>
-#include <spdlog/sinks/sink.h>
+#include <spdlog/sinks/base_sink.h>
 #include <iostream>
 
 namespace readdy {
@@ -58,12 +58,14 @@ class pysink : public spdlog::sinks::base_sink<std::mutex> {
 
 protected:
 
-    void _flush() override { /* no op */ }
+    void flush_() override { /* no op */ }
 
-    void _sink_it(const spdlog::details::log_msg &msg) override {
+    void sink_it_(const spdlog::details::log_msg &msg) override {
         if(should_log(msg.level)) {
 
-            auto message = msg.formatted.str();
+            fmt::memory_buffer formatted;
+            formatter_->format(msg, formatted);
+            auto message = fmt::to_string(formatted);
             {
                 // remove newline
                 message.pop_back();
