@@ -190,7 +190,7 @@ CylinderOut::CylinderOut(particle_type_type particleType, scalar forceConstant, 
 }
 
 std::string CylinderOut::type() const {
-    return getPotentialName<CylinderIn>();
+    return getPotentialName<CylinderOut>();
 }
 
 std::string CylinderOut::describe() const {
