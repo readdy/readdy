@@ -201,6 +201,44 @@ class PotentialRegistry(object):
         assert width > 0, "width has to be positive"
         self._registry.add_spherical_barrier(particle_type, height, width, _v3_of(origin), radius)
 
+    def add_cylinder_in(self, particle_type, force_constant, origin, normal, radius):
+        """
+        A potential that keeps particles inside a cylindrical volume. Particles outside the volume are
+        harmonically pushed inside again.
+
+        :param particle_type: the particle type
+        :param force_constant: the strength of the confining force [energy/length**2]
+        :param origin: any point on the axis of the cylinder [length]
+        :param normal: direction of the axis of the cylinder [length]
+        :param radius: radius of the cylinder [length]
+        """
+        force_constant = self._units.convert(force_constant, self._units.force_constant_unit)
+        origin = self._units.convert(origin, self._units.length_unit)
+        normal = self._units.convert(normal, self._units.length_unit)
+        radius = self._units.convert(radius, self._units.length_unit)
+        assert force_constant > 0, "force_constant has to be positive"
+        assert radius > 0, "radius has to be positive"
+        self._registry.add_cylinder_in(particle_type, force_constant, _v3_of(origin), _v3_of(normal), radius)
+
+    def add_cylinder_out(self, particle_type, force_constant, origin, normal, radius):
+        """
+        A potential that keeps particles outside of a cylindrical volume. Particles inside the volume are
+        harmonically pushed outside again.
+
+        :param particle_type: the particle type
+        :param force_constant: the strength of the confining force [energy/length**2]
+        :param origin: any point on the axis of the cylinder [length]
+        :param normal: direction of the axis of the cylinder [length]
+        :param radius: radius of the cylinder [length]
+        """
+        force_constant = self._units.convert(force_constant, self._units.force_constant_unit)
+        origin = self._units.convert(origin, self._units.length_unit)
+        normal = self._units.convert(normal, self._units.length_unit)
+        radius = self._units.convert(radius, self._units.length_unit)
+        assert force_constant > 0, "force_constant has to be positive"
+        assert radius > 0, "radius has to be positive"
+        self._registry.add_cylinder_out(particle_type, force_constant, _v3_of(origin), _v3_of(normal), radius)
+
     def add_custom_external(self, particle_type, clazz, *args):
         """
         This method allows to add a custom potential to a simulation. An example of how to define a custom potential

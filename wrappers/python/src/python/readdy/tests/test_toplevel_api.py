@@ -224,6 +224,14 @@ class TestTopLevelAPI(ReaDDyTestCase):
         rds.potentials.add_spherical_barrier("A", 1, 1, (0, 0, 0), 1)
         rds.potentials.add_spherical_barrier("A", 1 * ut.kilojoule / ut.mole, 1 * ut.meter,
                                              np.array([0, 0, 0]) * ut.meter, 1 * ut.meter)
+        rds.potentials.add_cylinder_in("A", 10, (10, 10, 10), (10, 10, 10), 1)
+        rds.potentials.add_cylinder_in("A", 10 * ut.joule / ut.mol / (ut.kilometer ** 2),
+                                       np.array([10, 10, 10]) * ut.nanometer, np.array([10, 10, 10]) * ut.nanometer,
+                                       1 * ut.picometer)
+        rds.potentials.add_cylinder_out("A", 10, (10, 10, 10), (10, 10, 10), 1)
+        rds.potentials.add_cylinder_out("A", 10 * ut.joule / ut.mol / (ut.kilometer ** 2),
+                                       np.array([10, 10, 10]) * ut.nanometer, np.array([10, 10, 10]) * ut.nanometer,
+                                       1 * ut.picometer)
         rds.potentials.add_weak_interaction_piecewise_harmonic("A", "A", 10, 10, 10, 10)
         rds.potentials.add_weak_interaction_piecewise_harmonic("A", "A", 10 * ut.joule / ut.mol / (ut.meter ** 2),
                                                                10 * ut.nanometer, 10 * ut.joule / ut.mol,

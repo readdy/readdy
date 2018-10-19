@@ -136,6 +136,14 @@ void exportKernelContext(py::module &module) {
                     const Vec3 &origin, scalar radius) {
                      return self.addSphericalBarrier(particleType, height, width, origin, radius);
                  })
+            .def("add_cylinder_in", [](PotentialRegistry &self, const std::string &particleType, scalar forceConstant, 
+                    const Vec3 &origin, const Vec3 &normal, scalar radius) { 
+                     return self.addCylinderIn(particleType, forceConstant, origin, normal, radius);
+            })
+            .def("add_cylinder_out", [](PotentialRegistry &self, const std::string &particleType, scalar forceConstant,
+                                       const Vec3 &origin, const Vec3 &normal, scalar radius) {
+                     return self.addCylinderOut(particleType, forceConstant, origin, normal, radius);
+            })
             .def("add_external_order1", [](PotentialRegistry& self, readdy::model::potentials::PotentialOrder1* pot) {
                 return self.addUserDefined(pot);
             }, py::keep_alive<1, 2>())
