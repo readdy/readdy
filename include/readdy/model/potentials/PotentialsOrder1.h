@@ -237,6 +237,44 @@ protected:
     const readdy::scalar radius, height, width, r1, r2, r3, r4, effectiveForceConstant;
 };
 
+class CylinderIn : public PotentialOrder1 {
+    using super = PotentialOrder1;
+public:
+    CylinderIn(particle_type_type particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &normal,
+               scalar radius);
+
+    scalar calculateEnergy(const Vec3 &position) const override {
+        Vec3 pos = position - origin;
+        Vec3 perpendicular = pos - (pos * normal) * normal;
+        scalar distanceFromAxis = perpendicular.norm();
+        if (distanceFromAxis > radius) {
+            return static_cast<scalar>(0.5) * forceConstant * std::pow(distanceFromAxis - radius, static_cast<scalar>(2));
+        } else {
+            return static_cast<scalar>(0.);
+        }
+    }
+
+    void calculateForce(Vec3 &force, const Vec3 &position) const override {
+        Vec3 pos = position - origin;
+        Vec3 perpendicular = pos - (pos * normal) * normal;
+        scalar distanceFromAxis = perpendicular.norm();
+        if (distanceFromAxis > radius) {
+            force += - forceConstant * (distanceFromAxis - radius) * perpendicular / distanceFromAxis;
+        } else {
+            // nothing happens
+        }
+    }
+
+    std::string describe() const override;
+
+    std::string type() const override;
+
+protected:
+    const Vec3 origin;
+    const Vec3 normal;
+    const scalar forceConstant, radius;
+};
+
 template<typename T>
 const std::string getPotentialName(typename std::enable_if<std::is_base_of<Box, T>::value>::type * = 0) {
     return "Box";
@@ -252,6 +290,10 @@ const std::string getPotentialName(typename std::enable_if<std::is_base_of<Spher
 template <typename T>
 const std::string getPotentialName(typename std::enable_if<std::is_base_of<SphericalBarrier, T>::value>::type * = 0) {
     return "SphericalBarrier";
+}
+template <typename T>
+const std::string getPotentialName(typename std::enable_if<std::is_base_of<CylinderIn, T>::value>::type * = 0) {
+    return "CylinderIn";
 }
 
 NAMESPACE_END(potentials)

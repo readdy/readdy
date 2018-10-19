@@ -166,6 +166,25 @@ std::string SphericalBarrier::type() const {
     return getPotentialName<SphericalBarrier>();
 }
 
+/**
+ * Cylindrical inclusion potential
+ */
+
+CylinderIn::CylinderIn(particle_type_type particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &normal,
+                       scalar radius) : super(particleType), forceConstant(forceConstant), origin(origin),
+                                        normal(normal/normal.norm()), radius(radius) {
+}
+
+std::string CylinderIn::type() const {
+    return getPotentialName<CylinderIn>();
+}
+
+std::string CylinderIn::describe() const {
+    return fmt::format("Cylindrical inclusion potential with force constant={}, origin={}, normal={}, and radius={}",
+                       forceConstant, origin, normal, radius);
+}
+
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Potentials order 2
