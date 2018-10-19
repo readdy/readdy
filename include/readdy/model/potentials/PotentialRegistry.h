@@ -310,6 +310,29 @@ public:
         _registerO1(pots.back().get());
     }
 
+    /**
+     * Register a cylindrical potential that confines particles to its outside using a harmonic potential.
+     * The cylinder is defined with an origin (any point on the axis of the cylinder),
+     * the normal (unit vector along the axis), and the radius of the cylinder.
+     *
+     * @param particleType the particle type for which the potential should take effect
+     * @param forceConstant the force constant determines the strength of repulsion
+     * @param origin any point on the axis of the cylinder
+     * @param normal a vector that determines the direction of the cylinder's axis, will be normalized to 1 internally
+     * @param radius the radius of the cylinder
+     */
+    void addCylinderOut(const std::string &particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &normal,
+                       scalar radius) {
+        addCylinderOut(_types(particleType), forceConstant, origin, normal, radius);
+    }
+
+    void addCylinderOut(ParticleTypeId particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &normal,
+                       scalar radius) {
+        auto &pots = _ownPotentialsO1[particleType];
+        pots.emplace_back(std::make_shared<CylinderOut>(particleType, forceConstant, origin, normal, radius));
+        _registerO1(pots.back().get());
+    }
+
     const PotentialsO1Collection &potentialsOf(const ParticleTypeId type) const {
         static const auto defaultValue = PotentialsO1Collection{};
         auto it = _potentialsO1.find(type);
