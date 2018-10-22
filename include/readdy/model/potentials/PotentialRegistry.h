@@ -231,38 +231,26 @@ public:
     }
 
     /**
-     * Register a sphere potential, which is used to confine particles outside a spherical volume. The energy function
-     * increases quadratically with respect to the distance from the sphere edge, resulting in a harmonic repulsion.
-     *
-     * @param particleType the particle type for which the potential should take effect
-     * @param forceConstant the force constant determines the strength of interaction, like a spring constant
-     * @param origin the center of the sphere
-     * @param radius the extent of the sphere
-     */
-    void addSphereOut(const std::string &particleType, scalar forceConstant, const Vec3 &origin, scalar radius) {
-        addSphereOut(_types(particleType), forceConstant, origin, radius);
-    }
-    void addSphereOut(ParticleTypeId particleType, scalar forceConstant, const Vec3 &origin, scalar radius) {
-        auto &pots = _ownPotentialsO1[particleType];
-        pots.emplace_back(std::make_shared<SphereOut>(particleType, forceConstant, origin, radius));
-        _registerO1(pots.back().get());
-    }
-
-    /**
-     * Register a sphere potential, which is used to confine particles inside a spherical volume. The energy function
-     * increases quadratically with respect to the distance from the sphere edge, resulting in a harmonic repulsion.
+     * Register a sphere potential, which is used to confine particles inside or outside a spherical volume.
+     * The energy function increases quadratically with respect to the distance from the sphere edge,
+     * resulting in a harmonic repulsion.
      *
      * @param particleType the particle type for which the sphere potential should take effect
      * @param forceConstant the force constant determines the strength of repulsion
      * @param origin the center of the sphere
      * @param radius the extent of the sphere
+     * @param inclusion if true, the potential will include particles, otherwise exclude them from the volume
      */
-    void addSphereIn(const std::string &particleType, scalar forceConstant, const Vec3 &origin, scalar radius) {
-        addSphereIn(_types(particleType), forceConstant, origin, radius);
+    void addSphere(const std::string &particleType, scalar forceConstant, const Vec3 &origin, scalar radius, bool inclusion) {
+        addSphere(_types(particleType), forceConstant, origin, radius, inclusion);
     }
-    void addSphereIn(ParticleTypeId particleType, scalar forceConstant, const Vec3 &origin, scalar radius) {
+    void addSphere(ParticleTypeId particleType, scalar forceConstant, const Vec3 &origin, scalar radius, bool inclusion) {
         auto &pots = _ownPotentialsO1[particleType];
-        pots.emplace_back(std::make_shared<SphereIn>(particleType, forceConstant, origin, radius));
+        if (inclusion) {
+            pots.emplace_back(std::make_shared<Sphere<true>>(particleType, forceConstant, origin, radius));
+        } else {
+            pots.emplace_back(std::make_shared<Sphere<false>>(particleType, forceConstant, origin, radius));
+        }
         _registerO1(pots.back().get());
     }
 
@@ -284,6 +272,35 @@ public:
                              scalar radius) {
         auto &pots = _ownPotentialsO1[particleType];
         pots.emplace_back(std::make_shared<SphericalBarrier>(particleType, height, width, origin, radius));
+        _registerO1(pots.back().get());
+    }
+
+    /**
+     * Register a cylindrical potential that confines particles to its inside or outside using a harmonic potential.
+     * The cylinder is defined with an origin (any point on the axis of the cylinder),
+     * the normal (unit vector along the axis), and the radius of the cylinder. A boolean flag determines if the
+     * potential includes or excludes particles.
+     *
+     * @param particleType the particle type for which the potential should take effect
+     * @param forceConstant the force constant determines the strength of repulsion
+     * @param origin any point on the axis of the cylinder
+     * @param normal a vector that determines the direction of the cylinder's axis, will be normalized to 1 internally
+     * @param radius the radius of the cylinder
+     * @param inclusion if true, the potential will include particles, otherwise exclude them from the volume
+     */
+    void addCylinder(const std::string &particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &normal,
+                       scalar radius, bool inclusion) {
+        addCylinder(_types(particleType), forceConstant, origin, normal, radius, inclusion);
+    }
+
+    void addCylinder(ParticleTypeId particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &normal,
+                       scalar radius, bool inclusion) {
+        auto &pots = _ownPotentialsO1[particleType];
+        if (inclusion) {
+            pots.emplace_back(std::make_shared<Cylinder<true>>(particleType, forceConstant, origin, normal, radius));
+        } else {
+            pots.emplace_back(std::make_shared<Cylinder<false>>(particleType, forceConstant, origin, normal, radius));
+        }
         _registerO1(pots.back().get());
     }
 

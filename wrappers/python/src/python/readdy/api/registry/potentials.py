@@ -147,37 +147,22 @@ class PotentialRegistry(object):
                                                    inverse_screening_depth, repulsion_strength, repulsion_distance,
                                                    exponent, cutoff)
 
-    def add_sphere_out(self, particle_type, force_constant, origin, radius):
+    def add_sphere(self, particle_type, force_constant, origin, radius, inclusion: bool):
         """
-        Adds a spherical potential that keeps particles of a certain type excluded from the inside of the
+        Adds a spherical potential that keeps particles of a certain type restrained to the inside or outside of the
         specified sphere.
 
         :param particle_type: the particle type
         :param force_constant: strength of the potential [energy/length**2]
         :param origin: origin of the sphere [length]
         :param radius: radius of the sphere [length]
+        :param inclusion: if true, the potential will include particles, otherwise exclude them from the volume
         """
         force_constant = self._units.convert(force_constant, self._units.force_constant_unit)
         origin = self._units.convert(origin, self._units.length_unit)
         radius = self._units.convert(radius, self._units.length_unit)
         assert radius > 0, "radius has to be positive"
-        self._registry.add_sphere_out(particle_type, force_constant, _v3_of(origin), radius)
-
-    def add_sphere_in(self, particle_type, force_constant, origin, radius):
-        """
-        Adds a spherical potential that keeps particles of a certain type restrained to the inside of the
-        specified sphere.
-
-        :param particle_type: the particle type
-        :param force_constant: strength of the potential [energy/length**2]
-        :param origin: origin of the sphere [length]
-        :param radius: radius of the sphere [length]
-        """
-        force_constant = self._units.convert(force_constant, self._units.force_constant_unit)
-        origin = self._units.convert(origin, self._units.length_unit)
-        radius = self._units.convert(radius, self._units.length_unit)
-        assert radius > 0, "radius has to be positive"
-        self._registry.add_sphere_in(particle_type, force_constant, _v3_of(origin), radius)
+        self._registry.add_sphere(particle_type, force_constant, _v3_of(origin), radius, inclusion)
 
     def add_spherical_barrier(self, particle_type, height, width, origin, radius):
         """
@@ -200,6 +185,26 @@ class PotentialRegistry(object):
         assert height > 0, "height has to be positive"
         assert width > 0, "width has to be positive"
         self._registry.add_spherical_barrier(particle_type, height, width, _v3_of(origin), radius)
+
+    def add_cylinder(self, particle_type, force_constant, origin, normal, radius, inclusion: bool):
+        """
+        A potential that keeps particles inside or outside a cylindrical volume. Particles penetrating the boundary are
+        harmonically pushed back again.
+
+        :param particle_type: the particle type
+        :param force_constant: the strength of the confining force [energy/length**2]
+        :param origin: any point on the axis of the cylinder [length]
+        :param normal: direction of the axis of the cylinder [length]
+        :param radius: radius of the cylinder [length]
+        :param inclusion: if true, the potential will include particles, otherwise exclude them from the volume
+        """
+        force_constant = self._units.convert(force_constant, self._units.force_constant_unit)
+        origin = self._units.convert(origin, self._units.length_unit)
+        normal = self._units.convert(normal, self._units.length_unit)
+        radius = self._units.convert(radius, self._units.length_unit)
+        assert force_constant > 0, "force_constant has to be positive"
+        assert radius > 0, "radius has to be positive"
+        self._registry.add_cylinder(particle_type, force_constant, _v3_of(origin), _v3_of(normal), radius, inclusion)
 
     def add_custom_external(self, particle_type, clazz, *args):
         """

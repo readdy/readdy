@@ -131,22 +131,14 @@ std::string Box::type() const {
  * Sphere Potentials
  */
 
-std::string SphereIn::describe() const {
-    return fmt::format("Spherical inclusion potential with origin={}, radius={}, and force constant k={}",
-                       origin, radius, forceConstant);
+template<>
+std::string Sphere<true>::type() const {
+    return getPotentialName<Sphere<true>>();
 }
 
-std::string SphereIn::type() const {
-    return getPotentialName<SphereIn>();
-}
-
-std::string SphereOut::describe() const {
-    return fmt::format("Spherical exclusion potential with origin={}, radius={}, and force constant k={}",
-                       origin, radius, forceConstant);
-}
-
-std::string SphereOut::type() const {
-    return getPotentialName<SphereOut>();
+template<>
+std::string Sphere<false>::type() const {
+    return getPotentialName<Sphere<false>>();
 }
 
 SphericalBarrier::SphericalBarrier(particle_type_type particleType, scalar height, scalar width, const Vec3 &origin, scalar radius)
@@ -164,6 +156,20 @@ std::string SphericalBarrier::describe() const {
 
 std::string SphericalBarrier::type() const {
     return getPotentialName<SphericalBarrier>();
+}
+
+/**
+ * Cylindrical potentials
+ */
+
+template<>
+std::string Cylinder<true>::type() const {
+    return getPotentialName<Cylinder<true>>();
+}
+
+template<>
+std::string Cylinder<false>::type() const {
+    return getPotentialName<Cylinder<false>>();
 }
 
 /////////////////////////////////////////////////////////////////////////////

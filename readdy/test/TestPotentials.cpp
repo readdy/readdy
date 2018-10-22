@@ -125,7 +125,7 @@ TEST_P(TestPotentials, TestParticleStayInSphere) {
     std::array<std::string, 2> types{{"A", "B"}};
     for (const auto &t : types) {
         readdy::Vec3 origin (0, 0, 0);
-        kernel->context().potentials().addSphereIn(t, 20, origin, 3);
+        kernel->context().potentials().addSphere(t, 20, origin, 3, true);
     }
     auto ppObs = kernel->observe().positions(1);
     const readdy::scalar maxDistFromOrigin = 4.0; // at kbt=1 and force_const=20 the RMSD in a well potential would be ~0.2
@@ -285,8 +285,8 @@ TEST_P(TestPotentials, SphericalMembrane) {
     auto radius = static_cast<readdy::scalar>(3.);
     readdy::Vec3 origin = {static_cast<readdy::scalar>(1.), static_cast<readdy::scalar>(0.),
                                   static_cast<readdy::scalar>(0.)};
-    kernel->context().potentials().addSphereOut("A", forceConstant, origin, radius);
-    kernel->context().potentials().addSphereIn("A", forceConstant, origin, radius);
+    kernel->context().potentials().addSphere("A", forceConstant, origin, radius, false);
+    kernel->context().potentials().addSphere("A", forceConstant, origin, radius, true);
     // record ids to get data-structure-indexes of the two particles later on
     auto pObs = kernel->observe().particles(1);
     std::vector<readdy::model::Particle::id_type> ids;
@@ -372,6 +372,126 @@ TEST_P(TestPotentials, SphericalBarrier) {
                                          static_cast<readdy::scalar>(0.)};
     EXPECT_VEC3_NEAR(collectedForces[id0Idx], forceOnParticle0, kernel->doublePrecision() ? 1e-8 : 1e-5);
     EXPECT_VEC3_NEAR(collectedForces[id1Idx], forceOnParticle1, kernel->doublePrecision() ? 1e-8 : 1e-5);
+}
+
+TEST_P(TestPotentials, CylinderIn) {
+    auto &ctx = kernel->context();
+    auto calculateForces = kernel->actions().calculateForces();
+    ctx.particleTypes().add("A", 1.0);
+    ctx.boxSize() = {{20, 20, 20}};
+    // particle 0 and 3 are outside, 1 and 2 inside of the cylinder
+    auto id0 = kernel->addParticle("A", {-1, -4, 1.});
+    auto id1 = kernel->addParticle("A", {0., -3., 3.});
+    auto id2 = kernel->addParticle("A", {1.5, -1., 5.});
+    auto id3 = kernel->addParticle("A", {4., -2., 8.});
+    readdy::Vec3 origin = {1., -2., 3.};
+    readdy::Vec3 normal = {0., 0., 1.};
+    double radius = 2.;
+    double forceConstant = 4.;
+    kernel->context().potentials().addCylinder("A", forceConstant, origin, normal, radius, true);
+    // record ids to get data-structure-indexes of the two particles later on
+    auto pObs = kernel->observe().particles(1);
+    std::vector<readdy::model::Particle::id_type> ids;
+    pObs->callback() = [&ids](const readdy::model::observables::Particles::result_type &result) {
+        const auto &recordedIds = std::get<1>(result);
+        ids.insert(ids.end(), recordedIds.begin(), recordedIds.end());
+    };
+    auto connParticles = kernel->connectObservable(pObs.get());
+    // also record forces
+    auto fObs = kernel->observe().forces(1);
+    std::vector<readdy::Vec3> collectedForces;
+    fObs->callback() = [&collectedForces](const readdy::model::observables::Forces::result_type &result) {
+        collectedForces.insert(collectedForces.end(), result.begin(), result.end());
+    };
+    auto connForces = kernel->connectObservable(fObs.get());
+
+    kernel->initialize();
+
+    calculateForces->perform();
+    kernel->evaluateObservables(1);
+
+    // the reference values were calculated by hand and evaluated numerically
+    ASSERT_FLOAT_EQ(kernel->stateModel().energy(), 3.37258300203048);
+    auto id0Idx = std::find(ids.begin(), ids.end(), id0) - ids.begin();
+    auto id1Idx = std::find(ids.begin(), ids.end(), id1) - ids.begin();
+    auto id2Idx = std::find(ids.begin(), ids.end(), id2) - ids.begin();
+    auto id3Idx = std::find(ids.begin(), ids.end(), id3) - ids.begin();
+    readdy::Vec3 forceOnParticle0{static_cast<readdy::scalar>(2.3431457505076203),
+                                  static_cast<readdy::scalar>(2.3431457505076203),
+                                  static_cast<readdy::scalar>(0.)};
+    readdy::Vec3 forceOnParticle1{static_cast<readdy::scalar>(0.),
+                                  static_cast<readdy::scalar>(0.),
+                                  static_cast<readdy::scalar>(0.)};
+    readdy::Vec3 forceOnParticle2{static_cast<readdy::scalar>(0.),
+                                  static_cast<readdy::scalar>(0.),
+                                  static_cast<readdy::scalar>(0.)};
+    readdy::Vec3 forceOnParticle3{static_cast<readdy::scalar>(-4.),
+                                  static_cast<readdy::scalar>(0.),
+                                  static_cast<readdy::scalar>(0.)};
+    EXPECT_VEC3_NEAR(collectedForces[id0Idx], forceOnParticle0, kernel->doublePrecision() ? 1e-8 : 1e-5);
+    EXPECT_VEC3_NEAR(collectedForces[id1Idx], forceOnParticle1, kernel->doublePrecision() ? 1e-8 : 1e-5);
+    EXPECT_VEC3_NEAR(collectedForces[id2Idx], forceOnParticle2, kernel->doublePrecision() ? 1e-8 : 1e-5);
+    EXPECT_VEC3_NEAR(collectedForces[id3Idx], forceOnParticle3, kernel->doublePrecision() ? 1e-8 : 1e-5);
+}
+
+TEST_P(TestPotentials, CylinderOut) {
+    auto &ctx = kernel->context();
+    auto calculateForces = kernel->actions().calculateForces();
+    ctx.particleTypes().add("A", 1.0);
+    ctx.boxSize() = {{20, 20, 20}};
+    // particle 0 and 3 are outside, 1 and 2 inside of the cylinder
+    auto id0 = kernel->addParticle("A", {-1, -4, 1.});
+    auto id1 = kernel->addParticle("A", {0., -3., 3.});
+    auto id2 = kernel->addParticle("A", {1.5, -1., 5.});
+    auto id3 = kernel->addParticle("A", {4., -2., 8.});
+    readdy::Vec3 origin = {1., -2., 3.};
+    readdy::Vec3 normal = {0., 0., 1.};
+    double radius = 2.;
+    double forceConstant = 4.;
+    kernel->context().potentials().addCylinder("A", forceConstant, origin, normal, radius, false);
+    // record ids to get data-structure-indexes of the two particles later on
+    auto pObs = kernel->observe().particles(1);
+    std::vector<readdy::model::Particle::id_type> ids;
+    pObs->callback() = [&ids](const readdy::model::observables::Particles::result_type &result) {
+        const auto &recordedIds = std::get<1>(result);
+        ids.insert(ids.end(), recordedIds.begin(), recordedIds.end());
+    };
+    auto connParticles = kernel->connectObservable(pObs.get());
+    // also record forces
+    auto fObs = kernel->observe().forces(1);
+    std::vector<readdy::Vec3> collectedForces;
+    fObs->callback() = [&collectedForces](const readdy::model::observables::Forces::result_type &result) {
+        collectedForces.insert(collectedForces.end(), result.begin(), result.end());
+    };
+    auto connForces = kernel->connectObservable(fObs.get());
+
+    kernel->initialize();
+
+    calculateForces->perform();
+    kernel->evaluateObservables(1);
+
+    // the reference values were calculated by hand and evaluated numerically
+    ASSERT_FLOAT_EQ(kernel->stateModel().energy(), 2.2420195910160805);
+    auto id0Idx = std::find(ids.begin(), ids.end(), id0) - ids.begin();
+    auto id1Idx = std::find(ids.begin(), ids.end(), id1) - ids.begin();
+    auto id2Idx = std::find(ids.begin(), ids.end(), id2) - ids.begin();
+    auto id3Idx = std::find(ids.begin(), ids.end(), id3) - ids.begin();
+    readdy::Vec3 forceOnParticle0{static_cast<readdy::scalar>(0.),
+                                  static_cast<readdy::scalar>(0.),
+                                  static_cast<readdy::scalar>(0.)};
+    readdy::Vec3 forceOnParticle1{static_cast<readdy::scalar>(-1.6568542494923801),
+                                  static_cast<readdy::scalar>(-1.6568542494923801),
+                                  static_cast<readdy::scalar>(0.)};
+    readdy::Vec3 forceOnParticle2{static_cast<readdy::scalar>(0.5 * 3.155417527999327),
+                                  static_cast<readdy::scalar>(3.155417527999327),
+                                  static_cast<readdy::scalar>(0.)};
+    readdy::Vec3 forceOnParticle3{static_cast<readdy::scalar>(0.),
+                                  static_cast<readdy::scalar>(0.),
+                                  static_cast<readdy::scalar>(0.)};
+    EXPECT_VEC3_NEAR(collectedForces[id0Idx], forceOnParticle0, kernel->doublePrecision() ? 1e-8 : 1e-5);
+    EXPECT_VEC3_NEAR(collectedForces[id1Idx], forceOnParticle1, kernel->doublePrecision() ? 1e-8 : 1e-5);
+    EXPECT_VEC3_NEAR(collectedForces[id2Idx], forceOnParticle2, kernel->doublePrecision() ? 1e-8 : 1e-5);
+    EXPECT_VEC3_NEAR(collectedForces[id3Idx], forceOnParticle3, kernel->doublePrecision() ? 1e-8 : 1e-5);
 }
 
 INSTANTIATE_TEST_CASE_P(TestPotentials, TestPotentials,

@@ -121,21 +121,20 @@ void exportKernelContext(py::module &module) {
                      return self.addScreenedElectrostatics(type1, type2, electrostaticStrength, inverseScreeningDepth,
                                                            repulsionStrength, repulsionDistance, exponent, cutoff);
                  })
-            .def("add_sphere_out",
+            .def("add_sphere",
                  [](PotentialRegistry &self, const std::string &particleType, scalar forceConstant, const Vec3 &origin,
-                    scalar radius) {
-                     return self.addSphereOut(particleType, forceConstant, origin, radius);
-                 })
-            .def("add_sphere_in",
-                 [](PotentialRegistry &self, const std::string &particleType, scalar forceConstant, const Vec3 &origin,
-                    scalar radius) {
-                     return self.addSphereIn(particleType, forceConstant, origin, radius);
+                    scalar radius, bool inclusion) {
+                     return self.addSphere(particleType, forceConstant, origin, radius, inclusion);
                  })
             .def("add_spherical_barrier",
                  [](PotentialRegistry &self, const std::string &particleType, scalar height, scalar width,
                     const Vec3 &origin, scalar radius) {
                      return self.addSphericalBarrier(particleType, height, width, origin, radius);
                  })
+            .def("add_cylinder", [](PotentialRegistry &self, const std::string &particleType, scalar forceConstant,
+                    const Vec3 &origin, const Vec3 &normal, scalar radius, bool inclusion) {
+                     return self.addCylinder(particleType, forceConstant, origin, normal, radius, inclusion);
+            })
             .def("add_external_order1", [](PotentialRegistry& self, readdy::model::potentials::PotentialOrder1* pot) {
                 return self.addUserDefined(pot);
             }, py::keep_alive<1, 2>())
