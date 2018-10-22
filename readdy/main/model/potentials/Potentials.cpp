@@ -131,14 +131,14 @@ std::string Box::type() const {
  * Sphere Potentials
  */
 
-std::string Sphere::describe() const {
-    std::string inOrOut = inclusion ? "inclusion" : "exclusion";
-    return fmt::format("Spherical {} potential with origin={}, radius={}, and force constant k={}",
-                       inOrOut, origin, radius, forceConstant);
+template<>
+std::string Sphere<true>::type() const {
+    return getPotentialName<Sphere<true>>();
 }
 
-std::string Sphere::type() const {
-    return getPotentialName<Sphere>();
+template<>
+std::string Sphere<false>::type() const {
+    return getPotentialName<Sphere<false>>();
 }
 
 SphericalBarrier::SphericalBarrier(particle_type_type particleType, scalar height, scalar width, const Vec3 &origin, scalar radius)
@@ -162,20 +162,14 @@ std::string SphericalBarrier::type() const {
  * Cylindrical potentials
  */
 
-Cylinder::Cylinder(particle_type_type particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &normal,
-                       scalar radius, bool inclusion) : super(particleType), forceConstant(forceConstant),
-                                                        origin(origin), normal(normal / normal.norm()), radius(radius),
-                                                        inclusion(inclusion) {
+template<>
+std::string Cylinder<true>::type() const {
+    return getPotentialName<Cylinder<true>>();
 }
 
-std::string Cylinder::type() const {
-    return getPotentialName<Cylinder>();
-}
-
-std::string Cylinder::describe() const {
-    std::string inOrOut = inclusion ? "inclusion" : "exclusion";
-    return fmt::format("Cylindrical {} potential with force constant={}, origin={}, normal={}, and radius={}",
-                       inOrOut, forceConstant, origin, normal, radius);
+template<>
+std::string Cylinder<false>::type() const {
+    return getPotentialName<Cylinder<false>>();
 }
 
 /////////////////////////////////////////////////////////////////////////////

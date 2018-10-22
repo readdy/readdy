@@ -246,7 +246,11 @@ public:
     }
     void addSphere(ParticleTypeId particleType, scalar forceConstant, const Vec3 &origin, scalar radius, bool inclusion) {
         auto &pots = _ownPotentialsO1[particleType];
-        pots.emplace_back(std::make_shared<Sphere>(particleType, forceConstant, origin, radius, inclusion));
+        if (inclusion) {
+            pots.emplace_back(std::make_shared<Sphere<true>>(particleType, forceConstant, origin, radius));
+        } else {
+            pots.emplace_back(std::make_shared<Sphere<false>>(particleType, forceConstant, origin, radius));
+        }
         _registerO1(pots.back().get());
     }
 
@@ -292,7 +296,11 @@ public:
     void addCylinder(ParticleTypeId particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &normal,
                        scalar radius, bool inclusion) {
         auto &pots = _ownPotentialsO1[particleType];
-        pots.emplace_back(std::make_shared<Cylinder>(particleType, forceConstant, origin, normal, radius, inclusion));
+        if (inclusion) {
+            pots.emplace_back(std::make_shared<Cylinder<true>>(particleType, forceConstant, origin, normal, radius));
+        } else {
+            pots.emplace_back(std::make_shared<Cylinder<false>>(particleType, forceConstant, origin, normal, radius));
+        }
         _registerO1(pots.back().get());
     }
 
