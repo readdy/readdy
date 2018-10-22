@@ -131,22 +131,14 @@ std::string Box::type() const {
  * Sphere Potentials
  */
 
-std::string SphereIn::describe() const {
-    return fmt::format("Spherical inclusion potential with origin={}, radius={}, and force constant k={}",
-                       origin, radius, forceConstant);
+std::string Sphere::describe() const {
+    std::string inOrOut = inclusion ? "inclusion" : "exclusion";
+    return fmt::format("Spherical {} potential with origin={}, radius={}, and force constant k={}",
+                       inOrOut, origin, radius, forceConstant);
 }
 
-std::string SphereIn::type() const {
-    return getPotentialName<SphereIn>();
-}
-
-std::string SphereOut::describe() const {
-    return fmt::format("Spherical exclusion potential with origin={}, radius={}, and force constant k={}",
-                       origin, radius, forceConstant);
-}
-
-std::string SphereOut::type() const {
-    return getPotentialName<SphereOut>();
+std::string Sphere::type() const {
+    return getPotentialName<Sphere>();
 }
 
 SphericalBarrier::SphericalBarrier(particle_type_type particleType, scalar height, scalar width, const Vec3 &origin, scalar radius)
@@ -170,32 +162,20 @@ std::string SphericalBarrier::type() const {
  * Cylindrical potentials
  */
 
-CylinderIn::CylinderIn(particle_type_type particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &normal,
-                       scalar radius) : super(particleType), forceConstant(forceConstant), origin(origin),
-                                        normal(normal/normal.norm()), radius(radius) {
+Cylinder::Cylinder(particle_type_type particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &normal,
+                       scalar radius, bool inclusion) : super(particleType), forceConstant(forceConstant),
+                                                        origin(origin), normal(normal / normal.norm()), radius(radius),
+                                                        inclusion(inclusion) {
 }
 
-std::string CylinderIn::type() const {
-    return getPotentialName<CylinderIn>();
+std::string Cylinder::type() const {
+    return getPotentialName<Cylinder>();
 }
 
-std::string CylinderIn::describe() const {
-    return fmt::format("Cylindrical inclusion potential with force constant={}, origin={}, normal={}, and radius={}",
-                       forceConstant, origin, normal, radius);
-}
-
-CylinderOut::CylinderOut(particle_type_type particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &normal,
-                         scalar radius) : super(particleType), forceConstant(forceConstant), origin(origin),
-                                          normal(normal / normal.norm()), radius(radius) {
-}
-
-std::string CylinderOut::type() const {
-    return getPotentialName<CylinderOut>();
-}
-
-std::string CylinderOut::describe() const {
-    return fmt::format("Cylindrical exclusion potential with force constant={}, origin={}, normal={}, and radius={}",
-                       forceConstant, origin, normal, radius);
+std::string Cylinder::describe() const {
+    std::string inOrOut = inclusion ? "inclusion" : "exclusion";
+    return fmt::format("Cylindrical {} potential with force constant={}, origin={}, normal={}, and radius={}",
+                       inOrOut, forceConstant, origin, normal, radius);
 }
 
 /////////////////////////////////////////////////////////////////////////////

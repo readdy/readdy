@@ -125,7 +125,7 @@ TEST_P(TestPotentials, TestParticleStayInSphere) {
     std::array<std::string, 2> types{{"A", "B"}};
     for (const auto &t : types) {
         readdy::Vec3 origin (0, 0, 0);
-        kernel->context().potentials().addSphereIn(t, 20, origin, 3);
+        kernel->context().potentials().addSphere(t, 20, origin, 3, true);
     }
     auto ppObs = kernel->observe().positions(1);
     const readdy::scalar maxDistFromOrigin = 4.0; // at kbt=1 and force_const=20 the RMSD in a well potential would be ~0.2
@@ -285,8 +285,8 @@ TEST_P(TestPotentials, SphericalMembrane) {
     auto radius = static_cast<readdy::scalar>(3.);
     readdy::Vec3 origin = {static_cast<readdy::scalar>(1.), static_cast<readdy::scalar>(0.),
                                   static_cast<readdy::scalar>(0.)};
-    kernel->context().potentials().addSphereOut("A", forceConstant, origin, radius);
-    kernel->context().potentials().addSphereIn("A", forceConstant, origin, radius);
+    kernel->context().potentials().addSphere("A", forceConstant, origin, radius, false);
+    kernel->context().potentials().addSphere("A", forceConstant, origin, radius, true);
     // record ids to get data-structure-indexes of the two particles later on
     auto pObs = kernel->observe().particles(1);
     std::vector<readdy::model::Particle::id_type> ids;
@@ -388,7 +388,7 @@ TEST_P(TestPotentials, CylinderIn) {
     readdy::Vec3 normal = {0., 0., 1.};
     double radius = 2.;
     double forceConstant = 4.;
-    kernel->context().potentials().addCylinderIn("A", forceConstant, origin, normal, radius);
+    kernel->context().potentials().addCylinder("A", forceConstant, origin, normal, radius, true);
     // record ids to get data-structure-indexes of the two particles later on
     auto pObs = kernel->observe().particles(1);
     std::vector<readdy::model::Particle::id_type> ids;
@@ -448,7 +448,7 @@ TEST_P(TestPotentials, CylinderOut) {
     readdy::Vec3 normal = {0., 0., 1.};
     double radius = 2.;
     double forceConstant = 4.;
-    kernel->context().potentials().addCylinderOut("A", forceConstant, origin, normal, radius);
+    kernel->context().potentials().addCylinder("A", forceConstant, origin, normal, radius, false);
     // record ids to get data-structure-indexes of the two particles later on
     auto pObs = kernel->observe().particles(1);
     std::vector<readdy::model::Particle::id_type> ids;

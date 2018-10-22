@@ -54,6 +54,7 @@ NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(potentials)
 
+// @todo allow box exclusion
 class Box : public PotentialOrder1 {
     using super = PotentialOrder1;
 public:
@@ -108,65 +109,35 @@ protected:
     const scalar forceConstant;
 };
 
-// @todo modify this, so that you can choose whether the sphere keeps particles in or out
-class SphereIn : public PotentialOrder1 {
+class Sphere : public PotentialOrder1 {
     using super = PotentialOrder1;
 public:
-    SphereIn(particle_type_type particleType, scalar forceConstant, const Vec3& origin, scalar radius)
-            : super(particleType), origin(origin), radius(radius), forceConstant(forceConstant) {}
-
-      scalar calculateEnergy(const Vec3 &position) const override {
-        auto difference = position - origin;
-        scalar distanceFromOrigin = difference.norm();
-        scalar distanceFromSphere = distanceFromOrigin - radius;
-        auto energy = static_cast<scalar>(0.);
-        if (distanceFromSphere > 0) {
-            energy = static_cast<scalar>(0.5 * forceConstant * distanceFromSphere * distanceFromSphere);
-        }
-        return energy;
-    }
-
-    void calculateForce(Vec3 &force, const Vec3 &position) const override {
-        auto difference = position - origin;
-        scalar distanceFromOrigin = difference.norm();
-        scalar distanceFromSphere = distanceFromOrigin - radius;
-        if (distanceFromSphere > 0) {
-            force += -1 * forceConstant * distanceFromSphere * difference / distanceFromOrigin;
-        }
-    }
-
-    std::string describe() const override;
-
-    std::string type() const override;
-
-protected:
-    const Vec3 origin;
-    const scalar radius, forceConstant;
-};
-
-class SphereOut : public PotentialOrder1 {
-    using super = PotentialOrder1;
-public:
-    SphereOut(particle_type_type particleType, scalar forceConstant, const Vec3& origin, scalar radius)
-            : super(particleType), forceConstant(forceConstant), origin(origin), radius(radius) {}
+    Sphere(particle_type_type particleType, scalar forceConstant, const Vec3& origin, scalar radius, bool inclusion)
+            : super(particleType), origin(origin), radius(radius), forceConstant(forceConstant), inclusion(inclusion) {}
 
     scalar calculateEnergy(const Vec3 &position) const override {
         auto difference = position - origin;
         scalar distanceFromOrigin = difference.norm();
         scalar distanceFromSphere = distanceFromOrigin - radius;
-        auto energy = static_cast<scalar>(0.);
-        if (distanceFromSphere < 0) {
-            energy = static_cast<scalar>(0.5) * forceConstant * distanceFromSphere * distanceFromSphere;
+        if (inclusion and distanceFromSphere > 0) {
+            return static_cast<scalar>(0.5) * forceConstant * distanceFromSphere * distanceFromSphere;
+        } else if (!inclusion and distanceFromSphere < 0) {
+            return static_cast<scalar>(0.5) * forceConstant * distanceFromSphere * distanceFromSphere;
+        } else {
+            return static_cast<scalar>(0.);
         }
-        return energy;
     }
 
     void calculateForce(Vec3 &force, const Vec3 &position) const override {
         auto difference = position - origin;
         scalar distanceFromOrigin = difference.norm();
         scalar distanceFromSphere = distanceFromOrigin - radius;
-        if (distanceFromSphere < 0) {
+        if (inclusion and distanceFromSphere > 0) {
             force += -1 * forceConstant * distanceFromSphere * difference / distanceFromOrigin;
+        } else if (!inclusion and distanceFromSphere < 0) {
+            force += -1 * forceConstant * distanceFromSphere * difference / distanceFromOrigin;
+        } else {
+            // nothing happens
         }
     }
 
@@ -177,6 +148,7 @@ public:
 protected:
     const Vec3 origin;
     const scalar radius, forceConstant;
+    const bool inclusion;
 };
 
 /**
@@ -237,17 +209,20 @@ protected:
     const readdy::scalar radius, height, width, r1, r2, r3, r4, effectiveForceConstant;
 };
 
-class CylinderIn : public PotentialOrder1 {
+class Cylinder : public PotentialOrder1 {
     using super = PotentialOrder1;
 public:
-    CylinderIn(particle_type_type particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &normal,
-               scalar radius);
+    Cylinder(particle_type_type particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &normal,
+             scalar radius, bool inclusion);
 
     scalar calculateEnergy(const Vec3 &position) const override {
         Vec3 pos = position - origin;
         Vec3 perpendicular = pos - (pos * normal) * normal;
         scalar distanceFromAxis = perpendicular.norm();
-        if (distanceFromAxis > radius) {
+        if (inclusion and distanceFromAxis > radius) {
+            return static_cast<scalar>(0.5) * forceConstant *
+                   std::pow(distanceFromAxis - radius, static_cast<scalar>(2));
+        } else if (!inclusion and distanceFromAxis < radius) {
             return static_cast<scalar>(0.5) * forceConstant *
                    std::pow(distanceFromAxis - radius, static_cast<scalar>(2));
         } else {
@@ -259,7 +234,9 @@ public:
         Vec3 pos = position - origin;
         Vec3 perpendicular = pos - (pos * normal) * normal;
         scalar distanceFromAxis = perpendicular.norm();
-        if (distanceFromAxis > radius) {
+        if (inclusion and distanceFromAxis > radius) {
+            force += -forceConstant * (distanceFromAxis - radius) * perpendicular / distanceFromAxis;
+        } else if (!inclusion and distanceFromAxis < radius) {
             force += -forceConstant * (distanceFromAxis - radius) * perpendicular / distanceFromAxis;
         } else {
             // nothing happens
@@ -274,45 +251,7 @@ protected:
     const Vec3 origin;
     const Vec3 normal;
     const scalar forceConstant, radius;
-};
-
-class CylinderOut : public PotentialOrder1 {
-    using super = PotentialOrder1;
-public:
-    CylinderOut(particle_type_type particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &normal,
-                scalar radius);
-
-    scalar calculateEnergy(const Vec3 &position) const override {
-        Vec3 pos = position - origin;
-        Vec3 perpendicular = pos - (pos * normal) * normal;
-        scalar distanceFromAxis = perpendicular.norm();
-        if (distanceFromAxis < radius) {
-            return static_cast<scalar>(0.5) * forceConstant *
-                   std::pow(distanceFromAxis - radius, static_cast<scalar>(2));
-        } else {
-            return static_cast<scalar>(0.);
-        }
-    }
-
-    void calculateForce(Vec3 &force, const Vec3 &position) const override {
-        Vec3 pos = position - origin;
-        Vec3 perpendicular = pos - (pos * normal) * normal;
-        scalar distanceFromAxis = perpendicular.norm();
-        if (distanceFromAxis < radius) {
-            force += -forceConstant * (distanceFromAxis - radius) * perpendicular / distanceFromAxis;
-        } else {
-            // nothing happens
-        }
-    }
-
-    std::string describe() const override;
-
-    std::string type() const override;
-
-protected:
-    const Vec3 origin;
-    const Vec3 normal;
-    const scalar forceConstant, radius;
+    const bool inclusion;
 };
 
 template<typename T>
@@ -320,24 +259,16 @@ const std::string getPotentialName(typename std::enable_if<std::is_base_of<Box, 
     return "Box";
 }
 template<typename T>
-const std::string getPotentialName(typename std::enable_if<std::is_base_of<SphereIn, T>::value>::type* = 0) {
-    return "SphereIn";
-}
-template <typename T>
-const std::string getPotentialName(typename std::enable_if<std::is_base_of<SphereOut, T>::value>::type* = 0) {
-    return "SphereOut";
+const std::string getPotentialName(typename std::enable_if<std::is_base_of<Sphere, T>::value>::type* = 0) {
+    return "Sphere";
 }
 template <typename T>
 const std::string getPotentialName(typename std::enable_if<std::is_base_of<SphericalBarrier, T>::value>::type * = 0) {
     return "SphericalBarrier";
 }
 template <typename T>
-const std::string getPotentialName(typename std::enable_if<std::is_base_of<CylinderIn, T>::value>::type * = 0) {
-    return "CylinderIn";
-}
-template <typename T>
-const std::string getPotentialName(typename std::enable_if<std::is_base_of<CylinderOut, T>::value>::type * = 0) {
-    return "CylinderOut";
+const std::string getPotentialName(typename std::enable_if<std::is_base_of<Cylinder, T>::value>::type * = 0) {
+    return "Cylinder";
 }
 
 NAMESPACE_END(potentials)

@@ -4,7 +4,7 @@ import readdy
 
 rds = readdy.ReactionDiffusionSystem(box_size=[10., 10., 10.], unit_system=None)
 rds.add_species("A")
-rds.potentials.add_cylinder_out("A", 100, (0, 0, 0), (1, 0, 0), 1)
+rds.potentials.add_cylinder("A", 100, (0, 0, 0), (1, 0, 0), 1, inclusion=False)
 
 simulation = rds.simulation(kernel="SingleCPU")
 
