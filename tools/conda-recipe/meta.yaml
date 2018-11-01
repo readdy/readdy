@@ -20,6 +20,8 @@ requirements:
     - bzip2
     - numpy
     - zlib 1.2.*
+    - clangxx # [osx]
+    - libcxx # [osx]
     - vs2015_runtime  # [win]
 
   build:
@@ -36,6 +38,8 @@ requirements:
     - hdf5
     - zlib 1.2.*
     - libgcc # [linux]
+    - clangxx # [osx]
+    - libcxx # [osx]
     - vs2015_runtime  # [win]
 
 test:
