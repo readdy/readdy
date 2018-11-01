@@ -74,6 +74,8 @@ public:
      */
     using executable = std::function<void(std::size_t)>;
 
+    virtual ~executor_base() = default;
+
     /**
      * executes a vector of executables and then waits for all of them to finish
      * @param executables the executables

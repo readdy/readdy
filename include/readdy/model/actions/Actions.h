@@ -78,6 +78,8 @@ class AddParticles : public Action {
 public:
     AddParticles(Kernel *kernel, const std::vector<Particle> &particles);
 
+    ~AddParticles() override = default;
+
     void perform(const util::PerformanceNode &node) override;
 
 protected:
@@ -88,11 +90,15 @@ protected:
 class EulerBDIntegrator : public TimeStepDependentAction {
 public:
     explicit EulerBDIntegrator(scalar timeStep);
+
+    ~EulerBDIntegrator() override = default;
 };
 
 class CalculateForces : public Action {
 public:
     CalculateForces();
+
+    ~CalculateForces() override = default;
 };
 
 class UpdateNeighborList : public Action {
@@ -102,6 +108,8 @@ public:
     };
 
     explicit UpdateNeighborList(Operation operation = Operation::init, scalar skinSize = 0);
+
+    ~UpdateNeighborList() override = default;
 
     scalar &skin() { return skinSize; }
 
@@ -118,11 +126,15 @@ class UncontrolledApproximation : public TimeStepDependentAction {
 
 public:
     explicit UncontrolledApproximation(scalar timeStep);
+
+    ~UncontrolledApproximation() override = default;
 };
 
 class Gillespie : public TimeStepDependentAction {
 public:
     explicit Gillespie(scalar timeStep);
+
+    ~Gillespie() override = default;
 };
 
 
@@ -130,6 +142,7 @@ class DetailedBalance : public TimeStepDependentAction {
 public:
     explicit DetailedBalance(scalar timeStep);
 
+    ~DetailedBalance() override = default;
     const std::vector<std::shared_ptr<const ReversibleReactionConfig>> &reversibleReactions() const {
         return _reversibleReactionsContainer;
     }
@@ -153,6 +166,8 @@ NAMESPACE_BEGIN(top)
 class EvaluateTopologyReactions : public TimeStepDependentAction {
 public:
     explicit EvaluateTopologyReactions(scalar timeStep);
+
+    ~EvaluateTopologyReactions() override = default;
 };
 
 NAMESPACE_END(top)
@@ -160,6 +175,8 @@ NAMESPACE_END(top)
 class EvaluateCompartments : public Action {
 public:
     explicit EvaluateCompartments() : Action() {}
+
+    ~EvaluateCompartments() override = default;
 };
 
 template<typename T>
