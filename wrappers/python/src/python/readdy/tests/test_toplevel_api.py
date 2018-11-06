@@ -421,7 +421,7 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
         simulation.record_trajectory()
         simulation.observe.topologies(1)
         simulation.show_progress = False
-        simulation.run(n_steps=10000, timestep=1e-2, show_system=False)
+        simulation.run(n_steps=1000, timestep=1e-2, show_system=False)
 
         t = readdy.Trajectory(simulation.output_file)
         entries = t.read()
@@ -429,6 +429,22 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
 
         assert len(time) == len(entries)
         assert len(topology_records) == len(entries)
+
+        time1, t_rec1 = t.read_observable_topologies(start=0, stop=len(time) // 3)
+        assert(len(time1) == len(time) // 3)
+        time2, t_rec2 = t.read_observable_topologies(start=len(time) // 3, stop=int(2 * len(time) // 3))
+        assert(len(time2) == int(2 * len(time) // 3) - len(time) // 3)
+        time3, t_rec3 = t.read_observable_topologies(start=int(2 * len(time) // 3), stop=len(time))
+        assert(len(time3) == len(time) - int(2 * len(time) // 3))
+
+        assert len(time) == len(time1) + len(time2) + len(time3)
+        assert len(topology_records) == len(t_rec1) + len(t_rec2) + len(t_rec3)
+        np.testing.assert_array_almost_equal(time, np.concatenate((time1, time2, time3)))
+
+        for ix, recs in enumerate(t_rec1 + t_rec2 + t_rec3):
+            assert len(recs) == len(topology_records[ix])
+            for iy, rec in enumerate(recs):
+                assert rec == topology_records[ix][iy]
 
         for frame in entries:
             for entry in frame:

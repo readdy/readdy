@@ -54,6 +54,10 @@ NAMESPACE_BEGIN(top)
 struct TopologyRecord {
     Topology::particle_indices particleIndices;
     std::vector<std::tuple<std::size_t, std::size_t>> edges;
+
+    bool operator==(const TopologyRecord &other) const {
+        return particleIndices == other.particleIndices && edges == other.edges;
+    }
 };
 
 NAMESPACE_END(top)

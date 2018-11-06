@@ -444,10 +444,12 @@ class Trajectory(object):
             forces = f[group_path]["data"][:]
             return time, forces
 
-    def read_observable_topologies(self, data_set_name="topologies"):
+    def read_observable_topologies(self, data_set_name="topologies", start=None, stop=None):
         """
         Reads back the output of the "topologies" observable
         :param data_set_name: The data set name as given in the simulation setup
+        :param start: ...
+        :param stop: ...
         :return: a tuple which contains an array corresponding to the time as first entry and an array containing
                  lists of topologies per recorded time step
         """
@@ -456,7 +458,12 @@ class Trajectory(object):
             if not group_path in f:
                 raise ValueError("The topologies observable was not recorded in the file or recorded under a different"
                                  "name!")
-        return _read_topologies(self._filename, group_path)
+        if start is None:
+            start = 0
+        if stop is None:
+            return _read_topologies(self._filename, group_path, start)
+        else:
+            return _read_topologies(self._filename, group_path, start, stop)
 
     def read_observable_virial(self, data_set_name="virial"):
         """
