@@ -89,7 +89,7 @@ py::tuple convert_readdy_viewer(const std::string &h5name, const std::string &tr
     // limits
     std::vector<std::size_t> limits;
     {
-        if(stride > 1) {
+        if (stride > 1) {
             traj.read("limits", limits, {stride, 1});
         } else {
             traj.read("limits", limits);
@@ -99,38 +99,40 @@ py::tuple convert_readdy_viewer(const std::string &h5name, const std::string &tr
         from = std::min(n, from);
         to = std::min(n, to);
 
-        if(from == to) {
+        if (from == to) {
             throw std::invalid_argument(fmt::format("not enough frames to cover range ({}, {}]", from, to));
         } else {
-            limits = std::vector<std::size_t>(limits.begin() + 2*from, limits.begin() + 2*to);
+            limits = std::vector<std::size_t>(limits.begin() + 2 * from, limits.begin() + 2 * to);
         }
     }
 
-    auto n_frames = limits.size()/2;
+    auto n_frames = limits.size() / 2;
     readdy::log::debug("got n frames: {}", n_frames);
 
-    if(n_frames > to - from) {
+    if (n_frames > to - from) {
         throw std::logic_error("something major went wrong here");
     }
 
     // map from type name to max number of particles in traj
     std::size_t max_n_particles_per_frame = 0;
-    std::vector<std::size_t> shape_nppf {n_frames};
-    py::array_t<std::size_t, py::array::c_style> n_particles_per_frame (shape_nppf);
+    std::vector<std::size_t> shape_nppf{n_frames};
+    py::array_t<std::size_t, py::array::c_style> n_particles_per_frame(shape_nppf);
     {
         auto ptr = n_particles_per_frame.mutable_data(0);
 
         for (std::size_t i = 0; i < limits.size(); i += 2) {
             auto len = limits[i + 1] - limits[i];
-            ptr[i/2] = len;
+            ptr[i / 2] = len;
             max_n_particles_per_frame = std::max(max_n_particles_per_frame, len);
         }
     }
     readdy::log::debug("got max n particles: {}", max_n_particles_per_frame);
 
-    py::array_t<double, py::array::c_style> positions_arr {std::vector<std::size_t>{n_frames, max_n_particles_per_frame, 3}};
-    py::array_t<std::size_t, py::array::c_style> types_arr {std::vector<std::size_t>{n_frames, max_n_particles_per_frame}};
-    py::array_t<std::size_t, py::array::c_style> ids_arr {std::vector<std::size_t>{n_frames, max_n_particles_per_frame}};
+    py::array_t<double, py::array::c_style> positions_arr{
+            std::vector<std::size_t>{n_frames, max_n_particles_per_frame, 3}};
+    py::array_t<std::size_t, py::array::c_style> types_arr{
+            std::vector<std::size_t>{n_frames, max_n_particles_per_frame}};
+    py::array_t<std::size_t, py::array::c_style> ids_arr{std::vector<std::size_t>{n_frames, max_n_particles_per_frame}};
 
     auto positions_ptr = positions_arr.mutable_unchecked();
     auto types_ptr = types_arr.mutable_unchecked();
@@ -139,18 +141,18 @@ py::tuple convert_readdy_viewer(const std::string &h5name, const std::string &tr
     auto trajectoryEntryTypes = readdy::model::observables::util::getTrajectoryEntryTypes(f->ref());
 
     for (std::size_t i = 0; i < limits.size(); i += 2) {
-        auto frame = i/2;
+        auto frame = i / 2;
         auto begin = limits[i];
-        auto end = limits[i+1];
+        auto end = limits[i + 1];
 
         // records
         std::vector<readdy::model::observables::TrajectoryEntry> entries;
         traj.readSelection("records", entries, &std::get<0>(trajectoryEntryTypes), &std::get<1>(trajectoryEntryTypes),
                            {begin}, {1}, {end - begin});
 
-        if(entries.size() != end - begin) {
+        if (entries.size() != end - begin) {
             throw std::runtime_error(fmt::format("this should not happen, the flat selection was {} to {} "
-                                                         "but we got {} entries", begin, end, entries.size()));
+                                                 "but we got {} entries", begin, end, entries.size()));
         }
 
         std::size_t p = 0;
@@ -167,7 +169,8 @@ py::tuple convert_readdy_viewer(const std::string &h5name, const std::string &tr
 }
 
 void
-convert_xyz(const std::string &h5name, const std::string &trajName, const std::string &out, bool generateTcl = true, bool tclRuler = false,
+convert_xyz(const std::string &h5name, const std::string &trajName, const std::string &out, bool generateTcl = true,
+            bool tclRuler = false,
             const radiusmap &radii = {}) {
     readdy::log::debug(R"(converting "{}" to "{}")", h5name, out);
 
@@ -306,7 +309,7 @@ convert_xyz(const std::string &h5name, const std::string &trajName, const std::s
                 if (it == radii.end()) {
                     readdy::log::warn("type {} had explicitly no specified radius, using 1.0", t.name);
                 } else {
-                    radius = it ->second;
+                    radius = it->second;
                 }
             }
             fs << "mol representation VDW " << std::to_string(radius * .7) << " 16.0" << std::endl;
@@ -322,7 +325,8 @@ convert_xyz(const std::string &h5name, const std::string &trajName, const std::s
     readdy::log::debug("converting finished");
 }
 
-std::vector<std::vector<rpy::ReadableReactionRecord>> read_reactions_obs(const std::string &filename, const std::string &name){
+std::vector<std::vector<rpy::ReadableReactionRecord>>
+read_reactions_obs(const std::string &filename, const std::string &name) {
     readdy::io::BloscFilter bloscFilter;
     bloscFilter.registerFilter();
 
@@ -352,12 +356,12 @@ std::vector<std::vector<rpy::ReadableReactionRecord>> read_reactions_obs(const s
 
     std::vector<std::vector<rpy::ReadableReactionRecord>> result;
     result.reserve(records.size());
-    for(const auto &reactions : records) {
+    for (const auto &reactions : records) {
         result.emplace_back();
         auto &readableRecords = result.back();
         readableRecords.reserve(reactions.size());
 
-        for(const auto &reaction : reactions) {
+        for (const auto &reaction : reactions) {
             readableRecords.push_back(rpy::convert(reaction, reactionsMap.at(reaction.id).name));
         }
 
@@ -370,6 +374,7 @@ struct TrajectoryParticle {
     TrajectoryParticle(std::string type, std::string flavor, const std::array<readdy::scalar, 3> &pos,
                        readdy::model::Particle::id_type id, readdy::time_step_type t)
             : type(std::move(type)), flavor(std::move(flavor)), position(pos), id(id), t(t) {}
+
     std::string type;
     std::string flavor;
     std::array<readdy::scalar, 3> position;
@@ -388,36 +393,75 @@ std::string repr(const TrajectoryParticle &p) {
 
 using TopologyRecord = readdy::model::top::TopologyRecord;
 
-std::tuple<std::vector<readdy::time_step_type>, std::vector<std::vector<TopologyRecord>>> readTopologies(const std::string &filename, const std::string &groupName) {
+std::tuple<std::vector<readdy::time_step_type>, std::vector<std::vector<TopologyRecord>>>
+readTopologies(const std::string &filename, const std::string &groupName, std::size_t from,
+               std::size_t to, std::size_t stride) {
     readdy::io::BloscFilter bloscFilter;
     bloscFilter.registerFilter();
 
     auto f = h5rd::File::open(filename, h5rd::File::Flag::READ_ONLY);
     auto group = f->getSubgroup(groupName);
 
+    std::size_t nFrames {0};
     // limits
     std::vector<std::size_t> limitsParticles;
-    group.read("limitsParticles", limitsParticles);
     std::vector<std::size_t> limitsEdges;
-    group.read("limitsEdges", limitsEdges);
+    {
+        if (stride > 1) {
+            group.read("limitsParticles", limitsParticles, {stride, 1});
+        } else {
+            group.read("limitsParticles", limitsParticles);
+        }
+        if (stride > 1) {
+            group.read("limitsEdges", limitsEdges, {stride, 1});
+        } else {
+            group.read("limitsEdges", limitsEdges);
+        }
+
+        if(limitsParticles.size() != limitsEdges.size()) {
+            throw std::logic_error(fmt::format("readTopologies: Incompatible limit sizes, "
+                                               "limitsParticles.size={}, limitsEdges.size={}",
+                                               limitsParticles.size(), limitsEdges.size()));
+        }
+
+        nFrames = limitsParticles.size() / 2;
+        from = std::min(nFrames, from);
+        to = std::min(nFrames, to);
+
+        if (from == to) {
+            throw std::invalid_argument(fmt::format("readTopologies: not enough frames to cover range ({}, {}]",
+                    from, to));
+        } else {
+            limitsParticles = std::vector<std::size_t>(limitsParticles.begin() + 2 * from,
+                                                       limitsParticles.begin() + 2 * to);
+            limitsEdges = std::vector<std::size_t>(limitsEdges.begin() + 2 * from,
+                                                   limitsEdges.begin() + 2 * to);
+        }
+    }
+
+    from = std::min(nFrames, from);
+    to = std::min(nFrames, to);
 
     // time
     std::vector<readdy::time_step_type> time;
-    group.read("time", time);
+    if (stride > 1) {
+        group.readSelection("time", time, {from}, {stride}, {to - from});
+    } else {
+        group.readSelection("time", time, {from}, {1}, {to - from});
+    }
 
-    // now check that nFrames(particles) == nFrames(edges) == nFrames(time)...
-    if(limitsParticles.size() % 2 != 0 || limitsEdges.size() % 2 != 0) {
+    if (limitsParticles.size() % 2 != 0 || limitsEdges.size() % 2 != 0) {
         throw std::logic_error(fmt::format(
-                "limitsParticles size was {} and limitsEdges size was {}, they should be divisible by 2",
-                limitsParticles.size(), limitsEdges.size())
+                "limitsParticles size was {} and limitsEdges size was {}, they should be divisible by 2; from={}, to={}",
+                limitsParticles.size(), limitsEdges.size(), from, to)
         );
     }
-    const auto nFrames = limitsParticles.size() / 2;
-    if(nFrames != limitsEdges.size() / 2 || nFrames != time.size()) {
+    // now check that nFrames(particles) == nFrames(edges) == nFrames(time)...
+    if (to - from != limitsEdges.size() / 2 || (to - from) != time.size()) {
         throw std::logic_error(fmt::format(
-                "nFrames should be equal to limitsEdges/2 and equal to the number of time steps in the recording, "
-                        "but was: nFrames = {}, limitsEdges/2 = {}, nTimeSteps={}",
-                nFrames, limitsEdges.size() / 2, time.size()
+                "(to-from) should be equal to limitsEdges/2 and equal to the number of time steps in the recording, "
+                "but was: (to-from) = {}, limitsEdges/2 = {}, nTimeSteps={}; from={}, to={}",
+                to - from, limitsEdges.size() / 2, time.size(), from, to
         ));
     }
 
@@ -428,38 +472,38 @@ std::tuple<std::vector<readdy::time_step_type>, std::vector<std::vector<Topology
 
     std::vector<std::vector<TopologyRecord>> result;
 
-    for(std::size_t frame = 0; frame < nFrames; ++frame) {
+    for (std::size_t frame = 0; frame < to - from; ++frame) {
         result.emplace_back();
         // this frame's records
         auto &records = result.back();
 
-        const auto &particlesLimitBegin = limitsParticles.at(2*frame);
-        const auto &particlesLimitEnd = limitsParticles.at(2*frame + 1);
+        const auto &particlesLimitBegin = limitsParticles.at(2 * frame);
+        const auto &particlesLimitEnd = limitsParticles.at(2 * frame + 1);
         // since the edges are flattened, we actually have to multiply this by 2
-        const auto &edgesLimitBegin = limitsEdges.at(2*frame);
-        const auto &edgesLimitEnd = limitsEdges.at(2*frame + 1);
+        const auto &edgesLimitBegin = limitsEdges.at(2 * frame);
+        const auto &edgesLimitEnd = limitsEdges.at(2 * frame + 1);
 
-        for(auto particlesIt = flatParticles.begin() + particlesLimitBegin;
-            particlesIt != flatParticles.begin() + particlesLimitEnd; ++particlesIt) {
+        for (auto particlesIt = flatParticles.begin() + particlesLimitBegin;
+             particlesIt != flatParticles.begin() + particlesLimitEnd; ++particlesIt) {
 
             records.emplace_back();
             auto nParticles = *particlesIt;
-            for(std::size_t i = 0; i < nParticles; ++i) {
+            for (std::size_t i = 0; i < nParticles; ++i) {
                 ++particlesIt;
                 records.back().particleIndices.push_back(*particlesIt);
             }
         }
 
         std::size_t recordIx = 0;
-        for(auto edgesIt = flatEdges.begin() + 2*edgesLimitBegin;
-            edgesIt != flatEdges.begin() + 2*edgesLimitEnd; ++recordIx) {
+        for (auto edgesIt = flatEdges.begin() + 2 * edgesLimitBegin;
+             edgesIt != flatEdges.begin() + 2 * edgesLimitEnd; ++recordIx) {
             auto &currentRecord = records.at(recordIx);
 
             auto nEdges = *edgesIt;
             edgesIt += 2;
 
-            for(std::size_t i = 0; i < nEdges; ++i) {
-                currentRecord.edges.emplace_back(*edgesIt, *(edgesIt+1));
+            for (std::size_t i = 0; i < nEdges; ++i) {
+                currentRecord.edges.emplace_back(*edgesIt, *(edgesIt + 1));
                 edgesIt += 2;
             }
 
@@ -467,6 +511,10 @@ std::tuple<std::vector<readdy::time_step_type>, std::vector<std::vector<Topology
 
     }
 
+    if(time.size() != result.size()) {
+        throw std::logic_error(fmt::format("readTopologies: size mismatch, time size is {}, result size is {}",
+                                           time.size(), result.size()));
+    }
     return std::make_tuple(time, result);
 }
 
@@ -485,7 +533,7 @@ std::vector<std::vector<TrajectoryParticle>> read_trajectory(const std::string &
         config.read("particle_types", types, &std::get<0>(particleInfoH5Type), &std::get<1>(particleInfoH5Type));
     }
     std::unordered_map<std::size_t, std::string> typeMapping;
-    for(const auto &type : types) {
+    for (const auto &type : types) {
         typeMapping[type.type_id] = std::string(type.name);
     }
 
@@ -504,7 +552,7 @@ std::vector<std::vector<TrajectoryParticle>> read_trajectory(const std::string &
     auto trajectoryEntryTypes = readdy::model::observables::util::getTrajectoryEntryTypes(f->ref());
     traj.read("records", entries, &std::get<0>(trajectoryEntryTypes), &std::get<1>(trajectoryEntryTypes));
 
-    auto n_frames = limits.size()/2;
+    auto n_frames = limits.size() / 2;
     readdy::log::debug("got n frames: {}", n_frames);
 
     std::vector<std::vector<TrajectoryParticle>> result;
@@ -532,27 +580,27 @@ std::vector<std::vector<TrajectoryParticle>> read_trajectory(const std::string &
 void exportUtils(py::module &m) {
     using namespace pybind11::literals;
     py::class_<TrajectoryParticle>(m, "TrajectoryParticle")
-            .def_property_readonly("type", [](const TrajectoryParticle &self) {return self.type;}, R"docs(
+            .def_property_readonly("type", [](const TrajectoryParticle &self) { return self.type; }, R"docs(
                 Returns the type of the particle.
 
                 :return: type of the particle
             )docs")
-            .def_property_readonly("flavor", [](const TrajectoryParticle &self) {return self.flavor;}, R"docs(
+            .def_property_readonly("flavor", [](const TrajectoryParticle &self) { return self.flavor; }, R"docs(
                 Returns the flavor of the particle (NORMAL or TOPOLOGY).
 
                 :return: flavor of the particle
             )docs")
-            .def_property_readonly("position", [](const TrajectoryParticle &self) {return self.position;}, R"docs(
+            .def_property_readonly("position", [](const TrajectoryParticle &self) { return self.position; }, R"docs(
                 Returns the position of the particle as array of length 3.
 
                 :return: position of the particle
             )docs")
-            .def_property_readonly("id", [](const TrajectoryParticle &self) {return self.id;}, R"docs(
+            .def_property_readonly("id", [](const TrajectoryParticle &self) { return self.id; }, R"docs(
                 Returns the id of the particle.
 
                 :return: id of the particle
             )docs")
-            .def_property_readonly("t", [](const TrajectoryParticle &self) {return self.t;}, R"docs(
+            .def_property_readonly("t", [](const TrajectoryParticle &self) { return self.t; }, R"docs(
                 Returns the current simulation time.
 
                 :return: the simulation time
@@ -608,7 +656,8 @@ void exportUtils(py::module &m) {
     m.def("convert_readdyviewer", &convert_readdy_viewer, "h5_file_name"_a, "traj_data_set_name"_a,
           "begin"_a = 0, "end"_a = std::numeric_limits<int>::max(), "stride"_a = 1);
     m.def("read_trajectory", &read_trajectory, "filename"_a, "name"_a);
-    m.def("read_topologies_observable", &readTopologies, "filename"_a, "groupname"_a);
+    m.def("read_topologies_observable", &readTopologies, "filename"_a, "groupname"_a,
+          "begin"_a = 0, "end"_a = std::numeric_limits<int>::max(), "stride"_a = 1);
     m.def("read_reaction_observable", &read_reactions_obs, "filename"_a, "name"_a);
     py::add_ostream_redirect(m, "ostream_redirect");
 }

@@ -49,6 +49,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
+#include <pybind11/operators.h>
 #include <readdy/model/observables/Observables.h>
 #include <readdy/api/Simulation.h>
 #include <readdy/model/observables/io/Trajectory.h>
@@ -278,7 +279,8 @@ void exportObservables(py::module &apiModule, py::class_<type_, options...> &sim
     using TopologyRecord = readdy::model::top::TopologyRecord;
     py::class_<TopologyRecord>(apiModule, "TopologyRecord")
             .def_property_readonly("particles", [](const TopologyRecord &self) {return self.particleIndices;})
-            .def_property_readonly("edges", [](const TopologyRecord &self) {return self.edges; });
+            .def_property_readonly("edges", [](const TopologyRecord &self) {return self.edges; })
+            .def(py::self == py::self);
 
     simulation.def("register_observable_particle_positions", &registerObservable_Positions,
                    "stride"_a, "types"_a, "callback"_a = py::none())
