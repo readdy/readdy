@@ -265,7 +265,7 @@ class Simulation(object):
         supported_reaction_handlers = ("Gillespie", "UncontrolledApproximation", "DetailedBalance",)
         assert (isinstance(value, str) and value in supported_reaction_handlers) or \
                isinstance(value, _UserDefinedAction), \
-            "the reaction handler can only be one of {} or a user defined reaction handler"\
+            "the reaction handler can only be one of {} or a user defined reaction handler" \
                 .format(",".join(supported_reaction_handlers))
         self._reaction_handler = value
 
@@ -357,6 +357,16 @@ class Simulation(object):
         if isinstance(particle_types, str):
             particle_types = [particle_types]
         return self._simulation.add_topology(topology_type, particle_types, positions)
+
+    def add_particles_from_trajectory(self, file_name):
+        from readdy import Trajectory
+        import h5py
+
+        with h5py.File(file_name) as f:
+            n_frames = len(f['/readdy/trajectory/limits'])  #...todo
+
+
+        traj = Trajectory(file_name)
 
     def run(self, n_steps, timestep, show_system=True):
         """

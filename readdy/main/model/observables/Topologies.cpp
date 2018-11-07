@@ -68,7 +68,7 @@ void Topologies::evaluate() {
         for(auto&& edge : topologyPtr->graph().edges()) {
             record.edges.emplace_back(std::get<0>(edge)->particleIndex, std::get<1>(edge)->particleIndex);
         }
-
+        record.type = topologyPtr->type();
         result.push_back(record);
     }
 }

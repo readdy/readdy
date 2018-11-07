@@ -62,6 +62,24 @@ def get_particle_types(filename, dset_path="readdy/config/particle_types"):
     return result
 
 
+def get_topology_types(filename, dset_path="readdy/config/topology_types"):
+    """
+    Construct a dictionary from type strings to type-ids for the topology types used in the simulation that
+    created the output file.
+
+    :param filename: the readdy h5 file, containing context info
+    :param dset_path: path to the dataset within the h5 file
+    :return: dictionary that maps from type-string to type-id
+    """
+    result = dict()
+    with h5py.File(filename, "r") as f:
+        if dset_path in f:
+            topology_types = f[dset_path]
+            for t in topology_types:
+                result[t['name']] = result[t['type_id']]
+    return result
+
+
 def get_particle_types_list(fname, dset_path="readdy/config/particle_types"):
     """Construct a list of type strings for the particle types
     used in the simulation that created the output file.

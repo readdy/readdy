@@ -76,14 +76,20 @@ struct ParticleTypeInfo {
     std::size_t type_id;
     scalar diffusion_constant;
 };
+struct TopologyTypeInfo {
+    const char* name;
+    std::size_t type_id;
+};
 
 std::tuple<h5rd::NativeCompoundType, h5rd::STDCompoundType> getReactionInfoMemoryType(h5rd::Object::ParentFileRef ref);
 std::tuple<h5rd::NativeCompoundType, h5rd::STDCompoundType> getParticleTypeInfoType(h5rd::Object::ParentFileRef ref);
+std::tuple<h5rd::NativeCompoundType, h5rd::STDCompoundType> getTopologyTypeInfoType(h5rd::Object::ParentFileRef ref);
 
 void writeGeneralContextInformation(h5rd::Group &group, const Context &context);
 void writeSimulationSetup(h5rd::Group &group, const Context &context);
 void writeReactionInformation(h5rd::Group &group, const Context &context);
 void writeParticleTypeInformation(h5rd::Group &group, const Context &context);
+void writeTopologyTypeInformation(h5rd::Group &group, const Context &context);
 
 NAMESPACE_END(ioutils)
 NAMESPACE_END(model)
