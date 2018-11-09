@@ -46,6 +46,7 @@ from readdy.api.utils import vec3_of as _v3_of
 from readdy.util.progress import SimulationProgress as _SimulationProgress
 from readdy._internal.readdybinding.api import KernelProvider as _KernelProvider
 
+
 class Simulation(object):
 
     def __init__(self, kernel, context, unit_config, output_file="", integrator="EulerBDIntegrator",
@@ -320,6 +321,56 @@ class Simulation(object):
         handle = self._simulation.register_observable_flat_trajectory(stride)
         self._observables._observable_handles.append((name, chunk_size, handle))
 
+    def make_checkpoints(self, stride):
+        """
+        Records the system's state (particle positions and topology configuration) every stride steps into the
+        trajectory file. This can be used to load particle positions to continue a simulation.
+
+        :param stride: record a checkpoint every `stride` simulation steps
+        """
+        # particle positions
+        from readdy.api.trajectory import _CKPT
+        self.record_trajectory(stride=stride, name=_CKPT.POSITIONS_CKPT)
+        self.observe.topologies(stride=stride, save={'chunk_size': 100, 'name': _CKPT.TOPOLOGY_CKPT})
+
+    @staticmethod
+    def list_checkpoints(file_name):
+        """
+        Returns a list of checkpoints in a trajectory file.
+        :param file_name: the trajectory file
+        """
+        from readdy import Trajectory
+        traj = Trajectory(file_name)
+        return traj.list_checkpoints()
+
+    def load_particles_from_checkpoint(self, file_name, n=None):
+        """
+        Adds particles to the simulation as contained in the n-th checkpoint of a trajectory file.
+        :param file_name: the trajectory file
+        :param n: if n is None, retrieve configuration from latest checkpoint, otherwise use 'n-th' checkpoint, n >= 1
+        """
+        assert n >= 1, f"n must be positive but was {n}"
+        import numpy as _np
+        from readdy import Trajectory
+        from readdy.api.trajectory import _CKPT
+        checkpoints = self.list_checkpoints(file_name)
+        if n is None:
+            n = len(checkpoints)
+        else:
+            assert n < len(checkpoints), f"n={n} is out of bounds, only have {len(checkpoints)} checkpoints"
+
+        traj = Trajectory(file_name)
+        n_particles_per_frame, positions, types, ids = traj.to_numpy(start=n - 1, stop=n, name=_CKPT.POSITIONS_CKPT)
+        time, topology_records = traj.read_observable_topologies(start=n - 1, stop=n)
+        assert len(topology_records) == 1
+        topologies = topology_records[0]
+        for topology in topologies:
+            particle_types = [traj.species_name(types[0, i]) for i in topology.particles]
+            pos = _np.array([positions[0, i] for i in topology.particles])
+            top = self.add_topology("Polymer", particle_types, pos.squeeze())
+            for e in topology.edges:
+                top.graph.add_edge(e[0], e[1])
+
     def add_particle(self, type, position):
         """
         Adds a particle of a certain type to a certain position in the simulation box.
@@ -357,16 +408,6 @@ class Simulation(object):
         if isinstance(particle_types, str):
             particle_types = [particle_types]
         return self._simulation.add_topology(topology_type, particle_types, positions)
-
-    def add_particles_from_trajectory(self, file_name):
-        from readdy import Trajectory
-        import h5py
-
-        with h5py.File(file_name) as f:
-            n_frames = len(f['/readdy/trajectory/limits'])  #...todo
-
-
-        traj = Trajectory(file_name)
 
     def run(self, n_steps, timestep, show_system=True):
         """

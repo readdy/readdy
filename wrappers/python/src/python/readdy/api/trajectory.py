@@ -213,6 +213,11 @@ class GeneralInformation(object):
         return self._pbc
 
 
+class _CKPT(object):
+    TOPOLOGY_CKPT = 'topologies_ckpt'
+    POSITIONS_CKPT = 'trajectory_ckpt'
+
+
 class Trajectory(object):
     def __init__(self, filename, name=""):
         """
@@ -503,3 +508,27 @@ class Trajectory(object):
         pressure = _np.array([_calculate_pressure(self.box_volume, self.kbt, n_particles[i], virial[i])
                               for i in range(len(time_n_particles))])
         return time_virial, pressure
+
+    def list_checkpoints(self):
+        result = []
+        trajectory_group_path = 'readdy/trajectory/' + _CKPT.POSITIONS_CKPT
+        topology_group_path = 'readdy/observables/' + _CKPT.TOPOLOGY_CKPT
+        with _h5py.File(self._filename, 'r') as f:
+            if trajectory_group_path in f:
+                assert topology_group_path in f, "Corrupted checkpointing: Contains checkpoints for particles " \
+                                                 "but not for topologies"
+                t_particles = f[trajectory_group_path]['time'][:]
+                t_topologies = f[topology_group_path]['time'][:]
+
+                assert _np.array_equal(t_particles, t_topologies)
+
+                for ix, t in enumerate(t_particles):
+                    result.append((ix, {
+                        'checkpoint_number': ix,
+                        'step': t
+                    }))
+        return result
+
+    def to_numpy(self, name="", start=None, stop=None):
+        from readdy.api.utils import load_trajectory_to_npy
+        return load_trajectory_to_npy(self._filename, begin=start, end=stop, name=name)

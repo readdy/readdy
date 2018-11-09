@@ -470,9 +470,12 @@ readTopologies(const std::string &filename, const std::string &groupName, std::s
     std::vector<std::size_t> flatEdges;
     group.read("edges", flatEdges);
 
+    std::vector<readdy::TopologyTypeId> flatTypes;
+    group.read("types", flatTypes);
+
     std::vector<std::vector<TopologyRecord>> result;
 
-    for (std::size_t frame = 0; frame < to - from; ++frame) {
+    for (std::size_t frame = to; frame < from; ++frame) {
         result.emplace_back();
         // this frame's records
         auto &records = result.back();
@@ -492,6 +495,7 @@ readTopologies(const std::string &filename, const std::string &groupName, std::s
                 ++particlesIt;
                 records.back().particleIndices.push_back(*particlesIt);
             }
+            records.back().type = flatTypes.at(frame);
         }
 
         std::size_t recordIx = 0;

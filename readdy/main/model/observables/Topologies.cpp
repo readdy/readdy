@@ -33,6 +33,8 @@
  ********************************************************************/
 
 
+#include <iterator>
+
 #include <readdy/model/observables/Topologies.h>
 #include <readdy/model/Kernel.h>
 #include <readdy/model/observables/io/TimeSeriesWriter.h>
@@ -43,15 +45,16 @@ namespace model {
 namespace observables {
 
 struct Topologies::Impl {
-    std::array<std::size_t, 2> currentLimitsParticles {{0_z, 0_z}};
-    std::unique_ptr<h5rd::DataSet> dataSetParticles {nullptr};
-    std::unique_ptr<h5rd::DataSet> limitsParticles {nullptr};
+    std::array<std::size_t, 2> currentLimitsParticles{{0_z, 0_z}};
+    std::unique_ptr<h5rd::DataSet> dataSetParticles{nullptr};
+    std::unique_ptr<h5rd::DataSet> limitsParticles{nullptr};
+    std::unique_ptr<h5rd::VLENDataSet> types {nullptr};
 
-    std::array<std::size_t, 2> currentLimitsEdges {{0_z, 0_z}};
-    std::unique_ptr<h5rd::DataSet> dataSetEdges {nullptr};
-    std::unique_ptr<h5rd::DataSet> limitsEdges {nullptr};
+    std::array<std::size_t, 2> currentLimitsEdges{{0_z, 0_z}};
+    std::unique_ptr<h5rd::DataSet> dataSetEdges{nullptr};
+    std::unique_ptr<h5rd::DataSet> limitsEdges{nullptr};
 
-    std::unique_ptr<util::TimeSeriesWriter> time {nullptr};
+    std::unique_ptr<util::TimeSeriesWriter> time{nullptr};
 };
 
 Topologies::Topologies(Kernel *kernel, stride_type stride)
@@ -59,13 +62,13 @@ Topologies::Topologies(Kernel *kernel, stride_type stride)
 
 void Topologies::evaluate() {
     result.clear();
-    for(auto topologyPtr : kernel->stateModel().getTopologies()) {
+    for (auto topologyPtr : kernel->stateModel().getTopologies()) {
         top::TopologyRecord record;
 
         record.particleIndices = topologyPtr->getParticles();
         kernel->stateModel().toDenseParticleIndices(record.particleIndices.begin(), record.particleIndices.end());
 
-        for(auto&& edge : topologyPtr->graph().edges()) {
+        for (auto &&edge : topologyPtr->graph().edges()) {
             record.edges.emplace_back(std::get<0>(edge)->particleIndex, std::get<1>(edge)->particleIndex);
         }
         record.type = topologyPtr->type();
@@ -74,11 +77,12 @@ void Topologies::evaluate() {
 }
 
 void Topologies::flush() {
-    if(pimpl->dataSetParticles) pimpl->dataSetParticles->flush();
-    if(pimpl->limitsParticles) pimpl->limitsParticles->flush();
-    if(pimpl->dataSetEdges) pimpl->dataSetEdges->flush();
-    if(pimpl->limitsEdges) pimpl->limitsEdges->flush();
-    if(pimpl->time) pimpl->time->flush();
+    if (pimpl->dataSetParticles) pimpl->dataSetParticles->flush();
+    if (pimpl->limitsParticles) pimpl->limitsParticles->flush();
+    if (pimpl->dataSetEdges) pimpl->dataSetEdges->flush();
+    if (pimpl->limitsEdges) pimpl->limitsEdges->flush();
+    if (pimpl->time) pimpl->time->flush();
+    if (pimpl->types) pimpl->types->flush();
 }
 
 std::string Topologies::type() const {
@@ -104,13 +108,19 @@ void Topologies::initializeDataSet(File &file, const std::string &dataSetName, s
         pimpl->limitsParticles = group.createDataSet<std::size_t>("limitsParticles", fs, dims);
         pimpl->limitsEdges = group.createDataSet<std::size_t>("limitsEdges", fs, dims);
     }
+    {
+        // types
+        h5rd::dimensions fs = {flushStride};
+        h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
+        pimpl->types = group.createVLENDataSet<TopologyTypeId>("types", fs, dims);
+    }
 
     pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
 }
 
 void Topologies::append() {
-    std::size_t totalNParticles {0}, totalNEdges {0};
-    for(const auto &record : result) {
+    std::size_t totalNParticles{0}, totalNEdges{0};
+    for (const auto &record : result) {
         totalNParticles += record.particleIndices.size();
         totalNEdges += record.edges.size();
     }
@@ -127,11 +137,11 @@ void Topologies::append() {
     std::vector<std::array<std::size_t, 2>> flatEdges;
     flatEdges.reserve(totalNEdges + result.size());
 
-    for(const auto &r : result) {
+    for (const auto &r : result) {
         flatParticles.push_back(r.particleIndices.size());
         flatParticles.insert(std::end(flatParticles), std::begin(r.particleIndices), std::end(r.particleIndices));
         flatEdges.push_back(std::array<std::size_t, 2>{{r.edges.size(), 0}});
-        for(const auto &edge : r.edges) {
+        for (const auto &edge : r.edges) {
             flatEdges.push_back(std::array<std::size_t, 2>{{std::get<0>(edge), std::get<1>(edge)}});
         }
     }
@@ -141,6 +151,13 @@ void Topologies::append() {
     pimpl->dataSetEdges->append({flatEdges.size(), 2}, &flatEdges[0][0]);
     pimpl->limitsEdges->append({1, 2}, pimpl->currentLimitsEdges.data());
     pimpl->time->append(t_current);
+
+    {
+        std::vector<TopologyTypeId> types;
+        types.reserve(result.size());
+        std::transform(result.begin(), result.end(), std::back_inserter(types), [](const auto &r) { return r.type; });
+        pimpl->types->append({1}, &types);
+    }
 }
 
 Topologies::~Topologies() = default;
