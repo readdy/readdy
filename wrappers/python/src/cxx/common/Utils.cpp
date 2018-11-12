@@ -465,29 +465,34 @@ readTopologies(const std::string &filename, const std::string &groupName, std::s
         ));
     }
 
-    std::vector<std::size_t> flatParticles;
-    group.read("particles", flatParticles);
-    std::vector<std::size_t> flatEdges;
-    group.read("edges", flatEdges);
-
-    std::vector<readdy::TopologyTypeId> flatTypes;
-    group.read("types", flatTypes);
+    std::vector<std::vector<readdy::TopologyTypeId>> types;
+    group.readVLENSelection("types", types, {from}, {stride}, {to - from});
 
     std::vector<std::vector<TopologyRecord>> result;
 
-    for (std::size_t frame = to; frame < from; ++frame) {
+    std::size_t ix = 0;
+    for (std::size_t frame = from; frame < to; ++frame, ++ix) {
         result.emplace_back();
         // this frame's records
         auto &records = result.back();
 
-        const auto &particlesLimitBegin = limitsParticles.at(2 * frame);
-        const auto &particlesLimitEnd = limitsParticles.at(2 * frame + 1);
+        const auto &particlesLimitBegin = limitsParticles.at(2 * ix);
+        const auto &particlesLimitEnd = limitsParticles.at(2 * ix + 1);
         // since the edges are flattened, we actually have to multiply this by 2
-        const auto &edgesLimitBegin = limitsEdges.at(2 * frame);
-        const auto &edgesLimitEnd = limitsEdges.at(2 * frame + 1);
+        const auto &edgesLimitBegin = limitsEdges.at(2 * ix);
+        const auto &edgesLimitEnd = limitsEdges.at(2 * ix + 1);
 
-        for (auto particlesIt = flatParticles.begin() + particlesLimitBegin;
-             particlesIt != flatParticles.begin() + particlesLimitEnd; ++particlesIt) {
+        std::vector<std::size_t> flatParticles;
+        group.readSelection("particles", flatParticles, {particlesLimitBegin}, {stride}, {particlesLimitEnd - particlesLimitBegin});
+        std::vector<std::size_t> flatEdges;
+        //readdy::log::critical("edges {} - {}", edgesLimitBegin, edgesLimitEnd);
+        group.readSelection("edges", flatEdges, {edgesLimitBegin, 0}, {stride, 1}, {edgesLimitEnd - edgesLimitBegin, 2});
+
+
+        const auto &currentTypes = types.at(ix);
+        auto typesIt = currentTypes.begin();
+        for (auto particlesIt = flatParticles.begin();
+             particlesIt != flatParticles.end(); ++particlesIt) {
 
             records.emplace_back();
             auto nParticles = *particlesIt;
@@ -495,12 +500,18 @@ readTopologies(const std::string &filename, const std::string &groupName, std::s
                 ++particlesIt;
                 records.back().particleIndices.push_back(*particlesIt);
             }
-            records.back().type = flatTypes.at(frame);
+            records.back().type = *typesIt;
+            ++typesIt;
+        }
+
+        if (currentTypes.size() != records.size()) {
+            throw std::logic_error(fmt::format("for frame {} had {} topology types but {} topologies",
+                                               frame, currentTypes.size(), records.size()));
         }
 
         std::size_t recordIx = 0;
-        for (auto edgesIt = flatEdges.begin() + 2 * edgesLimitBegin;
-             edgesIt != flatEdges.begin() + 2 * edgesLimitEnd; ++recordIx) {
+        for (auto edgesIt = flatEdges.begin();
+             edgesIt != flatEdges.begin(); ++recordIx) {
             auto &currentRecord = records.at(recordIx);
 
             auto nEdges = *edgesIt;
