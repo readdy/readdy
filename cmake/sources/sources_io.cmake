@@ -32,7 +32,6 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                       #
 ####################################################################
 
-
 SET(SOURCES_DIR "${READDY_GLOBAL_DIR}/readdy/main/io")
 
 # hdf5
