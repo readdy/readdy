@@ -488,7 +488,6 @@ readTopologies(const std::string &filename, const std::string &groupName, std::s
         //readdy::log::critical("edges {} - {}", edgesLimitBegin, edgesLimitEnd);
         group.readSelection("edges", flatEdges, {edgesLimitBegin, 0}, {stride, 1}, {edgesLimitEnd - edgesLimitBegin, 2});
 
-
         const auto &currentTypes = types.at(ix);
         auto typesIt = currentTypes.begin();
         for (auto particlesIt = flatParticles.begin();
@@ -511,7 +510,7 @@ readTopologies(const std::string &filename, const std::string &groupName, std::s
 
         std::size_t recordIx = 0;
         for (auto edgesIt = flatEdges.begin();
-             edgesIt != flatEdges.begin(); ++recordIx) {
+             edgesIt != flatEdges.end(); ++recordIx) {
             auto &currentRecord = records.at(recordIx);
 
             auto nEdges = *edgesIt;

@@ -76,7 +76,8 @@ def get_topology_types(filename, dset_path="readdy/config/topology_types"):
         if dset_path in f:
             topology_types = f[dset_path]
             for t in topology_types:
-                result[t['name']] = result[t['type_id']]
+                name, type_id = t
+                result[name] = type_id
     return result
 
 

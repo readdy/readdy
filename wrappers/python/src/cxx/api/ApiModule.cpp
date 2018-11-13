@@ -123,7 +123,7 @@ void exportApi(py::module &api) {
                 }
                 return self.addTopology(name, particles);
             }, rvp::reference_internal)
-            .def("current_topologies", &sim::currentTopologies)
+            .def_property_readonly("current_topologies", &sim::currentTopologies)
             .def_property("context", [](sim &self) -> readdy::model::Context & {
                 return self.context();
             }, [](sim &self, const readdy::model::Context &context) {

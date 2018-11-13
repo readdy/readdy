@@ -349,7 +349,6 @@ class Simulation(object):
         :param file_name: the trajectory file
         :param n: if n is None, retrieve configuration from latest checkpoint, otherwise use 'n-th' checkpoint, n >= 1
         """
-        assert n >= 1, f"n must be positive but was {n}"
         import numpy as _np
         from readdy import Trajectory
         from readdy.api.trajectory import _CKPT
@@ -357,7 +356,8 @@ class Simulation(object):
         if n is None:
             n = len(checkpoints)
         else:
-            assert n < len(checkpoints), f"n={n} is out of bounds, only have {len(checkpoints)} checkpoints"
+            assert n <= len(checkpoints), f"n={n} is out of bounds, only have {len(checkpoints)} checkpoints"
+        assert n >= 1, f"n must be positive but was {n}"
 
         traj = Trajectory(file_name)
         n_particles_per_frame, positions, types, ids = traj.to_numpy(start=n - 1, stop=n, name=_CKPT.POSITIONS_CKPT)
@@ -367,7 +367,7 @@ class Simulation(object):
         for topology in topologies:
             particle_types = [traj.species_name(types[0, i]) for i in topology.particles]
             pos = _np.array([positions[0, i] for i in topology.particles])
-            top = self.add_topology("Polymer", particle_types, pos.squeeze())
+            top = self.add_topology(traj.topology_type_name(topology.type), particle_types, pos.squeeze())
             for e in topology.edges:
                 top.graph.add_edge(e[0], e[1])
 
@@ -408,6 +408,14 @@ class Simulation(object):
         if isinstance(particle_types, str):
             particle_types = [particle_types]
         return self._simulation.add_topology(topology_type, particle_types, positions)
+
+    @property
+    def current_topologies(self):
+        """
+        Returns a list of currently registered topologies
+        :return: a list of topologies
+        """
+        return self._simulation.current_topologies
 
     def run(self, n_steps, timestep, show_system=True):
         """

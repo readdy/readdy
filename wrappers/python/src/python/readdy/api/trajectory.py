@@ -230,8 +230,10 @@ class Trajectory(object):
         self._name = name
         self._diffusion_constants = _io_utils.get_diffusion_constants(filename)
         self._particle_types = _io_utils.get_particle_types(filename)
+        self._topology_types = _io_utils.get_topology_types(filename)
         self._reactions = []
         self._inverse_types_map = {v: k for k, v in self.particle_types.items()}
+        self._inverse_topology_types_map =  {v: k for k, v in self.topology_types.items()}
         self._general = GeneralInformation(filename)
         for _, reaction in _io_utils.get_reactions(filename).items():
             info = ReactionInfo(reaction["name"], reaction["id"], reaction["n_educts"],
@@ -247,6 +249,14 @@ class Trajectory(object):
         :return: the species' name
         """
         return self._inverse_types_map[id]
+
+    def topology_type_name(self, type_id):
+        """
+        Retrieves the topologies' type name according to the type id as stored in some observables
+        :param type_id: the type id
+        :return: the topologies' type name
+        """
+        return self._inverse_topology_types_map[type_id]
 
     @property
     def kbt(self):
@@ -279,6 +289,14 @@ class Trajectory(object):
         :return: the particle types
         """
         return self._particle_types
+
+    @property
+    def topology_types(self):
+        """
+        Returns a dictionary of topology type -> topology type ID
+        :return: the topology types
+        """
+        return self._topology_types
 
     @property
     def reactions(self):
