@@ -181,16 +181,16 @@ class TestObservablesIO(ReaDDyTestCase):
                 np.testing.assert_equal(len(types[t]), t + 3)
                 np.testing.assert_equal(len(ids[t]), t + 3)
                 np.testing.assert_equal(len(positions[t]), t + 3)
-                np.testing.assert_equal(types[t][0], particle_types["A"])
+                np.testing.assert_equal(types[t][0], particle_types["A"]["type_id"])
                 np.testing.assert_equal(positions[t][0][0], 0)
                 np.testing.assert_equal(positions[t][0][1], 0)
                 np.testing.assert_equal(positions[t][0][2], 0)
                 np.testing.assert_equal(positions[t][1][0], 0)
                 np.testing.assert_equal(positions[t][1][1], 0)
                 np.testing.assert_equal(positions[t][1][2], 0)
-                np.testing.assert_equal(types[t][1], particle_types["B"])
+                np.testing.assert_equal(types[t][1], particle_types["B"]["type_id"])
                 for others in range(2, len(types[t])):
-                    np.testing.assert_equal(types[t][others], particle_types["A"])
+                    np.testing.assert_equal(types[t][others], particle_types["A"]["type_id"])
                     np.testing.assert_equal(positions[t][others][0], 1.5)
                     np.testing.assert_equal(positions[t][others][1], 2.5)
                     np.testing.assert_equal(positions[t][others][2], 3.5)
@@ -334,7 +334,7 @@ class TestObservablesIO(ReaDDyTestCase):
             loop.write_config_to_file(f)
             loop.run(n_timesteps)
 
-        type_str_to_id = ioutils.get_particle_types(fname)
+        type_str_to_id = {k: x["type_id"] for k, x in ioutils.get_particle_types(fname).items()}
 
         with h5py.File(fname, "r") as f2:
             data = f2["readdy/observables/reactions"]

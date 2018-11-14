@@ -292,15 +292,15 @@ void TopologyRegistry::validateSpatialReaction(const SpatialReaction &reaction) 
             throw std::invalid_argument(
                     fmt::format("if is_fusion is false, flavors need to remain same, which is not the case "
                                         "for {} (flavor={}) -> {} (flavor={})", info1.name,
-                                particleflavor::particle_flavor_to_str(info1.flavor), infoTo1.name,
-                                particleflavor::particle_flavor_to_str(infoTo1.flavor)));
+                                particleflavor::particleFlavorToString(info1.flavor), infoTo1.name,
+                                particleflavor::particleFlavorToString(infoTo1.flavor)));
         }
         if (info2.flavor != infoTo2.flavor) {
             throw std::invalid_argument(
                     fmt::format("if is_fusion is false, flavors need to remain same, which is not the case "
                                         "for {} (flavor={}) -> {} (flavor={})", info2.name,
-                                particleflavor::particle_flavor_to_str(info2.flavor), infoTo2.name,
-                                particleflavor::particle_flavor_to_str(infoTo2.flavor)));
+                                particleflavor::particleFlavorToString(info2.flavor), infoTo2.name,
+                                particleflavor::particleFlavorToString(infoTo2.flavor)));
         }
     }
 

@@ -178,7 +178,10 @@ void exportCommon(py::module& common) {
     py::class_<rpy::ReadableParticle>(common, "Particle")
             .def_property_readonly("pos", &rpy::ReadableParticle::pos)
             .def_property_readonly("type", &rpy::ReadableParticle::type)
-            .def_property_readonly("id", &rpy::ReadableParticle::id);
+            .def_property_readonly("id", &rpy::ReadableParticle::id)
+            .def("__repr__", [](const rpy::ReadableParticle &self) {
+                return fmt::format("Particle(pos={}, type={}, id={})", self.pos(), self.type(), self.id());
+            });
 
     py::class_<readdy::Vec3>(common, "Vec")
             .def(py::init<readdy::scalar, readdy::scalar, readdy::scalar>())

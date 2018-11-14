@@ -53,7 +53,7 @@ set(SOURCE_FILES
         api/ApiModule.cpp)
 pybind11_add_module(readdybinding ${SOURCE_FILES})
 target_include_directories(readdybinding PUBLIC "${READDY_INCLUDE_DIRS}")
-target_link_libraries(readdybinding LINK_PUBLIC ${READDY_DEPENDENT_LIBRARIES} readdy)
+target_link_libraries(readdybinding PUBLIC ${READDY_DEPENDENT_LIBRARIES} readdy)
 
 SET_TARGET_PROPERTIES(readdybinding
         PROPERTIES

@@ -280,6 +280,7 @@ void exportObservables(py::module &apiModule, py::class_<type_, options...> &sim
     py::class_<TopologyRecord>(apiModule, "TopologyRecord")
             .def_property_readonly("particles", [](const TopologyRecord &self) {return self.particleIndices;})
             .def_property_readonly("edges", [](const TopologyRecord &self) {return self.edges; })
+            .def_property_readonly("type", [](const TopologyRecord &self) { return self.type; })
             .def(py::self == py::self);
 
     simulation.def("register_observable_particle_positions", &registerObservable_Positions,

@@ -68,7 +68,7 @@ SET(READDY_LOG_CMAKE_CONFIGURATION OFF CACHE BOOL "If turned on, the status of r
 #####################################
 
 # minimum cmake version
-CMAKE_MINIMUM_REQUIRED(VERSION 3.2.0)
+cmake_minimum_required(VERSION 3.11)
 
 # extend cmake module path to include readdy custom modules
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
@@ -197,6 +197,7 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
 
     MESSAGE(STATUS "Initializing and updating submodules")
     EXECUTE_PROCESS(COMMAND git submodule update --init WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+    add_subdirectory(libraries/h5rd)
 
     #####################################
     #                                   #
@@ -268,7 +269,7 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
         MESSAGE(STATUS "Include directories: ${READDY_INCLUDE_DIRS}")
         ADD_LIBRARY(${READDY_PROJECT_NAME} ${READDY_ALL_SOURCES} ${READDY_GLOBAL_INCLUDE_DIR})
         TARGET_INCLUDE_DIRECTORIES(${READDY_PROJECT_NAME} PUBLIC ${READDY_INCLUDE_DIRS})
-        TARGET_LINK_LIBRARIES(${READDY_PROJECT_NAME} ${READDY_DEPENDENT_LIBRARIES})
+        TARGET_LINK_LIBRARIES(${READDY_PROJECT_NAME} PUBLIC ${READDY_DEPENDENT_LIBRARIES})
         SET_TARGET_PROPERTIES(${READDY_PROJECT_NAME} PROPERTIES
                 LINK_FLAGS "${EXTRA_LINK_FLAGS}"
                 COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}")

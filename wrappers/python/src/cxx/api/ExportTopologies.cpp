@@ -243,6 +243,9 @@ void exportTopologies(py::module &m) {
 
                 :return: the particles
             )topdoc")
+            .def_property_readonly("type", [](const topology &self) {
+                return self.context().topologyRegistry().nameOf(self.type());
+            })
             .def("particle_type_of_vertex", [](const topology &self, const vertex &v) -> std::string {
                 return self.context().particleTypes().nameOf(self.particleForVertex(v).type());
             }, R"topdoc(
@@ -322,6 +325,18 @@ void exportTopologies(py::module &m) {
 
                 :return: list of edges
             )topdoc")
+            .def("has_edge", [](graph &self, std::size_t v1, std::size_t v2) {
+                if (v1 < self.vertices().size() && v2 < self.vertices().size()) {
+                    if(v2 < v1) std::swap(v1, v2);
+                    auto it1 = self.vertices().begin();
+                    std::advance(it1, v1);
+                    auto it2 = it1;
+                    std::advance(it2, v2-v1);
+                    return self.hasEdge(std::make_tuple(it1, it2));
+                } else {
+                    throw std::invalid_argument("vertices out of bounds!");
+                }
+            }, "vertex_index_1"_a, "vertex_index_2"_a)
             .def("add_edge", [](graph &self, std::size_t v1, std::size_t v2) {
                 if (v1 < self.vertices().size() && v2 < self.vertices().size()) {
                     if(v2 < v1) std::swap(v1, v2);

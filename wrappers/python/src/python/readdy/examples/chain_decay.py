@@ -132,7 +132,7 @@ class ChainDecay(object):
                 .evaluate_topology_reactions()\
                 .write_config_to_file(f)\
                 .configure_and_run(time_steps, self.time_step)
-        print("currently %s topologies" % len(sim.current_topologies()))
+        print("currently %s topologies" % len(sim.current_topologies))
 
 
 if __name__ == '__main__':

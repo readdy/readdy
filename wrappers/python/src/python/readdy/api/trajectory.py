@@ -39,12 +39,14 @@ Created on 28.09.17
 """
 
 import os as _os
+import typing as _typing
 
 import h5py as _h5py
 import numpy as _np
 
 from readdy._internal.readdybinding.common.util import read_reaction_observable as _read_reaction_observable
 from readdy._internal.readdybinding.common.util import read_trajectory as _read_trajectory
+from readdy._internal.readdybinding.common.util import TrajectoryParticle
 from readdy._internal.readdybinding.common.util import read_topologies_observable as _read_topologies
 from readdy.util.observable_utils import calculate_pressure as _calculate_pressure
 
@@ -213,6 +215,11 @@ class GeneralInformation(object):
         return self._pbc
 
 
+class _CKPT(object):
+    TOPOLOGY_CKPT = 'topologies_ckpt'
+    POSITIONS_CKPT = 'trajectory_ckpt'
+
+
 class Trajectory(object):
     def __init__(self, filename, name=""):
         """
@@ -225,8 +232,11 @@ class Trajectory(object):
         self._name = name
         self._diffusion_constants = _io_utils.get_diffusion_constants(filename)
         self._particle_types = _io_utils.get_particle_types(filename)
+        self._particle_type_mapping = {k: v['type_id'] for k, v in self._particle_types.items()}
+        self._topology_types = _io_utils.get_topology_types(filename)
         self._reactions = []
         self._inverse_types_map = {v: k for k, v in self.particle_types.items()}
+        self._inverse_topology_types_map =  {v: k for k, v in self.topology_types.items()}
         self._general = GeneralInformation(filename)
         for _, reaction in _io_utils.get_reactions(filename).items():
             info = ReactionInfo(reaction["name"], reaction["id"], reaction["n_educts"],
@@ -242,6 +252,29 @@ class Trajectory(object):
         :return: the species' name
         """
         return self._inverse_types_map[id]
+
+    def topology_type_name(self, type_id):
+        """
+        Retrieves the topologies' type name according to the type id as stored in some observables
+        :param type_id: the type id
+        :return: the topologies' type name
+        """
+        return self._inverse_topology_types_map[type_id]
+
+    def is_topology_particle_type(self, particle_type):
+        """
+        Checks whether a particle type belongs to a topology or a freely diffusing particle.
+        :param particle_type: the particle type, either id (int) or name (str)
+        :return: true if the particle type belongs to topologies
+        """
+        import numbers
+        pname = None
+        if isinstance(particle_type, numbers.Number):
+            pname = self.species_name(particle_type)
+        if isinstance(particle_type, str):
+            pname = particle_type
+        assert pname is not None, f"Unknown particle type: {particle_type}"
+        return self._particle_types[pname]['flavor'] == 'TOPOLOGY'
 
     @property
     def kbt(self):
@@ -273,7 +306,15 @@ class Trajectory(object):
         Returns a dictionary of particle type -> particle type ID
         :return: the particle types
         """
-        return self._particle_types
+        return self._particle_type_mapping
+
+    @property
+    def topology_types(self):
+        """
+        Returns a dictionary of topology type -> topology type ID
+        :return: the topology types
+        """
+        return self._topology_types
 
     @property
     def reactions(self):
@@ -297,7 +338,7 @@ class Trajectory(object):
         to_xyz(self._filename, self._name, xyz_filename=xyz_filename, generate_tcl=generate_tcl,
                tcl_with_grid=tcl_with_grid, particle_radii=particle_radii)
 
-    def read(self):
+    def read(self) -> _typing.List[TrajectoryParticle]:
         """
         Reads the trajectory into memory as a list of lists.
 
@@ -503,3 +544,27 @@ class Trajectory(object):
         pressure = _np.array([_calculate_pressure(self.box_volume, self.kbt, n_particles[i], virial[i])
                               for i in range(len(time_n_particles))])
         return time_virial, pressure
+
+    def list_checkpoints(self):
+        result = []
+        trajectory_group_path = 'readdy/trajectory/' + _CKPT.POSITIONS_CKPT
+        topology_group_path = 'readdy/observables/' + _CKPT.TOPOLOGY_CKPT
+        with _h5py.File(self._filename, 'r') as f:
+            if trajectory_group_path in f:
+                assert topology_group_path in f, "Corrupted checkpointing: Contains checkpoints for particles " \
+                                                 "but not for topologies"
+                t_particles = f[trajectory_group_path]['time'][:]
+                t_topologies = f[topology_group_path]['time'][:]
+
+                assert _np.array_equal(t_particles, t_topologies)
+
+                for ix, t in enumerate(t_particles):
+                    result.append({
+                        'number': ix,
+                        'step': t
+                    })
+        return result
+
+    def to_numpy(self, name="", start=None, stop=None):
+        from readdy.api.utils import load_trajectory_to_npy
+        return load_trajectory_to_npy(self._filename, begin=start, end=stop, name=name)

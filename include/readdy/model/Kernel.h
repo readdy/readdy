@@ -136,7 +136,10 @@ public:
     TopologyParticle createTopologyParticle(const std::string &type, const Vec3 &pos) const {
         const auto& info = context().particleTypes().infoOf(type);
         if(info.flavor != particleflavor::TOPOLOGY) {
-            throw std::invalid_argument("You can only create topology particles of a type that is topology flavored.");
+            throw std::invalid_argument(fmt::format(
+                    "You can only create topology particles of a type that is topology flavored. "
+                    "Type was {}, flavor {}.", type, readdy::model::particleflavor::particleFlavorToString(info.flavor)
+                    ));
         }
         return TopologyParticle(pos, info.typeId);
     };

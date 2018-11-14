@@ -38,6 +38,7 @@ particle types and reactions. This module shall be standalone and thus not depen
 It shall only use the specification of the output objects.
 
 @author: chrisfroe
+@author: clonker
 @license: BSD-3
 """
 
@@ -58,7 +59,29 @@ def get_particle_types(filename, dset_path="readdy/config/particle_types"):
         if dset_path in f:
             p_types = f[dset_path]
             for p_type in p_types:
-                result[p_type["name"]] = p_type["type_id"]
+                result[p_type["name"]] = {
+                    "type_id": p_type["type_id"],
+                    "flavor": p_type["flavor"]
+                }
+    return result
+
+
+def get_topology_types(filename, dset_path="readdy/config/topology_types"):
+    """
+    Construct a dictionary from type strings to type-ids for the topology types used in the simulation that
+    created the output file.
+
+    :param filename: the readdy h5 file, containing context info
+    :param dset_path: path to the dataset within the h5 file
+    :return: dictionary that maps from type-string to type-id
+    """
+    result = dict()
+    with h5py.File(filename, "r") as f:
+        if dset_path in f:
+            topology_types = f[dset_path]
+            for t in topology_types:
+                name, type_id = t
+                result[name] = type_id
     return result
 
 

@@ -109,17 +109,17 @@ class TestTopLevelAPI(ReaDDyTestCase):
     def test_change_temperature(self):
         rds1 = readdy.ReactionDiffusionSystem(box_size=[10., 10., 10.], temperature=300.)
         rds1.temperature = 293.
-        self.assertEquals(rds1.temperature.magnitude, 293.)
+        self.assertEqual(rds1.temperature.magnitude, 293.)
 
         rds2 = readdy.ReactionDiffusionSystem(box_size=[10., 10., 10.], temperature=300.,
                                               unit_system={'energy_unit': 'joule'})
         rds2.temperature = 293.
-        self.assertEquals(rds2.temperature.magnitude, 293.)
+        self.assertEqual(rds2.temperature.magnitude, 293.)
 
         rds3 = readdy.ReactionDiffusionSystem(box_size=[10., 10., 10.], temperature=30. * readdy.units.kelvin,
                                               unit_system={'energy_unit': 'joule'})
         rds3.temperature = 293.
-        self.assertEquals(rds3.temperature.magnitude, 293.)
+        self.assertEqual(rds3.temperature.magnitude, 293.)
 
         rds4 = readdy.ReactionDiffusionSystem(box_size=[10., 10., 10.], temperature=300.)
         rds4.temperature = 293. * readdy.units.rankine
@@ -421,7 +421,7 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
         simulation.record_trajectory()
         simulation.observe.topologies(1)
         simulation.show_progress = False
-        simulation.run(n_steps=1000, timestep=1e-2, show_system=False)
+        simulation.run(n_steps=100, timestep=1e-2, show_system=False)
 
         t = readdy.Trajectory(simulation.output_file)
         entries = t.read()

@@ -130,11 +130,11 @@ class TestTopologyReactions(ReaDDyTestCase):
 
         # h = sim.register_observable_n_particles(1, [], lambda x: print("n particles=%s" % x))
 
-        np.testing.assert_equal(1, len(sim.current_topologies()))
+        np.testing.assert_equal(1, len(sim.current_topologies))
 
         sim.run(500, 1.)
 
-        np.testing.assert_equal(0, len(sim.current_topologies()))
+        np.testing.assert_equal(0, len(sim.current_topologies))
 
     def test_edges_decay(self):
         def dissociation_reaction_function(topology):

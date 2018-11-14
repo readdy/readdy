@@ -46,6 +46,7 @@ from readdy.api.utils import vec3_of as _v3_of
 from readdy.util.progress import SimulationProgress as _SimulationProgress
 from readdy._internal.readdybinding.api import KernelProvider as _KernelProvider
 
+
 class Simulation(object):
 
     def __init__(self, kernel, context, unit_config, output_file="", integrator="EulerBDIntegrator",
@@ -265,7 +266,7 @@ class Simulation(object):
         supported_reaction_handlers = ("Gillespie", "UncontrolledApproximation", "DetailedBalance",)
         assert (isinstance(value, str) and value in supported_reaction_handlers) or \
                isinstance(value, _UserDefinedAction), \
-            "the reaction handler can only be one of {} or a user defined reaction handler"\
+            "the reaction handler can only be one of {} or a user defined reaction handler" \
                 .format(",".join(supported_reaction_handlers))
         self._reaction_handler = value
 
@@ -320,6 +321,76 @@ class Simulation(object):
         handle = self._simulation.register_observable_flat_trajectory(stride)
         self._observables._observable_handles.append((name, chunk_size, handle))
 
+    def make_checkpoints(self, stride):
+        """
+        Records the system's state (particle positions and topology configuration) every stride steps into the
+        trajectory file. This can be used to load particle positions to continue a simulation.
+
+        :param stride: record a checkpoint every `stride` simulation steps
+        """
+        # particle positions
+        from readdy.api.trajectory import _CKPT
+        self.record_trajectory(stride=stride, name=_CKPT.POSITIONS_CKPT)
+        self.observe.topologies(stride=stride, save={'chunk_size': 100, 'name': _CKPT.TOPOLOGY_CKPT})
+
+    @staticmethod
+    def list_checkpoints(file_name):
+        """
+        Returns a list of checkpoints in a trajectory file.
+        :param file_name: the trajectory file
+        """
+        from readdy import Trajectory
+        traj = Trajectory(file_name)
+        return traj.list_checkpoints()
+
+    def load_particles_from_checkpoint(self, file_name, n=None):
+        """
+        Adds particles to the simulation as contained in the n-th checkpoint of a trajectory file.
+        :param file_name: the trajectory file
+        :param n: if n is None, retrieve configuration from latest checkpoint, otherwise use 'n-th' checkpoint, n >= 0
+        """
+        import numpy as _np
+        from readdy import Trajectory
+        from readdy.api.trajectory import _CKPT
+        from readdy.util.io_utils import get_particle_types
+        checkpoints = self.list_checkpoints(file_name)
+        if n is None:
+            n = len(checkpoints)-1
+        else:
+            assert n < len(checkpoints), f"n={n} is out of bounds, only have {len(checkpoints)} checkpoints"
+        assert n >= 0, f"n must be positive but was {n}"
+
+        # group particle types by flavor (NORMAL, TOPOLOGY)
+        ptypes = get_particle_types(filename=file_name)
+        normal_types = []
+        topology_types = []
+        for t in ptypes.values():
+            if t['flavor'] == 'TOPOLOGY':
+                topology_types.append(t['type_id'])
+            if t['flavor'] == 'NORMAL':
+                normal_types.append(t['type_id'])
+
+        # load frame into memory
+        traj = Trajectory(file_name)
+        n_particles_per_frame, positions, types, ids = traj.to_numpy(start=n, stop=n+1, name=_CKPT.POSITIONS_CKPT)
+
+        # add particles with flavor NORMAL
+        for normal_type in normal_types:
+            tixs = _np.argwhere(types[0] == normal_type)
+            pos = positions[0][tixs].squeeze()
+            if len(pos) > 0:
+                self.add_particles(traj.species_name(normal_type), _np.atleast_2d(pos))
+
+        # add topologies
+        time, topology_records = traj.read_observable_topologies(start=n, stop=n+1, data_set_name=_CKPT.TOPOLOGY_CKPT)
+        assert len(topology_records) == 1
+        for topology in topology_records[0]:
+            particle_types = [traj.species_name(types[0, i]) for i in topology.particles]
+            pos = _np.atleast_2d(_np.array([positions[0, i] for i in topology.particles]))
+            top = self.add_topology(traj.topology_type_name(topology.type), particle_types, pos)
+            for e in topology.edges:
+                top.graph.add_edge(e[0], e[1])
+
     def add_particle(self, type, position):
         """
         Adds a particle of a certain type to a certain position in the simulation box.
@@ -353,10 +424,26 @@ class Simulation(object):
         :return: the topology object
         """
         positions = self._unit_conf.convert(positions, self.length_unit)
-        assert positions.shape[1] == 3, "shape[1] has to be 3 but was {}".format(positions.shape[0])
+        assert positions.shape[1] == 3, "shape[1] has to be 3 but shape was {}".format(positions.shape)
         if isinstance(particle_types, str):
             particle_types = [particle_types]
         return self._simulation.add_topology(topology_type, particle_types, positions)
+
+    @property
+    def current_particles(self):
+        """
+        Returns a list of currently added particles.
+        :return: a list of currently added particles
+        """
+        return self._simulation.current_particles
+
+    @property
+    def current_topologies(self):
+        """
+        Returns a list of currently registered topologies
+        :return: a list of topologies
+        """
+        return self._simulation.current_topologies
 
     def run(self, n_steps, timestep, show_system=True):
         """

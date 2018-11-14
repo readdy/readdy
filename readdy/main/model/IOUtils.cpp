@@ -95,19 +95,49 @@ void writeParticleTypeInformation(h5rd::Group &group, const Context &context) {
     auto h5types = getParticleTypeInfoType(group.parentFile());
 
     const auto &types = context.particleTypes().typeMapping();
-    std::vector<ParticleTypeInfo> type_info_vec;
+    std::vector<ParticleTypeInfo> typeInfoVec;
     for (const auto &p_type : types) {
-        ParticleTypeInfo info{p_type.first.c_str(), p_type.second,
-                              context.particleTypes().diffusionConstantOf(p_type.first)};
-        type_info_vec.push_back(info);
+        const auto &info = context.particleTypes().infoOf(p_type.second);
+        typeInfoVec.push_back(ParticleTypeInfo{
+                .name = info.name.c_str(),
+                .type_id = info.typeId,
+                .diffusion_constant = info.diffusionConstant,
+                .flavor = [](particle_flavor v) -> const char * {
+                    if (v == particleflavor::NORMAL) return "NORMAL";
+                    if (v == particleflavor::TOPOLOGY) return "TOPOLOGY";
+                    if (v == particleflavor::MEMBRANE) return "MEMBRANE";
+                    return "UNKNOWN";
+                }(info.flavor)
+        });
     }
-    if (!type_info_vec.empty()) {
+    if (!typeInfoVec.empty()) {
         h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
-        h5rd::dimensions extent = {type_info_vec.size()};
+        h5rd::dimensions extent = {typeInfoVec.size()};
         std::vector<h5rd::Filter*> filters;
         auto dset = group.createDataSet("particle_types", extent, dims, std::get<0>(h5types),
                                         std::get<1>(h5types), filters);
-        dset->append(extent, type_info_vec.data());
+        dset->append(extent, typeInfoVec.data());
+    }
+}
+
+void writeTopologyTypeInformation(h5rd::Group &group, const Context &context) {
+    auto h5types = getTopologyTypeInfoType(group.parentFile());
+
+    const auto &types = context.topologyRegistry().types();
+    std::vector<TopologyTypeInfo> infoVec;
+    for (const auto &t : types) {
+        TopologyTypeInfo info{
+            .name = t.name.data(),
+            .type_id = static_cast<std::size_t>(t.type)
+        };
+        infoVec.push_back(info);
+    }
+    if (!infoVec.empty()) {
+        h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
+        h5rd::dimensions extent = {infoVec.size()};
+        std::vector<h5rd::Filter*> filters;
+        auto dset = group.createDataSet("topology_types", extent, dims, std::get<0>(h5types), std::get<1>(h5types), {});
+        dset->append(extent, infoVec.data());
     }
 }
 
@@ -115,11 +145,21 @@ std::tuple<h5rd::NativeCompoundType, h5rd::STDCompoundType> getParticleTypeInfoT
     using namespace h5rd;
     NativeCompoundType nct = NativeCompoundTypeBuilder(sizeof(ParticleTypeInfo), std::move(ref))
             .insertString("name", offsetof(ParticleTypeInfo, name))
+            .insertString("flavor", offsetof(ParticleTypeInfo, flavor))
             .insert<decltype(std::declval<ParticleTypeInfo>().type_id)>("type_id", offsetof(ParticleTypeInfo, type_id))
             .insert<decltype(std::declval<ParticleTypeInfo>().diffusion_constant)>("diffusion_constant", offsetof(ParticleTypeInfo, diffusion_constant))
             .build();
     return std::make_tuple(nct, STDCompoundType(nct));
 };
+
+std::tuple<h5rd::NativeCompoundType, h5rd::STDCompoundType> getTopologyTypeInfoType(h5rd::Object::ParentFileRef ref) {
+    using namespace h5rd;
+    NativeCompoundType nct = NativeCompoundTypeBuilder(sizeof(TopologyTypeInfo), std::move(ref))
+            .insertString("name", offsetof(TopologyTypeInfo, name))
+            .insert<decltype(std::declval<TopologyTypeInfo>().type_id)>("type_id", offsetof(TopologyTypeInfo, type_id))
+            .build();
+    return std::make_tuple(nct, STDCompoundType(nct));
+}
 
 std::tuple<h5rd::NativeCompoundType, h5rd::STDCompoundType> getReactionInfoMemoryType(h5rd::Object::ParentFileRef ref) {
     using namespace h5rd;
@@ -140,6 +180,7 @@ std::tuple<h5rd::NativeCompoundType, h5rd::STDCompoundType> getReactionInfoMemor
 
 void writeSimulationSetup(h5rd::Group &group, const Context &context) {
     writeParticleTypeInformation(group, context);
+    writeTopologyTypeInformation(group, context);
     writeReactionInformation(group, context);
     writeGeneralContextInformation(group, context);
 }
