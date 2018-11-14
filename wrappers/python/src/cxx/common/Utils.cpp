@@ -583,7 +583,7 @@ std::vector<std::vector<TrajectoryParticle>> read_trajectory(const std::string &
 
         for (auto it = entries.begin() + begin; it != entries.begin() + end; ++it) {
             currentFrame.emplace_back(typeMapping[it->typeId],
-                                      readdy::model::particleflavor::particle_flavor_to_str(it->flavor),
+                                      readdy::model::particleflavor::particleFlavorToString(it->flavor),
                                       it->pos.data, it->id, *timeIt);
         }
     }

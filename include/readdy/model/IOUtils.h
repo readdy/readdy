@@ -75,6 +75,7 @@ struct ParticleTypeInfo {
     const char* name;
     std::size_t type_id;
     scalar diffusion_constant;
+    const char* flavor;
 };
 struct TopologyTypeInfo {
     const char* name;

@@ -347,27 +347,46 @@ class Simulation(object):
         """
         Adds particles to the simulation as contained in the n-th checkpoint of a trajectory file.
         :param file_name: the trajectory file
-        :param n: if n is None, retrieve configuration from latest checkpoint, otherwise use 'n-th' checkpoint, n >= 1
+        :param n: if n is None, retrieve configuration from latest checkpoint, otherwise use 'n-th' checkpoint, n >= 0
         """
         import numpy as _np
         from readdy import Trajectory
         from readdy.api.trajectory import _CKPT
+        from readdy.util.io_utils import get_particle_types
         checkpoints = self.list_checkpoints(file_name)
         if n is None:
-            n = len(checkpoints)
+            n = len(checkpoints)-1
         else:
-            assert n <= len(checkpoints), f"n={n} is out of bounds, only have {len(checkpoints)} checkpoints"
-        assert n >= 1, f"n must be positive but was {n}"
+            assert n < len(checkpoints), f"n={n} is out of bounds, only have {len(checkpoints)} checkpoints"
+        assert n >= 0, f"n must be positive but was {n}"
 
+        # group particle types by flavor (NORMAL, TOPOLOGY)
+        ptypes = get_particle_types(filename=file_name)
+        normal_types = []
+        topology_types = []
+        for t in ptypes.values():
+            if t['flavor'] == 'TOPOLOGY':
+                topology_types.append(t['type_id'])
+            if t['flavor'] == 'NORMAL':
+                normal_types.append(t['type_id'])
+
+        # load frame into memory
         traj = Trajectory(file_name)
-        n_particles_per_frame, positions, types, ids = traj.to_numpy(start=n - 1, stop=n, name=_CKPT.POSITIONS_CKPT)
-        time, topology_records = traj.read_observable_topologies(start=n - 1, stop=n)
+        n_particles_per_frame, positions, types, ids = traj.to_numpy(start=n, stop=n+1, name=_CKPT.POSITIONS_CKPT)
+
+        # add particles with flavor NORMAL
+        for normal_type in normal_types:
+            tixs = _np.argwhere(types[0] == normal_type)
+            pos = positions[0][tixs].squeeze()
+            self.add_particles(traj.species_name(normal_type), pos)
+
+        # add topologies
+        time, topology_records = traj.read_observable_topologies(start=n, stop=n+1, data_set_name=_CKPT.TOPOLOGY_CKPT)
         assert len(topology_records) == 1
-        topologies = topology_records[0]
-        for topology in topologies:
+        for topology in topology_records[0]:
             particle_types = [traj.species_name(types[0, i]) for i in topology.particles]
-            pos = _np.array([positions[0, i] for i in topology.particles])
-            top = self.add_topology(traj.topology_type_name(topology.type), particle_types, pos.squeeze())
+            pos = _np.atleast_2d(_np.array([positions[0, i] for i in topology.particles]))
+            top = self.add_topology(traj.topology_type_name(topology.type), particle_types, pos)
             for e in topology.edges:
                 top.graph.add_edge(e[0], e[1])
 
@@ -404,10 +423,18 @@ class Simulation(object):
         :return: the topology object
         """
         positions = self._unit_conf.convert(positions, self.length_unit)
-        assert positions.shape[1] == 3, "shape[1] has to be 3 but was {}".format(positions.shape[0])
+        assert positions.shape[1] == 3, "shape[1] has to be 3 but shape was {}".format(positions.shape)
         if isinstance(particle_types, str):
             particle_types = [particle_types]
         return self._simulation.add_topology(topology_type, particle_types, positions)
+
+    @property
+    def current_particles(self):
+        """
+        Returns a list of currently added particles.
+        :return: a list of currently added particles
+        """
+        return self._simulation.current_particles
 
     @property
     def current_topologies(self):

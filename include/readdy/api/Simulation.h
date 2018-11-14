@@ -123,6 +123,10 @@ public:
         return _kernel->stateModel().getTopologies();
     }
 
+    auto currentParticles() const {
+        return _kernel->stateModel().getParticles();
+    }
+
     /**
      * Method yielding a collection of particles that corresponds to the particles currently contained in the given
      * topology instance.

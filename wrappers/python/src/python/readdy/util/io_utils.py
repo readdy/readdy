@@ -38,6 +38,7 @@ particle types and reactions. This module shall be standalone and thus not depen
 It shall only use the specification of the output objects.
 
 @author: chrisfroe
+@author: clonker
 @license: BSD-3
 """
 
@@ -58,7 +59,10 @@ def get_particle_types(filename, dset_path="readdy/config/particle_types"):
         if dset_path in f:
             p_types = f[dset_path]
             for p_type in p_types:
-                result[p_type["name"]] = p_type["type_id"]
+                result[p_type["name"]] = {
+                    "type_id": p_type["type_id"],
+                    "flavor": p_type["flavor"]
+                }
     return result
 
 

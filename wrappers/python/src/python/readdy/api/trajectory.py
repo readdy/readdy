@@ -39,12 +39,14 @@ Created on 28.09.17
 """
 
 import os as _os
+import typing as _typing
 
 import h5py as _h5py
 import numpy as _np
 
 from readdy._internal.readdybinding.common.util import read_reaction_observable as _read_reaction_observable
 from readdy._internal.readdybinding.common.util import read_trajectory as _read_trajectory
+from readdy._internal.readdybinding.common.util import TrajectoryParticle
 from readdy._internal.readdybinding.common.util import read_topologies_observable as _read_topologies
 from readdy.util.observable_utils import calculate_pressure as _calculate_pressure
 
@@ -230,6 +232,7 @@ class Trajectory(object):
         self._name = name
         self._diffusion_constants = _io_utils.get_diffusion_constants(filename)
         self._particle_types = _io_utils.get_particle_types(filename)
+        self._particle_type_mapping = {k: v['type_id'] for k, v in self._particle_types.items()}
         self._topology_types = _io_utils.get_topology_types(filename)
         self._reactions = []
         self._inverse_types_map = {v: k for k, v in self.particle_types.items()}
@@ -257,6 +260,21 @@ class Trajectory(object):
         :return: the topologies' type name
         """
         return self._inverse_topology_types_map[type_id]
+
+    def is_topology_particle_type(self, particle_type):
+        """
+        Checks whether a particle type belongs to a topology or a freely diffusing particle.
+        :param particle_type: the particle type, either id (int) or name (str)
+        :return: true if the particle type belongs to topologies
+        """
+        import numbers
+        pname = None
+        if isinstance(particle_type, numbers.Number):
+            pname = self.species_name(particle_type)
+        if isinstance(particle_type, str):
+            pname = particle_type
+        assert pname is not None, f"Unknown particle type: {particle_type}"
+        return self._particle_types[pname]['flavor'] == 'TOPOLOGY'
 
     @property
     def kbt(self):
@@ -288,7 +306,7 @@ class Trajectory(object):
         Returns a dictionary of particle type -> particle type ID
         :return: the particle types
         """
-        return self._particle_types
+        return self._particle_type_mapping
 
     @property
     def topology_types(self):
@@ -320,7 +338,7 @@ class Trajectory(object):
         to_xyz(self._filename, self._name, xyz_filename=xyz_filename, generate_tcl=generate_tcl,
                tcl_with_grid=tcl_with_grid, particle_radii=particle_radii)
 
-    def read(self):
+    def read(self) -> _typing.List[TrajectoryParticle]:
         """
         Reads the trajectory into memory as a list of lists.
 
@@ -541,10 +559,10 @@ class Trajectory(object):
                 assert _np.array_equal(t_particles, t_topologies)
 
                 for ix, t in enumerate(t_particles):
-                    result.append((ix, {
-                        'checkpoint_number': ix,
+                    result.append({
+                        'number': ix,
                         'step': t
-                    }))
+                    })
         return result
 
     def to_numpy(self, name="", start=None, stop=None):
