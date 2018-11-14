@@ -83,9 +83,9 @@ class TestIOUtils(ReaDDyTestCase):
     def test_particle_types_info(self):
         p_types = ioutils.get_particle_types(self.fname)
         # assuming that type ids are in accordance to order of registration
-        np.testing.assert_equal(p_types["A"], 0)
-        np.testing.assert_equal(p_types["B"], 1)
-        np.testing.assert_equal(p_types["C"], 2)
+        np.testing.assert_equal(p_types["A"]["type_id"], 0)
+        np.testing.assert_equal(p_types["B"]["type_id"], 1)
+        np.testing.assert_equal(p_types["C"]["type_id"], 2)
 
         diff_constants = ioutils.get_diffusion_constants(self.fname)
         np.testing.assert_equal(diff_constants["A"], 1.)
@@ -102,16 +102,16 @@ class TestIOUtils(ReaDDyTestCase):
         self.assertEqual(mylabel["n_educts"], 1)
         self.assertEqual(mylabel["n_products"], 1)
         self.assertAlmostEqual(mylabel["rate"], 0.00001)
-        self.assertEqual(mylabel["educt_types"][0], p_types["A"])
-        self.assertEqual(mylabel["product_types"][0], p_types["B"])
+        self.assertEqual(mylabel["educt_types"][0], p_types["A"]["type_id"])
+        self.assertEqual(mylabel["product_types"][0], p_types["B"]["type_id"])
 
         self.assertTrue("A->B" in reactions)
         atob = reactions["A->B"]
         self.assertEqual(atob["n_educts"], 1)
         self.assertEqual(atob["n_products"], 1)
         self.assertEqual(atob["rate"], 1.)
-        self.assertEqual(atob["educt_types"][0], p_types["A"])
-        self.assertEqual(atob["product_types"][0], p_types["B"])
+        self.assertEqual(atob["educt_types"][0], p_types["A"]["type_id"])
+        self.assertEqual(atob["product_types"][0], p_types["B"]["type_id"])
 
         self.assertTrue("B+C->A" in reactions)
         fusion = reactions["B+C->A"]
@@ -119,10 +119,10 @@ class TestIOUtils(ReaDDyTestCase):
         self.assertEqual(fusion["n_products"], 1)
         self.assertAlmostEqual(fusion["rate"], 0.4)
         self.assertAlmostEqual(fusion["educt_distance"], 0.2)
-        correct_educts = (fusion["educt_types"][0] == p_types["B"] and fusion["educt_types"][1] == p_types["C"])
-        correct_educts = correct_educts or (fusion["educt_types"][1] == p_types["B"] and fusion["educt_types"][0] == p_types["C"])
+        correct_educts = (fusion["educt_types"][0] == p_types["B"]["type_id"] and fusion["educt_types"][1] == p_types["C"]["type_id"])
+        correct_educts = correct_educts or (fusion["educt_types"][1] == p_types["B"]["type_id"] and fusion["educt_types"][0] == p_types["C"]["type_id"])
         self.assertTrue(correct_educts)
-        self.assertEqual(fusion["product_types"][0], p_types["A"])
+        self.assertEqual(fusion["product_types"][0], p_types["A"]["type_id"])
 
 if __name__ == '__main__':
     unittest.main()
