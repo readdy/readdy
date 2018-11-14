@@ -378,7 +378,8 @@ class Simulation(object):
         for normal_type in normal_types:
             tixs = _np.argwhere(types[0] == normal_type)
             pos = positions[0][tixs].squeeze()
-            self.add_particles(traj.species_name(normal_type), pos)
+            if len(pos) > 0:
+                self.add_particles(traj.species_name(normal_type), _np.atleast_2d(pos))
 
         # add topologies
         time, topology_records = traj.read_observable_topologies(start=n, stop=n+1, data_set_name=_CKPT.TOPOLOGY_CKPT)
