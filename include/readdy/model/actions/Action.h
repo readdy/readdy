@@ -48,7 +48,6 @@
 
 #include <memory>
 #include <readdy/common/common.h>
-#include <readdy/common/Timer.h>
 
 #if READDY_OSX
 #include <string>
@@ -64,12 +63,7 @@ public:
     Action() = default;
     virtual ~Action() = default;
 
-    virtual void perform(const util::PerformanceNode &node) = 0;
-
-    void perform() {
-        /*static */util::PerformanceNode dummy("dummy", false);
-        this->perform(dummy);
-    }
+    virtual void perform() = 0;
 
 };
 

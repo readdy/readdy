@@ -251,7 +251,7 @@ public:
     }
 
     api::SimulationLoop createLoop(scalar timeStep) {
-        return api::SimulationLoop(_kernel.get(), timeStep, _performanceRoot);
+        return api::SimulationLoop(_kernel.get(), timeStep);
     }
 
     /**
@@ -268,14 +268,6 @@ public:
      */
     bool doublePrecision() const {
         return _kernel->doublePrecision();
-    }
-
-    /**
-     * Access the root node of the performance measurement tree.
-     * @return reference to root node of performance measurement
-     */
-    const util::PerformanceNode &performanceRoot() {
-        return _performanceRoot;
     }
 
     /**
@@ -298,7 +290,6 @@ private:
     plugin::KernelProvider::kernel_ptr _kernel;
     std::vector<std::unique_ptr<readdy::model::observables::ObservableBase>> _observables{};
     std::vector<readdy::signals::scoped_connection> _observableConnections{};
-    util::PerformanceNode _performanceRoot{"simulation", true};
 };
 
 NAMESPACE_END(readdy)

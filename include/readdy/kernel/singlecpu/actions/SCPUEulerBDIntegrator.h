@@ -57,8 +57,7 @@ public:
     SCPUEulerBDIntegrator(SCPUKernel *kernel, scalar timeStep)
             : readdy::model::actions::EulerBDIntegrator(timeStep), kernel(kernel) {};
 
-    void perform(const util::PerformanceNode &node) override {
-        auto t = node.timeit();
+    void perform() override {
         const auto &context = kernel->context();
         const auto &pbc = context.periodicBoundaryConditions().data();
         const auto &kbt = context.kBT();

@@ -61,17 +61,6 @@ parser.add_argument('--debug', action='store_true',
                     help='Very short run for debugging output file and stuff. Computes for few minutes')
 
 
-def traverse_performance_tree(tree):
-    if len(tree) == 0:
-        # leaf
-        return {"time": tree.time(), "count": tree.count()}
-    else:
-        result = {"children": {}, "time": tree.time(), "count": tree.count()}
-        for name in tree.keys():
-            result["children"][name] = traverse_performance_tree(tree[name])
-        return result
-
-
 def perform(kernel="SingleCPU", n_particles_a=2357, force_constant=10., file_suffix="", full_simulation=False,
             debug_run=False, n_threads=-1):
     print("kernel {}, n_particles_a {}, force_constant {}, threads {}"
@@ -158,11 +147,6 @@ def perform(kernel="SingleCPU", n_particles_a=2357, force_constant=10., file_suf
 
     simulation.run(n_steps=n_steps, timestep=dt * ut.nanosecond)
 
-    perf = simulation._simulation.performance_root()
-    print(perf)
-    print("Simulated for {} seconds".format(perf.time()))
-    performance_tree = traverse_performance_tree(perf)
-
     traj = readdy.Trajectory(simulation.output_file)
     times, counts = traj.read_observable_number_of_particles()
     counts = {"A": counts[:, 0], "B": counts[:, 1], "C": counts[:, 2]}
@@ -171,7 +155,6 @@ def perform(kernel="SingleCPU", n_particles_a=2357, force_constant=10., file_suf
     average_n_particles = (np.sum(counts["A"]) + np.sum(counts["B"]) + np.sum(counts["C"])) / n_frames
     print("Time averaged total number of particles {}".format(average_n_particles))
 
-    t_pp_ps = perf.time() / average_n_particles / n_steps
     print("Computation time per particle per integration step is {} seconds".format(t_pp_ps))
 
     arguments = {
@@ -181,12 +164,9 @@ def perform(kernel="SingleCPU", n_particles_a=2357, force_constant=10., file_suf
         "file_suffix": file_suffix
     }
     result = {
-        "time/particle/step": t_pp_ps,
         "average_n_particles": average_n_particles,
         "n_particles": counts,
         "times": times,
-        "computation_time": perf.time(),
-        "performance_tree": performance_tree,
         "volume": edge_length ** 3,
         "unit_system": {"length_unit": "nanometer", "time_unit": "nanosecond", "energy_unit": "kilojoule / mol"},
         "n_steps": n_steps,
@@ -218,7 +198,6 @@ if __name__ == '__main__':
     if os.path.exists(file_name):
         raise RuntimeError("An output file with the desired name {} already exists. ".format(file_name))
 
-    t1 = time.perf_counter()
     n_cores = multiprocessing.cpu_count()
     perf_results = []
     for kernel in ["CPU", "SingleCPU"]:

@@ -88,8 +88,7 @@ bool performReactionEvent<false>(const scalar rate, const scalar timeStep) {
     return readdy::model::rnd::uniform_real() < 1 - std::exp(-rate * timeStep);
 }
 
-void CPUEvaluateTopologyReactions::perform(const util::PerformanceNode &node) {
-    auto t = node.timeit();
+void CPUEvaluateTopologyReactions::perform() {
     auto &model = kernel->getCPUKernelStateModel();
     const auto &context = kernel->context();
     auto &topologies = model.topologies();

@@ -544,8 +544,7 @@ std::string reactions::DetailedBalance::describe() const {
 AddParticles::AddParticles(Kernel *const kernel, const std::vector<Particle> &particles)
         : particles(particles), kernel(kernel) {}
 
-void AddParticles::perform(const util::PerformanceNode &node) {
-    auto t = node.timeit();
+void AddParticles::perform() {
     if(kernel != nullptr) {
         kernel->stateModel().addParticles(particles);
     } else {

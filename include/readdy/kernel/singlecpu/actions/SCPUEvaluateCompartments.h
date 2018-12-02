@@ -59,7 +59,7 @@ class SCPUEvaluateCompartments : public readdy::model::actions::EvaluateCompartm
 public:
     explicit SCPUEvaluateCompartments(SCPUKernel* kernel);
 
-    void perform(const util::PerformanceNode &node) override;
+    void perform() override;
 
 protected:
     SCPUKernel *const kernel;

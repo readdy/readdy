@@ -56,9 +56,8 @@ CellLinkedList::CellLinkedList(data_type &data, const readdy::model::Context &co
         : _data(data), _context(context), _pool(pool) {}
 
 
-void CellLinkedList::setUp(scalar skin, cell_radius_type radius, const util::PerformanceNode &node) {
+void CellLinkedList::setUp(scalar skin, cell_radius_type radius) {
     if (!_is_set_up || _skin != skin || _radius != radius) {
-        auto t = node.timeit();
 
         _skin = skin;
         _radius = radius;
@@ -76,7 +75,6 @@ void CellLinkedList::setUp(scalar skin, cell_radius_type radius, const util::Per
 
             {
                 // set up cell adjacency list
-                auto t2 = node.subnode("setUpCellNeighbors").timeit();
                 std::array<std::size_t, 3> nNeighbors{{_cellIndex[0], _cellIndex[1], _cellIndex[2]}};
                 for (int i = 0; i < 3; ++i) {
                     nNeighbors[i] = std::min(nNeighbors[i], static_cast<std::size_t>(2 * radius + 1));
@@ -142,7 +140,7 @@ void CellLinkedList::setUp(scalar skin, cell_radius_type radius, const util::Per
             }
 
             if (_max_cutoff > 0) {
-                setUpBins(node.subnode("setUpBins"));
+                setUpBins();
             }
 
             _is_set_up = true;
@@ -154,8 +152,7 @@ CompactCellLinkedList::CompactCellLinkedList(data_type &data, const readdy::mode
                                              thread_pool &pool) : CellLinkedList(data, context, pool) {}
 
 template<>
-void CompactCellLinkedList::fillBins<true>(const util::PerformanceNode &node) {
-    auto t = node.timeit();
+void CompactCellLinkedList::fillBins<true>() {
     const auto &boxSize = _context.get().boxSize();
 
     auto particleInBox = [boxSize](const Vec3 &pos) {
@@ -179,11 +176,8 @@ void CompactCellLinkedList::fillBins<true>(const util::PerformanceNode &node) {
 }
 
 template<>
-void CompactCellLinkedList::fillBins<false>(const util::PerformanceNode &node) {
-    auto t = node.timeit();
-
+void CompactCellLinkedList::fillBins<false>() {
     {/*
-        auto thilb = node.subnode("hilbert").timeit();
         static int i = 0;
         if(i % 100 == 0) {
             _data.get().hilbertSort(_max_cutoff + _skin);
@@ -240,11 +234,9 @@ void CompactCellLinkedList::fillBins<false>(const util::PerformanceNode &node) {
     futures.emplace_back(_pool.get().push(worker, it, _data.get().size()+1));
 }
 
-void CompactCellLinkedList::setUpBins(const util::PerformanceNode &node) {
+void CompactCellLinkedList::setUpBins() {
     if (_max_cutoff > 0) {
-        auto t = node.timeit();
         {
-            auto tt = node.subnode("allocate").timeit();
             auto nParticles = _data.get().size();
             _head.clear();
             _head.resize(_cellIndex.size());
@@ -252,9 +244,9 @@ void CompactCellLinkedList::setUpBins(const util::PerformanceNode &node) {
             _list.resize(nParticles + 1);
         }
         if (_serial) {
-            fillBins<true>(node.subnode("fillBins serial"));
+            fillBins<true>();
         } else {
-            fillBins<false>(node.subnode("fillBins parallel"));
+            fillBins<false>();
         }
     }
 }

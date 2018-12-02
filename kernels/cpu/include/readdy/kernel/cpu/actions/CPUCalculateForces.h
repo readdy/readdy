@@ -60,7 +60,7 @@ public:
 
     explicit CPUCalculateForces(CPUKernel *kernel) : kernel(kernel) {}
 
-    void perform(const util::PerformanceNode &node) override;
+    void perform() override;
 
 protected:
 

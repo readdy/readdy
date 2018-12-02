@@ -66,11 +66,11 @@ public:
     using topologies_vec = readdy::util::index_persistent_vector<topology_ref>;
 
     void initializeNeighborList(scalar skin) override {
-        neighborList->setUp(skin, 1, {});
+        neighborList->setUp(skin, 1);
     }
 
     void updateNeighborList() override {
-        neighborList->update({});
+        neighborList->update();
     }
 
     void clearNeighborList() override {
@@ -203,7 +203,6 @@ private:
     model::SCPUParticleData particleData {};
     std::unique_ptr<model::CellLinkedList> neighborList;
     SCPUStateModel::topology_action_factory const *topologyActionFactory {nullptr};
-    // only filled when readdy::model::Context::recordReactionsWithPositions is true
 
     std::reference_wrapper<const readdy::model::Context> _context;
 

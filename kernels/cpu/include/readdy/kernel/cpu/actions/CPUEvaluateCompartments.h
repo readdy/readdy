@@ -53,7 +53,7 @@ class CPUEvaluateCompartments : public readdy::model::actions::EvaluateCompartme
 public:
     explicit CPUEvaluateCompartments(CPUKernel* kernel);
 
-    void perform(const util::PerformanceNode &node) override;
+    void perform() override;
 
 protected:
     CPUKernel *const kernel;

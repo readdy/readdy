@@ -50,17 +50,16 @@ namespace kernel {
 namespace scpu {
 namespace actions {
 
-void SCPUUpdateNeighborList::perform(const util::PerformanceNode &node) {
-    auto t = node.timeit();
+void SCPUUpdateNeighborList::perform() {
     switch (operation) {
         case init:
-            kernel->getSCPUKernelStateModel().getNeighborList()->setUp(skinSize > 0 ? skinSize : 0, 1, node);
+            kernel->getSCPUKernelStateModel().getNeighborList()->setUp(skinSize > 0 ? skinSize : 0, 1);
             break;
         case clear:
             kernel->stateModel().clearNeighborList();
             break;
         case update:
-            kernel->getSCPUKernelStateModel().getNeighborList()->update(node);
+            kernel->getSCPUKernelStateModel().getNeighborList()->update();
             break;
     }
 }

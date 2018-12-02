@@ -49,7 +49,6 @@
 #include "SCPUParticleData.h"
 #include <readdy/common/numeric.h>
 #include <readdy/common/Index.h>
-#include <readdy/common/Timer.h>
 
 namespace readdy {
 namespace kernel {
@@ -72,9 +71,8 @@ public:
     CellLinkedList(data_type &data, const readdy::model::Context &context)
             : _data(data), _context(context), _head{}, _list{}, _radius{0} {};
 
-    void setUp(scalar skin, cell_radius_type radius, const util::PerformanceNode &node) {
+    void setUp(scalar skin, cell_radius_type radius) {
         if (!_is_set_up || _skin != skin || _radius != radius) {
-            auto t = node.timeit();
 
             _skin = skin;
             _radius = radius;
@@ -92,7 +90,6 @@ public:
 
                 {
                     // set up cell adjacency list
-                    auto t2 = node.subnode("setUpCellNeighbors").timeit();
                     std::array<std::size_t, 3> nNeighbors{{_cellIndex[0], _cellIndex[1], _cellIndex[2]}};
                     for (int i = 0; i < 3; ++i) {
                         nNeighbors[i] = std::min(nNeighbors[i], static_cast<std::size_t>(2 * radius + 1));
@@ -177,7 +174,7 @@ public:
                 }
 
                 if (_max_cutoff > 0) {
-                    setUpBins(node.subnode("setUpBins"));
+                    setUpBins();
                 }
 
                 _is_set_up = true;
@@ -185,9 +182,8 @@ public:
         }
     };
 
-    void update(const util::PerformanceNode &node) {
-        auto t = node.timeit();
-        setUpBins(node.subnode("setUpBins"));
+    void update() {
+        setUpBins();
     }
 
     virtual void clear() {
@@ -290,21 +286,18 @@ public:
     BoxIterator particlesEnd(std::size_t cellIndex) const;
 
 protected:
-    virtual void setUpBins(const util::PerformanceNode &node) {
+    virtual void setUpBins() {
         if (_max_cutoff > 0) {
-            auto t = node.timeit();
-            auto tt = node.subnode("allocate").timeit();
             auto nParticles = _data.get().size();
             _head.clear();
             _head.resize(_cellIndex.size());
             _list.resize(0);
             _list.resize(nParticles + 1);
-            fillBins(node.subnode("fillBins"));
+            fillBins();
         }
     };
 
-    void fillBins(const util::PerformanceNode &node) {
-        auto t = node.timeit();
+    void fillBins() {
         const auto &boxSize = _context.get().boxSize();
 
         auto particleInBox = [boxSize](const Vec3 &pos) {

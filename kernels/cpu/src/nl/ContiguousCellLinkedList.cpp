@@ -52,14 +52,12 @@ ContiguousCellLinkedList::ContiguousCellLinkedList(data_type &data, const readdy
                                                    thread_pool &pool)
         : CellLinkedList(data, context, pool) {}
 
-void ContiguousCellLinkedList::fillBins(const util::PerformanceNode &node) {
-    auto t = node.timeit();
-
+void ContiguousCellLinkedList::fillBins() {
     const auto nCells = _cellIndex.size();
     _blockNParticles.resize(nCells);
     std::for_each(_blockNParticles.begin(), _blockNParticles.end(), [](auto &x) { *x = 0; });
 
-    auto maxParticlesPerCell = getMaxCounts(node.subnode("getMaxCounts"));
+    auto maxParticlesPerCell = getMaxCounts();
     if(maxParticlesPerCell == 0) {
         _binsIndex = util::Index2D(nCells, 0_z);
     }
@@ -122,9 +120,7 @@ void ContiguousCellLinkedList::fillBins(const util::PerformanceNode &node) {
 
 }
 
-ContiguousCellLinkedList::count_type ContiguousCellLinkedList::getMaxCounts(const util::PerformanceNode &node) {
-    auto t = node.timeit();
-
+ContiguousCellLinkedList::count_type ContiguousCellLinkedList::getMaxCounts() {
     const auto &boxSize = _context.get().boxSize();
     const auto &data = _data.get();
     auto &pool = _pool.get();

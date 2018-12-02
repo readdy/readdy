@@ -57,17 +57,16 @@ public:
 
     CPUUpdateNeighborList(CPUKernel *kernel, super::Operation op, scalar skin) : super(op, skin), kernel(kernel) {}
 
-    void perform(const util::PerformanceNode &node) override {
-        auto t = node.timeit();
+    void perform() override {
         switch (operation) {
             case init:
-                kernel->getCPUKernelStateModel().initializeNeighborList(skinSize, node);
+                kernel->getCPUKernelStateModel().initializeNeighborList(skinSize);
                 break;
             case clear:
-                kernel->getCPUKernelStateModel().clearNeighborList(node);
+                kernel->getCPUKernelStateModel().clearNeighborList();
                 break;
             case update:
-                kernel->getCPUKernelStateModel().updateNeighborList(node);
+                kernel->getCPUKernelStateModel().updateNeighborList();
                 break;
         }
 
