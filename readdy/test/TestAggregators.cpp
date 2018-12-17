@@ -39,16 +39,16 @@
  * @date 07.11.16
  */
 
-#include <gmock/gmock.h>
+#include <catch2/catch.hpp>
+
 #include <readdy/testing/KernelTest.h>
 #include <readdy/testing/Utils.h>
 
-namespace {
+using namespace Catch::Matchers;
 
-class TestAggregators : public KernelTest {
-};
-
-TEST_P(TestAggregators, TestMeanSquaredDisplacement) {
+TEMPLATE_TEST_CASE("Sanity check of aggregators by applying them to compute MSD.", "[aggregators]",
+        readdytesting::kernel::SingleCPU, readdytesting::kernel::CPU) {
+    auto kernel = readdytesting::kernel::create<TestType>();
     kernel->context().particleTypes().add("A", 1.);
     for (auto i=0; i<5; ++i) kernel->addParticle("A", readdy::Vec3(0, 0, 0));
     auto obs = kernel->observe().particles(1);
@@ -59,24 +59,27 @@ TEST_P(TestAggregators, TestMeanSquaredDisplacement) {
         const auto& result = msd->getResult();
         const auto& resultMsd = std::get<1>(result);
         const auto& resultTime = std::get<0>(result);
-        EXPECT_EQ(resultMsd.size(), 1) << "repetitive evaluation at t=0 should always yield result of length 1";
-        EXPECT_EQ(resultTime.size(), 1);
-        EXPECT_THAT(resultMsd, ::testing::ElementsAre(0)) << "particles have not moved -> msd=0";
-        EXPECT_THAT(resultTime, ::testing::ElementsAre(0));
+        REQUIRE(resultMsd.size() == 1); // "repetitive evaluation at t=0 should always yield result of length 1"
+        REQUIRE(resultTime.size() == 1);
+        REQUIRE(resultMsd[0] == 0);  //"Particle have not moved, so the MSD should be 0."
+        REQUIRE(resultTime[0] == 0);
     }
     for (auto i=0; i<3; ++i) {
         kernel->evaluateObservables(1);
         const auto& result = msd->getResult();
         const auto& resultMsd = std::get<1>(result);
         const auto& resultTime = std::get<0>(result);
-        EXPECT_EQ(resultMsd.size(), 2) << "repetitive evaluation at t=1 should always yield result of length 2";
-        EXPECT_EQ(resultTime.size(), 2);
-        EXPECT_THAT(resultMsd, ::testing::ElementsAre(0, 0)) << "particles have not moved -> msd=0";
-        EXPECT_THAT(resultTime, ::testing::ElementsAre(0, 1));
+        REQUIRE(resultMsd.size() == 2); // "repetitive evaluation at t=1 should always yield result of length 2"
+        REQUIRE(resultTime.size() == 2);
+        REQUIRE_THAT(resultMsd, Equals(std::vector<double>{0, 0}));
+        REQUIRE(resultTime[0] == 0);
+        REQUIRE(resultTime[1] == 1);
     }
 }
 
-TEST_P(TestAggregators, TestTrivial) {
+TEMPLATE_TEST_CASE("Trivial sanity check of aggregators.", "[aggregators]",
+                   readdytesting::kernel::SingleCPU, readdytesting::kernel::CPU) {
+    auto kernel = readdytesting::kernel::create<TestType>();
     kernel->context().particleTypes().add("A", 1.);
     for (auto i=0; i<5; ++i) kernel->addParticle("A", readdy::Vec3(4, 2, 0));
     auto obs = kernel->observe().positions(1);
@@ -87,12 +90,12 @@ TEST_P(TestAggregators, TestTrivial) {
         const auto& result = traj->getResult();
         const auto& resultPos = std::get<1>(result);
         const auto& resultTime = std::get<0>(result);
-        EXPECT_EQ(resultTime.size(), 1);
-        EXPECT_EQ(resultPos.size(), 1);
-        EXPECT_THAT(resultTime, ::testing::ElementsAre(0));
-        EXPECT_EQ(resultPos[0].size(), 5);
+        REQUIRE(resultTime.size() == 1);
+        REQUIRE(resultPos.size() == 1);
+        REQUIRE(resultTime[0] == 0);
+        REQUIRE(resultPos[0].size() == 5);
         for (auto j=0; j<5; ++j) {
-            EXPECT_VEC3_EQ(resultPos[0][j], readdy::Vec3(4, 2, 0));
+            readdy::testing::vec3eq(resultPos[0][j], readdy::Vec3(4, 2, 0));
         }
     }
     for (auto i=0; i<3; ++i) {
@@ -100,16 +103,13 @@ TEST_P(TestAggregators, TestTrivial) {
         const auto& result = traj->getResult();
         const auto& resultPos = std::get<1>(result);
         const auto& resultTime = std::get<0>(result);
-        EXPECT_EQ(resultTime.size(), 2);
-        EXPECT_EQ(resultPos.size(), 2);
-        EXPECT_THAT(resultTime, ::testing::ElementsAre(0, 1));
-        EXPECT_EQ(resultPos[1].size(), 5);
+        REQUIRE(resultTime.size() == 2);
+        REQUIRE(resultPos.size() == 2);
+        REQUIRE(resultTime[0] == 0);
+        REQUIRE(resultTime[1] == 1);
+        REQUIRE(resultPos[1].size() == 5);
         for (auto j=0; j<5; ++j) {
-            EXPECT_VEC3_EQ(resultPos[1][j], readdy::Vec3(4, 2, 0));
+            readdy::testing::vec3eq(resultPos[1][j], readdy::Vec3(4, 2, 0));
         }
     }
-}
-
-INSTANTIATE_TEST_CASE_P(TestAggregators, TestAggregators, ::testing::ValuesIn(readdy::testing::getKernelsToTest()));
-
 }

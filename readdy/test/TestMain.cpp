@@ -38,16 +38,16 @@
 //
 
 
+#define CATCH_CONFIG_RUNNER
+#include <catch2/catch.hpp>
+
 #include <readdy/testing/Utils.h>
 #include <readdy/plugin/KernelProvider.h>
-
-#include "gtest/gtest.h"
 
 int perform_tests(int argc, char **argv) {
     const auto dir = readdy::testing::getPluginsDirectory();
     readdy::plugin::KernelProvider::getInstance().loadKernelsFromDirectory(dir);
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+    return Catch::Session().run( argc, argv );
 }
 
 int main(int argc, char **argv) {
