@@ -10,3 +10,6 @@
 [submodule "libraries/h5rd"]
 	path = libraries/h5rd
 	url = https://github.com/readdy/h5rd
+[submodule "libraries/Catch2"]
+	path = libraries/Catch2
+	url = https://github.com/catchorg/Catch2.git
