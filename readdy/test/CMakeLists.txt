@@ -44,7 +44,9 @@ LIST(APPEND READDY_TEST_SOURCES TestIntegration.cpp)
 LIST(APPEND READDY_TEST_SOURCES TestDetailedBalance.cpp)
 LIST(APPEND READDY_TEST_SOURCES TestContext.cpp)
 
-ADD_EXECUTABLE(runUnitTests TestMain.cpp TestAggregators.cpp ${TESTING_INCLUDE_DIR})
+ADD_EXECUTABLE(runUnitTests
+        TestMain.cpp TestAggregators.cpp TestAlgorithms.cpp TestCompartments.cpp
+        ${TESTING_INCLUDE_DIR})
 
 TARGET_INCLUDE_DIRECTORIES(
         runUnitTests PUBLIC ${READDY_INCLUDE_DIRS} ${TESTING_INCLUDE_DIR}
