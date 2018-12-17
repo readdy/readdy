@@ -324,7 +324,7 @@ TEST(CPUTestReactions, TestGillespieParallel) {
                 kernel->actions().gillespie(1)
         );
         neighborList->perform();
-        reactions->perform({});
+        reactions->perform();
         /*reactions->perform();
         EXPECT_EQ(1.0, reactions->getMaxReactionRadius());
         EXPECT_EQ(15.0, reactions->getBoxWidth());

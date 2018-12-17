@@ -75,7 +75,7 @@ TEST(TestNeighborListIterator, BoxIterator) {
         ids.push_back(data.getParticle(i).id());
     }
 
-    ccll.setUp(0, 1, {});
+    ccll.setUp(0, 1);
 
     {
         std::size_t nNonemptyCells {0};
@@ -113,8 +113,8 @@ TEST(TestNeighborListIterator, BoxIteratorEmptyBox) {
     context.reactions().addFusion("fusion", "A", "A", "A", 1.0, 1.0);
     context.boxSize() = {5., 5., 5.};
 
-    ccll.setUp(0, 1, {});
-    ccll.update({});
+    ccll.setUp(0, 1);
+    ccll.update();
 
     {
         std::size_t nNonemptyCells {0};
