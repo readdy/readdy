@@ -87,8 +87,7 @@ bool performReactionEvent(const scalar rate, const scalar timeStep) {
     }
 }
 
-void SCPUEvaluateTopologyReactions::perform(const util::PerformanceNode &node) {
-    auto t = node.timeit();
+void SCPUEvaluateTopologyReactions::perform() {
     auto &model = kernel->getSCPUKernelStateModel();
     const auto &context = kernel->context();
     auto &topologies = model.topologies();

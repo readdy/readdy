@@ -105,8 +105,7 @@ TEST_P(TestReactions, TestConstantNumberOfParticleType) {
     };
 
     {
-        readdy::util::PerformanceNode pn("", false);
-        readdy::api::SimulationLoop(kernel.get(), 1, pn).run(10);
+        readdy::api::SimulationLoop(kernel.get(), 1).run(10);
     }
 
 }
@@ -164,8 +163,7 @@ TEST_P(TestReactions, FusionFissionWeights) {
     auto connection = kernel->connectObservable(obs.get());
 
     {
-        readdy::util::PerformanceNode pn("", false);
-        readdy::api::SimulationLoop(kernel.get(), .1, pn).run(1);
+        readdy::api::SimulationLoop(kernel.get(), .1).run(1);
     }
 }
 

@@ -48,7 +48,6 @@
 #include <cstddef>
 #include <readdy/common/Index.h>
 #include <readdy/model/Context.h>
-#include <readdy/common/Timer.h>
 #include <readdy/common/thread/atomic.h>
 #include <readdy/kernel/cpu/data/DefaultDataContainer.h>
 
@@ -65,9 +64,9 @@ public:
     CellLinkedList(data_type &data, const readdy::model::Context &context,
                    thread_pool &pool);
 
-    void setUp(scalar skin, cell_radius_type radius, const util::PerformanceNode &node);
+    void setUp(scalar skin, cell_radius_type radius);
 
-    virtual void update(const util::PerformanceNode &node) = 0;
+    virtual void update() = 0;
 
     virtual void clear() = 0;
 
@@ -139,7 +138,7 @@ public:
     };
 
 protected:
-    virtual void setUpBins(const util::PerformanceNode &node) = 0;
+    virtual void setUpBins() = 0;
 
     bool _is_set_up{false};
 
@@ -175,9 +174,8 @@ public:
     CompactCellLinkedList(data_type &data, const readdy::model::Context &context,
                           thread_pool &pool);
 
-    void update(const util::PerformanceNode &node) override {
-        auto t = node.timeit();
-        setUpBins(node.subnode("setUpBins"));
+    void update() override {
+        setUpBins();
     };
 
     void clear() override {
@@ -221,10 +219,10 @@ public:
         return (*_head.at(index)).load() == 0;
     };
 protected:
-    void setUpBins(const util::PerformanceNode &node) override;
+    void setUpBins() override;
 
     template<bool serial>
-    void fillBins(const util::PerformanceNode &node);
+    void fillBins();
 
     HEAD _head;
     // particles, 1-indexed

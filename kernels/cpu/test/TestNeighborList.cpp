@@ -127,7 +127,7 @@ TEST_F(TestNeighborList, ThreeBoxesNonPeriodic) {
     };
 
     data.addParticles(particles);
-    list.setUp(0, 1, {});
+    list.setUp(0, 1);
 
     EXPECT_TRUE(isPairInList(&list, 0, 1));
     EXPECT_TRUE(isPairInList(&list, 1, 0));
@@ -151,7 +151,7 @@ TEST_F(TestNeighborList, OneDirection) {
     auto &data = list.data();
     data.addParticles(particles);
 
-    list.setUp(0, 8, {});
+    list.setUp(0, 8);
 
     EXPECT_TRUE(isIdPairInList(&list, data, ids.at(0), ids.at(2)));
     EXPECT_TRUE(isIdPairInList(&list, data, ids.at(2), ids.at(0)));
@@ -176,7 +176,7 @@ TEST_F(TestNeighborList, AllNeighborsInCutoffSphere) {
     };
 
     data.addParticles(particles);
-    list.setUp(0,1,{});
+    list.setUp(0,1);
     for (size_t i = 0; i < 6; ++i) {
         for (size_t j = i + 1; j < 6; ++j) {
             EXPECT_TRUE(isPairInList(&list, i, j)) << "Particles " << i << " and " << j << " were not neighbors.";
@@ -216,8 +216,7 @@ TEST(TestNeighborListImpl, DiffusionAndReaction) {
     auto connection = kernel->connectObservable(obs.get());
 
     {
-        readdy::util::PerformanceNode pn("", false);
-        readdy::api::SimulationLoop loop (kernel.get(), .01, pn);
+        readdy::api::SimulationLoop loop (kernel.get(), .01);
         loop.useReactionScheduler("Gillespie");
         loop.skinSize() = .1;
         loop.run(100);
@@ -279,8 +278,7 @@ TEST(TestNeighborListImpl, Diffusion) {
     );
     auto connection = kernel->connectObservable(obs.get());
     {
-        readdy::util::PerformanceNode pn("", false);
-        readdy::api::SimulationLoop loop(kernel.get(), .01, pn);
+        readdy::api::SimulationLoop loop(kernel.get(), .01);
         loop.useReactionScheduler("Gillespie");
         loop.skinSize() = .1;
         loop.run(100);

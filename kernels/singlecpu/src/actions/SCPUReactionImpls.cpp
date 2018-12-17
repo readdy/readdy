@@ -147,8 +147,7 @@ std::vector<event_t> findEvents(const SCPUKernel *const kernel, scalar dt, bool 
     return eventsUpdate;
 }
 
-void SCPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
-    auto t = node.timeit();
+void SCPUUncontrolledApproximation::perform() {
     const auto &ctx = kernel->context();
     SCPUStateModel &stateModel = kernel->getSCPUKernelStateModel();
     if(ctx.recordReactionsWithPositions()) {
@@ -335,8 +334,7 @@ scpu_data::entries_update handleEventsGillespie(
     return std::make_pair(std::move(newParticles), std::move(decayedEntries));
 }
 
-void SCPUGillespie::perform(const util::PerformanceNode &node) {
-    auto t = node.timeit();
+void SCPUGillespie::perform() {
     const auto &ctx = kernel->context();
     if(ctx.reactions().nOrder1() == 0 && ctx.reactions().nOrder2() == 0) {
         return;
@@ -403,8 +401,7 @@ ParticleBackup::ParticleBackup(event_t event,
     }
 }
 
-void SCPUDetailedBalance::perform(const readdy::util::PerformanceNode &node) {
-    auto t = node.timeit();
+void SCPUDetailedBalance::perform() {
 
     const auto &ctx = kernel->context();
     if(ctx.reactions().nOrder1() == 0 && ctx.reactions().nOrder2() == 0) {
@@ -460,7 +457,7 @@ void SCPUDetailedBalance::perform(const readdy::util::PerformanceNode &node) {
                 const auto updateRecord = data->update(std::move(forwardUpdate));
                 auto backwardUpdate = generateBackwardUpdate(particleBackup, updateRecord);
                 stateModel.updateNeighborList();
-                calculateEnergies(node);
+                calculateEnergies();
 
                 scalar boltzmannFactor = 1.;
                 scalar prefactor = 1.;
@@ -510,7 +507,7 @@ void SCPUDetailedBalance::perform(const readdy::util::PerformanceNode &node) {
                     log::trace("reject! apply backward update");
                     data->update(std::move(backwardUpdate));
                     stateModel.updateNeighborList();
-                    calculateEnergies(node);
+                    calculateEnergies();
                     if (energyBefore != stateModel.energy()) {
                         log::warn("reaction move was rejected but energy of state is different "
                                   "after rollback, was {}, is now {}", energyBefore, stateModel.energy());
@@ -537,11 +534,11 @@ void SCPUDetailedBalance::perform(const readdy::util::PerformanceNode &node) {
 
                 data->update(std::move(forwardUpdate));
                 stateModel.updateNeighborList();
-                calculateEnergies(node);
+                calculateEnergies();
             }
         };
 
-        calculateEnergies(node);
+        calculateEnergies();
         algo::performEvents(events, shouldEval, depending, eval);
 
     }
@@ -736,7 +733,7 @@ std::pair<model::SCPUParticleData::entries_update, scalar> SCPUDetailedBalance::
     return std::make_pair(std::make_pair(std::move(newParticles), decayedEntries), energyDelta);
 }
 
-void SCPUDetailedBalance::calculateEnergies(const util::PerformanceNode &node) {
+void SCPUDetailedBalance::calculateEnergies() {
     const auto &context = kernel->context();
 
     auto &stateModel = kernel->getSCPUKernelStateModel();
@@ -771,7 +768,7 @@ void SCPUDetailedBalance::calculateEnergies(const util::PerformanceNode &node) {
     auto topologyEval = [](auto &topology){ /* noop */ };
     SCPUStateModel::topologies_vec emptyContainer = {};
 
-    algo::evaluateOnContainers(data, order1eval, neighborList, order2eval, emptyContainer, topologyEval, node);
+    algo::evaluateOnContainers(data, order1eval, neighborList, order2eval, emptyContainer, topologyEval);
 }
 
 std::pair<const readdy::model::actions::reactions::ReversibleReactionConfig *, const readdy::model::reactions::Reaction *>

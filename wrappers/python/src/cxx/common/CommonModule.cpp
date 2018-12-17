@@ -43,7 +43,6 @@
 #include <pybind11/stl.h>
 
 #include <readdy/common/ReaDDyVec3.h>
-#include <readdy/common/Timer.h>
 #include <readdy/io/BloscFilter.h>
 #include <pybind11/numpy.h>
 #include "SpdlogPythonSink.h"
@@ -152,27 +151,6 @@ void exportCommon(py::module& common) {
     {
         py::module util = common.def_submodule("util", "ReaDDy util module");
         exportUtils(util);
-    }
-    {
-        py::module perf = common.def_submodule("perf", "ReaDDy performance module");
-        py::class_<readdy::util::PerformanceNode>(perf, "PerformanceNode")
-                .def("__getitem__", [](const readdy::util::PerformanceNode &self, const std::string &label) -> const readdy::util::PerformanceNode& {
-                    return self.child(label);
-                }, rvp::reference)
-                .def("__len__", [](const readdy::util::PerformanceNode &self) -> std::size_t {
-                    return self.n_children();
-                })
-                .def("__repr__", [](const readdy::util::PerformanceNode &self) -> std::string {
-                    return self.describe();
-                })
-                .def("keys", &readdy::util::PerformanceNode::keys)
-                .def("clear", &readdy::util::PerformanceNode::clear)
-                .def("time", [](const readdy::util::PerformanceNode &self) -> readdy::util::PerformanceData::time {
-                    return self.data().cumulativeTime();
-                })
-                .def("count", [](const readdy::util::PerformanceNode &self) -> std::size_t {
-                    return self.data().count();
-                });
     }
 
     py::class_<rpy::ReadableParticle>(common, "Particle")

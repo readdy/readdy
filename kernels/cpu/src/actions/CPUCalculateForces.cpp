@@ -46,8 +46,7 @@ namespace kernel {
 namespace cpu {
 namespace actions {
 
-void CPUCalculateForces::perform(const util::PerformanceNode &node) {
-    auto t = node.timeit();
+void CPUCalculateForces::perform() {
 
     const auto &ctx = kernel->context();
 
@@ -65,7 +64,6 @@ void CPUCalculateForces::perform(const util::PerformanceNode &node) {
     if (!potOrder1.empty() || !potOrder2.empty() || !stateModel.topologies().empty()) {
         {
             // todo maybe optimize this by transposing data structure
-            auto tClear = node.subnode("clear forces").timeit();
             std::for_each(data->begin(), data->end(), [](auto &entry) {
                 entry.force = {0, 0, 0};
             });
@@ -81,14 +79,11 @@ void CPUCalculateForces::perform(const util::PerformanceNode &node) {
                                + (!potOrder2.empty() ? nThreads : 0)
                                + (!topologies.empty() ? nThreads : 0);
             {
-                const auto &nTasks = node.subnode("create tasks");
-                auto tTasks = nTasks.timeit();
                 size_t nCells = neighborList->nCells();
                 promises.reserve(numberTasks);
                 virialPromises.reserve(!potOrder2.empty() ? nThreads : 0);
                 if (!potOrder1.empty()) {
                     // 1st order pot
-                    auto tO1 = nTasks.subnode("order1").timeit();
                     std::vector<std::function<void(std::size_t)>> tasks;
                     tasks.reserve(nThreads);
 
@@ -111,7 +106,6 @@ void CPUCalculateForces::perform(const util::PerformanceNode &node) {
                                                   ctx.potentials().potentialsOrder1()));
                     }
                     {
-                        auto tPush = nTasks.subnode("execute order 1 tasks and wait").timeit();
                         auto futures = pool.pushAll(std::move(tasks));
                         std::vector<util::thread::joining_future<void>> joiningFutures;
                         std::transform(futures.begin(), futures.end(), std::back_inserter(joiningFutures),
@@ -121,7 +115,6 @@ void CPUCalculateForces::perform(const util::PerformanceNode &node) {
                     }
                 }
                 if (!topologies.empty()) {
-                    auto tTops = nTasks.subnode("topologies").timeit();
                     std::vector<std::function<void(std::size_t)>> tasks;
                     tasks.reserve(nThreads);
                     const std::size_t grainSize = topologies.size() / nThreads;
@@ -142,7 +135,6 @@ void CPUCalculateForces::perform(const util::PerformanceNode &node) {
                         tasks.push_back(pool.pack(calculate_topologies, bounds, taf, std::ref(promises.back())));
                     }
                     {
-                        auto tPush = nTasks.subnode("execute topology tasks and wait").timeit();
                         auto futures = pool.pushAll(std::move(tasks));
                         std::vector<util::thread::joining_future<void>> joiningFutures;
                         std::transform(futures.begin(), futures.end(), std::back_inserter(joiningFutures),
@@ -152,7 +144,6 @@ void CPUCalculateForces::perform(const util::PerformanceNode &node) {
                     }
                 }
                 if (!potOrder2.empty()) {
-                    auto tO2 = nTasks.subnode("order2").timeit();
                     std::vector<std::function<void(std::size_t)>> tasks;
                     tasks.reserve(nThreads);
                     auto granularity = nThreads;
@@ -199,7 +190,6 @@ void CPUCalculateForces::perform(const util::PerformanceNode &node) {
                         }
                     }
                     {
-                        auto tPush = nTasks.subnode("execute order 2 tasks and wait").timeit();
                         auto futures = pool.pushAll(std::move(tasks));
                         std::vector<util::thread::joining_future<void>> joiningFutures;
                         std::transform(futures.begin(), futures.end(), std::back_inserter(joiningFutures),
@@ -211,13 +201,11 @@ void CPUCalculateForces::perform(const util::PerformanceNode &node) {
             }
 
             {
-                auto tFutures = node.subnode("get energy futures").timeit();
                 for (auto &f : promises) {
                     stateModel.energy() += f.get_future().get();
                 }
             }
             {
-                auto tVirialFutures = node.subnode("get virial futures").timeit();
                 for (auto &f : virialPromises) {
                     stateModel.virial() += f.get_future().get();
                 }

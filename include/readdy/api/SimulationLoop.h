@@ -92,10 +92,9 @@ public:
     /**
      * Creates a new simulation scheme.
      * @param kernel the kernel
-     * @param performanceRoot performance stuff
      */
-    explicit SimulationLoop(model::Kernel *const kernel, scalar timeStep, util::PerformanceNode &performanceRoot)
-            : _kernel(kernel), _performanceRoot(performanceRoot), _timeStep(timeStep),
+    explicit SimulationLoop(model::Kernel *const kernel, scalar timeStep)
+            : _kernel(kernel), _timeStep(timeStep),
               _integrator(kernel->actions().eulerBDIntegrator(timeStep).release()),
               _reactions(kernel->actions().gillespie(timeStep).release()),
               _forces(kernel->actions().calculateForces().release()),
@@ -138,19 +137,19 @@ public:
     }
 
     void runInitializeNeighborList() {
-        if (_initNeighborList) _initNeighborList->perform(_performanceRoot.subnode("initNeighborList"));
+        if (_initNeighborList) _initNeighborList->perform();
     }
 
     void runUpdateNeighborList() {
-        if (_neighborList) _neighborList->perform(_performanceRoot.subnode("neighborList"));
+        if (_neighborList) _neighborList->perform();
     }
 
     void runClearNeighborList() {
-        if (_clearNeighborList) _clearNeighborList->perform(_performanceRoot.subnode("clearNeighborList"));
+        if (_clearNeighborList) _clearNeighborList->perform();
     }
 
     void runForces() {
-        if (_forces) _forces->perform(_performanceRoot.subnode("forces"));
+        if (_forces) _forces->perform();
     }
 
     void runEvaluateObservables(time_step_type t) {
@@ -158,15 +157,15 @@ public:
     }
 
     void runIntegrator() {
-        if (_integrator) _integrator->perform(_performanceRoot.subnode("integrator"));
+        if (_integrator) _integrator->perform();
     }
 
     void runReactions() {
-        if (_reactions) _reactions->perform(_performanceRoot.subnode("reactionScheduler"));
+        if (_reactions) _reactions->perform();
     }
 
     void runTopologyReactions() {
-        if (_topologyReactions) _topologyReactions->perform(_performanceRoot.subnode("evaluateTopologyReactions"));
+        if (_topologyReactions) _topologyReactions->perform();
     }
 
     TimeStepActionPtr &integrator() { return _integrator; }
@@ -242,7 +241,6 @@ public:
                 _neighborList->skin() = _skinSize;
                 _clearNeighborList->skin() = _skinSize;
             }
-            auto runTimer = _performanceRoot.timeit();
             runInitialize();
             if (requiresNeighborList) runInitializeNeighborList();
             runForces();
@@ -324,7 +322,6 @@ protected:
     bool _evaluateObservables = true;
     time_step_type start = 0;
     std::size_t _progressOutputStride = 100;
-    const util::PerformanceNode &_performanceRoot;
     std::function<void(time_step_type)> _progressCallback;
     scalar _timeStep;
 

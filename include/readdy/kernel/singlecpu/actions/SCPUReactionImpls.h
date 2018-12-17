@@ -57,7 +57,7 @@ class SCPUUncontrolledApproximation : public readdy::model::actions::reactions::
 public:
     SCPUUncontrolledApproximation(SCPUKernel* kernel, scalar timeStep);
 
-    void perform(const util::PerformanceNode &node) override;
+    void perform() override;
 
 protected:
     SCPUKernel *const kernel;
@@ -88,7 +88,7 @@ public:
     SCPUGillespie(SCPUKernel *const kernel, scalar timeStep)
             : readdy::model::actions::reactions::Gillespie(timeStep), kernel(kernel) {};
 
-    void perform(const util::PerformanceNode &node) override;
+    void perform() override;
 
 protected:
     SCPUKernel *const kernel;
@@ -115,13 +115,13 @@ public:
         searchReversibleReactions(kernel->context());
     };
 
-    void perform(const util::PerformanceNode &node) override;
+    void perform() override;
 
 protected:
     SCPUKernel *const kernel;
 
     // calculate first-order interactions and second-order non-bonded interactions
-    void calculateEnergies(const util::PerformanceNode &node);
+    void calculateEnergies();
 
     std::pair<model::SCPUParticleData::entries_update, scalar>
     performReversibleReactionEvent(const Event &event,

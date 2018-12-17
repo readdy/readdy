@@ -80,7 +80,7 @@ public:
 
     ~AddParticles() override = default;
 
-    void perform(const util::PerformanceNode &node) override;
+    void perform() override;
 
 protected:
     std::vector<Particle> particles;

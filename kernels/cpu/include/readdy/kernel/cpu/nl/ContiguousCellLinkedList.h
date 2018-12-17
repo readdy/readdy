@@ -62,9 +62,9 @@ public:
 
 public:
 
-    void update(const util::PerformanceNode &node) override {
+    void update() override {
         if (_max_cutoff > 0) {
-            fillBins(node);
+            fillBins();
         }
     };
 
@@ -117,13 +117,13 @@ public:
 
 protected:
 
-    void setUpBins(const util::PerformanceNode &node) override { };
+    void setUpBins() override { };
 
-    void fillBins(const util::PerformanceNode &node);
+    void fillBins();
 
 private:
 
-    count_type getMaxCounts(const util::PerformanceNode &node);
+    count_type getMaxCounts();
 
     util::Index2D _binsIndex;
     std::vector<std::size_t> _bins;

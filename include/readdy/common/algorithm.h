@@ -49,7 +49,6 @@
 #include <algorithm>
 
 #include "common.h"
-#include <readdy/common/Timer.h>
 #include "../model/RandomProvider.h"
 
 namespace readdy {
@@ -143,11 +142,9 @@ inline void evaluateOnContainers(ParticleContainer &&particleContainer,
                                  InteractionContainer &&interactionContainer,
                                  const EvaluateOnInteraction &evaluateOnInteraction,
                                  TopologyContainer &&topologyContainer,
-                                 const EvaluateOnTopology &evaluateOnTopology,
-                                 const util::PerformanceNode &node) {
+                                 const EvaluateOnTopology &evaluateOnTopology) {
     // Evaluate on particles
     {
-        auto tEvaluateOnParticles = node.subnode("evaluate on particles").timeit();
         std::for_each(particleContainer.begin(), particleContainer.end(), [&](auto &&entry){
             if (!entry.deactivated) {
                 evaluateOnParticle(entry);
@@ -157,7 +154,6 @@ inline void evaluateOnContainers(ParticleContainer &&particleContainer,
 
     // Evaluate on interactions
     {
-        auto tEvaluateOnInteractions = node.subnode("evaluate on interactions").timeit();
         for (auto cell = 0_z; cell < interactionContainer.nCells(); ++cell) {
             for (auto it = interactionContainer.particlesBegin(cell); it != interactionContainer.particlesEnd(cell); ++it) {
                 auto pidx = *it;
@@ -173,7 +169,6 @@ inline void evaluateOnContainers(ParticleContainer &&particleContainer,
 
     // Evaluate on topologies
     {
-        auto tTopologies = node.subnode("evaluate on topologies").timeit();
         for (auto &&topology : topologyContainer) {
             if (!topology->isDeactivated()) {
                 evaluateOnTopology(topology);

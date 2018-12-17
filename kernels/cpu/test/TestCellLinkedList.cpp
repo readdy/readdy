@@ -71,8 +71,8 @@ void insertTestImpl(readdy::kernel::cpu::data::DefaultDataContainer &data, readd
     std::for_each(data.begin(), data.end(), [&] (const auto &entry){ particleIds.push_back(entry.id); });
     scalar cutoff = 1;
     CLL ccll(data, context, pool);
-    ccll.setUp(0, radius, {});
-    ccll.update({});
+    ccll.setUp(0, radius);
+    ccll.update();
 
     {
         std::size_t pidx{0};
@@ -185,8 +185,8 @@ void insertAndDearviateTestImpl(std::uint8_t radius) {
     }
 
     CLL nl(data, context, pool);
-    nl.setUp(0, radius, {});
-    nl.update({});
+    nl.setUp(0, radius);
+    nl.update();
 
     for (std::size_t cell = 0; cell < nl.nCells(); ++cell) {
         for (auto itParticle = nl.particlesBegin(cell); itParticle != nl.particlesEnd(cell); ++itParticle) {
@@ -257,8 +257,8 @@ void diffuseTestImpl(std::uint8_t radius) {
     }
 
     CLL nl(data, context, pool);
-    nl.setUp(0, radius, {});
-    nl.update({});
+    nl.setUp(0, radius);
+    nl.update();
 
     std::size_t n_steps = 3;
     for(std::size_t t = 0; t < n_steps; ++t) {
@@ -266,7 +266,7 @@ void diffuseTestImpl(std::uint8_t radius) {
             nl.data().displace(i, 2. * model::rnd::normal3<readdy::scalar>(0, 1));
         }
 
-        nl.update({});
+        nl.update();
 
 
         for(std::size_t cell = 0; cell < nl.nCells(); ++cell) {

@@ -59,7 +59,7 @@ class SCPUEvaluateTopologyReactions : public readdy::model::actions::top::Evalua
 public:
     SCPUEvaluateTopologyReactions(SCPUKernel* kernel, scalar timeStep);
 
-    void perform(const util::PerformanceNode &node) override;
+    void perform() override;
 
 private:
     struct TREvent;

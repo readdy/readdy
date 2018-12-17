@@ -56,7 +56,7 @@ public:
     explicit SCPUUpdateNeighborList(SCPUKernel* kernel,
                            readdy::model::actions::UpdateNeighborList::Operation op = Operation::init, scalar = -1);
 
-    void perform(const util::PerformanceNode &node) override;
+    void perform() override;
 
 private:
     SCPUKernel *const kernel;

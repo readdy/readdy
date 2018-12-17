@@ -60,7 +60,7 @@ class CPUEvaluateTopologyReactions : public readdy::model::actions::top::Evaluat
 public:
     CPUEvaluateTopologyReactions(CPUKernel* kernel, readdy::scalar timeStep);
 
-    void perform(const util::PerformanceNode &node) override;
+    void perform() override;
 
 private:
     struct TREvent;

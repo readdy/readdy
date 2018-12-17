@@ -56,7 +56,7 @@ class CPUUncontrolledApproximation : public readdy::model::actions::reactions::U
 public:
     CPUUncontrolledApproximation(CPUKernel* kernel, readdy::scalar timeStep);
 
-    void perform(const util::PerformanceNode &node) override;
+    void perform() override;
 
 protected:
     CPUKernel *const kernel;

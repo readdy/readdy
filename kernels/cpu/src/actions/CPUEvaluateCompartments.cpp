@@ -49,8 +49,7 @@ namespace actions {
 
 CPUEvaluateCompartments::CPUEvaluateCompartments(CPUKernel *const kernel) : kernel(kernel) {}
 
-void CPUEvaluateCompartments::perform(const util::PerformanceNode &node) {
-    auto t = node.timeit();
+void CPUEvaluateCompartments::perform() {
     const auto &ctx = kernel->context();
     const auto &compartments = ctx.compartments().get();
     for(auto& e : *kernel->getCPUKernelStateModel().getParticleData()) {
