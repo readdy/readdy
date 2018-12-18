@@ -43,12 +43,11 @@
  * @copyright GPL-3
  */
 
+#include <catch2/catch.hpp>
+
 #include <readdy/common/index_persistent_vector.h>
 #include <readdy/common/range.h>
 #include <memory>
-#include "gtest/gtest.h"
-
-namespace {
 
 struct Element {
     int val;
@@ -62,122 +61,96 @@ struct Element {
     }
 };
 
-TEST(TestIndexPersistentVector, DetectDeactivateable) {
-    using namespace readdy;
+struct NoElement {
+    int val;
+};
 
-    struct NoElement {
-        int val;
-    };
+using ElementPtr = std::shared_ptr<Element>;
 
-    ASSERT_TRUE(util::detail::can_be_deactivated<Element>::value);
-    ASSERT_FALSE(util::detail::can_be_deactivated<NoElement>::value);
-    ASSERT_FALSE(util::detail::can_be_deactivated<std::string>::value);
-}
+using namespace readdy;
 
-TEST(TestIndexPersistentVector, AddAndRemove) {
-    using namespace readdy;
+TEMPLATE_TEST_CASE("Test the index persistent vector class.", "[index-persistent-vector]", Element, ElementPtr) {
     util::index_persistent_vector<Element> vec;
 
-    ASSERT_TRUE(vec.empty());
-    vec.push_back({});
-    vec.push_back({});
-    vec.push_back({});
-
-    ASSERT_EQ(vec.size(), 3);
-    ASSERT_FALSE(vec.empty());
-    vec.erase(vec.begin());
-    vec.erase(vec.begin()+1);
-    vec.erase(vec.begin()+2);
-
-    ASSERT_EQ(vec.size(), 3);
-    ASSERT_EQ(vec.n_deactivated(), 3);
-    ASSERT_TRUE(vec.empty());
-
-    for(const auto& x : vec) {
-        ASSERT_TRUE(x.deactivated);
+    SECTION("Can be deactivated") {
+        CHECK(util::detail::can_be_deactivated<Element>::value);
+        CHECK_FALSE(util::detail::can_be_deactivated<NoElement>::value);
+        CHECK_FALSE(util::detail::can_be_deactivated<std::string>::value);
     }
-}
 
-TEST(TestIndexPersistentVector, EraseRange) {
-    using namespace readdy;
-    util::index_persistent_vector<Element> vec;
-    util::range<int> range {0, 10};
-    std::for_each(range.begin(), range.end(), [&](int) { vec.push_back({}); });
+    SECTION("Add and remove") {
+        REQUIRE(vec.empty());
+        vec.push_back({});
+        vec.push_back({});
+        vec.push_back({});
 
-    ASSERT_EQ(vec.size(), 10);
-    vec.erase(vec.begin(), vec.end()-5);
+        REQUIRE(vec.size() == 3);
+        REQUIRE_FALSE(vec.empty());
+        vec.erase(vec.begin());
+        vec.erase(vec.begin()+1);
+        vec.erase(vec.begin()+2);
 
-    ASSERT_EQ(vec.size(), 10);
-    ASSERT_EQ(vec.n_deactivated(), 5);
+        REQUIRE(vec.size() == 3);
+        REQUIRE(vec.n_deactivated() == 3);
+        REQUIRE(vec.empty());
 
-    for(std::size_t i = 0; i < vec.size(); ++i) {
-        if(i < 5) {
-            EXPECT_TRUE(vec.at(i).deactivated);
-        } else {
-            EXPECT_FALSE(vec.at(i).deactivated);
+        for(const auto& x : vec) {
+            CHECK(x.deactivated);
         }
     }
-}
 
-TEST(TestIndexPersistentVector, ReclaimIndex) {
-    using namespace readdy;
-    util::index_persistent_vector<Element> vec;
-    vec.push_back({});
-    vec.push_back({});
+    SECTION("Erase range") {
+        util::range<int> range {0, 10};
+        std::for_each(range.begin(), range.end(), [&](int) { vec.push_back({}); });
 
-    vec.erase(vec.begin());
-    ASSERT_EQ(vec.size(), 2);
-    ASSERT_EQ(vec.n_deactivated(), 1);
+        REQUIRE(vec.size() == 10);
+        vec.erase(vec.begin(), vec.end()-5);
 
-    vec.emplace_back(-1, false);
-    ASSERT_EQ(vec.size(), 2);
-    ASSERT_EQ(vec.n_deactivated(), 0);
-    ASSERT_EQ(vec.begin()->val, -1);
-    ASSERT_EQ(vec.begin()->deactivated, false);
+        REQUIRE(vec.size() == 10);
+        REQUIRE(vec.n_deactivated() == 5);
 
-    for(const auto& x : vec) {
-        ASSERT_FALSE(x.deactivated);
+        for(std::size_t i = 0; i < vec.size(); ++i) {
+            if(i < 5) {
+                REQUIRE(vec.at(i).deactivated);
+            } else {
+                REQUIRE_FALSE(vec.at(i).deactivated);
+            }
+        }
     }
-}
 
-TEST(TestIndexPersistentVector, Deactivation) {
-    using namespace readdy;
-    util::index_persistent_vector<Element> vec;
+    SECTION("Reclaim index") {
+        vec.push_back({});
+        vec.push_back({});
 
-    vec.push_back({});
-    ASSERT_EQ(vec.size(), 1);
-    ASSERT_EQ(vec.n_deactivated(), 0);
-    ASSERT_FALSE(vec.begin()->deactivated);
+        vec.erase(vec.begin());
+        REQUIRE(vec.size() == 2);
+        REQUIRE(vec.n_deactivated() == 1);
 
-    vec.erase(vec.begin());
-    ASSERT_EQ(vec.size(), 1);
-    ASSERT_EQ(vec.n_deactivated(), 1);
-    ASSERT_TRUE(vec.begin()->deactivated);
+        vec.emplace_back(-1, false);
+        REQUIRE(vec.size() == 2);
+        REQUIRE(vec.n_deactivated() == 0);
+        REQUIRE(vec.begin()->val == -1);
+        REQUIRE_FALSE(vec.begin()->deactivated);
 
-    vec.push_back({});
-    ASSERT_EQ(vec.size(), 1);
-    ASSERT_EQ(vec.n_deactivated(), 0);
-    ASSERT_FALSE(vec.begin()->deactivated);
-}
+        for(const auto& x : vec) {
+            CHECK_FALSE(x.deactivated);
+        }
+    }
 
-TEST(TestIndexPersistentVector, PointerDeactivation) {
-    using namespace readdy;
-    util::index_persistent_vector<std::shared_ptr<Element>> vec;
+    SECTION("Deactivation of elements") {
+        vec.push_back({});
+        REQUIRE(vec.size() == 1);
+        REQUIRE(vec.n_deactivated() == 0);
+        REQUIRE_FALSE(vec.begin()->deactivated);
 
-    vec.push_back(std::make_shared<Element>());
-    ASSERT_EQ(vec.size(), 1);
-    ASSERT_EQ(vec.n_deactivated(), 0);
-    ASSERT_FALSE((*vec.begin())->deactivated);
+        vec.erase(vec.begin());
+        REQUIRE(vec.size() == 1);
+        REQUIRE(vec.n_deactivated() == 1);
+        REQUIRE(vec.begin()->deactivated);
 
-    vec.erase(vec.begin());
-    ASSERT_EQ(vec.size(), 1);
-    ASSERT_EQ(vec.n_deactivated(), 1);
-    ASSERT_TRUE((*vec.begin())->deactivated);
-
-    vec.push_back(std::make_shared<Element>());
-    ASSERT_EQ(vec.size(), 1);
-    ASSERT_EQ(vec.n_deactivated(), 0);
-    ASSERT_FALSE((*vec.begin())->deactivated);
-}
-
+        vec.push_back({});
+        REQUIRE(vec.size() == 1);
+        REQUIRE(vec.n_deactivated() == 0);
+        REQUIRE_FALSE(vec.begin()->deactivated);
+    }
 }

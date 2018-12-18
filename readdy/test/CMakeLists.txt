@@ -35,7 +35,6 @@ LIST(APPEND READDY_TEST_SOURCES TestTopologyReactions.cpp)
 LIST(APPEND READDY_TEST_SOURCES TestTopologyReactionsExternal.cpp)
 LIST(APPEND READDY_TEST_SOURCES TestSimulationSchemes.cpp)
 LIST(APPEND READDY_TEST_SOURCES TestIndexPersistentVector.cpp)
-# LIST(APPEND READDY_TEST_SOURCES TestIO.cpp)
 LIST(APPEND READDY_TEST_SOURCES TestCompartments.cpp)
 LIST(APPEND READDY_TEST_SOURCES TestVec3.cpp)
 LIST(APPEND READDY_TEST_SOURCES TestMatrix33.cpp)
@@ -45,7 +44,8 @@ LIST(APPEND READDY_TEST_SOURCES TestDetailedBalance.cpp)
 LIST(APPEND READDY_TEST_SOURCES TestContext.cpp)
 
 ADD_EXECUTABLE(runUnitTests
-        TestMain.cpp TestAggregators.cpp TestAlgorithms.cpp TestCompartments.cpp
+        TestMain.cpp TestAggregators.cpp TestAlgorithms.cpp TestCompartments.cpp TestContext.cpp
+        TestDetailedBalance.cpp TestIndex.cpp TestIndexPersistentVector.cpp
         ${TESTING_INCLUDE_DIR})
 
 TARGET_INCLUDE_DIRECTORIES(

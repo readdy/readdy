@@ -50,8 +50,6 @@
 #include "readdy/common/algorithm.h"
 
 
-namespace {
-
 using namespace readdy;
 
 struct Event {
@@ -93,64 +91,63 @@ TEST_CASE("Sanity check of the simulation loop.", "[loop]") {
     loop.run(500);
 }
 
-TEST_CASE("Check of performEvents when evaluating all.", "[perform-events]") {
+TEST_CASE("Check performEvents.", "[perform-events]") {
     auto n = 1000U;
     std::vector<Event> events (n);
-    for(auto i = 0U; i < n; ++i) {
-        events.at(i).i = i;
-        events.at(i).rate = i;
-    }
 
-    auto shouldEval = [](const Event &event) { return true; };
-    auto depending = [](const Event &e1, const Event &e2) { return e1.rate == e2.rate; };
-
-    std::unordered_set<int> set;
-    auto eval = [&set](const Event &event) {
-        set.insert(event.i);
-    };
-
-    algo::performEvents(events, shouldEval, depending, eval);
-
-    for(auto i = 0; i < n; ++i) {
-        REQUIRE(set.find(i) != set.end());
-    }
-}
-
-TEST_CASE("Check of performEvents when evaluating only half of the events.", "[perform-events]") {
-    auto n = 1000U;
-    std::vector<Event> events (n);
-    for(auto i = 0U; i < n; ++i) {
-        events.at(i).i = i;
-        events.at(i).rate = static_cast<float>(i/2);
-    }
-
-    auto shouldEval = [](const Event &event) { return true; };
-    auto depending = [](const Event &e1, const Event &e2) { return e1.rate == e2.rate; };
-
-    std::unordered_set<scalar> set;
-    auto eval = [&set, &events](const Event &event) {
-        {
-            // check that the events are all moved to the end that were already taken care of
-            for(const auto rate : set) {
-                auto it1 = std::find_if(events.end() - 2*set.size(), events.end(), [rate](const Event &event) {
-                    return event.rate == rate;
-                });
-                REQUIRE(it1 != events.end());
-                auto it2 = std::find_if(it1+1, events.end(), [rate](const Event &event) {
-                    return event.rate == rate;
-                });
-                REQUIRE(it2 != events.end());
-            }
+    SECTION("Evaluating all events") {
+        for (auto i = 0U; i < n; ++i) {
+            events.at(i).i = i;
+            events.at(i).rate = i;
         }
 
-        set.insert(event.rate);
-    };
+        auto shouldEval = [](const Event &event) { return true; };
+        auto depending = [](const Event &e1, const Event &e2) { return e1.rate == e2.rate; };
 
-    algo::performEvents(events, shouldEval, depending, eval);
+        std::unordered_set<int> set;
+        auto eval = [&set](const Event &event) {
+            set.insert(event.i);
+        };
 
-    for(auto i = 0; i < n/2; ++i) {
-        REQUIRE(set.find(i) != set.end());
+        algo::performEvents(events, shouldEval, depending, eval);
+
+        for (auto i = 0; i < n; ++i) {
+            REQUIRE(set.find(i) != set.end());
+        }
     }
-}
 
+    SECTION("Evaluating half of the events") {
+        for(auto i = 0U; i < n; ++i) {
+            events.at(i).i = i;
+            events.at(i).rate = static_cast<float>(i/2);
+        }
+
+        auto shouldEval = [](const Event &event) { return true; };
+        auto depending = [](const Event &e1, const Event &e2) { return e1.rate == e2.rate; };
+
+        std::unordered_set<scalar> set;
+        auto eval = [&set, &events](const Event &event) {
+            {
+                // check that the events are all moved to the end that were already taken care of
+                for(const auto rate : set) {
+                    auto it1 = std::find_if(events.end() - 2*set.size(), events.end(), [rate](const Event &event) {
+                        return event.rate == rate;
+                    });
+                    REQUIRE(it1 != events.end());
+                    auto it2 = std::find_if(it1+1, events.end(), [rate](const Event &event) {
+                        return event.rate == rate;
+                    });
+                    REQUIRE(it2 != events.end());
+                }
+            }
+
+            set.insert(event.rate);
+        };
+
+        algo::performEvents(events, shouldEval, depending, eval);
+
+        for(auto i = 0; i < n/2; ++i) {
+            REQUIRE(set.find(i) != set.end());
+        }
+    }
 }

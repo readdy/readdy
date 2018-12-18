@@ -39,18 +39,22 @@
 
 
 #define CATCH_CONFIG_RUNNER
+
 #include <catch2/catch.hpp>
 
 #include <readdy/testing/Utils.h>
 #include <readdy/plugin/KernelProvider.h>
 
-int perform_tests(int argc, char **argv) {
-    const auto dir = readdy::testing::getPluginsDirectory();
-    readdy::plugin::KernelProvider::getInstance().loadKernelsFromDirectory(dir);
-    return Catch::Session().run( argc, argv );
-}
-
 int main(int argc, char **argv) {
     readdy::log::console()->set_level(spdlog::level::warn);
-    return perform_tests(argc, argv);
+    Catch::Session session;
+    int returnCode = session.applyCommandLine(argc, argv);
+    if (returnCode != 0) return returnCode;
+
+    if (!session.config().listTestNamesOnly()) {
+        const auto dir = readdy::testing::getPluginsDirectory();
+        readdy::plugin::KernelProvider::getInstance().loadKernelsFromDirectory(dir);
+    }
+
+    return session.run();
 }
