@@ -78,6 +78,10 @@ public:
 
     action_ref
     createChangeParticlePosition(top::GraphTopology *topology, const vertex &v, Vec3 position) const override;
+
+    action_ref
+    createAppendParticle(top::GraphTopology *topology, const std::vector<vertex> &neighbors, ParticleTypeId type,
+                         const Vec3 &position) const override;
 };
 
 NAMESPACE_END(top)

@@ -91,6 +91,10 @@ public:
         return *this;
     }
 
+    Recipe &appendNewParticle(const std::vector<Vertex> &neighbors, const std::string &type, const Vec3 &position);
+
+    Recipe &appendNewParticle(const std::vector<vertex_ref> &neighbors, const std::string &type, const Vec3 &position);
+
     Recipe &changeParticlePosition(const Vertex &v, Vec3 pos);
 
     Recipe &changeParticlePosition(const vertex_ref &ref, const Vec3 &pos) {

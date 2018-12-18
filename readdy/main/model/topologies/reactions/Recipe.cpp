@@ -79,6 +79,24 @@ Recipe &Recipe::separateVertex(const Recipe::Vertex &vertex) {
     return separateVertex(_topology.get().toVertexRef(vertex));
 }
 
+Recipe &
+Recipe::appendNewParticle(const std::vector<Recipe::Vertex> &neighbors, const std::string &type, const Vec3 &position) {
+    std::vector<vertex_ref> refs;
+    auto transf = [this](const Vertex &v) {
+        return _topology.get().toVertexRef(v);
+    };
+    auto neighborsRef = std::transform(neighbors.begin(), neighbors.end(), std::back_inserter(refs), transf);
+    return appendNewParticle(refs, type, position);
+}
+
+Recipe &Recipe::appendNewParticle(const std::vector<vertex_ref> &neighbors, const std::string &type,
+                                  const Vec3 &position) {
+    if(neighbors.empty()) throw std::invalid_argument("Cannot append new particle without specifying any neighbors.");
+    auto typeId = _topology.get().context().particleTypes().idOf(type);
+    _steps.push_back(std::make_shared<op::AppendParticle>(neighbors, typeId, position));
+    return *this;
+}
+
 }
 }
 }

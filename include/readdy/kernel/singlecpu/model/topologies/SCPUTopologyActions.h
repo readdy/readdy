@@ -191,6 +191,38 @@ public:
     }
 };
 
+class SCPUAppendParticle : public readdy::model::top::reactions::actions::AppendParticle {
+    SCPUParticleData *const data;
+    readdy::model::Particle particle;
+    SCPUParticleData::entry_index insertIndex;
+    vertex newParticleIt;
+public:
+    SCPUAppendParticle(SCPUParticleData *const data, top::GraphTopology *topology,
+                       std::vector<vertex> neighbors, ParticleTypeId type, Vec3 pos)
+                       : AppendParticle(topology, std::move(neighbors), type, pos), data(data), particle(pos, type) {};
+
+    void execute() override {
+        auto entry = Entry(particle);
+        insertIndex = data->addEntry(entry);
+        auto firstNeighbor = neighbors[0];
+        topology->appendParticle(insertIndex, type, firstNeighbor->particleIndex, firstNeighbor->particleType());
+        // new particles get appended to the end of the linked list
+        newParticleIt = std::prev(topology->graph().vertices().end());
+        for(auto it = neighbors.begin() + 1; it != neighbors.end(); ++it) {
+            topology->graph().addEdge(newParticleIt, *it);
+        }
+    }
+
+    void undo() override {
+        for (auto &neighbor : neighbors) {
+            topology->graph().removeEdge(newParticleIt, neighbor);
+        }
+        topology->graph().removeVertex(newParticleIt);
+        topology->getParticles().erase(topology->getParticles().cend() - 1);
+        data->removeEntry(insertIndex);
+    }
+};
+
 NAMESPACE_END(op)
 NAMESPACE_END(reactions)
 

@@ -94,3 +94,11 @@ readdy::kernel::cpu::actions::top::CPUTopologyActionFactory::createChangeParticl
         readdy::Vec3 position) const {
     return std::make_unique<reactions::op::CPUChangeParticlePosition>(&_data.get(), topology, v, position);
 }
+
+top::reactions::actions::TopologyReactionActionFactory::action_ref
+readdy::kernel::cpu::actions::top::CPUTopologyActionFactory::createAppendParticle(top::GraphTopology *topology,
+                                                                                  const std::vector<vertex> &neighbors,
+                                                                                  ParticleTypeId type,
+                                                                                  const Vec3 &position) const {
+    return std::make_unique<reactions::op::CPUAppendParticle>(&_data.get(), topology, neighbors, type, position);
+}
