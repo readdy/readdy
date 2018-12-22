@@ -348,7 +348,16 @@ void exportTopologies(py::module &m) {
                 } else {
                     throw std::invalid_argument("vertices out of bounds!");
                 }
-            }, "vertex_index_1"_a, "vertex_index_2"_a);
+            }, "vertex_index_1"_a, "vertex_index_2"_a)
+            .def("add_edge", [](graph &self, const vertex &v1, const vertex &v2) {
+                auto it1 = std::find(self.vertices().begin(), self.vertices().end(), v1);
+                auto it2 = std::find(self.vertices().begin(), self.vertices().end(), v2);
+                if(it1 != self.vertices().end() && it2 != self.vertices().end()) {
+                    self.addEdge(it1, it2);
+                }
+            }, py::return_value_policy::reference_internal)
+            .def("add_edge", [](graph &self, const vertex::vertex_ptr &v1, const vertex::vertex_ptr &v2) {
+                return self.addEdge(v1, v2);;
 
     py::class_<vertex::vertex_ptr>(m, "VertexPointer")
             .def("get", [](const vertex::vertex_ptr &edge) -> const vertex & { return *edge; }, rvp::reference_internal);
