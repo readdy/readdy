@@ -357,7 +357,8 @@ void exportTopologies(py::module &m) {
                 }
             }, py::return_value_policy::reference_internal)
             .def("add_edge", [](graph &self, const vertex::vertex_ptr &v1, const vertex::vertex_ptr &v2) {
-                return self.addEdge(v1, v2);;
+                return self.addEdge(v1, v2);
+            });
 
     py::class_<vertex::vertex_ptr>(m, "VertexPointer")
             .def("get", [](const vertex::vertex_ptr &edge) -> const vertex & { return *edge; }, rvp::reference_internal);
