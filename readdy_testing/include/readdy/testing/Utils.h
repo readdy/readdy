@@ -54,10 +54,10 @@
 
 namespace readdy::testing {
 
-static bool vec3eq(const readdy::Vec3 &v1, const readdy::Vec3 &v2) {
+static bool vec3eq(const readdy::Vec3 &v1, const readdy::Vec3 &v2, double epsilon=0) {
     using namespace Catch::Floating;
     for(auto i : {0, 1, 2}) {
-        if (v1[i] != Approx(v2[i])) return false;
+        if (v1[i] != Approx(v2[i]).epsilon(epsilon)) return false;
     }
     return true;
 }

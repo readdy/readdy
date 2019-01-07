@@ -46,7 +46,7 @@ LIST(APPEND READDY_TEST_SOURCES TestContext.cpp)
 ADD_EXECUTABLE(runUnitTests
         TestMain.cpp TestAggregators.cpp TestAlgorithms.cpp TestCompartments.cpp TestContext.cpp
         TestDetailedBalance.cpp TestIndex.cpp TestIndexPersistentVector.cpp TestIntegration.cpp
-        TestMatrix33.cpp
+        TestMatrix33.cpp TestObservables.cpp TestPlugins.cpp TestPotentials.cpp
         ${TESTING_INCLUDE_DIR})
 
 TARGET_INCLUDE_DIRECTORIES(
