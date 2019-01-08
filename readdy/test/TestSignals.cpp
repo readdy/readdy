@@ -1,3 +1,5 @@
+#include <utility>
+
 /********************************************************************
  * Copyright © 2018 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
@@ -37,16 +39,15 @@
 // Created by mho on 17/10/2016.
 //
 
-#include <gtest/gtest.h>
+
+#include <catch2/catch.hpp>
 #include <readdy/common/signals.h>
 
 namespace sig = readdy::signals;
 
-namespace {
-
 struct TestSlot {
 
-    explicit TestSlot(const std::function<void()> &callback) : callback(callback) {}
+    explicit TestSlot(std::function<void()> callback) : callback(std::move(callback)) {}
 
     void operator()() {
         callback();
@@ -56,38 +57,36 @@ private:
     std::function<void()> callback;
 };
 
-TEST(TestSignals, TestSimpleSignalConnectDisconnect) {
-    sig::signal<void(int)> signal;
-
-    {
-        auto connection = signal.connect([](int i) {});
-        EXPECT_EQ(signal.n_slots(), 1);
-        connection.disconnect();
-        EXPECT_EQ(signal.n_slots(), 0);
-    }
-    {
-        auto scoped = signal.connect_scoped([](int i) {});
-        EXPECT_EQ(signal.n_slots(), 1);
-    }
-    EXPECT_EQ(signal.n_slots(), 0);
-}
-
-TEST(TestSignals, TestStructSignalConnectDisconnect) {
-    sig::signal<void()> signal;
-    unsigned int called = 0;
-    {
-        TestSlot slot{[&called] {
-            ++called;
-        }};
+TEST_CASE("Test the signals class") {
+    SECTION("Connect and disconnect") {
+        sig::signal<void(int)> signal;
         {
-            auto scoped = signal.connect_scoped(slot);
-            EXPECT_EQ(signal.n_slots(), 1);
-            signal.fire_signal();
+            auto connection = signal.connect([](int i) {});
+            REQUIRE(signal.n_slots() == 1);
+            connection.disconnect();
+            REQUIRE(signal.n_slots() == 0);
         }
-        slot();
-        EXPECT_EQ(signal.n_slots(), 0);
-        EXPECT_EQ(called, 2);
+        {
+            auto scoped = signal.connect_scoped([](int i) {});
+            REQUIRE(signal.n_slots() == 1);
+        }
+        REQUIRE(signal.n_slots() == 0);
     }
-}
-
+    SECTION("Connect and disconnect with struct") {
+        sig::signal<void()> signal;
+        unsigned int called = 0;
+        {
+            TestSlot slot{[&called] {
+                ++called;
+            }};
+            {
+                auto scoped = signal.connect_scoped(slot);
+                REQUIRE(signal.n_slots() == 1);
+                signal.fire_signal();
+            }
+            slot();
+            REQUIRE(signal.n_slots() == 0);
+            REQUIRE(called == 2);
+        }
+    }
 }
