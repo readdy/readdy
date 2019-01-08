@@ -35,15 +35,14 @@
 
 #include <array>
 
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
+#include <catch2/catch.hpp>
 
-#include <readdy/testing/KernelTest.h>
 #include <readdy/testing/Utils.h>
-
+#include <readdy/testing/KernelTest.h>
 #include <readdy/common/numeric.h>
 
-class TestTopologyGraphs : public KernelTest {};
+using namespace readdy;
+using namespace readdytesting::kernel;
 
 /**
  * << detailed description >>
@@ -55,90 +54,135 @@ class TestTopologyGraphs : public KernelTest {};
  * @copyright GPL-3
  */
 
+TEST_CASE("Test topology graphs") {
+
+    SECTION("Test the hasher") {
+        SECTION("Quadruples") {
+            readdy::util::particle_type_quadruple_hasher hasher;
+            std::array<readdy::ParticleTypeId, 4> range{1, 2, 3, 4};
+            do {
+                REQUIRE(util::sortTypeQuadruple(range[0], range[1], range[2], range[3]) == std::make_tuple(1, 2, 3, 4));
+            } while (std::next_permutation(range.begin(), range.end()));
+            REQUIRE(hasher(std::make_tuple(1, 2, 3, 4)) == hasher(std::make_tuple(4, 3, 2, 1)));
+            REQUIRE(hasher(std::make_tuple(1, 3, 2, 4)) == hasher(std::make_tuple(4, 2, 3, 1)));
+        }
+        SECTION("Triples") {
+            readdy::util::particle_type_triple_hasher hasher;
+            std::array<readdy::ParticleTypeId, 3> range{1, 2, 3};
+            do {
+                REQUIRE(readdy::util::sortTypeTriple(range[0], range[1], range[2]) == std::make_tuple(1, 2, 3));
+            } while (std::next_permutation(range.begin(), range.end()));
+            REQUIRE(hasher(std::make_tuple(1, 2, 3)) == hasher(std::make_tuple(3, 2, 1)));
+            REQUIRE(hasher(std::make_tuple(2, 1, 3)) == hasher(std::make_tuple(3, 1, 2)));
+        }
+        SECTION("Tuples") {
+            readdy::util::particle_type_pair_hasher hasher;
+            REQUIRE(hasher(std::make_tuple(1, 2)) == hasher(std::make_tuple(2, 1)));
+            util::particle_type_pair_unordered_map<int> map;
+            int a = 1, b = 2;
+            map[std::make_tuple(a, b)] = 5;
+            REQUIRE(map[std::make_tuple(1, 2)] == 5);
+            REQUIRE(map[std::make_tuple(2, 1)] == 5);
+        }
+    }
+    SECTION("Test the graph") {
+        readdy::model::top::graph::Graph graph;
+        graph.addVertex(0, 0);
+        graph.addVertex(1, 0);
+        SECTION("Access with indices") {
+            graph.addEdge(graph.vertices().begin(), ++graph.vertices().begin());
+            REQUIRE(graph.vertices().size() == 2);
+            REQUIRE(graph.vertexForParticleIndex(0).particleIndex == 0);
+            REQUIRE(graph.vertexForParticleIndex(1).particleIndex == 1);
+            REQUIRE(graph.vertexForParticleIndex(0).neighbors().size() == 1);
+            REQUIRE(graph.vertexForParticleIndex(1).neighbors().size() == 1);
+            REQUIRE(graph.vertexForParticleIndex(0).neighbors()[0]->particleIndex == 1);
+            REQUIRE(graph.vertexForParticleIndex(1).neighbors()[0]->particleIndex == 0);
+            graph.removeParticle(0);
+            REQUIRE(graph.vertices().size() == 1);
+            REQUIRE(graph.vertexForParticleIndex(1).particleIndex == 1);
+            REQUIRE(graph.vertexForParticleIndex(1).neighbors().empty());
+        }
+        SECTION("Connected components") {
+            graph.addVertex(2, 0);
+
+            auto vertex_ref_0 = graph.vertices().begin();
+            auto vertex_ref_1 = ++graph.vertices().begin();
+            auto vertex_ref_2 = ++(++graph.vertices().begin());
+
+            auto it = graph.vertices().begin();
+            auto it_adv = ++graph.vertices().begin();
+            graph.addEdge(it, it_adv);
+
+            auto subGraphs = graph.connectedComponentsDestructive();
+            REQUIRE(subGraphs.size() == 2);
+            {
+                REQUIRE(subGraphs[0].vertices().size() == 2);
+                REQUIRE(subGraphs[0].vertices().begin() == vertex_ref_0);
+                REQUIRE(++subGraphs[0].vertices().begin() == vertex_ref_1);
+            }
+            {
+                REQUIRE(subGraphs[1].vertices().size() == 1);
+                REQUIRE(subGraphs[1].vertices().begin() == vertex_ref_2);
+            }
+        }
+        SECTION("Find N tuples") {
+            graph.addVertex(2, 0);
+            graph.addVertex(3, 0);
+
+            graph.addEdge(graph.firstVertex(), std::next(graph.firstVertex()));
+            graph.addEdge(std::next(graph.firstVertex()), std::next(graph.firstVertex(), 2));
+            graph.addEdge(std::next(graph.firstVertex(), 2), std::next(graph.firstVertex(), 3));
+            graph.addEdge(std::next(graph.firstVertex(), 3), graph.firstVertex());
+
+            auto n_tuples = graph.findNTuples();
+            const auto& tuples = std::get<0>(n_tuples);
+            const auto& triples = std::get<1>(n_tuples);
+            const auto& quadruples = std::get<2>(n_tuples);
+
+            REQUIRE(tuples.size() == 4);
+            REQUIRE(triples.size() == 4);
+            REQUIRE(quadruples.size() == 4);
+
+            auto a = graph.firstVertex();
+            auto b = std::next(graph.firstVertex());
+            auto c = std::next(graph.firstVertex(), 2);
+            auto d = std::next(graph.firstVertex(), 3);
+
+            // tuples
+            ASSERT_THAT(tuples, AnyOf(Contains(std::tie(a, b)), Contains(std::tie(b, a))));
+            ASSERT_THAT(tuples, AnyOf(Contains(std::tie(b, c)), Contains(std::tie(c, b))));
+            ASSERT_THAT(tuples, AnyOf(Contains(std::tie(c, d)), Contains(std::tie(d, c))));
+            ASSERT_THAT(tuples, AnyOf(Contains(std::tie(d, a)), Contains(std::tie(a, d))));
+
+            // triples
+            ASSERT_THAT(triples, AnyOf(Contains(std::tie(a, b, c)), Contains(std::tie(c, b, a))));
+            ASSERT_THAT(triples, AnyOf(Contains(std::tie(b, c, d)), Contains(std::tie(d, c, b))));
+            ASSERT_THAT(triples, AnyOf(Contains(std::tie(c, d, a)), Contains(std::tie(a, d, c))));
+            ASSERT_THAT(triples, AnyOf(Contains(std::tie(d, a, b)), Contains(std::tie(b, a, d))));
+
+            // quadruples
+            ASSERT_THAT(quadruples, AnyOf(Contains(std::tie(d, a, b, c)), Contains(std::tie(c, b, a, d))));
+            ASSERT_THAT(quadruples, AnyOf(Contains(std::tie(a, b, c, d)), Contains(std::tie(d, c, b, a))));
+            ASSERT_THAT(quadruples, AnyOf(Contains(std::tie(b, c, d, a)), Contains(std::tie(a, d, c, b))));
+            ASSERT_THAT(quadruples, AnyOf(Contains(std::tie(c, d, a, b)), Contains(std::tie(b, a, d, c))));
+        }
+    }
+
+}
+
 using particle_t = readdy::model::Particle;
 using topology_particle_t = readdy::model::TopologyParticle;
 
 using dihedral_bond = readdy::model::top::pot::CosineDihedralPotential;
 
-TEST(TestTopologyGraphs, TestQuadruple) {
-    readdy::util::particle_type_quadruple_hasher hasher;
-    std::array<readdy::ParticleTypeId, 4> range{1, 2, 3, 4};
-    do {
-        std::stringstream ss;
-        ss << range[0] << ", " << range[1] << ", " << range[2] << ", " << range[3];
-        EXPECT_EQ(readdy::util::sortTypeQuadruple(range[0], range[1], range[2], range[3]), std::make_tuple(1, 2, 3, 4))
-                            << "failed for range " << ss.str() << ", should always yield a sorted tuple!";
-    } while (std::next_permutation(range.begin(), range.end()));
-    EXPECT_EQ(hasher(std::make_tuple(1, 2, 3, 4)), hasher(std::make_tuple(4, 3, 2, 1)));
-    EXPECT_EQ(hasher(std::make_tuple(1, 3, 2, 4)), hasher(std::make_tuple(4, 2, 3, 1)));
-}
-
-TEST(TestTopologyGraphs, TestTriple) {
-    readdy::util::particle_type_triple_hasher hasher;
-    std::array<readdy::ParticleTypeId, 3> range{1, 2, 3};
-    do {
-        std::stringstream ss;
-        ss << range[0] << ", " << range[1] << ", " << range[2];
-        EXPECT_EQ(readdy::util::sortTypeTriple(range[0], range[1], range[2]), std::make_tuple(1, 2, 3))
-                            << "failed for range " << ss.str() << ", should always yield a sorted tuple!";
-    } while (std::next_permutation(range.begin(), range.end()));
-    EXPECT_EQ(hasher(std::make_tuple(1, 2, 3)), hasher(std::make_tuple(3, 2, 1)));
-    EXPECT_EQ(hasher(std::make_tuple(2, 1, 3)), hasher(std::make_tuple(3, 1, 2)));
-}
-
-TEST(TestTopologyGraphs, TestTuple) {
-    readdy::util::particle_type_pair_hasher hasher;
-    EXPECT_EQ(hasher(std::make_tuple(1, 2)), hasher(std::make_tuple(2, 1)));
-    readdy::util::particle_type_pair_unordered_map<int> map;
-    int a = 1, b = 2;
-    map[std::make_tuple(a, b)] = 5;
-    EXPECT_EQ(map[std::make_tuple(1, 2)], 5);
-    EXPECT_EQ(map[std::make_tuple(2, 1)], 5);
-}
-
 TEST(TestTopologyGraphs, TestGraphWithIndices) {
-    readdy::model::top::graph::Graph graph;
-    graph.addVertex(0, 0);
-    graph.addVertex(1, 0);
-    graph.addEdge(graph.vertices().begin(), ++graph.vertices().begin());
-    EXPECT_EQ(graph.vertices().size(), 2);
-    EXPECT_EQ(graph.vertexForParticleIndex(0).particleIndex, 0);
-    EXPECT_EQ(graph.vertexForParticleIndex(1).particleIndex, 1);
-    EXPECT_EQ(graph.vertexForParticleIndex(0).neighbors().size(), 1);
-    EXPECT_EQ(graph.vertexForParticleIndex(1).neighbors().size(), 1);
-    EXPECT_EQ(graph.vertexForParticleIndex(0).neighbors()[0]->particleIndex, 1);
-    EXPECT_EQ(graph.vertexForParticleIndex(1).neighbors()[0]->particleIndex, 0);
-    graph.removeParticle(0);
-    EXPECT_EQ(graph.vertices().size(), 1);
-    EXPECT_EQ(graph.vertexForParticleIndex(1).particleIndex, 1);
-    EXPECT_EQ(graph.vertexForParticleIndex(1).neighbors().size(), 0);
+
 }
 
 TEST(TestTopologyGraphs, ConnectedSubComponents) {
     readdy::model::top::graph::Graph graph;
-    graph.addVertex(0, 0);
-    graph.addVertex(1, 0);
-    graph.addVertex(2, 0);
 
-    auto vertex_ref_0 = graph.vertices().begin();
-    auto vertex_ref_1 = ++graph.vertices().begin();
-    auto vertex_ref_2 = ++(++graph.vertices().begin());
-
-    auto it = graph.vertices().begin();
-    auto it_adv = ++graph.vertices().begin();
-    graph.addEdge(it, it_adv);
-
-    auto subGraphs = graph.connectedComponentsDestructive();
-    ASSERT_EQ(subGraphs.size(), 2);
-    {
-        ASSERT_EQ(subGraphs[0].vertices().size(), 2);
-        ASSERT_EQ(subGraphs[0].vertices().begin(), vertex_ref_0);
-        ASSERT_EQ(++subGraphs[0].vertices().begin(), vertex_ref_1);
-    }
-    {
-        ASSERT_EQ(subGraphs[1].vertices().size(), 1);
-        ASSERT_EQ(subGraphs[1].vertices().begin(), vertex_ref_2);
-    }
 }
 
 TEST(TestTopologyGraphs, TestTopologyWithGraph) {
@@ -182,45 +226,7 @@ TEST(TestTopologyGraphs, TestFindNTuples) {
     readdy::model::top::graph::Graph graph;
     graph.addVertex(0, 0);
     graph.addVertex(1, 0);
-    graph.addVertex(2, 0);
-    graph.addVertex(3, 0);
 
-    graph.addEdge(graph.firstVertex(), std::next(graph.firstVertex()));
-    graph.addEdge(std::next(graph.firstVertex()), std::next(graph.firstVertex(), 2));
-    graph.addEdge(std::next(graph.firstVertex(), 2), std::next(graph.firstVertex(), 3));
-    graph.addEdge(std::next(graph.firstVertex(), 3), graph.firstVertex());
-
-    auto n_tuples = graph.findNTuples();
-    const auto& tuples = std::get<0>(n_tuples);
-    const auto& triples = std::get<1>(n_tuples);
-    const auto& quadruples = std::get<2>(n_tuples);
-
-    EXPECT_EQ(tuples.size(), 4);
-    EXPECT_EQ(triples.size(), 4);
-    EXPECT_EQ(quadruples.size(), 4);
-
-    auto a = graph.firstVertex();
-    auto b = std::next(graph.firstVertex());
-    auto c = std::next(graph.firstVertex(), 2);
-    auto d = std::next(graph.firstVertex(), 3);
-
-    // tuples
-    ASSERT_THAT(tuples, AnyOf(Contains(std::tie(a, b)), Contains(std::tie(b, a))));
-    ASSERT_THAT(tuples, AnyOf(Contains(std::tie(b, c)), Contains(std::tie(c, b))));
-    ASSERT_THAT(tuples, AnyOf(Contains(std::tie(c, d)), Contains(std::tie(d, c))));
-    ASSERT_THAT(tuples, AnyOf(Contains(std::tie(d, a)), Contains(std::tie(a, d))));
-
-    // triples
-    ASSERT_THAT(triples, AnyOf(Contains(std::tie(a, b, c)), Contains(std::tie(c, b, a))));
-    ASSERT_THAT(triples, AnyOf(Contains(std::tie(b, c, d)), Contains(std::tie(d, c, b))));
-    ASSERT_THAT(triples, AnyOf(Contains(std::tie(c, d, a)), Contains(std::tie(a, d, c))));
-    ASSERT_THAT(triples, AnyOf(Contains(std::tie(d, a, b)), Contains(std::tie(b, a, d))));
-
-    // quadruples
-    ASSERT_THAT(quadruples, AnyOf(Contains(std::tie(d, a, b, c)), Contains(std::tie(c, b, a, d))));
-    ASSERT_THAT(quadruples, AnyOf(Contains(std::tie(a, b, c, d)), Contains(std::tie(d, c, b, a))));
-    ASSERT_THAT(quadruples, AnyOf(Contains(std::tie(b, c, d, a)), Contains(std::tie(a, d, c, b))));
-    ASSERT_THAT(quadruples, AnyOf(Contains(std::tie(c, d, a, b)), Contains(std::tie(b, a, d, c))));
 }
 
 
