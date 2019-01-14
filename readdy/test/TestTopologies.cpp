@@ -312,4 +312,39 @@ TEMPLATE_TEST_CASE("Test topologies.", "[topologies]", SingleCPU, CPU) {
         readdy::testing::vec3eq(collectedForces[2], force_x_k, 1e-6);
         readdy::testing::vec3eq(collectedForces[3], force_x_l, 1e-6);
     }
+
+    SECTION("Sanity") {
+        auto &ctx = kernel->context();
+
+        ctx.particleTypes().add("Topology A", 1.0, readdy::model::particleflavor::TOPOLOGY);
+        ctx.particleTypes().add("Topology B", 1.0, readdy::model::particleflavor::TOPOLOGY);
+
+        ctx.topologyRegistry().configureBondPotential("Topology A", "Topology B", {1.0, 1.0});
+        ctx.topologyRegistry().configureBondPotential("Topology A", "Topology A", {1.0, 1.0});
+        ctx.topologyRegistry().configureAnglePotential("Topology B", "Topology A", "Topology A", {1.0, 1.0});
+        ctx.topologyRegistry().configureTorsionPotential("Topology A", "Topology B", "Topology A", "Topology A",
+                                                         {1.0, 1.0, 3.0});
+
+        ctx.boxSize() = {{10, 10, 10}};
+        topology_particle_t x_i{-1, 0, 0, ctx.particleTypes().idOf("Topology A")};
+        topology_particle_t x_j{0, 0, 0, ctx.particleTypes().idOf("Topology A")};
+        topology_particle_t x_k{0, 0, 1, ctx.particleTypes().idOf("Topology B")};
+        topology_particle_t x_l{1, .1, 1, ctx.particleTypes().idOf("Topology A")};
+
+        auto top = kernel->stateModel().addTopology(0, {x_i, x_j, x_k, x_l});
+        REQUIRE(top->graph().vertices().size() == 4);
+        auto it = top->graph().vertices().begin();
+        auto it2 = ++top->graph().vertices().begin();
+        REQUIRE_FALSE(top->graph().isConnected());
+        top->graph().addEdge(it++, it2++);
+        REQUIRE_FALSE(top->graph().isConnected());
+        top->graph().addEdge(it++, it2++);
+        REQUIRE_FALSE(top->graph().isConnected());
+        top->graph().addEdge(it++, it2++);
+        REQUIRE(top->graph().isConnected());
+
+        top->graph().addEdge(top->graph().firstVertex(), top->graph().lastVertex());
+        REQUIRE(top->graph().isConnected());
+        top->configure();
+    }
 }

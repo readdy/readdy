@@ -24,6 +24,7 @@ ADD_EXECUTABLE(runUnitTests
         TestDetailedBalance.cpp TestIndex.cpp TestIndexPersistentVector.cpp TestIntegration.cpp
         TestMatrix33.cpp TestObservables.cpp TestPlugins.cpp TestPotentials.cpp TestReactions.cpp
         TestSignals.cpp TestSimulationSchemes.cpp TestStateModel.cpp TestTopologies.cpp TestTopologyGraphs.cpp
+        TestTopologyReactions.cpp TestTopologyReactionsExternal.cpp TestVec3.cpp
         ${TESTING_INCLUDE_DIR})
 
 TARGET_INCLUDE_DIRECTORIES(
