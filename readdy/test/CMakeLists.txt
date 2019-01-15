@@ -19,7 +19,9 @@
 # <http://www.gnu.org/licenses/>.                                   #
 #####################################################################
 
-ADD_EXECUTABLE(runUnitTests
+project(runUnitTests)
+
+add_executable(${PROJECT_NAME}
         TestMain.cpp TestAggregators.cpp TestAlgorithms.cpp TestCompartments.cpp TestContext.cpp
         TestDetailedBalance.cpp TestIndex.cpp TestIndexPersistentVector.cpp TestIntegration.cpp
         TestMatrix33.cpp TestObservables.cpp TestPlugins.cpp TestPotentials.cpp TestReactions.cpp
@@ -27,24 +29,20 @@ ADD_EXECUTABLE(runUnitTests
         TestTopologyReactions.cpp TestTopologyReactionsExternal.cpp TestVec3.cpp
         ${TESTING_INCLUDE_DIR})
 
-TARGET_INCLUDE_DIRECTORIES(
-        runUnitTests PUBLIC ${READDY_INCLUDE_DIRS} ${TESTING_INCLUDE_DIR}
+target_include_directories(
+        ${PROJECT_NAME} PUBLIC ${READDY_INCLUDE_DIRS} ${TESTING_INCLUDE_DIR}
 )
 
-TARGET_COMPILE_DEFINITIONS(runUnitTests PRIVATE READDY_KERNELS_TO_TEST="${READDY_KERNELS_TO_TEST}")
+target_link_libraries(${PROJECT_NAME} PUBLIC readdy Catch2::Catch2)
 
-TARGET_LINK_LIBRARIES(runUnitTests PUBLIC readdy Catch2::Catch2)
-
-SET_TARGET_PROPERTIES(runUnitTests PROPERTIES
+set_target_properties(${PROJECT_NAME} PROPERTIES
         LINK_FLAGS "${EXTRA_LINK_FLAGS}"
         COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}")
-catch_discover_tests(runUnitTests)
+catch_discover_tests(${PROJECT_NAME})
 
-IF (READDY_INSTALL_UNIT_TEST_EXECUTABLE)
-    INSTALL(TARGETS runUnitTests
+if (READDY_INSTALL_UNIT_TEST_EXECUTABLE)
+    install(TARGETS ${PROJECT_NAME}
             RUNTIME DESTINATION bin
             LIBRARY DESTINATION lib
             ARCHIVE DESTINATION lib)
-ENDIF (READDY_INSTALL_UNIT_TEST_EXECUTABLE)
-
-# CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/simple_trajectory.h5 ${CMAKE_CURRENT_BINARY_DIR}/simple_trajectory.h5)
+endif (READDY_INSTALL_UNIT_TEST_EXECUTABLE)
