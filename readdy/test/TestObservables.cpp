@@ -68,6 +68,8 @@ TEMPLATE_TEST_CASE("Test observables", "[observables]", SingleCPU, CPU) {
         auto &&obs = kernel->observe().positions(3);
         auto &&connection = kernel->connectObservable(obs.get());
 
+        kernel->initialize();
+
         auto &&integrator = kernel->actions().createIntegrator("EulerBDIntegrator", timeStep);
         using update_nl = readdy::model::actions::UpdateNeighborList;
         auto &&neighborListInit = kernel->actions().updateNeighborList(update_nl::Operation::init, 0);
