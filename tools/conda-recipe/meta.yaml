@@ -28,6 +28,7 @@ requirements:
     - {{ compiler('c') }} # [not osx]
     - {{ compiler('cxx') }} # [not osx]
     - cmake # [not win]
+    - python
 
   run:
     - python
