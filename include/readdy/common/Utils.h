@@ -56,7 +56,7 @@
 #include <algorithm>
 #include <functional>
 #include <utility>
-#include <readdy/common/macros.h>
+#include <readdy/common/common.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(util)

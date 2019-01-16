@@ -46,7 +46,6 @@
 #define READDY_MAIN_KERNELMOCK_H
 
 #include <readdy/model/Kernel.h>
-#include <gmock/gmock.h>
 
 namespace readdy {
 namespace testing {
@@ -90,25 +89,6 @@ public:
     }
 };
 
-class KernelMock : public readdy::model::Kernel {
-
-public:
-    explicit KernelMock(const std::string &name) : Kernel(name) {}
-
-    MOCK_METHOD0(actions, readdy::model::actions::ActionFactory & (void));
-
-    MOCK_CONST_METHOD0(actions, const readdy::model::actions::ActionFactory & (
-            void));
-
-    MOCK_METHOD0(stateModel, readdy::model::StateModel &(void));
-    MOCK_CONST_METHOD0(stateModel, const readdy::model::StateModel & (void));
-
-    MOCK_METHOD0(observe, readdy::model::observables::ObservableFactory &(void));
-    MOCK_CONST_METHOD0(observe, const readdy::model::observables::ObservableFactory & (void));
-
-    MOCK_METHOD0(getTopologyActionFactory, readdy::model::top::TopologyActionFactory*const (void));
-    MOCK_CONST_METHOD0(getTopologyActionFactory, const readdy::model::top::TopologyActionFactory*const (void));
-};
 }
 }
 #endif //READDY_MAIN_KERNELMOCK_H

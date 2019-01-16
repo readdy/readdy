@@ -8,8 +8,14 @@ unset MACOSX_DEPLOYMENT_TARGET
 #                                                       #
 #########################################################
 
-# prefix path
+# install prefix
 CMAKE_FLAGS="-DCMAKE_INSTALL_PREFIX=${PREFIX}"
+# prefix path
+CMAKE_FLAGS+=" -DCMAKE_PREFIX_PATH=${PREFIX}"
+# python prefix
+CMAKE_FLAGS+=" -DPYTHON_PREFIX=${PREFIX}"
+# python executable
+CMAKE_FLAGS+=" -DPYTHON_EXECUTABLE=${PYTHON}"
 # do not generate documentation target
 CMAKE_FLAGS+=" -DREADDY_GENERATE_DOCUMENTATION_TARGET:BOOL=OFF"
 # build monolithic lib
@@ -49,13 +55,8 @@ do
 done
 
 cmake .. ${CMAKE_FLAGS}
-make ${MAKEFLAGS}
+make ${MAKEFLAGS} -v
 make install
-
-#if [ $(uname) = "Darwin" ]; then
-#    install_name_tool -add_rpath @loader_path/../readdy/readdy_plugins/ $BUILD_PREFIX/bin/runUnitTests_singlecpu
-#    install_name_tool -add_rpath @loader_path/../readdy/readdy_plugins/ $BUILD_PREFIX/bin/runUnitTests_cpu
-#fi
 
 export READDY_N_CORES=2
 
@@ -63,7 +64,7 @@ err_code=0
 ret_code=0
 
 echo "calling c++ core unit tests"
-CONDA_ENV_PATH=${PREFIX} bin/runUnitTests
+CONDA_ENV_PATH=${PREFIX} bin/runUnitTests --durations yes
 err_code=$?
 if [ ${err_code} -ne 0 ]; then
     ret_code=${err_code}
@@ -71,7 +72,7 @@ if [ ${err_code} -ne 0 ]; then
 fi
 
 echo "calling c++ singlecpu unit tests"
-CONDA_ENV_PATH=${PREFIX} bin/runUnitTests_singlecpu
+CONDA_ENV_PATH=${PREFIX} bin/runUnitTests_singlecpu --durations yes
 err_code=$?
 if [ ${err_code} -ne 0 ]; then
     ret_code=${err_code}
@@ -79,7 +80,7 @@ if [ ${err_code} -ne 0 ]; then
 fi
 
 echo "calling c++ cpu unit tests"
-CONDA_ENV_PATH=${PREFIX} bin/runUnitTests_cpu
+CONDA_ENV_PATH=${PREFIX} bin/runUnitTests_cpu --durations yes
 err_code=$?
 if [ ${err_code} -ne 0 ]; then
     ret_code=${err_code}

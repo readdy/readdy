@@ -46,16 +46,18 @@
 #ifndef READDY_MAIN_KERNELTEST_H
 #define READDY_MAIN_KERNELTEST_H
 
-#include <gtest/gtest.h>
 #include <readdy/model/Kernel.h>
 #include <readdy/plugin/KernelProvider.h>
 
-class KernelTest : public ::testing::TestWithParam<std::string> {
-public:
-    readdy::plugin::KernelProvider::kernel_ptr kernel;
+namespace readdytesting::kernel {
 
-    explicit KernelTest() : kernel(readdy::plugin::KernelProvider::getInstance().create(GetParam())) {
-    }
+struct SingleCPU { static constexpr auto value = "SingleCPU"; };
+struct CPU { static constexpr auto value = "CPU"; };
+
+template<typename Kernel> readdy::plugin::KernelProvider::kernel_ptr create() {
+    return readdy::plugin::KernelProvider::getInstance().create(Kernel::value);
 };
+
+}
 
 #endif //READDY_MAIN_KERNELTEST_H

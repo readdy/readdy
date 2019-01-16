@@ -61,11 +61,17 @@
  * @copyright GPL-3
  */
 
-#include <gtest/gtest.h>
-#include <readdy/plugin/KernelProvider.h>
-#include <readdy/common/numeric.h>
+#include <catch2/catch.hpp>
+
 #include <readdy/testing/Utils.h>
 #include <readdy/testing/KernelTest.h>
+
+#include <readdy/plugin/KernelProvider.h>
+#include <readdy/common/numeric.h>
+
+namespace m = readdy::model;
+
+using namespace readdytesting::kernel;
 
 using particle_t = readdy::model::Particle;
 using topology_particle_t = readdy::model::TopologyParticle;
@@ -74,251 +80,271 @@ using harmonic_bond = readdy::model::top::pot::HarmonicBondPotential;
 using angle_bond = readdy::model::top::pot::HarmonicAnglePotential;
 using dihedral_bond = readdy::model::top::pot::CosineDihedralPotential;
 
-namespace {
+TEMPLATE_TEST_CASE("Test topologies.", "[topologies]", SingleCPU, CPU) {
+    auto kernel = create<TestType>();
 
+    SECTION("Bonded potential") {
 
-struct TestTopologies : KernelTest {
+        /**
+         * k_bonded = 10
+         * d_0 = 5
+         * def bonded_energy(x_i, x_j):
+         *      result = k_bonded * ((np.linalg.norm(x_j - x_i) - d_0) ** 2)
+         *      return result
+         * x_i = np.array([4.0, 0., 0.])
+         * x_j = np.array([1.0, 0., 0.])
+         * print bonded_energy(x_i, x_j)
+         * partial_derivative_nd(bonded_energy, 0||1, x_i, x_j)
+         */
 
-};
-
-/**
- * k_bonded = 10
- * d_0 = 5
- * def bonded_energy(x_i, x_j):
- *      result = k_bonded * ((np.linalg.norm(x_j - x_i) - d_0) ** 2)
- *      return result
- * x_i = np.array([4.0, 0., 0.])
- * x_j = np.array([1.0, 0., 0.])
- * print bonded_energy(x_i, x_j)
- * partial_derivative_nd(bonded_energy, 0||1, x_i, x_j)
- */
-TEST_P(TestTopologies, BondedPotential) {
-    auto &ctx = kernel->context();
-    ctx.particleTypes().add("Topology A", 1.0, readdy::model::particleflavor::TOPOLOGY);
-    ctx.boxSize() = {{10, 10, 10}};
-    topology_particle_t x_i{4, 0, 0, ctx.particleTypes().idOf("Topology A")};
-    topology_particle_t x_j{1, 0, 0, ctx.particleTypes().idOf("Topology A")};
-    auto top = kernel->stateModel().addTopology(0,{x_i, x_j});
-    {
-        harmonic_bond::bond_configurations bonds;
-        bonds.emplace_back(0, 1, 10.0, 5.0);
-        top->addBondedPotential<harmonic_bond>(bonds);
-    }
-    auto fObs = kernel->observe().forces(1);
-    std::vector<readdy::Vec3> collectedForces;
-    fObs->callback() = [&collectedForces](const readdy::model::observables::Forces::result_type &result) {
-        for (const auto &force : result) {
-            collectedForces.push_back(force);
+        auto &ctx = kernel->context();
+        ctx.particleTypes().add("Topology A", 1.0, readdy::model::particleflavor::TOPOLOGY);
+        ctx.boxSize() = {{10, 10, 10}};
+        topology_particle_t x_i{4, 0, 0, ctx.particleTypes().idOf("Topology A")};
+        topology_particle_t x_j{1, 0, 0, ctx.particleTypes().idOf("Topology A")};
+        auto top = kernel->stateModel().addTopology(0,{x_i, x_j});
+        {
+            harmonic_bond::bond_configurations bonds;
+            bonds.emplace_back(0, 1, 10.0, 5.0);
+            top->template addBondedPotential<harmonic_bond>(bonds);
         }
-    };
+        auto fObs = kernel->observe().forces(1);
+        std::vector<readdy::Vec3> collectedForces;
+        fObs->callback() = [&collectedForces](const readdy::model::observables::Forces::result_type &result) {
+            for (const auto &force : result) {
+                collectedForces.push_back(force);
+            }
+        };
 
-    auto conn = kernel->connectObservable(fObs.get());
+        auto conn = kernel->connectObservable(fObs.get());
 
-    auto calculateForces = kernel->actions().calculateForces();
-    calculateForces->perform();
-    kernel->evaluateObservables(1);
+        auto calculateForces = kernel->actions().calculateForces();
+        calculateForces->perform();
+        kernel->evaluateObservables(1);
 
-    EXPECT_EQ(collectedForces.size(), 2);
-    readdy::Vec3 f1{40., 0, 0};
-    EXPECT_EQ(collectedForces.at(0), f1);
-    readdy::Vec3 f2{-40., 0, 0};
-    EXPECT_EQ(collectedForces.at(1), f2);
-    EXPECT_EQ(kernel->stateModel().energy(), 40);
-}
-
-/**
- * theta_0 = np.pi
- * k_angle = 1.0
- * def angle_potential(x_i, x_j, x_k):
- *     x_ji = x_i - x_j
- *     x_jk = x_k - x_j
- *     cos_theta = np.dot(x_ji, x_jk) / (np.linalg.norm(x_ji) * np.linalg.norm(x_jk))
- *     return k_angle * ((np.arccos(cos_theta) - theta_0) ** 2)
- * partial_derivative_nd(angle_potential, 0||1||2, x_i, x_j, x_k)
- */
-TEST_P(TestTopologies, AnglePotential) {
-    auto &ctx = kernel->context();
-    ctx.particleTypes().add("Topology A", 1.0, readdy::model::particleflavor::TOPOLOGY);
-    ctx.boxSize() = {{10, 10, 10}};
-    topology_particle_t x_i{0, 0, 0, ctx.particleTypes().idOf("Topology A")};
-    topology_particle_t x_j{1, 0, 0, ctx.particleTypes().idOf("Topology A")};
-    topology_particle_t x_k{1, 1, 0, ctx.particleTypes().idOf("Topology A")};
-    auto top = kernel->stateModel().addTopology(0, {x_i, x_j, x_k});
-    {
-        std::vector<angle_bond::angle> angles{{0, 1, 2, 1.0, readdy::util::numeric::pi<readdy::scalar>()}};
-        top->addAnglePotential<angle_bond>(std::move(angles));
+        REQUIRE(collectedForces.size() == 2);
+        readdy::Vec3 f1{40., 0, 0};
+        REQUIRE(collectedForces.at(0) == f1);
+        readdy::Vec3 f2{-40., 0, 0};
+        REQUIRE(collectedForces.at(1) == f2);
+        REQUIRE(kernel->stateModel().energy() == 40);
     }
-    auto fObs = kernel->observe().forces(1);
-    std::vector<readdy::Vec3> collectedForces;
-    fObs->callback() = [&collectedForces](const readdy::model::observables::Forces::result_type &result) {
-        for (const auto &force : result) {
-            collectedForces.push_back(force);
+
+    SECTION("Angle potential") {
+
+        /**
+         * theta_0 = np.pi
+         * k_angle = 1.0
+         * def angle_potential(x_i, x_j, x_k):
+         *     x_ji = x_i - x_j
+         *     x_jk = x_k - x_j
+         *     cos_theta = np.dot(x_ji, x_jk) / (np.linalg.norm(x_ji) * np.linalg.norm(x_jk))
+         *     return k_angle * ((np.arccos(cos_theta) - theta_0) ** 2)
+         * partial_derivative_nd(angle_potential, 0||1||2, x_i, x_j, x_k)
+         */
+
+        auto &ctx = kernel->context();
+        ctx.particleTypes().add("Topology A", 1.0, readdy::model::particleflavor::TOPOLOGY);
+        ctx.boxSize() = {{10, 10, 10}};
+        topology_particle_t x_i{0, 0, 0, ctx.particleTypes().idOf("Topology A")};
+        topology_particle_t x_j{1, 0, 0, ctx.particleTypes().idOf("Topology A")};
+        topology_particle_t x_k{1, 1, 0, ctx.particleTypes().idOf("Topology A")};
+        auto top = kernel->stateModel().addTopology(0, {x_i, x_j, x_k});
+        {
+            std::vector<angle_bond::angle> angles{{0, 1, 2, 1.0, readdy::util::numeric::pi<readdy::scalar>()}};
+            top->template addAnglePotential<angle_bond>(std::move(angles));
         }
-    };
+        auto fObs = kernel->observe().forces(1);
+        std::vector<readdy::Vec3> collectedForces;
+        fObs->callback() = [&collectedForces](const readdy::model::observables::Forces::result_type &result) {
+            for (const auto &force : result) {
+                collectedForces.push_back(force);
+            }
+        };
 
-    auto conn = kernel->connectObservable(fObs.get());
+        auto conn = kernel->connectObservable(fObs.get());
 
-    auto calculateForces = kernel->actions().calculateForces();
-    calculateForces->perform();
-    kernel->evaluateObservables(1);
+        auto calculateForces = kernel->actions().calculateForces();
+        calculateForces->perform();
+        kernel->evaluateObservables(1);
 
-    EXPECT_EQ(collectedForces.size(), 3);
-    if(kernel->singlePrecision()) {
-        EXPECT_FLOAT_EQ(kernel->stateModel().energy(), static_cast<readdy::scalar>(2.4674011002723395));
-    } else {
-        EXPECT_DOUBLE_EQ(kernel->stateModel().energy(), static_cast<readdy::scalar>(2.4674011002723395));
+        REQUIRE(collectedForces.size() == 3);
+        REQUIRE(kernel->stateModel().energy() == Approx(2.4674011002723395));
+
+        readdy::Vec3 force_x_i{0, -3.14159265, 0};
+        readdy::Vec3 force_x_j{-3.14159265, 3.14159265, 0};
+        readdy::Vec3 force_x_k{3.14159265, 0., 0.};
+
+        readdy::testing::vec3eq(collectedForces[0], force_x_i, 1e-6);
+        readdy::testing::vec3eq(collectedForces[1], force_x_j, 1e-6);
+        readdy::testing::vec3eq(collectedForces[2], force_x_k, 1e-6);
     }
-    readdy::Vec3 force_x_i{0, -3.14159265, 0};
-    readdy::Vec3 force_x_j{-3.14159265, 3.14159265, 0};
-    readdy::Vec3 force_x_k{3.14159265, 0., 0.};
 
-    EXPECT_VEC3_NEAR(collectedForces[0], force_x_i, 1e-6);
-    EXPECT_VEC3_NEAR(collectedForces[1], force_x_j, 1e-6);
-    EXPECT_VEC3_NEAR(collectedForces[2], force_x_k, 1e-6);
-}
-
-TEST_P(TestTopologies, MoreComplicatedAnglePotential) {
-    auto &ctx = kernel->context();
-    ctx.particleTypes().add("Topology A", 1.0, readdy::model::particleflavor::TOPOLOGY);
-    ctx.boxSize() = {{10, 10, 10}};
-    topology_particle_t x_i{0.1, 0.1, 0.1, ctx.particleTypes().idOf("Topology A")};
-    topology_particle_t x_j{1.0, 0.0, 0.0, ctx.particleTypes().idOf("Topology A")};
-    topology_particle_t x_k{1.0, 0.5, -.3, ctx.particleTypes().idOf("Topology A")};
-    auto top = kernel->stateModel().addTopology(0, {x_i, x_j, x_k});
-    {
-        std::vector<angle_bond::angle> angles{{0, 1, 2, 1.0, readdy::util::numeric::pi<readdy::scalar>()}};
-        top->addAnglePotential<angle_bond>(std::move(angles));
-    }
-    auto fObs = kernel->observe().forces(1);
-    std::vector<readdy::Vec3> collectedForces;
-    fObs->callback() = [&collectedForces](const readdy::model::observables::Forces::result_type &result) {
-        for (const auto &force : result) {
-            collectedForces.push_back(force);
+    SECTION("Angle potential (more complicated)") {
+        auto &ctx = kernel->context();
+        ctx.particleTypes().add("Topology A", 1.0, readdy::model::particleflavor::TOPOLOGY);
+        ctx.boxSize() = {{10, 10, 10}};
+        topology_particle_t x_i{0.1, 0.1, 0.1, ctx.particleTypes().idOf("Topology A")};
+        topology_particle_t x_j{1.0, 0.0, 0.0, ctx.particleTypes().idOf("Topology A")};
+        topology_particle_t x_k{1.0, 0.5, -.3, ctx.particleTypes().idOf("Topology A")};
+        auto top = kernel->stateModel().addTopology(0, {x_i, x_j, x_k});
+        {
+            std::vector<angle_bond::angle> angles{{0, 1, 2, 1.0, readdy::util::numeric::pi<readdy::scalar>()}};
+            top->template addAnglePotential<angle_bond>(std::move(angles));
         }
-    };
+        auto fObs = kernel->observe().forces(1);
+        std::vector<readdy::Vec3> collectedForces;
+        fObs->callback() = [&collectedForces](const readdy::model::observables::Forces::result_type &result) {
+            for (const auto &force : result) {
+                collectedForces.push_back(force);
+            }
+        };
 
-    auto conn = kernel->connectObservable(fObs.get());
+        auto conn = kernel->connectObservable(fObs.get());
 
-    auto calculateForces = kernel->actions().calculateForces();
-    calculateForces->perform();
-    kernel->evaluateObservables(1);
+        auto calculateForces = kernel->actions().calculateForces();
+        calculateForces->perform();
+        kernel->evaluateObservables(1);
 
-    EXPECT_EQ(collectedForces.size(), 3);
-    if(kernel->singlePrecision()) {
-        EXPECT_FLOAT_EQ(kernel->stateModel().energy(), static_cast<readdy::scalar>(2.5871244540347655));
-    } else {
-        EXPECT_DOUBLE_EQ(kernel->stateModel().energy(), static_cast<readdy::scalar>(2.5871244540347655));
+        REQUIRE(collectedForces.size() == 3);
+        REQUIRE(kernel->stateModel().energy() == Approx(2.5871244540347655));
+        readdy::Vec3 force_x_i{-0.13142034, -3.01536661, 1.83258358};
+        readdy::Vec3 force_x_j{-5.32252362, 3.44312692, -1.11964973};
+        readdy::Vec3 force_x_k{5.45394396, -0.42776031, -0.71293385};
+
+        readdy::testing::vec3eq(collectedForces[0], force_x_i, 1e-6);
+        readdy::testing::vec3eq(collectedForces[1], force_x_j, 1e-6);
+        readdy::testing::vec3eq(collectedForces[2], force_x_k, 1e-6);
     }
-    readdy::Vec3 force_x_i{-0.13142034, -3.01536661, 1.83258358};
-    readdy::Vec3 force_x_j{-5.32252362, 3.44312692, -1.11964973};
-    readdy::Vec3 force_x_k{5.45394396, -0.42776031, -0.71293385};
 
-    EXPECT_VEC3_NEAR(collectedForces[0], force_x_i, 1e-6);
-    EXPECT_VEC3_NEAR(collectedForces[1], force_x_j, 1e-6);
-    EXPECT_VEC3_NEAR(collectedForces[2], force_x_k, 1e-6);
-}
+    SECTION("Dihedral potential") {
 
-/**
- * phi_0 = np.pi
- * multiplicity = 3
- * k_dihedral = 1.0
- * def dihedral_potential(x_i, x_j, x_k, x_l):
- *     x_ji = x_i - x_j
- *     x_kj = x_j - x_k
- *     x_kl = x_l - x_k
- *     x_jk = x_k - x_j
- *     m = np.cross(x_ji, x_kj)
- *     n = np.cross(x_kl, x_jk)
- *     cos_phi = np.dot(m, n) / (np.linalg.norm(m) * np.linalg.norm(n))
- *     sin_phi = np.dot(np.cross(m, n), x_jk) / (np.linalg.norm(m) * np.linalg.norm(n) * np.linalg.norm(x_jk))
- *     phi = -np.arctan2(sin_phi, cos_phi)
- *     return k_dihedral * (1 + np.cos(multiplicity * phi - phi_0))
- * partial_derivative_nd(dihedral_potential, 0||1||2||3, x_i, x_j, x_k, x_l) * -1.
- */
-TEST_P(TestTopologies, DihedralPotential) {
-    auto &ctx = kernel->context();
-    ctx.particleTypes().add("Topology A", 1.0, readdy::model::particleflavor::TOPOLOGY);
-    ctx.boxSize() = {{10, 10, 10}};
-    topology_particle_t x_i{-1, 0, 0, ctx.particleTypes().idOf("Topology A")};
-    topology_particle_t x_j{0, 0, 0, ctx.particleTypes().idOf("Topology A")};
-    topology_particle_t x_k{0, 0, 1, ctx.particleTypes().idOf("Topology A")};
-    topology_particle_t x_l{1, .1, 1, ctx.particleTypes().idOf("Topology A")};
-    auto top = kernel->stateModel().addTopology(0, {x_i, x_j, x_k, x_l});
-    {
-        std::vector<dihedral_bond::dihedral_configuration> dihedrals{{0, 1, 2, 3, 1.0, 3, readdy::util::numeric::pi<readdy::scalar>()}};
-        top->addTorsionPotential<dihedral_bond>(dihedrals);
-    }
-    auto fObs = kernel->observe().forces(1);
-    std::vector<readdy::Vec3> collectedForces;
-    fObs->callback() = [&collectedForces](const readdy::model::observables::Forces::result_type &result) {
-        for (const auto &force : result) {
-            collectedForces.push_back(force);
+        /**
+         * phi_0 = np.pi
+         * multiplicity = 3
+         * k_dihedral = 1.0
+         * def dihedral_potential(x_i, x_j, x_k, x_l):
+         *     x_ji = x_i - x_j
+         *     x_kj = x_j - x_k
+         *     x_kl = x_l - x_k
+         *     x_jk = x_k - x_j
+         *     m = np.cross(x_ji, x_kj)
+         *     n = np.cross(x_kl, x_jk)
+         *     cos_phi = np.dot(m, n) / (np.linalg.norm(m) * np.linalg.norm(n))
+         *     sin_phi = np.dot(np.cross(m, n), x_jk) / (np.linalg.norm(m) * np.linalg.norm(n) * np.linalg.norm(x_jk))
+         *     phi = -np.arctan2(sin_phi, cos_phi)
+         *     return k_dihedral * (1 + np.cos(multiplicity * phi - phi_0))
+         * partial_derivative_nd(dihedral_potential, 0||1||2||3, x_i, x_j, x_k, x_l) * -1.
+         */
+
+        auto &ctx = kernel->context();
+        ctx.particleTypes().add("Topology A", 1.0, readdy::model::particleflavor::TOPOLOGY);
+        ctx.boxSize() = {{10, 10, 10}};
+        topology_particle_t x_i{-1, 0, 0, ctx.particleTypes().idOf("Topology A")};
+        topology_particle_t x_j{0, 0, 0, ctx.particleTypes().idOf("Topology A")};
+        topology_particle_t x_k{0, 0, 1, ctx.particleTypes().idOf("Topology A")};
+        topology_particle_t x_l{1, .1, 1, ctx.particleTypes().idOf("Topology A")};
+        auto top = kernel->stateModel().addTopology(0, {x_i, x_j, x_k, x_l});
+        {
+            std::vector<dihedral_bond::dihedral_configuration> dihedrals{{0, 1, 2, 3, 1.0, 3,
+                                                                          readdy::util::numeric::pi<readdy::scalar>()}};
+            top->template addTorsionPotential<dihedral_bond>(dihedrals);
         }
-    };
+        auto fObs = kernel->observe().forces(1);
+        std::vector<readdy::Vec3> collectedForces;
+        fObs->callback() = [&collectedForces](const readdy::model::observables::Forces::result_type &result) {
+            for (const auto &force : result) {
+                collectedForces.push_back(force);
+            }
+        };
 
-    auto conn = kernel->connectObservable(fObs.get());
-    auto calculateForces = kernel->actions().calculateForces();
-    calculateForces->perform();
-    kernel->evaluateObservables(1);
+        auto conn = kernel->connectObservable(fObs.get());
+        auto calculateForces = kernel->actions().calculateForces();
+        calculateForces->perform();
+        kernel->evaluateObservables(1);
 
-    EXPECT_EQ(collectedForces.size(), 4);
-    if(kernel->singlePrecision()) {
-        EXPECT_FLOAT_EQ(kernel->stateModel().energy(), static_cast<readdy::scalar>(0.044370223263673791));
-    } else {
-        EXPECT_DOUBLE_EQ(kernel->stateModel().energy(), static_cast<readdy::scalar>(0.044370223263673791));
+        REQUIRE(collectedForces.size() == 4);
+        REQUIRE(kernel->stateModel().energy() == Approx(0.044370223263673791));
+        readdy::Vec3 force_x_i{0., -0.88371125, 0.};
+        readdy::Vec3 force_x_j{0., 0.88371125, 0.};
+        readdy::Vec3 force_x_k{-0.08749616, 0.87496163, 0.};
+        readdy::Vec3 force_x_l{0.08749616, -0.87496163, 0.};
+        readdy::testing::vec3eq(collectedForces[0], force_x_i, 1e-6);
+        readdy::testing::vec3eq(collectedForces[1], force_x_j, 1e-6);
+        readdy::testing::vec3eq(collectedForces[2], force_x_k, 1e-6);
+        readdy::testing::vec3eq(collectedForces[3], force_x_l, 1e-6);
     }
-    readdy::Vec3 force_x_i{0., -0.88371125, 0.};
-    readdy::Vec3 force_x_j{0., 0.88371125, 0.};
-    readdy::Vec3 force_x_k{-0.08749616, 0.87496163, 0.};
-    readdy::Vec3 force_x_l{0.08749616, -0.87496163, 0.};
-    EXPECT_VEC3_NEAR(collectedForces[0], force_x_i, 1e-6);
-    EXPECT_VEC3_NEAR(collectedForces[1], force_x_j, 1e-6);
-    EXPECT_VEC3_NEAR(collectedForces[2], force_x_k, 1e-6);
-    EXPECT_VEC3_NEAR(collectedForces[3], force_x_l, 1e-6);
-}
 
-TEST_P(TestTopologies, DihedralPotentialSteeperAngle) {
-    auto &ctx = kernel->context();
-    ctx.particleTypes().add("Topology A", 1.0, readdy::model::particleflavor::TOPOLOGY);
-    ctx.boxSize() = {{10, 10, 10}};
-    topology_particle_t x_i{-1, 0, 0, ctx.particleTypes().idOf("Topology A")};
-    topology_particle_t x_j{0, 0, 0, ctx.particleTypes().idOf("Topology A")};
-    topology_particle_t x_k{0, 0, 1, ctx.particleTypes().idOf("Topology A")};
-    topology_particle_t x_l{1, 3, 1, ctx.particleTypes().idOf("Topology A")};
-    auto top = kernel->stateModel().addTopology(0, {x_i, x_j, x_k, x_l});
-    {
-        std::vector<dihedral_bond::dihedral_configuration> dihedral{{0, 1, 2, 3, 1.0, 3, readdy::util::numeric::pi<readdy::scalar>()}};
-        top->addTorsionPotential(std::make_unique<dihedral_bond>(dihedral));
-    }
-    auto fObs = kernel->observe().forces(1);
-    std::vector<readdy::Vec3> collectedForces;
-    fObs->callback() = [&collectedForces](const readdy::model::observables::Forces::result_type &result) {
-        for (const auto &force : result) {
-            collectedForces.push_back(force);
+    SECTION("Dihedral potential with steeper angle") {
+        auto &ctx = kernel->context();
+        ctx.particleTypes().add("Topology A", 1.0, readdy::model::particleflavor::TOPOLOGY);
+        ctx.boxSize() = {{10, 10, 10}};
+        topology_particle_t x_i{-1, 0, 0, ctx.particleTypes().idOf("Topology A")};
+        topology_particle_t x_j{0, 0, 0, ctx.particleTypes().idOf("Topology A")};
+        topology_particle_t x_k{0, 0, 1, ctx.particleTypes().idOf("Topology A")};
+        topology_particle_t x_l{1, 3, 1, ctx.particleTypes().idOf("Topology A")};
+        auto top = kernel->stateModel().addTopology(0, {x_i, x_j, x_k, x_l});
+        {
+            std::vector<dihedral_bond::dihedral_configuration> dihedral{{0, 1, 2, 3, 1.0, 3, readdy::util::numeric::pi<readdy::scalar>()}};
+            top->addTorsionPotential(std::make_unique<dihedral_bond>(dihedral));
         }
-    };
+        auto fObs = kernel->observe().forces(1);
+        std::vector<readdy::Vec3> collectedForces;
+        fObs->callback() = [&collectedForces](const readdy::model::observables::Forces::result_type &result) {
+            for (const auto &force : result) {
+                collectedForces.push_back(force);
+            }
+        };
 
-    auto conn = kernel->connectObservable(fObs.get());
-    auto calculateForces = kernel->actions().calculateForces();
-    calculateForces->perform();
-    kernel->evaluateObservables(1);
+        auto conn = kernel->connectObservable(fObs.get());
+        auto calculateForces = kernel->actions().calculateForces();
+        calculateForces->perform();
+        kernel->evaluateObservables(1);
 
-    EXPECT_EQ(collectedForces.size(), 4);
-    if(kernel->singlePrecision()) {
-        EXPECT_FLOAT_EQ(kernel->stateModel().energy(), static_cast<readdy::scalar>(1.8221921916437787));
-    } else {
-        EXPECT_DOUBLE_EQ(kernel->stateModel().energy(), static_cast<readdy::scalar>(1.8221921916437787));
+        REQUIRE(collectedForces.size() == 4);
+        REQUIRE(kernel->stateModel().energy() == Approx(1.8221921916437787));
+        readdy::Vec3 force_x_i{0., 1.70762994, 0.};
+        readdy::Vec3 force_x_j{0., -1.70762994, 0.};
+        readdy::Vec3 force_x_k{0.51228898, -0.17076299, 0.};
+        readdy::Vec3 force_x_l{-0.51228898, 0.17076299, 0.};
+        readdy::testing::vec3eq(collectedForces[0], force_x_i, 1e-6);
+        readdy::testing::vec3eq(collectedForces[1], force_x_j, 1e-6);
+        readdy::testing::vec3eq(collectedForces[2], force_x_k, 1e-6);
+        readdy::testing::vec3eq(collectedForces[3], force_x_l, 1e-6);
     }
-    readdy::Vec3 force_x_i{0., 1.70762994, 0.};
-    readdy::Vec3 force_x_j{0., -1.70762994, 0.};
-    readdy::Vec3 force_x_k{0.51228898, -0.17076299, 0.};
-    readdy::Vec3 force_x_l{-0.51228898, 0.17076299, 0.};
-    EXPECT_VEC3_NEAR(collectedForces[0], force_x_i, 1e-6);
-    EXPECT_VEC3_NEAR(collectedForces[1], force_x_j, 1e-6);
-    EXPECT_VEC3_NEAR(collectedForces[2], force_x_k, 1e-6);
-    EXPECT_VEC3_NEAR(collectedForces[3], force_x_l, 1e-6);
-}
 
-INSTANTIATE_TEST_CASE_P(TestTopologiesCore, TestTopologies, ::testing::Values("SingleCPU", "CPU"));
+    SECTION("Sanity") {
+        auto &ctx = kernel->context();
 
+        ctx.particleTypes().add("Topology A", 1.0, readdy::model::particleflavor::TOPOLOGY);
+        ctx.particleTypes().add("Topology B", 1.0, readdy::model::particleflavor::TOPOLOGY);
+
+        ctx.topologyRegistry().configureBondPotential("Topology A", "Topology B", {1.0, 1.0});
+        ctx.topologyRegistry().configureBondPotential("Topology A", "Topology A", {1.0, 1.0});
+        ctx.topologyRegistry().configureAnglePotential("Topology B", "Topology A", "Topology A", {1.0, 1.0});
+        ctx.topologyRegistry().configureTorsionPotential("Topology A", "Topology B", "Topology A", "Topology A",
+                                                         {1.0, 1.0, 3.0});
+
+        ctx.boxSize() = {{10, 10, 10}};
+        topology_particle_t x_i{-1, 0, 0, ctx.particleTypes().idOf("Topology A")};
+        topology_particle_t x_j{0, 0, 0, ctx.particleTypes().idOf("Topology A")};
+        topology_particle_t x_k{0, 0, 1, ctx.particleTypes().idOf("Topology B")};
+        topology_particle_t x_l{1, .1, 1, ctx.particleTypes().idOf("Topology A")};
+
+        auto top = kernel->stateModel().addTopology(0, {x_i, x_j, x_k, x_l});
+        REQUIRE(top->graph().vertices().size() == 4);
+        auto it = top->graph().vertices().begin();
+        auto it2 = ++top->graph().vertices().begin();
+        REQUIRE_FALSE(top->graph().isConnected());
+        top->graph().addEdge(it++, it2++);
+        REQUIRE_FALSE(top->graph().isConnected());
+        top->graph().addEdge(it++, it2++);
+        REQUIRE_FALSE(top->graph().isConnected());
+        top->graph().addEdge(it++, it2++);
+        REQUIRE(top->graph().isConnected());
+
+        top->graph().addEdge(top->graph().firstVertex(), top->graph().lastVertex());
+        REQUIRE(top->graph().isConnected());
+        top->configure();
+    }
 }

@@ -207,31 +207,21 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
 
     IF (READDY_CREATE_TEST_TARGET)
 
-       if (CMAKE_VERSION VERSION_LESS 3.2)
-           set(UPDATE_DISCONNECTED_IF_AVAILABLE "")
-       else()
-           set(UPDATE_DISCONNECTED_IF_AVAILABLE "UPDATE_DISCONNECTED 1")
-       endif()
+        if (EXISTS ${CMAKE_CURRENT_LIST_DIR}/libraries/Catch2/CMakeLists.txt)
+            add_subdirectory(libraries/Catch2)
+            include(${CMAKE_CURRENT_LIST_DIR}/libraries/Catch2/contrib/Catch.cmake)
+        elseif (NOT TARGET Catch2::Catch2)
+            find_package(Catch2 QUIET)
+            if (CATCH2_FOUND)
+                include(Catch)
+            else()
+                message(SEND_ERROR "Catch2 not found.")
+            endif()
+        endif ()
 
-       include(cmake/Modules/DownloadProject.cmake)
-       download_project(PROJ googletest
-               GIT_REPOSITORY https://github.com/google/googletest.git
-               GIT_TAG release-1.8.0
-               ${UPDATE_DISCONNECTED_IF_AVAILABLE}
-               )
-
-       # Prevent GoogleTest from overriding our compiler/linker options
-       # when building with Visual Studio
-       set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-
-       add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR})
-
-       ENABLE_TESTING()
-
-       ADD_SUBDIRECTORY(readdy_testing)
+        add_subdirectory(readdy_testing)
 
     ELSE()
-        MESSAGE(STATUS "The submodule googletest was not initialized or READDY_CREATE_TEST_TARGET was OFF, thus no testing.")
         # disable testing if there was no submodule
         SET(READDY_CREATE_TEST_TARGET OFF)
         # if tests are disabled, so are the corresponding memory checks

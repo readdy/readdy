@@ -42,12 +42,13 @@
  * @date 22.06.16
  */
 
-#include <gtest/gtest.h>
+#include <catch2/catch.hpp>
+
 #include <readdy/model/Kernel.h>
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/model/actions/Actions.h>
 
-TEST(SingleCPUTestReactions, TestDecay) {
+TEST_CASE("Test single cpu decay reactions", "[scpu]") {
     using particle_t = readdy::model::Particle;
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
     kernel->context().boxSize() = {{10, 10, 10}};
@@ -85,7 +86,7 @@ TEST(SingleCPUTestReactions, TestDecay) {
 
     }
 
-    EXPECT_EQ(0, kernel->stateModel().getParticlePositions().size());
+    REQUIRE(kernel->stateModel().getParticlePositions().empty());
 
     connection.disconnect();
 }
@@ -116,7 +117,7 @@ TEST(SingleCPUTestReactions, TestDecay) {
  *   - t = 2: n_particles == 1 with 1x A
  *   - t > 2: n_particles == 0
  */
-TEST(SingleCPUTestReactions, TestMultipleReactionTypes) {
+TEST_CASE("Test single cpu multiple reaction types", "[scpu]") {
     using particle_t = readdy::model::Particle;
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
     kernel->context().boxSize() = {{10, 10, 10}};
@@ -166,31 +167,31 @@ TEST(SingleCPUTestReactions, TestMultipleReactionTypes) {
 
         switch (t) {
             case 0: {
-                EXPECT_EQ(3, particles.size());
-                EXPECT_TRUE(containsA);
-                EXPECT_TRUE(containsB);
-                EXPECT_TRUE(containsC);
+                REQUIRE(3 == particles.size());
+                REQUIRE(containsA);
+                REQUIRE(containsB);
+                REQUIRE(containsC);
                 break;
             }
             case 1: {
-                EXPECT_TRUE(particles.size() == 2 || particles.size() == 1);
+                REQUIRE((particles.size() == 2 || particles.size() == 1));
                 if (particles.size() == 2) {
-                    readdy::log::debug("------> conversion happened");
-                    EXPECT_TRUE(containsB);
-                    EXPECT_TRUE(containsD);
+                    INFO("------> conversion happened");
+                    REQUIRE(containsB);
+                    REQUIRE(containsD);
                 } else {
-                    readdy::log::debug("------> fusion happened");
-                    EXPECT_TRUE(containsE);
+                    INFO("------> fusion happened");
+                    REQUIRE(containsE);
                 }
                 break;
             }
             case 2: {
-                EXPECT_EQ(1, particles.size());
-                EXPECT_TRUE(containsA);
+                REQUIRE(1 == particles.size());
+                REQUIRE(containsA);
                 break;
             }
             case 3: {
-                EXPECT_EQ(0, particles.size());
+                REQUIRE(particles.empty());
                 break;
             }
             default: {

@@ -43,93 +43,86 @@
  * @copyright GPL-3
  */
 
-#include "gtest/gtest.h"
+#include <catch2/catch.hpp>
+
 #include <readdy/kernel/cpu/nl/CellLinkedList.h>
 
-namespace {
-
-TEST(TestNeighborListIterator, BoxIterator) {
+TEST_CASE("Test cpu neighbor list iterators", "[cpu]") {
     using namespace readdy;
+
     model::Context context;
 
     kernel::cpu::thread_pool pool (readdy_default_n_threads());
     kernel::cpu::data::DefaultDataContainer data (context, pool);
     kernel::cpu::nl::CompactCellLinkedList ccll(data, context, pool);
 
-    context.particleTypes().add("A", 1.0);
-    context.reactions().addFusion("fusion", "A", "A", "A", 1.0, 1.0);
-    context.boxSize() = {5., 5., 5.};
+    SECTION("Box iterator") {
 
-    std::size_t n = 5;
+        context.particleTypes().add("A", 1.0);
+        context.reactions().addFusion("fusion", "A", "A", "A", 1.0, 1.0);
+        context.boxSize() = {5., 5., 5.};
 
-    {
-        std::vector<model::Particle> particles;
-        for(auto i = 0; i < n; ++i) {
-            particles.emplace_back(0, 0, 0, context.particleTypes().idOf("A"));
-        }
-        data.addParticles(particles);
-    }
+        std::size_t n = 5;
 
-    std::vector<model::Particle::id_type> ids;
-    for(std::size_t i=0; i < n; ++i){
-        ids.push_back(data.getParticle(i).id());
-    }
-
-    ccll.setUp(0, 1);
-
-    {
-        std::size_t nNonemptyCells {0};
-        for(const auto &head : ccll.head()) {
-            if((*head).load() != 0) {
-                ++nNonemptyCells;
+        {
+            std::vector<model::Particle> particles;
+            for(auto i = 0; i < n; ++i) {
+                particles.emplace_back(0, 0, 0, context.particleTypes().idOf("A"));
             }
+            data.addParticles(particles);
         }
-        ASSERT_EQ(nNonemptyCells, 1);
-    }
 
-    auto it = std::find_if(ccll.head().begin(), ccll.head().end(), [](const auto& head) {
-        return (*head).load() != 0;
-    });
-    ASSERT_NE(it, ccll.head().end());
+        std::vector<model::Particle::id_type> ids;
+        for(std::size_t i=0; i < n; ++i){
+            ids.push_back(data.getParticle(i).id());
+        }
 
-    auto cell = static_cast<std::size_t>(std::distance(ccll.head().begin(), it));
-    for(auto boxIt = ccll.particlesBegin(cell); boxIt != ccll.particlesEnd(cell); ++boxIt) {
-        auto idIt = std::find(ids.begin(), ids.end(), data.entry_at(*boxIt).id);
-        ASSERT_NE(idIt, ids.end());
-        ids.erase(idIt);
-    }
+        ccll.setUp(0, 1);
 
-    ASSERT_EQ(ids.size(), 0);
-}
-
-TEST(TestNeighborListIterator, BoxIteratorEmptyBox) {
-    using namespace readdy;
-    model::Context context;
-    kernel::cpu::thread_pool pool (readdy_default_n_threads());
-    kernel::cpu::data::DefaultDataContainer data (context, pool);
-    kernel::cpu::nl::CompactCellLinkedList ccll(data, context, pool);
-
-    context.particleTypes().add("A", 1.0);
-    context.reactions().addFusion("fusion", "A", "A", "A", 1.0, 1.0);
-    context.boxSize() = {5., 5., 5.};
-
-    ccll.setUp(0, 1);
-    ccll.update();
-
-    {
-        std::size_t nNonemptyCells {0};
-        for(const auto &head : ccll.head()) {
-            if((*head).load() != 0) {
-                ++nNonemptyCells;
+        {
+            std::size_t nNonemptyCells {0};
+            for(const auto &head : ccll.head()) {
+                if((*head).load() != 0) {
+                    ++nNonemptyCells;
+                }
             }
+            REQUIRE(nNonemptyCells == 1);
         }
-        ASSERT_EQ(nNonemptyCells, 0);
+
+        auto it = std::find_if(ccll.head().begin(), ccll.head().end(), [](const auto& head) {
+            return (*head).load() != 0;
+        });
+        REQUIRE(it != ccll.head().end());
+
+        auto cell = static_cast<std::size_t>(std::distance(ccll.head().begin(), it));
+        for(auto boxIt = ccll.particlesBegin(cell); boxIt != ccll.particlesEnd(cell); ++boxIt) {
+            auto idIt = std::find(ids.begin(), ids.end(), data.entry_at(*boxIt).id);
+            REQUIRE(idIt != ids.end());
+            ids.erase(idIt);
+        }
+
+        REQUIRE(ids.empty());
     }
+    SECTION("Box iterator with empty box") {
+        context.particleTypes().add("A", 1.0);
+        context.reactions().addFusion("fusion", "A", "A", "A", 1.0, 1.0);
+        context.boxSize() = {5., 5., 5.};
 
-    // some random cell
-    auto cell = 1_z;
-    ASSERT_EQ(ccll.particlesBegin(cell), ccll.particlesEnd(cell));
-}
+        ccll.setUp(0, 1);
+        ccll.update();
 
+        {
+            std::size_t nNonemptyCells {0};
+            for(const auto &head : ccll.head()) {
+                if((*head).load() != 0) {
+                    ++nNonemptyCells;
+                }
+            }
+            REQUIRE(nNonemptyCells == 0);
+        }
 
+        // some random cell
+        auto cell = 1_z;
+        REQUIRE(ccll.particlesBegin(cell) == ccll.particlesEnd(cell));
+    }
 }

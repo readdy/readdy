@@ -19,54 +19,30 @@
 # <http://www.gnu.org/licenses/>.                                   #
 #####################################################################
 
+project(runUnitTests)
 
-# Find pthread library
-FIND_PACKAGE(Threads REQUIRED)
+add_executable(${PROJECT_NAME}
+        TestMain.cpp TestAggregators.cpp TestAlgorithms.cpp TestCompartments.cpp TestContext.cpp
+        TestDetailedBalance.cpp TestIndex.cpp TestIndexPersistentVector.cpp TestIntegration.cpp
+        TestMatrix33.cpp TestObservables.cpp TestPlugins.cpp TestPotentials.cpp TestReactions.cpp
+        TestSignals.cpp TestSimulationSchemes.cpp TestStateModel.cpp TestTopologies.cpp TestTopologyGraphs.cpp
+        TestTopologyReactions.cpp TestTopologyReactionsExternal.cpp TestVec3.cpp
+        ${TESTING_INCLUDE_DIR})
 
-LIST(APPEND READDY_TEST_SOURCES TestMain.cpp)
-LIST(APPEND READDY_TEST_SOURCES TestAlgorithms.cpp)
-LIST(APPEND READDY_TEST_SOURCES TestPlugins.cpp)
-LIST(APPEND READDY_TEST_SOURCES TestReactions.cpp)
-LIST(APPEND READDY_TEST_SOURCES TestSimulation.cpp)
-LIST(APPEND READDY_TEST_SOURCES TestStateModel.cpp)
-LIST(APPEND READDY_TEST_SOURCES TestPotentials.cpp)
-LIST(APPEND READDY_TEST_SOURCES TestObservables.cpp)
-LIST(APPEND READDY_TEST_SOURCES TestSignals.cpp)
-LIST(APPEND READDY_TEST_SOURCES TestTopologies.cpp)
-LIST(APPEND READDY_TEST_SOURCES TestTopologyGraphs.cpp)
-LIST(APPEND READDY_TEST_SOURCES TestTopologyReactions.cpp)
-LIST(APPEND READDY_TEST_SOURCES TestTopologyReactionsExternal.cpp)
-LIST(APPEND READDY_TEST_SOURCES TestSimulationSchemes.cpp)
-LIST(APPEND READDY_TEST_SOURCES TestIndexPersistentVector.cpp)
-# LIST(APPEND READDY_TEST_SOURCES TestIO.cpp)
-LIST(APPEND READDY_TEST_SOURCES TestCompartments.cpp)
-LIST(APPEND READDY_TEST_SOURCES TestVec3.cpp)
-LIST(APPEND READDY_TEST_SOURCES TestMatrix33.cpp)
-LIST(APPEND READDY_TEST_SOURCES TestAggregators.cpp)
-LIST(APPEND READDY_TEST_SOURCES TestIndex.cpp)
-LIST(APPEND READDY_TEST_SOURCES TestIntegration.cpp)
-LIST(APPEND READDY_TEST_SOURCES TestDetailedBalance.cpp)
-LIST(APPEND READDY_TEST_SOURCES TestContext.cpp)
-
-ADD_EXECUTABLE(runUnitTests ${READDY_TEST_SOURCES} ${TESTING_INCLUDE_DIR})
-
-TARGET_INCLUDE_DIRECTORIES(
-        runUnitTests PUBLIC ${READDY_INCLUDE_DIRS} ${TESTING_INCLUDE_DIR} "${gtest_SOURCE_DIR}/include" "${gmock_SOURCE_DIR}/include"
+target_include_directories(
+        ${PROJECT_NAME} PUBLIC ${READDY_INCLUDE_DIRS} ${TESTING_INCLUDE_DIR}
 )
 
-TARGET_COMPILE_DEFINITIONS(runUnitTests PRIVATE READDY_KERNELS_TO_TEST="${READDY_KERNELS_TO_TEST}")
+target_link_libraries(${PROJECT_NAME} PUBLIC readdy Catch2::Catch2)
 
-TARGET_LINK_LIBRARIES(runUnitTests PUBLIC gmock_main readdy Threads::Threads)
-
-SET_TARGET_PROPERTIES(runUnitTests PROPERTIES
+set_target_properties(${PROJECT_NAME} PROPERTIES
         LINK_FLAGS "${EXTRA_LINK_FLAGS}"
         COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}")
+catch_discover_tests(${PROJECT_NAME})
 
-IF (READDY_INSTALL_UNIT_TEST_EXECUTABLE)
-    INSTALL(TARGETS runUnitTests
+if (READDY_INSTALL_UNIT_TEST_EXECUTABLE)
+    install(TARGETS ${PROJECT_NAME}
             RUNTIME DESTINATION bin
             LIBRARY DESTINATION lib
             ARCHIVE DESTINATION lib)
-ENDIF (READDY_INSTALL_UNIT_TEST_EXECUTABLE)
-
-# CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/simple_trajectory.h5 ${CMAKE_CURRENT_BINARY_DIR}/simple_trajectory.h5)
+endif (READDY_INSTALL_UNIT_TEST_EXECUTABLE)

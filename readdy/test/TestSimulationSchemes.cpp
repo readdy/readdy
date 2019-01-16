@@ -43,79 +43,75 @@
  * @date 23.08.16
  */
 
-#include <gtest/gtest.h>
+
+#include <catch2/catch.hpp>
+
+#include <readdy/testing/KernelTest.h>
+#include <readdy/testing/Utils.h>
+
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/api/Simulation.h>
-#include <readdy/testing/Utils.h>
 
 namespace api = readdy::api;
 
-namespace {
+using namespace readdytesting::kernel;
 
-class TestSchemes : public ::testing::TestWithParam<std::string> {
-public:
-    readdy::Simulation simulation;
 
-    explicit TestSchemes() : simulation(GetParam()) {}
-};
+TEMPLATE_TEST_CASE("Test simulation schemes", "[schemes]", SingleCPU, CPU) {
+    readdy::Simulation simulation {create<TestType>()};
 
-TEST_P(TestSchemes, CorrectNumberOfTimesteps) {
-    unsigned int counter = 0;
-    auto increment = [&counter](readdy::model::observables::NParticles::result_type result) {
-        counter++;
-    };
-    auto obsHandle = simulation.registerObservable(simulation.observe().nParticles(1), increment);
-    simulation.run(3, 0.1);
-    EXPECT_EQ(counter, 4);
-}
-
-TEST_P(TestSchemes, StoppingCriterionSimple) {
-    unsigned int counter = 0;
-    auto increment = [&counter](readdy::model::observables::NParticles::result_type result) {
-        counter++;
-    };
-    auto obsHandle = simulation.registerObservable(simulation.observe().nParticles(1), increment);
-    auto shallContinue = [](readdy::time_step_type currentStep) {
-        return currentStep < 5;
-    };
-    auto loop = simulation.createLoop(.1);
-    loop.run(shallContinue);
-    EXPECT_EQ(counter, 6);
-}
-
-TEST_P(TestSchemes, ComplexStoppingCriterion) {
-    simulation.context().particleTypes().add("A", 0.);
-    // A -> A + A, with probability = 1 each timestep. After 3 timesteps there will be 8 particles. The counter will be 4 by then.
-    simulation.context().reactions().addFission("bla", "A", "A", "A", 1e8, 0.);
-    simulation.addParticle("A", 0, 0, 0);
-    unsigned int counter = 0;
-    bool doStop = false;
-    auto increment = [&counter, &doStop](readdy::model::observables::NParticles::result_type result) {
-        counter++;
-        if (result[0] >= 8) {
-            doStop = true;
-        }
-    };
-    auto obsHandle = simulation.registerObservable(simulation.observe().nParticles(1), increment);
-    auto shallContinue = [&doStop](readdy::time_step_type currentStep) {
-        return !doStop;
-    };
-    simulation.createLoop(1.).run(shallContinue);
-    EXPECT_EQ(counter, 4);
-}
-
-TEST_P(TestSchemes, SkinSizeSanity) {
-    simulation.context().particleTypes().add("A", 1.);
-    simulation.context().boxSize() = {{10., 10., 10.}};
-    simulation.context().periodicBoundaryConditions() = {{true, true, true}};
-    simulation.context().potentials().addHarmonicRepulsion("A", "A", 1., 2.);
-    simulation.addParticle("A", 0., 0., 0.);
-    simulation.addParticle("A", 1.5, 0., 0.);
-    auto loop = simulation.createLoop(.001);
-    loop.skinSize() = 1.;
-    loop.run(10);
-}
-
-INSTANTIATE_TEST_CASE_P(TestSchemesCore, TestSchemes, ::testing::ValuesIn(readdy::testing::getKernelsToTest()));
-
+    SECTION("Correct number of timesteps") {
+        unsigned int counter = 0;
+        auto increment = [&counter](readdy::model::observables::NParticles::result_type result) {
+            counter++;
+        };
+        auto obsHandle = simulation.registerObservable(simulation.observe().nParticles(1), increment);
+        simulation.run(3, 0.1);
+        REQUIRE(counter == 4);
+    }
+    SECTION("Simple stopping criterion") {
+        unsigned int counter = 0;
+        auto increment = [&counter](readdy::model::observables::NParticles::result_type result) {
+            counter++;
+        };
+        auto obsHandle = simulation.registerObservable(simulation.observe().nParticles(1), increment);
+        auto shallContinue = [](readdy::time_step_type currentStep) {
+            return currentStep < 5;
+        };
+        auto loop = simulation.createLoop(.1);
+        loop.run(shallContinue);
+        REQUIRE(counter == 6);
+    }
+    SECTION("Complex stopping criterion") {
+        simulation.context().particleTypes().add("A", 0.);
+        // A -> A + A, with probability = 1 each timestep. After 3 timesteps there will be 8 particles.
+        // The counter will be 4 by then.
+        simulation.context().reactions().addFission("bla", "A", "A", "A", 1e8, 0.);
+        simulation.addParticle("A", 0, 0, 0);
+        unsigned int counter = 0;
+        bool doStop = false;
+        auto increment = [&counter, &doStop](readdy::model::observables::NParticles::result_type result) {
+            counter++;
+            if (result[0] >= 8) {
+                doStop = true;
+            }
+        };
+        auto obsHandle = simulation.registerObservable(simulation.observe().nParticles(1), increment);
+        auto shallContinue = [&doStop](readdy::time_step_type currentStep) {
+            return !doStop;
+        };
+        simulation.createLoop(1.).run(shallContinue);
+        REQUIRE(counter == 4);
+    }
+    SECTION("Skin size sanity check") {
+        simulation.context().particleTypes().add("A", 1.);
+        simulation.context().boxSize() = {{10., 10., 10.}};
+        simulation.context().periodicBoundaryConditions() = {{true, true, true}};
+        simulation.context().potentials().addHarmonicRepulsion("A", "A", 1., 2.);
+        simulation.addParticle("A", 0., 0., 0.);
+        simulation.addParticle("A", 1.5, 0., 0.);
+        auto loop = simulation.createLoop(.001);
+        loop.skinSize() = 1.;
+        loop.run(10);
+    }
 }

@@ -42,40 +42,37 @@
  * @date 1/18/18
  */
 
-#include <gtest/gtest.h>
+#include <catch2/catch.hpp>
+
 #include <readdy/model/Context.h>
 #include <readdy/kernel/singlecpu/SCPUStateModel.h>
 #include <readdy/kernel/singlecpu/model/topologies/SCPUTopologyActionFactory.h>
 #include <readdy/kernel/singlecpu/SCPUKernel.h>
 #include <readdy/common/boundary_condition_operations.h>
 
-namespace {
-
-class TestSCPUNeighborList : public ::testing::TestWithParam<std::array<readdy::scalar, 3>> {
-public:
-
-    auto getTestingBoxSize() const -> decltype(GetParam()) {
-        return GetParam();
-    }
-
-};
-
-TEST_P(TestSCPUNeighborList, Diffuse) {
+TEST_CASE("Test the singlecpu neighbor list", "[scpu]") {
     using namespace readdy;
-
     using IndexPair = std::tuple<std::size_t, std::size_t>;
 
-    kernel::scpu::SCPUKernel kernel;
+    auto boxSize = GENERATE(
+            std::array<readdy::scalar, 3>{{15, 15, 15}},
+            std::array<readdy::scalar, 3>{{10, 10, 10}},
+            std::array<readdy::scalar, 3>{{10, 5, 5}},
+            std::array<readdy::scalar, 3>{{5, 5, 10}},
+            std::array<readdy::scalar, 3>{{15, 5, 10}},
+            std::array<readdy::scalar, 3>{{5, 10, 5}},
+            std::array<readdy::scalar, 3>{{5, 5, 5}});
 
+    INFO(fmt::format("Testing for box size ({}, {}, {})", boxSize[0], boxSize[1], boxSize[2]));
+
+    kernel::scpu::SCPUKernel kernel;
     auto& context = kernel.context();
     context.particleTypes().add("Test", 1.);
     auto id = context.particleTypes().idOf("Test");
     scalar cutoff = 4;
     context.reactions().addFusion("Fusion", id, id, id, .001, cutoff);
-    context.boxSize() = getTestingBoxSize();
-    /*context.boxSize()[0] = 10;
-    context.boxSize()[1] = 5;
-    context.boxSize()[2] = 5;*/
+    context.boxSize() = boxSize;
+
     bool periodic = true;
     context.periodicBoundaryConditions()[0] = periodic;
     context.periodicBoundaryConditions()[1] = periodic;
@@ -113,7 +110,7 @@ TEST_P(TestSCPUNeighborList, Diffuse) {
             util::ForwardBackwardTupleEquality<IndexPair>> pairs;
     for(auto t = 0U; t < n_steps; ++t) {
         integrator->perform();
-        
+
         kernel.stateModel().updateNeighborList();
         {
             pairs.clear();
@@ -136,20 +133,16 @@ TEST_P(TestSCPUNeighborList, Diffuse) {
         for (auto cell = 0U; cell < neighborList.nCells(); ++cell) {
             for(auto it = neighborList.particlesBegin(cell); it != neighborList.particlesEnd(cell); ++it) {
                 const auto &entry = data.entry_at(*it);
-                EXPECT_FALSE(entry.deactivated) << "A deactivated entry should not end up in the NL";
+                // A deactivated entry should not end up in the NL
+                REQUIRE_FALSE(entry.deactivated);
                 neighborList.forEachNeighbor(it, cell, [&](const std::size_t neighborIndex) {
                     const auto &neighbor = data.entry_at(neighborIndex);
-                    EXPECT_FALSE(neighbor.deactivated) << "A deactivated entry should not end up in the NL";
+                    // A deactivated entry should not end up in the NL
+                    REQUIRE_FALSE(neighbor.deactivated);
                     // we got a pair
                     if(bcs::dist(entry.pos, neighbor.pos, context.boxSize().data(), context.periodicBoundaryConditions().data()) < cutoff) {
                         auto findIt = pairs.find(std::make_tuple(*it, neighborIndex));
-                        std::stringstream ss;
-                        if(pairsCopy.find(std::make_tuple(*it, neighborIndex)) != pairsCopy.end()) {
-                            ss << "A particle pairing was more than once in the NL";
-                        } else {
-                            ss << "A particle pairing was not contained in the NL";
-                        }
-                        ASSERT_NE(findIt, pairs.end()) << ss.str();
+                        REQUIRE(findIt != pairs.end());
                         if(findIt != pairs.end()) {
                             pairs.erase(findIt);
                         }
@@ -157,28 +150,10 @@ TEST_P(TestSCPUNeighborList, Diffuse) {
                 });
             }
         }
-        EXPECT_EQ(pairs.size(), 0) << "Some pairs were not contained in the NL";
+        // all pairs should end up in the NL
+        REQUIRE(pairs.empty());
 
         reactionHandler->perform();
 
-        /*std::cout << "n_particles: " << std::count_if(data.begin(), data.end(), [](const auto &entry) {
-            return !entry.deactivated;
-        }) << std::endl;*/
     }
 }
-
-}
-
-INSTANTIATE_TEST_CASE_P(
-        SCPUNeighborList,
-        TestSCPUNeighborList,
-        ::testing::Values(
-                std::array<readdy::scalar, 3>{{15, 15, 15}},
-                std::array<readdy::scalar, 3>{{10, 10, 10}},
-                std::array<readdy::scalar, 3>{{10, 5, 5}},
-                std::array<readdy::scalar, 3>{{5, 5, 10}},
-                std::array<readdy::scalar, 3>{{15, 5, 10}},
-                std::array<readdy::scalar, 3>{{5, 10, 5}},
-                std::array<readdy::scalar, 3>{{5, 5, 5}}
-        )
-);

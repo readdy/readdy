@@ -37,61 +37,26 @@
 // Created by clonker on 07.03.16.
 //
 
+#include <catch2/catch.hpp>
+
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/testing/KernelMock.h>
 #include <readdy/common/string.h>
 #include <readdy/common/filesystem.h>
 
-namespace plug = readdy::plugin;
-
-namespace {
-
-TEST(Kernel, LoadingNonexistingPlugin) {
-    plug::KernelProvider::getInstance().add("foo", [] { return new readdy::testing::KernelMock("foo"); });
-    try {
-        plug::KernelProvider::getInstance().create("foo2");
-        FAIL() << "Expected NoSuchPluginException!";
-    } catch (std::invalid_argument const &ex) {
-        SUCCEED() << "invalid argument caught.";
-    } catch (...) {
-        FAIL() << "Expected NoSuchPluginException!";
-    }
-}
-
-TEST(Kernel, LoadingExistingPlugin) {
-    plug::KernelProvider::getInstance().add("bar", [] { return new readdy::testing::KernelMock("bar"); });
-    auto kk_ptr = plug::KernelProvider::getInstance().create("bar");
-    EXPECT_STREQ("bar", kk_ptr.get()->name().c_str());
-}
-
-TEST(KernelProvider, SanityCheckDefaultDirectory) {
-    std::string defaultDirectory = plug::KernelProvider::getInstance().getDefaultKernelDirectory();
-    readdy::log::debug("default directory is {}", defaultDirectory);
-    SUCCEED();
-}
-
-TEST(KernelProvider, TestLoadPluginsFromDirectory) {
-    // if we're in conda
-    const char *env = std::getenv("CONDA_ENV_PATH");
-    if (!env) {
-        env = std::getenv("PREFIX");
-    }
-    std::string pluginDir = "readdy/readdy_plugins";
-    if (env) {
-        auto _env = std::string(env);
-        if (!readdy::util::str::has_suffix(_env, "/")) {
-            _env = _env.append("/");
+SCENARIO("Testing the kernel provider") {
+    GIVEN("a kernel provider") {
+        auto &provider = readdy::plugin::KernelProvider::getInstance();
+        WHEN("trying to load a nonexisting problem") {
+            THEN("an exception should be thrown") {
+                REQUIRE_THROWS_AS(provider.create("foo"), std::invalid_argument);
+            }
         }
-        pluginDir = _env.append(pluginDir);
+        WHEN("loading an existing plugin") {
+            auto kk_ptr = provider.create("SingleCPU");
+            THEN("at least the names should match") {
+                REQUIRE(kk_ptr->name() == "SingleCPU");
+            }
+        }
     }
-    plug::KernelProvider::getInstance().loadKernelsFromDirectory(pluginDir);
-    readdy::log::debug("current path: {}", readdy::util::fs::current_path());
-}
-
-TEST(KernelProvider, TestFoo) {
-    auto k = plug::KernelProvider::getInstance().create("SingleCPU");
-    auto name = k.get()->name();
-    readdy::log::debug("foo name: {}", name);
-}
-
 }

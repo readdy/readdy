@@ -96,12 +96,12 @@ public:
 
     const std::vector<particle_type> getParticles() const override;
 
-    void initializeNeighborList(scalar skin) {
+    void initializeNeighborList(scalar skin) override {
         _neighborList->setUp(skin, _neighborListCellRadius);
         _neighborList->update();
     };
 
-    void updateNeighborList() {
+    void updateNeighborList() override {
         _neighborList->update();
     };
 
@@ -162,7 +162,7 @@ public:
         return _neighborList.get();
     };
 
-    void clearNeighborList() {
+    void clearNeighborList() override {
         _neighborList->clear();
     };
 

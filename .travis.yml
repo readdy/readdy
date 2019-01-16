@@ -21,7 +21,7 @@ env:
   global:
   - PATH=$HOME/_cmake/bin:$HOME/miniconda/bin:$PATH
   - MACOSX_DEPLOYMENT_TARGET=10.7
-  - MAKEFLAGS="-j2 ${MAKEFLAGS}"
+  - MAKEFLAGS="-j1 ${MAKEFLAGS}"
 
   matrix:
   - python=3.6 CONDA_PY=36
@@ -35,7 +35,6 @@ matrix:
     compiler: gcc
 
 cache:
-  apt: true
   ccache: true
 
 before_install:
@@ -47,7 +46,7 @@ install:
 
 script:
 - conda-build --version
-- conda build -c defaults -c conda-forge -q tools/conda-recipe
+- conda build -c defaults -c conda-forge tools/conda-recipe --python=$CONDA_PY
 
 after_success:
 - tools/ci/travis/upload_conda_package.sh
