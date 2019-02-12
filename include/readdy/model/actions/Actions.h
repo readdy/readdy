@@ -94,6 +94,14 @@ public:
     ~EulerBDIntegrator() override = default;
 };
 
+class MdgfrdIntegrator : public TimeStepDependentAction {
+public:
+    explicit MdgfrdIntegrator(scalar timeStep);
+
+    ~MdgfrdIntegrator() override = default;
+};
+
+
 class CalculateForces : public Action {
 public:
     CalculateForces();
