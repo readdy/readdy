@@ -75,13 +75,18 @@ public:
 
     void perform() override {
         // @todo mdgfrd
-        // fractional propagation for previously protected particles
-        // propagate particles: either BD or GF
-        // loop over all particles,
-        //      if BD -> do BD
-        //      if GF and burst required -> do burst
 
-        // construct domains -> get distances again
+        // fractional propagation for previously protected particles
+        // -----
+        // update neighbor list
+        // update distances
+        // ---- the two seps above can be skipped under the assumption that
+        //      only rarely a particle bursts a domain after exiting its own domains,
+        //      or the gap left between domains should be larger than just the reaction distance
+        // burst
+        // update neighbor list
+        // update distances
+        // propagate or construct domain
 
         const auto &context = kernel->context();
         const auto &pbc = context.periodicBoundaryConditions().data();
