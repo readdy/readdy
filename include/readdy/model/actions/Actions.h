@@ -198,6 +198,11 @@ const std::string getActionName(typename std::enable_if<std::is_base_of<EulerBDI
 }
 
 template<typename T>
+const std::string getActionName(typename std::enable_if<std::is_base_of<MdgfrdIntegrator, T>::value>::type * = 0) {
+    return "MdgfrdIntegrator";
+}
+
+template<typename T>
 const std::string getActionName(typename std::enable_if<std::is_base_of<CalculateForces, T>::value>::type * = 0) {
     return "Calculate forces";
 }

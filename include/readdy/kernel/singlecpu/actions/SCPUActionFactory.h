@@ -60,6 +60,8 @@ public:
 
     std::unique_ptr<readdy::model::actions::EulerBDIntegrator> eulerBDIntegrator(scalar timeStep) const override;
 
+    std::unique_ptr<readdy::model::actions::MdgfrdIntegrator> mdgfrdIntegrator(scalar timeStep) const override;
+
     std::unique_ptr<readdy::model::actions::CalculateForces> calculateForces() const override;
 
     std::unique_ptr<readdy::model::actions::UpdateNeighborList>

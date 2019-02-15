@@ -285,6 +285,10 @@ public:
 
     BoxIterator particlesEnd(std::size_t cellIndex) const;
 
+    const Vec3 &cellSize() const {
+        return _cellSize;
+    }
+
 protected:
     virtual void setUpBins() {
         if (_max_cutoff > 0) {

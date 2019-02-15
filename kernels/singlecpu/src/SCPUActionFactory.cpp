@@ -41,6 +41,7 @@
 
 #include <readdy/kernel/singlecpu/actions/SCPUActionFactory.h>
 #include <readdy/kernel/singlecpu/actions/SCPUEulerBDIntegrator.h>
+#include <readdy/kernel/singlecpu/actions/SCPUMdgfrdIntegrator.h>
 #include <readdy/kernel/singlecpu/actions/SCPUCalculateForces.h>
 #include <readdy/kernel/singlecpu/actions/SCPUReactionImpls.h>
 #include <readdy/kernel/singlecpu/actions/SCPUUpdateNeighborList.h>
@@ -49,10 +50,8 @@
 
 namespace core_actions = readdy::model::actions;
 
-namespace readdy {
-namespace kernel {
-namespace scpu {
-namespace actions {
+namespace readdy::kernel::scpu::actions {
+
 SCPUActionFactory::SCPUActionFactory(SCPUKernel *const kernel) : kernel(kernel) {}
 
 namespace rma = readdy::model::actions;
@@ -70,6 +69,11 @@ std::vector<std::string> SCPUActionFactory::getAvailableActions() const {
 
 std::unique_ptr<readdy::model::actions::EulerBDIntegrator> SCPUActionFactory::eulerBDIntegrator(scalar timeStep) const {
     return {std::make_unique<SCPUEulerBDIntegrator>(kernel, timeStep)};
+}
+
+std::unique_ptr<readdy::model::actions::MdgfrdIntegrator>
+SCPUActionFactory::mdgfrdIntegrator(scalar timeStep) const {
+    return {std::make_unique<SCPUMdgfrdIntegrator>(kernel, timeStep)};
 }
 
 std::unique_ptr<readdy::model::actions::CalculateForces> SCPUActionFactory::calculateForces() const {
@@ -106,8 +110,3 @@ SCPUActionFactory::detailedBalance(scalar timeStep) const {
 }
 
 }
-}
-}
-}
-
-

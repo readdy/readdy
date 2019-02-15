@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2018 Computational Molecular Biology Group,          *
+ * Copyright © 2019 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * Redistribution and use in source and binary forms, with or       *
@@ -34,37 +34,24 @@
 
 
 /**
- * << detailed description >>
- *
- * @file ObservableData.h
- * @brief << brief description >>
- * @author clonker
- * @date 1/17/18
+ * @file TestFirstPassageTimeIntegrator.cpp
+ * @brief Tests for MDGFRD stuff
+ * @author luigisbailo
+ * @author chrisfroe
+ * @date 15.02.19
  */
 
+#include <catch2/catch.hpp>
 
-#pragma once
+#include <readdy/model/Kernel.h>
+#include <readdy/plugin/KernelProvider.h>
+#include <readdy/model/actions/Actions.h>
+#include <readdy/kernel/singlecpu/actions/SCPUMdgfrdIntegrator.h>
 
-#include <readdy/common/common.h>
-#include <readdy/model/reactions/ReactionRecord.h>
-
-namespace readdy {
-namespace kernel {
-namespace scpu {
-namespace model {
-
-struct ObservableData {
-
-    using reaction_counts_map = readdy::model::reactions::reaction_counts_map;
-
-    scalar energy = 0;
-    scalar time = 0;
-    std::vector<readdy::model::reactions::ReactionRecord> reactionRecords{};
-    reaction_counts_map reactionCounts {};
-    Matrix33 virial {};
-};
-
-}
-}
-}
+TEST_CASE("Test single cpu MDGFRD", "[scpu]") {
+    auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
+    kernel->context().boxSize() = {{10, 10, 10}};
+    kernel->context().particleTypes().add("X", .25);
+    readdy::scalar timestep = 0.1;
+    auto&& integrator = kernel->actions().mdgfrdIntegrator(timestep);
 }

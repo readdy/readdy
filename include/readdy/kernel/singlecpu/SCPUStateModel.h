@@ -113,6 +113,14 @@ public:
         return _observableData.energy;
     }
 
+    scalar time() const override {
+        return _observableData.time;
+    }
+
+    scalar &time() override {
+        return _observableData.time;
+    }
+
     SCPUStateModel(const readdy::model::Context &context, const topology_action_factory *);
 
     ~SCPUStateModel() override = default;

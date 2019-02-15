@@ -145,6 +145,14 @@ public:
         return _observableData.energy;
     };
 
+    scalar time() const override {
+        return _observableData.time;
+    };
+
+    scalar &time() override {
+        return _observableData.time;
+    };
+
     data_type const *const getParticleData() const {
         return &_data.get();
     };

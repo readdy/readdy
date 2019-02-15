@@ -34,7 +34,7 @@
 
 project(runUnitTests_singlecpu)
 
-add_executable(${PROJECT_NAME} TestMain.cpp TestNeighborList.cpp TestReactions.cpp
+add_executable(${PROJECT_NAME} TestMain.cpp TestNeighborList.cpp TestReactions.cpp TestFirstPassageTimeIntegrator.cpp
         ${READDY_INCLUDE_DIRS} ${TESTING_INCLUDE_DIR})
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${READDY_INCLUDE_DIRS} ${TESTING_INCLUDE_DIR})

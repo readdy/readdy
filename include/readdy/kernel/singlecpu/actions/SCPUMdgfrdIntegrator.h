@@ -53,40 +53,71 @@ namespace scpu {
 
 namespace actions {
 
-struct MdgfrdData {
-    scalar exitTime;
-    scalar constructionTime;
-    scalar simulationTime;
-    scalar domainSize;
+struct MdgfrdParticleData {
+    scalar exitTime = 0;
+    scalar constructionTime = 0;
+    scalar domainSize = 0;
 
-    bool GFpropagation;
-    bool GFend;
+    bool GFpropagation = false;
 };
 
-class SCPUMdgfrdIntegrator : public readdy::model::actions::MdgfrdIntegrator {
+struct MdgfrdSpeciesData {
+    scalar minDomainSize = 0;
+    scalar maxDomainSize = 0;
+};
 
+
+class SCPUMdgfrdIntegrator : public readdy::model::actions::MdgfrdIntegrator {
 public:
+
     SCPUMdgfrdIntegrator(SCPUKernel *kernel, scalar timeStep)
             : readdy::model::actions::MdgfrdIntegrator(timeStep), kernel(kernel) {
-        // @todo set up neighborlist again with skin=maxcutoff
-        // @todo determine min and max domain size from context
-
+        const auto &context = kernel->context();
+        const auto &particlesTypeIds = context.particleTypes().typesFlat();
+        // set up species data
+        for (const auto& speciesI : particlesTypeIds) {
+            const auto &infoI = context.particleTypes().infoOf(speciesI);
+            MdgfrdSpeciesData speciesDataI;
+            // fixme: 4 is just a guess
+            speciesDataI.minDomainSize = 4. * std::sqrt(infoI.diffusionConstant * timeStep);
+            scalar maxInteractionRadius = 0.;
+            for (const auto& speciesJ : particlesTypeIds) {
+                const auto &infoJ = context.particleTypes().infoOf(speciesJ);
+                // loop over reaction of i and j
+                // loop over potentials of i and j
+                scalar interactionDistance = 10.;
+                if (interactionDistance > maxInteractionRadius) {
+                    maxInteractionRadius = interactionDistance;
+                }
+            }
+            const auto &nlCellSize = kernel->getSCPUKernelStateModel().getNeighborList()->cellSize();
+            //const auto minCellSize = std::min(std::min(nlCellSize[0], nlCellSize[1]), nlCellSize[2]);
+            const auto minCellSize = *std::min_element(nlCellSize.data.begin(), nlCellSize.data.end());
+            speciesDataI.maxDomainSize = (minCellSize - maxInteractionRadius) / 2.;
+            speciesData.emplace(std::make_pair(speciesI, speciesDataI));
+        }
     };
 
     void perform() override {
-        // @todo mdgfrd
+        // @todo set up neighborlist again with skin=maxcutoff
+        if (firstPerform) {
+            initialize();
+        }
+        // todo bookkeep particleData (because particles might have disappeared or appeared)
 
         // fractional propagation for previously protected particles
+
         // -----
         // update neighbor list
         // update distances
         // ---- the two seps above can be skipped under the assumption that
         //      only rarely a particle bursts a domain after exiting its own domains,
         //      or the gap left between domains should be larger than just the reaction distance
+
         // burst
         // update neighbor list
         // update distances
-        // propagate or construct domain
+        // propagate or construct domain, find out minDomainSize
 
         const auto &context = kernel->context();
         const auto &pbc = context.periodicBoundaryConditions().data();
@@ -94,6 +125,13 @@ public:
         const auto &box = context.boxSize().data();
         auto& stateModel = kernel->getSCPUKernelStateModel();
         const auto pd = stateModel.getParticleData();
+        const auto t = stateModel.time();
+        for (auto& entry : *pd){
+
+
+
+        }
+
         for(auto& entry : *pd) {
             if(!entry.is_deactivated()) {
                 const scalar D = context.particleTypes().diffusionConstantOf(entry.type);
@@ -108,11 +146,18 @@ public:
     }
 
 private:
+    void initialize() {
+        // Todo setup particle data
+    }
+
     SCPUKernel *kernel;
 
-    std::unordered_map<readdy::model::Particle::id_type, MdgfrdData> particleData;
-    const scalar minDomainSize;
-    const scalar maxDomainSize;
+    bool firstPerform = true;
+
+
+    std::map<readdy::model::Particle::id_type, MdgfrdParticleData> particleData;
+    std::unordered_map<readdy::model::Particle::type_type, MdgfrdSpeciesData> speciesData;
+
 };
 }
 }
