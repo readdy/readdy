@@ -34,13 +34,10 @@
 
 
 /**
- * << detailed description >>
- *
  * @file ExportObservables.h
- * @brief << brief description >>
+ * @brief Create bindings for observable handles, certain record types, and methods on the simulation object.
  * @author clonker
  * @date 13.03.17
- * @copyright GPL-3
  */
 
 #ifndef READDY_MAIN_EXPORTOBSERVABLES_H

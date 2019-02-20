@@ -59,6 +59,7 @@
 #include <readdy/model/actions/ActionFactory.h>
 #include <readdy/model/topologies/TopologyActionFactory.h>
 #include <readdy/model/_internal/Util.h>
+#include <readdy/model/SimulationParams.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
@@ -166,6 +167,14 @@ public:
         return _context;
     };
 
+    const SimulationParams &simulationParams() const {
+        return _simulationParams;
+    }
+
+    SimulationParams &simulationParams() {
+        return _simulationParams;
+    }
+
     virtual const readdy::model::actions::ActionFactory &actions() const = 0;
 
     virtual readdy::model::actions::ActionFactory &actions() = 0;
@@ -193,6 +202,7 @@ public:
 protected:
 
     model::Context _context;
+    SimulationParams _simulationParams;
     std::string _name;
     observables::signal_type _signal;
 };

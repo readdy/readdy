@@ -34,8 +34,6 @@
 
 
 /**
- * << detailed description >>
- *
  * @file ExportSchemeApi.h
  * @brief << brief description >>
  * @author clonker

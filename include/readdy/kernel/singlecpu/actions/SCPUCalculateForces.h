@@ -66,11 +66,11 @@ void computeVirial<false>(const Vec3& /*r_ij*/, const Vec3 &/*force*/, Matrix33 
 
 class SCPUCalculateForces : public readdy::model::actions::CalculateForces {
 public:
-    explicit SCPUCalculateForces(SCPUKernel *kernel) : kernel(kernel) {};
+    explicit SCPUCalculateForces(SCPUKernel *kernel, bool recordVirial) : kernel(kernel), _recordVirial(recordVirial) {};
 
     void perform() override {
         const auto &context = kernel->context();
-        if(context.recordVirial()) {
+        if(_recordVirial) {
             performImpl<true>();
         } else {
             performImpl<false>();
@@ -146,6 +146,7 @@ private:
         readdy::algo::evaluateOnContainers(data, order1eval, neighborList, order2eval, topologies, topologyEval);
     }
     SCPUKernel *kernel;
+    bool _recordVirial;
 };
 }
 }

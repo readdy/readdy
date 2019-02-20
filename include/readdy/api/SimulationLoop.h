@@ -93,7 +93,7 @@ public:
      * Creates a new simulation scheme.
      * @param kernel the kernel
      */
-    explicit SimulationLoop(model::Kernel *const kernel, scalar timeStep)
+    explicit SimulationLoop(model::Kernel *const kernel, scalar timeStep, const model::SimulationParams &simParams)
             : _kernel(kernel), _timeStep(timeStep),
               _integrator(kernel->actions().eulerBDIntegrator(timeStep).release()),
               _reactions(kernel->actions().gillespie(timeStep).release()),
@@ -199,10 +199,6 @@ public:
     void writeConfigToFile(File &file) {
         configGroup = std::make_unique<h5rd::Group>(file.createGroup("readdy/config"));
     }
-
-    scalar &skinSize() { return _skinSize; }
-
-    const scalar &skinSize() const { return _skinSize; }
 
     /**
      * This method runs a simulation for a fixed number of time steps by providing an appropriate continue function.
@@ -320,7 +316,6 @@ protected:
     std::shared_ptr<model::actions::UpdateNeighborList> _neighborList{nullptr};
     std::shared_ptr<model::actions::top::EvaluateTopologyReactions> _topologyReactions{nullptr};
     std::shared_ptr<model::actions::UpdateNeighborList> _clearNeighborList{nullptr};
-    scalar _skinSize = 0;
     std::shared_ptr<h5rd::Group> configGroup = nullptr;
 
     bool _evaluateObservables = true;
@@ -328,6 +323,7 @@ protected:
     std::size_t _progressOutputStride = 100;
     std::function<void(time_step_type)> _progressCallback;
     scalar _timeStep;
+    model::SimulationParams simParams;
 
     std::vector<std::function<void(time_step_type)>> _callbacks;
 };

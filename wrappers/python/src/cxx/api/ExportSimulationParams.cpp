@@ -32,25 +32,33 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                       *
  ********************************************************************/
 
+
 /**
- * @file SimulationParams.h
- * @brief Holds kernel-independent parameters that determine how the simulation is run.
+ * @file ExportSimulationParams.cpp
+ * @brief << brief description >>
  * @author chrisfroe
- * @date 20.02.2019
+ * @date 20.02.19
  */
 
-#pragma once
+#include <pybind11/pybind11.h>
+//#include <pybind11/stl_bind.h>
+//#include <pybind11/stl.h>
+#include <pybind11/functional.h>
+#include <readdy/model/SimulationParams.h>
 
-#include <readdy/common/common.h>
+namespace py = pybind11;
 
-namespace readdy::model {
+using rvp = py::return_value_policy;
+using SimulationParams = readdy::model::SimulationParams;
 
-struct SimulationParams {
-    bool recordReactionsWithPositions = false;
-    bool recordReactionCounts = false;
-    bool recordVirial = false;
-    scalar neighborListCellWidth = -1.;
-    scalar neighborListSkinSize = 0.;
-};
+void exportSimulationParams(py::module &module) {
+    //using namespace readdy;
+    //using namespace py::literals;
 
+    py::class_<SimulationParams>(module, "SimulationParams")
+            .def_readwrite("recordReactionsWithPositions", &SimulationParams::recordReactionsWithPositions)
+            .def_readwrite("recordReactionCounts", &SimulationParams::recordReactionCounts)
+            .def_readwrite("recordVirial", &SimulationParams::recordVirial)
+            .def_readwrite("neighborListCellWidth", &SimulationParams::neighborListCellWidth)
+            .def_readwrite("neighborListSkinSize", &SimulationParams::neighborListSkinSize);
 }

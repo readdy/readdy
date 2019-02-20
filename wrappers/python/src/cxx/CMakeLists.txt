@@ -49,6 +49,7 @@ set(SOURCE_FILES
         api/ExportSchemeApi.cpp
         api/ExportTopologies.cpp
         api/ExportKernelContext.cpp
+        api/ExportSimulationParams.cpp
         api/PyFunction.h
         api/ApiModule.cpp)
 pybind11_add_module(readdybinding ${SOURCE_FILES})
