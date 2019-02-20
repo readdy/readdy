@@ -77,6 +77,7 @@ public:
             _skin = skin;
             _radius = radius;
             _max_cutoff = _context.get().calculateMaxCutoff();
+            // @todo put the decision of cell width to high level, i.e. read it from simParams
             if (_max_cutoff > 0) {
                 auto size = _context.get().boxSize();
                 auto desiredWidth = static_cast<scalar>((_max_cutoff + _skin) / static_cast<scalar>(radius));

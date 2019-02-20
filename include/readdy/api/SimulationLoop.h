@@ -238,6 +238,8 @@ public:
                     throw std::logic_error("Neighbor list required but set to null!");
                 }
                 _initNeighborList->skin() = _skinSize;
+                // @todo determine maxcutoff and other interactions here
+                // ask other actions if they have interaction distances
                 _neighborList->skin() = _skinSize;
                 _clearNeighborList->skin() = _skinSize;
             }

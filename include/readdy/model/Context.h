@@ -127,50 +127,6 @@ public:
      */
     std::string describe();
 
-    /**
-     * Returns whether reactions with positions shall be recorded in the state model, then obtainable by
-     * the readdy::model::observables::Reactions observable.
-     * @return whether reactions shall be recorded in the state model, by default false
-     */
-    const bool &recordReactionsWithPositions() const {
-        return _recordReactionsWithPositions;
-    }
-
-    /**
-     * Returns whether reactions with positions shall be recorded in the state model, then obtainable by
-     * the readdy::model::observables::Reactions observable.
-     * @return whether reactions shall be recorded in the state model, by default false
-     */
-    bool &recordReactionsWithPositions() {
-        return _recordReactionsWithPositions;
-    }
-
-    /**
-     * Returns whether reaction counts shall be recorded in the state model (if it is supported). It is then obtainable
-     * by the readdy::model::observables::ReactionCounts observable.
-     * @return wheter reaction counts shall be recorded
-     */
-    const bool &recordReactionCounts() const {
-        return _recordReactionCounts;
-    }
-
-    /**
-     * Returns whether reaction counts shall be recorded in the state model (if it is supported). It is then obtainable
-     * by the readdy::model::observables::ReactionCounts observable.
-     * @return wheter reaction counts shall be recorded
-     */
-    bool &recordReactionCounts() {
-        return _recordReactionCounts;
-    }
-
-    const bool &recordVirial() const {
-        return _recordVirial;
-    }
-
-    bool &recordVirial() {
-        return _recordVirial;
-    }
-
     compartments::CompartmentRegistry &compartments() {
         return _compartmentRegistry;
     }
@@ -248,12 +204,6 @@ private:
     scalar _kBT{1};
     BoxSize _box_size{{1, 1, 1}};
     PeriodicBoundaryConditions _periodic_boundary{{true, true, true}};
-
-    // here come horrible flags
-    bool _recordReactionsWithPositions{false};
-    bool _recordReactionCounts{false};
-    bool _recordVirial{false};
-
 };
 
 NAMESPACE_END(model)
