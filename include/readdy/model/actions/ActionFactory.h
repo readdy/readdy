@@ -34,12 +34,13 @@
 
 
 /**
- * This file contains the declaration of the program factory. Internally, the factory is simply a map of
- * string -> std::function<Program*()>, which then can get called.
+ * This file contains the declaration of the action factory. Internally, the factory is simply a map of
+ * string -> std::function<Action*()>, which then can get called.
  *
- * @file ProgramFactory.h
- * @brief Declaration of the program factory.
+ * @file ActionFactory.h
+ * @brief Declaration of the action factory.
  * @author clonker
+ * @author chrisfroe
  * @date 08.04.16
  */
 
@@ -100,17 +101,17 @@ public:
 
     virtual std::unique_ptr<MdgfrdIntegrator> mdgfrdIntegrator(scalar timeStep) const = 0;
 
-    virtual std::unique_ptr<CalculateForces> calculateForces() const = 0;
+    virtual std::unique_ptr<readdy::model::actions::CalculateForces> calculateForces(bool recordVirial) const = 0;
 
-    virtual std::unique_ptr<UpdateNeighborList> updateNeighborList(UpdateNeighborList::Operation operation,
-                                                                   scalar skinSize) const = 0;
+    virtual std::unique_ptr<UpdateNeighborList>
+    updateNeighborList(scalar interactionDistance, UpdateNeighborList::Operation operation) const = 0;
 
     std::unique_ptr<UpdateNeighborList> updateNeighborList(UpdateNeighborList::Operation op) const {
-        return updateNeighborList(op, 0);
+        return updateNeighborList(0, op);
     };
 
     std::unique_ptr<UpdateNeighborList> updateNeighborList() const {
-        return updateNeighborList(UpdateNeighborList::Operation::init, 0);
+        return updateNeighborList(0, UpdateNeighborList::Operation::init);
     };
 
     virtual std::unique_ptr<EvaluateCompartments> evaluateCompartments() const = 0;

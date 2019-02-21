@@ -65,9 +65,10 @@ void Virial::flush() {
     if (pimpl->time) pimpl->time->flush();
 }
 
-void Virial::initialize(Kernel *const kernel) {
-    kernel->context().recordVirial() = true;
-}
+// todo remove me
+//void Virial::initialize(Kernel *const kernel) {
+//    kernel->context().recordVirial() = true;
+//}
 
 void Virial::initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) {
     h5rd::dimensions fs = {flushStride, Matrix33::n(), Matrix33::m()};

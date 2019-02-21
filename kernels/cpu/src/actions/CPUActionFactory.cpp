@@ -68,13 +68,13 @@ std::unique_ptr<model::actions::EulerBDIntegrator> CPUActionFactory::eulerBDInte
     return {std::make_unique<CPUEulerBDIntegrator>(kernel, timeStep)};
 }
 
-std::unique_ptr<model::actions::CalculateForces> CPUActionFactory::calculateForces() const {
-    return {std::make_unique<CPUCalculateForces>(kernel)};
+std::unique_ptr<readdy::model::actions::CalculateForces> CPUActionFactory::calculateForces(bool recordVirial) const {
+    return {std::make_unique<CPUCalculateForces>(kernel, recordVirial)};
 }
 
 std::unique_ptr<model::actions::UpdateNeighborList>
-CPUActionFactory::updateNeighborList(model::actions::UpdateNeighborList::Operation operation, scalar skinSize) const {
-    return {std::make_unique<CPUUpdateNeighborList>(kernel, operation, skinSize)};
+CPUActionFactory::updateNeighborList(scalar interactionDistance, model::actions::UpdateNeighborList::Operation operation) const {
+    return {std::make_unique<CPUUpdateNeighborList>(kernel, interactionDistance, operation)};
 }
 
 std::unique_ptr<model::actions::EvaluateCompartments> CPUActionFactory::evaluateCompartments() const {

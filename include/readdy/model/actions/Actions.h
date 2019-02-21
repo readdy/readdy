@@ -115,17 +115,19 @@ public:
         init, update, clear
     };
 
-    explicit UpdateNeighborList(Operation operation = Operation::init, scalar skinSize = 0);
+    explicit UpdateNeighborList(scalar interactionDistance, Operation operation = Operation::init);
 
     ~UpdateNeighborList() override = default;
 
-    scalar &skin() { return skinSize; }
+    scalar &interactionDistance() { return _interactionDistance; }
 
-    const scalar &skin() const { return skinSize; }
+    const scalar &interactionDistance() const { return _interactionDistance; }
 
 protected:
     Operation operation;
-    scalar skinSize;
+    // todo consider making this const
+    // todo which would mean that all simulation config and params must be known when loop is constructed
+    scalar _interactionDistance;
 };
 
 NAMESPACE_BEGIN(reactions)
@@ -136,6 +138,11 @@ public:
     explicit UncontrolledApproximation(scalar timeStep);
 
     ~UncontrolledApproximation() override = default;
+
+protected:
+    // todo const?
+    bool recordReactionCounts = false;
+    bool recordReactionsWithPositions = false;
 };
 
 class Gillespie : public TimeStepDependentAction {

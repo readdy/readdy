@@ -61,12 +61,12 @@ public:
         return nullptr;
     }
 
-    std::unique_ptr<model::actions::CalculateForces> calculateForces() const override {
+    std::unique_ptr<readdy::model::actions::CalculateForces> calculateForces(bool recordVirial) const override {
         return nullptr;
     }
 
     std::unique_ptr<model::actions::UpdateNeighborList>
-    updateNeighborList(model::actions::UpdateNeighborList::Operation operation, scalar skinSize) const override {
+    updateNeighborList(scalar interactionDistance, model::actions::UpdateNeighborList::Operation operation) const override {
         return nullptr;
     }
 

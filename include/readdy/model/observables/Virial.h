@@ -65,7 +65,8 @@ public:
     void flush() override;
 
 protected:
-    void initialize(Kernel * kernel) override;
+    // todo will not be necessary
+    //void initialize(Kernel * kernel) override;
 
     void initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) override;
 

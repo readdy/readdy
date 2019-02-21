@@ -337,10 +337,10 @@ TEMPLATE_TEST_CASE("Test detailed balance action.", "[detailed-balance]", Single
 
 void perform(readdy::model::Kernel *kernel, size_t nSteps, readdy::scalar timeStep, bool withIntegrator = false) {
     auto &&integrator = kernel->actions().eulerBDIntegrator(timeStep);
-    auto &&forces = kernel->actions().calculateForces();
+    auto &&forces = kernel->actions().calculateForces(false);
     using update_nl = readdy::model::actions::UpdateNeighborList;
-    auto &&initNeighborList = kernel->actions().updateNeighborList(update_nl::Operation::init, 0);
-    auto &&neighborList = kernel->actions().updateNeighborList(update_nl::Operation::update, 0);
+    auto &&initNeighborList = kernel->actions().updateNeighborList(0, update_nl::Operation::init);
+    auto &&neighborList = kernel->actions().updateNeighborList(0, update_nl::Operation::update);
     auto &&reactions = kernel->actions().detailedBalance(timeStep);
 
     initNeighborList->perform();

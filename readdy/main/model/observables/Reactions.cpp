@@ -88,13 +88,14 @@ void Reactions::append() {
     pimpl->time->append(t_current);
 }
 
-void Reactions::initialize(Kernel *const kernel) {
-    if (!kernel->context().recordReactionsWithPositions()) {
-        log::warn("The \"Reactions\"-observable set context.recordReactionsWithPositions() to true. "
-                          "If this is undesired, the observable should not be registered.");
-        kernel->context().recordReactionsWithPositions() = true;
-    }
-}
+// todo remove me
+//void Reactions::initialize(Kernel *const kernel) {
+//    if (!kernel->context().recordReactionsWithPositions()) {
+//        log::warn("The \"Reactions\"-observable set context.recordReactionsWithPositions() to true. "
+//                          "If this is undesired, the observable should not be registered.");
+//        kernel->context().recordReactionsWithPositions() = true;
+//    }
+//}
 
 std::string Reactions::type() const {
     return "Reactions";

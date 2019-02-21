@@ -49,7 +49,7 @@ struct SimulationParams {
     bool recordReactionsWithPositions = false;
     bool recordReactionCounts = false;
     bool recordVirial = false;
-    scalar neighborListCellWidth = -1.;
+    scalar neighborListInteractionDistance = -1.;
     scalar neighborListSkinSize = 0.;
 };
 

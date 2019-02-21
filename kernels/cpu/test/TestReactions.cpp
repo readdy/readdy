@@ -223,7 +223,7 @@ TEST_CASE("Test cpu kernel reaction handling", "[cpu]") {
         kernel->context().reactions().addFission("X fission", "X", "X", "X", .5, .3);
 
         auto &&integrator = kernel->actions().eulerBDIntegrator(1);
-        auto &&forces = kernel->actions().calculateForces();
+        auto &&forces = kernel->actions().calculateForces(false);
         auto &&neighborList = kernel->actions().updateNeighborList();
         auto &&reactions = kernel->actions().gillespie(1);
 

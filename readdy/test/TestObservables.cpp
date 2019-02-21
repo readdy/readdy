@@ -72,8 +72,8 @@ TEMPLATE_TEST_CASE("Test observables", "[observables]", SingleCPU, CPU) {
 
         auto &&integrator = kernel->actions().createIntegrator("EulerBDIntegrator", timeStep);
         using update_nl = readdy::model::actions::UpdateNeighborList;
-        auto &&neighborListInit = kernel->actions().updateNeighborList(update_nl::Operation::init, 0);
-        auto &&neighborList = kernel->actions().updateNeighborList(update_nl::Operation::update, -1);
+        auto &&neighborListInit = kernel->actions().updateNeighborList(0, update_nl::Operation::init);
+        auto &&neighborList = kernel->actions().updateNeighborList(-1, update_nl::Operation::update);
         neighborListInit->perform();
         for (readdy::time_step_type t = 0; t < 100; t++) {
             integrator->perform();
@@ -181,7 +181,7 @@ TEMPLATE_TEST_CASE("Test observables", "[observables]", SingleCPU, CPU) {
 
         {
             auto integrator = kernel->actions().createIntegrator("EulerBDIntegrator", 1.0);
-            auto forces = kernel->actions().calculateForces();
+            auto forces = kernel->actions().calculateForces(false);
             auto topReactions = kernel->actions().evaluateTopologyReactions(1.0);
 
             std::size_t time = 0;
@@ -307,7 +307,7 @@ TEMPLATE_TEST_CASE("Test observables", "[observables]", SingleCPU, CPU) {
 
         using update_nl = readdy::model::actions::UpdateNeighborList;
         auto &&nl = kernel->actions().updateNeighborList();
-        auto &&forces = kernel->actions().calculateForces();
+        auto &&forces = kernel->actions().calculateForces(false);
         kernel->initialize();
         {
             auto obsC = kernel->observe().forces(1, std::vector<std::string>{"C"});

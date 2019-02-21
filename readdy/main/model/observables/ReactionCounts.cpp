@@ -77,13 +77,14 @@ void ReactionCounts::flush() {
     if (pimpl->time) pimpl->time->flush();
 }
 
-void ReactionCounts::initialize(Kernel *const kernel) {
-    if (!kernel->context().recordReactionCounts()) {
-        log::warn("The \"ReactionCounts\"-observable set context.recordReactionCounts() to true. "
-                          "If this is undesired, the observable should not be registered.");
-        kernel->context().recordReactionCounts() = true;
-    }
-}
+// todo remove me
+//void ReactionCounts::initialize(Kernel *const kernel) {
+//    if (!kernel->context().recordReactionCounts()) {
+//        log::warn("The \"ReactionCounts\"-observable set context.recordReactionCounts() to true. "
+//                          "If this is undesired, the observable should not be registered.");
+//        kernel->context().recordReactionCounts() = true;
+//    }
+//}
 
 void ReactionCounts::initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) {
     pimpl->firstWrite = true;

@@ -34,11 +34,10 @@
 
 
 /**
- * << detailed description >>
- *
- * @file SingleCPUNeighborList.h
- * @brief << brief description >>
+ * @file SCPUNeighborList.h
+ * @brief Cell linked list for Single CPU kernel
  * @author clonker
+ * @author chrisfroe
  * @date 09.06.16
  */
 
@@ -71,16 +70,15 @@ public:
     CellLinkedList(data_type &data, const readdy::model::Context &context)
             : _data(data), _context(context), _head{}, _list{}, _radius{0} {};
 
-    void setUp(scalar skin, cell_radius_type radius) {
-        if (!_is_set_up || _skin != skin || _radius != radius) {
+    void setUp(scalar interactionDistance, cell_radius_type radius) {
+        if (!_isSetUp || _interactionDistance != interactionDistance || _radius != radius) {
 
-            _skin = skin;
             _radius = radius;
-            _max_cutoff = _context.get().calculateMaxCutoff();
-            // @todo put the decision of cell width to high level, i.e. read it from simParams
-            if (_max_cutoff > 0) {
+            // @todo additional padding/skin is added to maxcutoff at high level (SimulationParams and SimulationLoop)
+            _interactionDistance = interactionDistance;
+            if (_interactionDistance > 0) {
                 auto size = _context.get().boxSize();
-                auto desiredWidth = static_cast<scalar>((_max_cutoff + _skin) / static_cast<scalar>(radius));
+                auto desiredWidth = static_cast<scalar>((_interactionDistance) / static_cast<scalar>(radius));
                 std::array<std::size_t, 3> dims{};
                 for (int i = 0; i < 3; ++i) {
                     dims[i] = static_cast<unsigned int>(std::max(1., std::floor(size[i] / desiredWidth)));
@@ -174,11 +172,11 @@ public:
                     }
                 }
 
-                if (_max_cutoff > 0) {
+                if (_interactionDistance > 0) {
                     setUpBins();
                 }
 
-                _is_set_up = true;
+                _isSetUp = true;
             }
         }
     };
@@ -190,7 +188,7 @@ public:
     virtual void clear() {
         _head.resize(0);
         _list.resize(0);
-        _is_set_up = false;
+        _isSetUp = false;
     };
 
     const util::Index3D &cellIndex() const {
@@ -236,7 +234,7 @@ public:
     };
 
     scalar maxCutoff() const {
-        return _max_cutoff;
+        return _interactionDistance;
     };
 
     const HEAD &head() const {
@@ -292,7 +290,7 @@ public:
 
 protected:
     virtual void setUpBins() {
-        if (_max_cutoff > 0) {
+        if (_interactionDistance > 0) {
             auto nParticles = _data.get().size();
             _head.clear();
             _head.resize(_cellIndex.size());
@@ -330,10 +328,9 @@ protected:
     LIST _list;
 
 
-    bool _is_set_up{false};
+    bool _isSetUp{false};
 
-    scalar _skin{0};
-    scalar _max_cutoff{0};
+    scalar _interactionDistance{0};
     std::uint8_t _radius;
 
     Vec3 _cellSize{0, 0, 0};

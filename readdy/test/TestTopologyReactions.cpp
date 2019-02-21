@@ -348,7 +348,7 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
 
         {
             auto integrator = kernel->actions().createIntegrator("EulerBDIntegrator", 1.0);
-            auto forces = kernel->actions().calculateForces();
+            auto forces = kernel->actions().calculateForces(false);
             auto topReactions = kernel->actions().evaluateTopologyReactions(1.0);
 
             std::size_t time = 0;
@@ -450,7 +450,7 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
 
         {
             auto integrator = kernel->actions().createIntegrator("EulerBDIntegrator", 1.0);
-            auto forces = kernel->actions().calculateForces();
+            auto forces = kernel->actions().calculateForces(false);
             auto topReactions = kernel->actions().evaluateTopologyReactions(1.0);
 
             std::size_t time = 0;
@@ -647,7 +647,7 @@ TEMPLATE_TEST_CASE("Test topology reactions chaindecay integration test", "[topo
 
     {
         auto integrator = kernel->actions().createIntegrator("EulerBDIntegrator", 1e-2);
-        auto forces = kernel->actions().calculateForces();
+        auto forces = kernel->actions().calculateForces(false);
         auto topReactions = kernel->actions().evaluateTopologyReactions(1e-2);
         auto reactions = kernel->actions().uncontrolledApproximation(1e-2);
 

@@ -76,14 +76,13 @@ SCPUActionFactory::mdgfrdIntegrator(scalar timeStep) const {
     return {std::make_unique<SCPUMdgfrdIntegrator>(kernel, timeStep)};
 }
 
-std::unique_ptr<readdy::model::actions::CalculateForces> SCPUActionFactory::calculateForces() const {
-    return {std::make_unique<SCPUCalculateForces>(kernel)};
+std::unique_ptr<readdy::model::actions::CalculateForces> SCPUActionFactory::calculateForces(bool recordVirial) const {
+    return {std::make_unique<SCPUCalculateForces>(kernel, recordVirial)};
 }
 
 std::unique_ptr<readdy::model::actions::UpdateNeighborList>
-SCPUActionFactory::updateNeighborList(readdy::model::actions::UpdateNeighborList::Operation operation,
-                                      scalar skinSize) const {
-    return {std::make_unique<SCPUUpdateNeighborList>(kernel, operation, skinSize)};
+SCPUActionFactory::updateNeighborList(scalar interactionDistance, readdy::model::actions::UpdateNeighborList::Operation operation) const {
+    return {std::make_unique<SCPUUpdateNeighborList>(kernel, interactionDistance, operation)};
 }
 
 std::unique_ptr<readdy::model::actions::EvaluateCompartments> SCPUActionFactory::evaluateCompartments() const {

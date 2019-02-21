@@ -55,12 +55,14 @@ class CPUUpdateNeighborList : public readdy::model::actions::UpdateNeighborList 
     using super = readdy::model::actions::UpdateNeighborList;
 public:
 
-    CPUUpdateNeighborList(CPUKernel *kernel, super::Operation op, scalar skin) : super(op, skin), kernel(kernel) {}
+    CPUUpdateNeighborList(CPUKernel *kernel, super::Operation op, scalar skin) : super(op, skin), kernel(kernel),
+                                                                                 UpdateNeighborList(0, update),
+                                                                                 UpdateNeighborList(0, update) {}
 
     void perform() override {
         switch (operation) {
             case init:
-                kernel->getCPUKernelStateModel().initializeNeighborList(skinSize);
+                kernel->getCPUKernelStateModel().initializeNeighborList(_interactionDistance);
                 break;
             case clear:
                 kernel->getCPUKernelStateModel().clearNeighborList();

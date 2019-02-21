@@ -33,9 +33,13 @@
  ********************************************************************/
 
 
-//
-// Created by clonker on 08.04.16.
-//
+/**
+ * @file SCPUActionFactory.h
+ * @brief Declaration of the Single CPU action factory.
+ * @author clonker
+ * @author chrisfroe
+ * @date 08.04.16
+ */
 
 #pragma once
 
@@ -62,10 +66,10 @@ public:
 
     std::unique_ptr<readdy::model::actions::MdgfrdIntegrator> mdgfrdIntegrator(scalar timeStep) const override;
 
-    std::unique_ptr<readdy::model::actions::CalculateForces> calculateForces() const override;
+    std::unique_ptr<readdy::model::actions::CalculateForces> calculateForces(bool recordVirial) const override;
 
     std::unique_ptr<readdy::model::actions::UpdateNeighborList>
-    updateNeighborList(readdy::model::actions::UpdateNeighborList::Operation operation, scalar skinSize) const override;
+    updateNeighborList(scalar interactionDistance, readdy::model::actions::UpdateNeighborList::Operation operation) const override;
 
     std::unique_ptr<readdy::model::actions::EvaluateCompartments> evaluateCompartments() const override;
 

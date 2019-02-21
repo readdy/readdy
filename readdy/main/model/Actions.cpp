@@ -52,8 +52,8 @@ namespace model {
 namespace actions {
 
 
-UpdateNeighborList::UpdateNeighborList(UpdateNeighborList::Operation operation, scalar skinSize)
-        : operation(operation), skinSize(skinSize) {
+UpdateNeighborList::UpdateNeighborList(scalar interactionDistance, Operation operation)
+        : operation(operation), _interactionDistance(interactionDistance) {
 }
 
 EulerBDIntegrator::EulerBDIntegrator(scalar timeStep) : TimeStepDependentAction(timeStep) {}

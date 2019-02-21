@@ -34,10 +34,8 @@
 
 
 /**
- * << detailed description >>
- *
- * @file CPUProgramFactory.h
- * @brief << brief description >>
+ * @file CPUActionFactory.h
+ * @brief Declaration of CPU action factory
  * @author clonker
  * @date 23.06.16
  */
@@ -61,10 +59,10 @@ public:
 
     std::unique_ptr<model::actions::EulerBDIntegrator> eulerBDIntegrator(scalar timeStep) const override;
 
-    std::unique_ptr<model::actions::CalculateForces> calculateForces() const override;
+    std::unique_ptr<readdy::model::actions::CalculateForces> calculateForces(bool recordVirial) const override;
 
     std::unique_ptr<model::actions::UpdateNeighborList>
-    updateNeighborList(model::actions::UpdateNeighborList::Operation operation, scalar skinSize) const override;
+    updateNeighborList(scalar interactionDistance, model::actions::UpdateNeighborList::Operation operation) const override;
 
     std::unique_ptr<model::actions::EvaluateCompartments> evaluateCompartments() const override;
 

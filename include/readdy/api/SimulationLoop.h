@@ -94,10 +94,10 @@ public:
      * @param kernel the kernel
      */
     explicit SimulationLoop(model::Kernel *const kernel, scalar timeStep, const model::SimulationParams &simParams)
-            : _kernel(kernel), _timeStep(timeStep),
+            : _kernel(kernel), _timeStep(timeStep), _simParams(simParams),
               _integrator(kernel->actions().eulerBDIntegrator(timeStep).release()),
               _reactions(kernel->actions().gillespie(timeStep).release()),
-              _forces(kernel->actions().calculateForces().release()),
+              _forces(kernel->actions().calculateForces(false).release()),
               _initNeighborList(kernel->actions().updateNeighborList(NeighborListOps::init).release()),
               _neighborList(kernel->actions().updateNeighborList(NeighborListOps::update).release()),
               _clearNeighborList(kernel->actions().updateNeighborList(NeighborListOps::clear).release()),
@@ -193,7 +193,7 @@ public:
     }
 
     void evaluateForces(bool include) {
-        _forces = include ? _kernel->actions().calculateForces() : nullptr;
+        _forces = include ? _kernel->actions().calculateForces(false) : nullptr;
     }
 
     void writeConfigToFile(File &file) {
@@ -208,14 +208,14 @@ public:
         // show every 100 time steps
         if (!_progressCallback) {
             _progressCallback = [this, steps](time_step_type current) {
-                log::info("Simulation progress: {} / {} steps", (current - start), steps);
+                log::info("Simulation progress: {} / {} steps", (current - _start), steps);
             };
         }
         auto defaultContinueCriterion = [this, steps](const time_step_type current) {
-            if (current != start && _progressOutputStride > 0 && (current - start) % _progressOutputStride == 0) {
+            if (current != _start && _progressOutputStride > 0 && (current - _start) % _progressOutputStride == 0) {
                 _progressCallback(current);
             }
-            return current < start + steps;
+            return current < _start + steps;
         };
         run(defaultContinueCriterion);
     };
@@ -233,18 +233,19 @@ public:
                 if (!(_initNeighborList && _neighborList && _clearNeighborList)) {
                     throw std::logic_error("Neighbor list required but set to null!");
                 }
-                _initNeighborList->skin() = _skinSize;
-                // @todo determine maxcutoff and other interactions here
-                // ask other actions if they have interaction distances
-                _neighborList->skin() = _skinSize;
-                _clearNeighborList->skin() = _skinSize;
+                _initNeighborList->interactionDistance() =
+                        _simParams.neighborListInteractionDistance + _simParams.neighborListSkinSize;
+                _neighborList->interactionDistance() =
+                        _simParams.neighborListInteractionDistance + _simParams.neighborListSkinSize;
+                _clearNeighborList->interactionDistance() =
+                        _simParams.neighborListInteractionDistance + _simParams.neighborListSkinSize;
             }
             runInitialize();
             if (requiresNeighborList) runInitializeNeighborList();
             runForces();
-            time_step_type t = start;
+            time_step_type t = _start;
             runEvaluateObservables(t);
-            std::for_each(std::begin(_callbacks), std::end(_callbacks), [t](const auto& callback) {
+            std::for_each(std::begin(_callbacks), std::end(_callbacks), [t](const auto &callback) {
                 callback(t);
             });
             while (continueFun(t)) {
@@ -255,15 +256,15 @@ public:
                 if (requiresNeighborList) runUpdateNeighborList();
                 runForces();
                 runEvaluateObservables(t + 1);
-                std::for_each(std::begin(_callbacks), std::end(_callbacks), [t](const auto& callback) {
-                    callback(t+1);
+                std::for_each(std::begin(_callbacks), std::end(_callbacks), [t](const auto &callback) {
+                    callback(t + 1);
                 });
                 ++t;
 
                 _kernel->stateModel().time() += _timeStep;
             }
             if (requiresNeighborList) runClearNeighborList();
-            start = t;
+            _start = t;
             log::info("Simulation completed");
         }
     }
@@ -319,11 +320,11 @@ protected:
     std::shared_ptr<h5rd::Group> configGroup = nullptr;
 
     bool _evaluateObservables = true;
-    time_step_type start = 0;
+    time_step_type _start = 0;
     std::size_t _progressOutputStride = 100;
     std::function<void(time_step_type)> _progressCallback;
     scalar _timeStep;
-    model::SimulationParams simParams;
+    model::SimulationParams _simParams;
 
     std::vector<std::function<void(time_step_type)>> _callbacks;
 };

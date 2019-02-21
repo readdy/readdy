@@ -58,10 +58,10 @@ TEST_CASE("Test single cpu decay reactions", "[scpu]") {
 
     readdy::scalar timeStep = 1.0;
     auto &&integrator = kernel->actions().eulerBDIntegrator(timeStep);
-    auto &&forces = kernel->actions().calculateForces();
+    auto &&forces = kernel->actions().calculateForces(false);
     using update_nl = readdy::model::actions::UpdateNeighborList;
-    auto &&initNeighborList = kernel->actions().updateNeighborList(update_nl::Operation::init, 0);
-    auto &&neighborList = kernel->actions().updateNeighborList(update_nl::Operation::update, 0);
+    auto &&initNeighborList = kernel->actions().updateNeighborList(0, update_nl::Operation::init);
+    auto &&neighborList = kernel->actions().updateNeighborList(0, update_nl::Operation::update);
     auto &&reactions = kernel->actions().uncontrolledApproximation(timeStep);
 
     auto pp_obs = kernel->observe().positions(1);
@@ -135,7 +135,7 @@ TEST_CASE("Test single cpu multiple reaction types", "[scpu]") {
     kernel->context().reactions().addConversion("C->D", "C", "D", 1e16);
 
     auto &&integrator = kernel->actions().eulerBDIntegrator(1);
-    auto &&forces = kernel->actions().calculateForces();
+    auto &&forces = kernel->actions().calculateForces(false);
     auto &&neighborList = kernel->actions().updateNeighborList();
     auto &&reactions = kernel->actions().uncontrolledApproximation(1);
 

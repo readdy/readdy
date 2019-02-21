@@ -77,7 +77,7 @@ TEMPLATE_TEST_CASE("Test state model", "[state-model]", SingleCPU, CPU) {
         stateModel.initializeNeighborList(0.);
         stateModel.updateNeighborList();
 
-        auto calculateForces = kernel->actions().calculateForces();
+        auto calculateForces = kernel->actions().calculateForces(false);
         calculateForces->perform();
         calculateForces->perform(); // calculating twice should yield the same result. force and energy must not accumulate
         // check results
@@ -99,7 +99,7 @@ TEMPLATE_TEST_CASE("Test state model", "[state-model]", SingleCPU, CPU) {
 
     SECTION("Calculate repulsion forces") {
         m::Context &ctx = kernel->context();
-        auto calculateForces = kernel->actions().calculateForces();
+        auto calculateForces = kernel->actions().calculateForces(false);
         auto &stateModel = kernel->stateModel();
 
         // similar situation as before but now with repulsion between A and B
@@ -184,7 +184,7 @@ TEMPLATE_TEST_CASE("Test state model", "[state-model]", SingleCPU, CPU) {
     SECTION("Calculate no forces") {
         m::Context &ctx = kernel->context();
         auto &stateModel = kernel->stateModel();
-        auto calculateForces = kernel->actions().calculateForces();
+        auto calculateForces = kernel->actions().calculateForces(false);
         // several particles without potentials -> forces must all be zero
         auto obs = kernel->observe().forces(1);
         auto conn = kernel->connectObservable(obs.get());
