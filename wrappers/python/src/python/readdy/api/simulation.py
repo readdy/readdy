@@ -479,7 +479,7 @@ class Simulation(object):
             loop.evaluate_topology_reactions(self.evaluate_topology_reactions, timestep)
             loop.use_reaction_scheduler(self.reaction_handler)
             loop.skin_size = self._skin
-            loop.evaluate_observables(self.evaluate_topology_reactions)
+            loop.evaluate_observables(self.evaluate_observables)
 
             if self.output_file is not None and len(self.output_file) > 0:
                 with closing(io.File.create(self.output_file)) as f:
