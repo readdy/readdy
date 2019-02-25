@@ -98,9 +98,9 @@ public:
               _integrator(kernel->actions().eulerBDIntegrator(timeStep).release()),
               _reactions(kernel->actions().gillespie(timeStep).release()),
               _forces(kernel->actions().calculateForces(false).release()),
-              _initNeighborList(kernel->actions().updateNeighborList(NeighborListOps::init).release()),
-              _neighborList(kernel->actions().updateNeighborList(NeighborListOps::update).release()),
-              _clearNeighborList(kernel->actions().updateNeighborList(NeighborListOps::clear).release()),
+              _initNeighborList(kernel->actions().initNeighborList(simParams.neighborListInteractionDistance + simParams.neighborListSkinSize).release()),
+              _neighborList(kernel->actions().updateNeighborList().release()),
+              _clearNeighborList(kernel->actions().clearNeighborList().release()),
               _topologyReactions(kernel->actions().evaluateTopologyReactions(timeStep).release()) {}
 
     /**

@@ -106,12 +106,16 @@ public:
     virtual std::unique_ptr<UpdateNeighborList>
     updateNeighborList(scalar interactionDistance, UpdateNeighborList::Operation operation) const = 0;
 
-    std::unique_ptr<UpdateNeighborList> updateNeighborList(UpdateNeighborList::Operation op) const {
-        return updateNeighborList(0, op);
+    std::unique_ptr<UpdateNeighborList> updateNeighborList() const {
+        return updateNeighborList(0, UpdateNeighborList::Operation::update);
     };
 
-    std::unique_ptr<UpdateNeighborList> updateNeighborList() const {
-        return updateNeighborList(0, UpdateNeighborList::Operation::init);
+    std::unique_ptr<UpdateNeighborList> initNeighborList(scalar interactionDistance) const {
+        return updateNeighborList(interactionDistance, UpdateNeighborList::Operation::init);
+    };
+
+    std::unique_ptr<UpdateNeighborList> clearNeighborList() const {
+        return updateNeighborList(0, UpdateNeighborList::Operation::clear);
     };
 
     virtual std::unique_ptr<EvaluateCompartments> evaluateCompartments() const = 0;

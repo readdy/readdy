@@ -65,8 +65,8 @@ public:
     using topology_ref = std::unique_ptr<topology>;
     using topologies_vec = readdy::util::index_persistent_vector<topology_ref>;
 
-    void initializeNeighborList(scalar skin) override {
-        neighborList->setUp(skin, 1);
+    void initializeNeighborList(scalar interactionDistance) override {
+        neighborList->setUp(interactionDistance, 1);
     }
 
     void updateNeighborList() override {

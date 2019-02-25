@@ -150,6 +150,10 @@ public:
     explicit Gillespie(scalar timeStep);
 
     ~Gillespie() override = default;
+
+protected:
+    bool recordReactionCounts = false;
+    bool recordReactionsWithPositions = false;
 };
 
 
@@ -172,6 +176,9 @@ protected:
     // usually two (unidirectional) reaction ids point to the same ReversibleReactionConfig
     std::unordered_map<model::reactions::Reaction::ReactionId, std::shared_ptr<const ReversibleReactionConfig>>
             _reversibleReactionsMap;
+
+    bool recordReactionCounts = false;
+    bool recordReactionsWithPositions = false;
 };
 
 NAMESPACE_END(reactions)

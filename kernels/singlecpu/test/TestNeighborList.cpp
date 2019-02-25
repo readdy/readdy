@@ -97,7 +97,7 @@ TEST_CASE("Test the singlecpu neighbor list", "[scpu]") {
 
     kernel.initialize();
 
-    kernel.stateModel().initializeNeighborList(0);
+    kernel.stateModel().initializeNeighborList(context.calculateMaxCutoff());
 
     auto integrator = kernel.actions().eulerBDIntegrator(.1);
     auto reactionHandler = kernel.actions().uncontrolledApproximation(.1);

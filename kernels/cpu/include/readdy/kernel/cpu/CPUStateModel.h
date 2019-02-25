@@ -96,8 +96,8 @@ public:
 
     const std::vector<particle_type> getParticles() const override;
 
-    void initializeNeighborList(scalar skin) override {
-        _neighborList->setUp(skin, _neighborListCellRadius);
+    void initializeNeighborList(scalar interactionDistance) override {
+        _neighborList->setUp(interactionDistance, _neighborListCellRadius);
         _neighborList->update();
     };
 
