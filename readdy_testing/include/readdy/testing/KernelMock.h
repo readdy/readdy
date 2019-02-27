@@ -34,16 +34,13 @@
 
 
 /**
- * << detailed description >>
- *
  * @file KernelMock.h
- * @brief << brief description >>
+ * @brief Header for an impostor Kernel
  * @author clonker
  * @date 13.07.16
  */
 
-#ifndef READDY_MAIN_KERNELMOCK_H
-#define READDY_MAIN_KERNELMOCK_H
+#pragma once
 
 #include <readdy/model/Kernel.h>
 
@@ -65,8 +62,8 @@ public:
         return nullptr;
     }
 
-    std::unique_ptr<model::actions::UpdateNeighborList>
-    updateNeighborList(scalar interactionDistance, model::actions::UpdateNeighborList::Operation operation) const override {
+    std::unique_ptr<model::actions::NeighborListAction>
+    neighborListAction(model::actions::NeighborListAction::Operation operation, scalar interactionDistance) const override {
         return nullptr;
     }
 
@@ -75,11 +72,12 @@ public:
     }
 
     std::unique_ptr<model::actions::reactions::UncontrolledApproximation>
-    uncontrolledApproximation(scalar timeStep) const override {
+    uncontrolledApproximation(scalar timeStep, bool recordReactionCounts, bool recordReactionsWithPositions) const override {
         return nullptr;
     }
 
-    std::unique_ptr<model::actions::reactions::Gillespie> gillespie(scalar timeStep) const override {
+    std::unique_ptr<model::actions::reactions::Gillespie>
+    gillespie(scalar timeStep, bool recordReactionCounts, bool recordReactionsWithPositions) const override {
         return nullptr;
     }
 
@@ -91,4 +89,3 @@ public:
 
 }
 }
-#endif //READDY_MAIN_KERNELMOCK_H

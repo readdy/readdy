@@ -66,15 +66,15 @@ TEMPLATE_TEST_CASE("Test state model", "[state-model]", SingleCPU, CPU) {
 
         ctx.potentials().addBox("A", .001, {-1.9, -1.9, -1.9}, {3.8, 3.8, 3.8});
 
-        kernel->context().potentials().addHarmonicRepulsion("A", "A", 1.0, 2.0);
-        kernel->context().potentials().addBox("A", .01, {-1.9, -1.9, -1.9}, {3.8, 3.8, 3.8});
+        ctx.potentials().addHarmonicRepulsion("A", "A", 1.0, 2.0);
+        ctx.potentials().addBox("A", .01, {-1.9, -1.9, -1.9}, {3.8, 3.8, 3.8});
 
         kernel->initialize();
         auto typeIdA = ctx.particleTypes().idOf("A");
         auto twoParticles = std::vector<m::Particle> {m::Particle(0., 0., 0., typeIdA), m::Particle(0., 0., 1.8, typeIdA)};
 
         stateModel.addParticles(twoParticles);
-        stateModel.initializeNeighborList(0.);
+        stateModel.initializeNeighborList(ctx.calculateMaxCutoff());
         stateModel.updateNeighborList();
 
         auto calculateForces = kernel->actions().calculateForces(false);
@@ -134,7 +134,7 @@ TEMPLATE_TEST_CASE("Test state model", "[state-model]", SingleCPU, CPU) {
         stateModel.addParticles(particlesA);
         stateModel.addParticles(particlesB);
         kernel->initialize();
-        stateModel.initializeNeighborList(0);
+        stateModel.initializeNeighborList(ctx.calculateMaxCutoff());
         stateModel.updateNeighborList();
         calculateForces->perform();
 

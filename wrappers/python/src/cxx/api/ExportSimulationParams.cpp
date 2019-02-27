@@ -59,6 +59,6 @@ void exportSimulationParams(py::module &module) {
             .def_readwrite("recordReactionsWithPositions", &SimulationParams::recordReactionsWithPositions)
             .def_readwrite("recordReactionCounts", &SimulationParams::recordReactionCounts)
             .def_readwrite("recordVirial", &SimulationParams::recordVirial)
-            .def_readwrite("neighborListCellWidth", &SimulationParams::neighborListCellWidth)
+            .def_readwrite("neighborListInteractionDistance", &SimulationParams::neighborListInteractionDistance)
             .def_readwrite("neighborListSkinSize", &SimulationParams::neighborListSkinSize);
 }

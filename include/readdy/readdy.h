@@ -37,13 +37,13 @@
  * Including this header will expose the C++ top-level API, i.e., everything under
  *   * ObservableHandle.h
  *   * Simulation.h
- *   * SimulationScheme.h
+ *   * SimulationLoop.h
  *
  * @file readdy.h
  * @brief Main header of ReaDDy. Including this will expose the C++ top-level API.
  * @author clonker
  * @date 06.01.17
- * @copyright GPL-3
+ * @copyright BSD-3
  */
 
 #pragma once

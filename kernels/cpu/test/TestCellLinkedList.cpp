@@ -40,7 +40,7 @@
  * @brief << brief description >>
  * @author clonker
  * @date 12.09.17
- * @copyright GPL-3
+ * @copyright BSD-3
  */
 
 #include <catch2/catch.hpp>
@@ -89,7 +89,7 @@ TEMPLATE_TEST_CASE("Test cpu cell linked list", "[cpu]", CompactCLL, ContiguousC
         std::for_each(data.begin(), data.end(), [&] (const auto &entry){ particleIds.push_back(entry.id); });
 
         std::unique_ptr<TestType> cll = std::make_unique<TestType>(data, context, pool);
-        cll->setUp(0, static_cast<kernel::cpu::nl::CellLinkedList::cell_radius_type>(cllRadius));
+        cll->setUp(context.calculateMaxCutoff(), static_cast<kernel::cpu::nl::CellLinkedList::cell_radius_type>(cllRadius));
         cll->update();
 
         {
@@ -141,7 +141,7 @@ TEMPLATE_TEST_CASE("Test cpu cell linked list", "[cpu]", CompactCLL, ContiguousC
         }
 
         std::unique_ptr<TestType> cll = std::make_unique<TestType>(data, context, pool);
-        cll->setUp(0, static_cast<kernel::cpu::nl::CellLinkedList::cell_radius_type>(cllRadius));
+        cll->setUp(context.calculateMaxCutoff(), static_cast<kernel::cpu::nl::CellLinkedList::cell_radius_type>(cllRadius));
         cll->update();
 
         for (std::size_t cell = 0; cell < cll->nCells(); ++cell) {
@@ -173,7 +173,7 @@ TEMPLATE_TEST_CASE("Test cpu cell linked list", "[cpu]", CompactCLL, ContiguousC
 
     SECTION("Diffuse") {
         std::unique_ptr<TestType> cll = std::make_unique<TestType>(data, context, pool);
-        cll->setUp(0, static_cast<kernel::cpu::nl::CellLinkedList::cell_radius_type>(cllRadius));
+        cll->setUp(context.calculateMaxCutoff(), static_cast<kernel::cpu::nl::CellLinkedList::cell_radius_type>(cllRadius));
         cll->update();
 
         std::size_t n_steps = 3;

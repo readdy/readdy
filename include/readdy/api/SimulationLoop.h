@@ -79,7 +79,7 @@ NAMESPACE_BEGIN(api)
  * superclass for all simulation schemes
  */
 class SimulationLoop {
-    using NeighborListOps = model::actions::UpdateNeighborList::Operation;
+    using NeighborListOps = model::actions::NeighborListAction::Operation;
 public:
     /**
      * the type of function that is responsible for deciding whether the simulation should continue
@@ -92,13 +92,17 @@ public:
     /**
      * Creates a new simulation scheme.
      * @param kernel the kernel
+     * @param timeStep the time step width
+     * @param simParams config for the actions, e.g. the distance for neighborlist, or if virial shall be calculated
      */
     explicit SimulationLoop(model::Kernel *const kernel, scalar timeStep, const model::SimulationParams &simParams)
             : _kernel(kernel), _timeStep(timeStep), _simParams(simParams),
               _integrator(kernel->actions().eulerBDIntegrator(timeStep).release()),
-              _reactions(kernel->actions().gillespie(timeStep).release()),
+              _reactions(kernel->actions().gillespie(timeStep, false, false).release()),
               _forces(kernel->actions().calculateForces(false).release()),
-              _initNeighborList(kernel->actions().initNeighborList(simParams.neighborListInteractionDistance + simParams.neighborListSkinSize).release()),
+              _initNeighborList(kernel->actions().initNeighborList(
+                      std::max(simParams.neighborListInteractionDistance, kernel->context().calculateMaxCutoff())
+                      + simParams.neighborListSkinSize).release()),
               _neighborList(kernel->actions().updateNeighborList().release()),
               _clearNeighborList(kernel->actions().clearNeighborList().release()),
               _topologyReactions(kernel->actions().evaluateTopologyReactions(timeStep).release()) {}
@@ -168,6 +172,10 @@ public:
         if (_topologyReactions) _topologyReactions->perform();
     }
 
+    // todo remove this in favor of a setUserIntegrator, this way the actions can be set up in the constructor
+    // todo and not changed afterwards, configuration object for the user meanwhile is the SimulationParams object
+    // todo the only thing not configured at construction are observables -> so far those will only set flags at the actions
+    // todo which can be done after construction
     TimeStepActionPtr &integrator() { return _integrator; }
 
     const TimeStepActionPtr &integrator() const { return _integrator; }
@@ -233,12 +241,6 @@ public:
                 if (!(_initNeighborList && _neighborList && _clearNeighborList)) {
                     throw std::logic_error("Neighbor list required but set to null!");
                 }
-                _initNeighborList->interactionDistance() =
-                        _simParams.neighborListInteractionDistance + _simParams.neighborListSkinSize;
-                _neighborList->interactionDistance() =
-                        _simParams.neighborListInteractionDistance + _simParams.neighborListSkinSize;
-                _clearNeighborList->interactionDistance() =
-                        _simParams.neighborListInteractionDistance + _simParams.neighborListSkinSize;
             }
             runInitialize();
             if (requiresNeighborList) runInitializeNeighborList();
@@ -313,10 +315,10 @@ protected:
     std::shared_ptr<model::actions::TimeStepDependentAction> _integrator{nullptr};
     std::shared_ptr<model::actions::Action> _forces{nullptr};
     std::shared_ptr<model::actions::TimeStepDependentAction> _reactions{nullptr};
-    std::shared_ptr<model::actions::UpdateNeighborList> _initNeighborList{nullptr};
-    std::shared_ptr<model::actions::UpdateNeighborList> _neighborList{nullptr};
+    std::shared_ptr<model::actions::NeighborListAction> _initNeighborList{nullptr};
+    std::shared_ptr<model::actions::NeighborListAction> _neighborList{nullptr};
     std::shared_ptr<model::actions::top::EvaluateTopologyReactions> _topologyReactions{nullptr};
-    std::shared_ptr<model::actions::UpdateNeighborList> _clearNeighborList{nullptr};
+    std::shared_ptr<model::actions::NeighborListAction> _clearNeighborList{nullptr};
     std::shared_ptr<h5rd::Group> configGroup = nullptr;
 
     bool _evaluateObservables = true;
@@ -324,7 +326,6 @@ protected:
     std::size_t _progressOutputStride = 100;
     std::function<void(time_step_type)> _progressCallback;
     scalar _timeStep;
-    model::SimulationParams _simParams;
 
     std::vector<std::function<void(time_step_type)>> _callbacks;
 };

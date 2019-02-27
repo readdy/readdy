@@ -60,7 +60,7 @@ std::vector<std::string> SCPUActionFactory::getAvailableActions() const {
     return {
             rma::getActionName<rma::AddParticles>(), rma::getActionName<rma::EulerBDIntegrator>(),
             rma::getActionName<rma::CalculateForces>(),
-            rma::getActionName<rma::UpdateNeighborList>(),
+            rma::getActionName<rma::NeighborListAction>(),
             rma::getActionName<rma::reactions::UncontrolledApproximation>(),
             rma::getActionName<rma::reactions::Gillespie>(),
             rma::getActionName<rma::top::EvaluateTopologyReactions>()
@@ -80,9 +80,9 @@ std::unique_ptr<readdy::model::actions::CalculateForces> SCPUActionFactory::calc
     return {std::make_unique<SCPUCalculateForces>(kernel, recordVirial)};
 }
 
-std::unique_ptr<readdy::model::actions::UpdateNeighborList>
-SCPUActionFactory::updateNeighborList(scalar interactionDistance, readdy::model::actions::UpdateNeighborList::Operation operation) const {
-    return {std::make_unique<SCPUUpdateNeighborList>(kernel, interactionDistance, operation)};
+std::unique_ptr<readdy::model::actions::NeighborListAction>
+SCPUActionFactory::neighborListAction(readdy::model::actions::NeighborListAction::Operation operation, scalar interactionDistance) const {
+    return {std::make_unique<SCPUUpdateNeighborList>(kernel, operation, interactionDistance)};
 }
 
 std::unique_ptr<readdy::model::actions::EvaluateCompartments> SCPUActionFactory::evaluateCompartments() const {
@@ -90,11 +90,12 @@ std::unique_ptr<readdy::model::actions::EvaluateCompartments> SCPUActionFactory:
 }
 
 std::unique_ptr<readdy::model::actions::reactions::UncontrolledApproximation>
-SCPUActionFactory::uncontrolledApproximation(scalar timeStep) const {
+SCPUActionFactory::uncontrolledApproximation(scalar timeStep, bool recordReactionCounts, bool recordReactionsWithPositions) const {
     return {std::make_unique<reactions::SCPUUncontrolledApproximation>(kernel, timeStep)};
 }
 
-std::unique_ptr<readdy::model::actions::reactions::Gillespie> SCPUActionFactory::gillespie(scalar timeStep) const {
+std::unique_ptr<readdy::model::actions::reactions::Gillespie>
+SCPUActionFactory::gillespie(scalar timeStep, bool recordReactionCounts, bool recordReactionsWithPositions) const {
     return {std::make_unique<reactions::SCPUGillespie>(kernel, timeStep)};
 }
 
@@ -104,7 +105,7 @@ SCPUActionFactory::evaluateTopologyReactions(scalar timeStep) const {
 }
 
 std::unique_ptr<readdy::model::actions::reactions::DetailedBalance>
-SCPUActionFactory::detailedBalance(scalar timeStep) const {
+SCPUActionFactory::detailedBalance(scalar timeStep, bool recordReactionCounts, bool recordReactionsWithPositions) const {
     return {std::make_unique<reactions::SCPUDetailedBalance>(kernel, timeStep)};
 }
 

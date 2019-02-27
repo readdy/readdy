@@ -86,7 +86,7 @@ class SCPUGillespie : public readdy::model::actions::reactions::Gillespie {
 public:
 
     SCPUGillespie(SCPUKernel *const kernel, scalar timeStep)
-            : readdy::model::actions::reactions::Gillespie(timeStep), kernel(kernel) {};
+            : readdy::model::actions::reactions::Gillespie(timeStep, false, false), kernel(kernel) {};
 
     void perform() override;
 
@@ -111,7 +111,7 @@ class SCPUDetailedBalance : public readdy::model::actions::reactions::DetailedBa
     using reaction_type = readdy::model::reactions::ReactionType;
 public:
     SCPUDetailedBalance(SCPUKernel *const kernel, scalar timeStep)
-            : readdy::model::actions::reactions::DetailedBalance(timeStep), kernel(kernel) {
+            : readdy::model::actions::reactions::DetailedBalance(timeStep, false, false), kernel(kernel) {
         searchReversibleReactions(kernel->context());
     };
 

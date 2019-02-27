@@ -65,6 +65,8 @@ struct Vec3ProjectedLess {
 
 TEMPLATE_TEST_CASE("Test reaction handlers", "[reactions]", SingleCPU, CPU) {
     auto kernel = create<TestType>();
+    auto &ctx = kernel->context();
+    readdy::model::SimulationParams simParams;
     for (const auto &handler : REACTION_HANDLERS) {
         SECTION(handler) {
             if (kernel->name() == "CPU" && std::string(handler) == "DetailedBalance") {
@@ -84,13 +86,13 @@ TEMPLATE_TEST_CASE("Test reaction handlers", "[reactions]", SingleCPU, CPU) {
                     return dist(rd);
                 };
 
-                kernel->context().particleTypes().add("A", 1.0);
-                kernel->context().particleTypes().add("B", 1.0);
-                kernel->context().particleTypes().add("AB", 0.0);
-                kernel->context().periodicBoundaryConditions() = {{true, true, true}};
-                kernel->context().boxSize() = {{5, 5, 5}};
-                kernel->context().reactions().addFusion("Form complex", "A", "B", "AB", .5, 1.0);
-                kernel->context().reactions().addFission("Dissolve", "AB", "A", "B", .5, 1.0);
+                ctx.particleTypes().add("A", 1.0);
+                ctx.particleTypes().add("B", 1.0);
+                ctx.particleTypes().add("AB", 0.0);
+                ctx.periodicBoundaryConditions() = {{true, true, true}};
+                ctx.boxSize() = {{5, 5, 5}};
+                ctx.reactions().addFusion("Form complex", "A", "B", "AB", .5, 1.0);
+                ctx.reactions().addFission("Dissolve", "AB", "A", "B", .5, 1.0);
 
                 unsigned long n_A = 50;
                 unsigned long n_B = n_A;
@@ -110,7 +112,7 @@ TEMPLATE_TEST_CASE("Test reaction handlers", "[reactions]", SingleCPU, CPU) {
                     }
                 };
 
-                readdy::api::SimulationLoop loop(kernel.get(), 1);
+                readdy::api::SimulationLoop loop(kernel.get(), 1, simParams);
                 loop.useReactionScheduler(handler);
                 loop.run(10);
             }
@@ -119,16 +121,16 @@ TEMPLATE_TEST_CASE("Test reaction handlers", "[reactions]", SingleCPU, CPU) {
                 // A diffuses, F is fixed
                 // Idea: position F particles and remember their positions (ordered set),
                 // do ONE time-step and check if current positions are still the same.
-                auto &context = kernel->context();
-                context.particleTypes().add("A", 0.5);
-                context.particleTypes().add("F", 0.0);
-                context.periodicBoundaryConditions() = {{true, true, true}};
-                context.boxSize() = {{20, 20, 20}};
+                // fixme auto &context = kernel->context();
+                ctx.particleTypes().add("A", 0.5);
+                ctx.particleTypes().add("F", 0.0);
+                ctx.periodicBoundaryConditions() = {{true, true, true}};
+                ctx.boxSize() = {{20, 20, 20}};
 
                 const readdy::scalar weightF {static_cast<readdy::scalar>(0)};
                 const readdy::scalar weightA  {static_cast<readdy::scalar>(1.)};
-                kernel->context().reactions().addFusion("F+A->F", "F", "A", "F", 1.0, 2.0, weightF, weightA);
-                kernel->context().reactions().addFission("F->F+A", "F", "F", "A", 1.0, 2.0, weightF, weightA);
+                ctx.reactions().addFusion("F+A->F", "F", "A", "F", 1.0, 2.0, weightF, weightA);
+                ctx.reactions().addFission("F->F+A", "F", "F", "A", 1.0, 2.0, weightF, weightA);
 
                 std::set<readdy::Vec3, Vec3ProjectedLess> fPositions;
                 auto n3 = readdy::model::rnd::normal3<readdy::scalar>;
@@ -158,24 +160,28 @@ TEMPLATE_TEST_CASE("Test reaction handlers", "[reactions]", SingleCPU, CPU) {
                         };
                 auto connection = kernel->connectObservable(obs.get());
                 {
-                    readdy::api::SimulationLoop loop (kernel.get(), .1);
+                    simParams.neighborListInteractionDistance = ctx.calculateMaxCutoff();
+                    readdy::api::SimulationLoop loop (kernel.get(), .1, simParams);
                     loop.useReactionScheduler(handler);
                     loop.run(1);
                 }
             }
 
             SECTION("Fusion through periodic boundary") {
-                auto &ctx = kernel->context();
+                //fixme auto &ctx = kernel->context();
                 ctx.boxSize() = {{10, 10, 10}};
                 ctx.periodicBoundaryConditions() = {true, true, true};
                 ctx.particleTypes().add("A", 0.);
                 ctx.reactions().add("fus: A +(2) A -> A", 1e16);
 
                 auto &&reactions = kernel->actions().createReactionScheduler(handler, 1);
+                auto &&initNeighborList = kernel->actions().initNeighborList(ctx.calculateMaxCutoff());
                 auto &&neighborList = kernel->actions().updateNeighborList();
                 // resulting particle should be at 4.9
                 kernel->stateModel().addParticle({4.5, 4.5, 4.5, ctx.particleTypes().idOf("A")});
                 kernel->stateModel().addParticle({-4.7, -4.7, -4.7, ctx.particleTypes().idOf("A")});
+
+                initNeighborList->perform();
                 neighborList->perform();
                 reactions->perform();
 
@@ -188,16 +194,19 @@ TEMPLATE_TEST_CASE("Test reaction handlers", "[reactions]", SingleCPU, CPU) {
             }
 
             SECTION("Fission near boundary") {
-                auto &ctx = kernel->context();
+                //fixme auto &ctx = kernel->context();
                 ctx.boxSize() = {{10, 10, 10}};
                 ctx.periodicBoundaryConditions() = {true, true, true};
                 ctx.particleTypes().add("A", 0.);
                 ctx.reactions().add("fis: A -> A +(2) A", 1e16);
 
                 auto &&reactions = kernel->actions().createReactionScheduler(handler, 1);
+                auto &&initNeighborList = kernel->actions().initNeighborList(ctx.calculateMaxCutoff());
                 auto &&neighborList = kernel->actions().updateNeighborList();
                 // one product will be in negative-x halfspace, the other in positive-x halfspace
                 kernel->stateModel().addParticle({-4.9999999, 0, 0, ctx.particleTypes().idOf("A")});
+
+                initNeighborList->perform();
                 neighborList->perform();
                 reactions->perform();
 

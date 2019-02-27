@@ -41,7 +41,7 @@
  * @brief Definitions of the Index class, making contiguously stored multi-dimensional array access easier.
  * @author clonker
  * @date 11.09.17
- * @copyright GPL-3
+ * @copyright BSD-3
  */
 
 #pragma once

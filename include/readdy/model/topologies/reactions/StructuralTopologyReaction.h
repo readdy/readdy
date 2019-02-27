@@ -41,7 +41,7 @@
  * @brief Definition of everything belonging to the structural topology reaction.
  * @author clonker
  * @date 03.04.17
- * @copyright GPL-3
+ * @copyright BSD-3
  */
 
 #pragma once

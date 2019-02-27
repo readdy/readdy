@@ -34,10 +34,8 @@
 
 
 /**
- * << detailed description >>
- *
- * @file UncontrolledApproximation.h
- * @brief << brief description >>
+ * @file CPUUncontrolledApproximation.h
+ * @brief CPU kernel declaration of reaction handler UncontrolledApproximation
  * @author clonker
  * @date 20.10.16
  */
@@ -54,7 +52,8 @@ namespace reactions {
 class CPUUncontrolledApproximation : public readdy::model::actions::reactions::UncontrolledApproximation {
     using super = readdy::model::actions::reactions::UncontrolledApproximation;
 public:
-    CPUUncontrolledApproximation(CPUKernel* kernel, readdy::scalar timeStep);
+    CPUUncontrolledApproximation(CPUKernel *kernel, readdy::scalar timeStep, bool recordReactionCounts,
+                                 bool recordReactionsWithPositions);
 
     void perform() override;
 

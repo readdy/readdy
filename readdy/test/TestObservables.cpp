@@ -71,10 +71,10 @@ TEMPLATE_TEST_CASE("Test observables", "[observables]", SingleCPU, CPU) {
         kernel->initialize();
 
         auto &&integrator = kernel->actions().createIntegrator("EulerBDIntegrator", timeStep);
-        using update_nl = readdy::model::actions::UpdateNeighborList;
-        auto &&neighborListInit = kernel->actions().updateNeighborList(0, update_nl::Operation::init);
-        auto &&neighborList = kernel->actions().updateNeighborList(-1, update_nl::Operation::update);
-        neighborListInit->perform();
+        using update_nl = readdy::model::actions::NeighborListAction;
+        auto &&initNeighborList = kernel->actions().initNeighborList(context.calculateMaxCutoff());
+        auto &&neighborList = kernel->actions().updateNeighborList();
+        initNeighborList->perform();
         for (readdy::time_step_type t = 0; t < 100; t++) {
             integrator->perform();
             neighborList->perform();
@@ -163,7 +163,7 @@ TEMPLATE_TEST_CASE("Test observables", "[observables]", SingleCPU, CPU) {
                 readdy::model::top::reactions::Recipe recipe(top);
                 if (top.graph().vertices().size() == 1) {
                     recipe.changeParticleType(top.graph().vertices().begin(),
-                                              kernel->context().particleTypes().idOf("A"));
+                                              context.particleTypes().idOf("A"));
                 } else {
                     throw std::logic_error("this reaction should only be executed when there is exactly "
                                            "one particle in the topology");
@@ -260,10 +260,10 @@ TEMPLATE_TEST_CASE("Test observables", "[observables]", SingleCPU, CPU) {
     }
     SECTION("Forces") {
         // Setup particles
-        kernel->context().particleTypes().add("A", 42.);
-        kernel->context().particleTypes().add("B", 1337.);
-        const auto typeIdA = kernel->context().particleTypes().idOf("A");
-        const auto typeIdB = kernel->context().particleTypes().idOf("B");
+        context.particleTypes().add("A", 42.);
+        context.particleTypes().add("B", 1337.);
+        const auto typeIdA = context.particleTypes().idOf("A");
+        const auto typeIdB = context.particleTypes().idOf("B");
         const unsigned int n_particles = 2; // There will be 55 Bs
         const auto particlesA = std::vector<m::Particle>(n_particles, m::Particle(0, 0, 0, typeIdA));
         const auto particlesB = std::vector<m::Particle>(n_particles + 5, m::Particle(0, 0, 0, typeIdB));
@@ -293,25 +293,27 @@ TEMPLATE_TEST_CASE("Test observables", "[observables]", SingleCPU, CPU) {
             }
         }
         // Two particles C and C with radius 1 and harmonic repulsion at distance 1.5 -> force = kappa * (radiiSum - 1.5)
-        kernel->context().periodicBoundaryConditions() = {{false, false, false}};
-        kernel->context().boxSize() = {{5, 5, 5}};
-        kernel->context().particleTypes().add("C", 1.);
-        kernel->context().potentials().addBox("A", .001, {-2.4, -2.4, -2.4}, {4.8, 4.8, 4.8});
-        kernel->context().potentials().addBox("B", .001, {-2.4, -2.4, -2.4}, {4.8, 4.8, 4.8});
-        kernel->context().potentials().addBox("C", .001, {-2.4, -2.4, -2.4}, {4.8, 4.8, 4.8});
-        const auto typeIdC = kernel->context().particleTypes().idOf("C");
+        context.periodicBoundaryConditions() = {{false, false, false}};
+        context.boxSize() = {{5, 5, 5}};
+        context.particleTypes().add("C", 1.);
+        context.potentials().addBox("A", .001, {-2.4, -2.4, -2.4}, {4.8, 4.8, 4.8});
+        context.potentials().addBox("B", .001, {-2.4, -2.4, -2.4}, {4.8, 4.8, 4.8});
+        context.potentials().addBox("C", .001, {-2.4, -2.4, -2.4}, {4.8, 4.8, 4.8});
+        const auto typeIdC = context.particleTypes().idOf("C");
         const auto particlesC = std::vector<m::Particle>{m::Particle(0, 0, 0, typeIdC), m::Particle(0, -1.5, 0, typeIdC)};
         kernel->stateModel().addParticles(particlesC);
 
-        kernel->context().potentials().addHarmonicRepulsion("C", "C", 2.0, 2.0);
+        context.potentials().addHarmonicRepulsion("C", "C", 2.0, 2.0);
 
-        using update_nl = readdy::model::actions::UpdateNeighborList;
+        using update_nl = readdy::model::actions::NeighborListAction;
+        auto &&initNeighborList = kernel->actions().initNeighborList(context.calculateMaxCutoff());
         auto &&nl = kernel->actions().updateNeighborList();
         auto &&forces = kernel->actions().calculateForces(false);
         kernel->initialize();
         {
             auto obsC = kernel->observe().forces(1, std::vector<std::string>{"C"});
             auto connectionC = kernel->connectObservable(obsC.get());
+            initNeighborList->perform();
             nl->perform();
             forces->perform();
             kernel->evaluateObservables(2);

@@ -40,7 +40,7 @@
  * @brief << brief description >>
  * @author clonker
  * @date 06.04.17
- * @copyright GPL-3
+ * @copyright BSD-3
  */
 
 #pragma once

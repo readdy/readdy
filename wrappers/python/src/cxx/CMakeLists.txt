@@ -46,7 +46,7 @@ set(SOURCE_FILES
         common/SpdlogPythonSink.h
         common/Utils.cpp
         api/ExportObservables.h
-        api/ExportSchemeApi.cpp
+        api/ExportLoopApi.cpp
         api/ExportTopologies.cpp
         api/ExportKernelContext.cpp
         api/ExportSimulationParams.cpp

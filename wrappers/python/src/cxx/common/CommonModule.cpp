@@ -63,15 +63,6 @@ void exportUtils(py::module& m);
 void exportCommon(py::module& common) {
     using namespace pybind11::literals;
     common.def("set_logging_level", [](const std::string &level, bool python_console_out) -> void {
-        /*spdlog::drop("console");
-        spdlog::set_sync_mode();
-        std::vector<spdlog::sink_ptr> sinks;
-        auto sink_stdout = std::make_shared<spdlog::sinks::ansicolor_sink>(spdlog::sinks::stdout_sink_mt::instance());
-        sinks.push_back(sink_stdout);
-        if(python_console_out) {
-            auto sink_pysink = std::make_shared<readdy::rpy::pysink>();
-            sinks.push_back(sink_pysink);
-        }*/
 
         auto l = [&level] {
             if (level == "trace") {
@@ -101,43 +92,6 @@ void exportCommon(py::module& common) {
 
         readdy::log::set_level(l);
 
-        /*auto logger =  spdlog::create("console", std::begin(sinks), std::end(sinks));
-        logger->set_pattern("[          ] [%Y-%m-%d %H:%M:%S] [%t] [%l] %v");
-        logger->set_level(l);*/
-
-        /*if(python_console_out) {
-            // update python loggers level
-            py::gil_scoped_acquire gil;
-            auto logging_module = pybind11::module::import("logging");
-            auto args = py::dict("format"_a="%(message)s");
-            switch(logger->level()) {
-                case spdlog::level::trace:{
-                }
-                case spdlog::level::debug: {
-                    args["level"] = "DEBUG";
-                    break;
-                }
-                case spdlog::level::info: {
-                    args["level"] = "INFO";
-                    break;
-                }
-                case spdlog::level::warn: {
-                    args["level"] = "WARNING";
-                    break;
-                }
-                case spdlog::level::err: {
-                    args["level"] = "ERROR";
-                    break;
-                }
-                case spdlog::level::critical: {
-                }
-                case spdlog::level::off: {
-                    args["level"] = "CRITICAL";
-                    break;
-                }
-            }
-            logging_module.attr("basicConfig")(**args);
-        }*/
     }, "Function that sets the logging level. Possible arguments: \"trace\", \"debug\", \"info\", \"warn\", "
                        "\"err\", \"error\", \"critical\", \"off\".", "level"_a, "python_console_out"_a = true);
     common.def("register_blosc_hdf5_plugin", []() -> void {
@@ -199,25 +153,6 @@ void exportCommon(py::module& common) {
                         { sizeof(readdy::Matrix33::data_arr::value_type) * readdy::Matrix33::n(),
                           sizeof(readdy::Matrix33::data_arr::value_type)}
                 );
-            })
-            ;
-    /**
-     * .def(py::self + py::self)
-            //.def(py::self - py::self)
-            .def(readdy::scalar() * py::self)
-            //.def(py::self / readdy::scalar())
-            .def(py::self += py::self)
-            .def(py::self *= readdy::scalar())
-            .def(py::self == py::self)
-            .def(py::self != py::self)
-            .def("toarray", [](const readdy::Matrix33 &self) {
-                np_array arr {3, 3};
-                for(readdy::Matrix33::size_type i = 0; i < readdy::Matrix33::n(); ++i) {
-                    for(readdy::Matrix33::size_type j = 0; j < readdy::Matrix33::m(); ++j) {
-                        arr.mutable_at(i, j) = self.at(i, j);
-                    }
-                }
-                return arr;
-            })
-     */
+            });
+
 }

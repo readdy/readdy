@@ -63,7 +63,7 @@ public:
 public:
 
     void update() override {
-        if (_max_cutoff > 0) {
+        if (_interactionDistance > 0) {
             fillBins();
         }
     };

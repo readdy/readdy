@@ -44,7 +44,7 @@
  * @brief Header file containing definitions for particle flavors, particle type info and the particle type registry.
  * @author clonker
  * @date 29.03.17
- * @copyright GPL-3
+ * @copyright BSD-3
  */
 
 #pragma once

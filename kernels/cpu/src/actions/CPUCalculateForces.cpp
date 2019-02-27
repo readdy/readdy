@@ -36,7 +36,7 @@
 /**
  * @file CPUCalculateForces.cpp
  * @author clonker
- * @date 1/3/18
+ * @date 03.01.18
  */
 
 #include "readdy/kernel/cpu/actions/CPUCalculateForces.h"
@@ -94,7 +94,7 @@ void CPUCalculateForces::perform() {
                         if (it != itNext) {
                             promises.emplace_back();
                             auto dataBounds = std::make_tuple(it, itNext);
-                            tasks.push_back(pool.pack(calculate_order1, dataBounds, std::ref(promises.back()), data,
+                            tasks.push_back(pool.pack(calculateOrder1, dataBounds, std::ref(promises.back()), data,
                                                       ctx.potentials().potentialsOrder1()));
                         }
                         it = itNext;
@@ -102,7 +102,7 @@ void CPUCalculateForces::perform() {
                     if (it != data->end()) {
                         promises.emplace_back();
                         auto dataBounds = std::make_tuple(it, data->end());
-                        tasks.push_back(pool.pack(calculate_order1, dataBounds, std::ref(promises.back()), data,
+                        tasks.push_back(pool.pack(calculateOrder1, dataBounds, std::ref(promises.back()), data,
                                                   ctx.potentials().potentialsOrder1()));
                     }
                     {
@@ -125,14 +125,14 @@ void CPUCalculateForces::perform() {
                             promises.emplace_back();
                             auto bounds = std::make_tuple(it, itNext);
                             tasks.push_back(
-                                    pool.pack(calculate_topologies, bounds, taf, std::ref(promises.back())));
+                                    pool.pack(calculateTopologies, bounds, taf, std::ref(promises.back())));
                         }
                         it = itNext;
                     }
                     if (it != topologies.cend()) {
                         promises.emplace_back();
                         auto bounds = std::make_tuple(it, topologies.cend());
-                        tasks.push_back(pool.pack(calculate_topologies, bounds, taf, std::ref(promises.back())));
+                        tasks.push_back(pool.pack(calculateTopologies, bounds, taf, std::ref(promises.back())));
                     }
                     {
                         auto futures = pool.pushAll(std::move(tasks));
@@ -154,16 +154,16 @@ void CPUCalculateForces::perform() {
                         if (it != itNext) {
                             promises.emplace_back();
                             virialPromises.emplace_back();
-                            if(ctx.recordVirial()) {
+                            if(recordVirial) {
                                 tasks.push_back(pool.pack(
-                                        calculate_order2<true>, std::make_tuple(it, itNext), data,
+                                        calculateOrder2<true>, std::make_tuple(it, itNext), data,
                                         std::cref(*neighborList), std::ref(promises.back()),
                                         std::ref(virialPromises.back()), ctx.potentials().potentialsOrder2(),
                                         ctx.boxSize(), ctx.periodicBoundaryConditions()
                                 ));
                             } else {
                                 tasks.push_back(pool.pack(
-                                        calculate_order2<false>, std::make_tuple(it, itNext), data,
+                                        calculateOrder2<false>, std::make_tuple(it, itNext), data,
                                         std::cref(*neighborList), std::ref(promises.back()),
                                         std::ref(virialPromises.back()), ctx.potentials().potentialsOrder2(),
                                         ctx.boxSize(), ctx.periodicBoundaryConditions()
@@ -175,15 +175,15 @@ void CPUCalculateForces::perform() {
                     if (it != nCells) {
                         promises.emplace_back();
                         virialPromises.emplace_back();
-                        if(ctx.recordVirial()) {
+                        if(recordVirial) {
                             tasks.push_back(pool.pack(
-                                    calculate_order2<true>, std::make_tuple(it, nCells), data, std::cref(*neighborList),
+                                    calculateOrder2<true>, std::make_tuple(it, nCells), data, std::cref(*neighborList),
                                     std::ref(promises.back()), std::ref(virialPromises.back()),
                                     ctx.potentials().potentialsOrder2(), ctx.boxSize(), ctx.periodicBoundaryConditions()
                             ));
                         } else {
                             tasks.push_back(pool.pack(
-                                    calculate_order2<false>, std::make_tuple(it, nCells), data, std::cref(*neighborList),
+                                    calculateOrder2<false>, std::make_tuple(it, nCells), data, std::cref(*neighborList),
                                     std::ref(promises.back()), std::ref(virialPromises.back()),
                                     ctx.potentials().potentialsOrder2(), ctx.boxSize(), ctx.periodicBoundaryConditions()
                             ));
@@ -215,17 +215,14 @@ void CPUCalculateForces::perform() {
 }
 
 template<bool COMPUTE_VIRIAL>
-void CPUCalculateForces::calculate_order2(std::size_t, nl_bounds nlBounds,
-                                          CPUStateModel::data_type *data, const CPUStateModel::neighbor_list &nl,
-                                          std::promise<scalar> &energyPromise, std::promise<Matrix33> &virialPromise,
-                                          model::potentials::PotentialRegistry::PotentialsO2Map pot2,
-                                          model::Context::BoxSize box, model::Context::PeriodicBoundaryConditions pbc) {
+void CPUCalculateForces::calculateOrder2(std::size_t, nl_bounds nlBounds,
+                                         CPUStateModel::data_type *data, const CPUStateModel::neighbor_list &nl,
+                                         std::promise<scalar> &energyPromise, std::promise<Matrix33> &virialPromise,
+                                         model::potentials::PotentialRegistry::PotentialsO2Map pot2,
+                                         model::Context::BoxSize box, model::Context::PeriodicBoundaryConditions pbc) {
     scalar energyUpdate = 0.0;
     Matrix33 virialUpdate{{{0, 0, 0, 0, 0, 0, 0, 0, 0}}};
 
-    //
-    // 2nd order potentials
-    //
     for (auto cell = std::get<0>(nlBounds); cell < std::get<1>(nlBounds); ++cell) {
         for (auto particleIt = nl.particlesBegin(cell); particleIt != nl.particlesEnd(cell); ++particleIt) {
             auto &entry = data->entry_at(*particleIt);
@@ -240,9 +237,6 @@ void CPUCalculateForces::calculate_order2(std::size_t, nl_bounds nlBounds,
                     auto &force = entry.force;
                     const auto &myPos = entry.pos;
 
-                    //
-                    // 2nd order potentials
-                    //
                     scalar mySecondOrderEnergy = 0.;
                     auto potit = pot2.find(std::tie(entry.type, neighbor.type));
                     if (potit != pot2.end()) {
@@ -276,9 +270,9 @@ void CPUCalculateForces::calculate_order2(std::size_t, nl_bounds nlBounds,
 
 }
 
-void CPUCalculateForces::calculate_topologies(std::size_t, top_bounds topBounds,
-                                              model::top::TopologyActionFactory *taf,
-                                              std::promise<scalar> &energyPromise) {
+void CPUCalculateForces::calculateTopologies(std::size_t, top_bounds topBounds,
+                                             model::top::TopologyActionFactory *taf,
+                                             std::promise<scalar> &energyPromise) {
     scalar energyUpdate = 0.0;
     for (auto it = std::get<0>(topBounds); it != std::get<1>(topBounds); ++it) {
         const auto &top = *it;
@@ -301,14 +295,11 @@ void CPUCalculateForces::calculate_topologies(std::size_t, top_bounds topBounds,
     energyPromise.set_value(energyUpdate);
 }
 
-void CPUCalculateForces::calculate_order1(std::size_t, data_bounds dataBounds,
-                                          std::promise<scalar> &energyPromise, CPUStateModel::data_type *data,
-                                          model::potentials::PotentialRegistry::PotentialsO1Map pot1) {
+void CPUCalculateForces::calculateOrder1(std::size_t, data_bounds dataBounds,
+                                         std::promise<scalar> &energyPromise, CPUStateModel::data_type *data,
+                                         model::potentials::PotentialRegistry::PotentialsO1Map pot1) {
     scalar energyUpdate = 0.0;
 
-    //
-    // 1st order potentials
-    //
     for (auto it = std::get<0>(dataBounds); it != std::get<1>(dataBounds); ++it) {
         auto &entry = *it;
         if (!entry.deactivated) {

@@ -34,13 +34,11 @@
 
 
 /**
- * << detailed description >>
- *
  * @file CellLinkedList.h
  * @brief << brief description >>
  * @author clonker
  * @date 12.09.17
- * @copyright GPL-3
+ * @copyright BSD-3
  */
 
 #pragma once
@@ -64,7 +62,7 @@ public:
     CellLinkedList(data_type &data, const readdy::model::Context &context,
                    thread_pool &pool);
 
-    void setUp(scalar skin, cell_radius_type radius);
+    void setUp(scalar interactionDistance, cell_radius_type radius);
 
     virtual void update() = 0;
 
@@ -112,10 +110,6 @@ public:
         return _data.get();
     };
 
-    scalar maxCutoff() const {
-        return _max_cutoff;
-    };
-
     std::size_t cellOfParticle(std::size_t index) const {
         const auto &entry = data().entry_at(index);
         if (entry.deactivated) {
@@ -142,8 +136,7 @@ protected:
 
     bool _is_set_up{false};
 
-    scalar _skin{0};
-    scalar _max_cutoff{0};
+    scalar _interactionDistance{0};
     std::uint8_t _radius;
 
     Vec3 _cellSize{0, 0, 0};

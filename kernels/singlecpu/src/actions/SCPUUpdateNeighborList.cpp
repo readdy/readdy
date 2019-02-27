@@ -64,8 +64,8 @@ void SCPUUpdateNeighborList::perform() {
     }
 }
 
-SCPUUpdateNeighborList::SCPUUpdateNeighborList(SCPUKernel *kernel, scalar interactionDistance, Operation op)
-        : UpdateNeighborList(interactionDistance, op), kernel(kernel) {
+SCPUUpdateNeighborList::SCPUUpdateNeighborList(SCPUKernel *kernel, Operation op, scalar interactionDistance)
+        : NeighborListAction(op, interactionDistance), kernel(kernel) {
 }
 
 }

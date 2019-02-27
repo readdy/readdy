@@ -40,7 +40,7 @@
  * @brief << brief description >>
  * @author chrisfroe
  * @date 13.01.17
- * @copyright GPL-3
+ * @copyright BSD-3
  */
 
 #include <readdy/model/compartments/Compartments.h>

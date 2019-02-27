@@ -59,6 +59,7 @@ using namespace readdytesting::kernel;
 
 TEMPLATE_TEST_CASE("Test simulation schemes", "[schemes]", SingleCPU, CPU) {
     readdy::Simulation simulation {create<TestType>()};
+    readdy::model::SimulationParams defaultSimParams;
 
     SECTION("Correct number of timesteps") {
         unsigned int counter = 0;
@@ -66,7 +67,7 @@ TEMPLATE_TEST_CASE("Test simulation schemes", "[schemes]", SingleCPU, CPU) {
             counter++;
         };
         auto obsHandle = simulation.registerObservable(simulation.observe().nParticles(1), increment);
-        simulation.run(3, 0.1);
+        simulation.run(3, 0.1, defaultSimParams);
         REQUIRE(counter == 4);
     }
     SECTION("Simple stopping criterion") {
@@ -78,7 +79,7 @@ TEMPLATE_TEST_CASE("Test simulation schemes", "[schemes]", SingleCPU, CPU) {
         auto shallContinue = [](readdy::time_step_type currentStep) {
             return currentStep < 5;
         };
-        auto loop = simulation.createLoop(.1);
+        auto loop = simulation.createLoop(.1, defaultSimParams);
         loop.run(shallContinue);
         REQUIRE(counter == 6);
     }
@@ -100,7 +101,7 @@ TEMPLATE_TEST_CASE("Test simulation schemes", "[schemes]", SingleCPU, CPU) {
         auto shallContinue = [&doStop](readdy::time_step_type currentStep) {
             return !doStop;
         };
-        simulation.createLoop(1.).run(shallContinue);
+        simulation.createLoop(1., defaultSimParams).run(shallContinue);
         REQUIRE(counter == 4);
     }
     SECTION("Skin size sanity check") {
@@ -110,8 +111,9 @@ TEMPLATE_TEST_CASE("Test simulation schemes", "[schemes]", SingleCPU, CPU) {
         simulation.context().potentials().addHarmonicRepulsion("A", "A", 1., 2.);
         simulation.addParticle("A", 0., 0., 0.);
         simulation.addParticle("A", 1.5, 0., 0.);
-        auto loop = simulation.createLoop(.001);
-        loop.skinSize() = 1.;
+        readdy::model::SimulationParams skinnySimParams;
+        skinnySimParams.neighborListSkinSize = 1.;
+        auto loop = simulation.createLoop(.001, skinnySimParams);
         loop.run(10);
     }
 }

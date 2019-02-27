@@ -40,7 +40,7 @@
  * @brief << brief description >>
  * @author clonker
  * @date 29.03.17
- * @copyright GPL-3
+ * @copyright BSD-3
  */
 
 #include <readdy/model/ParticleTypeRegistry.h>

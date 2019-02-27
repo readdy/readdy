@@ -171,8 +171,8 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
             auto radius = static_cast<readdy::scalar>(3.);
             readdy::Vec3 origin = {static_cast<readdy::scalar>(1.), static_cast<readdy::scalar>(0.),
                                    static_cast<readdy::scalar>(0.)};
-            kernel->context().potentials().addSphere("A", forceConstant, origin, radius, false);
-            kernel->context().potentials().addSphere("A", forceConstant, origin, radius, true);
+            context.potentials().addSphere("A", forceConstant, origin, radius, false);
+            context.potentials().addSphere("A", forceConstant, origin, radius, true);
             // record ids to get data-structure-indexes of the two particles later on
             auto pObs = kernel->observe().particles(1);
             std::vector<readdy::model::Particle::id_type> ids;
@@ -190,9 +190,9 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
             auto conn = kernel->connectObservable(fObs.get());
 
             // we need to update the neighbor list as this is a pair potential
-            auto neighborList = kernel->actions().updateNeighborList();
-            neighborList->perform();
-            auto updateNeighborList = kernel->actions().updateNeighborList(readdy::model::actions::UpdateNeighborList::Operation::update);
+            auto initNeighborList = kernel->actions().initNeighborList(context.calculateMaxCutoff());
+            initNeighborList->perform();
+            auto updateNeighborList = kernel->actions().updateNeighborList();
             updateNeighborList->perform();
             // calc forces
             auto calculateForces = kernel->actions().calculateForces(false);
@@ -201,7 +201,7 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
             kernel->evaluateObservables(1);
 
             // the reference values were calculated numerically
-            REQUIRE(kernel->stateModel().energy() == Approx(0.803847577293 + 2.41154273188));
+            REQUIRE(stateModel.energy() == Approx(0.803847577293 + 2.41154273188));
             ptrdiff_t id0Idx = std::find(ids.begin(), ids.end(), id0) - ids.begin();
             ptrdiff_t id1Idx = std::find(ids.begin(), ids.end(), id1) - ids.begin();
             readdy::Vec3 forceOnParticle0{static_cast<readdy::scalar>(0.73205081),
@@ -224,7 +224,7 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
             double radius = 1.;
             double height = 2.;
             double width = 0.3;
-            kernel->context().potentials().addSphericalBarrier("A", height, width, origin, radius);
+            context.potentials().addSphericalBarrier("A", height, width, origin, radius);
             // record ids to get data-structure-indexes of the two particles later on
             auto pObs = kernel->observe().particles(1);
             std::vector<readdy::model::Particle::id_type> ids;
@@ -247,7 +247,7 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
             kernel->evaluateObservables(1);
 
             // the reference values were calculated numerically
-            REQUIRE(kernel->stateModel().energy() == Approx(1.51432015278));
+            REQUIRE(stateModel.energy() == Approx(1.51432015278));
             auto id0Idx = std::find(ids.begin(), ids.end(), id0) - ids.begin();
             auto id1Idx = std::find(ids.begin(), ids.end(), id1) - ids.begin();
             readdy::Vec3 forceOnParticle0{static_cast<readdy::scalar>(9.2539372), static_cast<readdy::scalar>(0.84126702),
@@ -271,7 +271,7 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
             readdy::Vec3 normal = {0., 0., 1.};
             double radius = 2.;
             double forceConstant = 4.;
-            kernel->context().potentials().addCylinder("A", forceConstant, origin, normal, radius, true);
+            context.potentials().addCylinder("A", forceConstant, origin, normal, radius, true);
             // record ids to get data-structure-indexes of the two particles later on
             auto pObs = kernel->observe().particles(1);
             std::vector<readdy::model::Particle::id_type> ids;
@@ -294,7 +294,7 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
             kernel->evaluateObservables(1);
 
             // the reference values were calculated by hand and evaluated numerically
-            REQUIRE(kernel->stateModel().energy() == Approx(3.37258300203048));
+            REQUIRE(stateModel.energy() == Approx(3.37258300203048));
             auto id0Idx = std::find(ids.begin(), ids.end(), id0) - ids.begin();
             auto id1Idx = std::find(ids.begin(), ids.end(), id1) - ids.begin();
             auto id2Idx = std::find(ids.begin(), ids.end(), id2) - ids.begin();
@@ -329,7 +329,7 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
             readdy::Vec3 normal = {0., 0., 1.};
             double radius = 2.;
             double forceConstant = 4.;
-            kernel->context().potentials().addCylinder("A", forceConstant, origin, normal, radius, false);
+            context.potentials().addCylinder("A", forceConstant, origin, normal, radius, false);
             // record ids to get data-structure-indexes of the two particles later on
             auto pObs = kernel->observe().particles(1);
             std::vector<readdy::model::Particle::id_type> ids;
@@ -352,7 +352,7 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
             kernel->evaluateObservables(1);
 
             // the reference values were calculated by hand and evaluated numerically
-            REQUIRE(kernel->stateModel().energy() == Approx(2.2420195910160805));
+            REQUIRE(stateModel.energy() == Approx(2.2420195910160805));
             auto id0Idx = std::find(ids.begin(), ids.end(), id0) - ids.begin();
             auto id1Idx = std::find(ids.begin(), ids.end(), id1) - ids.begin();
             auto id2Idx = std::find(ids.begin(), ids.end(), id2) - ids.begin();
@@ -393,7 +393,7 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
 
             // the potential has exponents 3 and 2, a cutoff distance of 1.0, does not shift the energy, a well depth
             // of 1.0 and a zero-interaction distance of 0.1 (particle distance < sigma ==> repellent)
-            kernel->context().potentials().addLennardJones("A", "A", 3, 2, 1.0, false, 1.0, .1);
+            context.potentials().addLennardJones("A", "A", 3, 2, 1.0, false, 1.0, .1);
 
             // record ids
             auto pObs = kernel->observe().particles(1);
@@ -412,18 +412,18 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
             auto conn = kernel->connectObservable(fObs.get());
 
             // we need to update the neighbor list as this is a pair potential
-            auto neighborList = kernel->actions().updateNeighborList(readdy::model::actions::UpdateNeighborList::init);
-            neighborList->perform();
-
-            auto updateNeighborList = kernel->actions().updateNeighborList(readdy::model::actions::UpdateNeighborList::update);
+            auto initNeighborList = kernel->actions().initNeighborList(context.calculateMaxCutoff());
+            initNeighborList->perform();
+            auto updateNeighborList = kernel->actions().updateNeighborList();
             updateNeighborList->perform();
+
             // calc forces
             calculateForces->perform();
             // give me results
             kernel->evaluateObservables(1);
 
             // the reference values were calculated numerically
-            REQUIRE(kernel->stateModel().energy() == Approx(2.0 * 0.925925925926).epsilon(1e-6));
+            REQUIRE(stateModel.energy() == Approx(2.0 * 0.925925925926).epsilon(1e-6));
             auto id0Idx = std::find(ids.begin(), ids.end(), id0) - ids.begin();
             auto id1Idx = std::find(ids.begin(), ids.end(), id1) - ids.begin();
             auto id2Idx = std::find(ids.begin(), ids.end(), id2) - ids.begin();
@@ -460,8 +460,8 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
             auto sigma = static_cast<readdy::scalar>(1.);
             auto cutoff = static_cast<readdy::scalar>(8.);
             unsigned int exponent = 6;
-            kernel->context().potentials().addScreenedElectrostatics("A", "A", electrostaticStrength, 1. / screeningDepth,
-                                                                     repulsionStrength, sigma, exponent, cutoff);
+            context.potentials().addScreenedElectrostatics("A", "A", electrostaticStrength, 1. / screeningDepth,
+                                                           repulsionStrength, sigma, exponent, cutoff);
             // record ids to get data-structure-indexes of the two particles later on
             auto pObs = kernel->observe().particles(1);
             std::vector<readdy::model::Particle::id_type> ids;
@@ -479,8 +479,11 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
             auto conn = kernel->connectObservable(fObs.get());
 
             // we need to update the neighbor list as this is a pair potential
-            auto neighborList = kernel->actions().updateNeighborList();
-            neighborList->perform();
+            auto initNeighborList = kernel->actions().initNeighborList(context.calculateMaxCutoff());
+            initNeighborList->perform();
+            //fixme auto updateNeighborList = kernel->actions().updateNeighborList();
+            //updateNeighborList->perform();
+
             // calc forces
             calculateForces->perform();
             // give me results
@@ -488,9 +491,9 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
 
             // the reference values were calculated numerically
             if(kernel->singlePrecision()) {
-                REQUIRE(kernel->stateModel().energy() == Approx(-0.0264715664281));
+                REQUIRE(stateModel.energy() == Approx(-0.0264715664281));
             } else {
-                REQUIRE(kernel->stateModel().energy() == Approx(-0.0264715664281));
+                REQUIRE(stateModel.energy() == Approx(-0.0264715664281));
             }
             ptrdiff_t id0Idx = std::find(ids.begin(), ids.end(), id0) - ids.begin();
             ptrdiff_t id1Idx = std::find(ids.begin(), ids.end(), id1) - ids.begin();

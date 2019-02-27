@@ -72,9 +72,12 @@ public:
 
     void setUp(scalar interactionDistance, cell_radius_type radius) {
         if (!_isSetUp || _interactionDistance != interactionDistance || _radius != radius) {
-
+            if (interactionDistance < _context.get().calculateMaxCutoff()) {
+                throw std::logic_error(fmt::format(
+                        "The requested interaction distance {} for neighbor-list set-up was smaller than the largest cutoff {}",
+                        interactionDistance, _context.get().calculateMaxCutoff()));
+            }
             _radius = radius;
-            // @todo additional padding/skin is added to maxcutoff at high level (SimulationParams and SimulationLoop)
             _interactionDistance = interactionDistance;
             if (_interactionDistance > 0) {
                 auto size = _context.get().boxSize();

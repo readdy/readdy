@@ -42,7 +42,7 @@
  * @brief Definitions for the index_persistent_vector
  * @author clonker
  * @date 09.06.17
- * @copyright GPL-3
+ * @copyright BSD-3
  */
 
 #pragma once

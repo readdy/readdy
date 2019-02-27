@@ -59,19 +59,23 @@ public:
 
     std::unique_ptr<model::actions::EulerBDIntegrator> eulerBDIntegrator(scalar timeStep) const override;
 
+    std::unique_ptr<readdy::model::actions::MdgfrdIntegrator> mdgfrdIntegrator(scalar timeStep) const override;
+
     std::unique_ptr<readdy::model::actions::CalculateForces> calculateForces(bool recordVirial) const override;
 
-    std::unique_ptr<model::actions::UpdateNeighborList>
-    updateNeighborList(scalar interactionDistance, model::actions::UpdateNeighborList::Operation operation) const override;
+    std::unique_ptr<model::actions::NeighborListAction>
+    neighborListAction(model::actions::NeighborListAction::Operation operation, scalar interactionDistance) const override;
 
     std::unique_ptr<model::actions::EvaluateCompartments> evaluateCompartments() const override;
 
     std::unique_ptr<model::actions::reactions::UncontrolledApproximation>
-    uncontrolledApproximation(scalar timeStep) const override;
+    uncontrolledApproximation(scalar timeStep, bool recordReactionCounts, bool recordReactionsWithPositions) const override;
 
-    std::unique_ptr<model::actions::reactions::Gillespie> gillespie(scalar timeStep) const override;
+    std::unique_ptr<model::actions::reactions::Gillespie>
+    gillespie(scalar timeStep, bool recordReactionCounts, bool recordReactionsWithPositions) const override;
 
-    std::unique_ptr<model::actions::reactions::DetailedBalance> detailedBalance(scalar timeStep) const override;
+    std::unique_ptr<model::actions::reactions::DetailedBalance>
+    detailedBalance(scalar timeStep, bool recordReactionCounts, bool recordReactionsWithPositions) const override;
 
     std::unique_ptr<model::actions::top::EvaluateTopologyReactions>
     evaluateTopologyReactions(scalar timeStep) const override;

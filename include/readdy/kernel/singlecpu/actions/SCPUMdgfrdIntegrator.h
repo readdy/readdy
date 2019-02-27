@@ -38,7 +38,7 @@
  *
  * @file SingleCPUEulerDBIntegrator.h
  * @brief << brief description >>
- * @author clonker
+ * @author chrisfroe
  * @author luigisbailo
  * @date 19.04.16
  */

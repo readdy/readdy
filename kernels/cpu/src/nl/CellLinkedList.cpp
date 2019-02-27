@@ -40,7 +40,7 @@
  * @brief << brief description >>
  * @author clonker
  * @date 12.09.17
- * @copyright GPL-3
+ * @copyright BSD-3
  */
 
 #include <readdy/kernel/cpu/nl/CellLinkedList.h>
@@ -56,15 +56,18 @@ CellLinkedList::CellLinkedList(data_type &data, const readdy::model::Context &co
         : _data(data), _context(context), _pool(pool) {}
 
 
-void CellLinkedList::setUp(scalar skin, cell_radius_type radius) {
-    if (!_is_set_up || _skin != skin || _radius != radius) {
-
-        _skin = skin;
+void CellLinkedList::setUp(scalar interactionDistance, cell_radius_type radius) {
+    if (!_is_set_up || _interactionDistance != interactionDistance || _radius != radius) {
+        if (interactionDistance < _context.get().calculateMaxCutoff()) {
+            throw std::logic_error(fmt::format(
+                    "The requested interaction distance {} for neighbor-list set-up was smaller than the largest cutoff {}",
+                    interactionDistance, _context.get().calculateMaxCutoff()));
+        }
         _radius = radius;
-        _max_cutoff = _context.get().calculateMaxCutoff();
-        if (_max_cutoff > 0) {
+        _interactionDistance = interactionDistance;
+        if (_interactionDistance > 0) {
             auto size = _context.get().boxSize();
-            auto desiredWidth = static_cast<scalar>((_max_cutoff + _skin) / static_cast<scalar>(radius));
+            auto desiredWidth = static_cast<scalar>((_interactionDistance) / static_cast<scalar>(radius));
             std::array<std::size_t, 3> dims{};
             for (int i = 0; i < 3; ++i) {
                 dims[i] = static_cast<unsigned int>(std::max(1., std::floor(size[i] / desiredWidth)));
@@ -139,7 +142,7 @@ void CellLinkedList::setUp(scalar skin, cell_radius_type radius) {
                 }
             }
 
-            if (_max_cutoff > 0) {
+            if (_interactionDistance > 0) {
                 setUpBins();
             }
 
@@ -235,7 +238,7 @@ void CompactCellLinkedList::fillBins<false>() {
 }
 
 void CompactCellLinkedList::setUpBins() {
-    if (_max_cutoff > 0) {
+    if (_interactionDistance > 0) {
         {
             auto nParticles = _data.get().size();
             _head.clear();

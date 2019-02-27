@@ -83,27 +83,27 @@ TEST_CASE("Test cpu kernel reaction handling", "[cpu]") {
     using particle_t = readdy::model::Particle;
     using data_t = readdy::kernel::cpu::data::DefaultDataContainer;
     auto kernel = std::make_unique<readdy::kernel::cpu::CPUKernel>();
-    
+    auto &ctx = kernel->context();
     
     SECTION("In and out types and positions") {
-        kernel->context().periodicBoundaryConditions() = {{false, false, false}};
-        kernel->context().boxSize() = {{100, 100, 100}};
-        kernel->context().particleTypes().add("A", .1); // type id 0
-        kernel->context().particleTypes().add("B", .1); // type id 1
-        kernel->context().particleTypes().add("C", .1); // type id 2
+        ctx.periodicBoundaryConditions() = {{false, false, false}};
+        ctx.boxSize() = {{100, 100, 100}};
+        ctx.particleTypes().add("A", .1); // type id 0
+        ctx.particleTypes().add("B", .1); // type id 1
+        ctx.particleTypes().add("C", .1); // type id 2
 
         // test conversion
         {
             conversion_t conversion("A->B", 0, 1, 1);
             particle_t p_A{0, 0, 0, 0};
 
-            data_t data {kernel->context(), kernel->pool()};
+            data_t data {ctx, kernel->pool()};
             data.addParticles({p_A});
 
             data_t::EntriesUpdate newParticles{};
             std::vector<data_t::size_type> decayedEntries {};
 
-            reac::performReaction(&data, kernel->context(), 0, 0, newParticles, decayedEntries, &conversion, nullptr);
+            reac::performReaction(&data, ctx, 0, 0, newParticles, decayedEntries, &conversion, nullptr);
 
             REQUIRE(data.entry_at(0).type == conversion.getTypeTo());
             REQUIRE(data.pos(0) == readdy::Vec3(0,0,0));
@@ -111,7 +111,7 @@ TEST_CASE("Test cpu kernel reaction handling", "[cpu]") {
 
         // test fusion
         {
-            data_t data {kernel->context(), kernel->pool()};
+            data_t data {ctx, kernel->pool()};
 
             data_t::EntriesUpdate newParticles{};
             std::vector<data_t::size_type> decayedEntries {};
@@ -123,7 +123,7 @@ TEST_CASE("Test cpu kernel reaction handling", "[cpu]") {
             particle_t p_B{-1, 0, 0, 1};
             data.addParticles({p_A, p_B});
 
-            reac::performReaction(&data, kernel->context(), 0, 1, newParticles, decayedEntries, &fusion, nullptr);
+            reac::performReaction(&data, ctx, 0, 1, newParticles, decayedEntries, &fusion, nullptr);
             REQUIRE(decayedEntries.size() == 2);
             REQUIRE((decayedEntries.size() == 2 && (decayedEntries.at(0) == 1 || decayedEntries.at(1) == 1)));
             data.update(std::make_pair(std::move(newParticles), std::move(decayedEntries)));
@@ -133,7 +133,7 @@ TEST_CASE("Test cpu kernel reaction handling", "[cpu]") {
 
         // fission
         {
-            data_t data {kernel->context(), kernel->pool()};
+            data_t data {ctx, kernel->pool()};
 
             data_t::EntriesUpdate newParticles{};
             std::vector<data_t::size_type> decayedEntries {};
@@ -144,13 +144,13 @@ TEST_CASE("Test cpu kernel reaction handling", "[cpu]") {
             particle_t p_C{0, 0, 0, 2};
             data.addParticle(p_C);
 
-            reac::performReaction(&data, kernel->context(), 0, 0, newParticles, decayedEntries, &fission, nullptr);
+            reac::performReaction(&data, ctx, 0, 0, newParticles, decayedEntries, &fission, nullptr);
             data.update(std::make_pair(std::move(newParticles), std::move(decayedEntries)));
 
             REQUIRE(data.entry_at(0).type == fission.getTo1());
             REQUIRE(data.entry_at(1).type == fission.getTo2());
-            auto p_12 = readdy::bcs::shortestDifference(data.pos(0), data.pos(1), kernel->context().boxSize(),
-                                                        kernel->context().periodicBoundaryConditions());
+            auto p_12 = readdy::bcs::shortestDifference(data.pos(0), data.pos(1), ctx.boxSize(),
+                                                        ctx.periodicBoundaryConditions());
             auto p_12_nondirect = data.pos(1) - data.pos(0);
             REQUIRE(p_12_nondirect == p_12);
             auto distance = std::sqrt(p_12 * p_12);
@@ -159,7 +159,7 @@ TEST_CASE("Test cpu kernel reaction handling", "[cpu]") {
 
         // enzymatic 1
         {
-            data_t data{kernel->context(), kernel->pool()};
+            data_t data{ctx, kernel->pool()};
 
             data_t::EntriesUpdate newParticles{};
             std::vector<data_t::size_type > decayedEntries{};
@@ -168,7 +168,7 @@ TEST_CASE("Test cpu kernel reaction handling", "[cpu]") {
             particle_t p_A{0, 0, 0, 0};
             particle_t p_C{5, 5, 5, 2};
             data.addParticles({p_A, p_C});
-            reac::performReaction(&data, kernel->context(), 0, 1, newParticles, decayedEntries, &enzymatic, nullptr);
+            reac::performReaction(&data, ctx, 0, 1, newParticles, decayedEntries, &enzymatic, nullptr);
             data.update(std::make_pair(std::move(newParticles), std::move(decayedEntries)));
             {
                 const auto &e1 = data.entry_at(0);
@@ -188,7 +188,7 @@ TEST_CASE("Test cpu kernel reaction handling", "[cpu]") {
         }
         // enzymatic 2
         {
-            data_t data{kernel->context(), kernel->pool()};
+            data_t data{ctx, kernel->pool()};
 
             data_t::EntriesUpdate newParticles{};
             std::vector<data_t::size_type> decayedEntries{};
@@ -197,7 +197,7 @@ TEST_CASE("Test cpu kernel reaction handling", "[cpu]") {
             particle_t p_A{0, 0, 0, 0};
             particle_t p_C{5, 5, 5, 2};
             data.addParticles({p_C, p_A});
-            reac::performReaction(&data, kernel->context(), 0, 1, newParticles, decayedEntries, &enzymatic, nullptr);
+            reac::performReaction(&data, ctx, 0, 1, newParticles, decayedEntries, &enzymatic, nullptr);
             data.update(std::make_pair(std::move(newParticles), std::move(decayedEntries)));
             {
                 const auto &e1 = data.entry_at(0);
@@ -217,15 +217,16 @@ TEST_CASE("Test cpu kernel reaction handling", "[cpu]") {
         }
     }
     SECTION("Decay situation") {
-        kernel->context().boxSize() = {{10, 10, 10}};
-        kernel->context().particleTypes().add("X", .25);
-        kernel->context().reactions().addDecay("X decay", "X", 1e16);
-        kernel->context().reactions().addFission("X fission", "X", "X", "X", .5, .3);
+        ctx.boxSize() = {{10, 10, 10}};
+        ctx.particleTypes().add("X", .25);
+        ctx.reactions().addDecay("X decay", "X", 1e16);
+        ctx.reactions().addFission("X fission", "X", "X", "X", .5, .3);
 
         auto &&integrator = kernel->actions().eulerBDIntegrator(1);
         auto &&forces = kernel->actions().calculateForces(false);
+        auto &&initNeighborList = kernel->actions().initNeighborList(ctx.calculateMaxCutoff());
         auto &&neighborList = kernel->actions().updateNeighborList();
-        auto &&reactions = kernel->actions().gillespie(1);
+        auto &&reactions = kernel->actions().gillespie(1, false, false);
 
         auto pp_obs = kernel->observe().positions(1);
         pp_obs->callback() = ([](const readdy::model::observables::Positions::result_type &t) {
@@ -234,7 +235,7 @@ TEST_CASE("Test cpu kernel reaction handling", "[cpu]") {
         auto connection = kernel->connectObservable(pp_obs.get());
 
         const int n_particles = 200;
-        const auto typeId = kernel->context().particleTypes().idOf("X");
+        const auto typeId = ctx.particleTypes().idOf("X");
         std::vector<readdy::model::Particle> particlesToBeginWith{n_particles, {0, 0, 0, typeId}};
         kernel->stateModel().addParticles(particlesToBeginWith);
         neighborList->perform();
@@ -255,24 +256,24 @@ TEST_CASE("Test cpu kernel reaction handling", "[cpu]") {
     }
 
     SECTION("Parallel gillespie implementation") {
-        kernel->context().boxSize() = {{10, 10, 30}};
-        kernel->context().periodicBoundaryConditions() = {{true, true, false}};
+        ctx.boxSize() = {{10, 10, 30}};
+        ctx.periodicBoundaryConditions() = {{true, true, false}};
 
-        kernel->context().particleTypes().add("A", .25);
-        kernel->context().particleTypes().add("B", .25);
-        kernel->context().particleTypes().add("C", .25);
-        kernel->context().potentials().addBox("A", .0001, {-4.9, -4.9, -14.9}, {9.8, 9.8, 29.8});
-        kernel->context().potentials().addBox("B", .0001, {-4.9, -4.9, -14.9}, {9.8, 9.8, 29.8});
-        kernel->context().potentials().addBox("C", .0001, {-4.9, -4.9, -14.9}, {9.8, 9.8, 29.8});
+        ctx.particleTypes().add("A", .25);
+        ctx.particleTypes().add("B", .25);
+        ctx.particleTypes().add("C", .25);
+        ctx.potentials().addBox("A", .0001, {-4.9, -4.9, -14.9}, {9.8, 9.8, 29.8});
+        ctx.potentials().addBox("B", .0001, {-4.9, -4.9, -14.9}, {9.8, 9.8, 29.8});
+        ctx.potentials().addBox("C", .0001, {-4.9, -4.9, -14.9}, {9.8, 9.8, 29.8});
         readdy::scalar reactionRadius = 1.0;
-        kernel->context().reactions().addFusion("annihilation", "A", "A", "A", 1e16, reactionRadius);
-        kernel->context().reactions().addFusion("very unlikely", "A", "C", "A",
+        ctx.reactions().addFusion("annihilation", "A", "A", "A", 1e16, reactionRadius);
+        ctx.reactions().addFusion("very unlikely", "A", "C", "A",
                                                 std::numeric_limits<readdy::scalar>::min(), reactionRadius);
-        kernel->context().reactions().addFusion("dummy reaction", "A", "B", "A", 0.0, reactionRadius);
+        ctx.reactions().addFusion("dummy reaction", "A", "B", "A", 0.0, reactionRadius);
 
-        const auto typeA = kernel->context().particleTypes().idOf("A");
-        const auto typeB = kernel->context().particleTypes().idOf("B");
-        const auto typeC = kernel->context().particleTypes().idOf("C");
+        const auto typeA = ctx.particleTypes().idOf("A");
+        const auto typeB = ctx.particleTypes().idOf("B");
+        const auto typeC = ctx.particleTypes().idOf("C");
 
         // this particle goes right into the middle, i.e., into the halo region
         kernel->stateModel().addParticle({0, 0, 0, typeA});            // 0
@@ -295,10 +296,12 @@ TEST_CASE("Test cpu kernel reaction handling", "[cpu]") {
         {
             fix_n_threads n_threads{kernel.get(), 2};
             REQUIRE(2 == kernel->getNThreads());
+            auto &&initNeighborList = kernel->actions().initNeighborList(ctx.calculateMaxCutoff());
             auto &&neighborList = kernel->actions().updateNeighborList();
             std::unique_ptr<readdy::kernel::cpu::actions::reactions::CPUGillespie> reactions = readdy::util::static_unique_ptr_cast_no_del<readdy::kernel::cpu::actions::reactions::CPUGillespie>(
-                    kernel->actions().gillespie(1)
+                    kernel->actions().gillespie(1, false, false)
             );
+            initNeighborList->perform();
             neighborList->perform();
             reactions->perform();
             /*reactions->perform();

@@ -72,7 +72,7 @@ std::ostream &operator<<(std::ostream &os, const Event &evt) {
 using event_t = Event;
 
 SCPUUncontrolledApproximation::SCPUUncontrolledApproximation(SCPUKernel *const kernel, scalar timeStep)
-        : readdy::model::actions::reactions::UncontrolledApproximation(timeStep), kernel(kernel) {
+        : readdy::model::actions::reactions::UncontrolledApproximation(timeStep, false, false), kernel(kernel) {
 }
 
 template<bool approximated>

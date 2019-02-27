@@ -44,7 +44,7 @@
  * @brief Definitions for various operations that can be performed on graph topologies.
  * @author clonker
  * @date 13.04.17
- * @copyright GPL-3
+ * @copyright BSD-3
  */
 
 #pragma once

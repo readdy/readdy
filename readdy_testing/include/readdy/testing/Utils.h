@@ -34,16 +34,13 @@
 
 
 /**
- * << detailed description >>
- *
  * @file Utils.h
- * @brief << brief description >>
+ * @brief Utils for testing
  * @author clonker
  * @date 13.07.16
  */
 
-#ifndef READDY_TESTING_UTILS_H
-#define READDY_TESTING_UTILS_H
+#pragma once
 
 #include <catch2/catch.hpp>
 
@@ -96,4 +93,3 @@ inline std::string getPluginsDirectory() {
     return pluginDir;
 }
 }
-#endif //READDY_TESTING_UTILS_H

@@ -51,7 +51,7 @@ using namespace readdytesting::kernel;
  * @brief << brief description >>
  * @author clonker
  * @date 20.03.17
- * @copyright GPL-3
+ * @copyright BSD-3
  */
 
 template<typename Tup>

@@ -33,10 +33,8 @@
  ********************************************************************/
 
 /**
- * << detailed description >>
- *
  * @file SCPUCalculateForces.h
- * @brief << brief description >>
+ * @brief Single CPU implementation of action that calculates forces and energies (and optionally the virial)
  * @author clonker
  * @date 20.06.16
  */
@@ -65,12 +63,14 @@ void computeVirial<false>(const Vec3& /*r_ij*/, const Vec3 &/*force*/, Matrix33 
 }
 
 class SCPUCalculateForces : public readdy::model::actions::CalculateForces {
+    using super = readdy::model::actions::CalculateForces;
 public:
-    explicit SCPUCalculateForces(SCPUKernel *kernel, bool recordVirial) : kernel(kernel), _recordVirial(recordVirial) {};
+    explicit SCPUCalculateForces(SCPUKernel *kernel, bool recordVirial) : super::CalculateForces(recordVirial),
+                                                                          kernel(kernel) {};
 
     void perform() override {
         const auto &context = kernel->context();
-        if(_recordVirial) {
+        if(recordVirial) {
             performImpl<true>();
         } else {
             performImpl<false>();
@@ -146,7 +146,6 @@ private:
         readdy::algo::evaluateOnContainers(data, order1eval, neighborList, order2eval, topologies, topologyEval);
     }
     SCPUKernel *kernel;
-    bool _recordVirial;
 };
 }
 }

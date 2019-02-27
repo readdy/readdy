@@ -34,13 +34,10 @@
 
 
 /**
- * << detailed description >>
- *
  * @file TestTopologyReactionsExternal.cpp
- * @brief << brief description >>
  * @author clonker
  * @date 16.08.17
- * @copyright GPL-3
+ * @copyright BSD-3
  */
 
 #include <catch2/catch.hpp>
@@ -56,6 +53,8 @@ using namespace readdytesting::kernel;
 
 TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU, CPU) {
     Simulation simulation {create<TestType>()};
+
+    model::SimulationParams simParams;
 
     auto &ctx = simulation.context();
 
@@ -95,7 +94,7 @@ TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU
             REQUIRE(nNormalFlavor == 1);
         }
 
-        auto loop = simulation.createLoop(1.);
+        auto loop = simulation.createLoop(1., simParams);
         loop.useReactionScheduler("UncontrolledApproximation");
         loop.runInitializeNeighborList();
         loop.runUpdateNeighborList();
@@ -129,7 +128,7 @@ TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU
     }
 
     SECTION("Get topology for particle decay") {
-// check that the particles that are contained in (active) topologies point to their respective topologies, also
+        // check that the particles that are contained in (active) topologies point to their respective topologies, also
         // and especially after topology split reactions
         using namespace readdy;
         simulation.context().periodicBoundaryConditions() = {{true, true, true}};
@@ -179,7 +178,7 @@ TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU
 
         simulation.context().topologyRegistry().addStructuralReaction("TA", r);
 
-        simulation.run(35, 1.);
+        simulation.run(35, 1., simParams);
 
         log::trace("got n topologies: {}", simulation.currentTopologies().size());
         for(auto top : simulation.currentTopologies()) {
@@ -313,7 +312,8 @@ TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU
         simulation.context().topologyRegistry().addSpatialReaction("merge: TA (end) + TA (end) -> TA (middle--middle)", 1e3, 1.5);
 
         REQUIRE(simulation.currentTopologies().size() == 3);
-        simulation.run(6, 1.);
+        simParams.neighborListInteractionDistance = simulation.context().calculateMaxCutoff();
+        simulation.run(6, 1., simParams);
 
         const auto& type_registry = simulation.context().particleTypes();
 
@@ -418,7 +418,8 @@ TEMPLATE_TEST_CASE("Test topology reactions attach particle integration", "[topo
     simulation.addParticle("A", c_::zero + c_::three, c_::zero, c_::zero);
     simulation.addParticle("A", c_::zero + c_::four, c_::zero, c_::zero);
 
-    simulation.run(6, 1.);
+    readdy::model::SimulationParams simParams;
+    simulation.run(6, 1., simParams);
 
     const auto& type_registry = simulation.context().particleTypes();
 
