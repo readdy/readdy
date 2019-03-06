@@ -81,7 +81,7 @@ class TestCheckpoints(ReaDDyTestCase):
         sim.observe.topologies(1, callback=topologies_callback)
         sim.output_file = os.path.join(self.dir, fname)
         sim.show_progress = False
-        sim.run(120, 1e-2, show_system=False)
+        sim.run(120, 1e-2, show_system=False, show_loop=False)
 
         traj = readdy.Trajectory(sim.output_file)
         entries = traj.read()
@@ -136,7 +136,7 @@ class TestCheckpoints(ReaDDyTestCase):
         assert len(current_particles) == 0
 
         sim.show_progress = False
-        sim.run(500, 1e-3, show_system=False)
+        sim.run(500, 1e-3, show_system=False, show_loop=False)
 
     def test_continue_simulation_full(self):
         self._run_test(with_topologies=True, with_particles=True, fname='full.h5')

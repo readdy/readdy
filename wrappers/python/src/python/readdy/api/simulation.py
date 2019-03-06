@@ -77,7 +77,7 @@ class Simulation(object):
         self._evaluate_topology_reactions = True
         self._evaluate_forces = True
         self._evaluate_observables = True
-        self._skin = 0
+        self._skin = 0.
         self._integrator = "EulerBDIntegrator"
         self._reaction_handler = "Gillespie"
         self._simulation_scheme = "ReaDDyScheme"
@@ -445,13 +445,14 @@ class Simulation(object):
         """
         return self._simulation.current_topologies
 
-    def run(self, n_steps, timestep, show_system=True):
+    def run(self, n_steps, timestep, show_system=True, show_loop=True):
         """
         Executes the simulation as configured.
 
         :param n_steps: number of steps to perform
         :param timestep: the time step to use [time]
         :param show_system: determines if system configuration is printed
+        :param show_loop: determines if loop configuration is printed
         """
         import os
         from contextlib import closing
@@ -478,8 +479,11 @@ class Simulation(object):
             loop.evaluate_forces(self.evaluate_forces)
             loop.evaluate_topology_reactions(self.evaluate_topology_reactions, timestep)
             loop.use_reaction_scheduler(self.reaction_handler)
-            loop.skin_size = self._skin
             loop.evaluate_observables(self.evaluate_observables)
+            if self.integrator == "MdgfrdIntegrator":
+                loop.neighbor_list_distance = max(2. * loop.calculate_max_cutoff(), loop.neighbor_list_distance)
+            if self._skin > 0.:
+                loop.neighbor_list_distance = loop.neighbor_list_distance + self._skin
 
             if self.output_file is not None and len(self.output_file) > 0:
                 with closing(io.File.create(self.output_file)) as f:
@@ -490,12 +494,16 @@ class Simulation(object):
                         self._progress = _SimulationProgress(n_steps // self._progress_output_stride)
                         loop.progress_callback = self._progress.callback
                         loop.progress_output_stride = self._progress_output_stride
+                    if show_loop:
+                        print(loop.describe())
                     loop.run(n_steps)
             else:
                 if self.show_progress:
                     self._progress = _SimulationProgress(n_steps // self._progress_output_stride)
                     loop.progress_callback = self._progress.callback
                     loop.progress_output_stride = self._progress_output_stride
+                if show_loop:
+                    print(loop.describe())
                 loop.run(n_steps)
             if self.show_progress:
                 self._progress.finish()

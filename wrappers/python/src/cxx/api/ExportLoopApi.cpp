@@ -103,5 +103,7 @@ void exportSchemeApi(pybind11::module &module) {
             .def("evaluate_observables", &Loop::evaluateObservables, "evaluate"_a)
             .def_property("neighbor_list_distance", [](const Loop &self) { return self.neighborListDistance(); },
                           [](Loop &self, readdy::scalar distance) { self.neighborListDistance() = distance; })
+            .def("calculate_max_cutoff", &Loop::calculateMaxCutoff)
+            .def("describe", &Loop::describe)
             .def("validate", &Loop::validate);
 }

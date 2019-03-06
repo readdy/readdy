@@ -100,7 +100,7 @@ class TestSchemeApi(ReaDDyTestCase):
             simulation.add_particle("A", common.Vec(0, 0, 0))
         simulation.observe.number_of_particles(1, ["A"], callback=callback)
         simulation.record_trajectory(1)
-        simulation.run(20, 1, show_system=False)
+        simulation.run(20, 1, show_system=False, show_loop=False)
 
         r = TrajectoryReader(simulation.output_file)
         trajectory_items = r[:]

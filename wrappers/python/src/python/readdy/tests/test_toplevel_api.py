@@ -256,7 +256,7 @@ class TestTopLevelAPI(ReaDDyTestCase):
         simulation.observe.virial(5)
         simulation.observe.pressure(5)
         simulation.observe.topologies(5)
-        simulation.run(10, .1 * ut.nanosecond, False)
+        simulation.run(10, .1 * ut.nanosecond, False, False)
 
     def test_add_particles(self):
         rds = readdy.ReactionDiffusionSystem([10., 10., 10.])
@@ -312,7 +312,7 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
         sim.add_particles("A", np.random.random((100, 3)))
         recorded_positions = []
         sim.observe.particle_positions(1, callback=lambda x: recorded_positions.append(x))
-        sim.run(50, 1e-3, False)
+        sim.run(50, 1e-3, False, False)
 
         traj = readdy.Trajectory(traj_fname)
 
@@ -421,7 +421,7 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
         simulation.record_trajectory()
         simulation.observe.topologies(1)
         simulation.show_progress = False
-        simulation.run(n_steps=100, timestep=1e-2, show_system=False)
+        simulation.run(n_steps=100, timestep=1e-2, show_system=False, show_loop=False)
 
         t = readdy.Trajectory(simulation.output_file)
         entries = t.read()
@@ -516,7 +516,7 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
         simulation.observe.topologies(1, callback=lambda x: topology_records.append(x))
         simulation.show_progress = False
         n_steps = 100
-        simulation.run(n_steps=n_steps, timestep=1e-1, show_system=False)
+        simulation.run(n_steps=n_steps, timestep=1e-1, show_system=False, show_loop=False)
 
         traj = readdy.Trajectory(simulation.output_file)
 
@@ -589,11 +589,11 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
         pressure_callback = PressureCallback()
 
         sim.observe.pressure(1, callback=pressure_callback)
-        sim.run(50, 1e-3, False)
+        sim.run(50, 1e-3, False, False)
 
         pressure_callback.active = False
         sim.output_file = traj_fname2
-        sim.run(50, 1e-3, False)
+        sim.run(50, 1e-3, False, False)
 
         for fname in [traj_fname, traj_fname2]:
             traj = readdy.Trajectory(fname)
