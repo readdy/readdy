@@ -34,10 +34,8 @@
 
 
 /**
- * << detailed description >>
- *
  * @file CPUActionFactory.cpp
- * @brief << brief description >>
+ * @brief CPU kernel implementation of Action factory
  * @author clonker
  * @date 23.06.16
  */
@@ -72,8 +70,8 @@ std::unique_ptr<readdy::model::actions::MdgfrdIntegrator> CPUActionFactory::mdgf
     throw std::invalid_argument("Mdgfrd integrator not implemented for CPU");
 }
 
-std::unique_ptr<readdy::model::actions::CalculateForces> CPUActionFactory::calculateForces(bool recordVirial) const {
-    return {std::make_unique<CPUCalculateForces>(kernel, recordVirial)};
+std::unique_ptr<readdy::model::actions::CalculateForces> CPUActionFactory::calculateForces() const {
+    return {std::make_unique<CPUCalculateForces>(kernel)};
 }
 
 std::unique_ptr<model::actions::NeighborListAction>
@@ -86,13 +84,13 @@ std::unique_ptr<model::actions::EvaluateCompartments> CPUActionFactory::evaluate
 }
 
 std::unique_ptr<model::actions::reactions::UncontrolledApproximation>
-CPUActionFactory::uncontrolledApproximation(scalar timeStep, bool recordReactionCounts, bool recordReactionsWithPositions) const {
-    return {std::make_unique<reactions::CPUUncontrolledApproximation>(kernel, timeStep, recordReactionCounts, recordReactionsWithPositions)};
+CPUActionFactory::uncontrolledApproximation(scalar timeStep) const {
+    return {std::make_unique<reactions::CPUUncontrolledApproximation>(kernel, timeStep)};
 }
 
 std::unique_ptr<model::actions::reactions::Gillespie>
-CPUActionFactory::gillespie(scalar timeStep, bool recordReactionCounts, bool recordReactionsWithPositions) const {
-    return {std::make_unique<reactions::CPUGillespie>(kernel, timeStep, recordReactionCounts, recordReactionsWithPositions)};
+CPUActionFactory::gillespie(scalar timeStep) const {
+    return {std::make_unique<reactions::CPUGillespie>(kernel, timeStep)};
 }
 
 std::unique_ptr<model::actions::top::EvaluateTopologyReactions>
@@ -101,7 +99,7 @@ CPUActionFactory::evaluateTopologyReactions(scalar timeStep) const {
 }
 
 std::unique_ptr<model::actions::reactions::DetailedBalance>
-CPUActionFactory::detailedBalance(scalar timeStep, bool recordReactionCounts, bool recordReactionsWithPositions) const {
+CPUActionFactory::detailedBalance(scalar timeStep) const {
     throw std::invalid_argument("DetailedBalance reaction handler not implemented for CPU");
 }
 }

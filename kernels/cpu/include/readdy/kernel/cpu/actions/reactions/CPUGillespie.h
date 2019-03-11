@@ -60,8 +60,7 @@ class CPUGillespie : public readdy::model::actions::reactions::Gillespie {
 
 public:
 
-    CPUGillespie(CPUKernel *kernel, readdy::scalar timeStep, bool recordReactionCounts,
-                 bool recordReactionsWithPositions);
+    CPUGillespie(CPUKernel *kernel, readdy::scalar timeStep);
 
     void perform() override;
 

@@ -58,7 +58,7 @@ public:
         return nullptr;
     }
 
-    std::unique_ptr<readdy::model::actions::CalculateForces> calculateForces(bool recordVirial) const override {
+    std::unique_ptr<readdy::model::actions::CalculateForces> calculateForces() const override {
         return nullptr;
     }
 
@@ -72,12 +72,12 @@ public:
     }
 
     std::unique_ptr<model::actions::reactions::UncontrolledApproximation>
-    uncontrolledApproximation(scalar timeStep, bool recordReactionCounts, bool recordReactionsWithPositions) const override {
+    uncontrolledApproximation(scalar timeStep) const override {
         return nullptr;
     }
 
     std::unique_ptr<model::actions::reactions::Gillespie>
-    gillespie(scalar timeStep, bool recordReactionCounts, bool recordReactionsWithPositions) const override {
+    gillespie(scalar timeStep) const override {
         return nullptr;
     }
 

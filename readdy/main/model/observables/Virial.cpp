@@ -34,12 +34,10 @@
 
 
 /**
- * << detailed description >>
- *
  * @file Virial.cpp
- * @brief << brief description >>
+ * @brief Implementation of virial observable
  * @author clonker
- * @date 1/17/18
+ * @date 17.01.18
  */
 
 #include <readdy/model/observables/Virial.h>
@@ -65,10 +63,9 @@ void Virial::flush() {
     if (pimpl->time) pimpl->time->flush();
 }
 
-// todo remove me
-//void Virial::initialize(Kernel *const kernel) {
-//    kernel->context().recordVirial() = true;
-//}
+void Virial::initialize(Kernel *const kernel) {
+    kernel->context().recordVirial() = true;
+}
 
 void Virial::initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) {
     h5rd::dimensions fs = {flushStride, Matrix33::n(), Matrix33::m()};

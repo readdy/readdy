@@ -90,7 +90,6 @@ TEST_CASE("Test cpu neighbor list", "[cpu]") {
 
     auto kernel = std::make_unique<cpu::CPUKernel>();
     auto &ctx = kernel->context();
-    model::SimulationParams simParams;
 
     SECTION("Basic behavior") {
         ctx.particleTypes().add("A", 1.);
@@ -200,9 +199,9 @@ TEST_CASE("Test cpu neighbor list", "[cpu]") {
         auto connection = kernel->connectObservable(obs.get());
 
         {
-            simParams.neighborListSkinSize = 0.1;
-            readdy::api::SimulationLoop loop (kernel.get(), .01, simParams);
+            readdy::api::SimulationLoop loop(kernel.get(), .01);
             loop.useReactionScheduler("Gillespie");
+            loop.neighborListDistance() += 0.1;
             loop.run(100);
         }
     }
@@ -258,9 +257,9 @@ TEST_CASE("Test cpu neighbor list", "[cpu]") {
         );
         auto connection = kernel->connectObservable(obs.get());
         {
-            simParams.neighborListSkinSize = 0.1;
-            readdy::api::SimulationLoop loop(kernel.get(), .01, simParams);
+            readdy::api::SimulationLoop loop(kernel.get(), .01);
             loop.useReactionScheduler("Gillespie");
+            loop.neighborListDistance() += 0.1;
             loop.run(100);
         }
     }
@@ -308,7 +307,7 @@ TEST_CASE("Test cpu neighbor list", "[cpu]") {
         kernel->stateModel().initializeNeighborList(context.calculateMaxCutoff());
 
         auto integrator = kernel->actions().eulerBDIntegrator(.1);
-        auto reactionHandler = kernel->actions().uncontrolledApproximation(.1, false, false);
+        auto reactionHandler = kernel->actions().uncontrolledApproximation(.1);
 
         const auto &data = *kernel->getCPUKernelStateModel().getParticleData();
 

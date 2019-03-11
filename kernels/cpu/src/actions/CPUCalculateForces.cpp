@@ -154,7 +154,7 @@ void CPUCalculateForces::perform() {
                         if (it != itNext) {
                             promises.emplace_back();
                             virialPromises.emplace_back();
-                            if(recordVirial) {
+                            if(ctx.recordVirial()) {
                                 tasks.push_back(pool.pack(
                                         calculateOrder2<true>, std::make_tuple(it, itNext), data,
                                         std::cref(*neighborList), std::ref(promises.back()),
@@ -175,7 +175,7 @@ void CPUCalculateForces::perform() {
                     if (it != nCells) {
                         promises.emplace_back();
                         virialPromises.emplace_back();
-                        if(recordVirial) {
+                        if(ctx.recordVirial()) {
                             tasks.push_back(pool.pack(
                                     calculateOrder2<true>, std::make_tuple(it, nCells), data, std::cref(*neighborList),
                                     std::ref(promises.back()), std::ref(virialPromises.back()),

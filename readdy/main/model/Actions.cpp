@@ -60,14 +60,7 @@ EulerBDIntegrator::EulerBDIntegrator(scalar timeStep) : TimeStepDependentAction(
 
 MdgfrdIntegrator::MdgfrdIntegrator(scalar timeStep) : TimeStepDependentAction(timeStep) {}
 
-reactions::UncontrolledApproximation::UncontrolledApproximation(scalar timeStep, bool recordReactionCounts,
-                                                                bool recordReactionsWithPositions)
-        : TimeStepDependentAction(timeStep), recordReactionCounts(recordReactionCounts),
-          recordReactionsWithPositions(recordReactionsWithPositions) {}
-
-reactions::Gillespie::Gillespie(scalar timeStep, bool recordReactionCounts, bool recordReactionsWithPositions)
-        : TimeStepDependentAction(timeStep), recordReactionCounts(recordReactionCounts),
-          recordReactionsWithPositions(recordReactionsWithPositions) {}
+reactions::UncontrolledApproximation::UncontrolledApproximation(scalar timeStep) : TimeStepDependentAction(timeStep) {}
 
 reactions::ReversibleReactionConfig::ReversibleReactionConfig(ReactionId forwardId, ReactionId backwardId,
                                                               const Context &ctx)
@@ -318,7 +311,7 @@ reactions::ReversibleReactionConfig::ReversibleReactionConfig(ReactionId forward
                 p = p / cumulativeFissionProb.back();
             }
         } else {
-            // in case of small values, construct a cumulative that is zero everywhere and 1 in the last entry 
+            // in case of small values, construct a cumulative that is zero everywhere and 1 in the last entry
             std::for_each(cumulativeFissionProb.begin(), cumulativeFissionProb.end() - 1,
                           [](auto &entry) { entry = 0.; });
             cumulativeFissionProb.back() = 1.;
@@ -371,6 +364,8 @@ reactions::ReversibleReactionConfig::ReversibleReactionConfig(ReactionId forward
                                                "ReversibleReactionConfig::ReversibleReactionConfig", "Actions.cpp"));
     }
 }
+
+reactions::Gillespie::Gillespie(scalar timeStep) : TimeStepDependentAction(timeStep) {}
 
 std::string reactions::ReversibleReactionConfig::describe() const {
     std::stringstream description;
@@ -433,9 +428,7 @@ std::string reactions::ReversibleReactionConfig::describe() const {
     return description.str();
 }
 
-reactions::DetailedBalance::DetailedBalance(scalar timeStep, bool recordReactionCounts, bool recordReactionsWithPositions)
-        : TimeStepDependentAction(timeStep), recordReactionCounts(recordReactionCounts),
-          recordReactionsWithPositions(recordReactionsWithPositions) {}
+reactions::DetailedBalance::DetailedBalance(scalar timeStep) : TimeStepDependentAction(timeStep) {}
 
 void reactions::DetailedBalance::searchReversibleReactions(const Context &ctx) {
     _reversibleReactionsMap.clear();
@@ -561,7 +554,7 @@ void AddParticles::perform() {
     }
 }
 
-CalculateForces::CalculateForces(bool recordVirial) : Action(), recordVirial(recordVirial) {}
+CalculateForces::CalculateForces() : Action() {}
 
 top::EvaluateTopologyReactions::EvaluateTopologyReactions(scalar timeStep) : TimeStepDependentAction(timeStep) {}
 

@@ -57,8 +57,7 @@ class CPUCalculateForces : public readdy::model::actions::CalculateForces {
     using top_bounds = std::tuple<CPUStateModel::topologies_vec::const_iterator, CPUStateModel::topologies_vec::const_iterator>;
 public:
 
-    explicit CPUCalculateForces(CPUKernel *kernel, bool recordVirial) : super::CalculateForces(recordVirial),
-                                                                        kernel(kernel) {}
+    explicit CPUCalculateForces(CPUKernel *kernel) : super::CalculateForces(), kernel(kernel) {}
 
     void perform() override;
 

@@ -222,7 +222,7 @@ TEMPLATE_TEST_CASE("Test detailed balance action.", "[detailed-balance]", Single
         SECTION("Enzymatic+Enzymatic") {
             ctx.reactions().add("forward: A +(4) C -> B + C", 1.);
             ctx.reactions().add("backward: B +(4) C -> A + C", 2.);
-            auto &&reactions = kernel->actions().detailedBalance(1., false, false);
+            auto &&reactions = kernel->actions().detailedBalance(1.);
             const auto &reversibleReactions = reactions->reversibleReactions();
             REQUIRE(reversibleReactions.size() == 1);
             auto reversibleType = reversibleReactions.front()->reversibleType;
@@ -231,7 +231,7 @@ TEMPLATE_TEST_CASE("Test detailed balance action.", "[detailed-balance]", Single
         SECTION("Fusion+Fission") {
             ctx.reactions().add("fusion: A +(2) B -> C", 1.);
             ctx.reactions().add("fission: C -> A +(2) B", 2.);
-            auto &&reactions = kernel->actions().detailedBalance(1., false, false);
+            auto &&reactions = kernel->actions().detailedBalance(1.);
             const auto &reversibleReactions = reactions->reversibleReactions();
             REQUIRE(reversibleReactions.size() == 1);
             REQUIRE(reversibleReactions.front()->reversibleType == r::ReversibleType::FusionFission);
@@ -239,7 +239,7 @@ TEMPLATE_TEST_CASE("Test detailed balance action.", "[detailed-balance]", Single
         SECTION("Fission+Fusion") {
             ctx.reactions().add("fission: C -> A +(2) B", 2.);
             ctx.reactions().add("fusion: B +(2) A -> C", 1.);
-            auto &&reactions = kernel->actions().detailedBalance(1., false, false);
+            auto &&reactions = kernel->actions().detailedBalance(1.);
             const auto &reversibleReactions = reactions->reversibleReactions();
             REQUIRE(reversibleReactions.size() == 1);
             REQUIRE(reversibleReactions.front()->reversibleType == r::ReversibleType::FusionFission);
@@ -255,7 +255,7 @@ TEMPLATE_TEST_CASE("Test detailed balance action.", "[detailed-balance]", Single
             ctx.reactions().add("fusion2: A +(3) D -> C", 4.);
             ctx.reactions().add("shortcut: B -> D", 5.);
 
-            auto &&reactions = kernel->actions().detailedBalance(1., false, false);
+            auto &&reactions = kernel->actions().detailedBalance(1.);
             const auto &reversibleReactions = reactions->reversibleReactions();
             REQUIRE(reversibleReactions.size() == 2);
             REQUIRE(reversibleReactions[0]->reversibleType == r::ReversibleType::FusionFission);
@@ -290,7 +290,7 @@ TEMPLATE_TEST_CASE("Test detailed balance action.", "[detailed-balance]", Single
             ctx.reactions().add("convRev2: B -> A", 8.);
             ctx.reactions().add("convNonRev: C -> B", 9.);
 
-            auto &&reactions = kernel->actions().detailedBalance(1., false, false);
+            auto &&reactions = kernel->actions().detailedBalance(1.);
             const auto &reversibleReactions = reactions->reversibleReactions();
             REQUIRE(reversibleReactions.size() == 3);
             for (const auto &rev : reversibleReactions) {
@@ -323,13 +323,13 @@ TEMPLATE_TEST_CASE("Test detailed balance action.", "[detailed-balance]", Single
         ctx.reactions().add("fission: C -> A +(2) B", 1.);
         ctx.reactions().add("anotherFusion: A +(2) B -> C", 2.);
 
-        REQUIRE_THROWS_AS(kernel->actions().detailedBalance(1., false, false), std::logic_error);
+        REQUIRE_THROWS_AS(kernel->actions().detailedBalance(1.), std::logic_error);
     }
     SECTION("Wrong weights") {
         ctx.reactions().addFusion("fusion", "A", "B", "C", 1., 2., 0.5, 0.5);
         ctx.reactions().addFission("fission", "C", "A", "B", 1., 2., 0.3, 0.7);
 
-        auto &&reactions = kernel->actions().detailedBalance(1., false, false);
+        auto &&reactions = kernel->actions().detailedBalance(1.);
         const auto &reversibleReactions = reactions->reversibleReactions();
         REQUIRE(reversibleReactions.empty());
     }
@@ -337,11 +337,11 @@ TEMPLATE_TEST_CASE("Test detailed balance action.", "[detailed-balance]", Single
 
 void perform(readdy::model::Kernel *kernel, size_t nSteps, readdy::scalar timeStep, bool withIntegrator = false) {
     auto &&integrator = kernel->actions().eulerBDIntegrator(timeStep);
-    auto &&forces = kernel->actions().calculateForces(false);
+    auto &&forces = kernel->actions().calculateForces();
     using update_nl = readdy::model::actions::NeighborListAction;
     auto &&initNeighborList = kernel->actions().initNeighborList(kernel->context().calculateMaxCutoff());
     auto &&neighborList = kernel->actions().updateNeighborList();
-    auto &&reactions = kernel->actions().detailedBalance(timeStep, false, false);
+    auto &&reactions = kernel->actions().detailedBalance(timeStep);
 
     initNeighborList->perform();
     neighborList->perform();

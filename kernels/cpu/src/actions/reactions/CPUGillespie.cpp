@@ -48,9 +48,7 @@ namespace cpu {
 namespace actions {
 namespace reactions {
 
-CPUGillespie::CPUGillespie(CPUKernel *kernel, readdy::scalar timeStep, bool recordReactionCounts,
-                           bool recordReactionsWithPositions) : super(timeStep, recordReactionCounts,
-                                                                      recordReactionsWithPositions), kernel(kernel) {}
+CPUGillespie::CPUGillespie(CPUKernel *kernel, readdy::scalar timeStep) : super(timeStep), kernel(kernel) {}
 
 void CPUGillespie::perform() {
     const auto &ctx = kernel->context();
@@ -61,16 +59,16 @@ void CPUGillespie::perform() {
     auto data = stateModel.getParticleData();
     const auto nl = stateModel.getNeighborList();
 
-    if(recordReactionCounts) {
+    if(ctx.recordReactionCounts()) {
         stateModel.resetReactionCounts();
     }
 
     scalar alpha = 0.0;
     std::vector<event_t> events;
     gatherEvents(kernel, readdy::util::range<event_t::index_type>(0, data->size()), nl, data, alpha, events);
-    if(recordReactionsWithPositions) {
+    if(ctx.recordReactionsWithPositions()) {
         stateModel.reactionRecords().clear();
-        if(recordReactionCounts) {
+        if(ctx.recordReactionCounts()) {
             auto &counts = stateModel.reactionCounts();
             auto particlesUpdate = handleEventsGillespie(kernel, timeStep(), false, false, std::move(events),
                                                          &stateModel.reactionRecords(), &counts);
@@ -81,7 +79,7 @@ void CPUGillespie::perform() {
             data->update(std::move(particlesUpdate));
         }
     } else {
-        if(recordReactionCounts) {
+        if(ctx.recordReactionCounts()) {
             auto &counts = stateModel.reactionCounts();
             auto particlesUpdate = handleEventsGillespie(kernel, timeStep(), false, false, std::move(events),
                                                          nullptr, &counts);

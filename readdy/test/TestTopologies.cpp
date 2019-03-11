@@ -118,7 +118,7 @@ TEMPLATE_TEST_CASE("Test topologies.", "[topologies]", SingleCPU, CPU) {
 
         auto conn = kernel->connectObservable(fObs.get());
 
-        auto calculateForces = kernel->actions().calculateForces(false);
+        auto calculateForces = kernel->actions().calculateForces();
         calculateForces->perform();
         kernel->evaluateObservables(1);
 
@@ -164,7 +164,7 @@ TEMPLATE_TEST_CASE("Test topologies.", "[topologies]", SingleCPU, CPU) {
 
         auto conn = kernel->connectObservable(fObs.get());
 
-        auto calculateForces = kernel->actions().calculateForces(false);
+        auto calculateForces = kernel->actions().calculateForces();
         calculateForces->perform();
         kernel->evaluateObservables(1);
 
@@ -202,7 +202,7 @@ TEMPLATE_TEST_CASE("Test topologies.", "[topologies]", SingleCPU, CPU) {
 
         auto conn = kernel->connectObservable(fObs.get());
 
-        auto calculateForces = kernel->actions().calculateForces(false);
+        auto calculateForces = kernel->actions().calculateForces();
         calculateForces->perform();
         kernel->evaluateObservables(1);
 
@@ -259,7 +259,7 @@ TEMPLATE_TEST_CASE("Test topologies.", "[topologies]", SingleCPU, CPU) {
         };
 
         auto conn = kernel->connectObservable(fObs.get());
-        auto calculateForces = kernel->actions().calculateForces(false);
+        auto calculateForces = kernel->actions().calculateForces();
         calculateForces->perform();
         kernel->evaluateObservables(1);
 
@@ -297,7 +297,7 @@ TEMPLATE_TEST_CASE("Test topologies.", "[topologies]", SingleCPU, CPU) {
         };
 
         auto conn = kernel->connectObservable(fObs.get());
-        auto calculateForces = kernel->actions().calculateForces(false);
+        auto calculateForces = kernel->actions().calculateForces();
         calculateForces->perform();
         kernel->evaluateObservables(1);
 

@@ -34,10 +34,7 @@
 
 
 /**
- * << detailed description >>
- *
- * @file TestSimulationSchemes.cpp
- * @brief << brief description >>
+ * @file TestSimulationLoop.cpp
  * @author clonker
  * @author chrisfro**
  * @date 23.08.16
@@ -57,9 +54,8 @@ namespace api = readdy::api;
 using namespace readdytesting::kernel;
 
 
-TEMPLATE_TEST_CASE("Test simulation schemes", "[schemes]", SingleCPU, CPU) {
+TEMPLATE_TEST_CASE("Test simulation loop", "[loop]", SingleCPU, CPU) {
     readdy::Simulation simulation {create<TestType>()};
-    readdy::model::SimulationParams defaultSimParams;
 
     SECTION("Correct number of timesteps") {
         unsigned int counter = 0;
@@ -67,7 +63,7 @@ TEMPLATE_TEST_CASE("Test simulation schemes", "[schemes]", SingleCPU, CPU) {
             counter++;
         };
         auto obsHandle = simulation.registerObservable(simulation.observe().nParticles(1), increment);
-        simulation.run(3, 0.1, defaultSimParams);
+        simulation.run(3, 0.1);
         REQUIRE(counter == 4);
     }
     SECTION("Simple stopping criterion") {
@@ -79,7 +75,7 @@ TEMPLATE_TEST_CASE("Test simulation schemes", "[schemes]", SingleCPU, CPU) {
         auto shallContinue = [](readdy::time_step_type currentStep) {
             return currentStep < 5;
         };
-        auto loop = simulation.createLoop(.1, defaultSimParams);
+        auto loop = simulation.createLoop(.1);
         loop.run(shallContinue);
         REQUIRE(counter == 6);
     }
@@ -101,7 +97,7 @@ TEMPLATE_TEST_CASE("Test simulation schemes", "[schemes]", SingleCPU, CPU) {
         auto shallContinue = [&doStop](readdy::time_step_type currentStep) {
             return !doStop;
         };
-        simulation.createLoop(1., defaultSimParams).run(shallContinue);
+        simulation.createLoop(1.).run(shallContinue);
         REQUIRE(counter == 4);
     }
     SECTION("Skin size sanity check") {
@@ -111,9 +107,8 @@ TEMPLATE_TEST_CASE("Test simulation schemes", "[schemes]", SingleCPU, CPU) {
         simulation.context().potentials().addHarmonicRepulsion("A", "A", 1., 2.);
         simulation.addParticle("A", 0., 0., 0.);
         simulation.addParticle("A", 1.5, 0., 0.);
-        readdy::model::SimulationParams skinnySimParams;
-        skinnySimParams.neighborListSkinSize = 1.;
-        auto loop = simulation.createLoop(.001, skinnySimParams);
+        auto loop = simulation.createLoop(.001);
+        loop.neighborListDistance() += 0.1; // adding a skin/padding
         loop.run(10);
     }
 }

@@ -72,7 +72,7 @@ std::ostream &operator<<(std::ostream &os, const Event &evt) {
 using event_t = Event;
 
 SCPUUncontrolledApproximation::SCPUUncontrolledApproximation(SCPUKernel *const kernel, scalar timeStep)
-        : readdy::model::actions::reactions::UncontrolledApproximation(timeStep, false, false), kernel(kernel) {
+        : readdy::model::actions::reactions::UncontrolledApproximation(timeStep), kernel(kernel) {
 }
 
 template<bool approximated>
@@ -151,10 +151,10 @@ void SCPUUncontrolledApproximation::perform() {
     const auto &ctx = kernel->context();
     SCPUStateModel &stateModel = kernel->getSCPUKernelStateModel();
 
-    if(recordReactionsWithPositions) {
+    if(ctx.recordReactionsWithPositions()) {
         stateModel.reactionRecords().clear();
     }
-    if(recordReactionCounts) {
+    if(ctx.recordReactionCounts()) {
         stateModel.resetReactionCounts();
     }
     auto &data = *stateModel.getParticleData();
@@ -176,7 +176,7 @@ void SCPUUncontrolledApproximation::perform() {
                 auto entry1 = event.idx1;
                 if (event.nEducts == 1) {
                     reaction = ctx.reactions().order1ByType(event.t1)[event.reactionIndex];
-                    if(recordReactionsWithPositions) {
+                    if(ctx.recordReactionsWithPositions()) {
                         reaction_record record;
                         record.id = reaction->id();
                         performReaction(data, entry1, entry1, newParticles, decayedEntries, reaction, ctx, &record);
@@ -191,7 +191,7 @@ void SCPUUncontrolledApproximation::perform() {
                     }
                 } else {
                     reaction = ctx.reactions().order2ByType(event.t1, event.t2)[event.reactionIndex];
-                    if(recordReactionsWithPositions) {
+                    if(ctx.recordReactionsWithPositions()) {
                         reaction_record record;
                         record.id = reaction->id();
                         performReaction(data, entry1, event.idx2, newParticles, decayedEntries, reaction, ctx, &record);
@@ -207,7 +207,7 @@ void SCPUUncontrolledApproximation::perform() {
                     }
                 }
                 // update reaction counts if necessary
-                if(recordReactionCounts) {
+                if(ctx.recordReactionCounts()) {
                     stateModel.reactionCounts().at(reaction->id())++;
                 }
             }
@@ -274,7 +274,7 @@ void gatherEvents(SCPUKernel const *const kernel,
 scpu_data::entries_update handleEventsGillespie(
         SCPUKernel *const kernel, scalar timeStep,
         bool filterEventsInAdvance, bool approximateRate,
-        std::vector<event_t> &&events, bool recordReactionCounts, bool recordReactionsWithPositions) {
+        std::vector<event_t> &&events) {
     scpu_data::new_entries newParticles{};
     std::vector<scpu_data::entry_index> decayedEntries{};
 
@@ -299,7 +299,7 @@ scpu_data::entries_update handleEventsGillespie(
                 auto entry1 = event.idx1;
                 if (event.nEducts == 1) {
                     auto reaction = ctx.reactions().order1ByType(event.t1)[event.reactionIndex];
-                    if(recordReactionsWithPositions) {
+                    if(ctx.recordReactionsWithPositions()) {
                         reaction_record record;
                         record.id = reaction->id();
                         performReaction(*data, entry1, entry1, newParticles, decayedEntries, reaction, ctx,
@@ -309,12 +309,12 @@ scpu_data::entries_update handleEventsGillespie(
                         performReaction(*data, entry1, entry1, newParticles, decayedEntries, reaction, ctx,
                                         nullptr);
                     }
-                    if(recordReactionCounts) {
+                    if(ctx.recordReactionCounts()) {
                         model.reactionCounts().at(reaction->id())++;
                     }
                 } else {
                     auto reaction = ctx.reactions().order2ByType(event.t1, event.t2)[event.reactionIndex];
-                    if(recordReactionsWithPositions) {
+                    if(ctx.recordReactionsWithPositions()) {
                         reaction_record record;
                         record.id = reaction->id();
                         performReaction(*data, entry1, event.idx2, newParticles, decayedEntries, reaction, ctx, &record);
@@ -322,7 +322,7 @@ scpu_data::entries_update handleEventsGillespie(
                     } else {
                         performReaction(*data, entry1, event.idx2, newParticles, decayedEntries, reaction, ctx, nullptr);
                     }
-                    if(recordReactionCounts) {
+                    if(ctx.recordReactionCounts()) {
                         model.reactionCounts().at(reaction->id())++;
                     }
                 }
@@ -341,8 +341,10 @@ void SCPUGillespie::perform() {
         return;
     }
     auto &stateModel = kernel->getSCPUKernelStateModel();
-    if(recordReactionsWithPositions) stateModel.reactionRecords().clear();
-    if(recordReactionCounts) {
+    if(ctx.recordReactionsWithPositions()) {
+        stateModel.reactionRecords().clear();
+    }
+    if(ctx.recordReactionCounts()) {
         stateModel.resetReactionCounts();
     }
     auto data = stateModel.getParticleData();
@@ -351,8 +353,7 @@ void SCPUGillespie::perform() {
     scalar alpha = 0.0;
     std::vector<event_t> events;
     gatherEvents(kernel, *nl, *data, alpha, events);
-    auto particlesUpdate = handleEventsGillespie(kernel, timeStep(), false, false, std::move(events),
-            recordReactionCounts, recordReactionsWithPositions);
+    auto particlesUpdate = handleEventsGillespie(kernel, timeStep(), false, false, std::move(events));
 
     // update data structure
     data->update(std::move(particlesUpdate));
@@ -411,7 +412,7 @@ void SCPUDetailedBalance::perform() {
     }
 
     auto &stateModel = kernel->getSCPUKernelStateModel();
-    if(recordReactionCounts) {
+    if(ctx.recordReactionCounts()) {
         stateModel.resetReactionCounts();
     }
 
@@ -449,7 +450,7 @@ void SCPUDetailedBalance::perform() {
                 reaction_record record;
                 model::SCPUParticleData::entries_update forwardUpdate;
                 scalar interactionEnergy; // only relevant for FusionFission
-                if (recordReactionsWithPositions) {
+                if (ctx.recordReactionsWithPositions()) {
                     std::tie(forwardUpdate, interactionEnergy) = performReversibleReactionEvent(event, revReaction,
                                                                                                 reaction, &record);
                 } else {
@@ -498,10 +499,10 @@ void SCPUDetailedBalance::perform() {
                 if (readdy::model::rnd::uniform_real() < acceptance) {
                     // accept/do-nothing
                     log::trace("accept!");
-                    if (recordReactionsWithPositions) {
+                    if (ctx.recordReactionsWithPositions()) {
                         stateModel.reactionRecords().push_back(record);
                     }
-                    if (recordReactionCounts) {
+                    if (ctx.recordReactionCounts()) {
                         stateModel.reactionCounts().at(reaction->id())++;
                     }
                 } else {
@@ -519,7 +520,7 @@ void SCPUDetailedBalance::perform() {
                 // Perform vanilla Doi model with direct update to data structure
                 model::SCPUParticleData::entries_update forwardUpdate;
 
-                if (recordReactionsWithPositions) {
+                if (ctx.recordReactionsWithPositions()) {
                     reaction_record record;
                     record.id = reaction->id();
                     performReaction(*data, event.idx1, event.idx2, forwardUpdate.first, forwardUpdate.second, reaction,
@@ -530,7 +531,7 @@ void SCPUDetailedBalance::perform() {
                                     ctx, nullptr);
                 }
 
-                if(recordReactionCounts) {
+                if(ctx.recordReactionCounts()) {
                     stateModel.reactionCounts().at(reaction->id())++;
                 }
 

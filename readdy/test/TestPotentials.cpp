@@ -57,7 +57,7 @@ void run(readdy::model::Kernel &kernel, readdy::scalar timeStep) {
     unsigned int nSteps = 200;
     auto &&integrator = kernel.actions().eulerBDIntegrator(timeStep);
     auto &&nl = kernel.actions().updateNeighborList();
-    auto &&forces = kernel.actions().calculateForces(false);
+    auto &&forces = kernel.actions().calculateForces();
     nl->perform();
     for (readdy::time_step_type &&t = 0; t < nSteps; ++t) {
         forces->perform();
@@ -195,7 +195,7 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
             auto updateNeighborList = kernel->actions().updateNeighborList();
             updateNeighborList->perform();
             // calc forces
-            auto calculateForces = kernel->actions().calculateForces(false);
+            auto calculateForces = kernel->actions().calculateForces();
             calculateForces->perform();
             // give me results
             kernel->evaluateObservables(1);
@@ -214,7 +214,7 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
             readdy::testing::vec3eq(collectedForces[id1Idx], forceOnParticle1, 1e-6);
         }
         SECTION("Spherical barrier") {
-            auto calculateForces = kernel->actions().calculateForces(false);
+            auto calculateForces = kernel->actions().calculateForces();
             context.particleTypes().add("A", 1.0);
             context.boxSize() = {{10, 10, 10}};
             // add two particles, one on the outer edge getting pushed outside, one inside the sphere unaffected
@@ -259,7 +259,7 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
         }
 
         SECTION("Cylindrical inclusion") {
-            auto calculateForces = kernel->actions().calculateForces(false);
+            auto calculateForces = kernel->actions().calculateForces();
             context.particleTypes().add("A", 1.0);
             context.boxSize() = {{20, 20, 20}};
             // particle 0 and 3 are outside, 1 and 2 inside of the cylinder
@@ -317,7 +317,7 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
             readdy::testing::vec3eq(collectedForces[id3Idx], forceOnParticle3, kernel->doublePrecision() ? 1e-8 : 1e-5);
         }
         SECTION("Cylindrical exclusion") {
-            auto calculateForces = kernel->actions().calculateForces(false);
+            auto calculateForces = kernel->actions().calculateForces();
             context.particleTypes().add("A", 1.0);
             context.boxSize() = {{20, 20, 20}};
             // particle 0 and 3 are outside, 1 and 2 inside of the cylinder
@@ -379,7 +379,7 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
         SECTION("Lennard-Jones") {
             // test system where the particles are closer together than they should be, i.e.,
             // the force should be repellent
-            auto calculateForces = kernel->actions().calculateForces(false);
+            auto calculateForces = kernel->actions().calculateForces();
             // one particle type A
             context.particleTypes().add("A", 1.0);
             // large enough box
@@ -446,7 +446,7 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
             }
         }
         SECTION("Screened electrostatics") {
-            auto calculateForces = kernel->actions().calculateForces(false);
+            auto calculateForces = kernel->actions().calculateForces();
             context.periodicBoundaryConditions() = {{false, false, false}};
             context.particleTypes().add("A", 1.0);
             context.boxSize() = {{10, 10, 10}};

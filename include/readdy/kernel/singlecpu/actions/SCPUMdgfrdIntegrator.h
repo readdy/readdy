@@ -34,13 +34,13 @@
 
 
 /**
- * << detailed description >>
+ * @todo
  *
- * @file SingleCPUEulerDBIntegrator.h
+ * @file SCPUMdgfrdIntegrator.h
  * @brief << brief description >>
  * @author chrisfroe
  * @author luigisbailo
- * @date 19.04.16
+ * @date 12.02.19
  */
 #pragma once
 #include <readdy/model/actions/Actions.h>

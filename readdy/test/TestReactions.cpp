@@ -66,7 +66,6 @@ struct Vec3ProjectedLess {
 TEMPLATE_TEST_CASE("Test reaction handlers", "[reactions]", SingleCPU, CPU) {
     auto kernel = create<TestType>();
     auto &ctx = kernel->context();
-    readdy::model::SimulationParams simParams;
     for (const auto &handler : REACTION_HANDLERS) {
         SECTION(handler) {
             if (kernel->name() == "CPU" && std::string(handler) == "DetailedBalance") {
@@ -112,7 +111,7 @@ TEMPLATE_TEST_CASE("Test reaction handlers", "[reactions]", SingleCPU, CPU) {
                     }
                 };
 
-                readdy::api::SimulationLoop loop(kernel.get(), 1, simParams);
+                readdy::api::SimulationLoop loop(kernel.get(), 1);
                 loop.useReactionScheduler(handler);
                 loop.run(10);
             }
@@ -121,7 +120,6 @@ TEMPLATE_TEST_CASE("Test reaction handlers", "[reactions]", SingleCPU, CPU) {
                 // A diffuses, F is fixed
                 // Idea: position F particles and remember their positions (ordered set),
                 // do ONE time-step and check if current positions are still the same.
-                // fixme auto &context = kernel->context();
                 ctx.particleTypes().add("A", 0.5);
                 ctx.particleTypes().add("F", 0.0);
                 ctx.periodicBoundaryConditions() = {{true, true, true}};
@@ -160,15 +158,13 @@ TEMPLATE_TEST_CASE("Test reaction handlers", "[reactions]", SingleCPU, CPU) {
                         };
                 auto connection = kernel->connectObservable(obs.get());
                 {
-                    simParams.neighborListInteractionDistance = ctx.calculateMaxCutoff();
-                    readdy::api::SimulationLoop loop (kernel.get(), .1, simParams);
+                    readdy::api::SimulationLoop loop (kernel.get(), .1);
                     loop.useReactionScheduler(handler);
                     loop.run(1);
                 }
             }
 
             SECTION("Fusion through periodic boundary") {
-                //fixme auto &ctx = kernel->context();
                 ctx.boxSize() = {{10, 10, 10}};
                 ctx.periodicBoundaryConditions() = {true, true, true};
                 ctx.particleTypes().add("A", 0.);
@@ -194,7 +190,6 @@ TEMPLATE_TEST_CASE("Test reaction handlers", "[reactions]", SingleCPU, CPU) {
             }
 
             SECTION("Fission near boundary") {
-                //fixme auto &ctx = kernel->context();
                 ctx.boxSize() = {{10, 10, 10}};
                 ctx.periodicBoundaryConditions() = {true, true, true};
                 ctx.particleTypes().add("A", 0.);

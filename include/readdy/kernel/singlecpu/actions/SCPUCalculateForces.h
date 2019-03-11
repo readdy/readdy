@@ -63,14 +63,12 @@ void computeVirial<false>(const Vec3& /*r_ij*/, const Vec3 &/*force*/, Matrix33 
 }
 
 class SCPUCalculateForces : public readdy::model::actions::CalculateForces {
-    using super = readdy::model::actions::CalculateForces;
 public:
-    explicit SCPUCalculateForces(SCPUKernel *kernel, bool recordVirial) : super::CalculateForces(recordVirial),
-                                                                          kernel(kernel) {};
+    explicit SCPUCalculateForces(SCPUKernel *kernel) : kernel(kernel) {};
 
     void perform() override {
         const auto &context = kernel->context();
-        if(recordVirial) {
+        if(context.recordVirial()) {
             performImpl<true>();
         } else {
             performImpl<false>();

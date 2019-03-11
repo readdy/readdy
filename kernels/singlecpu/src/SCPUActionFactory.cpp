@@ -76,8 +76,8 @@ SCPUActionFactory::mdgfrdIntegrator(scalar timeStep) const {
     return {std::make_unique<SCPUMdgfrdIntegrator>(kernel, timeStep)};
 }
 
-std::unique_ptr<readdy::model::actions::CalculateForces> SCPUActionFactory::calculateForces(bool recordVirial) const {
-    return {std::make_unique<SCPUCalculateForces>(kernel, recordVirial)};
+std::unique_ptr<readdy::model::actions::CalculateForces> SCPUActionFactory::calculateForces() const {
+    return {std::make_unique<SCPUCalculateForces>(kernel)};
 }
 
 std::unique_ptr<readdy::model::actions::NeighborListAction>
@@ -90,12 +90,12 @@ std::unique_ptr<readdy::model::actions::EvaluateCompartments> SCPUActionFactory:
 }
 
 std::unique_ptr<readdy::model::actions::reactions::UncontrolledApproximation>
-SCPUActionFactory::uncontrolledApproximation(scalar timeStep, bool recordReactionCounts, bool recordReactionsWithPositions) const {
+SCPUActionFactory::uncontrolledApproximation(scalar timeStep) const {
     return {std::make_unique<reactions::SCPUUncontrolledApproximation>(kernel, timeStep)};
 }
 
 std::unique_ptr<readdy::model::actions::reactions::Gillespie>
-SCPUActionFactory::gillespie(scalar timeStep, bool recordReactionCounts, bool recordReactionsWithPositions) const {
+SCPUActionFactory::gillespie(scalar timeStep) const {
     return {std::make_unique<reactions::SCPUGillespie>(kernel, timeStep)};
 }
 
@@ -105,7 +105,7 @@ SCPUActionFactory::evaluateTopologyReactions(scalar timeStep) const {
 }
 
 std::unique_ptr<readdy::model::actions::reactions::DetailedBalance>
-SCPUActionFactory::detailedBalance(scalar timeStep, bool recordReactionCounts, bool recordReactionsWithPositions) const {
+SCPUActionFactory::detailedBalance(scalar timeStep) const {
     return {std::make_unique<reactions::SCPUDetailedBalance>(kernel, timeStep)};
 }
 

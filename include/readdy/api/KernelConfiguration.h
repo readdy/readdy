@@ -63,7 +63,6 @@ struct NeighborList {
      * The radius in the box space of cell-linked lists to consider as neighboring cells. A larger value can 
      * drastically increase memory requirements.
      */
-    // @todo move this to SimulationParams?
     std::uint8_t cll_radius {1};
 };
 /**

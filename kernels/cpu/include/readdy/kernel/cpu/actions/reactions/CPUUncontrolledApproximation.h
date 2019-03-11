@@ -52,8 +52,7 @@ namespace reactions {
 class CPUUncontrolledApproximation : public readdy::model::actions::reactions::UncontrolledApproximation {
     using super = readdy::model::actions::reactions::UncontrolledApproximation;
 public:
-    CPUUncontrolledApproximation(CPUKernel *kernel, readdy::scalar timeStep, bool recordReactionCounts,
-                                 bool recordReactionsWithPositions);
+    CPUUncontrolledApproximation(CPUKernel *kernel, readdy::scalar timeStep);
 
     void perform() override;
 

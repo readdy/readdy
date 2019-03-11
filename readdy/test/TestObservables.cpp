@@ -181,7 +181,7 @@ TEMPLATE_TEST_CASE("Test observables", "[observables]", SingleCPU, CPU) {
 
         {
             auto integrator = kernel->actions().createIntegrator("EulerBDIntegrator", 1.0);
-            auto forces = kernel->actions().calculateForces(false);
+            auto forces = kernel->actions().calculateForces();
             auto topReactions = kernel->actions().evaluateTopologyReactions(1.0);
 
             std::size_t time = 0;
@@ -308,7 +308,7 @@ TEMPLATE_TEST_CASE("Test observables", "[observables]", SingleCPU, CPU) {
         using update_nl = readdy::model::actions::NeighborListAction;
         auto &&initNeighborList = kernel->actions().initNeighborList(context.calculateMaxCutoff());
         auto &&nl = kernel->actions().updateNeighborList();
-        auto &&forces = kernel->actions().calculateForces(false);
+        auto &&forces = kernel->actions().calculateForces();
         kernel->initialize();
         {
             auto obsC = kernel->observe().forces(1, std::vector<std::string>{"C"});

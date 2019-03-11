@@ -56,11 +56,11 @@ TEST_CASE("Test single cpu decay reactions", "[scpu]") {
 
     readdy::scalar timeStep = 1.0;
     auto &&integrator = kernel->actions().eulerBDIntegrator(timeStep);
-    auto &&forces = kernel->actions().calculateForces(false);
+    auto &&forces = kernel->actions().calculateForces();
     using update_nl = readdy::model::actions::NeighborListAction;
     auto &&initNeighborList = kernel->actions().initNeighborList(0);
     auto &&neighborList = kernel->actions().updateNeighborList();
-    auto &&reactions = kernel->actions().uncontrolledApproximation(timeStep, false, false);
+    auto &&reactions = kernel->actions().uncontrolledApproximation(timeStep);
 
     auto pp_obs = kernel->observe().positions(1);
     pp_obs->callback() = [](const readdy::model::observables::Positions::result_type &t) {
@@ -135,10 +135,10 @@ TEST_CASE("Test single cpu multiple reaction types", "[scpu]") {
     const auto maxCutoff = kernel->context().calculateMaxCutoff();
 
     auto &&integrator = kernel->actions().eulerBDIntegrator(1);
-    auto &&forces = kernel->actions().calculateForces(false);
+    auto &&forces = kernel->actions().calculateForces();
     auto &&initNeighborList = kernel->actions().initNeighborList(maxCutoff);
     auto &&neighborList = kernel->actions().updateNeighborList();
-    auto &&reactions = kernel->actions().uncontrolledApproximation(1, false, false);
+    auto &&reactions = kernel->actions().uncontrolledApproximation(1);
 
     const auto typeId_A = kernel->context().particleTypes().idOf("A");
     const auto typeId_B = kernel->context().particleTypes().idOf("B");

@@ -107,12 +107,9 @@ public:
  */
 class CalculateForces : public Action {
 public:
-    CalculateForces(bool recordVirial);
+    CalculateForces();
 
     ~CalculateForces() override = default;
-
-protected:
-    bool recordVirial;
 };
 
 class NeighborListAction : public Action {
@@ -131,8 +128,6 @@ public:
 
 protected:
     Operation operation;
-    // todo consider making this const
-    // todo which would mean that all simulation config and params must be known when loop is constructed
     scalar _interactionDistance;
 };
 
@@ -141,31 +136,22 @@ NAMESPACE_BEGIN(reactions)
 class UncontrolledApproximation : public TimeStepDependentAction {
 
 public:
-    explicit UncontrolledApproximation(scalar timeStep, bool recordReactionCounts, bool recordReactionsWithPositions);
+    explicit UncontrolledApproximation(scalar timeStep);
 
     ~UncontrolledApproximation() override = default;
-
-protected:
-    // todo const?
-    bool recordReactionCounts = false;
-    bool recordReactionsWithPositions = false;
 };
 
 class Gillespie : public TimeStepDependentAction {
 public:
-    explicit Gillespie(scalar timeStep, bool recordReactionCounts, bool recordReactionsWithPositions);
+    explicit Gillespie(scalar timeStep);
 
     ~Gillespie() override = default;
-
-protected:
-    bool recordReactionCounts = false;
-    bool recordReactionsWithPositions = false;
 };
 
 
 class DetailedBalance : public TimeStepDependentAction {
 public:
-    explicit DetailedBalance(scalar timeStep, bool recordReactionCounts, bool recordReactionsWithPositions);
+    explicit DetailedBalance(scalar timeStep);
 
     ~DetailedBalance() override = default;
     const std::vector<std::shared_ptr<const ReversibleReactionConfig>> &reversibleReactions() const {
@@ -182,9 +168,6 @@ protected:
     // usually two (unidirectional) reaction ids point to the same ReversibleReactionConfig
     std::unordered_map<model::reactions::Reaction::ReactionId, std::shared_ptr<const ReversibleReactionConfig>>
             _reversibleReactionsMap;
-
-    bool recordReactionCounts = false;
-    bool recordReactionsWithPositions = false;
 };
 
 NAMESPACE_END(reactions)

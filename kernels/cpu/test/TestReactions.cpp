@@ -223,10 +223,10 @@ TEST_CASE("Test cpu kernel reaction handling", "[cpu]") {
         ctx.reactions().addFission("X fission", "X", "X", "X", .5, .3);
 
         auto &&integrator = kernel->actions().eulerBDIntegrator(1);
-        auto &&forces = kernel->actions().calculateForces(false);
+        auto &&forces = kernel->actions().calculateForces();
         auto &&initNeighborList = kernel->actions().initNeighborList(ctx.calculateMaxCutoff());
         auto &&neighborList = kernel->actions().updateNeighborList();
-        auto &&reactions = kernel->actions().gillespie(1, false, false);
+        auto &&reactions = kernel->actions().gillespie(1);
 
         auto pp_obs = kernel->observe().positions(1);
         pp_obs->callback() = ([](const readdy::model::observables::Positions::result_type &t) {
@@ -298,9 +298,8 @@ TEST_CASE("Test cpu kernel reaction handling", "[cpu]") {
             REQUIRE(2 == kernel->getNThreads());
             auto &&initNeighborList = kernel->actions().initNeighborList(ctx.calculateMaxCutoff());
             auto &&neighborList = kernel->actions().updateNeighborList();
-            std::unique_ptr<readdy::kernel::cpu::actions::reactions::CPUGillespie> reactions = readdy::util::static_unique_ptr_cast_no_del<readdy::kernel::cpu::actions::reactions::CPUGillespie>(
-                    kernel->actions().gillespie(1, false, false)
-            );
+            std::unique_ptr<readdy::kernel::cpu::actions::reactions::CPUGillespie> reactions
+                    = readdy::util::static_unique_ptr_cast_no_del<readdy::kernel::cpu::actions::reactions::CPUGillespie>(kernel->actions().gillespie(1));
             initNeighborList->perform();
             neighborList->perform();
             reactions->perform();

@@ -72,6 +72,20 @@ TEST_CASE("Test context.", "[context]") {
             REQUIRE(std::get<1>(bbox) == readdy::Vec3(5, 10, 15));
         }
     }
+    SECTION("Observable record switches") {
+        context.recordReactionCounts() = true;
+        context.recordReactionsWithPositions() = true;
+        context.recordVirial() = true;
+        REQUIRE(context.recordReactionCounts());
+        REQUIRE(context.recordReactionsWithPositions());
+        REQUIRE(context.recordVirial());
+        context.recordReactionCounts() = false;
+        context.recordReactionsWithPositions() = false;
+        context.recordVirial() = false;
+        REQUIRE_FALSE(context.recordReactionCounts());
+        REQUIRE_FALSE(context.recordReactionsWithPositions());
+        REQUIRE_FALSE(context.recordVirial());
+    }
     SECTION("Compartments") {
         context.particleTypes().add("A", 1.);
         auto &compartments = context.compartments();

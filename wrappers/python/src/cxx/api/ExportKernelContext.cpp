@@ -212,6 +212,12 @@ void exportKernelContext(py::module &module) {
             .def("validate", &KernelContext::validate)
             .def("bounding_box_vertices", &KernelContext::getBoxBoundingVertices)
             .def("calculate_max_cutoff", &KernelContext::calculateMaxCutoff)
+            .def_property("record_reactions_with_positions",
+                          [](const KernelContext &self) { return self.recordReactionsWithPositions(); },
+                          [](KernelContext &self, bool value) { self.recordReactionsWithPositions() = value; })
+            .def_property("record_reaction_counts",
+                          [](const KernelContext &self) { return self.recordReactionCounts(); },
+                          [](KernelContext &self, bool value) { self.recordReactionCounts() = value; })
             .def("set_kernel_configuration", &KernelContext::setKernelConfiguration)
             .def_property_readonly("particle_types", [](KernelContext &self) -> ParticleTypeRegistry&  { return self.particleTypes(); }, rvp::reference_internal)
             .def_property_readonly("reactions", [](KernelContext &self) -> ReactionRegistry& { return self.reactions(); }, rvp::reference_internal)

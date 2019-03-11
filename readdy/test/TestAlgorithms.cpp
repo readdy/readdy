@@ -71,8 +71,7 @@ TEST_CASE("Sanity check of the simulation loop.", "[loop]") {
     sim.addTopology("Polymer", {sim.createTopologyParticle("A", {0., 0., 0.})});
     sim.context().topologyRegistry().configureBondPotential("A", "A", {0., 10.});
 
-    model::SimulationParams simParams;
-    auto loop = sim.createLoop(1.5, simParams);
+    auto loop = sim.createLoop(1.5);
 
     loop.addCallback([&](const auto t) {
         // triggers evaluation of rate functions for each topology

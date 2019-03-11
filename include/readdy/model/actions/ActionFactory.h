@@ -101,7 +101,7 @@ public:
 
     virtual std::unique_ptr<MdgfrdIntegrator> mdgfrdIntegrator(scalar timeStep) const = 0;
 
-    virtual std::unique_ptr<readdy::model::actions::CalculateForces> calculateForces(bool recordVirial) const = 0;
+    virtual std::unique_ptr<readdy::model::actions::CalculateForces> calculateForces() const = 0;
 
     virtual std::unique_ptr<NeighborListAction>
     neighborListAction(NeighborListAction::Operation operation, scalar interactionDistance) const = 0;
@@ -121,13 +121,13 @@ public:
     virtual std::unique_ptr<EvaluateCompartments> evaluateCompartments() const = 0;
 
     virtual std::unique_ptr<reactions::UncontrolledApproximation>
-    uncontrolledApproximation(scalar timeStep, bool recordReactionCounts, bool recordReactionsWithPositions) const = 0;
+    uncontrolledApproximation(scalar timeStep) const = 0;
 
     virtual std::unique_ptr<reactions::Gillespie>
-    gillespie(scalar timeStep, bool recordReactionCounts, bool recordReactionsWithPositions) const = 0;
+    gillespie(scalar timeStep) const = 0;
 
     virtual std::unique_ptr<reactions::DetailedBalance>
-    detailedBalance(scalar timeStep, bool recordReactionCounts, bool recordReactionsWithPositions) const = 0;
+    detailedBalance(scalar timeStep) const = 0;
 
     virtual std::unique_ptr<top::EvaluateTopologyReactions> evaluateTopologyReactions(scalar timeStep) const = 0;
 

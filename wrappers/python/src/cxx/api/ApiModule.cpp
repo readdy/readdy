@@ -55,7 +55,7 @@ using ctx = readdy::model::Context;
 using kern = readdy::model::Kernel;
 
 void exportTopologies(py::module &);
-void exportSchemeApi(py::module &);
+void exportLoopApi(py::module &module);
 void exportKernelContext(py::module &);
 void exportSimulationParams(py::module &);
 
@@ -71,11 +71,10 @@ enum class ParticleTypeFlavor {
 void exportApi(py::module &api) {
     using namespace pybind11::literals;
 
-    exportSchemeApi(api);
+    exportLoopApi(api);
     auto topologyModule = api.def_submodule("top");
     exportTopologies(topologyModule);
     exportKernelContext(api);
-    exportSimulationParams(api);
 
     py::enum_<ParticleTypeFlavor>(api, "ParticleTypeFlavor")
             .value("NORMAL", ParticleTypeFlavor::NORMAL)
@@ -142,10 +141,10 @@ void exportApi(py::module &api) {
                 self.context() = context;
             })
             .def("create_loop", &sim::createLoop, py::keep_alive<0, 1>(), py::return_value_policy::reference_internal)
-            .def("run", [](sim &self, const readdy::time_step_type steps, const readdy::scalar timeStep, const readdy::model::SimulationParams simParams) {
+            .def("run", [](sim &self, const readdy::time_step_type steps, const readdy::scalar timeStep) {
                 py::gil_scoped_release release;
-                self.run(steps, timeStep, simParams);
-            }, "n_steps"_a, "time_step"_a, "sim_params"_a);
+                self.run(steps, timeStep);
+            }, "n_steps"_a, "time_step"_a);
     exportObservables(api, simulation);
 
     py::class_<kp, std::unique_ptr<kp, readdy::util::nodelete>>(api, "KernelProvider")

@@ -54,8 +54,6 @@ using namespace readdytesting::kernel;
 TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU, CPU) {
     Simulation simulation {create<TestType>()};
 
-    model::SimulationParams simParams;
-
     auto &ctx = simulation.context();
 
     ctx.topologyRegistry().addType("T");
@@ -94,7 +92,7 @@ TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU
             REQUIRE(nNormalFlavor == 1);
         }
 
-        auto loop = simulation.createLoop(1., simParams);
+        auto loop = simulation.createLoop(1.);
         loop.useReactionScheduler("UncontrolledApproximation");
         loop.runInitializeNeighborList();
         loop.runUpdateNeighborList();
@@ -178,7 +176,7 @@ TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU
 
         simulation.context().topologyRegistry().addStructuralReaction("TA", r);
 
-        simulation.run(35, 1., simParams);
+        simulation.run(35, 1.);
 
         log::trace("got n topologies: {}", simulation.currentTopologies().size());
         for(auto top : simulation.currentTopologies()) {
@@ -312,8 +310,7 @@ TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU
         simulation.context().topologyRegistry().addSpatialReaction("merge: TA (end) + TA (end) -> TA (middle--middle)", 1e3, 1.5);
 
         REQUIRE(simulation.currentTopologies().size() == 3);
-        simParams.neighborListInteractionDistance = simulation.context().calculateMaxCutoff();
-        simulation.run(6, 1., simParams);
+        simulation.run(6, 1.);
 
         const auto& type_registry = simulation.context().particleTypes();
 
@@ -418,8 +415,7 @@ TEMPLATE_TEST_CASE("Test topology reactions attach particle integration", "[topo
     simulation.addParticle("A", c_::zero + c_::three, c_::zero, c_::zero);
     simulation.addParticle("A", c_::zero + c_::four, c_::zero, c_::zero);
 
-    readdy::model::SimulationParams simParams;
-    simulation.run(6, 1., simParams);
+    simulation.run(6, 1.);
 
     const auto& type_registry = simulation.context().particleTypes();
 

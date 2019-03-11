@@ -78,8 +78,7 @@ public:
 
 
 protected:
-    // todo this will not be necessary once the loop and simParams configure the reaction handler to record the data
-    //void initialize(Kernel *kernel) override;
+    void initialize(Kernel *kernel) override;
 
     void initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) override;
 

@@ -35,7 +35,7 @@
 
 /**
  * @file UserDefinedAction.h
- * @brief << brief description >>
+ * @brief Base class for user-written actions, which are built against this header and injected at runtime.
  * @author clonker
  * @date 02.07.18
  * @copyright BSD-3

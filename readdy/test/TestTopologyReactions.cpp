@@ -85,8 +85,6 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
 
     ctx.boxSize() = {{10, 10, 10}};
 
-    readdy::model::SimulationParams simParams;
-
     SECTION("Mode flags") {
         using namespace readdy::model::top;
 
@@ -349,7 +347,7 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
 
         {
             auto integrator = kernel->actions().createIntegrator("EulerBDIntegrator", 1.0);
-            auto forces = kernel->actions().calculateForces(false);
+            auto forces = kernel->actions().calculateForces();
             auto topReactions = kernel->actions().evaluateTopologyReactions(1.0);
 
             std::size_t time = 0;
@@ -451,7 +449,7 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
 
         {
             auto integrator = kernel->actions().createIntegrator("EulerBDIntegrator", 1.0);
-            auto forces = kernel->actions().calculateForces(false);
+            auto forces = kernel->actions().calculateForces();
             auto topReactions = kernel->actions().evaluateTopologyReactions(1.0);
 
             std::size_t time = 0;
@@ -491,8 +489,7 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
             sim.addTopology("T", {p1});
             sim.addTopology("T", {p2});
 
-            simParams.neighborListInteractionDistance = sim.context().calculateMaxCutoff();
-            sim.createLoop(1e-3, simParams).run(1);
+            sim.run(1, 1e-3);
 
             auto topologies = sim.currentTopologies();
 
@@ -532,7 +529,7 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
             t->graph().addEdgeBetweenParticles(0, 1);
             t->graph().addEdgeBetweenParticles(1, 2);
 
-            sim.createLoop(1e-3, simParams).run(1);
+            sim.run(1, 1e-3);
 
             auto topologies = sim.currentTopologies();
 
@@ -649,9 +646,9 @@ TEMPLATE_TEST_CASE("Test topology reactions chaindecay integration test", "[topo
 
     {
         auto integrator = kernel->actions().createIntegrator("EulerBDIntegrator", 1e-2);
-        auto forces = kernel->actions().calculateForces(false);
+        auto forces = kernel->actions().calculateForces();
         auto topReactions = kernel->actions().evaluateTopologyReactions(1e-2);
-        auto reactions = kernel->actions().uncontrolledApproximation(1e-2, false, false);
+        auto reactions = kernel->actions().uncontrolledApproximation(1e-2);
 
         std::size_t time = 0;
         std::size_t n_time_steps = 10000;

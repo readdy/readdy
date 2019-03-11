@@ -49,7 +49,7 @@
 using UserAction = readdy::model::actions::UserDefinedAction;
 
 
-void exportSchemeApi(pybind11::module &module) {
+void exportLoopApi(pybind11::module &module) {
     namespace py = pybind11;
     using namespace py::literals;
     using Loop = readdy::api::SimulationLoop;
