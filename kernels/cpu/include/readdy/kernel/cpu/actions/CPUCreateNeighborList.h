@@ -34,34 +34,53 @@
 
 
 /**
- * << detailed description >>
- *
- * @file SingleCPUUpdateNeighborList.h
- * @brief << brief description >>
+ * @file CPUNeighborList.h
+ * @brief CPU kernel declaration of NeighborList Action
  * @author clonker
- * @date 11.07.16
+ * @date 13.07.16
  */
+
 #pragma once
 #include <readdy/model/actions/Actions.h>
-#include <readdy/kernel/singlecpu/SCPUKernel.h>
+#include <readdy/kernel/cpu/CPUKernel.h>
 
-namespace readdy {
-namespace kernel {
-namespace scpu {
-namespace actions {
+namespace readdy::kernel::cpu::actions {
 
-class SCPUUpdateNeighborList : public readdy::model::actions::NeighborListAction {
-
+class CPUCreateNeighborList : public readdy::model::actions::CreateNeighborList {
 public:
-    explicit SCPUUpdateNeighborList(SCPUKernel *kernel, Operation op, scalar interactionDistance);
+    CPUCreateNeighborList(CPUKernel *kernel, scalar cutoffDistance)
+            : CreateNeighborList(cutoffDistance), kernel(kernel) {}
 
-    void perform() override;
+    void perform() override {
+        kernel->getCPUKernelStateModel().initializeNeighborList(_cutoffDistance);
+    }
 
 private:
-    SCPUKernel *const kernel;
+    CPUKernel *const kernel;
 };
 
-}
-}
-}
+class CPUUpdateNeighborList : public readdy::model::actions::UpdateNeighborList {
+public:
+    explicit CPUUpdateNeighborList(CPUKernel *kernel) : kernel(kernel) {}
+
+    void perform() override {
+        kernel->getCPUKernelStateModel().updateNeighborList();
+    }
+
+private:
+    CPUKernel *const kernel;
+};
+
+class CPUClearNeighborList : public readdy::model::actions::ClearNeighborList {
+public:
+    explicit CPUClearNeighborList(CPUKernel *kernel) : kernel(kernel) {}
+
+    void perform() override {
+        kernel->getCPUKernelStateModel().clearNeighborList();
+    }
+
+private:
+    CPUKernel *const kernel;
+};
+
 }

@@ -34,11 +34,13 @@
 
 
 /**
- * << detailed description >>
+ * Reaction handler declaration specific to Single CPU kernel. Defines additional structs: a reaction Event
+ * to be used by the reaction handlers, and ParticleBackup to be used by the DetailedBalance reaction handler.
  *
- * @file SingleCPUDefaultReactionProgram.h.h
- * @brief << brief description >>
+ * @file SCPUReactionImpls.h
+ * @brief Single CPU kernel declaration of reaction handlers
  * @author clonker
+ * @author chrisfroe
  * @date 21.06.16
  */
 
@@ -85,7 +87,8 @@ class SCPUGillespie : public readdy::model::actions::reactions::Gillespie {
     using reaction_index = Event::index_type;
 public:
 
-    SCPUGillespie(SCPUKernel *const kernel, scalar timeStep) : readdy::model::actions::reactions::Gillespie(timeStep), kernel(kernel) {};
+    SCPUGillespie(SCPUKernel *const kernel, scalar timeStep)
+            : readdy::model::actions::reactions::Gillespie(timeStep), kernel(kernel) {};
 
     void perform() override;
 
@@ -109,7 +112,8 @@ class SCPUDetailedBalance : public readdy::model::actions::reactions::DetailedBa
     using fix_pos = readdy::model::Context::fix_pos_fun;
     using reaction_type = readdy::model::reactions::ReactionType;
 public:
-    SCPUDetailedBalance(SCPUKernel *const kernel, scalar timeStep) : readdy::model::actions::reactions::DetailedBalance(timeStep), kernel(kernel) {
+    SCPUDetailedBalance(SCPUKernel *const kernel, scalar timeStep)
+            : readdy::model::actions::reactions::DetailedBalance(timeStep), kernel(kernel) {
         searchReversibleReactions(kernel->context());
     };
 

@@ -80,8 +80,7 @@ const std::vector<readdy::model::Particle> CPUStateModel::getParticles() const {
     return result;
 }
 
-CPUStateModel::CPUStateModel(data_type &data, const readdy::model::Context &context,
-                             thread_pool &pool,
+CPUStateModel::CPUStateModel(data_type &data, const readdy::model::Context &context, thread_pool &pool,
                              readdy::model::top::TopologyActionFactory const *const taf)
         : _pool(pool), _context(context), _topologyActionFactory(*taf), _data(data) {
     _neighborList = std::make_unique<neighbor_list>(_data.get(), _context.get(), _pool.get());

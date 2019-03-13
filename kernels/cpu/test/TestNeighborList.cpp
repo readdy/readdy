@@ -201,7 +201,7 @@ TEST_CASE("Test cpu neighbor list", "[cpu]") {
         {
             readdy::api::SimulationLoop loop(kernel.get(), .01);
             loop.useReactionScheduler("Gillespie");
-            loop.neighborListDistance() += 0.1;
+            loop.neighborListCutoff() += 0.1;
             loop.run(100);
         }
     }
@@ -259,7 +259,7 @@ TEST_CASE("Test cpu neighbor list", "[cpu]") {
         {
             readdy::api::SimulationLoop loop(kernel.get(), .01);
             loop.useReactionScheduler("Gillespie");
-            loop.neighborListDistance() += 0.1;
+            loop.neighborListCutoff() += 0.1;
             loop.run(100);
         }
     }

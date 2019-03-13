@@ -34,7 +34,7 @@
 
 
 /**
- * @todo
+ * @todo This is a draft
  *
  * @file SCPUMdgfrdIntegrator.h
  * @brief << brief description >>
@@ -47,11 +47,7 @@
 #include <readdy/kernel/singlecpu/SCPUKernel.h>
 #include <readdy/common/boundary_condition_operations.h>
 
-namespace readdy {
-namespace kernel {
-namespace scpu {
-
-namespace actions {
+namespace readdy::kernel::scpu::actions {
 
 struct MdgfrdParticleData {
     scalar exitTime = 0;
@@ -128,8 +124,6 @@ public:
         const auto t = stateModel.time();
         for (auto& entry : *pd){
 
-
-
         }
 
         for(auto& entry : *pd) {
@@ -159,7 +153,5 @@ private:
     std::unordered_map<readdy::model::Particle::type_type, MdgfrdSpeciesData> speciesData;
 
 };
-}
-}
-}
+
 }

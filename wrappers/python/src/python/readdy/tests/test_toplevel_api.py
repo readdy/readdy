@@ -256,7 +256,7 @@ class TestTopLevelAPI(ReaDDyTestCase):
         simulation.observe.virial(5)
         simulation.observe.pressure(5)
         simulation.observe.topologies(5)
-        simulation.run(10, .1 * ut.nanosecond, False, False)
+        simulation.run(10, .1 * ut.nanosecond, False)
 
     def test_add_particles(self):
         rds = readdy.ReactionDiffusionSystem([10., 10., 10.])
@@ -285,6 +285,23 @@ class TestTopLevelAPI(ReaDDyTestCase):
             else:
                 np.testing.assert_equal("TopA", topology2.particle_type_of_vertex(v))
 
+    def test_simulation_with_skin(self):
+        rds = readdy.ReactionDiffusionSystem([10., 10., 10.])
+        rds.add_species("A")
+        rds.potentials.add_harmonic_repulsion("A", "A", 10., 0.5)
+        sim = rds.simulation("CPU")
+        sim.skin = 1.
+        sim.add_particle("A", [0., 0., 0.])
+        sim.run(10, 0.1, show_summary=False)
+
+    def test_simulation_with_negative_skin(self):
+        rds = readdy.ReactionDiffusionSystem([10., 10., 10.])
+        rds.add_species("A")
+        sim = rds.simulation("CPU")
+        sim.add_particle("A", [0., 0., 0.])
+        with self.assertRaises(Exception):
+            sim.skin = -1.
+            sim.run(10, 0.1, show_summary=False)
 
 class TestTopLevelAPIObservables(ReaDDyTestCase):
     @classmethod
@@ -312,7 +329,7 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
         sim.add_particles("A", np.random.random((100, 3)))
         recorded_positions = []
         sim.observe.particle_positions(1, callback=lambda x: recorded_positions.append(x))
-        sim.run(50, 1e-3, False, False)
+        sim.run(50, 1e-3, False)
 
         traj = readdy.Trajectory(traj_fname)
 
@@ -421,7 +438,7 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
         simulation.record_trajectory()
         simulation.observe.topologies(1)
         simulation.show_progress = False
-        simulation.run(n_steps=100, timestep=1e-2, show_system=False, show_loop=False)
+        simulation.run(n_steps=100, timestep=1e-2, show_summary=False)
 
         t = readdy.Trajectory(simulation.output_file)
         entries = t.read()
@@ -516,7 +533,7 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
         simulation.observe.topologies(1, callback=lambda x: topology_records.append(x))
         simulation.show_progress = False
         n_steps = 100
-        simulation.run(n_steps=n_steps, timestep=1e-1, show_system=False, show_loop=False)
+        simulation.run(n_steps=n_steps, timestep=1e-1, show_summary=False)
 
         traj = readdy.Trajectory(simulation.output_file)
 
@@ -589,11 +606,11 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
         pressure_callback = PressureCallback()
 
         sim.observe.pressure(1, callback=pressure_callback)
-        sim.run(50, 1e-3, False, False)
+        sim.run(50, 1e-3, False)
 
         pressure_callback.active = False
         sim.output_file = traj_fname2
-        sim.run(50, 1e-3, False, False)
+        sim.run(50, 1e-3, False)
 
         for fname in [traj_fname, traj_fname2]:
             traj = readdy.Trajectory(fname)

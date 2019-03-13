@@ -62,7 +62,8 @@ public:
     virtual std::vector<std::string> getAvailableActions() const {
         return {
                 getActionName<AddParticles>(), getActionName<EulerBDIntegrator>(), getActionName<CalculateForces>(),
-                getActionName<NeighborListAction>(), getActionName<reactions::UncontrolledApproximation>(),
+                getActionName<CreateNeighborList>(), getActionName<UpdateNeighborList>(),
+                getActionName<ClearNeighborList>(), getActionName<reactions::UncontrolledApproximation>(),
                 getActionName<reactions::Gillespie>(), getActionName<reactions::DetailedBalance>(),
                 getActionName<top::EvaluateTopologyReactions>(), getActionName<MdgfrdIntegrator>()
         };
@@ -103,20 +104,11 @@ public:
 
     virtual std::unique_ptr<readdy::model::actions::CalculateForces> calculateForces() const = 0;
 
-    virtual std::unique_ptr<NeighborListAction>
-    neighborListAction(NeighborListAction::Operation operation, scalar interactionDistance) const = 0;
+    virtual std::unique_ptr<CreateNeighborList> createNeighborList(scalar interactionDistance) const = 0;
 
-    std::unique_ptr<NeighborListAction> updateNeighborList() const {
-        return neighborListAction(NeighborListAction::Operation::update, 0);
-    };
+    virtual std::unique_ptr<UpdateNeighborList> updateNeighborList() const = 0;
 
-    std::unique_ptr<NeighborListAction> initNeighborList(scalar interactionDistance) const {
-        return neighborListAction(NeighborListAction::Operation::init, interactionDistance);
-    };
-
-    std::unique_ptr<NeighborListAction> clearNeighborList() const {
-        return neighborListAction(NeighborListAction::Operation::clear, 0);
-    };
+    virtual std::unique_ptr<ClearNeighborList> clearNeighborList() const = 0;
 
     virtual std::unique_ptr<EvaluateCompartments> evaluateCompartments() const = 0;
 

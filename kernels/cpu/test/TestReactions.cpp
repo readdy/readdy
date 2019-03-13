@@ -224,8 +224,6 @@ TEST_CASE("Test cpu kernel reaction handling", "[cpu]") {
 
         auto &&integrator = kernel->actions().eulerBDIntegrator(1);
         auto &&forces = kernel->actions().calculateForces();
-        auto &&initNeighborList = kernel->actions().initNeighborList(ctx.calculateMaxCutoff());
-        auto &&neighborList = kernel->actions().updateNeighborList();
         auto &&reactions = kernel->actions().gillespie(1);
 
         auto pp_obs = kernel->observe().positions(1);
@@ -238,16 +236,12 @@ TEST_CASE("Test cpu kernel reaction handling", "[cpu]") {
         const auto typeId = ctx.particleTypes().idOf("X");
         std::vector<readdy::model::Particle> particlesToBeginWith{n_particles, {0, 0, 0, typeId}};
         kernel->stateModel().addParticles(particlesToBeginWith);
-        neighborList->perform();
         for (size_t t = 0; t < 20; t++) {
-
             forces->perform();
             integrator->perform();
-            neighborList->perform();
             reactions->perform();
 
             kernel->evaluateObservables(t);
-
         }
 
         REQUIRE(kernel->stateModel().getParticlePositions().empty());
@@ -296,7 +290,7 @@ TEST_CASE("Test cpu kernel reaction handling", "[cpu]") {
         {
             fix_n_threads n_threads{kernel.get(), 2};
             REQUIRE(2 == kernel->getNThreads());
-            auto &&initNeighborList = kernel->actions().initNeighborList(ctx.calculateMaxCutoff());
+            auto &&initNeighborList = kernel->actions().createNeighborList(ctx.calculateMaxCutoff());
             auto &&neighborList = kernel->actions().updateNeighborList();
             std::unique_ptr<readdy::kernel::cpu::actions::reactions::CPUGillespie> reactions
                     = readdy::util::static_unique_ptr_cast_no_del<readdy::kernel::cpu::actions::reactions::CPUGillespie>(kernel->actions().gillespie(1));

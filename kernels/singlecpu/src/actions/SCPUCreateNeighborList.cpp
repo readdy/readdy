@@ -34,41 +34,35 @@
 
 
 /**
- * << detailed description >>
- *
- * @file SingleCPUUpdateNeighborList.cpp
- * @brief << brief description >>
+ * @file SCPUCreateNeighborList.cpp
+ * @brief Implementation of CreateNeighborList action for single CPU kernel
  * @author clonker
+ * @author chrisfroe
  * @date 11.07.16
  */
-#include <readdy/kernel/singlecpu/actions/SCPUUpdateNeighborList.h>
 
-namespace core_actions = readdy::model::actions;
+#include <readdy/kernel/singlecpu/actions/SCPUCreateNeighborList.h>
 
-namespace readdy {
-namespace kernel {
-namespace scpu {
-namespace actions {
+namespace readdy::kernel::scpu::actions {
+
+void SCPUCreateNeighborList::perform() {
+    kernel->getSCPUKernelStateModel().initializeNeighborList(_cutoffDistance);
+}
+
+SCPUCreateNeighborList::SCPUCreateNeighborList(SCPUKernel *kernel, scalar cutoffDistance)
+        : CreateNeighborList(cutoffDistance), kernel(kernel) {
+}
+
+SCPUUpdateNeighborList::SCPUUpdateNeighborList(SCPUKernel *kernel) : kernel(kernel) {}
 
 void SCPUUpdateNeighborList::perform() {
-    switch (operation) {
-        case init:
-            kernel->getSCPUKernelStateModel().getNeighborList()->setUp(_interactionDistance > 0 ? _interactionDistance : 0, 1);
-            break;
-        case clear:
-            kernel->stateModel().clearNeighborList();
-            break;
-        case update:
-            kernel->getSCPUKernelStateModel().getNeighborList()->update();
-            break;
-    }
+    kernel->getSCPUKernelStateModel().updateNeighborList();
 }
 
-SCPUUpdateNeighborList::SCPUUpdateNeighborList(SCPUKernel *kernel, Operation op, scalar interactionDistance)
-        : NeighborListAction(op, interactionDistance), kernel(kernel) {
+SCPUClearNeighborList::SCPUClearNeighborList(SCPUKernel *kernel) : kernel(kernel) {}
+
+void SCPUClearNeighborList::perform() {
+    kernel->getSCPUKernelStateModel().clearNeighborList();
 }
 
-}
-}
-}
 }

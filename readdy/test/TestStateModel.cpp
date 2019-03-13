@@ -204,8 +204,6 @@ TEMPLATE_TEST_CASE("Test state model", "[state-model]", SingleCPU, CPU) {
         };
         stateModel.addParticles(particlesA);
         stateModel.addParticles(particlesB);
-        stateModel.initializeNeighborList(0.);
-        stateModel.updateNeighborList();
         calculateForces->perform();
         // check results
         obs->evaluate();

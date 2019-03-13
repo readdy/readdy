@@ -112,24 +112,23 @@ public:
     ~CalculateForces() override = default;
 };
 
-class NeighborListAction : public Action {
+class CreateNeighborList : public Action {
 public:
-    enum Operation {
-        init, update, clear
-    };
+    explicit CreateNeighborList(scalar cutoffDistance);
 
-    explicit NeighborListAction(Operation operation, scalar interactionDistance);
+    ~CreateNeighborList() override = default;
 
-    ~NeighborListAction() override = default;
+    scalar &cutoffDistance() { return _cutoffDistance; }
 
-    scalar &interactionDistance() { return _interactionDistance; }
-
-    const scalar &interactionDistance() const { return _interactionDistance; }
+    const scalar &cutoffDistance() const { return _cutoffDistance; }
 
 protected:
-    Operation operation;
-    scalar _interactionDistance;
+    scalar _cutoffDistance;
 };
+
+class UpdateNeighborList : public Action {};
+
+class ClearNeighborList : public Action {};
 
 NAMESPACE_BEGIN(reactions)
 
@@ -218,8 +217,18 @@ const std::string getActionName(typename std::enable_if<std::is_base_of<Calculat
 }
 
 template<typename T>
-const std::string getActionName(typename std::enable_if<std::is_base_of<NeighborListAction, T>::value>::type * = 0) {
+const std::string getActionName(typename std::enable_if<std::is_base_of<CreateNeighborList, T>::value>::type * = 0) {
+    return "Create neighbor list";
+}
+
+template<typename T>
+const std::string getActionName(typename std::enable_if<std::is_base_of<UpdateNeighborList, T>::value>::type * = 0) {
     return "Update neighbor list";
+}
+
+template<typename T>
+const std::string getActionName(typename std::enable_if<std::is_base_of<ClearNeighborList, T>::value>::type * = 0) {
+    return "Clear neighbor list";
 }
 
 template<typename T>

@@ -34,49 +34,45 @@
 
 
 /**
- * << detailed description >>
- *
- * @file UpdateNeighborList.h
- * @brief << brief description >>
+ * @file SCPUNeighborList.h
+ * @brief Single CPU kernel declaration of NeighborList Action
  * @author clonker
- * @date 13.07.16
+ * @date 11.07.16
  */
-
 
 #pragma once
 #include <readdy/model/actions/Actions.h>
-#include <readdy/kernel/cpu/CPUKernel.h>
+#include <readdy/kernel/singlecpu/SCPUKernel.h>
 
-namespace readdy {
-namespace kernel {
-namespace cpu {
-namespace actions {
-class CPUUpdateNeighborList : public readdy::model::actions::NeighborListAction {
-    using super = readdy::model::actions::NeighborListAction;
+namespace readdy::kernel::scpu::actions {
+
+class SCPUCreateNeighborList : public readdy::model::actions::CreateNeighborList {
 public:
+    explicit SCPUCreateNeighborList(SCPUKernel *kernel, scalar cutoffDistance);
 
-    CPUUpdateNeighborList(CPUKernel *kernel, super::Operation op, scalar interactionDistance)
-            : super(op, interactionDistance), kernel(kernel) {}
-
-    void perform() override {
-        switch (operation) {
-            case init:
-                kernel->getCPUKernelStateModel().initializeNeighborList(_interactionDistance);
-                break;
-            case clear:
-                kernel->getCPUKernelStateModel().clearNeighborList();
-                break;
-            case update:
-                kernel->getCPUKernelStateModel().updateNeighborList();
-                break;
-        }
-
-    }
+    void perform() override;
 
 private:
-    CPUKernel *kernel;
+    SCPUKernel *const kernel;
 };
-}
-}
-}
+
+class SCPUUpdateNeighborList : public readdy::model::actions::UpdateNeighborList {
+public:
+    explicit SCPUUpdateNeighborList(SCPUKernel *kernel);
+
+    void perform() override;
+
+private:
+    SCPUKernel *const kernel;
+};
+
+class SCPUClearNeighborList : public readdy::model::actions::ClearNeighborList {
+public:
+    explicit SCPUClearNeighborList(SCPUKernel * kernel);
+
+    void perform() override;
+private:
+    SCPUKernel *const kernel;
+};
+
 }

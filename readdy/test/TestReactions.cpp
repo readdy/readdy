@@ -171,7 +171,7 @@ TEMPLATE_TEST_CASE("Test reaction handlers", "[reactions]", SingleCPU, CPU) {
                 ctx.reactions().add("fus: A +(2) A -> A", 1e16);
 
                 auto &&reactions = kernel->actions().createReactionScheduler(handler, 1);
-                auto &&initNeighborList = kernel->actions().initNeighborList(ctx.calculateMaxCutoff());
+                auto &&initNeighborList = kernel->actions().createNeighborList(ctx.calculateMaxCutoff());
                 auto &&neighborList = kernel->actions().updateNeighborList();
                 // resulting particle should be at 4.9
                 kernel->stateModel().addParticle({4.5, 4.5, 4.5, ctx.particleTypes().idOf("A")});
@@ -196,13 +196,9 @@ TEMPLATE_TEST_CASE("Test reaction handlers", "[reactions]", SingleCPU, CPU) {
                 ctx.reactions().add("fis: A -> A +(2) A", 1e16);
 
                 auto &&reactions = kernel->actions().createReactionScheduler(handler, 1);
-                auto &&initNeighborList = kernel->actions().initNeighborList(ctx.calculateMaxCutoff());
-                auto &&neighborList = kernel->actions().updateNeighborList();
                 // one product will be in negative-x halfspace, the other in positive-x halfspace
                 kernel->stateModel().addParticle({-4.9999999, 0, 0, ctx.particleTypes().idOf("A")});
 
-                initNeighborList->perform();
-                neighborList->perform();
                 reactions->perform();
 
                 const auto particles = kernel->stateModel().getParticles();

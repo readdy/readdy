@@ -445,14 +445,13 @@ class Simulation(object):
         """
         return self._simulation.current_topologies
 
-    def run(self, n_steps, timestep, show_system=True, show_loop=True):
+    def run(self, n_steps, timestep, show_summary=True):
         """
         Executes the simulation as configured.
 
         :param n_steps: number of steps to perform
         :param timestep: the time step to use [time]
-        :param show_system: determines if system configuration is printed
-        :param show_loop: determines if loop configuration is printed
+        :param show_summary: determines if system and simulation configuration is printed
         """
         import os
         from contextlib import closing
@@ -462,9 +461,6 @@ class Simulation(object):
         with ostream_redirect(stdout=True, stderr=True):
 
             self._simulation.context.validate()
-
-            if show_system:
-                print(self._simulation.context.describe())
 
             timestep = self._unit_conf.convert(timestep, self.time_unit)
             assert timestep > 0.
@@ -481,9 +477,9 @@ class Simulation(object):
             loop.use_reaction_scheduler(self.reaction_handler)
             loop.evaluate_observables(self.evaluate_observables)
             if self.integrator == "MdgfrdIntegrator":
-                loop.neighbor_list_distance = max(2. * loop.calculate_max_cutoff(), loop.neighbor_list_distance)
+                loop.neighbor_list_cutoff = max(2. * loop.calculate_max_cutoff(), loop.neighbor_list_cutoff)
             if self._skin > 0.:
-                loop.neighbor_list_distance = loop.neighbor_list_distance + self._skin
+                loop.neighbor_list_cutoff = loop.neighbor_list_cutoff + self._skin
 
             if self.output_file is not None and len(self.output_file) > 0:
                 with closing(io.File.create(self.output_file)) as f:
@@ -494,7 +490,8 @@ class Simulation(object):
                         self._progress = _SimulationProgress(n_steps // self._progress_output_stride)
                         loop.progress_callback = self._progress.callback
                         loop.progress_output_stride = self._progress_output_stride
-                    if show_loop:
+                    if show_summary:
+                        print(self._simulation.context.describe())
                         print(loop.describe())
                     loop.run(n_steps)
             else:
@@ -502,7 +499,8 @@ class Simulation(object):
                     self._progress = _SimulationProgress(n_steps // self._progress_output_stride)
                     loop.progress_callback = self._progress.callback
                     loop.progress_output_stride = self._progress_output_stride
-                if show_loop:
+                if show_summary:
+                    print(self._simulation.context.describe())
                     print(loop.describe())
                 loop.run(n_steps)
             if self.show_progress:

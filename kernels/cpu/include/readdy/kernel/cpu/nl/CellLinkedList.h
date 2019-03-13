@@ -62,7 +62,7 @@ public:
     CellLinkedList(data_type &data, const readdy::model::Context &context,
                    thread_pool &pool);
 
-    void setUp(scalar interactionDistance, cell_radius_type radius);
+    void setUp(scalar cutoff, cell_radius_type radius);
 
     virtual void update() = 0;
 
@@ -134,9 +134,9 @@ public:
 protected:
     virtual void setUpBins() = 0;
 
-    bool _is_set_up{false};
+    bool _isSetUp{false};
 
-    scalar _interactionDistance{0};
+    scalar _cutoff{0};
     std::uint8_t _radius;
 
     Vec3 _cellSize{0, 0, 0};
@@ -164,8 +164,7 @@ public:
 
     using iterator_bounds = std::tuple<std::size_t, std::size_t>;
 
-    CompactCellLinkedList(data_type &data, const readdy::model::Context &context,
-                          thread_pool &pool);
+    CompactCellLinkedList(data_type &data, const readdy::model::Context &context, thread_pool &pool);
 
     void update() override {
         setUpBins();
@@ -174,6 +173,7 @@ public:
     void clear() override {
         _head.resize(0);
         _list.resize(0);
+        _isSetUp = false;
     };
 
     BoxIterator particlesBegin(std::size_t cellIndex);

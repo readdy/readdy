@@ -34,10 +34,8 @@
 
 
 /**
- * << detailed description >>
- *
  * @file CellLinkedList.cpp
- * @brief << brief description >>
+ * @brief Implementation of cell linked list for CPU kernel
  * @author clonker
  * @date 12.09.17
  * @copyright BSD-3
@@ -51,23 +49,24 @@ namespace kernel {
 namespace cpu {
 namespace nl {
 
-CellLinkedList::CellLinkedList(data_type &data, const readdy::model::Context &context,
-                               thread_pool &pool)
+CellLinkedList::CellLinkedList(data_type &data, const readdy::model::Context &context, thread_pool &pool)
         : _data(data), _context(context), _pool(pool) {}
 
-
-void CellLinkedList::setUp(scalar interactionDistance, cell_radius_type radius) {
-    if (!_is_set_up || _interactionDistance != interactionDistance || _radius != radius) {
-        if (interactionDistance < _context.get().calculateMaxCutoff()) {
-            throw std::logic_error(fmt::format(
+void CellLinkedList::setUp(scalar cutoff, cell_radius_type radius) {
+    if (!_isSetUp || _cutoff != cutoff || _radius != radius) {
+        if (cutoff <= 0) {
+            throw std::logic_error("The cutoff distance for setting up a neighbor list must be > 0");
+        }
+        if (cutoff < _context.get().calculateMaxCutoff()) {
+            log::warn(fmt::format(
                     "The requested interaction distance {} for neighbor-list set-up was smaller than the largest cutoff {}",
-                    interactionDistance, _context.get().calculateMaxCutoff()));
+                    cutoff, _context.get().calculateMaxCutoff()));
         }
         _radius = radius;
-        _interactionDistance = interactionDistance;
-        if (_interactionDistance > 0) {
+        _cutoff = cutoff;
+        if (_cutoff > 0) {
             auto size = _context.get().boxSize();
-            auto desiredWidth = static_cast<scalar>((_interactionDistance) / static_cast<scalar>(radius));
+            auto desiredWidth = static_cast<scalar>((_cutoff) / static_cast<scalar>(radius));
             std::array<std::size_t, 3> dims{};
             for (int i = 0; i < 3; ++i) {
                 dims[i] = static_cast<unsigned int>(std::max(1., std::floor(size[i] / desiredWidth)));
@@ -142,11 +141,11 @@ void CellLinkedList::setUp(scalar interactionDistance, cell_radius_type radius) 
                 }
             }
 
-            if (_interactionDistance > 0) {
+            if (_cutoff > 0) {
                 setUpBins();
             }
 
-            _is_set_up = true;
+            _isSetUp = true;
         }
     }
 }
@@ -238,7 +237,7 @@ void CompactCellLinkedList::fillBins<false>() {
 }
 
 void CompactCellLinkedList::setUpBins() {
-    if (_interactionDistance > 0) {
+    if (_cutoff > 0) {
         {
             auto nParticles = _data.get().size();
             _head.clear();

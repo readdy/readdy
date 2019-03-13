@@ -64,7 +64,11 @@ void Virial::flush() {
 }
 
 void Virial::initialize(Kernel *const kernel) {
-    kernel->context().recordVirial() = true;
+    if (!kernel->context().recordVirial()) {
+        log::warn("The \"Virial\"-observable set context.recordVirial() to true. "
+                  "If this is undesired, the observable should not be registered.");
+        kernel->context().recordVirial() = true;
+    }
 }
 
 void Virial::initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) {

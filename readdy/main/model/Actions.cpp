@@ -52,9 +52,7 @@ namespace model {
 namespace actions {
 
 
-NeighborListAction::NeighborListAction(Operation operation, scalar interactionDistance)
-        : operation(operation), _interactionDistance(interactionDistance) {
-}
+CreateNeighborList::CreateNeighborList(scalar cutoffDistance) : _cutoffDistance(cutoffDistance) {}
 
 EulerBDIntegrator::EulerBDIntegrator(scalar timeStep) : TimeStepDependentAction(timeStep) {}
 

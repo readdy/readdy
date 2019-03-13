@@ -64,7 +64,8 @@ using entry_type = data_t::Entries::value_type;
 using event_future_t = std::future<std::vector<event_t>>;
 using event_promise_t = std::promise<std::vector<event_t>>;
 
-CPUUncontrolledApproximation::CPUUncontrolledApproximation(CPUKernel *kernel, readdy::scalar timeStep) : super(timeStep), kernel(kernel) {}
+CPUUncontrolledApproximation::CPUUncontrolledApproximation(CPUKernel *kernel, readdy::scalar timeStep)
+        : super(timeStep), kernel(kernel) {}
 
 void findEvents(std::size_t /*tid*/, data_iter_t begin, data_iter_t end, nl_bounds nlBounds,
                 const CPUKernel *const kernel, scalar dt, bool approximateRate, const neighbor_list &nl,

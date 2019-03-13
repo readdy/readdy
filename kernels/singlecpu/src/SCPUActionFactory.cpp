@@ -44,7 +44,7 @@
 #include <readdy/kernel/singlecpu/actions/SCPUMdgfrdIntegrator.h>
 #include <readdy/kernel/singlecpu/actions/SCPUCalculateForces.h>
 #include <readdy/kernel/singlecpu/actions/SCPUReactionImpls.h>
-#include <readdy/kernel/singlecpu/actions/SCPUUpdateNeighborList.h>
+#include <readdy/kernel/singlecpu/actions/SCPUCreateNeighborList.h>
 #include <readdy/kernel/singlecpu/actions/SCPUEvaluateCompartments.h>
 #include <readdy/kernel/singlecpu/actions/SCPUEvaluateTopologyReactions.h>
 
@@ -60,7 +60,9 @@ std::vector<std::string> SCPUActionFactory::getAvailableActions() const {
     return {
             rma::getActionName<rma::AddParticles>(), rma::getActionName<rma::EulerBDIntegrator>(),
             rma::getActionName<rma::CalculateForces>(),
-            rma::getActionName<rma::NeighborListAction>(),
+            rma::getActionName<rma::CreateNeighborList>(),
+            rma::getActionName<rma::UpdateNeighborList>(),
+            rma::getActionName<rma::ClearNeighborList>(),
             rma::getActionName<rma::reactions::UncontrolledApproximation>(),
             rma::getActionName<rma::reactions::Gillespie>(),
             rma::getActionName<rma::top::EvaluateTopologyReactions>()
@@ -80,9 +82,17 @@ std::unique_ptr<readdy::model::actions::CalculateForces> SCPUActionFactory::calc
     return {std::make_unique<SCPUCalculateForces>(kernel)};
 }
 
-std::unique_ptr<readdy::model::actions::NeighborListAction>
-SCPUActionFactory::neighborListAction(readdy::model::actions::NeighborListAction::Operation operation, scalar interactionDistance) const {
-    return {std::make_unique<SCPUUpdateNeighborList>(kernel, operation, interactionDistance)};
+std::unique_ptr<readdy::model::actions::CreateNeighborList>
+SCPUActionFactory::createNeighborList(readdy::scalar interactionDistance) const {
+    return {std::make_unique<SCPUCreateNeighborList>(kernel, interactionDistance)};
+}
+
+std::unique_ptr<readdy::model::actions::UpdateNeighborList> SCPUActionFactory::updateNeighborList() const {
+    return {std::make_unique<SCPUUpdateNeighborList>(kernel)};
+}
+
+std::unique_ptr<readdy::model::actions::ClearNeighborList> SCPUActionFactory::clearNeighborList() const {
+    return {std::make_unique<SCPUClearNeighborList>(kernel)};
 }
 
 std::unique_ptr<readdy::model::actions::EvaluateCompartments> SCPUActionFactory::evaluateCompartments() const {

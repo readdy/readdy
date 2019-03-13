@@ -62,8 +62,15 @@ public:
         return nullptr;
     }
 
-    std::unique_ptr<model::actions::NeighborListAction>
-    neighborListAction(model::actions::NeighborListAction::Operation operation, scalar interactionDistance) const override {
+    std::unique_ptr<model::actions::CreateNeighborList> createNeighborList(scalar interactionDistance) const override {
+        return nullptr;
+    }
+
+    std::unique_ptr<model::actions::UpdateNeighborList> updateNeighborList() const override {
+        return nullptr;
+    }
+
+    std::unique_ptr<model::actions::ClearNeighborList> clearNeighborList() const override {
         return nullptr;
     }
 

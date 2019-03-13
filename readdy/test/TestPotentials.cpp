@@ -189,11 +189,6 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
             };
             auto conn = kernel->connectObservable(fObs.get());
 
-            // we need to update the neighbor list as this is a pair potential
-            auto initNeighborList = kernel->actions().initNeighborList(context.calculateMaxCutoff());
-            initNeighborList->perform();
-            auto updateNeighborList = kernel->actions().updateNeighborList();
-            updateNeighborList->perform();
             // calc forces
             auto calculateForces = kernel->actions().calculateForces();
             calculateForces->perform();
@@ -412,7 +407,7 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
             auto conn = kernel->connectObservable(fObs.get());
 
             // we need to update the neighbor list as this is a pair potential
-            auto initNeighborList = kernel->actions().initNeighborList(context.calculateMaxCutoff());
+            auto initNeighborList = kernel->actions().createNeighborList(context.calculateMaxCutoff());
             initNeighborList->perform();
             auto updateNeighborList = kernel->actions().updateNeighborList();
             updateNeighborList->perform();
@@ -479,10 +474,10 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
             auto conn = kernel->connectObservable(fObs.get());
 
             // we need to update the neighbor list as this is a pair potential
-            auto initNeighborList = kernel->actions().initNeighborList(context.calculateMaxCutoff());
+            auto initNeighborList = kernel->actions().createNeighborList(context.calculateMaxCutoff());
             initNeighborList->perform();
-            //fixme auto updateNeighborList = kernel->actions().updateNeighborList();
-            //updateNeighborList->perform();
+            auto updateNeighborList = kernel->actions().updateNeighborList();
+            updateNeighborList->perform();
 
             // calc forces
             calculateForces->perform();

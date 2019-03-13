@@ -63,13 +63,14 @@ public:
 public:
 
     void update() override {
-        if (_interactionDistance > 0) {
+        if (_cutoff > 0) {
             fillBins();
         }
     };
 
     void clear() override {
         _bins.clear();
+        _isSetUp = false;
     };
 
     const std::vector<std::size_t> &bins() const {

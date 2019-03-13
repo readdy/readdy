@@ -40,7 +40,7 @@
  * @brief << brief description >>
  * @author clonker
  * @date 13.03.17
- * @copyright GPL-3
+ * @copyright BSD-3
  */
 
 #include <readdy/model/observables/Reactions.h>
@@ -89,7 +89,6 @@ void Reactions::append() {
 }
 
 void Reactions::initialize(Kernel *const kernel) {
-    // fixme why is this warning here? e.g. virial silently sets its corresponding flag in context
     if (!kernel->context().recordReactionsWithPositions()) {
         log::warn("The \"Reactions\"-observable set context.recordReactionsWithPositions() to true. "
                           "If this is undesired, the observable should not be registered.");

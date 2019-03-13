@@ -35,7 +35,7 @@
 
 /**
  * @file TestReactions.cpp
- * @brief << brief description >>
+ * @brief Testing of reactions specific to single CPU kernel
  * @author clonker
  * @date 22.06.16
  */
@@ -47,7 +47,6 @@
 #include <readdy/model/actions/Actions.h>
 
 TEST_CASE("Test single cpu decay reactions", "[scpu]") {
-    using particle_t = readdy::model::Particle;
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
     kernel->context().boxSize() = {{10, 10, 10}};
     kernel->context().particleTypes().add("X", .25);
@@ -57,9 +56,6 @@ TEST_CASE("Test single cpu decay reactions", "[scpu]") {
     readdy::scalar timeStep = 1.0;
     auto &&integrator = kernel->actions().eulerBDIntegrator(timeStep);
     auto &&forces = kernel->actions().calculateForces();
-    using update_nl = readdy::model::actions::NeighborListAction;
-    auto &&initNeighborList = kernel->actions().initNeighborList(0);
-    auto &&neighborList = kernel->actions().updateNeighborList();
     auto &&reactions = kernel->actions().uncontrolledApproximation(timeStep);
 
     auto pp_obs = kernel->observe().positions(1);
@@ -72,16 +68,12 @@ TEST_CASE("Test single cpu decay reactions", "[scpu]") {
     const auto typeId = kernel->context().particleTypes().idOf("X");
     std::vector<readdy::model::Particle> particlesToBeginWith{n_particles, {0, 0, 0, typeId}};
     kernel->stateModel().addParticles(particlesToBeginWith);
-    initNeighborList->perform();
     for (size_t t = 0; t < 20; t++) {
-
         forces->perform();
         integrator->perform();
-        neighborList->perform();
         reactions->perform();
 
         kernel->evaluateObservables(t);
-
     }
 
     REQUIRE(kernel->stateModel().getParticlePositions().empty());
@@ -136,7 +128,7 @@ TEST_CASE("Test single cpu multiple reaction types", "[scpu]") {
 
     auto &&integrator = kernel->actions().eulerBDIntegrator(1);
     auto &&forces = kernel->actions().calculateForces();
-    auto &&initNeighborList = kernel->actions().initNeighborList(maxCutoff);
+    auto &&initNeighborList = kernel->actions().createNeighborList(maxCutoff);
     auto &&neighborList = kernel->actions().updateNeighborList();
     auto &&reactions = kernel->actions().uncontrolledApproximation(1);
 

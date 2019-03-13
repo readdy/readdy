@@ -79,7 +79,6 @@ NAMESPACE_BEGIN(api)
  * superclass for all simulation schemes
  */
 class SimulationLoop {
-    using NeighborListOps = model::actions::NeighborListAction::Operation;
 public:
     /**
      * the type of function that is responsible for deciding whether the simulation should continue
@@ -100,8 +99,11 @@ public:
               _integrator(kernel->actions().eulerBDIntegrator(timeStep).release()),
               _reactions(kernel->actions().gillespie(timeStep).release()),
               _forces(kernel->actions().calculateForces().release()),
-              _initNeighborList(kernel->actions().initNeighborList(kernel->context().calculateMaxCutoff()).release()),
-              _neighborList(kernel->actions().updateNeighborList().release()),
+              _initNeighborList(
+                      kernel->context().calculateMaxCutoff() > 0 
+                      ? kernel->actions().createNeighborList(kernel->context().calculateMaxCutoff()).release()
+                      : nullptr),
+              _updateNeighborList(kernel->actions().updateNeighborList().release()),
               _clearNeighborList(kernel->actions().clearNeighborList().release()),
               _topologyReactions(kernel->actions().evaluateTopologyReactions(timeStep).release()) {}
 
@@ -143,7 +145,7 @@ public:
     }
 
     void runUpdateNeighborList() {
-        if (_neighborList) _neighborList->perform();
+        if (_updateNeighborList) _updateNeighborList->perform();
     }
 
     void runClearNeighborList() {
@@ -202,17 +204,17 @@ public:
         configGroup = std::make_unique<h5rd::Group>(file.createGroup("readdy/config"));
     }
 
-    scalar &neighborListDistance() {
+    scalar &neighborListCutoff() {
         if (_initNeighborList) {
-            return _initNeighborList->interactionDistance();
+            return _initNeighborList->cutoffDistance();
         } else {
             throw std::logic_error("There is no neighbor list. This indicates that there are no interactions which would require one.");
         }
     }
 
-    const scalar &neighborListDistance() const {
+    const scalar &neighborListCutoff() const {
         if (_initNeighborList) {
-            return _initNeighborList->interactionDistance();
+            return _initNeighborList->cutoffDistance();
         } else {
             throw std::logic_error("There is no neighbor list. This indicates that there are no interactions which would require one.");
         }
@@ -250,13 +252,13 @@ public:
     void run(const continue_fun &continueFun) {
         validate(_timeStep);
         {
-            bool requiresNeighborList = _forces || _reactions || _topologyReactions;
+            bool requiresNeighborList = kernel()->context().calculateMaxCutoff() > 0;
             if (requiresNeighborList) {
-                if (!(_initNeighborList && _neighborList && _clearNeighborList)) {
+                if (!(_initNeighborList && _updateNeighborList && _clearNeighborList)) {
                     throw std::logic_error("Neighbor list required but set to null!");
                 }
-                _initNeighborList->interactionDistance() = std::max(_initNeighborList->interactionDistance(),
-                                                                    kernel()->context().calculateMaxCutoff());
+                _initNeighborList->cutoffDistance() = std::max(_initNeighborList->cutoffDistance(),
+                                                               kernel()->context().calculateMaxCutoff());
             }
             runInitialize();
             if (requiresNeighborList) runInitializeNeighborList();
@@ -338,7 +340,7 @@ public:
         // todo let actions know their name?
         description += fmt::format(" - Performing actions:{}", rus::newline);
         description += fmt::format("   * Initialize neighbor list? {} {}", _initNeighborList ? true : false, rus::newline);
-        description += fmt::format("   * Update neighbor list? {} {}", _neighborList ? true : false, rus::newline);
+        description += fmt::format("   * Update neighbor list? {} {}", _updateNeighborList ? true : false, rus::newline);
         description += fmt::format("   * Clear neighbor list? {} {}", _clearNeighborList ? true : false, rus::newline);
         description += fmt::format("   * Integrate diffusion? {} {}", _integrator ? true : false, rus::newline);
         description += fmt::format("   * Calculate forces? {} {}", _forces ? true : false, rus::newline);
@@ -352,11 +354,11 @@ protected:
     std::shared_ptr<model::actions::TimeStepDependentAction> _integrator{nullptr};
     std::shared_ptr<model::actions::Action> _forces{nullptr};
     std::shared_ptr<model::actions::TimeStepDependentAction> _reactions{nullptr};
-    std::shared_ptr<model::actions::NeighborListAction> _initNeighborList{nullptr};
-    std::shared_ptr<model::actions::NeighborListAction> _neighborList{nullptr};
+    std::shared_ptr<model::actions::CreateNeighborList> _initNeighborList{nullptr};
+    std::shared_ptr<model::actions::UpdateNeighborList> _updateNeighborList{nullptr};
     std::shared_ptr<model::actions::top::EvaluateTopologyReactions> _topologyReactions{nullptr};
-    std::shared_ptr<model::actions::NeighborListAction> _clearNeighborList{nullptr};
-    std::shared_ptr<h5rd::Group> configGroup = nullptr;
+    std::shared_ptr<model::actions::ClearNeighborList> _clearNeighborList{nullptr};
+    std::shared_ptr<h5rd::Group> configGroup{nullptr};
 
     bool _evaluateObservables = true;
     time_step_type _start = 0;

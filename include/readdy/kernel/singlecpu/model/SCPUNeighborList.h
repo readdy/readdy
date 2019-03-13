@@ -70,18 +70,21 @@ public:
     CellLinkedList(data_type &data, const readdy::model::Context &context)
             : _data(data), _context(context), _head{}, _list{}, _radius{0} {};
 
-    void setUp(scalar interactionDistance, cell_radius_type radius) {
-        if (!_isSetUp || _interactionDistance != interactionDistance || _radius != radius) {
-            if (interactionDistance < _context.get().calculateMaxCutoff()) {
-                throw std::logic_error(fmt::format(
-                        "The requested interaction distance {} for neighbor-list set-up was smaller than the largest cutoff {}",
-                        interactionDistance, _context.get().calculateMaxCutoff()));
+    void setUp(scalar cutoff, cell_radius_type radius) {
+        if (!_isSetUp || _cutoff != cutoff || _radius != radius) {
+            if (cutoff <= 0) {
+                throw std::logic_error("The cutoff distance for setting up a neighbor list must be > 0");
+            }
+            if (cutoff < _context.get().calculateMaxCutoff()) {
+                log::warn(fmt::format(
+                        "The requested cutoff {} for neighbor-list set-up was smaller than the largest cutoff {}",
+                        cutoff, _context.get().calculateMaxCutoff()));
             }
             _radius = radius;
-            _interactionDistance = interactionDistance;
-            if (_interactionDistance > 0) {
+            _cutoff = cutoff;
+            if (_cutoff > 0) {
                 auto size = _context.get().boxSize();
-                auto desiredWidth = static_cast<scalar>((_interactionDistance) / static_cast<scalar>(radius));
+                auto desiredWidth = static_cast<scalar>((_cutoff) / static_cast<scalar>(radius));
                 std::array<std::size_t, 3> dims{};
                 for (int i = 0; i < 3; ++i) {
                     dims[i] = static_cast<unsigned int>(std::max(1., std::floor(size[i] / desiredWidth)));
@@ -175,7 +178,7 @@ public:
                     }
                 }
 
-                if (_interactionDistance > 0) {
+                if (_cutoff > 0) {
                     setUpBins();
                 }
 
@@ -236,8 +239,8 @@ public:
         return _data.get();
     };
 
-    scalar maxCutoff() const {
-        return _interactionDistance;
+    scalar cutoff() const {
+        return _cutoff;
     };
 
     const HEAD &head() const {
@@ -293,7 +296,7 @@ public:
 
 protected:
     virtual void setUpBins() {
-        if (_interactionDistance > 0) {
+        if (_cutoff > 0) {
             auto nParticles = _data.get().size();
             _head.clear();
             _head.resize(_cellIndex.size());
@@ -333,7 +336,7 @@ protected:
 
     bool _isSetUp{false};
 
-    scalar _interactionDistance{0};
+    scalar _cutoff{0};
     std::uint8_t _radius;
 
     Vec3 _cellSize{0, 0, 0};

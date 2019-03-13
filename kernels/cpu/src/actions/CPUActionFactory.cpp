@@ -42,7 +42,7 @@
 
 #include <readdy/kernel/cpu/actions/CPUActionFactory.h>
 #include <readdy/kernel/cpu/actions/CPUEulerBDIntegrator.h>
-#include <readdy/kernel/cpu/actions/CPUUpdateNeighborList.h>
+#include <readdy/kernel/cpu/actions/CPUCreateNeighborList.h>
 #include <readdy/kernel/cpu/actions/CPUCalculateForces.h>
 #include <readdy/kernel/cpu/actions/CPUEvaluateCompartments.h>
 #include <readdy/kernel/cpu/actions/reactions/CPUGillespie.h>
@@ -74,9 +74,17 @@ std::unique_ptr<readdy::model::actions::CalculateForces> CPUActionFactory::calcu
     return {std::make_unique<CPUCalculateForces>(kernel)};
 }
 
-std::unique_ptr<model::actions::NeighborListAction>
-CPUActionFactory::neighborListAction(model::actions::NeighborListAction::Operation operation, scalar interactionDistance) const {
-    return {std::make_unique<CPUUpdateNeighborList>(kernel, operation, interactionDistance)};
+std::unique_ptr<model::actions::CreateNeighborList>
+CPUActionFactory::createNeighborList(scalar cutoffDistance) const {
+    return {std::make_unique<CPUCreateNeighborList>(kernel, cutoffDistance)};
+}
+
+std::unique_ptr<model::actions::UpdateNeighborList> CPUActionFactory::updateNeighborList() const {
+    return {std::make_unique<CPUUpdateNeighborList>(kernel)};
+}
+
+std::unique_ptr<model::actions::ClearNeighborList> CPUActionFactory::clearNeighborList() const {
+    return {std::make_unique<CPUClearNeighborList>(kernel)};
 }
 
 std::unique_ptr<model::actions::EvaluateCompartments> CPUActionFactory::evaluateCompartments() const {

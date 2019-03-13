@@ -34,10 +34,8 @@
 
 
 /**
- * << detailed description >>
- *
  * @file TestObservables.cpp
- * @brief << brief description >>
+ * @brief Testing observables
  * @author clonker
  * @date 02.05.16
  */
@@ -61,7 +59,7 @@ TEMPLATE_TEST_CASE("Test observables", "[observables]", SingleCPU, CPU) {
     SECTION("Particle positions") {
         const unsigned int n_particles = 100;
         context.particleTypes().add("type", 1.);
-        const readdy::scalar  timeStep = 1.0;
+        const readdy::scalar timeStep = 1.0;
         const auto particleTypeId = context.particleTypes().idOf("type");
         const auto particles = std::vector<m::Particle>(n_particles, m::Particle(0, 0, 0, particleTypeId));
         stateModel.addParticles(particles);
@@ -71,13 +69,8 @@ TEMPLATE_TEST_CASE("Test observables", "[observables]", SingleCPU, CPU) {
         kernel->initialize();
 
         auto &&integrator = kernel->actions().createIntegrator("EulerBDIntegrator", timeStep);
-        using update_nl = readdy::model::actions::NeighborListAction;
-        auto &&initNeighborList = kernel->actions().initNeighborList(context.calculateMaxCutoff());
-        auto &&neighborList = kernel->actions().updateNeighborList();
-        initNeighborList->perform();
         for (readdy::time_step_type t = 0; t < 100; t++) {
             integrator->perform();
-            neighborList->perform();
             kernel->evaluateObservables(t);
         }
 
@@ -305,8 +298,7 @@ TEMPLATE_TEST_CASE("Test observables", "[observables]", SingleCPU, CPU) {
 
         context.potentials().addHarmonicRepulsion("C", "C", 2.0, 2.0);
 
-        using update_nl = readdy::model::actions::NeighborListAction;
-        auto &&initNeighborList = kernel->actions().initNeighborList(context.calculateMaxCutoff());
+        auto &&initNeighborList = kernel->actions().createNeighborList(context.calculateMaxCutoff());
         auto &&nl = kernel->actions().updateNeighborList();
         auto &&forces = kernel->actions().calculateForces();
         kernel->initialize();
