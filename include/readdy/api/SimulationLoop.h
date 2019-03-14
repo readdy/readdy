@@ -99,10 +99,7 @@ public:
               _integrator(kernel->actions().eulerBDIntegrator(timeStep).release()),
               _reactions(kernel->actions().gillespie(timeStep).release()),
               _forces(kernel->actions().calculateForces().release()),
-              _initNeighborList(
-                      kernel->context().calculateMaxCutoff() > 0 
-                      ? kernel->actions().createNeighborList(kernel->context().calculateMaxCutoff()).release()
-                      : nullptr),
+              _initNeighborList(kernel->actions().createNeighborList(kernel->context().calculateMaxCutoff()).release()),
               _updateNeighborList(kernel->actions().updateNeighborList().release()),
               _clearNeighborList(kernel->actions().clearNeighborList().release()),
               _topologyReactions(kernel->actions().evaluateTopologyReactions(timeStep).release()) {}
@@ -205,19 +202,11 @@ public:
     }
 
     scalar &neighborListCutoff() {
-        if (_initNeighborList) {
-            return _initNeighborList->cutoffDistance();
-        } else {
-            throw std::logic_error("There is no neighbor list. This indicates that there are no interactions which would require one.");
-        }
+        return _initNeighborList->cutoffDistance();
     }
 
     const scalar &neighborListCutoff() const {
-        if (_initNeighborList) {
-            return _initNeighborList->cutoffDistance();
-        } else {
-            throw std::logic_error("There is no neighbor list. This indicates that there are no interactions which would require one.");
-        }
+        return _initNeighborList->cutoffDistance();
     }
 
     const scalar calculateMaxCutoff() const {
@@ -252,7 +241,7 @@ public:
     void run(const continue_fun &continueFun) {
         validate(_timeStep);
         {
-            bool requiresNeighborList = kernel()->context().calculateMaxCutoff() > 0;
+            bool requiresNeighborList = _initNeighborList->cutoffDistance() > 0;
             if (requiresNeighborList) {
                 if (!(_initNeighborList && _updateNeighborList && _clearNeighborList)) {
                     throw std::logic_error("Neighbor list required but set to null!");

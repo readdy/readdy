@@ -82,108 +82,103 @@ public:
             }
             _radius = radius;
             _cutoff = cutoff;
-            if (_cutoff > 0) {
-                auto size = _context.get().boxSize();
-                auto desiredWidth = static_cast<scalar>((_cutoff) / static_cast<scalar>(radius));
-                std::array<std::size_t, 3> dims{};
+
+            auto size = _context.get().boxSize();
+            auto desiredWidth = static_cast<scalar>((_cutoff) / static_cast<scalar>(radius));
+            std::array<std::size_t, 3> dims{};
+            for (int i = 0; i < 3; ++i) {
+                dims[i] = static_cast<unsigned int>(std::max(1., std::floor(size[i] / desiredWidth)));
+                _cellSize[i] = size[i] / static_cast<scalar>(dims[i]);
+            }
+
+            _cellIndex = util::Index3D(dims[0], dims[1], dims[2]);
+
+            {
+                // set up cell adjacency list
+                std::array<std::size_t, 3> nNeighbors{{_cellIndex[0], _cellIndex[1], _cellIndex[2]}};
                 for (int i = 0; i < 3; ++i) {
-                    dims[i] = static_cast<unsigned int>(std::max(1., std::floor(size[i] / desiredWidth)));
-                    _cellSize[i] = size[i] / static_cast<scalar>(dims[i]);
+                    nNeighbors[i] = std::min(nNeighbors[i], static_cast<std::size_t>(2 * radius + 1));
                 }
-
-                _cellIndex = util::Index3D(dims[0], dims[1], dims[2]);
-
+                auto nAdjacentCells = nNeighbors[0] * nNeighbors[1] * nNeighbors[2];
+                _cellNeighbors = util::Index2D(_cellIndex.size(), 1 + nAdjacentCells);
+                _cellNeighborsContent.resize(_cellNeighbors.size());
                 {
-                    // set up cell adjacency list
-                    std::array<std::size_t, 3> nNeighbors{{_cellIndex[0], _cellIndex[1], _cellIndex[2]}};
-                    for (int i = 0; i < 3; ++i) {
-                        nNeighbors[i] = std::min(nNeighbors[i], static_cast<std::size_t>(2 * radius + 1));
-                    }
-                    auto nAdjacentCells = nNeighbors[0] * nNeighbors[1] * nNeighbors[2];
-                    _cellNeighbors = util::Index2D(_cellIndex.size(), 1 + nAdjacentCells);
-                    _cellNeighborsContent.resize(_cellNeighbors.size());
-                    {
-                        auto pbc = _context.get().periodicBoundaryConditions();
-                        auto fixBoxIx = [&](auto cix, auto boxIx, std::uint8_t axis) {
-                            auto nCells = static_cast<int>(_cellIndex[axis]);
-                            if (pbc[axis] && nCells > 2) {
-                                return (boxIx % nCells + nCells) % nCells;
-                            }
-                            return boxIx;
-                        };
+                    auto pbc = _context.get().periodicBoundaryConditions();
+                    auto fixBoxIx = [&](auto cix, auto boxIx, std::uint8_t axis) {
+                        auto nCells = static_cast<int>(_cellIndex[axis]);
+                        if (pbc[axis] && nCells > 2) {
+                            return (boxIx % nCells + nCells) % nCells;
+                        }
+                        return boxIx;
+                    };
 
-                        int r = _radius;
-                        // local adjacency
-                        std::vector<std::size_t> adj;
-                        adj.reserve(1 + nAdjacentCells);
-                        for (int i = 0; i < _cellIndex[0]; ++i) {
-                            for (int j = 0; j < _cellIndex[1]; ++j) {
-                                for (int k = 0; k < _cellIndex[2]; ++k) {
-                                    auto cellIdx = _cellIndex(static_cast<std::size_t>(i), static_cast<std::size_t>(j),
-                                                              static_cast<std::size_t>(k));
-                                    std::array<std::size_t, 3> ijk {{static_cast<std::size_t>(i), static_cast<std::size_t>(j),static_cast<std::size_t>(k)}};
+                    int r = _radius;
+                    // local adjacency
+                    std::vector<std::size_t> adj;
+                    adj.reserve(1 + nAdjacentCells);
+                    for (int i = 0; i < _cellIndex[0]; ++i) {
+                        for (int j = 0; j < _cellIndex[1]; ++j) {
+                            for (int k = 0; k < _cellIndex[2]; ++k) {
+                                auto cellIdx = _cellIndex(static_cast<std::size_t>(i), static_cast<std::size_t>(j),
+                                                          static_cast<std::size_t>(k));
+                                std::array<std::size_t, 3> ijk {{static_cast<std::size_t>(i), static_cast<std::size_t>(j),static_cast<std::size_t>(k)}};
 
-                                    adj.resize(0);
-                                    {
-                                        std::vector<std::array<int, 3>> boxCoords{
-                                                {{i + 0, j + 0, k + 1}},
+                                adj.resize(0);
+                                {
+                                    std::vector<std::array<int, 3>> boxCoords{
+                                            {{i + 0, j + 0, k + 1}},
 
-                                                {{i + 0, j + 1, k - 1}},
-                                                {{i + 0, j + 1, k - 0}},
-                                                {{i + 0, j + 1, k + 1}},
+                                            {{i + 0, j + 1, k - 1}},
+                                            {{i + 0, j + 1, k - 0}},
+                                            {{i + 0, j + 1, k + 1}},
 
-                                                {{i + 1, j - 1, k - 1}},
-                                                {{i + 1, j - 1, k + 0}},
-                                                {{i + 1, j - 1, k + 1}},
+                                            {{i + 1, j - 1, k - 1}},
+                                            {{i + 1, j - 1, k + 0}},
+                                            {{i + 1, j - 1, k + 1}},
 
-                                                {{i + 1, j + 0, k - 1}},
-                                                {{i + 1, j + 0, k + 0}},
-                                                {{i + 1, j + 0, k + 1}},
+                                            {{i + 1, j + 0, k - 1}},
+                                            {{i + 1, j + 0, k + 0}},
+                                            {{i + 1, j + 0, k + 1}},
 
-                                                {{i + 1, j + 1, k - 1}},
-                                                {{i + 1, j + 1, k + 0}},
-                                                {{i + 1, j + 1, k + 1}},
-                                        };
+                                            {{i + 1, j + 1, k - 1}},
+                                            {{i + 1, j + 1, k + 0}},
+                                            {{i + 1, j + 1, k + 1}},
+                                    };
 
-                                        std::transform(boxCoords.begin(), boxCoords.end(), boxCoords.begin(),
-                                                       [&](auto arr) {
-                                                           for (std::uint8_t d = 0; d < 3; ++d) {
-                                                               arr.at(d) = fixBoxIx(ijk[d], arr.at(d), d);
-                                                           }
-                                                           return arr;
+                                    std::transform(boxCoords.begin(), boxCoords.end(), boxCoords.begin(),
+                                                   [&](auto arr) {
+                                                       for (std::uint8_t d = 0; d < 3; ++d) {
+                                                           arr.at(d) = fixBoxIx(ijk[d], arr.at(d), d);
                                                        }
-                                        );
+                                                       return arr;
+                                                   }
+                                    );
 
-                                        for (auto boxCoord : boxCoords) {
-                                            if (boxCoord[0] >= 0 && boxCoord[1] >= 0 && boxCoord[2] >= 0
-                                                && boxCoord[0] < _cellIndex[0] && boxCoord[1] < _cellIndex[1] &&
-                                                boxCoord[2] < _cellIndex[2]) {
-                                                adj.push_back(_cellIndex(boxCoord[0], boxCoord[1], boxCoord[2]));
-                                            }
+                                    for (auto boxCoord : boxCoords) {
+                                        if (boxCoord[0] >= 0 && boxCoord[1] >= 0 && boxCoord[2] >= 0
+                                            && boxCoord[0] < _cellIndex[0] && boxCoord[1] < _cellIndex[1] &&
+                                            boxCoord[2] < _cellIndex[2]) {
+                                            adj.push_back(_cellIndex(boxCoord[0], boxCoord[1], boxCoord[2]));
                                         }
                                     }
-
-                                    std::sort(adj.begin(), adj.end());
-                                    adj.erase(std::unique(std::begin(adj), std::end(adj)), std::end(adj));
-                                    adj.erase(std::remove(std::begin(adj), std::end(adj), _cellIndex(i, j, k)),
-                                              std::end(adj));
-
-                                    //log::critical("cell {} with n neighbors: {}" ,cellIdx, adj.size());
-                                    auto begin = _cellNeighbors(cellIdx, 0_z);
-                                    _cellNeighborsContent[begin] = adj.size();
-                                    std::copy(adj.begin(), adj.end(), &_cellNeighborsContent.at(begin + 1));
                                 }
+
+                                std::sort(adj.begin(), adj.end());
+                                adj.erase(std::unique(std::begin(adj), std::end(adj)), std::end(adj));
+                                adj.erase(std::remove(std::begin(adj), std::end(adj), _cellIndex(i, j, k)),
+                                          std::end(adj));
+
+                                //log::critical("cell {} with n neighbors: {}" ,cellIdx, adj.size());
+                                auto begin = _cellNeighbors(cellIdx, 0_z);
+                                _cellNeighborsContent[begin] = adj.size();
+                                std::copy(adj.begin(), adj.end(), &_cellNeighborsContent.at(begin + 1));
                             }
                         }
                     }
                 }
-
-                if (_cutoff > 0) {
-                    setUpBins();
-                }
-
-                _isSetUp = true;
             }
+            _isSetUp = true;
+            setUpBins();
         }
     };
 
@@ -296,13 +291,15 @@ public:
 
 protected:
     virtual void setUpBins() {
-        if (_cutoff > 0) {
+        if (_isSetUp) {
             auto nParticles = _data.get().size();
             _head.clear();
             _head.resize(_cellIndex.size());
             _list.resize(0);
             _list.resize(nParticles + 1);
             fillBins();
+        } else {
+            throw std::logic_error("Attempting to fill neighborlist bins, but cell structure is not set up yet");
         }
     };
 

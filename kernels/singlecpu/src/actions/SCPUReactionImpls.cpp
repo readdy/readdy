@@ -459,7 +459,9 @@ void SCPUDetailedBalance::perform() {
                 }
                 const auto updateRecord = data->update(std::move(forwardUpdate));
                 auto backwardUpdate = generateBackwardUpdate(particleBackup, updateRecord);
-                stateModel.updateNeighborList();
+                if (nl->cutoff() > 0) {
+                    stateModel.updateNeighborList();
+                }
                 calculateEnergies();
 
                 scalar boltzmannFactor = 1.;
@@ -509,7 +511,9 @@ void SCPUDetailedBalance::perform() {
                     // reject/rollback
                     log::trace("reject! apply backward update");
                     data->update(std::move(backwardUpdate));
-                    stateModel.updateNeighborList();
+                    if (nl->cutoff() > 0) {
+                        stateModel.updateNeighborList();
+                    }
                     calculateEnergies();
                     if (energyBefore != stateModel.energy()) {
                         log::warn("reaction move was rejected but energy of state is different "
@@ -536,7 +540,9 @@ void SCPUDetailedBalance::perform() {
                 }
 
                 data->update(std::move(forwardUpdate));
-                stateModel.updateNeighborList();
+                if (nl->cutoff() > 0) {
+                    stateModel.updateNeighborList();
+                }
                 calculateEnergies();
             }
         };

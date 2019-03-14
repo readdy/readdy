@@ -56,13 +56,18 @@ using namespace readdytesting::kernel;
 void run(readdy::model::Kernel &kernel, readdy::scalar timeStep) {
     unsigned int nSteps = 200;
     auto &&integrator = kernel.actions().eulerBDIntegrator(timeStep);
+    auto &&initNeighborList = kernel.actions().createNeighborList(kernel.context().calculateMaxCutoff());
     auto &&nl = kernel.actions().updateNeighborList();
     auto &&forces = kernel.actions().calculateForces();
-    nl->perform();
+    bool requiresNeighborList = initNeighborList->cutoffDistance() > 0;
+    if (requiresNeighborList) {
+        initNeighborList->perform();
+        nl->perform();
+    }
     for (readdy::time_step_type &&t = 0; t < nSteps; ++t) {
         forces->perform();
         integrator->perform();
-        nl->perform();
+        if (requiresNeighborList) nl->perform();
     }
 }
 
