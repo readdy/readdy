@@ -34,10 +34,7 @@
 
 
 /**
- * << detailed description >>
- *
- * @file TestSimulationSchemes.cpp
- * @brief << brief description >>
+ * @file TestSimulationLoop.cpp
  * @author clonker
  * @author chrisfro**
  * @date 23.08.16
@@ -57,7 +54,7 @@ namespace api = readdy::api;
 using namespace readdytesting::kernel;
 
 
-TEMPLATE_TEST_CASE("Test simulation schemes", "[schemes]", SingleCPU, CPU) {
+TEMPLATE_TEST_CASE("Test simulation loop", "[loop]", SingleCPU, CPU) {
     readdy::Simulation simulation {create<TestType>()};
 
     SECTION("Correct number of timesteps") {
@@ -111,7 +108,7 @@ TEMPLATE_TEST_CASE("Test simulation schemes", "[schemes]", SingleCPU, CPU) {
         simulation.addParticle("A", 0., 0., 0.);
         simulation.addParticle("A", 1.5, 0., 0.);
         auto loop = simulation.createLoop(.001);
-        loop.skinSize() = 1.;
+        loop.neighborListCutoff() += 0.1; // adding a skin/padding
         loop.run(10);
     }
 }

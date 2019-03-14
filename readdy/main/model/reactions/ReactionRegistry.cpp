@@ -41,7 +41,7 @@
  * @author clonker
  * @author chrisfroe
  * @date 29.03.17
- * @copyright GPL-3
+ * @copyright BSD-3
  */
 
 #include <readdy/model/reactions/ReactionRegistry.h>

@@ -117,7 +117,7 @@ TEST_CASE("Test cpu neighbor list", "[cpu]") {
             };
 
             data.addParticles(particles);
-            list.setUp(0, 1);
+            list.setUp(ctx.calculateMaxCutoff(), 1);
 
             REQUIRE(isPairInList(&list, 0, 1));
             REQUIRE(isPairInList(&list, 1, 0));
@@ -141,7 +141,7 @@ TEST_CASE("Test cpu neighbor list", "[cpu]") {
             auto &data = list.data();
             data.addParticles(particles);
 
-            list.setUp(0, 8);
+            list.setUp(ctx.calculateMaxCutoff(), 8);
 
             REQUIRE(isIdPairInList(&list, data, ids.at(0), ids.at(2)));
             REQUIRE(isIdPairInList(&list, data, ids.at(2), ids.at(0)));
@@ -163,7 +163,7 @@ TEST_CASE("Test cpu neighbor list", "[cpu]") {
             };
 
             data.addParticles(particles);
-            list.setUp(0, 1);
+            list.setUp(ctx.calculateMaxCutoff(), 1);
             for (size_t i = 0; i < 6; ++i) {
                 for (size_t j = i + 1; j < 6; ++j) {
                     REQUIRE(isPairInList(&list, i, j));
@@ -199,9 +199,9 @@ TEST_CASE("Test cpu neighbor list", "[cpu]") {
         auto connection = kernel->connectObservable(obs.get());
 
         {
-            readdy::api::SimulationLoop loop (kernel.get(), .01);
+            readdy::api::SimulationLoop loop(kernel.get(), .01);
             loop.useReactionScheduler("Gillespie");
-            loop.skinSize() = .1;
+            loop.neighborListCutoff() += 0.1;
             loop.run(100);
         }
     }
@@ -259,7 +259,7 @@ TEST_CASE("Test cpu neighbor list", "[cpu]") {
         {
             readdy::api::SimulationLoop loop(kernel.get(), .01);
             loop.useReactionScheduler("Gillespie");
-            loop.skinSize() = .1;
+            loop.neighborListCutoff() += 0.1;
             loop.run(100);
         }
     }
@@ -304,7 +304,7 @@ TEST_CASE("Test cpu neighbor list", "[cpu]") {
 
         kernel->initialize();
 
-        kernel->stateModel().initializeNeighborList(0);
+        kernel->stateModel().initializeNeighborList(context.calculateMaxCutoff());
 
         auto integrator = kernel->actions().eulerBDIntegrator(.1);
         auto reactionHandler = kernel->actions().uncontrolledApproximation(.1);

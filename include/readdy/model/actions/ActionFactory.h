@@ -34,12 +34,13 @@
 
 
 /**
- * This file contains the declaration of the program factory. Internally, the factory is simply a map of
- * string -> std::function<Program*()>, which then can get called.
+ * This file contains the declaration of the action factory. Internally, the factory is simply a map of
+ * string -> std::function<Action*()>, which then can get called.
  *
- * @file ProgramFactory.h
- * @brief Declaration of the program factory.
+ * @file ActionFactory.h
+ * @brief Declaration of the action factory.
  * @author clonker
+ * @author chrisfroe
  * @date 08.04.16
  */
 
@@ -61,9 +62,10 @@ public:
     virtual std::vector<std::string> getAvailableActions() const {
         return {
                 getActionName<AddParticles>(), getActionName<EulerBDIntegrator>(), getActionName<CalculateForces>(),
-                getActionName<UpdateNeighborList>(), getActionName<reactions::UncontrolledApproximation>(),
+                getActionName<CreateNeighborList>(), getActionName<UpdateNeighborList>(),
+                getActionName<ClearNeighborList>(), getActionName<reactions::UncontrolledApproximation>(),
                 getActionName<reactions::Gillespie>(), getActionName<reactions::DetailedBalance>(),
-                getActionName<top::EvaluateTopologyReactions>()
+                getActionName<top::EvaluateTopologyReactions>(), getActionName<MdgfrdIntegrator>()
         };
     }
 
@@ -98,26 +100,26 @@ public:
 
     virtual std::unique_ptr<EulerBDIntegrator> eulerBDIntegrator(scalar timeStep) const = 0;
 
-    virtual std::unique_ptr<CalculateForces> calculateForces() const = 0;
+    virtual std::unique_ptr<MdgfrdIntegrator> mdgfrdIntegrator(scalar timeStep) const = 0;
 
-    virtual std::unique_ptr<UpdateNeighborList> updateNeighborList(UpdateNeighborList::Operation operation,
-                                                                   scalar skinSize) const = 0;
+    virtual std::unique_ptr<readdy::model::actions::CalculateForces> calculateForces() const = 0;
 
-    std::unique_ptr<UpdateNeighborList> updateNeighborList(UpdateNeighborList::Operation op) const {
-        return updateNeighborList(op, 0);
-    };
+    virtual std::unique_ptr<CreateNeighborList> createNeighborList(scalar interactionDistance) const = 0;
 
-    std::unique_ptr<UpdateNeighborList> updateNeighborList() const {
-        return updateNeighborList(UpdateNeighborList::Operation::init, 0);
-    };
+    virtual std::unique_ptr<UpdateNeighborList> updateNeighborList() const = 0;
+
+    virtual std::unique_ptr<ClearNeighborList> clearNeighborList() const = 0;
 
     virtual std::unique_ptr<EvaluateCompartments> evaluateCompartments() const = 0;
 
-    virtual std::unique_ptr<reactions::UncontrolledApproximation> uncontrolledApproximation(scalar timeStep) const = 0;
+    virtual std::unique_ptr<reactions::UncontrolledApproximation>
+    uncontrolledApproximation(scalar timeStep) const = 0;
 
-    virtual std::unique_ptr<reactions::Gillespie> gillespie(scalar timeStep) const = 0;
+    virtual std::unique_ptr<reactions::Gillespie>
+    gillespie(scalar timeStep) const = 0;
 
-    virtual std::unique_ptr<reactions::DetailedBalance> detailedBalance(scalar timeStep) const = 0;
+    virtual std::unique_ptr<reactions::DetailedBalance>
+    detailedBalance(scalar timeStep) const = 0;
 
     virtual std::unique_ptr<top::EvaluateTopologyReactions> evaluateTopologyReactions(scalar timeStep) const = 0;
 

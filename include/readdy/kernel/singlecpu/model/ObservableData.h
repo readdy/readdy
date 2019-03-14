@@ -58,6 +58,7 @@ struct ObservableData {
     using reaction_counts_map = readdy::model::reactions::reaction_counts_map;
 
     scalar energy = 0;
+    scalar time = 0;
     std::vector<readdy::model::reactions::ReactionRecord> reactionRecords{};
     reaction_counts_map reactionCounts {};
     Matrix33 virial {};

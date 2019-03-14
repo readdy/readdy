@@ -36,7 +36,7 @@
 /**
  * << detailed description >>
  *
- * @file SingleCPUKernelStateModel.h
+ * @file SCPUStateModel.h
  * @brief << brief description >>
  * @author clonker
  * @date 19.04.16
@@ -65,8 +65,8 @@ public:
     using topology_ref = std::unique_ptr<topology>;
     using topologies_vec = readdy::util::index_persistent_vector<topology_ref>;
 
-    void initializeNeighborList(scalar skin) override {
-        neighborList->setUp(skin, 1);
+    void initializeNeighborList(scalar interactionDistance) override {
+        neighborList->setUp(interactionDistance, 1);
     }
 
     void updateNeighborList() override {
@@ -111,6 +111,14 @@ public:
 
     scalar &energy() override {
         return _observableData.energy;
+    }
+
+    scalar time() const override {
+        return _observableData.time;
+    }
+
+    scalar &time() override {
+        return _observableData.time;
     }
 
     SCPUStateModel(const readdy::model::Context &context, const topology_action_factory *);

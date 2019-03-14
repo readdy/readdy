@@ -43,8 +43,7 @@
  * @date 24.06.16
  */
 
-#ifndef READDY_MAIN_PYFUNCTION_H
-#define READDY_MAIN_PYFUNCTION_H
+#pragma once
 
 #include <pybind11/pybind11.h>
 #include <pybind11/functional.h>
@@ -98,5 +97,3 @@ protected:
 
 }
 }
-
-#endif //READDY_MAIN_PYFUNCTION_H

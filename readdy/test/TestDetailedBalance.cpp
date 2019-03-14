@@ -38,7 +38,7 @@
  * @brief Kernel-non-specific tests of the detailed-balance reaction handler
  * @author chrisfroe
  * @date 29.05.18
- * @copyright GPL-3
+ * @copyright BSD-3
  */
 
 #include <catch2/catch.hpp>
@@ -338,9 +338,9 @@ TEMPLATE_TEST_CASE("Test detailed balance action.", "[detailed-balance]", Single
 void perform(readdy::model::Kernel *kernel, size_t nSteps, readdy::scalar timeStep, bool withIntegrator = false) {
     auto &&integrator = kernel->actions().eulerBDIntegrator(timeStep);
     auto &&forces = kernel->actions().calculateForces();
-    using update_nl = readdy::model::actions::UpdateNeighborList;
-    auto &&initNeighborList = kernel->actions().updateNeighborList(update_nl::Operation::init, 0);
-    auto &&neighborList = kernel->actions().updateNeighborList(update_nl::Operation::update, 0);
+    using update_nl = readdy::model::actions::CreateNeighborList;
+    auto &&initNeighborList = kernel->actions().createNeighborList(kernel->context().calculateMaxCutoff());
+    auto &&neighborList = kernel->actions().updateNeighborList();
     auto &&reactions = kernel->actions().detailedBalance(timeStep);
 
     initNeighborList->perform();

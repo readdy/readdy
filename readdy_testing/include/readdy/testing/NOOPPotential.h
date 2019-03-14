@@ -43,13 +43,12 @@
  * @date 19.08.16
  */
 
-#ifndef READDY_MAIN_NOOPPOTENTIAL_H
-#define READDY_MAIN_NOOPPOTENTIAL_H
+#pragma once
 
 #include <readdy/model/potentials/PotentialOrder2.h>
 
-namespace readdy {
-namespace testing {
+namespace readdy::testing {
+
 struct NOOPPotentialOrder2 : public readdy::model::potentials::PotentialOrder2 {
     NOOPPotentialOrder2(particle_type_type particleType1, particle_type_type particleType2,
                         readdy::scalar cutoff = 0, readdy::scalar force = 0, readdy::scalar energy = 0)
@@ -79,7 +78,5 @@ struct NOOPPotentialOrder2 : public readdy::model::potentials::PotentialOrder2 {
 
     readdy::scalar cutoff, force, energy;
 };
-}
-}
 
-#endif //READDY_MAIN_NOOPPOTENTIAL_H
+}

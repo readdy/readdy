@@ -34,17 +34,13 @@
 
 
 /**
- * << detailed description >>
- *
  * @file KernelTest.h
- * @brief << brief description >>
+ * @brief Utilities for testing different kernels
  * @author clonker
  * @date 15.07.16
  */
 
-
-#ifndef READDY_MAIN_KERNELTEST_H
-#define READDY_MAIN_KERNELTEST_H
+#pragma once
 
 #include <readdy/model/Kernel.h>
 #include <readdy/plugin/KernelProvider.h>
@@ -59,5 +55,3 @@ template<typename Kernel> readdy::plugin::KernelProvider::kernel_ptr create() {
 };
 
 }
-
-#endif //READDY_MAIN_KERNELTEST_H

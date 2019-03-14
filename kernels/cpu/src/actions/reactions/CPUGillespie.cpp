@@ -34,10 +34,8 @@
 
 
 /**
- * << detailed description >>
- *
- * @file Gillespie.cpp
- * @brief << brief description >>
+ * @file CPUGillespie.cpp
+ * @brief CPU kernel implementation of Gillespie-order reaction handler
  * @author clonker
  * @date 20.10.16
  */
@@ -50,7 +48,7 @@ namespace cpu {
 namespace actions {
 namespace reactions {
 
-CPUGillespie::CPUGillespie(CPUKernel *const kernel, scalar timeStep) : super(timeStep), kernel(kernel) {}
+CPUGillespie::CPUGillespie(CPUKernel *kernel, readdy::scalar timeStep) : super(timeStep), kernel(kernel) {}
 
 void CPUGillespie::perform() {
     const auto &ctx = kernel->context();

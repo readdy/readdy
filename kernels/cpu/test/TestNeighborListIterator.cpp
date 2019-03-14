@@ -77,7 +77,7 @@ TEST_CASE("Test cpu neighbor list iterators", "[cpu]") {
             ids.push_back(data.getParticle(i).id());
         }
 
-        ccll.setUp(0, 1);
+        ccll.setUp(context.calculateMaxCutoff(), 1);
 
         {
             std::size_t nNonemptyCells {0};
@@ -108,7 +108,7 @@ TEST_CASE("Test cpu neighbor list iterators", "[cpu]") {
         context.reactions().addFusion("fusion", "A", "A", "A", 1.0, 1.0);
         context.boxSize() = {5., 5., 5.};
 
-        ccll.setUp(0, 1);
+        ccll.setUp(context.calculateMaxCutoff(), 1);
         ccll.update();
 
         {

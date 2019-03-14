@@ -58,7 +58,7 @@ public:
     void perform() override;
 
 private:
-    CPUKernel *kernel;
+    CPUKernel *const kernel;
 };
 }
 }

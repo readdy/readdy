@@ -35,7 +35,7 @@
 
 /**
  * This file contains the base class definitions for Kernel and KernelProvider.
- * A Kernel is used to execute Programs, i.e., instances of readdy::plugin::Program.
+ * A Kernel is used to execute Actions, i.e., instances of readdy::model::Action.
  * The derived kernels can be built in or provided by shared libs in directories, which are loaded by the KernelProvider.
  * Each Kernel has a readdy::plugin::Kernel::name by which it can be accessed in the KernelProvider.
  *

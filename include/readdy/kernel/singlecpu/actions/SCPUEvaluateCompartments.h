@@ -34,15 +34,8 @@
 
 
 /**
- * The SingleCPUCompartments program defines compartments via characteristic functions that map from Vec3 to bool.
- * For every compartment
- * one can then define conversions that should take place as soon as a particle enters the compartment.
- * Note that the user is responsible for
- * keeping the compartments disjoint.
- *
- * @file SingleCPUCompartments.cpp
- * @brief SingleCPUCompartments defines compartments via characteristic functions and performs conversions of
- * particle species on these compartments.
+ * @file SCPUEvaluateCompartments.cpp
+ * @brief Single CPU kernel declaration of EvaluateCompartments action
  * @author chrisfroe
  * @date 13.10.16
  */

@@ -39,7 +39,7 @@
  * @author chrisfroe
  * @author clonker
  * @date 12.12.16
- * @copyright GPL-3
+ * @copyright BSD-3
  */
 
 #include <readdy/model/Kernel.h>

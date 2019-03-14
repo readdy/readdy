@@ -34,16 +34,12 @@
 
 
 /**
- * << detailed description >>
- *
- * @file ExportSchemeApi.h
- * @brief << brief description >>
+ * @file ExportLoopApi.cpp
+ * @brief Python bindings for SimulationLoop
  * @author clonker
  * @date 26.08.16
  */
 
-#ifndef READDY_MAIN_EXPORTSCHEMEAPI_H
-#define READDY_MAIN_EXPORTSCHEMEAPI_H
 
 #include <pybind11/pybind11.h>
 #include <readdy/api/SimulationLoop.h>
@@ -53,7 +49,7 @@
 using UserAction = readdy::model::actions::UserDefinedAction;
 
 
-void exportSchemeApi(pybind11::module &module) {
+void exportLoopApi(pybind11::module &module) {
     namespace py = pybind11;
     using namespace py::literals;
     using Loop = readdy::api::SimulationLoop;
@@ -105,9 +101,9 @@ void exportSchemeApi(pybind11::module &module) {
                 self.evaluateTopologyReactions(evaluate, timeStep.is_none() ? self.timeStep() : timeStep.cast<readdy::scalar>());
             }, "evaluate"_a, "timeStep"_a = py::none())
             .def("evaluate_observables", &Loop::evaluateObservables, "evaluate"_a)
-            .def_property("skin_size", [](const Loop &self) { return self.skinSize(); },
-                          [](Loop &self, readdy::scalar skin) { self.skinSize() = skin; })
+            .def_property("neighbor_list_cutoff", [](const Loop &self) { return self.neighborListCutoff(); },
+                          [](Loop &self, readdy::scalar distance) { self.neighborListCutoff() = distance; })
+            .def("calculate_max_cutoff", &Loop::calculateMaxCutoff)
+            .def("describe", &Loop::describe)
             .def("validate", &Loop::validate);
 }
-
-#endif //READDY_MAIN_EXPORTSCHEMEAPI_H

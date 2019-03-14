@@ -34,13 +34,11 @@
 
 
 /**
- * << detailed description >>
- *
  * @file CellLinkedList.cpp
- * @brief << brief description >>
+ * @brief Implementation of cell linked list for CPU kernel
  * @author clonker
  * @date 12.09.17
- * @copyright GPL-3
+ * @copyright BSD-3
  */
 
 #include <readdy/kernel/cpu/nl/CellLinkedList.h>
@@ -51,100 +49,99 @@ namespace kernel {
 namespace cpu {
 namespace nl {
 
-CellLinkedList::CellLinkedList(data_type &data, const readdy::model::Context &context,
-                               thread_pool &pool)
+CellLinkedList::CellLinkedList(data_type &data, const readdy::model::Context &context, thread_pool &pool)
         : _data(data), _context(context), _pool(pool) {}
 
-
-void CellLinkedList::setUp(scalar skin, cell_radius_type radius) {
-    if (!_is_set_up || _skin != skin || _radius != radius) {
-
-        _skin = skin;
+void CellLinkedList::setUp(scalar cutoff, cell_radius_type radius) {
+    if (!_isSetUp || _cutoff != cutoff || _radius != radius) {
+        if (cutoff <= 0) {
+            throw std::logic_error("The cutoff distance for setting up a neighbor list must be > 0");
+        }
+        if (cutoff < _context.get().calculateMaxCutoff()) {
+            log::warn(fmt::format(
+                    "The requested interaction distance {} for neighbor-list set-up was smaller than the largest cutoff {}",
+                    cutoff, _context.get().calculateMaxCutoff()));
+        }
         _radius = radius;
-        _max_cutoff = _context.get().calculateMaxCutoff();
-        if (_max_cutoff > 0) {
-            auto size = _context.get().boxSize();
-            auto desiredWidth = static_cast<scalar>((_max_cutoff + _skin) / static_cast<scalar>(radius));
-            std::array<std::size_t, 3> dims{};
+        _cutoff = cutoff;
+
+        auto size = _context.get().boxSize();
+        auto desiredWidth = static_cast<scalar>((_cutoff) / static_cast<scalar>(radius));
+        std::array<std::size_t, 3> dims{};
+        for (int i = 0; i < 3; ++i) {
+            dims[i] = static_cast<unsigned int>(std::max(1., std::floor(size[i] / desiredWidth)));
+            _cellSize[i] = size[i] / static_cast<scalar>(dims[i]);
+        }
+
+        _cellIndex = util::Index3D(dims[0], dims[1], dims[2]);
+
+        {
+            // set up cell adjacency list
+            std::array<std::size_t, 3> nNeighbors{{_cellIndex[0], _cellIndex[1], _cellIndex[2]}};
             for (int i = 0; i < 3; ++i) {
-                dims[i] = static_cast<unsigned int>(std::max(1., std::floor(size[i] / desiredWidth)));
-                _cellSize[i] = size[i] / static_cast<scalar>(dims[i]);
+                nNeighbors[i] = std::min(nNeighbors[i], static_cast<std::size_t>(2 * radius + 1));
             }
-
-            _cellIndex = util::Index3D(dims[0], dims[1], dims[2]);
-
+            auto nAdjacentCells = nNeighbors[0] * nNeighbors[1] * nNeighbors[2];
+            _cellNeighbors = util::Index2D(_cellIndex.size(), 1 + nAdjacentCells);
+            _cellNeighborsContent.resize(_cellNeighbors.size());
             {
-                // set up cell adjacency list
-                std::array<std::size_t, 3> nNeighbors{{_cellIndex[0], _cellIndex[1], _cellIndex[2]}};
-                for (int i = 0; i < 3; ++i) {
-                    nNeighbors[i] = std::min(nNeighbors[i], static_cast<std::size_t>(2 * radius + 1));
-                }
-                auto nAdjacentCells = nNeighbors[0] * nNeighbors[1] * nNeighbors[2];
-                _cellNeighbors = util::Index2D(_cellIndex.size(), 1 + nAdjacentCells);
-                _cellNeighborsContent.resize(_cellNeighbors.size());
-                {
-                    auto pbc = _context.get().periodicBoundaryConditions();
-                    int r = _radius;
-                    // local adjacency
-                    std::vector<std::size_t> adj;
-                    adj.reserve(1 + nAdjacentCells);
-                    for (int i = 0; i < _cellIndex[0]; ++i) {
-                        for (int j = 0; j < _cellIndex[1]; ++j) {
-                            for (int k = 0; k < _cellIndex[2]; ++k) {
-                                auto cellIdx = _cellIndex(static_cast<std::size_t>(i), static_cast<std::size_t>(j),
-                                                          static_cast<std::size_t>(k));
+                auto pbc = _context.get().periodicBoundaryConditions();
+                int r = _radius;
+                // local adjacency
+                std::vector<std::size_t> adj;
+                adj.reserve(1 + nAdjacentCells);
+                for (int i = 0; i < _cellIndex[0]; ++i) {
+                    for (int j = 0; j < _cellIndex[1]; ++j) {
+                        for (int k = 0; k < _cellIndex[2]; ++k) {
+                            auto cellIdx = _cellIndex(static_cast<std::size_t>(i), static_cast<std::size_t>(j),
+                                                      static_cast<std::size_t>(k));
 
-                                adj.resize(0);
+                            adj.resize(0);
 
-                                for (int ii = i - r; ii <= i + r; ++ii) {
-                                    for (int jj = j - r; jj <= j + r; ++jj) {
-                                        for (int kk = k - r; kk <= k + r; ++kk) {
-                                            if (ii == i && jj == j && kk == k) continue;
-                                            auto adj_x = ii;
-                                            if (pbc[0]) {
-                                                auto cix = static_cast<int>(_cellIndex[0]);
-                                                adj_x = (adj_x % cix + cix) % cix;
-                                            }
-                                            auto adj_y = jj;
-                                            if (pbc[1]) {
-                                                auto cix = static_cast<int>(_cellIndex[1]);
-                                                adj_y = (adj_y % cix + cix) % cix;
-                                            }
-                                            auto adj_z = kk;
-                                            if (pbc[2]) {
-                                                auto cix = static_cast<int>(_cellIndex[2]);
-                                                adj_z = (adj_z % cix + cix) % cix;
-                                            }
+                            for (int ii = i - r; ii <= i + r; ++ii) {
+                                for (int jj = j - r; jj <= j + r; ++jj) {
+                                    for (int kk = k - r; kk <= k + r; ++kk) {
+                                        if (ii == i && jj == j && kk == k) continue;
+                                        auto adj_x = ii;
+                                        if (pbc[0]) {
+                                            auto cix = static_cast<int>(_cellIndex[0]);
+                                            adj_x = (adj_x % cix + cix) % cix;
+                                        }
+                                        auto adj_y = jj;
+                                        if (pbc[1]) {
+                                            auto cix = static_cast<int>(_cellIndex[1]);
+                                            adj_y = (adj_y % cix + cix) % cix;
+                                        }
+                                        auto adj_z = kk;
+                                        if (pbc[2]) {
+                                            auto cix = static_cast<int>(_cellIndex[2]);
+                                            adj_z = (adj_z % cix + cix) % cix;
+                                        }
 
-                                            if (adj_x >= 0 && adj_y >= 0 && adj_z >= 0
-                                                && adj_x < _cellIndex[0] && adj_y < _cellIndex[1] &&
-                                                adj_z < _cellIndex[2]) {
-                                                adj.push_back(_cellIndex(adj_x, adj_y, adj_z));
-                                            }
+                                        if (adj_x >= 0 && adj_y >= 0 && adj_z >= 0
+                                            && adj_x < _cellIndex[0] && adj_y < _cellIndex[1] &&
+                                            adj_z < _cellIndex[2]) {
+                                            adj.push_back(_cellIndex(adj_x, adj_y, adj_z));
                                         }
                                     }
                                 }
-
-                                std::sort(adj.begin(), adj.end());
-                                adj.erase(std::unique(std::begin(adj), std::end(adj)), std::end(adj));
-                                adj.erase(std::remove(std::begin(adj), std::end(adj), _cellIndex(i, j, k)),
-                                          std::end(adj));
-
-                                auto begin = _cellNeighbors(cellIdx, 0_z);
-                                _cellNeighborsContent[begin] = adj.size();
-                                std::copy(adj.begin(), adj.end(), &_cellNeighborsContent.at(begin + 1));
                             }
+
+                            std::sort(adj.begin(), adj.end());
+                            adj.erase(std::unique(std::begin(adj), std::end(adj)), std::end(adj));
+                            adj.erase(std::remove(std::begin(adj), std::end(adj), _cellIndex(i, j, k)),
+                                      std::end(adj));
+
+                            auto begin = _cellNeighbors(cellIdx, 0_z);
+                            _cellNeighborsContent[begin] = adj.size();
+                            std::copy(adj.begin(), adj.end(), &_cellNeighborsContent.at(begin + 1));
                         }
                     }
                 }
             }
-
-            if (_max_cutoff > 0) {
-                setUpBins();
-            }
-
-            _is_set_up = true;
         }
+        _isSetUp = true;
+        setUpBins();
     }
 }
 
@@ -235,7 +232,7 @@ void CompactCellLinkedList::fillBins<false>() {
 }
 
 void CompactCellLinkedList::setUpBins() {
-    if (_max_cutoff > 0) {
+    if (_isSetUp) {
         {
             auto nParticles = _data.get().size();
             _head.clear();
@@ -248,6 +245,8 @@ void CompactCellLinkedList::setUpBins() {
         } else {
             fillBins<false>();
         }
+    } else {
+        throw std::logic_error("Attempting to fill neighborlist bins, but cell structure is not set up yet");
     }
 }
 

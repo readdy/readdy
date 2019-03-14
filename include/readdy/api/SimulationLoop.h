@@ -79,7 +79,6 @@ NAMESPACE_BEGIN(api)
  * superclass for all simulation schemes
  */
 class SimulationLoop {
-    using NeighborListOps = model::actions::UpdateNeighborList::Operation;
 public:
     /**
      * the type of function that is responsible for deciding whether the simulation should continue
@@ -90,21 +89,23 @@ public:
     using ActionPtr = std::shared_ptr<readdy::model::actions::Action>;
 
     /**
-     * Creates a new simulation scheme.
+     * Creates a new simulation scheme. Creates and initializes actions: Sets the neighborlist distance
+     * to be the largest cutoff present in the context.
      * @param kernel the kernel
+     * @param timeStep the time step width
      */
     explicit SimulationLoop(model::Kernel *const kernel, scalar timeStep)
             : _kernel(kernel), _timeStep(timeStep),
               _integrator(kernel->actions().eulerBDIntegrator(timeStep).release()),
               _reactions(kernel->actions().gillespie(timeStep).release()),
               _forces(kernel->actions().calculateForces().release()),
-              _initNeighborList(kernel->actions().updateNeighborList(NeighborListOps::init).release()),
-              _neighborList(kernel->actions().updateNeighborList(NeighborListOps::update).release()),
-              _clearNeighborList(kernel->actions().updateNeighborList(NeighborListOps::clear).release()),
+              _initNeighborList(kernel->actions().createNeighborList(kernel->context().calculateMaxCutoff()).release()),
+              _updateNeighborList(kernel->actions().updateNeighborList().release()),
+              _clearNeighborList(kernel->actions().clearNeighborList().release()),
               _topologyReactions(kernel->actions().evaluateTopologyReactions(timeStep).release()) {}
 
     /**
-     * This function gives access the an updateCallback function that gets called every 100 time steps if one is
+     * This function gives access to an progressCallback function that gets called every 100 time steps if one is
      * running the simulation for a fixed number of time steps.
      * @return the callback function
      */
@@ -141,7 +142,7 @@ public:
     }
 
     void runUpdateNeighborList() {
-        if (_neighborList) _neighborList->perform();
+        if (_updateNeighborList) _updateNeighborList->perform();
     }
 
     void runClearNeighborList() {
@@ -200,9 +201,17 @@ public:
         configGroup = std::make_unique<h5rd::Group>(file.createGroup("readdy/config"));
     }
 
-    scalar &skinSize() { return _skinSize; }
+    scalar &neighborListCutoff() {
+        return _initNeighborList->cutoffDistance();
+    }
 
-    const scalar &skinSize() const { return _skinSize; }
+    const scalar &neighborListCutoff() const {
+        return _initNeighborList->cutoffDistance();
+    }
+
+    const scalar calculateMaxCutoff() const {
+        return kernel()->context().calculateMaxCutoff();
+    }
 
     /**
      * This method runs a simulation for a fixed number of time steps by providing an appropriate continue function.
@@ -212,14 +221,14 @@ public:
         // show every 100 time steps
         if (!_progressCallback) {
             _progressCallback = [this, steps](time_step_type current) {
-                log::info("Simulation progress: {} / {} steps", (current - start), steps);
+                log::info("Simulation progress: {} / {} steps", (current - _start), steps);
             };
         }
         auto defaultContinueCriterion = [this, steps](const time_step_type current) {
-            if (current != start && _progressOutputStride > 0 && (current - start) % _progressOutputStride == 0) {
+            if (current != _start && _progressOutputStride > 0 && (current - _start) % _progressOutputStride == 0) {
                 _progressCallback(current);
             }
-            return current < start + steps;
+            return current < _start + steps;
         };
         run(defaultContinueCriterion);
     };
@@ -232,21 +241,20 @@ public:
     void run(const continue_fun &continueFun) {
         validate(_timeStep);
         {
-            bool requiresNeighborList = _forces || _reactions || _topologyReactions;
+            bool requiresNeighborList = _initNeighborList->cutoffDistance() > 0;
             if (requiresNeighborList) {
-                if (!(_initNeighborList && _neighborList && _clearNeighborList)) {
+                if (!(_initNeighborList && _updateNeighborList && _clearNeighborList)) {
                     throw std::logic_error("Neighbor list required but set to null!");
                 }
-                _initNeighborList->skin() = _skinSize;
-                _neighborList->skin() = _skinSize;
-                _clearNeighborList->skin() = _skinSize;
+                _initNeighborList->cutoffDistance() = std::max(_initNeighborList->cutoffDistance(),
+                                                               kernel()->context().calculateMaxCutoff());
             }
             runInitialize();
             if (requiresNeighborList) runInitializeNeighborList();
             runForces();
-            time_step_type t = start;
+            time_step_type t = _start;
             runEvaluateObservables(t);
-            std::for_each(std::begin(_callbacks), std::end(_callbacks), [t](const auto& callback) {
+            std::for_each(std::begin(_callbacks), std::end(_callbacks), [t](const auto &callback) {
                 callback(t);
             });
             while (continueFun(t)) {
@@ -257,13 +265,15 @@ public:
                 if (requiresNeighborList) runUpdateNeighborList();
                 runForces();
                 runEvaluateObservables(t + 1);
-                std::for_each(std::begin(_callbacks), std::end(_callbacks), [t](const auto& callback) {
-                    callback(t+1);
+                std::for_each(std::begin(_callbacks), std::end(_callbacks), [t](const auto &callback) {
+                    callback(t + 1);
                 });
                 ++t;
+
+                _kernel->stateModel().time() += _timeStep;
             }
             if (requiresNeighborList) runClearNeighborList();
-            start = t;
+            _start = t;
             log::info("Simulation completed");
         }
     }
@@ -307,20 +317,40 @@ public:
         _callbacks.emplace_back(std::move(f));
     }
 
+    std::string describe() {
+        namespace rus = readdy::util::str;
+        std::string description;
+        description += fmt::format("Configured simulation loop with:{}", rus::newline);
+        description += fmt::format("--------------------------------{}", rus::newline);
+        description += fmt::format(" - timeStep = {}{}", _timeStep, rus::newline);
+        description += fmt::format(" - evaluateObservables = {}{}", _evaluateObservables, rus::newline);
+        description += fmt::format(" - progressOutputStride = {}{}", _progressOutputStride, rus::newline);
+        description += fmt::format(" - context written to file = {}{}", configGroup ? true : false, rus::newline);
+        // todo let actions know their name?
+        description += fmt::format(" - Performing actions:{}", rus::newline);
+        description += fmt::format("   * Initialize neighbor list? {} {}", _initNeighborList ? true : false, rus::newline);
+        description += fmt::format("   * Update neighbor list? {} {}", _updateNeighborList ? true : false, rus::newline);
+        description += fmt::format("   * Clear neighbor list? {} {}", _clearNeighborList ? true : false, rus::newline);
+        description += fmt::format("   * Integrate diffusion? {} {}", _integrator ? true : false, rus::newline);
+        description += fmt::format("   * Calculate forces? {} {}", _forces ? true : false, rus::newline);
+        description += fmt::format("   * Handle reactions? {} {}", _reactions ? true : false, rus::newline);
+        description += fmt::format("   * Handle topology reactions? {} {}", _topologyReactions ? true : false, rus::newline);
+        return description;
+    }
+
 protected:
     model::Kernel *const _kernel;
     std::shared_ptr<model::actions::TimeStepDependentAction> _integrator{nullptr};
     std::shared_ptr<model::actions::Action> _forces{nullptr};
     std::shared_ptr<model::actions::TimeStepDependentAction> _reactions{nullptr};
-    std::shared_ptr<model::actions::UpdateNeighborList> _initNeighborList{nullptr};
-    std::shared_ptr<model::actions::UpdateNeighborList> _neighborList{nullptr};
+    std::shared_ptr<model::actions::CreateNeighborList> _initNeighborList{nullptr};
+    std::shared_ptr<model::actions::UpdateNeighborList> _updateNeighborList{nullptr};
     std::shared_ptr<model::actions::top::EvaluateTopologyReactions> _topologyReactions{nullptr};
-    std::shared_ptr<model::actions::UpdateNeighborList> _clearNeighborList{nullptr};
-    scalar _skinSize = 0;
-    std::shared_ptr<h5rd::Group> configGroup = nullptr;
+    std::shared_ptr<model::actions::ClearNeighborList> _clearNeighborList{nullptr};
+    std::shared_ptr<h5rd::Group> configGroup{nullptr};
 
     bool _evaluateObservables = true;
-    time_step_type start = 0;
+    time_step_type _start = 0;
     std::size_t _progressOutputStride = 100;
     std::function<void(time_step_type)> _progressCallback;
     scalar _timeStep;

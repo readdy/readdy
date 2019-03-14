@@ -33,9 +33,11 @@
  ********************************************************************/
 
 
-//
-// Created by clonker on 07.03.16.
-//
+/**
+ * @file TestPlugins.cpp
+ * @author clonker
+ * @date 07.03.16
+ */
 
 #include <catch2/catch.hpp>
 

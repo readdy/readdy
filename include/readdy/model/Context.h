@@ -148,7 +148,7 @@ public:
     /**
      * Returns whether reaction counts shall be recorded in the state model (if it is supported). It is then obtainable
      * by the readdy::model::observables::ReactionCounts observable.
-     * @return wheter reaction counts shall be recorded
+     * @return whether reaction counts shall be recorded
      */
     const bool &recordReactionCounts() const {
         return _recordReactionCounts;
@@ -157,7 +157,7 @@ public:
     /**
      * Returns whether reaction counts shall be recorded in the state model (if it is supported). It is then obtainable
      * by the readdy::model::observables::ReactionCounts observable.
-     * @return wheter reaction counts shall be recorded
+     * @return whether reaction counts shall be recorded
      */
     bool &recordReactionCounts() {
         return _recordReactionCounts;
@@ -253,7 +253,6 @@ private:
     bool _recordReactionsWithPositions{false};
     bool _recordReactionCounts{false};
     bool _recordVirial{false};
-
 };
 
 NAMESPACE_END(model)

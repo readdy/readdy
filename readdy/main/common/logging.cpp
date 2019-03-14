@@ -41,7 +41,7 @@
  * @author chrisfrö
  * @author clonker
  * @date 27.03.17
- * @copyright GPL-3
+ * @copyright BSD-3
  */
 
 #include <readdy/common/logging.h>

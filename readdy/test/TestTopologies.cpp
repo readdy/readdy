@@ -58,7 +58,7 @@
  * @brief Tests for topology potentials
  * @author clonker
  * @date 08.02.17
- * @copyright GPL-3
+ * @copyright BSD-3
  */
 
 #include <catch2/catch.hpp>

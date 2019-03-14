@@ -34,13 +34,10 @@
 
 
 /**
- * << detailed description >>
- *
  * @file ExportKernelContext.cpp
- * @brief << brief description >>
+ * @brief Create bindings for the kernel context and its registries.
  * @author clonker
  * @date 20.09.17
- * @copyright GPL-3
  */
 
 #include <pybind11/pybind11.h>

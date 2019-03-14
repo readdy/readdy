@@ -42,7 +42,7 @@
  * @author clonker
  * @author chrisfroe
  * @date 10.03.17
- * @copyright GPL-3
+ * @copyright BSD-3
  */
 
 #include <json.hpp>

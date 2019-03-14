@@ -40,7 +40,7 @@
  * @brief << brief description >>
  * @author clonker
  * @date 13.03.17
- * @copyright GPL-3
+ * @copyright BSD-3
  */
 
 #include <readdy/io/BloscFilter.h>
@@ -78,6 +78,7 @@ void ReactionCounts::flush() {
 }
 
 void ReactionCounts::initialize(Kernel *const kernel) {
+    // fixme why is this warning here? e.g. virial silently sets its corresponding flag in context
     if (!kernel->context().recordReactionCounts()) {
         log::warn("The \"ReactionCounts\"-observable set context.recordReactionCounts() to true. "
                           "If this is undesired, the observable should not be registered.");

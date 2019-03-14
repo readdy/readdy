@@ -150,6 +150,7 @@ std::vector<event_t> findEvents(const SCPUKernel *const kernel, scalar dt, bool 
 void SCPUUncontrolledApproximation::perform() {
     const auto &ctx = kernel->context();
     SCPUStateModel &stateModel = kernel->getSCPUKernelStateModel();
+
     if(ctx.recordReactionsWithPositions()) {
         stateModel.reactionRecords().clear();
     }
@@ -340,7 +341,9 @@ void SCPUGillespie::perform() {
         return;
     }
     auto &stateModel = kernel->getSCPUKernelStateModel();
-    if(ctx.recordReactionsWithPositions()) stateModel.reactionRecords().clear();
+    if(ctx.recordReactionsWithPositions()) {
+        stateModel.reactionRecords().clear();
+    }
     if(ctx.recordReactionCounts()) {
         stateModel.resetReactionCounts();
     }
@@ -456,7 +459,9 @@ void SCPUDetailedBalance::perform() {
                 }
                 const auto updateRecord = data->update(std::move(forwardUpdate));
                 auto backwardUpdate = generateBackwardUpdate(particleBackup, updateRecord);
-                stateModel.updateNeighborList();
+                if (nl->cutoff() > 0) {
+                    stateModel.updateNeighborList();
+                }
                 calculateEnergies();
 
                 scalar boltzmannFactor = 1.;
@@ -506,7 +511,9 @@ void SCPUDetailedBalance::perform() {
                     // reject/rollback
                     log::trace("reject! apply backward update");
                     data->update(std::move(backwardUpdate));
-                    stateModel.updateNeighborList();
+                    if (nl->cutoff() > 0) {
+                        stateModel.updateNeighborList();
+                    }
                     calculateEnergies();
                     if (energyBefore != stateModel.energy()) {
                         log::warn("reaction move was rejected but energy of state is different "
@@ -533,7 +540,9 @@ void SCPUDetailedBalance::perform() {
                 }
 
                 data->update(std::move(forwardUpdate));
-                stateModel.updateNeighborList();
+                if (nl->cutoff() > 0) {
+                    stateModel.updateNeighborList();
+                }
                 calculateEnergies();
             }
         };

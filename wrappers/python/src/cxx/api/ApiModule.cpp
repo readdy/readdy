@@ -55,8 +55,9 @@ using ctx = readdy::model::Context;
 using kern = readdy::model::Kernel;
 
 void exportTopologies(py::module &);
-void exportSchemeApi(py::module &);
+void exportLoopApi(py::module &module);
 void exportKernelContext(py::module &);
+void exportSimulationParams(py::module &);
 
 std::string getSelectedKernelType(sim &self) { /* discard const reference */ return self.selectedKernelType(); }
 
@@ -70,7 +71,7 @@ enum class ParticleTypeFlavor {
 void exportApi(py::module &api) {
     using namespace pybind11::literals;
 
-    exportSchemeApi(api);
+    exportLoopApi(api);
     auto topologyModule = api.def_submodule("top");
     exportTopologies(topologyModule);
     exportKernelContext(api);

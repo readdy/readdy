@@ -34,11 +34,13 @@
 
 
 /**
- * << detailed description >>
+ * Reaction handler declaration specific to Single CPU kernel. Defines additional structs: a reaction Event
+ * to be used by the reaction handlers, and ParticleBackup to be used by the DetailedBalance reaction handler.
  *
- * @file SingleCPUDefaultReactionProgram.h.h
- * @brief << brief description >>
+ * @file SCPUReactionImpls.h
+ * @brief Single CPU kernel declaration of reaction handlers
  * @author clonker
+ * @author chrisfroe
  * @date 21.06.16
  */
 

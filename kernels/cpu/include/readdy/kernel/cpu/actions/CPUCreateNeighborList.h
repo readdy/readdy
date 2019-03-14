@@ -34,48 +34,53 @@
 
 
 /**
- * << detailed description >>
- *
- * @file UpdateNeighborList.h
- * @brief << brief description >>
+ * @file CPUNeighborList.h
+ * @brief CPU kernel declaration of NeighborList Action
  * @author clonker
  * @date 13.07.16
  */
-
 
 #pragma once
 #include <readdy/model/actions/Actions.h>
 #include <readdy/kernel/cpu/CPUKernel.h>
 
-namespace readdy {
-namespace kernel {
-namespace cpu {
-namespace actions {
-class CPUUpdateNeighborList : public readdy::model::actions::UpdateNeighborList {
-    using super = readdy::model::actions::UpdateNeighborList;
-public:
+namespace readdy::kernel::cpu::actions {
 
-    CPUUpdateNeighborList(CPUKernel *kernel, super::Operation op, scalar skin) : super(op, skin), kernel(kernel) {}
+class CPUCreateNeighborList : public readdy::model::actions::CreateNeighborList {
+public:
+    CPUCreateNeighborList(CPUKernel *kernel, scalar cutoffDistance)
+            : CreateNeighborList(cutoffDistance), kernel(kernel) {}
 
     void perform() override {
-        switch (operation) {
-            case init:
-                kernel->getCPUKernelStateModel().initializeNeighborList(skinSize);
-                break;
-            case clear:
-                kernel->getCPUKernelStateModel().clearNeighborList();
-                break;
-            case update:
-                kernel->getCPUKernelStateModel().updateNeighborList();
-                break;
-        }
-
+        kernel->getCPUKernelStateModel().initializeNeighborList(_cutoffDistance);
     }
 
 private:
-    CPUKernel *kernel;
+    CPUKernel *const kernel;
 };
-}
-}
-}
+
+class CPUUpdateNeighborList : public readdy::model::actions::UpdateNeighborList {
+public:
+    explicit CPUUpdateNeighborList(CPUKernel *kernel) : kernel(kernel) {}
+
+    void perform() override {
+        kernel->getCPUKernelStateModel().updateNeighborList();
+    }
+
+private:
+    CPUKernel *const kernel;
+};
+
+class CPUClearNeighborList : public readdy::model::actions::ClearNeighborList {
+public:
+    explicit CPUClearNeighborList(CPUKernel *kernel) : kernel(kernel) {}
+
+    void perform() override {
+        kernel->getCPUKernelStateModel().clearNeighborList();
+    }
+
+private:
+    CPUKernel *const kernel;
+};
+
 }

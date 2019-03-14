@@ -34,10 +34,8 @@
 
 
 /**
- * << detailed description >>
- *
- * @file CPUProgramFactory.h
- * @brief << brief description >>
+ * @file CPUActionFactory.h
+ * @brief Declaration of CPU action factory
  * @author clonker
  * @date 23.06.16
  */
@@ -61,19 +59,26 @@ public:
 
     std::unique_ptr<model::actions::EulerBDIntegrator> eulerBDIntegrator(scalar timeStep) const override;
 
-    std::unique_ptr<model::actions::CalculateForces> calculateForces() const override;
+    std::unique_ptr<readdy::model::actions::MdgfrdIntegrator> mdgfrdIntegrator(scalar timeStep) const override;
 
-    std::unique_ptr<model::actions::UpdateNeighborList>
-    updateNeighborList(model::actions::UpdateNeighborList::Operation operation, scalar skinSize) const override;
+    std::unique_ptr<readdy::model::actions::CalculateForces> calculateForces() const override;
+
+    std::unique_ptr<model::actions::CreateNeighborList> createNeighborList(scalar interactionDistance) const override;
+
+    std::unique_ptr<model::actions::UpdateNeighborList> updateNeighborList() const override;
+
+    std::unique_ptr<model::actions::ClearNeighborList> clearNeighborList() const override;
 
     std::unique_ptr<model::actions::EvaluateCompartments> evaluateCompartments() const override;
 
     std::unique_ptr<model::actions::reactions::UncontrolledApproximation>
     uncontrolledApproximation(scalar timeStep) const override;
 
-    std::unique_ptr<model::actions::reactions::Gillespie> gillespie(scalar timeStep) const override;
+    std::unique_ptr<model::actions::reactions::Gillespie>
+    gillespie(scalar timeStep) const override;
 
-    std::unique_ptr<model::actions::reactions::DetailedBalance> detailedBalance(scalar timeStep) const override;
+    std::unique_ptr<model::actions::reactions::DetailedBalance>
+    detailedBalance(scalar timeStep) const override;
 
     std::unique_ptr<model::actions::top::EvaluateTopologyReactions>
     evaluateTopologyReactions(scalar timeStep) const override;

@@ -38,7 +38,7 @@
  * @brief Definition of the topology reaction exception.
  * @author clonker
  * @date 19.04.17
- * @copyright GPL-3
+ * @copyright BSD-3
  */
 
 #pragma once

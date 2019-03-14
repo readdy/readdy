@@ -34,8 +34,8 @@
 
 
 /**
- * @file Compartments.cpp
- * @brief Implementation of SingleCPU program Compartments
+ * @file SCPUEvaluateCompartments.cpp
+ * @brief Implementation of SingleCPU action Compartments
  * @author chrisfroe
  * @date 13.10.16
  */
@@ -51,7 +51,7 @@ SCPUEvaluateCompartments::SCPUEvaluateCompartments(SCPUKernel *const kernel) : k
 
 void SCPUEvaluateCompartments::perform() {
     const auto &ctx = kernel->context();
-    const auto & compartments = ctx.compartments().get();
+    const auto &compartments = ctx.compartments().get();
     auto data = kernel->getSCPUKernelStateModel().getParticleData();
     for(auto& entry : *data) {
         if(!entry.is_deactivated()) {

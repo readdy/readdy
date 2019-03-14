@@ -75,7 +75,15 @@ public:
 
     virtual ParticleTypeId getParticleType(std::size_t index) const = 0;
 
-    virtual void initializeNeighborList(scalar skin) = 0;
+    /**
+     * Initialize the neighbor list such that all particle-particle interactions
+     * that are shorter than the given interactionDistance can be considered. Usually this distance is the largest cutoff distance
+     * of all reactions/potentials. Adding a padding/skin to this value might increase performance in dilute systems. If this distance is smaller
+     * than the largest cutoff, interactions might be missed.
+     *
+     * @param interactionDistance should be set to the largest interaction distance of particles
+     */
+    virtual void initializeNeighborList(scalar interactionDistance) = 0;
 
     virtual void updateNeighborList() = 0;
 
@@ -102,6 +110,10 @@ public:
     virtual scalar energy() const = 0;
 
     virtual scalar &energy() = 0;
+
+    virtual scalar time() const = 0;
+
+    virtual scalar &time() = 0;
 
     virtual void toDenseParticleIndices(std::vector<std::size_t>::iterator begin,
                                         std::vector<std::size_t>::iterator end) const = 0;

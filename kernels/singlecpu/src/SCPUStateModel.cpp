@@ -36,7 +36,7 @@
 /**
  * << detailed description >>
  *
- * @file SingleCPUKernelStateModel.cpp
+ * @file SCPUStateModel.cpp
  * @brief << brief description >>
  * @author clonker
  * @date 19.04.16

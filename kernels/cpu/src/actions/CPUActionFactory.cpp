@@ -34,17 +34,15 @@
 
 
 /**
- * << detailed description >>
- *
  * @file CPUActionFactory.cpp
- * @brief << brief description >>
+ * @brief CPU kernel implementation of Action factory
  * @author clonker
  * @date 23.06.16
  */
 
 #include <readdy/kernel/cpu/actions/CPUActionFactory.h>
 #include <readdy/kernel/cpu/actions/CPUEulerBDIntegrator.h>
-#include <readdy/kernel/cpu/actions/CPUUpdateNeighborList.h>
+#include <readdy/kernel/cpu/actions/CPUCreateNeighborList.h>
 #include <readdy/kernel/cpu/actions/CPUCalculateForces.h>
 #include <readdy/kernel/cpu/actions/CPUEvaluateCompartments.h>
 #include <readdy/kernel/cpu/actions/reactions/CPUGillespie.h>
@@ -68,13 +66,25 @@ std::unique_ptr<model::actions::EulerBDIntegrator> CPUActionFactory::eulerBDInte
     return {std::make_unique<CPUEulerBDIntegrator>(kernel, timeStep)};
 }
 
-std::unique_ptr<model::actions::CalculateForces> CPUActionFactory::calculateForces() const {
+std::unique_ptr<readdy::model::actions::MdgfrdIntegrator> CPUActionFactory::mdgfrdIntegrator(scalar timeStep) const {
+    throw std::invalid_argument("Mdgfrd integrator not implemented for CPU");
+}
+
+std::unique_ptr<readdy::model::actions::CalculateForces> CPUActionFactory::calculateForces() const {
     return {std::make_unique<CPUCalculateForces>(kernel)};
 }
 
-std::unique_ptr<model::actions::UpdateNeighborList>
-CPUActionFactory::updateNeighborList(model::actions::UpdateNeighborList::Operation operation, scalar skinSize) const {
-    return {std::make_unique<CPUUpdateNeighborList>(kernel, operation, skinSize)};
+std::unique_ptr<model::actions::CreateNeighborList>
+CPUActionFactory::createNeighborList(scalar cutoffDistance) const {
+    return {std::make_unique<CPUCreateNeighborList>(kernel, cutoffDistance)};
+}
+
+std::unique_ptr<model::actions::UpdateNeighborList> CPUActionFactory::updateNeighborList() const {
+    return {std::make_unique<CPUUpdateNeighborList>(kernel)};
+}
+
+std::unique_ptr<model::actions::ClearNeighborList> CPUActionFactory::clearNeighborList() const {
+    return {std::make_unique<CPUClearNeighborList>(kernel)};
 }
 
 std::unique_ptr<model::actions::EvaluateCompartments> CPUActionFactory::evaluateCompartments() const {
@@ -86,7 +96,8 @@ CPUActionFactory::uncontrolledApproximation(scalar timeStep) const {
     return {std::make_unique<reactions::CPUUncontrolledApproximation>(kernel, timeStep)};
 }
 
-std::unique_ptr<model::actions::reactions::Gillespie> CPUActionFactory::gillespie(scalar timeStep) const {
+std::unique_ptr<model::actions::reactions::Gillespie>
+CPUActionFactory::gillespie(scalar timeStep) const {
     return {std::make_unique<reactions::CPUGillespie>(kernel, timeStep)};
 }
 
@@ -95,7 +106,7 @@ CPUActionFactory::evaluateTopologyReactions(scalar timeStep) const {
     return {std::make_unique<top::CPUEvaluateTopologyReactions>(kernel, timeStep)};
 }
 
-std::unique_ptr<readdy::model::actions::reactions::DetailedBalance>
+std::unique_ptr<model::actions::reactions::DetailedBalance>
 CPUActionFactory::detailedBalance(scalar timeStep) const {
     throw std::invalid_argument("DetailedBalance reaction handler not implemented for CPU");
 }

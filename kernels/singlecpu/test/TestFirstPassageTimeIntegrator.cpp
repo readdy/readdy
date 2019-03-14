@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2018 Computational Molecular Biology Group,          *
+ * Copyright © 2019 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * Redistribution and use in source and binary forms, with or       *
@@ -34,35 +34,24 @@
 
 
 /**
- * << detailed description >>
- *
- * @file SingleCPUUpdateNeighborList.h
- * @brief << brief description >>
- * @author clonker
- * @date 11.07.16
+ * @file TestFirstPassageTimeIntegrator.cpp
+ * @brief Tests for MDGFRD stuff
+ * @author luigisbailo
+ * @author chrisfroe
+ * @date 15.02.19
  */
-#pragma once
+
+#include <catch2/catch.hpp>
+
+#include <readdy/model/Kernel.h>
+#include <readdy/plugin/KernelProvider.h>
 #include <readdy/model/actions/Actions.h>
-#include <readdy/kernel/singlecpu/SCPUKernel.h>
+#include <readdy/kernel/singlecpu/actions/SCPUMdgfrdIntegrator.h>
 
-namespace readdy {
-namespace kernel {
-namespace scpu {
-namespace actions {
-
-class SCPUUpdateNeighborList : public readdy::model::actions::UpdateNeighborList {
-
-public:
-    explicit SCPUUpdateNeighborList(SCPUKernel* kernel,
-                           readdy::model::actions::UpdateNeighborList::Operation op = Operation::init, scalar = -1);
-
-    void perform() override;
-
-private:
-    SCPUKernel *const kernel;
-};
-
-}
-}
-}
+TEST_CASE("Test single cpu MDGFRD", "[scpu]") {
+    auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
+    kernel->context().boxSize() = {{10, 10, 10}};
+    kernel->context().particleTypes().add("X", .25);
+    readdy::scalar timestep = 0.1;
+    auto&& integrator = kernel->actions().mdgfrdIntegrator(timestep);
 }

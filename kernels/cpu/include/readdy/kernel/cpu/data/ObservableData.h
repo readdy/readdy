@@ -56,7 +56,8 @@ namespace data {
 struct ObservableData {
     std::vector<readdy::model::reactions::ReactionRecord> reactionRecords;
     readdy::model::reactions::reaction_counts_map reactionCounts;
-    scalar energy;
+    scalar energy = 0;
+    scalar time = 0;
     Matrix33 virial;
 };
 

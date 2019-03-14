@@ -33,10 +33,8 @@
  ********************************************************************/
 
 /**
- * << detailed description >>
- *
  * @file SCPUCalculateForces.h
- * @brief << brief description >>
+ * @brief Single CPU implementation of action that calculates forces and energies (and optionally the virial)
  * @author clonker
  * @date 20.06.16
  */

@@ -34,41 +34,35 @@
 
 
 /**
- * << detailed description >>
- *
- * @file Gillespie.h
- * @brief << brief description >>
+ * @file SCPUCreateNeighborList.cpp
+ * @brief Implementation of CreateNeighborList action for single CPU kernel
  * @author clonker
- * @date 20.10.16
+ * @author chrisfroe
+ * @date 11.07.16
  */
 
-#pragma once
-#include <readdy/kernel/cpu/CPUKernel.h>
-#include <readdy/common/range.h>
-#include "ReactionUtils.h"
+#include <readdy/kernel/singlecpu/actions/SCPUCreateNeighborList.h>
 
-namespace readdy {
-namespace kernel {
-namespace cpu {
-namespace actions {
-namespace reactions {
+namespace readdy::kernel::scpu::actions {
 
-class CPUGillespie : public readdy::model::actions::reactions::Gillespie {
-    using event_t = Event;
-    using reaction_idx_t = event_t::index_type;
-    using super = readdy::model::actions::reactions::Gillespie;
-
-public:
-
-    CPUGillespie(CPUKernel *kernel, readdy::scalar timeStep);
-
-    void perform() override;
-
-protected:
-    CPUKernel *const kernel;
-};
+void SCPUCreateNeighborList::perform() {
+    kernel->getSCPUKernelStateModel().initializeNeighborList(_cutoffDistance);
 }
+
+SCPUCreateNeighborList::SCPUCreateNeighborList(SCPUKernel *kernel, scalar cutoffDistance)
+        : CreateNeighborList(cutoffDistance), kernel(kernel) {
 }
+
+SCPUUpdateNeighborList::SCPUUpdateNeighborList(SCPUKernel *kernel) : kernel(kernel) {}
+
+void SCPUUpdateNeighborList::perform() {
+    kernel->getSCPUKernelStateModel().updateNeighborList();
 }
+
+SCPUClearNeighborList::SCPUClearNeighborList(SCPUKernel *kernel) : kernel(kernel) {}
+
+void SCPUClearNeighborList::perform() {
+    kernel->getSCPUKernelStateModel().clearNeighborList();
 }
+
 }

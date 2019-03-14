@@ -285,6 +285,23 @@ class TestTopLevelAPI(ReaDDyTestCase):
             else:
                 np.testing.assert_equal("TopA", topology2.particle_type_of_vertex(v))
 
+    def test_simulation_with_skin(self):
+        rds = readdy.ReactionDiffusionSystem([10., 10., 10.])
+        rds.add_species("A")
+        rds.potentials.add_harmonic_repulsion("A", "A", 10., 0.5)
+        sim = rds.simulation("CPU")
+        sim.skin = 1.
+        sim.add_particle("A", [0., 0., 0.])
+        sim.run(10, 0.1, show_summary=False)
+
+    def test_simulation_with_negative_skin(self):
+        rds = readdy.ReactionDiffusionSystem([10., 10., 10.])
+        rds.add_species("A")
+        sim = rds.simulation("CPU")
+        sim.add_particle("A", [0., 0., 0.])
+        with self.assertRaises(Exception):
+            sim.skin = -1.
+            sim.run(10, 0.1, show_summary=False)
 
 class TestTopLevelAPIObservables(ReaDDyTestCase):
     @classmethod
@@ -421,7 +438,7 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
         simulation.record_trajectory()
         simulation.observe.topologies(1)
         simulation.show_progress = False
-        simulation.run(n_steps=100, timestep=1e-2, show_system=False)
+        simulation.run(n_steps=100, timestep=1e-2, show_summary=False)
 
         t = readdy.Trajectory(simulation.output_file)
         entries = t.read()
@@ -516,7 +533,7 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
         simulation.observe.topologies(1, callback=lambda x: topology_records.append(x))
         simulation.show_progress = False
         n_steps = 100
-        simulation.run(n_steps=n_steps, timestep=1e-1, show_system=False)
+        simulation.run(n_steps=n_steps, timestep=1e-1, show_summary=False)
 
         traj = readdy.Trajectory(simulation.output_file)
 

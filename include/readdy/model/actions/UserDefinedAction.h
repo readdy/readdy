@@ -32,19 +32,21 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                       *
  ********************************************************************/
 
-//
-// Created by mho on 7/2/18.
-//
 
-#ifndef READDY_MAIN_USERDEFINEDACTION_H
-#define READDY_MAIN_USERDEFINEDACTION_H
+/**
+ * @file UserDefinedAction.h
+ * @brief Base class for user-written actions, which are built against this header and injected at runtime.
+ * @author clonker
+ * @date 02.07.18
+ * @copyright BSD-3
+ */
+
+#pragma once
 
 #include <readdy/model/Kernel.h>
 #include "Action.h"
 
-namespace readdy {
-namespace model {
-namespace actions {
+namespace readdy::model::actions {
 
 class UserDefinedAction : public TimeStepDependentAction {
 public:
@@ -63,7 +65,3 @@ protected:
 };
 
 }
-}
-}
-
-#endif //READDY_MAIN_USERDEFINEDACTION_H

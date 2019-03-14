@@ -50,7 +50,7 @@
 #include <readdy/model/Kernel.h>
 #include <readdy/api/SimulationLoop.h>
 #include <readdy/model/topologies/reactions/StructuralTopologyReaction.h>
-#include "ObservableHandle.h"
+#include <readdy/api/ObservableHandle.h>
 
 NAMESPACE_BEGIN(readdy)
 /**
@@ -164,6 +164,16 @@ public:
     template<typename T>
     ObservableHandle registerObservable(std::unique_ptr<T> observable, const observable_callback<T> &callback,
                                         detail::is_observable_type<T> * = 0) {
+        if (observable->type() == "Reactions") {
+            _kernel->context().recordReactionsWithPositions() = true;
+        } else if (observable->type() == "ReactionCounts") {
+            _kernel->context().recordReactionCounts() = true;
+        } else if (observable->type() == "Virial") {
+            _kernel->context().recordVirial() = true;
+        } else {
+            /* no action required */
+        }
+
         auto connection = _kernel->connectObservable(observable.get());
         observable->callback() = callback;
         _observables.push_back(std::move(observable));

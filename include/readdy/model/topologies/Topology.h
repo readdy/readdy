@@ -40,7 +40,7 @@
  * @brief Definitions for topologies
  * @author clonker
  * @date 26.01.17
- * @copyright GPL-3
+ * @copyright BSD-3
  */
 
 #pragma once

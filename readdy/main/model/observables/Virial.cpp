@@ -34,12 +34,10 @@
 
 
 /**
- * << detailed description >>
- *
  * @file Virial.cpp
- * @brief << brief description >>
+ * @brief Implementation of virial observable
  * @author clonker
- * @date 1/17/18
+ * @date 17.01.18
  */
 
 #include <readdy/model/observables/Virial.h>
@@ -66,7 +64,11 @@ void Virial::flush() {
 }
 
 void Virial::initialize(Kernel *const kernel) {
-    kernel->context().recordVirial() = true;
+    if (!kernel->context().recordVirial()) {
+        log::warn("The \"Virial\"-observable set context.recordVirial() to true. "
+                  "If this is undesired, the observable should not be registered.");
+        kernel->context().recordVirial() = true;
+    }
 }
 
 void Virial::initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) {
