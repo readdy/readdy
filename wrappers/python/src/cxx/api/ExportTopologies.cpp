@@ -164,6 +164,14 @@ void exportTopologies(py::module &m) {
             .def("add_edge", [](reaction_recipe &self, const vertex::vertex_ptr &v1, const vertex::vertex_ptr &v2) {
                 return self.addEdge(v1, v2);
             }, py::return_value_policy::reference_internal)
+            .def("append_particle", [](reaction_recipe &self, const std::vector<vertex> &neighbors, 
+                    const std::string &type, readdy::Vec3 pos){
+                return self.appendNewParticle(neighbors, type, pos);
+            })
+            .def("append_particle", [](reaction_recipe &self, const std::vector<vertex::vertex_ptr> &neighbors,
+                    const std::string &type, readdy::Vec3 pos){
+                return self.appendNewParticle(neighbors, type, pos);
+            })
             .def("remove_edge", [](reaction_recipe &self, std::size_t v_index1, std::size_t v_index2) -> reaction_recipe& {
                 auto it1 = self.topology().graph().vertices().begin();
                 auto it2 = self.topology().graph().vertices().begin();

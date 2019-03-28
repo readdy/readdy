@@ -121,6 +121,20 @@ class StructuralReactionRecipe(object):
         self._recipe.change_topology_type(new_type)
         return self
 
+    def append_particle(self, neighbor_vertices, particle_type, position):
+        """
+        Creates a new particle of type `particle_type` (which should be a topology particle type) at position
+        `position`, inserts it into the topology and connects the newly created particles' vertex
+        to the given `neighbor_vertices`.
+
+        :param neighbor_vertices: the neighbors of the newly inserted vertex
+        :param particle_type: the to-be created particle's type
+        :param position: the position
+        :return: a reference to this recipe to enable a fluent interface
+        """
+        self._recipe.append_particle(neighbor_vertices, particle_type, _v3_of(position))
+        return self
+
     def _get(self):
         """
         Internal usage only

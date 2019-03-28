@@ -112,7 +112,8 @@ top::reactions::actions::TopologyReactionActionFactory::action_ref
 SCPUTopologyActionFactory::createAppendParticle(top::GraphTopology *topology,
                                                 const std::vector<top::reactions::actions::TopologyReactionActionFactory::vertex> &neighbors,
                                                 ParticleTypeId type, const Vec3 &position) const {
-    return readdy::model::top::reactions::actions::TopologyReactionActionFactory::action_ref();
+    return std::make_unique<reactions::op::SCPUAppendParticle>(kernel->getSCPUKernelStateModel().getParticleData(),
+            topology, neighbors, type, position);
 }
 
 }

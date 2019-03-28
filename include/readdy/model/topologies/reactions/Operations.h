@@ -132,7 +132,7 @@ public:
         : neighbors(std::move(neighbors)), type(type), pos(pos) {};
 
     action_ptr create_action(topology_ref topology, factory_ref factory) const override {
-        return readdy::model::top::reactions::op::Operation::action_ptr();
+        return factory->createAppendParticle(topology, neighbors, type, pos);
     }
 
 private:
