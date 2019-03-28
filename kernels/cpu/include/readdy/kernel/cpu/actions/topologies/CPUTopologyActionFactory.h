@@ -77,6 +77,10 @@ public:
 
     action_ref createChangeTopologyType(top::GraphTopology *topology, const std::string &type_to) const override;
 
+    action_ref
+    createAppendParticle(top::GraphTopology *topology, const std::vector<vertex> &neighbors, ParticleTypeId type,
+                         const Vec3 &position) const override;
+
 private:
     std::reference_wrapper<const model::Context> _context;
     std::reference_wrapper<data::DefaultDataContainer> _data;

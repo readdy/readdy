@@ -125,6 +125,22 @@ private:
     ParticleTypeId _type_to;
 };
 
+class AppendParticle : public Operation {
+public:
+
+    AppendParticle(std::vector<vertex_ref> neighbors, ParticleTypeId type, const Vec3 &pos)
+        : neighbors(std::move(neighbors)), type(type), pos(pos) {};
+
+    action_ptr create_action(topology_ref topology, factory_ref factory) const override {
+        return factory->createAppendParticle(topology, neighbors, type, pos);
+    }
+
+private:
+    std::vector<vertex_ref> neighbors;
+    ParticleTypeId type;
+    Vec3 pos;
+};
+
 class ChangeParticlePosition : public Operation {
 public:
     ChangeParticlePosition(const vertex_ref &vertex, Vec3 position) : _vertex(vertex), _pos(position) {};

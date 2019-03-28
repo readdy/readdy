@@ -156,6 +156,16 @@ protected:
     Vec3 _posTo;
 };
 
+class AppendParticle : public TopologyReactionAction {
+public:
+    AppendParticle(GraphTopology *topology, std::vector<vertex> neighbors, ParticleTypeId type, Vec3 pos);
+
+protected:
+    std::vector<vertex> neighbors;
+    ParticleTypeId  type;
+    Vec3 pos;
+};
+
 class AddEdge : public TopologyReactionAction {
 public:
     /**

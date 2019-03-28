@@ -46,11 +46,7 @@
 #include <readdy/model/topologies/reactions/TopologyReactionAction.h>
 #include <readdy/model/topologies/GraphTopology.h>
 
-namespace readdy {
-namespace model {
-namespace top {
-namespace reactions {
-namespace actions {
+namespace readdy::model::top::reactions::actions {
 
 TopologyReactionAction::TopologyReactionAction(GraphTopology *const topology) : topology(topology){ }
 
@@ -95,8 +91,7 @@ void ChangeTopologyType::undo() {
 
 ChangeParticlePosition::ChangeParticlePosition(GraphTopology *topology, const vertex &v, Vec3 posTo)
         : TopologyReactionAction(topology), _vertex(v), _posTo(posTo) {}
-}
-}
-}
-}
+
+AppendParticle::AppendParticle(GraphTopology *topology, std::vector<vertex> neighbors, ParticleTypeId type, Vec3 pos)
+        : TopologyReactionAction(topology), neighbors(std::move(neighbors)), type(type), pos(pos) {}
 }

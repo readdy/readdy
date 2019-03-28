@@ -108,6 +108,14 @@ SCPUTopologyActionFactory::createChangeParticlePosition(top::GraphTopology *topo
     );
 }
 
+top::reactions::actions::TopologyReactionActionFactory::action_ref
+SCPUTopologyActionFactory::createAppendParticle(top::GraphTopology *topology,
+                                                const std::vector<top::reactions::actions::TopologyReactionActionFactory::vertex> &neighbors,
+                                                ParticleTypeId type, const Vec3 &position) const {
+    return std::make_unique<reactions::op::SCPUAppendParticle>(kernel->getSCPUKernelStateModel().getParticleData(),
+            topology, neighbors, type, position);
+}
+
 }
 }
 }
