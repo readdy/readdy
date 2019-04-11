@@ -207,6 +207,26 @@ const bool GraphTopology::isNormalParticle(const Kernel &k) const {
 }
 
 void GraphTopology::appendParticle(particle_index newParticle, ParticleTypeId newParticleType,
+                                   topology_graph::vertex_ref counterPart, ParticleTypeId counterPartType) {
+
+    // this is costly so I am just assuming that the counter part iterator (vertex_ref) belongs to `this` topology...
+    //if(std::find(graph().vertices().begin(), graph().vertices().end(), *counterPart) == graph().vertices().end()) {
+    //    throw std::logic_error("Could not locate graph vertex iterator within vertices list.");
+    //}
+
+    particles.push_back(newParticle);
+    graph().addVertex(particles.size() - 1, newParticleType);
+
+    auto newParticleIt = std::prev(graph().vertices().end());
+    auto otherParticleIt = counterPart;
+    otherParticleIt->particleType() = counterPartType;
+
+    graph().addEdge(newParticleIt, otherParticleIt);
+
+    counterPart->particleType() = counterPartType;
+}
+
+void GraphTopology::appendParticle(particle_index newParticle, ParticleTypeId newParticleType,
                                    particle_index counterPart, ParticleTypeId counterPartType) {
     auto it = std::find(particles.begin(), particles.end(), counterPart);
     if(it != particles.end()) {
