@@ -205,7 +205,7 @@ public:
         auto entry = Entry(particle);
         insertIndex = data->addEntry(entry);
         auto firstNeighbor = neighbors[0];
-        topology->appendParticle(insertIndex, type, firstNeighbor->particleIndex, firstNeighbor->particleType());
+        topology->appendParticle(insertIndex, type, firstNeighbor, firstNeighbor->particleType());
         // new particles get appended to the end of the linked list
         newParticleIt = std::prev(topology->graph().vertices().end());
         for(auto it = neighbors.begin() + 1; it != neighbors.end(); ++it) {
