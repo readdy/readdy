@@ -388,7 +388,7 @@ void CPUEvaluateTopologyReactions::handleTopologyTopologyReaction(CPUStateModel:
             // introduce edge if not already present
             auto v1 = t1->vertexForParticle(event.idx1);
             auto v2 = t1->vertexForParticle(event.idx2);
-            if(entry1Type == reaction.type1() && t1->type() == reaction.top_type1()) {
+            if(v1->particleType() == reaction.type1() && t1->type() == reaction.top_type1()) {
                 v1->particleType() = reaction.type_to1();
                 v2->particleType() = reaction.type_to2();
             } else {

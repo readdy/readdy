@@ -59,18 +59,27 @@ NAMESPACE_BEGIN(detail)
 
 class TopologyParticleTypeHasher {
 public:
+    /**
+     * This hasher needs to respect that in the tuple (x1, t1, x2, t2),
+     * swapping (x1, t1) with (x2, t2) should result in the same hash.
+     * Thus first compute hashes of both sub-tuples and compare them accordingly, which already gives a unique hash.
+     * A weaker/faster version e.g. could only hash (t1, t2) and neglect x1 and x2, leaving the rest to the comparator.
+     */
     std::size_t operator()(const topology_particle_type_tuple& tup) const {
+        std::size_t seed1 {0};
+        util::hash::combine(seed1, std::get<0>(tup));
+        util::hash::combine(seed1, std::get<1>(tup));
+        std::size_t seed2 {0};
+        util::hash::combine(seed2, std::get<2>(tup));
+        util::hash::combine(seed2, std::get<3>(tup));
+
         std::size_t seed {0};
-        if(std::get<1>(tup) > std::get<3>(tup)) {
-            util::hash::combine(seed, std::get<0>(tup));
-            util::hash::combine(seed, std::get<1>(tup));
-            util::hash::combine(seed, std::get<2>(tup));
-            util::hash::combine(seed, std::get<3>(tup));
+        if (seed1 > seed2) {
+            util::hash::combine(seed, seed1);
+            util::hash::combine(seed, seed2);
         } else {
-            util::hash::combine(seed, std::get<2>(tup));
-            util::hash::combine(seed, std::get<3>(tup));
-            util::hash::combine(seed, std::get<0>(tup));
-            util::hash::combine(seed, std::get<1>(tup));
+            util::hash::combine(seed, seed2);
+            util::hash::combine(seed, seed1);
         }
         return seed;
     }
