@@ -475,23 +475,34 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
         SECTION("TTFusion") {
             Simulation sim (std::move(kernel));
 
-            sim.context().particleTypes().addTopologyType("X", 0);
+            sim.context().particleTypes().addTopologyType("X1", 0);
+            sim.context().particleTypes().addTopologyType("X2", 0);
             sim.context().particleTypes().addTopologyType("Y", 0);
             sim.context().particleTypes().addTopologyType("Z", 0);
             sim.context().topologyRegistry().addType("T");
             sim.context().topologyRegistry().addType("T2");
 
             sim.context().topologyRegistry().configureBondPotential("Y", "Z", {0., .1});
-            sim.context().topologyRegistry().addSpatialReaction("connect: T(X) + T(X) -> T2(Y--Z) [self=true]", 1e10, 1.);
+            sim.context().topologyRegistry().addSpatialReaction("connect: T(X1) + T(X2) -> T2(Y--Z)", 1e10, 1.);
+            
+            std::string x1type = "X1"; 
+            std::string x2type = "X2"; 
+            std::string ttype = "T";
+            REQUIRE(sim.context().topologyRegistry().spatialReactionsByType(x1type, ttype, x2type, ttype).size() == 1);
+            REQUIRE(sim.context().topologyRegistry().spatialReactionsByType(x2type, ttype, x1type, ttype).size() == 1);
 
-            auto p1 = sim.createTopologyParticle("X", {0, 0, 0});
-            auto p2 = sim.createTopologyParticle("X", {0, 0, 0});
+            auto p1 = sim.createTopologyParticle("X1", {0, 0, 0});
+            auto p2 = sim.createTopologyParticle("X2", {0, 0, 0});
             sim.addTopology("T", {p1});
             sim.addTopology("T", {p2});
 
+            auto topologies = sim.currentTopologies();
+
+            REQUIRE(topologies.size() == 2);
+
             sim.run(1, 1e-3);
 
-            auto topologies = sim.currentTopologies();
+            topologies = sim.currentTopologies();
 
             REQUIRE(topologies.size() == 1);
             auto top = topologies.at(0);
