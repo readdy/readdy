@@ -75,6 +75,7 @@ bool Graph::isConnected() {
 }
 
 void Graph::findEdges(const Graph::edge_callback &edgeCallback) {
+    // todo use _edges
     for (auto &v : _vertices) {
         v.visited = false;
     }

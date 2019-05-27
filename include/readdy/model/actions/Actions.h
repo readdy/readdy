@@ -180,6 +180,20 @@ public:
     ~EvaluateTopologyReactions() override = default;
 };
 
+class BondBarf : public TimeStepDependentAction {
+public:
+    explicit BondBarf(Kernel * kernel, scalar timeStep);
+
+    ~BondBarf() override = default;
+
+    void perform() override;
+
+protected:
+    Kernel * kernel;
+    virtual scalar evaluateEdgeEnergy() = 0;
+
+};
+
 }
 
 /**

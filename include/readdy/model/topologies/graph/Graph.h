@@ -201,14 +201,18 @@ public:
     bool isConnected();
 
     std::vector<std::tuple<vertex_ref, vertex_ref>> edges() {
-        std::vector<std::tuple<Graph::vertex_ref, Graph::vertex_ref>> result;
-        findEdges([&result](const edge &tup) {
-            result.push_back(tup);
-        });
-        return result;
+        if(_dirty) {
+            _edges.clear();
+            findEdges([this](const edge &tup) {
+                _edges.push_back(tup);
+            });
+            // todo _dirty = false;
+        }
+        return _edges;
     };
 
     bool hasEdge(const std::tuple<vertex_ref, vertex_ref> &edge) const {
+        // todo use _edges
         const auto &v1 = std::get<0>(edge);
         const auto &v2 = std::get<1>(edge);
         auto it1 = std::find(v1->neighbors().begin(), v1->neighbors().end(), v2);
@@ -243,6 +247,8 @@ public:
 
 private:
     vertex_list _vertices{};
+    bool _dirty {true};
+    std::vector<std::tuple<vertex_ref, vertex_ref>> _edges;
 
     void removeNeighborsEdges(vertex_ref vertex) {
         std::for_each(std::begin(vertex->neighbors()), std::end(vertex->neighbors()), [vertex](const auto neighbor) {

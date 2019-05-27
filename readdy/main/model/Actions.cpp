@@ -554,4 +554,24 @@ CalculateForces::CalculateForces() : Action() {}
 
 top::EvaluateTopologyReactions::EvaluateTopologyReactions(scalar timeStep) : TimeStepDependentAction(timeStep) {}
 
+top::BondBarf::BondBarf(Kernel *const kernel, scalar timeStep) : TimeStepDependentAction(timeStep), kernel(kernel) {
+}
+
+void top::BondBarf::perform() {
+    for (auto* top : kernel->stateModel().getTopologies()) {
+        if (!top->isDeactivated()) {
+            model::top::reactions::Recipe recipe (*top);
+            for( const auto &edge : top->graph().edges()) {
+                auto energy = evaluateEdgeEnergy(edge);
+                if(energy > 1e3) {
+                    // todo auswuerfeln
+                    recipe.removeEdge(edge);
+                }
+            }
+        }
+    }
+}
+
+}
+}
 }
