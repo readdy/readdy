@@ -180,18 +180,22 @@ public:
     ~EvaluateTopologyReactions() override = default;
 };
 
-class BondBarf : public TimeStepDependentAction {
+class BreakBonds : public TimeStepDependentAction {
 public:
-    explicit BondBarf(Kernel * kernel, scalar timeStep);
+    using vertex_ref = readdy::model::top::graph::Graph::vertex_ref;
 
-    ~BondBarf() override = default;
+    explicit BreakBonds(Kernel * kernel, scalar timeStep);
+
+    ~BreakBonds() override = default;
 
     void perform() override;
 
 protected:
     Kernel * kernel;
-    virtual scalar evaluateEdgeEnergy() = 0;
-
+    // todo actionfactory, and implement evaluateEdgeEnergy that sums all pair potential terms for given edge
+    virtual scalar evaluateEdgeEnergy(std::tuple<vertex_ref, vertex_ref>) = 0;
+    util::particle_type_pair_unordered_map<scalar> breakRates;
+    util::particle_type_pair_unordered_map<scalar> thresholdEnergies;
 };
 
 }

@@ -554,20 +554,31 @@ CalculateForces::CalculateForces() : Action() {}
 
 top::EvaluateTopologyReactions::EvaluateTopologyReactions(scalar timeStep) : TimeStepDependentAction(timeStep) {}
 
-top::BondBarf::BondBarf(Kernel *const kernel, scalar timeStep) : TimeStepDependentAction(timeStep), kernel(kernel) {
-}
+top::BreakBonds::BreakBonds(Kernel *const kernel, scalar timeStep)
+        : TimeStepDependentAction(timeStep), kernel(kernel) {}
 
-void top::BondBarf::perform() {
-    for (auto* top : kernel->stateModel().getTopologies()) {
+void top::BreakBonds::perform() {
+    for (auto *top : kernel->stateModel().getTopologies()) {
         if (!top->isDeactivated()) {
-            model::top::reactions::Recipe recipe (*top);
-            for( const auto &edge : top->graph().edges()) {
-                auto energy = evaluateEdgeEnergy(edge);
-                if(energy > 1e3) {
-                    // todo auswuerfeln
-                    recipe.removeEdge(edge);
+            auto reactionFunction = [&](model::top::GraphTopology &t) -> model::top::reactions::Recipe && {
+                model::top::reactions::Recipe recipe(t);
+                for (const auto &edge : t.graph().edges()) {
+                    auto energy = evaluateEdgeEnergy(edge);
+                    const auto &v1Type = std::get<0>(edge)->particleType();
+                    const auto &v2Type = std::get<1>(edge)->particleType();
+                    const auto &typePair = std::make_tuple(v1Type, v2Type);
+                    if (energy > thresholdEnergies.at(typePair)) {
+                        const auto &rate = breakRates.at(typePair);
+                        if (readdy::model::rnd::uniform_real() < 1 - std::exp(-rate * _timeStep)) {
+                            recipe.removeEdge(edge);
+                        }
+                    }
                 }
-            }
+                return std::move(recipe);
+            };
+            scalar rateDoesntMatter{1.};
+            model::top::reactions::StructuralTopologyReaction reaction(reactionFunction, rateDoesntMatter);
+            reaction.execute(*top, kernel);
         }
     }
 }
