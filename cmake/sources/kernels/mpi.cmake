@@ -1,5 +1,5 @@
 ####################################################################
-# Copyright © 2018 Computational Molecular Biology Group,          #
+# Copyright © 2019 Computational Molecular Biology Group,          #
 #                  Freie Universität Berlin (GER)                  #
 #                                                                  #
 # Redistribution and use in source and binary forms, with or       #
@@ -33,9 +33,28 @@
 ####################################################################
 
 
-ADD_SUBDIRECTORY(cpu)
+SET(SOURCES_DIR "${READDY_GLOBAL_DIR}/kernels/mpi/src")
+SET(MPI_INCLUDE_DIR "${READDY_GLOBAL_DIR}/kernels/mpi/include")
 
-set(READDY_BUILD_MPI_KERNEL OFF CACHE BOOL "Whether to build the MPI kernel or not")
-if (READDY_BUILD_MPI_KERNEL)
-    ADD_SUBDIRECTORY(mpi)
-endif()
+# sources
+LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/MPIKernel.cpp")
+LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/MPIActionFactory.cpp")
+LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/MPIStateModel.cpp")
+
+# --- actions ---
+LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/actions/MPICreateNeighborList.cpp")
+LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/actions/MPIReactionImpls.cpp")
+#LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/actions/MPIEvaluateCompartments.cpp")
+#LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/actions/MPIEvaluateTopologyReactions.cpp")
+
+# --- model ---
+LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/MPIParticleData.cpp")
+
+# --- observables ---
+LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/MPIObservableFactory.cpp")
+
+# --- topology actions ---
+#LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/topologies/MPITopologyActionFactory.cpp")
+
+# --- all sources ---
+LIST(APPEND READDY_ALL_SOURCES ${MPI_SOURCES})

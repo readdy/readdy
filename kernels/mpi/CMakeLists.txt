@@ -1,5 +1,5 @@
 ####################################################################
-# Copyright © 2018 Computational Molecular Biology Group,          #
+# Copyright © 2019 Computational Molecular Biology Group,          #
 #                  Freie Universität Berlin (GER)                  #
 #                                                                  #
 # Redistribution and use in source and binary forms, with or       #
@@ -32,10 +32,41 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                       #
 ####################################################################
 
+project(readdy_kernel_mpi C CXX)
 
-ADD_SUBDIRECTORY(cpu)
+find_package(MPI REQUIRED)
 
-set(READDY_BUILD_MPI_KERNEL OFF CACHE BOOL "Whether to build the MPI kernel or not")
-if (READDY_BUILD_MPI_KERNEL)
-    ADD_SUBDIRECTORY(mpi)
-endif()
+# sources and headers
+include("${READDY_GLOBAL_DIR}/cmake/sources/kernels/mpi.cmake")
+
+# create library
+add_library(${PROJECT_NAME} SHARED ${MPI_SOURCES} ${READDY_INCLUDE_DIRS} ${MPI_INCLUDE_DIR})
+
+# MPI specific flags for target library
+target_include_directories(${PROJECT_NAME} PUBLIC ${MPI_CXX_INCLUDE_DIRS})
+target_compile_options(${PROJECT_NAME} PUBLIC ${MPI_CXX_COMPILE_OPTIONS})
+target_link_libraries(${PROJECT_NAME} ${MPI_CXX_LIBRARIES} ${MPI_CXX_LINK_FLAGS})
+
+# includes
+target_include_directories(${PROJECT_NAME} PUBLIC ${READDY_INCLUDE_DIRS} ${MPI_INCLUDE_DIR})
+
+# link
+target_link_libraries(${PROJECT_NAME} ${CMAKE_DL_LIBS} readdy)
+
+SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES
+        POSITION_INDEPENDENT_CODE ON
+        LINK_FLAGS "${EXTRA_LINK_FLAGS}"
+        COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}"
+        ARCHIVE_OUTPUT_DIRECTORY "${READDY_PLUGIN_OUTPUT_DIRECTORY}"
+        LIBRARY_OUTPUT_DIRECTORY "${READDY_PLUGIN_OUTPUT_DIRECTORY}"
+        LINKER_LANGUAGE CXX)
+
+INSTALL(TARGETS ${PROJECT_NAME}
+        RUNTIME DESTINATION readdy/readdy_plugins
+        LIBRARY DESTINATION readdy/readdy_plugins
+        ARCHIVE DESTINATION readdy/readdy_plugins
+        )
+
+IF (READDY_CREATE_TEST_TARGET)
+    ADD_SUBDIRECTORY(test)
+ENDIF()

@@ -1,5 +1,5 @@
 ####################################################################
-# Copyright © 2018 Computational Molecular Biology Group,          #
+# Copyright © 2019 Computational Molecular Biology Group,          #
 #                  Freie Universität Berlin (GER)                  #
 #                                                                  #
 # Redistribution and use in source and binary forms, with or       #
@@ -33,9 +33,20 @@
 ####################################################################
 
 
-ADD_SUBDIRECTORY(cpu)
+project(runUnitTests_mpi LANGUAGES C CXX)
 
-set(READDY_BUILD_MPI_KERNEL OFF CACHE BOOL "Whether to build the MPI kernel or not")
-if (READDY_BUILD_MPI_KERNEL)
-    ADD_SUBDIRECTORY(mpi)
-endif()
+add_executable(${PROJECT_NAME} TestMain.cpp TestSetupMPI.cpp ${TESTING_INCLUDE_DIR})
+
+target_include_directories(${PROJECT_NAME} PUBLIC ${READDY_INCLUDE_DIRS} ${TESTING_INCLUDE_DIR} ${MPI_INCLUDE_DIR})
+target_link_libraries(${PROJECT_NAME} PUBLIC readdy readdy_kernel_mpi Catch2::Catch2)
+set_target_properties(${PROJECT_NAME} PROPERTIES
+        LINK_FLAGS "${EXTRA_LINK_FLAGS}"
+        COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}")
+catch_discover_tests(${PROJECT_NAME})
+
+if (READDY_INSTALL_UNIT_TEST_EXECUTABLE)
+    install(TARGETS ${PROJECT_NAME}
+            RUNTIME DESTINATION bin
+            LIBRARY DESTINATION lib
+            ARCHIVE DESTINATION lib)
+endif (READDY_INSTALL_UNIT_TEST_EXECUTABLE)
