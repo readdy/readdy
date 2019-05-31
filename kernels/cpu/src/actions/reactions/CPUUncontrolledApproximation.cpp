@@ -103,20 +103,23 @@ void findEvents(std::size_t /*tid*/, data_iter_t begin, data_iter_t end, nl_boun
             }
 
             nl.forEachNeighbor(*particleIt, cell, [&](const auto neighborIdx) {
-                const auto &neighbor = data.entry_at(neighborIdx);
-                if(!neighbor.deactivated) {
-                    const auto &reactions = kernel->context().reactions().order2ByType(entry.type, neighbor.type);
-                    if (!reactions.empty()) {
-                        const auto distSquared = bcs::distSquared(neighbor.pos, entry.pos, box, pbc);
-                        for (auto it_reactions = reactions.begin(); it_reactions < reactions.end(); ++it_reactions) {
-                            const auto &react = *it_reactions;
-                            const auto rate = react->rate();
-                            if (rate > 0 && distSquared < react->eductDistanceSquared()
-                                && shouldPerformEvent(rate, dt, approximateRate)) {
-                                const auto reaction_index = static_cast<event_t::reaction_index_type>(it_reactions -
-                                                                                                      reactions.begin());
-                                eventsUpdate.emplace_back(2, react->nProducts(), *particleIt, neighborIdx,
-                                                          rate, 0, reaction_index, entry.type, neighbor.type);
+                // Making sure that every pair of particles is only seen once
+                if (*particleIt > neighborIdx) {
+                    const auto &neighbor = data.entry_at(neighborIdx);
+                    if(!neighbor.deactivated) {
+                        const auto &reactions = kernel->context().reactions().order2ByType(entry.type, neighbor.type);
+                        if (!reactions.empty()) {
+                            const auto distSquared = bcs::distSquared(neighbor.pos, entry.pos, box, pbc);
+                            for (auto it_reactions = reactions.begin(); it_reactions < reactions.end(); ++it_reactions) {
+                                const auto &react = *it_reactions;
+                                const auto rate = react->rate();
+                                if (rate > 0 && distSquared < react->eductDistanceSquared()
+                                    && shouldPerformEvent(rate, dt, approximateRate)) {
+                                    const auto reaction_index = static_cast<event_t::reaction_index_type>(it_reactions -
+                                                                                                          reactions.begin());
+                                    eventsUpdate.emplace_back(2, react->nProducts(), *particleIt, neighborIdx,
+                                                              rate, 0, reaction_index, entry.type, neighbor.type);
+                                }
                             }
                         }
                     }
