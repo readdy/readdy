@@ -213,15 +213,15 @@ TEMPLATE_TEST_CASE("Test reaction handlers", "[reactions]", SingleCPU, CPU) {
             }
 
             SECTION("Michaelis Menten") {
-                if (std::string(handler) == "UncontrolledApproximation") { // others are slower
+                //if (std::string(handler) == "UncontrolledApproximation") {
                     /**
-                 * Since comparing the value of a stochastic process (number of particles over time) is not well
-                 * suited for testing, here integrate the stochastic process over the simulated time,
-                 * giving a quite robust observable. This can be compared to an analytic value from ODE kinetics.
-                 */
+                    * Since comparing the value of a stochastic process (number of particles over time) is not well
+                    * suited for testing, here integrate the stochastic process over the simulated time,
+                    * giving a quite robust observable. This can be compared to an analytic value from ODE kinetics.
+                    */
                     namespace rnd = readdy::model::rnd;
 
-                    readdy::scalar length {1.7};
+                    readdy::scalar length {10.};
                     ctx.boxSize() = {{length, length, length}};
                     ctx.periodicBoundaryConditions() = {true, true, true};
 
@@ -257,7 +257,7 @@ TEMPLATE_TEST_CASE("Test reaction handlers", "[reactions]", SingleCPU, CPU) {
                         kernel->addParticle("S", pos);
                     }
 
-                    std::size_t nSteps {2500};
+                    std::size_t nSteps {37500};
 
                     std::vector<std::string> typesToCount {{"S"}};
                     auto &&obs = kernel->observe().nParticles(1, typesToCount);
@@ -272,7 +272,13 @@ TEMPLATE_TEST_CASE("Test reaction handlers", "[reactions]", SingleCPU, CPU) {
                     initNeighborList->perform();
                     neighborList->perform();
                     kernel->evaluateObservables(0);
+                    auto t1 = std::chrono::high_resolution_clock::now();
                     for (readdy::time_step_type t = 1; t < nSteps+1; t++) {
+                        if (t == (nSteps+1)/100) {
+                            auto t2 = std::chrono::high_resolution_clock::now();
+                            auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+                            readdy::log::warn("1% done in {} ms, ETA is {} seconds", dur, dur / 10.);
+                        }
                         bd->perform();
                         neighborList->perform();
                         reactions->perform();
@@ -282,11 +288,9 @@ TEMPLATE_TEST_CASE("Test reaction handlers", "[reactions]", SingleCPU, CPU) {
 
                     meanS /= static_cast<readdy::scalar>(nSteps+1);
 
-                    readdy::log::warn("meanS {}", meanS);
-
-                    CHECK(meanS < 448.7 + 0.1 * 448.7);
-                    CHECK(meanS > 448.7 - 0.1 * 448.7);
-                }
+                    CHECK(meanS < 665.2 + 0.03 * 665.2);
+                    CHECK(meanS > 665.2 - 0.03 * 665.2);
+                //}
             }
         }
     }
