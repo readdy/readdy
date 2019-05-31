@@ -211,7 +211,83 @@ TEMPLATE_TEST_CASE("Test reaction handlers", "[reactions]", SingleCPU, CPU) {
                     REQUIRE(pos2.x< 0.);
                 }
             }
+
+            SECTION("Michaelis Menten") {
+                if (std::string(handler) == "UncontrolledApproximation") { // others are slower
+                    /**
+                 * Since comparing the value of a stochastic process (number of particles over time) is not well
+                 * suited for testing, here integrate the stochastic process over the simulated time,
+                 * giving a quite robust observable. This can be compared to an analytic value from ODE kinetics.
+                 */
+                    namespace rnd = readdy::model::rnd;
+
+                    readdy::scalar length {1.7};
+                    ctx.boxSize() = {{length, length, length}};
+                    ctx.periodicBoundaryConditions() = {true, true, true};
+
+                    ctx.particleTypes().add("E", 0.5);
+                    ctx.particleTypes().add("S", 0.5);
+                    ctx.particleTypes().add("ES", 0.5);
+                    ctx.particleTypes().add("P", 0.5);
+
+                    ctx.reactions().add("fwd: E +(1.0) S -> ES", 0.0023417691399750494);
+                    ctx.reactions().add("back: ES -> E +(1.0) S", 1.);
+                    ctx.reactions().add("prod: ES -> E +(1.0) P", 1.);
+
+                    readdy::scalar dt {8e-3};
+                    auto &&reactions = kernel->actions().createReactionScheduler(handler, dt);
+                    auto &&bd = kernel->actions().eulerBDIntegrator(dt);
+                    auto &&initNeighborList = kernel->actions().createNeighborList(1.0);
+                    auto &&neighborList = kernel->actions().updateNeighborList();
+
+                    std::size_t nParticlesE {70};
+                    std::size_t nParticlesS {700};
+
+                    for (int i = 0; i < nParticlesE; ++i) {
+                        readdy::Vec3 pos{rnd::uniform_real() * length - 0.5 * length,
+                                         rnd::uniform_real() * length - 0.5 * length,
+                                         rnd::uniform_real() * length - 0.5 * length};
+                        kernel->addParticle("E", pos);
+                    }
+
+                    for (int i = 0; i < nParticlesS; ++i) {
+                        readdy::Vec3 pos{rnd::uniform_real() * length - 0.5 * length,
+                                         rnd::uniform_real() * length - 0.5 * length,
+                                         rnd::uniform_real() * length - 0.5 * length};
+                        kernel->addParticle("S", pos);
+                    }
+
+                    std::size_t nSteps {2500};
+
+                    std::vector<std::string> typesToCount {{"S"}};
+                    auto &&obs = kernel->observe().nParticles(1, typesToCount);
+                    readdy::scalar meanS {0.};
+
+                    obs->callback() = [&](const readdy::model::observables::NParticles::result_type &result) {
+                        meanS += static_cast<readdy::scalar>(result[0]);
+                    };
+
+                    auto &&connection = kernel->connectObservable(obs.get());
+
+                    initNeighborList->perform();
+                    neighborList->perform();
+                    kernel->evaluateObservables(0);
+                    for (readdy::time_step_type t = 1; t < nSteps+1; t++) {
+                        bd->perform();
+                        neighborList->perform();
+                        reactions->perform();
+                        neighborList->perform();
+                        kernel->evaluateObservables(t);
+                    }
+
+                    meanS /= static_cast<readdy::scalar>(nSteps+1);
+
+                    readdy::log::warn("meanS {}", meanS);
+
+                    CHECK(meanS < 448.7 + 0.1 * 448.7);
+                    CHECK(meanS > 448.7 - 0.1 * 448.7);
+                }
+            }
         }
     }
-
 }

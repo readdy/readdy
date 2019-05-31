@@ -50,9 +50,7 @@
 #include <thread>
 #include "readdy/common/common.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(rnd)
+namespace readdy::model::rnd {
 
 template<typename RealType=scalar, typename Generator = std::default_random_engine>
 RealType normal(const RealType mean = 0.0, const RealType variance = 1.0) {
@@ -96,6 +94,4 @@ Iter random_element(Iter start, const Iter end) {
     return start;
 }
 
-NAMESPACE_END(rnd)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}
