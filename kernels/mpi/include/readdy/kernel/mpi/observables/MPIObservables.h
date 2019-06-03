@@ -32,104 +32,115 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                       *
  ********************************************************************/
 
-
 /**
- * << detailed description >>
+ * « detailed description »
  *
- * @file MPIKernel.h
- * @brief Header file for readdy kernel that parallelizes using the message passing interface (MPI)
+ * @file MPIObservables.h
+ * @brief « brief description »
  * @author chrisfroe
- * @date 28.05.2019
+ * @date 03.06.19
  */
 
 #pragma once
 
 
-#include <readdy/model/Kernel.h>
-#include <readdy/kernel/mpi/MPIStateModel.h>
-#include <readdy/kernel/mpi/actions/MPIActionFactory.h>
-#include <readdy/kernel/mpi/observables/MPIObservableFactory.h>
+#include <readdy/model/observables/Observables.h>
 
 namespace readdy::kernel::mpi {
 
+class MPIKernel;
 
-class MPIKernel : public readdy::model::Kernel {
+namespace observables {
+
+class MPIVirial : public readdy::model::observables::Virial {
 public:
-    static const std::string name;
+    MPIVirial(MPIKernel *kernel, stride_type stride);
 
-    MPIKernel();
-
-    ~MPIKernel() override = default;
-
-    MPIKernel(const MPIKernel &) = delete;
-
-    MPIKernel &operator=(const MPIKernel &) = delete;
-
-    MPIKernel(MPIKernel &&) = delete;
-
-    MPIKernel &operator=(MPIKernel &&) = delete;
-
-    // factory method
-    static readdy::model::Kernel *create();
-
-    const MPIStateModel &getMPIKernelStateModel() const {
-        return _stateModel;
-    };
-
-    MPIStateModel &getMPIKernelStateModel() {
-        return _stateModel;
-    };
-
-    const model::StateModel &stateModel() const override {
-        return _stateModel;
-    };
-
-    model::StateModel &stateModel() override {
-        return _stateModel;
-    };
-
-    const model::actions::ActionFactory &actions() const override {
-        return _actions;
-    };
-
-    model::actions::ActionFactory &actions() override {
-        return _actions;
-    };
-
-    const model::observables::ObservableFactory &observe() const override {
-        return _observables;
-    };
-
-    model::observables::ObservableFactory &observe() override {
-        return _observables;
-    };
-
-    void initialize() override;
-
-    const model::top::TopologyActionFactory *const getTopologyActionFactory() const override {
-        throw std::logic_error("no topologies on MPI kernel");
-        return nullptr;
-    };
-
-    model::top::TopologyActionFactory *const getTopologyActionFactory() override {
-        throw std::logic_error("no topologies on MPI kernel");
-        return nullptr;
-    };
+    void evaluate() override;
 
 protected:
-    int rank;
-    std::string processorName;
+    MPIKernel * kernel;
+};
+
+class MPIPositions : public readdy::model::observables::Positions {
+public:
+    MPIPositions(MPIKernel* kernel, unsigned int stride, const std::vector<std::string> &typesToCount = {});
+
+    void evaluate() override;
+
+protected:
+    MPIKernel * kernel;
+};
+
+class MPIParticles : public readdy::model::observables::Particles {
+public:
+    MPIParticles(MPIKernel* kernel, unsigned int stride);
+
+    void evaluate() override;
+
+protected:
+    MPIKernel * kernel;
+};
+
+class MPIHistogramAlongAxis : public readdy::model::observables::HistogramAlongAxis {
+
+public:
+    MPIHistogramAlongAxis(MPIKernel* kernel, unsigned int stride,
+                          const std::vector<scalar> &binBorders,
+                          const std::vector<std::string> &typesToCount,
+                          unsigned int axis);
+
+    void evaluate() override;
+
+protected:
+    MPIKernel * kernel;
+    size_t size;
+};
+
+class MPINParticles : public readdy::model::observables::NParticles {
+public:
+
+    MPINParticles(MPIKernel* kernel, unsigned int stride, std::vector<std::string> typesToCount = {});
 
 
-    MPIStateModel::Data _data;
-    actions::MPIActionFactory _actions;
-    readdy::kernel::mpi::observables::MPIObservableFactory _observables;
-    MPIStateModel _stateModel;
+    void evaluate() override;
+
+protected:
+    MPIKernel * kernel;
+};
+
+class MPIForces : public readdy::model::observables::Forces {
+public:
+    MPIForces(MPIKernel* kernel, unsigned int stride, std::vector<std::string> typesToCount = {});
+
+    ~MPIForces() override = default;
+
+    void evaluate() override;
+
+
+protected:
+    MPIKernel * kernel;
+};
+
+class MPIReactions : public readdy::model::observables::Reactions {
+public:
+    MPIReactions(MPIKernel* kernel, unsigned int stride);
+
+    void evaluate() override;
+
+protected:
+    MPIKernel * kernel;
+};
+
+class MPIReactionCounts : public readdy::model::observables::ReactionCounts {
+public:
+    MPIReactionCounts(MPIKernel* kernel, unsigned int stride);
+
+    void evaluate() override;
+
+protected:
+    MPIKernel * kernel;
 };
 
 }
-
-extern "C" const char *name();
-
-extern "C" readdy::model::Kernel *createKernel();
-
+}

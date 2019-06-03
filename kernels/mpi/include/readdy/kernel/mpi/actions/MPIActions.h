@@ -35,8 +35,85 @@
 /**
  * « detailed description »
  *
- * @file MPIObservableFactory.cpp
+ * @file MPIActions.h
  * @brief « brief description »
  * @author chrisfroe
- * @date 28.05.19
+ * @date 03.06.19
  */
+
+#pragma once
+
+#include <readdy/model/actions/Actions.h>
+#include <readdy/kernel/mpi/MPIKernel.h>
+
+namespace readdy::kernel::mpi::actions {
+
+class MPIEulerBDIntegrator : public readdy::model::actions::EulerBDIntegrator {
+public:
+    MPIEulerBDIntegrator(MPIKernel *kernel, readdy::scalar timeStep) : kernel(kernel), EulerBDIntegrator(timeStep) {}
+
+    void perform() override;
+
+private:
+    MPIKernel *kernel;
+};
+
+class MPICalculateForces : public readdy::model::actions::CalculateForces {
+public:
+    explicit MPICalculateForces(MPIKernel *kernel) : CalculateForces(), kernel(kernel) {}
+
+    void perform() override {
+        const auto &context = kernel->context();
+        if(context.recordVirial()) {
+            performImpl<true>();
+        } else {
+            performImpl<false>();
+        }
+    }
+
+private:
+    MPIKernel *kernel;
+
+    template<bool COMPUTE_VIRIAL>
+    void performImpl();
+};
+
+class MPICreateNeighborList : public readdy::model::actions::CreateNeighborList {
+public:
+    MPICreateNeighborList(MPIKernel *kernel, scalar cutoffDistance) : CreateNeighborList(cutoffDistance),
+                                                                      kernel(kernel) {}
+
+    void perform() override {
+        kernel->getMPIKernelStateModel().initializeNeighborList(cutoffDistance());
+    }
+
+private:
+    MPIKernel *kernel;
+
+};
+
+class MPIUpdateNeighborList : public readdy::model::actions::UpdateNeighborList {
+public:
+    explicit MPIUpdateNeighborList(MPIKernel *kernel) : UpdateNeighborList(), kernel(kernel) {}
+
+    void perform() override {
+        kernel->getMPIKernelStateModel().updateNeighborList();
+    }
+
+private:
+    MPIKernel *kernel;
+};
+
+class MPIClearNeighborList : public readdy::model::actions::ClearNeighborList {
+public:
+    explicit MPIClearNeighborList(MPIKernel *kernel) : ClearNeighborList(), kernel(kernel) {}
+
+    void perform() override {
+        kernel->getMPIKernelStateModel().clearNeighborList();
+    }
+
+private:
+    MPIKernel *kernel;
+};
+
+}

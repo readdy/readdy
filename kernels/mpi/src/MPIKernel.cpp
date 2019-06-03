@@ -48,7 +48,11 @@ namespace readdy::kernel::mpi {
 
 const std::string MPIKernel::name = "MPI";
 
-MPIKernel::MPIKernel() : Kernel(name) {
+readdy::model::Kernel *MPIKernel::create() {
+    return new MPIKernel();
+}
+
+MPIKernel::MPIKernel() : Kernel(name), _stateModel(_data, _context), _actions(this), _observables(this) {
     int worldSize;
     int myRank;
     int nameLen;
@@ -61,5 +65,14 @@ MPIKernel::MPIKernel() : Kernel(name) {
     readdy::log::console()->info("pid {} Rank {} / {} is on {}", static_cast<long>(getpid()), myRank, worldSize,
                                  processorName);
 }
+
+void MPIKernel::initialize() {
+    readdy::model::Kernel::initialize();
+
+    _stateModel.reactionRecords().clear();
+    _stateModel.resetReactionCounts();
+    _stateModel.virial() = Matrix33{{{0, 0, 0, 0, 0, 0, 0, 0, 0}}};
+}
+
 
 }

@@ -43,6 +43,15 @@
 
 #include <readdy/kernel/mpi/MPIStateModel.h>
 
-readdy::kernel::mpi::MPIStateModel::MPIStateModel(const readdy::model::Context &context) : _data({}) {
+readdy::kernel::mpi::MPIStateModel::MPIStateModel(Data &data, const readdy::model::Context &context) : _data(data), _context(context) {
 
+}
+
+const std::vector<readdy::Vec3> readdy::kernel::mpi::MPIStateModel::getParticlePositions() const {
+    throw std::runtime_error("impl");
+}
+
+const std::vector<readdy::kernel::mpi::MPIStateModel::Particle>
+readdy::kernel::mpi::MPIStateModel::getParticles() const {
+    throw std::runtime_error("impl");
 }

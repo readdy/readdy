@@ -32,104 +32,28 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                       *
  ********************************************************************/
 
-
 /**
- * << detailed description >>
+ * « detailed description »
  *
- * @file MPIKernel.h
- * @brief Header file for readdy kernel that parallelizes using the message passing interface (MPI)
+ * @file MPIObservables.cpp
+ * @brief « brief description »
  * @author chrisfroe
- * @date 28.05.2019
+ * @date 03.06.19
  */
 
-#pragma once
+#include <readdy/kernel/mpi/observables/MPIObservables.h>
+#include <readdy/kernel/mpi/MPIKernel.h>
 
+namespace readdy::kernel::mpi::observables {
 
-#include <readdy/model/Kernel.h>
-#include <readdy/kernel/mpi/MPIStateModel.h>
-#include <readdy/kernel/mpi/actions/MPIActionFactory.h>
-#include <readdy/kernel/mpi/observables/MPIObservableFactory.h>
-
-namespace readdy::kernel::mpi {
-
-
-class MPIKernel : public readdy::model::Kernel {
-public:
-    static const std::string name;
-
-    MPIKernel();
-
-    ~MPIKernel() override = default;
-
-    MPIKernel(const MPIKernel &) = delete;
-
-    MPIKernel &operator=(const MPIKernel &) = delete;
-
-    MPIKernel(MPIKernel &&) = delete;
-
-    MPIKernel &operator=(MPIKernel &&) = delete;
-
-    // factory method
-    static readdy::model::Kernel *create();
-
-    const MPIStateModel &getMPIKernelStateModel() const {
-        return _stateModel;
-    };
-
-    MPIStateModel &getMPIKernelStateModel() {
-        return _stateModel;
-    };
-
-    const model::StateModel &stateModel() const override {
-        return _stateModel;
-    };
-
-    model::StateModel &stateModel() override {
-        return _stateModel;
-    };
-
-    const model::actions::ActionFactory &actions() const override {
-        return _actions;
-    };
-
-    model::actions::ActionFactory &actions() override {
-        return _actions;
-    };
-
-    const model::observables::ObservableFactory &observe() const override {
-        return _observables;
-    };
-
-    model::observables::ObservableFactory &observe() override {
-        return _observables;
-    };
-
-    void initialize() override;
-
-    const model::top::TopologyActionFactory *const getTopologyActionFactory() const override {
-        throw std::logic_error("no topologies on MPI kernel");
-        return nullptr;
-    };
-
-    model::top::TopologyActionFactory *const getTopologyActionFactory() override {
-        throw std::logic_error("no topologies on MPI kernel");
-        return nullptr;
-    };
-
-protected:
-    int rank;
-    std::string processorName;
-
-
-    MPIStateModel::Data _data;
-    actions::MPIActionFactory _actions;
-    readdy::kernel::mpi::observables::MPIObservableFactory _observables;
-    MPIStateModel _stateModel;
-};
-
+MPIVirial::MPIVirial(MPIKernel *kernel, stride_type stride) : Virial(kernel, stride), kernel(kernel) {
 }
 
-extern "C" const char *name();
+void MPIVirial::evaluate() {
+    result = kernel->getMPIKernelStateModel().virial();
+}
 
-extern "C" readdy::model::Kernel *createKernel();
+MPIPositions::MPIPositions(MPIKernel *kernel, unsigned int stride, const std::vector<std::string> &typesToCount)
+    : Positions(kernel, stride, typesToCount) {}
 
+}

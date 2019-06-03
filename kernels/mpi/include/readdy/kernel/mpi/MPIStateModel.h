@@ -61,7 +61,7 @@ public:
     using ReactionCountsMap = readdy::model::reactions::reaction_counts_map;
     using NeighborList = readdy::kernel::scpu::model::CellLinkedList;
 
-    MPIStateModel(const readdy::model::Context &context);
+    MPIStateModel(Data &data, const readdy::model::Context &context);
 
     ~MPIStateModel() override = default;
 
@@ -182,6 +182,23 @@ public:
                                 std::vector<std::size_t>::iterator end) const override;
 
     void clear() override;
+
+    readdy::model::top::GraphTopology *const
+    addTopology(TopologyTypeId type, const std::vector<readdy::model::TopologyParticle> &particles) override {
+        throw std::logic_error("no topologies on MPI kernel");
+    }
+
+    std::vector<readdy::model::top::GraphTopology *> getTopologies() override {
+        throw std::logic_error("no topologies on MPI kernel");
+    }
+
+    const readdy::model::top::GraphTopology *getTopologyForParticle(readdy::model::top::Topology::particle_index particle) const override {
+        throw std::logic_error("no topologies on MPI kernel");
+    }
+
+    readdy::model::top::GraphTopology *getTopologyForParticle(readdy::model::top::Topology::particle_index particle) override {
+        throw std::logic_error("no topologies on MPI kernel");
+    }
 
 private:
     readdy::kernel::scpu::model::ObservableData _observableData;

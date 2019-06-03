@@ -39,11 +39,12 @@ SET(MPI_INCLUDE_DIR "${READDY_GLOBAL_DIR}/kernels/mpi/include")
 # sources
 LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/MPIKernel.cpp")
 LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/MPIStateModel.cpp")
-LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/actions/MPIActionFactory.cpp")
 
 # --- actions ---
-LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/actions/MPICreateNeighborList.cpp")
+LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/actions/MPIActionFactory.cpp")
 LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/actions/MPIReactionImpls.cpp")
+LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/actions/MPIEulerBDIntegrator.cpp")
+LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/actions/MPICalculateForces.cpp")
 #LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/actions/MPIEvaluateCompartments.cpp")
 #LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/actions/MPIEvaluateTopologyReactions.cpp")
 
@@ -51,7 +52,8 @@ LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/actions/MPIReactionImpls.cpp")
 #LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/MPIParticleData.cpp")
 
 # --- observables ---
-LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/MPIObservableFactory.cpp")
+LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/observables/MPIObservableFactory.cpp")
+LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/observables/MPIObservables.cpp")
 
 # --- topology actions ---
 #LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/topologies/MPITopologyActionFactory.cpp")
