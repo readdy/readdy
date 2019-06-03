@@ -36,8 +36,9 @@ project(readdy_kernel_mpi C CXX)
 
 find_package(MPI REQUIRED)
 
-# sources and headers
+# sources and headers, MPI kernel shall depend a lot on singlecpu kernel
 include("${READDY_GLOBAL_DIR}/cmake/sources/kernels/mpi.cmake")
+include("${READDY_GLOBAL_DIR}/cmake/sources/kernels/singlecpu.cmake")
 
 # create library
 add_library(${PROJECT_NAME} SHARED ${MPI_SOURCES} ${READDY_INCLUDE_DIRS} ${MPI_INCLUDE_DIR})

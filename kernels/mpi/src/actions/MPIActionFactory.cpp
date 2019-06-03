@@ -35,8 +35,20 @@
 /**
  * « detailed description »
  *
- * @file MPIParticleData.cpp
+ * @file MPIActionFactory.cpp
  * @brief « brief description »
  * @author chrisfroe
  * @date 28.05.19
  */
+
+#include <readdy/kernel/mpi/actions/MPIActionFactory.h>
+
+namespace readdy::kernel::mpi::actions {
+
+MPIActionFactory::MPIActionFactory(MPIKernel *kernel) : kernel(kernel) {}
+
+std::unique_ptr<model::actions::EulerBDIntegrator> MPIActionFactory::eulerBDIntegrator(scalar timeStep) const {
+    return {std::make_unique<MPIEulerBDIntegrator>(kernel, timeStep)};
+}
+
+}

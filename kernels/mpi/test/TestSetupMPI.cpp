@@ -47,8 +47,8 @@
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/kernel/mpi/MPIKernel.h>
 
-TEST_CASE("Test mpi kernel running in parallel", "[cpu]") {
-    auto kernel = std::make_unique<readdy::kernel::mpi::CPUKernel>();
+TEST_CASE("Test mpi kernel running in parallel", "[mpi]") {
+    auto kernel = std::make_unique<readdy::kernel::mpi::MPIKernel>();
     auto &ctx = kernel->context();
 
     SECTION("In and out types and positions") {}

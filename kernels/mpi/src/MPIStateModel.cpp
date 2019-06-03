@@ -42,3 +42,7 @@
  */
 
 #include <readdy/kernel/mpi/MPIStateModel.h>
+
+readdy::kernel::mpi::MPIStateModel::MPIStateModel(const readdy::model::Context &context) : _data({}) {
+
+}

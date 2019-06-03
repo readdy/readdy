@@ -38,8 +38,8 @@ SET(MPI_INCLUDE_DIR "${READDY_GLOBAL_DIR}/kernels/mpi/include")
 
 # sources
 LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/MPIKernel.cpp")
-LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/MPIActionFactory.cpp")
 LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/MPIStateModel.cpp")
+LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/actions/MPIActionFactory.cpp")
 
 # --- actions ---
 LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/actions/MPICreateNeighborList.cpp")
@@ -48,7 +48,7 @@ LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/actions/MPIReactionImpls.cpp")
 #LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/actions/MPIEvaluateTopologyReactions.cpp")
 
 # --- model ---
-LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/MPIParticleData.cpp")
+#LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/MPIParticleData.cpp")
 
 # --- observables ---
 LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/MPIObservableFactory.cpp")

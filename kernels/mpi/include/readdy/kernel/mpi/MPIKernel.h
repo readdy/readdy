@@ -43,6 +43,7 @@
  */
 
 #include <readdy/model/Kernel.h>
+#include <readdy/kernel/mpi/MPIStateModel.h>
 
 namespace readdy::kernel::mpi {
 

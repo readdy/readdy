@@ -42,3 +42,154 @@
  */
 
 #pragma once
+
+#include <readdy/model/StateModel.h>
+#include <readdy/kernel/singlecpu/model/SCPUParticleData.h>
+#include <readdy/kernel/singlecpu/model/SCPUNeighborList.h>
+#include <readdy/kernel/singlecpu/model/ObservableData.h>
+#include <readdy/model/reactions/ReactionRecord.h>
+#include <readdy/common/signals.h>
+
+namespace readdy::kernel::mpi {
+
+class MPIStateModel : public readdy::model::StateModel {
+
+public:
+
+    using Data = readdy::kernel::scpu::model::SCPUParticleData;
+    using Particle = readdy::model::Particle;
+    using ReactionCountsMap = readdy::model::reactions::reaction_counts_map;
+    using NeighborList = readdy::kernel::scpu::model::CellLinkedList;
+
+    MPIStateModel(const readdy::model::Context &context);
+
+    ~MPIStateModel() override = default;
+
+    MPIStateModel(const MPIStateModel&) = delete;
+    MPIStateModel& operator=(const MPIStateModel&) = delete;
+    MPIStateModel(MPIStateModel&&) = delete;
+    MPIStateModel& operator=(MPIStateModel&&) = delete;
+
+    const std::vector<Vec3> getParticlePositions() const override;
+
+    const std::vector<Particle> getParticles() const override;
+
+    void initializeNeighborList(scalar interactionDistance) override {
+        _neighborList->setUp(interactionDistance, _neighborListCellRadius);
+        _neighborList->update();
+    };
+
+    void updateNeighborList() override {
+        _neighborList->update();
+    };
+
+    void addParticle(const Particle &p) override {
+        getParticleData()->addParticle(p);
+    };
+
+    void addParticles(const std::vector<Particle> &p) override {
+        getParticleData()->addParticles(p);
+    };
+
+    void removeParticle(const Particle &p) override {
+        getParticleData()->removeParticle(p);
+    };
+
+    void removeAllParticles() override {
+        getParticleData()->clear();
+    };
+
+    readdy::kernel::scpu::model::ObservableData &observableData() {
+        return _observableData;
+    }
+
+    const readdy::kernel::scpu::model::ObservableData &observableData() const {
+        return _observableData;
+    }
+
+    Matrix33 &virial() {
+        return _observableData.virial;
+    }
+
+    const Matrix33 &virial() const {
+        return _observableData.virial;
+    }
+
+    scalar energy() const override {
+        return _observableData.energy;
+    };
+
+    scalar &energy() override {
+        return _observableData.energy;
+    };
+
+    scalar time() const override {
+        return _observableData.time;
+    };
+
+    scalar &time() override {
+        return _observableData.time;
+    };
+
+    Data const *const getParticleData() const {
+        return &_data.get();
+    };
+
+    Data *const getParticleData() {
+        return &_data.get();
+    };
+
+    NeighborList const *const getNeighborList() const {
+        return _neighborList.get();
+
+    };
+
+    NeighborList *const getNeighborList() {
+        return _neighborList.get();
+    };
+
+    void clearNeighborList() override {
+        _neighborList->clear();
+    };
+
+    std::vector<readdy::model::reactions::ReactionRecord> &reactionRecords() {
+        return _observableData.reactionRecords;
+    };
+
+    const std::vector<readdy::model::reactions::ReactionRecord> &reactionRecords() const {
+        return _observableData.reactionRecords;
+    };
+
+    const ReactionCountsMap & reactionCounts() const {
+        return _observableData.reactionCounts;
+    };
+
+    ReactionCountsMap &reactionCounts() {
+        return _observableData.reactionCounts;
+    };
+
+    void resetReactionCounts();
+
+    Particle getParticleForIndex(std::size_t index) const override {
+        return _data.get().getParticle(index);
+    };
+
+    ParticleTypeId getParticleType(std::size_t index) const override {
+        return _data.get().entry_at(index).type;
+    };
+
+    void toDenseParticleIndices(std::vector<std::size_t>::iterator begin,
+                                std::vector<std::size_t>::iterator end) const override;
+
+    void clear() override;
+
+private:
+    readdy::kernel::scpu::model::ObservableData _observableData;
+    std::reference_wrapper<const readdy::model::Context> _context;
+    std::reference_wrapper<Data> _data;
+    std::unique_ptr<NeighborList> _neighborList;
+    NeighborList::cell_radius_type _neighborListCellRadius {1};
+    std::unique_ptr<readdy::signals::scoped_connection> _reorderConnection;
+};
+
+}
