@@ -45,6 +45,7 @@ LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/actions/MPIActionFactory.cpp")
 LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/actions/MPIReactionImpls.cpp")
 LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/actions/MPIEulerBDIntegrator.cpp")
 LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/actions/MPICalculateForces.cpp")
+LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/actions/MPIUncontrolledApproximation.cpp")
 #LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/actions/MPIEvaluateCompartments.cpp")
 #LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/actions/MPIEvaluateTopologyReactions.cpp")
 

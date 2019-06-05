@@ -64,7 +64,7 @@ public:
 
     void perform() override {
         const auto &context = kernel->context();
-        if(context.recordVirial()) {
+        if (context.recordVirial()) {
             performImpl<true>();
         } else {
             performImpl<false>();
@@ -115,5 +115,45 @@ public:
 private:
     MPIKernel *kernel;
 };
+
+class MPIEvaluateCompartments : public readdy::model::actions::EvaluateCompartments {
+public:
+    explicit MPIEvaluateCompartments(MPIKernel *kernel) : EvaluateCompartments(), kernel(kernel) {}
+
+    void perform() override {
+        const auto &ctx = kernel->context();
+        const auto &compartments = ctx.compartments().get();
+        for (auto &e : *kernel->getMPIKernelStateModel().getParticleData()) {
+            if (!e.deactivated) {
+                for (const auto &compartment : compartments) {
+                    if (compartment->isContained(e.pos)) {
+                        const auto &conversions = compartment->getConversions();
+                        const auto convIt = conversions.find(e.type);
+                        if (convIt != conversions.end()) {
+                            e.type = (*convIt).second;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+protected:
+    MPIKernel *kernel;
+};
+
+namespace reactions {
+
+class MPIUncontrolledApproximation : public readdy::model::actions::reactions::UncontrolledApproximation {
+public:
+    MPIUncontrolledApproximation(MPIKernel *kernel, readdy::scalar timeStep) : UncontrolledApproximation(timeStep),
+                                                                               kernel(kernel) {}
+
+    void perform() override;
+
+protected:
+    MPIKernel *const kernel;
+};
+}
 
 }

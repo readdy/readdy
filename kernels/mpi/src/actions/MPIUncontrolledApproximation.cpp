@@ -35,68 +35,19 @@
 /**
  * « detailed description »
  *
- * @file MPIActionFactory.cpp
+ * @file MPIUncontrolledApproximation.cpp
  * @brief « brief description »
  * @author chrisfroe
- * @date 28.05.19
+ * @date 05.06.19
  */
 
-#include <readdy/kernel/mpi/actions/MPIActionFactory.h>
 #include <readdy/kernel/mpi/actions/MPIActions.h>
 
-namespace readdy::kernel::mpi::actions {
+namespace readdy::kernel::mpi::actions::reactions {
 
-MPIActionFactory::MPIActionFactory(MPIKernel *kernel) : kernel(kernel) {}
 
-std::unique_ptr<model::actions::EulerBDIntegrator> MPIActionFactory::eulerBDIntegrator(scalar timeStep) const {
-    return {std::make_unique<MPIEulerBDIntegrator>(kernel, timeStep)};
+void MPIUncontrolledApproximation::perform() {
+
 }
-
-std::unique_ptr<readdy::model::actions::CalculateForces> MPIActionFactory::calculateForces() const {
-    return {std::make_unique<MPICalculateForces>(kernel)};
-}
-
-std::unique_ptr<model::actions::AddParticles>
-MPIActionFactory::addParticles(const std::vector<model::Particle> &particles) const {
-    return {std::make_unique<readdy::model::actions::AddParticles>(kernel, particles)};
-}
-
-std::unique_ptr<readdy::model::actions::MdgfrdIntegrator> MPIActionFactory::mdgfrdIntegrator(scalar timeStep) const {
-    throw std::invalid_argument("Mdgfrd integrator not implemented for MPI");
-}
-
-std::unique_ptr<model::actions::CreateNeighborList>
-MPIActionFactory::createNeighborList(scalar interactionDistance) const {
-    return {std::make_unique<MPICreateNeighborList>(kernel, interactionDistance)};
-}
-
-std::unique_ptr<model::actions::UpdateNeighborList> MPIActionFactory::updateNeighborList() const {
-    return {std::make_unique<MPIUpdateNeighborList>(kernel)};
-}
-
-std::unique_ptr<model::actions::ClearNeighborList> MPIActionFactory::clearNeighborList() const {
-    return {std::make_unique<MPIClearNeighborList>(kernel)};
-}
-
-std::unique_ptr<model::actions::EvaluateCompartments> MPIActionFactory::evaluateCompartments() const {
-    return {std::make_unique<MPIEvaluateCompartments>(kernel)};
-}
-
-std::unique_ptr<model::actions::reactions::UncontrolledApproximation>
-MPIActionFactory::uncontrolledApproximation(scalar timeStep) const {
-    return {std::make_unique<reactions::MPIUncontrolledApproximation>(kernel, timeStep)};
-}
-
-std::unique_ptr<model::actions::reactions::Gillespie>
-MPIActionFactory::gillespie(scalar timeStep) const {
-    throw std::invalid_argument("Gillespie reaction handler currently not implemented for MPI");
-    //return {std::make_unique<reactions::MPIGillespie>(kernel, timeStep)};
-}
-
-std::unique_ptr<model::actions::reactions::DetailedBalance>
-MPIActionFactory::detailedBalance(scalar timeStep) const {
-    throw std::invalid_argument("DetailedBalance reaction handler not implemented for MPI");
-}
-
 
 }
