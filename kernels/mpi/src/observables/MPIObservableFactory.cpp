@@ -96,5 +96,11 @@ std::unique_ptr<model::observables::Virial>
 MPIObservableFactory::virial(stride_type stride) const {
     return {std::make_unique<MPIVirial>(kernel, stride)};
 }
-                                                                
+
+std::unique_ptr<model::observables::MeanSquaredDisplacement>
+MPIObservableFactory::msd(stride_type stride, std::vector<std::string> typesToCount,
+                          model::observables::Particles *particlesObservable) const {
+    throw std::runtime_error("MeanSquaredDisplacement observable not available for MPI kernel");
+}
+
 }

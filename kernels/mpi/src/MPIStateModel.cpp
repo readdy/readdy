@@ -43,15 +43,61 @@
 
 #include <readdy/kernel/mpi/MPIStateModel.h>
 
-readdy::kernel::mpi::MPIStateModel::MPIStateModel(Data &data, const readdy::model::Context &context) : _data(data), _context(context) {
+namespace readdy::kernel::mpi {
 
-}
+MPIStateModel::MPIStateModel(Data &data, const readdy::model::Context &context) : _data(data), _context(context) {}
 
-const std::vector<readdy::Vec3> readdy::kernel::mpi::MPIStateModel::getParticlePositions() const {
+const std::vector<readdy::Vec3> MPIStateModel::getParticlePositions() const {
     throw std::runtime_error("impl");
 }
 
-const std::vector<readdy::kernel::mpi::MPIStateModel::Particle>
-readdy::kernel::mpi::MPIStateModel::getParticles() const {
+const std::vector<MPIStateModel::Particle>
+MPIStateModel::getParticles() const {
     throw std::runtime_error("impl");
+}
+
+void MPIStateModel::resetReactionCounts() {
+    if (!reactionCounts().empty()) {
+        for (auto &e : reactionCounts()) {
+            e.second = 0;
+        }
+    } else {
+        const auto &reactions = _context.get().reactions();
+        for (const auto &entry : reactions.order1()) {
+            for (auto reaction : entry.second) {
+                reactionCounts()[reaction->id()] = 0;
+            }
+        }
+        for (const auto &entry : reactions.order2()) {
+            for (auto reaction : entry.second) {
+                reactionCounts()[reaction->id()] = 0;
+            }
+        }
+    }
+}
+
+void MPIStateModel::toDenseParticleIndices(
+        std::vector<std::size_t>::iterator begin,
+        std::vector<std::size_t>::iterator end) const {
+    const auto &blanks = _data.get().blanks();
+    std::transform(begin, end, begin, [&blanks](const std::size_t &ix) {
+        auto result = ix;
+        for (auto blankIx : blanks) {
+            if (blankIx < ix) {
+                --result;
+            }
+        }
+        return result;
+    });
+}
+
+void MPIStateModel::clear() {
+    getParticleData()->clear();
+    //topologies().clear();
+    reactionRecords().clear();
+    resetReactionCounts();
+    virial() = {};
+    energy() = 0;
+}
+
 }

@@ -59,33 +59,33 @@ public:
     void evaluate() override;
 
 protected:
-    MPIKernel * kernel;
+    MPIKernel *kernel;
 };
 
 class MPIPositions : public readdy::model::observables::Positions {
 public:
-    MPIPositions(MPIKernel* kernel, unsigned int stride, const std::vector<std::string> &typesToCount = {});
+    MPIPositions(MPIKernel *kernel, unsigned int stride, const std::vector<std::string> &typesToCount = {});
 
     void evaluate() override;
 
 protected:
-    MPIKernel * kernel;
+    MPIKernel *kernel;
 };
 
 class MPIParticles : public readdy::model::observables::Particles {
 public:
-    MPIParticles(MPIKernel* kernel, unsigned int stride);
+    MPIParticles(MPIKernel *kernel, unsigned int stride);
 
     void evaluate() override;
 
 protected:
-    MPIKernel * kernel;
+    MPIKernel *kernel;
 };
 
 class MPIHistogramAlongAxis : public readdy::model::observables::HistogramAlongAxis {
 
 public:
-    MPIHistogramAlongAxis(MPIKernel* kernel, unsigned int stride,
+    MPIHistogramAlongAxis(MPIKernel *kernel, unsigned int stride,
                           const std::vector<scalar> &binBorders,
                           const std::vector<std::string> &typesToCount,
                           unsigned int axis);
@@ -93,25 +93,25 @@ public:
     void evaluate() override;
 
 protected:
-    MPIKernel * kernel;
+    MPIKernel *kernel;
     size_t size;
 };
 
 class MPINParticles : public readdy::model::observables::NParticles {
 public:
 
-    MPINParticles(MPIKernel* kernel, unsigned int stride, std::vector<std::string> typesToCount = {});
+    MPINParticles(MPIKernel *kernel, unsigned int stride, std::vector<std::string> typesToCount = {});
 
 
     void evaluate() override;
 
 protected:
-    MPIKernel * kernel;
+    MPIKernel *kernel;
 };
 
 class MPIForces : public readdy::model::observables::Forces {
 public:
-    MPIForces(MPIKernel* kernel, unsigned int stride, std::vector<std::string> typesToCount = {});
+    MPIForces(MPIKernel *kernel, unsigned int stride, std::vector<std::string> typesToCount = {});
 
     ~MPIForces() override = default;
 
@@ -119,27 +119,27 @@ public:
 
 
 protected:
-    MPIKernel * kernel;
+    MPIKernel *kernel;
 };
 
 class MPIReactions : public readdy::model::observables::Reactions {
 public:
-    MPIReactions(MPIKernel* kernel, unsigned int stride);
+    MPIReactions(MPIKernel *kernel, unsigned int stride);
 
     void evaluate() override;
 
 protected:
-    MPIKernel * kernel;
+    MPIKernel *kernel;
 };
 
 class MPIReactionCounts : public readdy::model::observables::ReactionCounts {
 public:
-    MPIReactionCounts(MPIKernel* kernel, unsigned int stride);
+    MPIReactionCounts(MPIKernel *kernel, unsigned int stride);
 
     void evaluate() override;
 
 protected:
-    MPIKernel * kernel;
+    MPIKernel *kernel;
 };
 
 }

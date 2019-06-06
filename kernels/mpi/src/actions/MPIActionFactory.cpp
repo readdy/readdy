@@ -98,5 +98,10 @@ MPIActionFactory::detailedBalance(scalar timeStep) const {
     throw std::invalid_argument("DetailedBalance reaction handler not implemented for MPI");
 }
 
+std::unique_ptr<model::actions::top::EvaluateTopologyReactions>
+MPIActionFactory::evaluateTopologyReactions(scalar timeStep) const {
+    throw std::invalid_argument("EvaluateTopologyReactions not implemented for MPI");
+}
+
 
 }
