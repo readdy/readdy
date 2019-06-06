@@ -52,7 +52,6 @@
 
 namespace readdy::kernel::mpi {
 
-
 class MPIKernel : public readdy::model::Kernel {
 public:
     static const std::string name;
@@ -121,7 +120,7 @@ protected:
 
     MPIStateModel::Data _data;
     actions::MPIActionFactory _actions;
-    readdy::kernel::mpi::observables::MPIObservableFactory _observables;
+    observables::MPIObservableFactory _observables;
     MPIStateModel _stateModel;
 };
 

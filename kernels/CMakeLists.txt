@@ -33,9 +33,8 @@
 ####################################################################
 
 
-ADD_SUBDIRECTORY(cpu)
+add_subdirectory(cpu)
 
-set(READDY_BUILD_MPI_KERNEL OFF CACHE BOOL "Whether to build the MPI kernel or not")
 if (READDY_BUILD_MPI_KERNEL)
-    ADD_SUBDIRECTORY(mpi)
+    add_subdirectory(mpi)
 endif()

@@ -74,5 +74,12 @@ void MPIKernel::initialize() {
     _stateModel.virial() = Matrix33{{{0, 0, 0, 0, 0, 0, 0, 0, 0}}};
 }
 
+}
 
+const char *name() {
+    return readdy::kernel::mpi::MPIKernel::name.c_str();
+}
+
+readdy::model::Kernel *createKernel() {
+    return readdy::kernel::mpi::MPIKernel::create();
 }

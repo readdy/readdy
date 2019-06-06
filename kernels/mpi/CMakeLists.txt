@@ -36,9 +36,8 @@ project(readdy_kernel_mpi C CXX)
 
 find_package(MPI REQUIRED)
 
-# sources and headers, MPI kernel shall depend a lot on singlecpu kernel
+# sources and headers
 include("${READDY_GLOBAL_DIR}/cmake/sources/kernels/mpi.cmake")
-include("${READDY_GLOBAL_DIR}/cmake/sources/kernels/singlecpu.cmake")
 
 # create library
 add_library(${PROJECT_NAME} SHARED ${MPI_SOURCES} ${READDY_INCLUDE_DIRS} ${MPI_INCLUDE_DIR})
@@ -46,15 +45,15 @@ add_library(${PROJECT_NAME} SHARED ${MPI_SOURCES} ${READDY_INCLUDE_DIRS} ${MPI_I
 # MPI specific flags for target library
 target_include_directories(${PROJECT_NAME} PUBLIC ${MPI_CXX_INCLUDE_DIRS})
 target_compile_options(${PROJECT_NAME} PUBLIC ${MPI_CXX_COMPILE_OPTIONS})
-target_link_libraries(${PROJECT_NAME} ${MPI_CXX_LIBRARIES} ${MPI_CXX_LINK_FLAGS})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${MPI_CXX_LIBRARIES} ${MPI_CXX_LINK_FLAGS})
 
 # includes
 target_include_directories(${PROJECT_NAME} PUBLIC ${READDY_INCLUDE_DIRS} ${MPI_INCLUDE_DIR})
 
 # link
-target_link_libraries(${PROJECT_NAME} ${CMAKE_DL_LIBS} readdy)
+target_link_libraries(${PROJECT_NAME} PUBLIC ${CMAKE_DL_LIBS} readdy)
 
-SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES
+set_target_properties(${PROJECT_NAME} PROPERTIES
         POSITION_INDEPENDENT_CODE ON
         LINK_FLAGS "${EXTRA_LINK_FLAGS}"
         COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}"
@@ -62,12 +61,12 @@ SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES
         LIBRARY_OUTPUT_DIRECTORY "${READDY_PLUGIN_OUTPUT_DIRECTORY}"
         LINKER_LANGUAGE CXX)
 
-INSTALL(TARGETS ${PROJECT_NAME}
+install(TARGETS ${PROJECT_NAME}
         RUNTIME DESTINATION readdy/readdy_plugins
         LIBRARY DESTINATION readdy/readdy_plugins
         ARCHIVE DESTINATION readdy/readdy_plugins
         )
 
-IF (READDY_CREATE_TEST_TARGET)
-    ADD_SUBDIRECTORY(test)
-ENDIF()
+if (READDY_CREATE_TEST_TARGET)
+    add_subdirectory(test)
+endif()
