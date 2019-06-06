@@ -107,12 +107,10 @@ public:
     void initialize() override;
 
     const model::top::TopologyActionFactory *const getTopologyActionFactory() const override {
-        throw std::logic_error("no topologies on MPI kernel");
         return nullptr;
     };
 
     model::top::TopologyActionFactory *const getTopologyActionFactory() override {
-        throw std::logic_error("no topologies on MPI kernel");
         return nullptr;
     };
 

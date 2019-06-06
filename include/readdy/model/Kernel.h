@@ -114,10 +114,9 @@ public:
     };
 
     /**
-     * Returns a vector containing all available program names for this specific kernel instance.
+     * Returns a vector containing all available action names for this specific kernel instance.
      *
-     * @see createProgram(name)
-     * @return The program names.
+     * @return The action names.
      */
     virtual std::vector<std::string> getAvailableActions() const {
         return actions().getAvailableActions();
