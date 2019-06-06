@@ -61,6 +61,12 @@
  */
 static void waitForDebugger() {
     if (getenv("READDY_MPI_DEBUG") != nullptr) {
+        int rank;
+        char processorName[MPI_MAX_PROCESSOR_NAME];
+        int nameLen;
+        MPI_Get_processor_name(processorName, &nameLen);
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
         static int rankToDebug = 0;
         if (rank == rankToDebug) {
             volatile int i = 0;
@@ -73,6 +79,12 @@ static void waitForDebugger() {
 }
 
 int main(int argc, char **argv) {
+    // @todo in the long run use dynamic process management, i.e. MPI_Comm_spawn and MPI_Intercomm_merge, but then the
+    // children processes need to get the data: i.e. at least the whole context
+    // there needs to be a common entry point for all workers.
+    // Two options:
+    // - spawn processes and distribute data when run() is called (i.e. all particles are present on master -> memory)
+    // - spawn processes when kernel is created, addParticles() then distributes particles, workers wait for run()
     int worldSize;
     int myRank;
     int nameLen;
