@@ -40,7 +40,7 @@
  * @brief << brief description >>
  * @author clonker
  * @date 10.10.17
- * @copyright GPL-3
+ * @copyright BSD-3
  */
 
 #include <readdy/model/reactions/ReactionRecord.h>

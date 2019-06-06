@@ -42,7 +42,7 @@ import matplotlib.pyplot as plt
 import readdy.examples.performance_scenarios as ps
 
 __author__ = "chrisfroe"
-__license__ = "LGPL"
+__license__ = "BSD-3"
 
 data_dir = "./"
 #  data_dir = "./performance_results/"

@@ -40,7 +40,7 @@
  * @brief << brief description >>
  * @author clonker
  * @date 20.07.17
- * @copyright GPL-3
+ * @copyright BSD-3
  */
 
 #include <pybind11/pybind11.h>
