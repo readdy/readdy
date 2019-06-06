@@ -144,11 +144,6 @@ public:
         return particleType_;
     }
 
-    /**
-     * flag if this vertex has been visited (for BFS/DFS)
-     */
-    bool visited{false};
-
 private:
     friend class readdy::model::top::graph::Graph;
 

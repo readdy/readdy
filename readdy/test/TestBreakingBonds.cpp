@@ -57,7 +57,7 @@ TEMPLATE_TEST_CASE("Test breaking bonds.", "[breakbonds]", SingleCPU, CPU) {
     SECTION("Break due to large displacement with high rate, dimer") {
         // "A"-"A" with threshold 10 kBT
         // todo
-        auto &&breakingBonds = kernel->actions().breakBonds();
+        //auto &&breakingBonds = kernel->actions().breakBonds();
     }
 
     SECTION("Break due to large displacement with high rate, trimer") {

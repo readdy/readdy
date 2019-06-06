@@ -45,7 +45,6 @@
 
 #pragma once
 
-#include <functional>
 #include <stdexcept>
 #include <list>
 #include <unordered_map>
@@ -69,10 +68,6 @@ public:
 
     using path_len_3 = std::tuple<vertex_ref, vertex_ref, vertex_ref, vertex_ref>;
     using cpath_len_3 = std::tuple<vertex_cref, vertex_cref, vertex_cref, vertex_cref>;
-
-    using edge_callback = std::function<void(const edge &)>;
-    using path_len_2_callback = std::function<void(const path_len_2 &)>;
-    using path_len_3_callback = std::function<void(const path_len_3 &)>;
 
     Graph() = default;
 
@@ -125,8 +120,7 @@ public:
     }
 
     bool containsEdge(const cedge &edge) const {
-        const auto &v1 = std::get<0>(edge);
-        const auto &v2 = std::get<1>(edge);
+        const auto& [v1, v2] = edge;
         const auto &v1Neighbors = v1->neighbors();
         const auto &v2Neighbors = v2->neighbors();
         return std::find(v1Neighbors.begin(), v1Neighbors.end(), v2) != v1Neighbors.end()
@@ -151,7 +145,7 @@ public:
         _vertices.emplace_back(particleIndex, particleType);
     }
 
-    void addEdge(vertex_ref v1, vertex_ref v2) {
+    static void addEdge(vertex_ref v1, vertex_ref v2) {
         v1->addNeighbor(v2);
         v2->addNeighbor(v1);
     }
@@ -200,31 +194,32 @@ public:
 
     bool isConnected();
 
-    std::vector<std::tuple<vertex_ref, vertex_ref>> edges() {
+    std::vector<edge> edges() const {
         if(_dirty) {
             _edges.clear();
             findEdges([this](const edge &tup) {
                 _edges.push_back(tup);
             });
-            // todo _dirty = false;
+            _dirty = false;
         }
         return _edges;
     };
 
-    bool hasEdge(const std::tuple<vertex_ref, vertex_ref> &edge) const {
-        // todo use _edges
-        const auto &v1 = std::get<0>(edge);
-        const auto &v2 = std::get<1>(edge);
+    bool hasEdge(const edge &edge) const {
+        const auto &[v1, v2] = edge;
+        const auto &e = edges();
         auto it1 = std::find(v1->neighbors().begin(), v1->neighbors().end(), v2);
         auto it2 = std::find(v2->neighbors().begin(), v2->neighbors().end(), v1);
         return it1 != v1->neighbors().end() && it2 != v2->neighbors().end();
     }
 
-    void findEdges(const edge_callback &edgeCallback);
+    template<typename TupleCallback>
+    void findEdges(const TupleCallback &edgeCallback) const;
 
-    void findNTuples(const edge_callback &tuple_callback,
-                     const path_len_2_callback &triple_callback,
-                     const path_len_3_callback &quadruple_callback);
+    template<typename TupleCallback, typename TripleCallback, typename QuadrupleCallback>
+    void findNTuples(const TupleCallback &tuple_callback,
+                     const TripleCallback &triple_callback,
+                     const QuadrupleCallback &quadruple_callback) const;
 
     std::tuple<std::vector<edge>, std::vector<path_len_2>, std::vector<path_len_3>>
     findNTuples() {
@@ -247,8 +242,9 @@ public:
 
 private:
     vertex_list _vertices{};
-    bool _dirty {true};
-    std::vector<std::tuple<vertex_ref, vertex_ref>> _edges;
+
+    mutable bool _dirty {true};
+    mutable std::vector<edge> _edges;
 
     void removeNeighborsEdges(vertex_ref vertex) {
         std::for_each(std::begin(vertex->neighbors()), std::end(vertex->neighbors()), [vertex](const auto neighbor) {
@@ -262,5 +258,78 @@ private:
         });
     }
 };
+
+template<typename TupleCallback>
+void Graph::findEdges(const TupleCallback &edgeCallback) const {
+    for (auto &v : _vertices) {
+        v.visited = false;
+    }
+
+    for(auto it = _vertices.begin(); it != _vertices.end(); ++it) {
+        it->visited = true;
+        auto &neighbors = it->neighbors();
+        for (auto it_neigh : neighbors) {
+            if(!it_neigh->visited) {
+                edgeCallback(std::tie(it, it_neigh));
+            }
+        }
+    }
+}
+
+template<typename TupleCallback, typename TripleCallback, typename QuadrupleCallback>
+void Graph::findNTuples(const TupleCallback &tuple_callback,
+                 const TripleCallback &triple_callback,
+                 const QuadrupleCallback &quadruple_callback) const {
+    for (auto &v : _vertices) {
+        v.visited = false;
+    }
+
+    for (auto it = _vertices.begin(); it != _vertices.end(); ++it) {
+        it->visited = true;
+        auto v_type = it->particleType();
+        auto v_idx = it->particleIndex;
+        auto &neighbors = it->neighbors();
+        for (auto it_neigh : neighbors) {
+            auto vv_type = it_neigh->particleType();
+            auto vv_idx = it_neigh->particleIndex;
+            if (!it_neigh->visited) {
+                log::trace("got type tuple ({}, {}) for particles {}, {}", v_type, vv_type, v_idx, vv_idx);
+                // got edge (v, vv), now look for N(v)\{vv} and N(vv)\(N(v) + v)
+                tuple_callback(std::tie(it, it_neigh));
+                for (auto quad_it_1 : neighbors) {
+                    // N(v)\{vv}
+                    if (it_neigh != quad_it_1) {
+                        auto vvv_type = quad_it_1->particleType();
+                        auto vvv_idx = quad_it_1->particleIndex;
+                        // got one end of the quadruple
+                        for (auto quad_it_2 : it_neigh->neighbors()) {
+                            // if this other neighbor is no neighbor of v and not v itself,
+                            // we got the other end of the quadruple
+                            auto no_circle =
+                                    std::find(neighbors.begin(), neighbors.end(), quad_it_2) == neighbors.end();
+                            if (quad_it_2 != it && no_circle) {
+                                auto vvvv_type = quad_it_2->particleType();
+                                auto vvvv_idx = quad_it_2->particleIndex;
+                                log::trace("got type quadruple ({}, {}, {}, {}) for particles {}, {}, {}, {}", vvv_type, v_type,
+                                           vv_type, vvvv_type, vvv_idx, v_idx, vv_idx, vvvv_idx);
+                                quadruple_callback(std::tie(quad_it_1, it, it_neigh, quad_it_2));
+                            }
+                        }
+                    }
+                }
+            }
+            for (auto it_neigh2 : neighbors) {
+                if (it_neigh2 != it_neigh && it_neigh->particleIndex < it_neigh2->particleIndex) {
+                    auto vvv_type = it_neigh2->particleType();
+                    auto vvv_idx = it_neigh2->particleIndex;
+                    log::trace("got type triple ({}, {}, {}) for particles {}, {}, {}", vv_type, v_type, vvv_type,
+                               vv_idx, v_idx, vvv_idx);
+                    triple_callback(std::tie(it_neigh, it, it_neigh2));
+                }
+            }
+        }
+    }
+}
+
 
 }
