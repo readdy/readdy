@@ -192,7 +192,7 @@ void exportTopologies(py::module &m) {
             .def("remove_edge", [](reaction_recipe &self, const vertex::vertex_ptr &v1, const vertex::vertex_ptr &v2) {
                 return self.removeEdge(v1, v2);
             })
-            .def("remove_edge", [](reaction_recipe &self, graph::edge edge) -> reaction_recipe& {
+            .def("remove_edge", [](reaction_recipe &self, graph::Edge edge) -> reaction_recipe& {
                 return self.removeEdge(edge);
             }, R"topdoc(
                 Removes an edge between given vertices. Depending on the configuration of the topology reaction, this
@@ -319,14 +319,14 @@ void exportTopologies(py::module &m) {
 
                 :return: list of vertices
             )topdoc", rvp::copy)
-            .def("get_edges", [](graph &self) -> std::vector<graph::edge> {
+            .def("get_edges", [](graph &self) -> std::vector<graph::Edge> {
                 return self.edges();
             }, R"topdoc(
                 Yields a list of edges contained in this graph.
 
                 :return: list of edges
             )topdoc")
-            .def_property_readonly("edges", [](graph &self) -> std::vector<graph::edge> {
+            .def_property_readonly("edges", [](graph &self) -> std::vector<graph::Edge> {
                 return self.edges();
             }, R"topdoc(
                 Yields a list of edges contained in this graph.

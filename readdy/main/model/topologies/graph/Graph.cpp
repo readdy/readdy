@@ -50,10 +50,13 @@
 
 namespace readdy::model::top::graph {
 
-bool Graph::isConnected() {
-    std::for_each(_vertices.begin(), _vertices.end(), [](Vertex &v) { v.visited = false; });
+bool Graph::isConnected() const {
+    std::for_each(_vertices.begin(), _vertices.end(), [](const Vertex &v) { v.visited = false; });
+
+    auto &vert = const_cast<vertex_list&>(_vertices);
+
     std::vector<vertex_ref> unvisited;
-    unvisited.emplace_back(_vertices.begin());
+    unvisited.emplace_back(vert.begin());
     std::size_t n_visited = 0;
     while(!unvisited.empty()) {
         auto vertex = unvisited.back();
@@ -72,9 +75,10 @@ bool Graph::isConnected() {
 }
 
 std::vector<Graph> Graph::connectedComponentsDestructive() {
+    _dirty = true;
     std::vector<vertex_list> subVertexLists;
     {
-        std::vector<std::vector<vertex_cref>> components;
+        std::vector<std::vector<vertex_ref>> components;
 
         std::for_each(_vertices.begin(), _vertices.end(), [](Vertex &v) { v.visited = false; });
 

@@ -78,15 +78,15 @@ public:
      * @param particleIndex the particle index this vertex belongs to
      */
     Vertex(std::size_t particleIndex, ParticleTypeId particleType)
-            : particleIndex(particleIndex), particleType_(particleType) {}
+            : particleIndex(particleIndex), particleType_(particleType), visited(false) {}
 
     Vertex(const Vertex &) = default;
 
     Vertex &operator=(const Vertex &) = default;
 
-    Vertex(Vertex &&) = default;
+    Vertex(Vertex && other) noexcept = default;
 
-    Vertex &operator=(Vertex &&) = default;
+    Vertex &operator=(Vertex && rhs) noexcept = default;
 
     /**
      * default destructor
@@ -115,23 +115,6 @@ public:
         return !(rhs == *this);
     }
 
-    void addNeighbor(const vertex_ptr &edge) {
-        if (std::find(neighbors_.begin(), neighbors_.end(), edge) == neighbors_.end()) {
-            neighbors_.push_back(edge);
-        } else {
-            log::debug("tried to add an already existing edge ({} - {})", particleIndex, edge->particleIndex);
-        }
-    }
-
-    void removeNeighbor(const vertex_ptr &edge) {
-        decltype(neighbors_.begin()) it;
-        if ((it = std::find(neighbors_.begin(), neighbors_.end(), edge)) != neighbors_.end()) {
-            neighbors_.erase(it);
-        } else {
-            log::debug("tried to remove a non existing edge {} - {}", particleIndex, edge->particleIndex);
-        }
-    }
-
     const std::vector<vertex_ptr> &neighbors() const {
         return neighbors_;
     }
@@ -151,6 +134,7 @@ private:
      * the edges (i.e., pointers to neighboring vertices)
      */
     std::vector<vertex_ptr> neighbors_{};
+    mutable bool visited;
 
     ParticleTypeId particleType_{0};
 };
