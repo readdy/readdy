@@ -222,9 +222,10 @@ public:
     };
 
     bool hasEdge(const Edge &edge) const {
-        const auto &[v1, v2] = edge;
+        const auto &v1 = std::get<0>(edge);
+        const auto &v2 = std::get<1>(edge);
         const auto &e = edges();
-        auto it = std::find_if(e.begin(), e.end(), [&](const auto& ee) {
+        auto it = std::find_if(e.begin(), e.end(), [&v1, &v2](const auto& ee) {
             const auto &[ev1, ev2] = ee;
             return (v1 == ev1 && v2 == ev2) || (v1 == ev2 && v2 == ev1);
         });
