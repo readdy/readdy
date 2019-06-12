@@ -368,61 +368,59 @@ reactions::Gillespie::Gillespie(scalar timeStep) : TimeStepDependentAction(timeS
 std::string reactions::ReversibleReactionConfig::describe() const {
     std::stringstream description;
 
-    description << fmt::format("ReversibleReactionConfig({}", readdy::util::str::newline);
-    description << fmt::format("reversibleReactionType {} {}", reversibleType, readdy::util::str::newline);
+    description << fmt::format("ReversibleReactionConfig(\n");
+    description << fmt::format("reversibleReactionType {}\n", reversibleType);
 
     if (numberLhsTypes == 1) {
         description
-                << fmt::format("lhsTypes {} {}", lhsNames[0], readdy::util::str::newline);
+                << fmt::format("lhsTypes {}\n", lhsNames[0]);
     } else if (numberLhsTypes == 2) {
-        description << fmt::format("lhsTypes {} and {} {}", lhsNames[0], lhsNames[1], readdy::util::str::newline);
+        description << fmt::format("lhsTypes {} and {}\n", lhsNames[0], lhsNames[1]);
     }
     if (numberRhsTypes == 1) {
         description
-                << fmt::format("rhsTypes {} {}", rhsNames[0], readdy::util::str::newline);
+                << fmt::format("rhsTypes {}\n", rhsNames[0]);
     } else if (numberRhsTypes == 2) {
-        description << fmt::format("rhsTypes {} and {} {}", rhsNames[0], rhsNames[1], readdy::util::str::newline);
+        description << fmt::format("rhsTypes {} and {}\n", rhsNames[0], rhsNames[1]);
     }
 
-    description << fmt::format("forwardReaction \"{}\"{}{}{}", forwardName,
-                               readdy::util::str::newline, *forwardReaction, readdy::util::str::newline);
-    description << fmt::format("backwardReaction \"{}\"{}{}{}", backwardName,
-                               readdy::util::str::newline, *backwardReaction, readdy::util::str::newline);
-    description << fmt::format("forwardId {} {}", forwardId, readdy::util::str::newline);
-    description << fmt::format("backwardId {} {}", backwardId, readdy::util::str::newline);
+    description << fmt::format("forwardReaction \"{}\"\n{}\n", forwardName, *forwardReaction);
+    description << fmt::format("backwardReaction \"{}\"\n{}\n", backwardName, *backwardReaction);
+    description << fmt::format("forwardId {}\n", forwardId);
+    description << fmt::format("backwardId {}\n", backwardId);
 
-    description << fmt::format("microForwardRate {} {}", microForwardRate, readdy::util::str::newline);
-    description << fmt::format("microBackwardRate {} {}", microBackwardRate, readdy::util::str::newline);
-    description << fmt::format("reactionRadius {} {}", reactionRadius, readdy::util::str::newline);
+    description << fmt::format("microForwardRate {}\n", microForwardRate);
+    description << fmt::format("microBackwardRate {}\n", microBackwardRate);
+    description << fmt::format("reactionRadius {}\n", reactionRadius);
 
-    description << fmt::format("lhsPotentials{}", readdy::util::str::newline);
+    description << fmt::format("lhsPotentials\n");
     for (const auto &p : lhsPotentials) {
-        description << fmt::format("    {}{}", p->describe(), readdy::util::str::newline);
+        description << fmt::format("    {}\n", p->describe());
     }
-    description << fmt::format("rhsPotentials{}", readdy::util::str::newline);
+    description << fmt::format("rhsPotentials\n");
     for (const auto &p : rhsPotentials) {
-        description << fmt::format("    {}{}", p->describe(), readdy::util::str::newline);
+        description << fmt::format("    {}\n", p->describe());
     }
     
-    description << fmt::format("lhsInteractionRadius {} {}", lhsInteractionRadius, readdy::util::str::newline);
-    description << fmt::format("lhsInteractionVolume {} {}", lhsInteractionVolume, readdy::util::str::newline);
-    description << fmt::format("effectiveLhsInteractionVolume {} {}", effectiveLhsInteractionVolume, readdy::util::str::newline);
-    description << fmt::format("effectiveLhsReactionVolume {} {}", effectiveLhsReactionVolume, readdy::util::str::newline);
+    description << fmt::format("lhsInteractionRadius {}\n", lhsInteractionRadius);
+    description << fmt::format("lhsInteractionVolume {}\n", lhsInteractionVolume);
+    description << fmt::format("effectiveLhsInteractionVolume {}\n", effectiveLhsInteractionVolume);
+    description << fmt::format("effectiveLhsReactionVolume {}\n", effectiveLhsReactionVolume);
 
-    description << fmt::format("rhsInteractionRadius {} {}", rhsInteractionRadius, readdy::util::str::newline);
-    description << fmt::format("rhsInteractionVolume {} {}", rhsInteractionVolume, readdy::util::str::newline);
-    description << fmt::format("effectiveRhsInteractionVolume {} {}", effectiveRhsInteractionVolume, readdy::util::str::newline);
-    description << fmt::format("effectiveRhsReactionVolume {} {}", effectiveRhsReactionVolume, readdy::util::str::newline);
+    description << fmt::format("rhsInteractionRadius {}\n", rhsInteractionRadius);
+    description << fmt::format("rhsInteractionVolume {}\n", rhsInteractionVolume);
+    description << fmt::format("effectiveRhsInteractionVolume {}\n", effectiveRhsInteractionVolume);
+    description << fmt::format("effectiveRhsReactionVolume {}\n", effectiveRhsReactionVolume);
     
-    description << fmt::format("totalVolume {} {}", totalVolume, readdy::util::str::newline);
-    description << fmt::format("kbt {} {}", kbt, readdy::util::str::newline);
-    description << fmt::format("acceptancePrefactor {} {}", acceptancePrefactor, readdy::util::str::newline);
+    description << fmt::format("totalVolume {}\n", totalVolume);
+    description << fmt::format("kbt {}\n", kbt);
+    description << fmt::format("acceptancePrefactor {}\n", acceptancePrefactor);
 
-    description << fmt::format("inferred macro rates {}", readdy::util::str::newline);
-    description << fmt::format("    equilibriumConstant {} {}", equilibriumConstant, readdy::util::str::newline);
-    description << fmt::format("    macroForwardRate {} {}", macroForwardRate, readdy::util::str::newline);
-    description << fmt::format("    macroBackwardRate {} {}", macroBackwardRate, readdy::util::str::newline);
-    description << fmt::format("){}",  readdy::util::str::newline);
+    description << fmt::format("inferred macro rates\n");
+    description << fmt::format("    equilibriumConstant {}\n", equilibriumConstant);
+    description << fmt::format("    macroForwardRate {}\n", macroForwardRate);
+    description << fmt::format("    macroBackwardRate {}\n", macroBackwardRate);
+    description << fmt::format(")\n");
     return description.str();
 }
 
@@ -519,7 +517,7 @@ void reactions::DetailedBalance::searchReversibleReactions(const Context &ctx) {
 std::string reactions::DetailedBalance::describe() const {
     std::stringstream ss;
     if (!_reversibleReactionsContainer.empty()) {
-        ss << "- reversible reactions handled subject to detailed-balance:" << readdy::util::str::newline;
+        ss << "- reversible reactions handled subject to detailed-balance:\n";
         for (const auto &rev : _reversibleReactionsContainer) {
             ss << "     * -> \"" << rev->forwardReaction->name() << "\" and <- \"" << rev->backwardReaction->name()
                << "\"";

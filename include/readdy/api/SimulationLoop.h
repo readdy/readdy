@@ -258,10 +258,11 @@ public:
             if (requiresNeighborList) runInitializeNeighborList();
             runForces();
             time_step_type t = _start;
-            runEvaluateObservables(t);
             if(_saver) {
+                // this needs to happen before observables because observables can in principle influence the state
                 _saver->makeCheckpoint(_kernel, t);
             }
+            runEvaluateObservables(t);
             std::for_each(std::begin(_callbacks), std::end(_callbacks), [t](const auto &callback) {
                 callback(t);
             });
@@ -272,10 +273,11 @@ public:
                 runTopologyReactions();
                 if (requiresNeighborList) runUpdateNeighborList();
                 runForces();
-                runEvaluateObservables(t + 1);
                 if(_saver && (t + 1) % _checkpointingStride == 0) {
-                    _saver->makeCheckpoint(_kernel, t);
+                    // this needs to happen before observables because observables can in principle influence the state
+                    _saver->makeCheckpoint(_kernel, t + 1);
                 }
+                runEvaluateObservables(t + 1);
                 std::for_each(std::begin(_callbacks), std::end(_callbacks), [t](const auto &callback) {
                     callback(t + 1);
                 });
@@ -339,24 +341,28 @@ public:
     std::string describe() {
         namespace rus = readdy::util::str;
         std::string description;
-        description += fmt::format("Configured simulation loop with:{}", rus::newline);
-        description += fmt::format("--------------------------------{}", rus::newline);
-        description += fmt::format(" - timeStep = {}{}", _timeStep, rus::newline);
-        description += fmt::format(" - evaluateObservables = {}{}", _evaluateObservables, rus::newline);
-        description += fmt::format(" - progressOutputStride = {}{}", _progressOutputStride, rus::newline);
-        description += fmt::format(" - context written to file = {}{}", configGroup ? true : false, rus::newline);
+        description += fmt::format("Configured simulation loop with:\n");
+        description += fmt::format("--------------------------------\n");
+        description += fmt::format(" - timeStep = {}\n", _timeStep);
+        description += fmt::format(" - evaluateObservables = {}\n", _evaluateObservables);
+        description += fmt::format(" - progressOutputStride = {}\n", _progressOutputStride);
+        description += fmt::format(" - context written to file = {}\n", static_cast<bool>(configGroup));
         // todo let actions know their name?
-        description += fmt::format(" - Performing actions:{}", rus::newline);
-        description += fmt::format("   * Initialize neighbor list? {} {}", _initNeighborList ? true : false,
-                                   rus::newline);
-        description += fmt::format("   * Update neighbor list? {} {}", _updateNeighborList ? true : false,
-                                   rus::newline);
-        description += fmt::format("   * Clear neighbor list? {} {}", _clearNeighborList ? true : false, rus::newline);
-        description += fmt::format("   * Integrate diffusion? {} {}", _integrator ? true : false, rus::newline);
-        description += fmt::format("   * Calculate forces? {} {}", _forces ? true : false, rus::newline);
-        description += fmt::format("   * Handle reactions? {} {}", _reactions ? true : false, rus::newline);
-        description += fmt::format("   * Handle topology reactions? {} {}", _topologyReactions ? true : false,
-                                   rus::newline);
+        description += fmt::format(" - Performing actions:\n");
+        description += fmt::format("   * Initialize neighbor list? {}\n", static_cast<bool>(_initNeighborList));
+        description += fmt::format("   * Update neighbor list? {}\n", static_cast<bool>(_updateNeighborList));
+        description += fmt::format("   * Clear neighbor list? {}\n", static_cast<bool>(_clearNeighborList));
+        description += fmt::format("   * Integrate diffusion? {}\n", static_cast<bool>(_integrator));
+        description += fmt::format("   * Calculate forces? {}\n", static_cast<bool>(_forces));
+        description += fmt::format("   * Handle reactions? {}\n", static_cast<bool>(_reactions));
+        description += fmt::format("   * Handle topology reactions? {}\n", static_cast<bool>(_topologyReactions));
+        if (_saver) {
+            description += fmt::format(" - Performing checkpointing:\n");
+            description += fmt::format("   * stride: {}\n", _checkpointingStride);
+            description += fmt::format("   * base path: {}\n", _saver->basePath());
+            description += fmt::format("   * checkpoint filename template: {}\n", _saver->checkpointTemplate());
+            description += fmt::format("   * maximal number saves: {}\n", _saver->maxNSaves());
+        }
         return description;
     }
 

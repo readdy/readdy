@@ -1,6 +1,7 @@
 import os
 import shutil
 import tempfile
+import unittest
 
 import numpy as np
 
@@ -10,13 +11,11 @@ from readdy.util.testing_utils import ReaDDyTestCase
 
 class TestCheckpoints(ReaDDyTestCase):
 
-    @classmethod
-    def setUpClass(cls):
-        cls.dir = tempfile.mkdtemp("test-checkpoints")
+    def setUp(self):
+        self.dir = tempfile.mkdtemp("test-checkpoints")
 
-    @classmethod
-    def tearDownClass(cls):
-        shutil.rmtree(cls.dir, ignore_errors=True)
+    def tearDown(self):
+        shutil.rmtree(self.dir, ignore_errors=True)
 
     def _set_up_system(self):
         system = readdy.ReactionDiffusionSystem(box_size=[10, 10, 10])
@@ -61,10 +60,7 @@ class TestCheckpoints(ReaDDyTestCase):
             b_particles_initial_pos = np.random.normal(0, 1, size=(50, 3))
             sim.add_particles("B", b_particles_initial_pos)
 
-        recorded_topologies = []
-
-        def topologies_callback(x):
-            recorded_topologies.append(x)
+        def topologies_callback(_):
             if with_topologies:
                 if len(sim.current_topologies) % 2 == 0:
                     sim.add_topology("Dummy", "Dummy", np.random.random(size=(1, 3)))
@@ -76,7 +72,7 @@ class TestCheckpoints(ReaDDyTestCase):
                     t.graph.add_edge(3, 4)
                     t.configure()
 
-        sim.make_checkpoints(7)
+        sim.make_checkpoints(7, output_directory=self.dir, max_n_saves=7)
         sim.record_trajectory()
         sim.observe.topologies(1, callback=topologies_callback)
         sim.output_file = os.path.join(self.dir, fname)
@@ -85,19 +81,30 @@ class TestCheckpoints(ReaDDyTestCase):
 
         traj = readdy.Trajectory(sim.output_file)
         entries = traj.read()
-        checkpoint = sim.list_checkpoints(sim.output_file)[17]
+        _, traj_tops = traj.read_observable_topologies()
 
         system = self._set_up_system()
         sim = system.simulation()
-        sim.load_particles_from_checkpoint(os.path.join(self.dir, fname), checkpoint['number'])
 
-        current_entries = entries[checkpoint['step']]
+        ckpt_files = sim.list_checkpoint_files(self.dir)
+        ckpt_file = sim.get_latest_checkpoint_file(self.dir)
+        checkpoints = sim.list_checkpoints(ckpt_file)
+        checkpoint = checkpoints[-1]
+
+        latest_checkpoint_step = 120 // 7 * 7
+        assert checkpoint['step'] == latest_checkpoint_step, "expected {} but got {} (file {} of files {})"\
+            .format(latest_checkpoint_step, checkpoint['step'], ckpt_file, ckpt_files)
+
+        sim.load_particles_from_checkpoint(ckpt_file)
+
+        current_entries = entries[latest_checkpoint_step]
         current_particles = sim.current_particles
 
         if with_topologies:
             tops = sim.current_topologies
-            assert len(tops) == 2 + checkpoint['step'], f"expected {2 + checkpoint['step']} topologies, " \
-                                                        f"got {len(tops)}"
+            assert len(tops) == len(traj_tops[latest_checkpoint_step]), \
+                f"expected {len(traj_tops[latest_checkpoint_step])} topologies, " \
+                f"got {len(tops)} (file {ckpt_file})"
             assert tops[0].type == "TT1"
             assert tops[0].graph.has_edge(0, 1)
             assert tops[0].graph.has_edge(1, 2)
@@ -110,7 +117,7 @@ class TestCheckpoints(ReaDDyTestCase):
             assert tops[1].graph.has_edge(1, 2)
             assert tops[1].graph.has_edge(2, 3)
 
-            topologies = recorded_topologies[checkpoint['step']]
+            topologies = traj_tops[checkpoint['step']]
 
             # check whether restored topologies are o.k.
             assert len(topologies) == len(tops)
@@ -146,3 +153,7 @@ class TestCheckpoints(ReaDDyTestCase):
 
     def test_continue_simulation_no_free_particles(self):
         self._run_test(with_topologies=True, with_particles=False, fname='no_free_particles')
+
+
+if __name__ == '__main__':
+    unittest.main()

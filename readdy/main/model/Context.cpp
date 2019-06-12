@@ -116,15 +116,12 @@ void Context::validate() const {
 std::string Context::describe() {
     namespace rus = readdy::util::str;
     std::string description;
-    description += fmt::format("Configured kernel context with:{}", rus::newline);
-    description += fmt::format("--------------------------------{}", rus::newline);
-    description += fmt::format(" - kBT = {}{}", kBT(), rus::newline);
-    description += fmt::format(" - periodic b.c. = ({}, {}, {}){}",
-                               periodicBoundaryConditions()[0],
-                               periodicBoundaryConditions()[1],
-                               periodicBoundaryConditions()[2],
-                               rus::newline);
-    description += fmt::format(" - box size = ({}, {}, {}){}", boxSize()[0], boxSize()[1], boxSize()[2], rus::newline);
+    description += fmt::format("Configured kernel context with:\n");
+    description += fmt::format("--------------------------------\n");
+    description += fmt::format(" - kBT = {}\n", kBT());
+    description += fmt::format(" - periodic b.c. = ({}, {}, {})\n", periodicBoundaryConditions()[0],
+            periodicBoundaryConditions()[1], periodicBoundaryConditions()[2]);
+    description += fmt::format(" - box size = ({}, {}, {})\n", boxSize()[0], boxSize()[1], boxSize()[2]);
 
     description += _particleTypeRegistry.describe();
     description += _potentialRegistry.describe();

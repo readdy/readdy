@@ -489,8 +489,8 @@ class Trajectory(object):
         """
         Reads back the output of the "topologies" observable
         :param data_set_name: The data set name as given in the simulation setup
-        :param start: ...
-        :param stop: ...
+        :param start: start step, if None from the beginning
+        :param stop: stop step, if None until the end
         :return: a tuple which contains an array corresponding to the time as first entry and an array containing
                  lists of topologies per recorded time step
         """

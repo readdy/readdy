@@ -41,6 +41,7 @@ from readdy.api.conf.KernelConfiguration import CPUKernelConfiguration as _CPUKe
 from readdy.api.conf.KernelConfiguration import NOOPKernelConfiguration as _NOOPKernelConfiguration
 from readdy.api.registry.observables import Observables as _Observables
 from readdy._internal.readdybinding.api import Simulation as _Simulation
+from readdy._internal.readdybinding.api import Saver as _Saver
 from readdy._internal.readdybinding.api import UserDefinedAction as _UserDefinedAction
 from readdy.api.utils import vec3_of as _v3_of
 from readdy.util.progress import SimulationProgress as _SimulationProgress
@@ -85,6 +86,8 @@ class Simulation(object):
 
         self.output_file = output_file
         self._observables = _Observables(self)
+        self._checkpoint_saver = None
+        self._checkpoint_stride = 0
 
         self.integrator = integrator
         self.reaction_handler = reaction_handler
@@ -321,20 +324,20 @@ class Simulation(object):
         handle = self._simulation.register_observable_flat_trajectory(stride)
         self._observables._observable_handles.append((name, chunk_size, handle))
 
-    def make_checkpoints(self, stride, output_directory=None):
+    def make_checkpoints(self, stride, output_directory, max_n_saves=5):
         """
         Records the system's state (particle positions and topology configuration) every stride steps into the
         trajectory file. This can be used to load particle positions to continue a simulation.
 
         :param stride: record a checkpoint every `stride` simulation steps
+        :param output_directory: directory containing checkpoint files
+        :param max_n_saves: only keep `max_n_saves` many checkpoint files, in case of `max_n_saves=0` all files are kept
         """
-        # todo account for output directory
-        # particle positions
-        from readdy.api.trajectory import _CKPT
-        handle = self._simulation.register_observable_flat_trajectory(stride)
-        self._checkpointing_obs_handles.append((_CKPT.POSITIONS_CKPT, 1000, handle))
-        handle = self._simulation.register_observable_topologies(stride, None)
-        self._checkpointing_obs_handles.append((_CKPT.TOPOLOGY_CKPT, 100, handle))
+        import os
+        if not os.path.exists(output_directory):
+            os.makedirs(output_directory)
+        self._checkpoint_saver = _Saver(str(output_directory), max_n_saves, "checkpoint_{}.h5")
+        self._checkpoint_stride = stride
 
     @staticmethod
     def list_checkpoints(file_name):
@@ -345,6 +348,61 @@ class Simulation(object):
         from readdy import Trajectory
         traj = Trajectory(file_name)
         return traj.list_checkpoints()
+
+    @staticmethod
+    def list_checkpoint_files(directory_name):
+        import os
+        from glob import glob
+        from readdy import Trajectory
+        files = glob(os.path.join(directory_name, '*.h5'))
+        result = []
+        for f in files:
+            try:
+                traj = Trajectory(f)
+                traj.list_checkpoints()
+                result.append(f)
+            except:
+                pass
+        return result
+
+    @staticmethod
+    def get_latest_checkpoint_file(directory_name):
+        """
+        Yields the file with the most up-to-date checkpoint in it in terms of the 'step'.
+        :param directory_name: the directory in which to look for checkpoints
+        :return: the latest checkpoint or raise if directory is empty
+        """
+        from readdy import Trajectory
+
+        checkpoint_files = Simulation.list_checkpoint_files(directory_name)
+        if len(checkpoint_files) == 0:
+            raise ValueError("No checkpoints found in {}".format(directory_name))
+        latest = None
+        latest_step = None
+        for filename in checkpoint_files:
+
+            traj = Trajectory(filename)
+            ckpt = traj.list_checkpoints()
+
+            latest_ckpt_step = 0
+            for c in ckpt:
+                latest_ckpt_step = c['step'] if latest_step is None else (c['step'] if c['step'] > latest_step
+                                                                          else latest_step)
+            if latest is None:
+                latest = (filename, ckpt)
+                latest_step = latest_ckpt_step
+            else:
+                if latest_ckpt_step > latest_step:
+                    latest = (filename, ckpt)
+        return latest[0]
+
+    def load_particles_from_latest_checkpoint(self, directory_name):
+        """
+        Loads the latest checkpoint in terms of 'step'.
+        :param directory_name: the directory in which to look for checkpoint files
+        """
+        f = self.get_latest_checkpoint_file(directory_name)
+        self.load_particles_from_checkpoint(f, n=None)
 
     def load_particles_from_checkpoint(self, file_name, n=None):
         """
@@ -483,6 +541,8 @@ class Simulation(object):
                 loop.neighbor_list_cutoff = max(2. * loop.calculate_max_cutoff(), loop.neighbor_list_cutoff)
             if self._skin > 0.:
                 loop.neighbor_list_cutoff = loop.neighbor_list_cutoff + self._skin
+            if self._checkpoint_saver is not None:
+                loop.make_checkpoints(self._checkpoint_saver, self._checkpoint_stride)
 
             if self.output_file is not None and len(self.output_file) > 0:
                 with closing(io.File.create(self.output_file)) as f:

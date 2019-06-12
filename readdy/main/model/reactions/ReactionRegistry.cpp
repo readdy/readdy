@@ -87,7 +87,7 @@ std::string ReactionRegistry::describe() const {
     auto nameOf = [&](ParticleTypeId t) {return _types.get().nameOf(t);};
 
     if (!_o1Reactions.empty()) {
-        description += fmt::format(" - unimolecular reactions:{}", rus::newline);
+        description += fmt::format(" - unimolecular reactions:\n");
         for (const auto &entry : _o1Reactions) {
             for (const auto reaction : entry.second) {
                 const auto &educts = reaction->educts();
@@ -95,21 +95,20 @@ std::string ReactionRegistry::describe() const {
 
                 switch (reaction->type()) {
                     case ReactionType::Conversion: {
-                        description += fmt::format("     * Conversion {} -> {} with a rate of {}{}",
-                                                   nameOf(educts[0]), nameOf(products[0]), reaction->rate(),
-                                                   rus::newline);
+                        description += fmt::format("     * Conversion {} -> {} with a rate of {}\n",
+                                                   nameOf(educts[0]), nameOf(products[0]), reaction->rate());
                         break;
                     }
                     case ReactionType::Fission: {
-                        description += fmt::format("     * Fission {} -> {} + {} with a rate of {}, a product distance of {}, and weights {} and {}{}",
+                        description += fmt::format("     * Fission {} -> {} + {} with a rate of {}, a product distance of {}, and weights {} and {}\n",
                                                    nameOf(educts[0]), nameOf(products[0]), nameOf(products[1]),
                                                    reaction->rate(), reaction->productDistance(),
-                                                   reaction->weight1(), reaction->weight2(), rus::newline);
+                                                   reaction->weight1(), reaction->weight2());
                         break;
                     }
                     case ReactionType::Decay: {
-                        description += fmt::format("     * Decay {} -> ø with a rate of {}{}",
-                                                   nameOf(educts[0]), reaction->rate(), rus::newline);
+                        description += fmt::format("     * Decay {} -> ø with a rate of {}\n",
+                                                   nameOf(educts[0]), reaction->rate());
                         break;
                     }
                     default: {
@@ -121,7 +120,7 @@ std::string ReactionRegistry::describe() const {
         }
     }
     if (!_o2Reactions.empty()) {
-        description += fmt::format(" - bimolecular reactions:{}", rus::newline);
+        description += fmt::format(" - bimolecular reactions:\n");
         for (const auto &entry : _o2Reactions) {
             for (const auto reaction : entry.second) {
                 const auto &educts = reaction->educts();
@@ -130,18 +129,18 @@ std::string ReactionRegistry::describe() const {
                 switch(reaction->type()) {
                     case ReactionType::Enzymatic: {
                         auto enzymatic = dynamic_cast<const Enzymatic*>(reaction);
-                        description += fmt::format("     * Enzymatic {} + {} -> {} + {} with a rate of {} and an educt distance of {}{}",
+                        description += fmt::format("     * Enzymatic {} + {} -> {} + {} with a rate of {} and an educt distance of {}\n",
                                                    nameOf(enzymatic->getFrom()), nameOf(enzymatic->getCatalyst()),
                                                    nameOf(enzymatic->getTo()), nameOf(enzymatic->getCatalyst()),
-                                                   enzymatic->rate(), enzymatic->eductDistance(), rus::newline);
+                                                   enzymatic->rate(), enzymatic->eductDistance());
                         break;
                     }
                     case ReactionType::Fusion: {
                         auto fusion = dynamic_cast<const Fusion*>(reaction);
-                        description += fmt::format("     * Fusion {} + {} -> {} with a rate of {}, an educt distance of {}, and weights {} and {}{}",
+                        description += fmt::format("     * Fusion {} + {} -> {} with a rate of {}, an educt distance of {}, and weights {} and {}\n",
                                                    nameOf(fusion->getFrom1()), nameOf(fusion->getFrom2()),
                                                    nameOf(fusion->getTo()), fusion->rate(), fusion->eductDistance(),
-                                                   fusion->weight1(), fusion->weight2(), rus::newline);
+                                                   fusion->weight1(), fusion->weight2());
                         break;
                     }
                     default: {

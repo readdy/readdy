@@ -89,7 +89,7 @@ class FlatTrajectory : public Observable<std::vector<TrajectoryEntry>> {
     using super = Observable<std::vector<TrajectoryEntry>>;
 public:
 
-    FlatTrajectory(Kernel* kernel, unsigned int stride);
+    FlatTrajectory(Kernel* kernel, unsigned int stride, bool useBlosc = true);
 
     ~FlatTrajectory() override;
 
@@ -108,6 +108,8 @@ protected:
 
     struct Impl;
     std::unique_ptr<Impl> pimpl;
+
+    bool useBlosc;
 };
 
 NAMESPACE_END(observables)
