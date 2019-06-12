@@ -103,6 +103,11 @@ public:
         return _observables;
     };
 
+    /**
+     * Set up domain decomposition.
+     * All context and actions must be configured such that cutoffs are known.
+     * Consider using SimulationLoop, which always calls initialize(), for simulations.
+     */
     void initialize() override;
 
     const model::top::TopologyActionFactory *const getTopologyActionFactory() const override {
@@ -115,6 +120,7 @@ public:
 
 protected:
     int rank;
+    int worldSize;
     std::string processorName;
 
 

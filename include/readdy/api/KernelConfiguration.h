@@ -148,6 +148,25 @@ namespace scpu {
 struct Configuration {
 };
 }
+
+namespace mpi {
+struct Configuration {
+    scalar dx {-1.}, dy {-1.}, dz {-1.}; // widths of MPI boxes, for domain decomposition
+};
+/**
+ * Json serialization of Configuration
+ * @param j the json object
+ * @param conf the config
+ */
+void to_json(json &j, const Configuration &conf);
+/**
+ * Json deserialization of Configuration
+ * @param j the json object
+ * @param conf the config
+ */
+void from_json(const json &j, Configuration &conf);
+}
+
 /**
  * Struct that contains configuration information for the SingleCPU as well as the CPU kernel.
  */
@@ -160,6 +179,10 @@ struct Configuration {
      * Configuration for the CPU kernel
      */
     cpu::Configuration cpu;
+    /**
+     * Configuration for the MPI kernel
+     */
+     mpi::Configuration mpi;
 };
 
 /**

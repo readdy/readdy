@@ -33,7 +33,7 @@
  ********************************************************************/
 
 /**
- * « detailed description »
+ * Test the general workflow of MPI kernel, i.e. set up a simulation with a couple of particles and run it.
  *
  * @file TestSetupMPI.cpp
  * @brief « brief description »
@@ -46,13 +46,42 @@
 #include <readdy/model/Kernel.h>
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/kernel/mpi/MPIKernel.h>
+#include <readdy/api/Simulation.h>
+#include <readdy/api/KernelConfiguration.h>
+
+using json = nlohmann::json;
 
 TEST_CASE("Test mpi kernel running in parallel", "[mpi]") {
-    auto kernel = std::make_unique<readdy::kernel::mpi::MPIKernel>();
-    auto &ctx = kernel->context();
+    readdy::Simulation simulation("MPI");
+    auto &ctx = simulation.context();
 
-    REQUIRE(kernel->name == "MPI");
+    REQUIRE(simulation.selectedKernelType() == "MPI");
 
-    SECTION("In and out types and positions") {}
+    SECTION("In and out types and positions") {
+        ctx.boxSize() = {{50.,50.,50.}};
+        ctx.particleTypes().add("A", 1.);
+        ctx.particleTypes().add("B", 1.);
+        //ctx.reactions().add("fusili: A +(1.) A -> B", 0.1);
+        ctx.potentials().addHarmonicRepulsion("A", "A", 10., 1.);
+        // todo kernel configuration into context
+        ctx.kernelConfiguration() = json{{"MPI", {"dx", 2.}, {"dy", 2.}, {"dz", 2.}}};
+        const std::size_t nParticles = 10000;
+        for (std::size_t i = 0; i < nParticles; ++i) {
+            auto x = readdy::model::rnd::uniform_real()*50. - 25.;
+            auto y = readdy::model::rnd::uniform_real()*50. - 25.;
+            auto z = readdy::model::rnd::uniform_real()*50. - 25.;
+            simulation.addParticle("A", x, y, z);
+        }
+        const auto idA = ctx.particleTypes().idOf("A");
+        auto check = [&nParticles, &idA](readdy::model::observables::Particles::result_type result) {
+            const auto &types = std::get<0>(result);
+            const auto &ids = std::get<1>(result);
+            const auto &positions = std::get<2>(result);
+            REQUIRE(std::count(types.begin(), types.end(), idA));
+        };
+        auto obsHandle = simulation.registerObservable(simulation.observe().particles(1), check);
+        simulation.run(100, 0.01);
+
+    }
 
 }

@@ -53,6 +53,9 @@
 /**
  * Forces a certain processor with given rank to halt in a while loop and all others to wait at a barrier.
  * This allows gdb to attach to this pid and change `i`, which will continue the program.
+ *
+ * E.g. do the following on the commandline $ gdb -ex "attach $pid" -ex "set variable i=1" -ex "finish"
+ *
  * To enable debugging set the environment variable READDY_MPI_DEBUG,
  * which can be exported to processes via `mpirun`.
  *
@@ -83,7 +86,7 @@ int main(int argc, char **argv) {
     // children processes need to get the data: i.e. at least the whole context
     // there needs to be a common entry point for all workers.
     // Two options:
-    // - spawn processes and distribute data when run() is called (i.e. all particles are present on master -> memory)
+    // - [this] spawn processes and distribute data when run() is called (i.e. all particles are present on master -> memory)
     // - spawn processes when kernel is created, addParticles() then distributes particles, workers wait for run()
     int worldSize;
     int myRank;

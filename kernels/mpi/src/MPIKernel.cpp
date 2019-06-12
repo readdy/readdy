@@ -53,21 +53,37 @@ readdy::model::Kernel *MPIKernel::create() {
 }
 
 MPIKernel::MPIKernel() : Kernel(name), _stateModel(_data, _context), _actions(this), _observables(this) {
-    int worldSize;
+    // Since this kernel should be a drop-in replacement, we need to MPI_Init here
+    // given the option that it is already initialized?
+    int myWorldSize;
     int myRank;
     int nameLen;
-    char processorName[MPI_MAX_PROCESSOR_NAME];
+    char myProcessorName[MPI_MAX_PROCESSOR_NAME];
 
-    MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
+    MPI_Comm_size(MPI_COMM_WORLD, &myWorldSize);
     MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
-    MPI_Get_processor_name(processorName, &nameLen);
+    MPI_Get_processor_name(myProcessorName, &nameLen);
 
-    readdy::log::console()->info("pid {} Rank {} / {} is on {}", static_cast<long>(getpid()), myRank, worldSize,
+    rank = myRank;
+    worldSize = myWorldSize;
+    processorName = myProcessorName;
+
+    readdy::log::console()->info("pid {} Rank {} / {} is on {}", static_cast<long>(getpid()), rank, worldSize,
                                  processorName);
+
 }
 
 void MPIKernel::initialize() {
     readdy::model::Kernel::initialize();
+
+    // todo do any user configuration here
+
+    // todo domain decomposition
+    // domains shall be as cubic as possible to optimize communication
+    // find out if number of available ranks fits
+    // first get user values for dx,dy,dz, find closest and if ranks do not fit, try + or - 1 box (around that) in x, y or z
+    // a box must be at least as large as largest cutoff
+
 
     _stateModel.reactionRecords().clear();
     _stateModel.resetReactionCounts();
