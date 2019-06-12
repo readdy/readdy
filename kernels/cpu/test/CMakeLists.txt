@@ -42,6 +42,10 @@ add_executable(${PROJECT_NAME} TestMain.cpp TestCellLinkedList.cpp TestNeighborL
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${READDY_INCLUDE_DIRS} ${TESTING_INCLUDE_DIR} ${CPU_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} PUBLIC readdy readdy_kernel_cpu Catch2::Catch2)
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "stdc++fs")
+endif()
+
 set_target_properties(${PROJECT_NAME} PROPERTIES
         LINK_FLAGS "${EXTRA_LINK_FLAGS}"
         COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}")

@@ -72,8 +72,9 @@
 #include <readdy/model/Kernel.h>
 #include <readdy/model/IOUtils.h>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(api)
+#include "Saver.h"
+
+namespace readdy::api {
 
 /**
  * superclass for all simulation schemes
@@ -129,6 +130,9 @@ public:
         return _progressOutputStride;
     }
 
+    std::size_t checkpointingStride() const { return _checkpointingStride; }
+    void setCheckpointingStride(std::size_t stride) { _checkpointingStride = stride; }
+
 
     void runInitialize() {
         _kernel->initialize();
@@ -173,7 +177,7 @@ public:
 
     const TimeStepActionPtr &integrator() const { return _integrator; }
 
-    void useIntegrator(const std::string &name, scalar timeStep=-1) {
+    void useIntegrator(const std::string &name, scalar timeStep = -1) {
         _integrator = _kernel->actions().createIntegrator(name, timeStep > 0 ? timeStep : _timeStep);
     }
 
@@ -181,12 +185,13 @@ public:
 
     const TimeStepActionPtr &reactionScheduler() const { return _reactions; }
 
-    void useReactionScheduler(const std::string &name, scalar timeStep=-1) {
+    void useReactionScheduler(const std::string &name, scalar timeStep = -1) {
         _reactions = _kernel->actions().createReactionScheduler(name, timeStep > 0 ? timeStep : _timeStep);
     }
 
-    void evaluateTopologyReactions(bool evaluate, scalar timeStep=-1) {
-        _topologyReactions = evaluate ? _kernel->actions().evaluateTopologyReactions(timeStep > 0 ? timeStep : _timeStep) : nullptr;
+    void evaluateTopologyReactions(bool evaluate, scalar timeStep = -1) {
+        _topologyReactions = evaluate ? _kernel->actions().evaluateTopologyReactions(
+                timeStep > 0 ? timeStep : _timeStep) : nullptr;
     }
 
     void evaluateObservables(bool evaluate) {
@@ -233,7 +238,6 @@ public:
         run(defaultContinueCriterion);
     };
 
-
     /**
      * ReaDDy scheme implementation of the simulation loop
      * @param continueFun the continue function
@@ -254,6 +258,9 @@ public:
             runForces();
             time_step_type t = _start;
             runEvaluateObservables(t);
+            if(_saver) {
+                _saver->makeCheckpoint(_kernel, t);
+            }
             std::for_each(std::begin(_callbacks), std::end(_callbacks), [t](const auto &callback) {
                 callback(t);
             });
@@ -265,6 +272,9 @@ public:
                 if (requiresNeighborList) runUpdateNeighborList();
                 runForces();
                 runEvaluateObservables(t + 1);
+                if(_saver && (t + 1) % _checkpointingStride == 0) {
+                    _saver->makeCheckpoint(_kernel, t);
+                }
                 std::for_each(std::begin(_callbacks), std::end(_callbacks), [t](const auto &callback) {
                     callback(t + 1);
                 });
@@ -304,11 +314,11 @@ public:
     scalar timeStep() const {
         return _timeStep;
     }
-    
+
     model::Kernel *const kernel() {
         return _kernel;
     }
-    
+
     const model::Kernel *const kernel() const {
         return _kernel;
     }
@@ -328,13 +338,16 @@ public:
         description += fmt::format(" - context written to file = {}{}", configGroup ? true : false, rus::newline);
         // todo let actions know their name?
         description += fmt::format(" - Performing actions:{}", rus::newline);
-        description += fmt::format("   * Initialize neighbor list? {} {}", _initNeighborList ? true : false, rus::newline);
-        description += fmt::format("   * Update neighbor list? {} {}", _updateNeighborList ? true : false, rus::newline);
+        description += fmt::format("   * Initialize neighbor list? {} {}", _initNeighborList ? true : false,
+                                   rus::newline);
+        description += fmt::format("   * Update neighbor list? {} {}", _updateNeighborList ? true : false,
+                                   rus::newline);
         description += fmt::format("   * Clear neighbor list? {} {}", _clearNeighborList ? true : false, rus::newline);
         description += fmt::format("   * Integrate diffusion? {} {}", _integrator ? true : false, rus::newline);
         description += fmt::format("   * Calculate forces? {} {}", _forces ? true : false, rus::newline);
         description += fmt::format("   * Handle reactions? {} {}", _reactions ? true : false, rus::newline);
-        description += fmt::format("   * Handle topology reactions? {} {}", _topologyReactions ? true : false, rus::newline);
+        description += fmt::format("   * Handle topology reactions? {} {}", _topologyReactions ? true : false,
+                                   rus::newline);
         return description;
     }
 
@@ -347,16 +360,17 @@ protected:
     std::shared_ptr<model::actions::UpdateNeighborList> _updateNeighborList{nullptr};
     std::shared_ptr<model::actions::top::EvaluateTopologyReactions> _topologyReactions{nullptr};
     std::shared_ptr<model::actions::ClearNeighborList> _clearNeighborList{nullptr};
+    std::shared_ptr<api::Saver> _saver {nullptr};
     std::shared_ptr<h5rd::Group> configGroup{nullptr};
 
     bool _evaluateObservables = true;
     time_step_type _start = 0;
     std::size_t _progressOutputStride = 100;
+    std::size_t _checkpointingStride = 10000;
     std::function<void(time_step_type)> _progressCallback;
     scalar _timeStep;
 
     std::vector<std::function<void(time_step_type)>> _callbacks;
 };
 
-NAMESPACE_END(api)
-NAMESPACE_END(readdy)
+}

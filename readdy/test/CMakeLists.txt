@@ -34,6 +34,9 @@ target_include_directories(
 )
 
 target_link_libraries(${PROJECT_NAME} PUBLIC readdy Catch2::Catch2)
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "stdc++fs")
+endif()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
         LINK_FLAGS "${EXTRA_LINK_FLAGS}"

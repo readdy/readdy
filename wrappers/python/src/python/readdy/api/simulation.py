@@ -321,17 +321,20 @@ class Simulation(object):
         handle = self._simulation.register_observable_flat_trajectory(stride)
         self._observables._observable_handles.append((name, chunk_size, handle))
 
-    def make_checkpoints(self, stride):
+    def make_checkpoints(self, stride, output_directory=None):
         """
         Records the system's state (particle positions and topology configuration) every stride steps into the
         trajectory file. This can be used to load particle positions to continue a simulation.
 
         :param stride: record a checkpoint every `stride` simulation steps
         """
+        # todo account for output directory
         # particle positions
         from readdy.api.trajectory import _CKPT
-        self.record_trajectory(stride=stride, name=_CKPT.POSITIONS_CKPT)
-        self.observe.topologies(stride=stride, save={'chunk_size': 100, 'name': _CKPT.TOPOLOGY_CKPT})
+        handle = self._simulation.register_observable_flat_trajectory(stride)
+        self._checkpointing_obs_handles.append((_CKPT.POSITIONS_CKPT, 1000, handle))
+        handle = self._simulation.register_observable_topologies(stride, None)
+        self._checkpointing_obs_handles.append((_CKPT.TOPOLOGY_CKPT, 100, handle))
 
     @staticmethod
     def list_checkpoints(file_name):
