@@ -53,8 +53,13 @@ void exportLoopApi(pybind11::module &module) {
     namespace py = pybind11;
     using namespace py::literals;
     using Loop = readdy::api::SimulationLoop;
+    using Saver = readdy::api::Saver;
 
     py::class_<UserAction, std::shared_ptr<UserAction>> userAction (module, "UserDefinedAction");
+
+    py::class_<Saver, std::shared_ptr<Saver>> (module, "Saver")
+            .def(py::init<std::string, std::size_t, std::string>())
+            .def("make_checkpoint", &Saver::makeCheckpoint);
 
     py::class_<Loop>(module, "SimulationLoop")
             .def_property("progress_callback", [](const Loop& self) { return self.progressCallback(); },

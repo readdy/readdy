@@ -64,6 +64,7 @@
 #pragma once
 
 #include <memory>
+#include <utility>
 #include <type_traits>
 
 #include <h5rd/h5rd.h>
@@ -325,6 +326,14 @@ public:
 
     void addCallback(std::function<void(time_step_type)> f) {
         _callbacks.emplace_back(std::move(f));
+    }
+
+    void setSaver(std::shared_ptr<Saver> saver) {
+        _saver = std::move(saver);
+    }
+
+    std::shared_ptr<Saver> saver() const {
+        return _saver;
     }
 
     std::string describe() {

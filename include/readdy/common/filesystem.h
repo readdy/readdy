@@ -49,9 +49,7 @@
 #include <memory>
 #include "macros.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(util)
-NAMESPACE_BEGIN(fs)
+namespace readdy::util::fs {
 
 constexpr char separator =
 #if READDY_WINDOWS
@@ -69,22 +67,26 @@ public:
      * constructs a new directory iterator for a given path
      * @param path the path in which to look for directories
      */
-    explicit dir_iterator(const std::string& path);
+    explicit dir_iterator(const std::string &path);
+
     /**
      * function to determine if there are more directories to come
      * @return true if there are more directories to be iterated through, false otherwise
      */
     bool has_next() const;
+
     /**
      * returns the name of the input directory without the leading path
      * @return the input directory name
      */
     std::string base_name() const;
+
     /**
      * advances the iterator by one
      * @return the current directory
      */
     std::string next();
+
     /**
      * destructor
      */
@@ -93,19 +95,22 @@ public:
     /**
      * copying is not allowed
      */
-    dir_iterator(const dir_iterator&) = delete;
+    dir_iterator(const dir_iterator &) = delete;
+
     /**
      * copying is not allowed
      */
-    dir_iterator& operator=(const dir_iterator&) = delete;
+    dir_iterator &operator=(const dir_iterator &) = delete;
+
     /**
      * move constructor
      */
-    dir_iterator(dir_iterator&&) noexcept;
+    dir_iterator(dir_iterator &&) noexcept;
+
     /**
      * move assign
      */
-    dir_iterator& operator=(dir_iterator&&) noexcept;
+    dir_iterator &operator=(dir_iterator &&) noexcept;
 
 private:
     struct Impl;
@@ -124,7 +129,7 @@ std::string current_path();
  * @param path the path to check
  * @return true if it exists, otherwise false
  */
-bool exists(const std::string& path);
+bool exists(const std::string &path);
 
 /**
  * checks if the input path resolves to a file
@@ -140,6 +145,6 @@ bool is_file(const std::string &path);
  */
 bool is_directory(const std::string &path);
 
-NAMESPACE_END(fs)
-NAMESPACE_END(util)
-NAMESPACE_END(readdy)
+bool remove(const std::string &file);
+
+}

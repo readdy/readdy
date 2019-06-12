@@ -4,9 +4,18 @@
 
 #pragma once
 
+#ifdef __cpp_lib_filesystem
+#define CPP_FS 1
+#include <filesystem>
+namespace fs = std::filesystem;
+#else
+#define CPP_FS 0
+#include <readdy/common/filesystem.h>
+namespace fs = readdy::util::fs;
+#endif
+
 #include <memory>
 #include <type_traits>
-#include <filesystem>
 #include <utility>
 
 #include <h5rd/h5rd.h>
@@ -25,30 +34,33 @@ public:
             // if template is invalid this will raise
             auto testFormat = fmt::format(checkpointTemplate, 123);
         }
-        if(std::filesystem::exists(basePath)) {
+        if(fs::exists(basePath)) {
             // basePath exists, make sure it is a directory
-            if(!std::filesystem::is_directory(basePath)) {
+            if(!fs::is_directory(basePath)) {
                 throw std::invalid_argument(fmt::format("Base path \"{}\" exists but is no directory.", basePath));
             }
             // else we are o.k.!
         } else {
+#if CPP_FS
             // basePath did not exist, create it
             if(!std::filesystem::create_directories(basePath)) {
                 throw std::invalid_argument(fmt::format("Could not create directory at \"{}\"", basePath));
             }
+#else
+            throw std::invalid_argument(fmt::format("Base path \"{}\" did not exist", basePath));
+#endif
         }
     }
 
     void makeCheckpoint(model::Kernel *const kernel, time_step_type t) {
         auto fileName = fmt::format(checkpointTemplate, t);
-        auto filePath = basePath / fileName;
-        auto absFilePath = std::filesystem::absolute(filePath);
+        auto filePath = basePath + "/" + fileName;
 
         if (maxNSaves > 0) {
-            previousCheckpoints.push(absFilePath);
+            previousCheckpoints.push(filePath);
         }
 
-        auto file = File::create(absFilePath, File::Flag::OVERWRITE);
+        auto file = File::create(filePath, File::Flag::OVERWRITE);
         {
             // write config into checkpoint
             auto cfgGroup = file->createGroup("readdy/config");
@@ -68,8 +80,10 @@ public:
         while(maxNSaves > 0 && previousCheckpoints.size() > maxNSaves) {
             const auto& oldestCheckpoint = previousCheckpoints.front();
 
-            if (std::filesystem::exists(oldestCheckpoint)) {
-                std::filesystem::remove(oldestCheckpoint);
+            if (fs::exists(oldestCheckpoint)) {
+                if(!fs::remove(oldestCheckpoint)) {
+                    throw std::runtime_error(fmt::format("Could not remove checkpoint {}", oldestCheckpoint));
+                }
             } else {
                 log::warn("Tried removing checkpoint {} but it didn't exist (anymore).", oldestCheckpoint);
             }
@@ -79,10 +93,10 @@ public:
     }
 
 private:
-    std::filesystem::path basePath;
+    std::string basePath;
     std::size_t maxNSaves;
     std::string checkpointTemplate;
-    std::queue<std::filesystem::path> previousCheckpoints {};
+    std::queue<std::string> previousCheckpoints {};
 };
 
 }

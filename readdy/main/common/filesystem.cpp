@@ -57,9 +57,7 @@
 #include "readdy/common/filesystem.h"
 #include "readdy/common/tinydir.h"
 
-namespace readdy {
-namespace util {
-namespace fs {
+namespace readdy::util::fs {
 
 std::string current_path()  {
     char cCurrentPath[FILENAME_MAX];
@@ -86,7 +84,16 @@ bool is_directory(const std::string &path) {
         log::error("error on opening {}", path);
         throw std::runtime_error("error on opening " + path);
     }
-    return file.is_dir != 0;
+    bool result = file.is_dir != 0;
+    return result;
+}
+
+bool remove(const std::string &file) {
+    if(exists(file)) {
+        int result = ::remove(file.c_str());
+        return result == 0;
+    }
+    return false;
 }
 
 struct dir_iterator::Impl {
@@ -139,6 +146,4 @@ std::string dir_iterator::base_name() const {
     return path.substr(lastSlash + 1);
 }
 
-}
-}
 }
