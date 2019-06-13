@@ -70,7 +70,7 @@ def load_trajectory_to_npy(filename, name="", begin=0, end=None, stride=None):
 
 
 def convert_trajectory_to_xyz(filename, name="", xyz_filename=None, generate_tcl=True, tcl_with_grid=False,
-                              particle_radii=None):
+                              particle_radii=None, color_ids=None):
     """
     Converts a hdf5 trajectory to a xyz file that can be read into VMD. Assuming the TCL script was generated, the
     trajectory can be visualized by `vmd -e traj.xyz.tcl`.
@@ -86,7 +86,9 @@ def convert_trajectory_to_xyz(filename, name="", xyz_filename=None, generate_tcl
         xyz_filename = filename + ".xyz"
     if particle_radii is None:
         particle_radii = {}
-    _convert_xyz(filename, name, xyz_filename, generate_tcl, tcl_with_grid, particle_radii)
+    if color_ids is None:
+        color_ids = {}
+    _convert_xyz(filename, name, xyz_filename, generate_tcl, tcl_with_grid, particle_radii, color_ids)
 
 
 def vec3_of(value):
