@@ -422,13 +422,13 @@ read_reactions_obs(const std::string &filename, const std::string &name) {
 
 struct TrajectoryParticle {
     TrajectoryParticle(std::string type, std::string flavor, const std::array<readdy::scalar, 3> &pos,
-                       readdy::model::Particle::id_type id, readdy::TimeStep t)
+                       readdy::model::Particle::Id id, readdy::TimeStep t)
             : type(std::move(type)), flavor(std::move(flavor)), position(pos), id(id), t(t) {}
 
     std::string type;
     std::string flavor;
     std::array<readdy::scalar, 3> position;
-    readdy::model::Particle::id_type id;
+    readdy::model::Particle::Id id;
     readdy::TimeStep t;
 };
 

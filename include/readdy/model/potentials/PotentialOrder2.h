@@ -59,7 +59,7 @@ class PotentialRegistry;
 
 class PotentialOrder2 : public Potential {
 protected:
-    using particle_type_type = readdy::model::Particle::type_type;
+    using particle_type_type = readdy::model::Particle::TypeId;
 public:
     PotentialOrder2(particle_type_type type1, particle_type_type type2)
             : _particleType1(type1), _particleType2(type2) {}

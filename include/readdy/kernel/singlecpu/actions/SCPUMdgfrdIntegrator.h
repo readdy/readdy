@@ -149,8 +149,8 @@ private:
     bool firstPerform = true;
 
 
-    std::map<readdy::model::Particle::id_type, MdgfrdParticleData> particleData;
-    std::unordered_map<readdy::model::Particle::type_type, MdgfrdSpeciesData> speciesData;
+    std::map<readdy::model::Particle::Id, MdgfrdParticleData> particleData;
+    std::unordered_map<readdy::model::Particle::TypeId, MdgfrdSpeciesData> speciesData;
 
 };
 

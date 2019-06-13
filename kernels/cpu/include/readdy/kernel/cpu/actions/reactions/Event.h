@@ -59,7 +59,7 @@ struct Event {
     std::uint8_t nProducts;
     index_type idx1, idx2;
     reaction_index_type reactionIndex;
-    readdy::model::Particle::type_type t1, t2;
+    readdy::model::Particle::TypeId t1, t2;
     readdy::scalar rate;
     readdy::scalar cumulativeRate;
 

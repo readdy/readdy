@@ -51,7 +51,7 @@ namespace model {
 
 
 ParticleTypeInfo::ParticleTypeInfo(const std::string &name, const scalar diffusionConstant,
-                                   const particle_flavor flavor, const Particle::type_type typeId)
+                                   const particle_flavor flavor, const Particle::TypeId typeId)
         : name(name), diffusionConstant(diffusionConstant), flavor(flavor), typeId(typeId) {}
 
 

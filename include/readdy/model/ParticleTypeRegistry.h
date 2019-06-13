@@ -82,7 +82,7 @@ struct ParticleTypeInfo {
     ParticleTypeId typeId;
 
     ParticleTypeInfo(const std::string &name, scalar diffusionConstant,
-                     particle_flavor flavor, Particle::type_type typeId);
+                     particle_flavor flavor, Particle::TypeId typeId);
 };
 
 class ParticleTypeRegistry {
@@ -120,7 +120,7 @@ public:
         return infoOf(_idOf(name));
     }
 
-    const ParticleTypeInfo &infoOf(Particle::type_type type) const {
+    const ParticleTypeInfo &infoOf(Particle::TypeId type) const {
         return particle_info_.at(type);
     }
 

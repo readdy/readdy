@@ -65,8 +65,8 @@ struct ReadableReactionRecord {
 
     std::string type;
     std::string reaction_label;
-    std::vector<readdy::model::Particle::id_type> educts;
-    std::vector<readdy::model::Particle::id_type> products;
+    std::vector<readdy::model::Particle::Id> educts;
+    std::vector<readdy::model::Particle::Id> products;
     readdy::Vec3::data_arr where;
 
     friend std::ostream &operator<<(std::ostream &os, const ReadableReactionRecord &rrr);

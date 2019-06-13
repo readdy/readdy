@@ -47,7 +47,7 @@
 namespace readdy {
 namespace model {
 
-std::atomic<Particle::id_type> Particle::id_counter{0};
+std::atomic<Particle::Id> Particle::id_counter{0};
 
 }
 }

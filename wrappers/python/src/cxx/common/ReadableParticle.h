@@ -68,7 +68,7 @@ public:
 private:
     np_array<readdy::scalar> _pos;
     std::string _type;
-    readdy::model::Particle::id_type _id;
+    readdy::model::Particle::Id _id;
 };
 
 }

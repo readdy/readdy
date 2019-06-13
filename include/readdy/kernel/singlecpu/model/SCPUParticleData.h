@@ -34,9 +34,7 @@
 
 
 /**
- * << detailed description >>
- *
- * @file SingleCPUParticleData.h
+ * @file SCPUParticleData.h
  * @brief << brief description >>
  * @author clonker
  * @date 03.06.16
@@ -48,22 +46,16 @@
 #include <vector>
 #include <readdy/model/Particle.h>
 
-namespace readdy {
-namespace kernel {
-namespace scpu {
-namespace model {
-
-//class SCPUParticleData;
+namespace readdy::kernel::scpu::model {
 
 struct Entry {
-    using entries_vector = std::vector<Entry>;
-    using particle_type = readdy::model::Particle;
-    using force_type = particle_type::pos_type;
-    using displacement_type = scalar;
-    using topology_index_type = std::ptrdiff_t;
+    using Particle = readdy::model::Particle;
+    using Force = Particle::Position;
+    using Displacement = scalar;
+    using TopologyIndex = std::ptrdiff_t;
 
-    explicit Entry(const particle_type &particle)
-            : pos(particle.pos()), force(force_type()), type(particle.type()), deactivated(false),
+    explicit Entry(const Particle &particle)
+            : pos(particle.pos()), force(Force()), type(particle.type()), deactivated(false),
               displacement(0), id(particle.id()) {}
 
     Entry(const Entry &) = default;
@@ -80,16 +72,16 @@ struct Entry {
         return deactivated;
     }
 
-    const particle_type::pos_type &position() const {
+    const Particle::Position &position() const {
         return pos;
     }
 
-    force_type force;
-    displacement_type displacement;
-    particle_type::pos_type pos;
-    topology_index_type topology_index {-1};
-    particle_type::id_type id;
-    particle_type::type_type type;
+    Force force;
+    Displacement displacement;
+    Particle::Position pos;
+    TopologyIndex topology_index {-1};
+    Particle::Id id;
+    Particle::TypeId type;
     bool deactivated;
 };
 
@@ -103,7 +95,7 @@ public:
     using NewEntries = std::vector<Entry>;
     using Particle = readdy::model::Particle;
     using TopParticle = readdy::model::TopologyParticle;
-    using Force = Particle::pos_type;
+    using Force = Particle::Position;
     using Displacement = scalar;
     using Iterator = typename Entries::iterator;
     using ConstIterator = typename Entries::const_iterator;
@@ -294,7 +286,4 @@ protected:
 };
 
 
-}
-}
-}
 }

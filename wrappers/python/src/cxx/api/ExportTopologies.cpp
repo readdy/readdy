@@ -270,7 +270,7 @@ void exportTopologies(py::module &m) {
                 :param v: the vertex
                 :return: the position
             )topdoc")
-            .def("particle_id_of_vertex", [](const topology &self, const vertex &v) -> readdy::model::Particle::id_type {
+            .def("particle_id_of_vertex", [](const topology &self, const vertex &v) -> readdy::model::Particle::Id {
                 return self.particleForVertex(v).id();
             }, R"topdoc(
                 Retrieves the id of the particle corresponding to the given vertex.
@@ -294,7 +294,7 @@ void exportTopologies(py::module &m) {
                 :param v: the vertex
                 :return: the position
             )topdoc")
-            .def("particle_id_of_vertex", [](const topology &self, const vertex::vertex_ptr &v) -> readdy::model::Particle::id_type {
+            .def("particle_id_of_vertex", [](const topology &self, const vertex::vertex_ptr &v) -> readdy::model::Particle::Id {
                 return self.particleForVertex(v).id();
             }, R"topdoc(
                 Retrieves the id of the particle corresponding to the given vertex.
