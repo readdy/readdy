@@ -131,11 +131,11 @@ public:
 
     SCPUStateModel& operator=(const SCPUStateModel&) = delete;
 
-    readdy::kernel::scpu::model::SCPUParticleData *getParticleData() {
+    readdy::kernel::scpu::model::SCPUParticleData<model::Entry> *getParticleData() {
         return &particleData;
     }
 
-    const readdy::kernel::scpu::model::SCPUParticleData *getParticleData() const {
+    const readdy::kernel::scpu::model::SCPUParticleData<model::Entry> *getParticleData() const {
         return &particleData;
     }
 
@@ -235,7 +235,7 @@ public:
     void clear() override;
 
 private:
-    model::SCPUParticleData particleData {};
+    model::SCPUParticleData<model::Entry> particleData {};
     std::unique_ptr<model::CellLinkedList> neighborList;
     SCPUStateModel::topology_action_factory const *topologyActionFactory {nullptr};
 

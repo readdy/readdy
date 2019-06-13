@@ -448,7 +448,7 @@ void SCPUDetailedBalance::perform() {
                 const auto energyBefore = stateModel.energy();
 
                 reaction_record record;
-                model::SCPUParticleData::entries_update forwardUpdate;
+                model::SCPUParticleData<model::Entry>::entries_update forwardUpdate;
                 scalar interactionEnergy; // only relevant for FusionFission
                 if (ctx.recordReactionsWithPositions()) {
                     std::tie(forwardUpdate, interactionEnergy) = performReversibleReactionEvent(event, revReaction,
@@ -522,7 +522,7 @@ void SCPUDetailedBalance::perform() {
                 }
             } else {
                 // Perform vanilla Doi model with direct update to data structure
-                model::SCPUParticleData::entries_update forwardUpdate;
+                model::SCPUParticleData<model::Entry>::entries_update forwardUpdate;
 
                 if (ctx.recordReactionsWithPositions()) {
                     reaction_record record;
@@ -553,10 +553,10 @@ void SCPUDetailedBalance::perform() {
     }
 }
 
-model::SCPUParticleData::entries_update
+model::SCPUParticleData<model::Entry>::entries_update
 SCPUDetailedBalance::generateBackwardUpdate(
         const ParticleBackup &particleBackup,
-        const std::vector<model::SCPUParticleData::entry_index> &updateRecord) const {
+        const std::vector<model::SCPUParticleData<model::Entry>::entry_index> &updateRecord) const {
     // the entries that were created by the forward update
     std::vector<scpu_data::entry_index> decayedEntries = updateRecord;
     scpu_data::new_entries newParticles{};
@@ -576,7 +576,7 @@ SCPUDetailedBalance::generateBackwardUpdate(
     return std::make_pair(std::move(newParticles), decayedEntries);
 }
 
-std::pair<model::SCPUParticleData::entries_update, scalar> SCPUDetailedBalance::performReversibleReactionEvent(
+std::pair<model::SCPUParticleData<model::Entry>::entries_update, scalar> SCPUDetailedBalance::performReversibleReactionEvent(
         const Event &event, const readdy::model::actions::reactions::ReversibleReactionConfig *reversibleReaction,
         const readdy::model::reactions::Reaction *reaction, reaction_record *record) {
     if (reversibleReaction == nullptr) {

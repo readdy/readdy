@@ -73,35 +73,19 @@ MPIKernel::MPIKernel() : Kernel(name), _stateModel(_data, _context), _actions(th
 
 }
 
-bool MPIKernel::isValidDecomposition(const std::array<std::size_t, 3> nBoxesArr) {
+bool MPIKernel::isValidDecomposition(const std::array<std::size_t, 3> dims) {
     const auto cutoff = _context.calculateMaxCutoff();
     const auto periodic = _context.periodicBoundaryConditions();
-    const auto box = _context.boxSize();
-    const auto dx = box[0] / static_cast<scalar>(nBoxesArr[0]);
-    const auto dy = box[1] / static_cast<scalar>(nBoxesArr[1]);
-    const auto dz = box[2] / static_cast<scalar>(nBoxesArr[2]);
-    if (dx < cutoff) {
-        if (nBoxesArr[0] == 1 and not periodic[0]) {
-            /* smaller than cutoff is ok, when there are no neighbors to be considered */
-        } else {
-            return false;
-            throw std::logic_error(fmt::format("Resulting dx {} (nBoxesX {}, periodicX {}) of MPI box cannot be smaller than cutoff {}", dx, nBoxesArr[0], periodic[0], cutoff));
-        }
-    }
-    if (dy < cutoff) {
-        if (nBoxesArr[1] == 1 and not periodic[1]) {
-            /* smaller than cutoff is ok, when there are no neighbors to be considered */
-        } else {
-            return false;
-            throw std::logic_error(fmt::format("Resulting dy {} (nBoxesY {}, periodicY {}) of MPI box cannot be smaller than cutoff {}", dy, nBoxesArr[1], periodic[1], cutoff));
-        }
-    }
-    if (dz < cutoff) {
-        if (nBoxesArr[2] == 1 and not periodic[2]) {
-            /* smaller than cutoff is ok, when there are no neighbors to be considered */
-        } else {
-            return false;
-            throw std::logic_error(fmt::format("Resulting dz {} (nBoxesZ {}, periodicZ {}) of MPI box cannot be smaller than cutoff {}", dz, nBoxesArr[2], periodic[2], cutoff));
+    const auto boxSize = _context.boxSize();
+    std::array<scalar, 3> boxWidths{};
+    for (std::size_t i=0; i<3; ++i) {
+        boxWidths[i] = boxSize[i] / static_cast<scalar>(dims[i]);
+        if (boxWidths[i] < cutoff) {
+            if (dims[i] == 1 and not periodic[0]) {
+                /* smaller than cutoff is ok, when there are no neighbors to be considered */
+            } else {
+                return false;
+            }
         }
     }
     return true;
@@ -110,71 +94,44 @@ bool MPIKernel::isValidDecomposition(const std::array<std::size_t, 3> nBoxesArr)
 void MPIKernel::initialize() {
     readdy::model::Kernel::initialize();
 
-    // todo do any user configuration here
-
+    // Spatial decomposition
     {
         const auto conf = _context.kernelConfiguration();
-        const auto minDx = conf.mpi.dx;
-        const auto minDy = conf.mpi.dy;
-        const auto minDz = conf.mpi.dz;
+        std::array<scalar, 3> minBoxWidths {conf.mpi.dx, conf.mpi.dy, conf.mpi.dz};
         const auto cutoff = _context.calculateMaxCutoff();
+        const auto &boxSize = _context.boxSize();
+        const auto &periodic = _context.periodicBoundaryConditions();
 
-        const auto lx = _context.boxSize()[0];
-        const auto ly = _context.boxSize()[1];
-        const auto lz = _context.boxSize()[2];
-        const auto periodicX = _context.periodicBoundaryConditions()[0];
-        const auto periodicY = _context.periodicBoundaryConditions()[1];
-        const auto periodicZ = _context.periodicBoundaryConditions()[2];
-
-        auto dx = lx;
-        std::size_t nBoxesX{0};
-        while (dx > minDx) {
-            nBoxesX++;
-            dx = lx / static_cast<scalar>(nBoxesX);
-        }
-        if (nBoxesX > 1) {
-            nBoxesX--;
-            dx = lx / static_cast<scalar>(nBoxesX);
-        } else {
-            dx = lx;
+        std::array<std::size_t, 3> dims{};
+        std::array<scalar, 3> boxWidths{};
+        for (std::size_t i=0; i<3; ++i) {
+            dims[i] = static_cast<unsigned int>(std::max(1., std::floor(boxSize[i] / minBoxWidths[i])));
+            boxWidths[i] = boxSize[i] / static_cast<scalar>(dims[i]);
         }
 
-        auto dy = ly;
-        std::size_t nBoxesY{0};
-        while (dy > minDy) {
-            nBoxesY++;
-            dy = ly / static_cast<scalar>(nBoxesY);
-        }
-        if (nBoxesY > 1) {
-            nBoxesY--;
-            dy = ly / static_cast<scalar>(nBoxesY);
-        } else {
-            dy = ly;
+        if (rank==0) {
+            readdy::log::info("MPI spatial decomposition:");
+            readdy::log::info("The user given minimal box widths were ({}, {}, {})", minBoxWidths[0], minBoxWidths[1],
+                              minBoxWidths[2]);
+            readdy::log::info("there will be {} * {} * {} = {} number of boxes", dims[0], dims[1],
+                              dims[2], dims[0] * dims[1] * dims[2]);
+            readdy::log::info("with actual widths dx {} dy {} dz {}", boxWidths[0], boxWidths[1], boxWidths[2]);
         }
 
-        auto dz = lz;
-        std::size_t nBoxesZ{0};
-        while (dz > minDz) {
-            nBoxesZ++;
-            dz = lz / static_cast<scalar>(nBoxesZ);
+        if (not isValidDecomposition(dims)) {
+            throw std::logic_error("Spatial decomposition is not valid.");
         }
-        if (nBoxesZ > 1) {
-            nBoxesZ--;
-            dz = lz / static_cast<scalar>(nBoxesZ);
-        } else {
-            dz = lz;
+
+        const auto nBoxes = dims[0] * dims[1] * dims[2];
+        if (nBoxes != worldSize - 1) {// subtract one for master rank 0
+            throw std::logic_error(fmt::format("There are {} + 1 worker positions to be filled, but there are {} workers", nBoxes, worldSize));
         }
+
+
+
+        // set up neighborList ? make halo regions clear for each kernel,
         
-        // todo try +1 or -1 in some directions
-        
-        auto valid = isValidDecomposition({{nBoxesX, nBoxesY, nBoxesZ}});
 
-        if (not valid) {
-            for (intdelX)
-        }
-
-        
-        auto nBoxes = nBoxesX * nBoxesY * nBoxesZ;
     }
     // todo domain decomposition
     // domains shall be as cubic as possible to optimize communication

@@ -56,7 +56,7 @@ class MPIStateModel : public readdy::model::StateModel {
 
 public:
 
-    using Data = readdy::kernel::scpu::model::SCPUParticleData;
+    using Data = readdy::kernel::scpu::model::SCPUParticleData<readdy::kernel::scpu::model::Entry>;
     using Particle = readdy::model::Particle;
     using ReactionCountsMap = readdy::model::reactions::reaction_counts_map;
     using NeighborList = readdy::kernel::scpu::model::CellLinkedList;

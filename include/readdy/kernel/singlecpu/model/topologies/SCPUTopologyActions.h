@@ -57,12 +57,12 @@ namespace readdy::kernel::scpu::model::top {
 class SCPUCalculateHarmonicBondPotential : public readdy::model::top::pot::CalculateHarmonicBondPotential {
 
     const harmonic_bond *const potential;
-    SCPUParticleData *const data;
+    SCPUParticleData<model::Entry> *const data;
     model::ObservableData *const observableData;
 
 public:
     SCPUCalculateHarmonicBondPotential(const readdy::model::Context *const context,
-                                       SCPUParticleData *const data, model::ObservableData *observableData,
+                                       SCPUParticleData<model::Entry> *const data, model::ObservableData * observableData,
                                        const harmonic_bond *const potential)
             : CalculateHarmonicBondPotential(context), potential(potential), data(data),
               observableData(observableData) {}
@@ -90,11 +90,11 @@ public:
 
 class SCPUCalculateHarmonicAnglePotential : public readdy::model::top::pot::CalculateHarmonicAnglePotential {
     const harmonic_angle *const potential;
-    SCPUParticleData *const data;
+    SCPUParticleData<model::Entry> *const data;
     model::ObservableData *const observableData;
 public:
-    SCPUCalculateHarmonicAnglePotential(const readdy::model::Context *const context, SCPUParticleData *const data,
-                                        model::ObservableData *observableData, const harmonic_angle *const potential)
+    SCPUCalculateHarmonicAnglePotential(const readdy::model::Context *const context, SCPUParticleData<model::Entry> *const data,
+                                        model::ObservableData * observableData, const harmonic_angle *const potential)
             : CalculateHarmonicAnglePotential(context), potential(potential), data(data),
               observableData(observableData) {}
 
@@ -120,9 +120,9 @@ public:
 
 class SCPUCalculateCosineDihedralPotential : public readdy::model::top::pot::CalculateCosineDihedralPotential {
     const cos_dihedral *const potential;
-    SCPUParticleData *const data;
+    SCPUParticleData<model::Entry> *const data;
 public:
-    SCPUCalculateCosineDihedralPotential(const readdy::model::Context *const context, SCPUParticleData *const data,
+    SCPUCalculateCosineDihedralPotential(const readdy::model::Context *const context, SCPUParticleData<model::Entry> *const data,
                                          const cos_dihedral *const pot)
             : CalculateCosineDihedralPotential(context), potential(pot), data(data) {
     }
@@ -152,9 +152,9 @@ public:
 namespace reactions::op {
 
 class SCPUChangeParticleType : public readdy::model::top::reactions::actions::ChangeParticleType {
-    SCPUParticleData *const data;
+    SCPUParticleData<model::Entry> *const data;
 public:
-    SCPUChangeParticleType(SCPUParticleData *const data, top::GraphTopology *const topology, const vertex &v,
+    SCPUChangeParticleType(SCPUParticleData<model::Entry> *const data, top::GraphTopology *const topology, const vertex &v,
                            const ParticleTypeId &type_to) : ChangeParticleType(topology, v, type_to), data(data) {}
 
     void execute() override {
@@ -170,9 +170,9 @@ public:
 };
 
 class SCPUChangeParticlePosition : public readdy::model::top::reactions::actions::ChangeParticlePosition {
-    SCPUParticleData *const data;
+    SCPUParticleData<model::Entry> *const data;
 public:
-    SCPUChangeParticlePosition(SCPUParticleData *const data, top::GraphTopology *const topology,
+    SCPUChangeParticlePosition(SCPUParticleData<model::Entry> *const data, top::GraphTopology *const topology,
                                const vertex &v, Vec3 posTo) : ChangeParticlePosition(topology, v, posTo), data(data) {}
 
     void execute() override {
@@ -186,12 +186,12 @@ public:
 };
 
 class SCPUAppendParticle : public readdy::model::top::reactions::actions::AppendParticle {
-    SCPUParticleData *const data;
+    SCPUParticleData<model::Entry> *const data;
     readdy::model::Particle particle;
-    SCPUParticleData::entry_index insertIndex;
+    SCPUParticleData<model::Entry>::entry_index insertIndex;
     vertex newParticleIt;
 public:
-    SCPUAppendParticle(SCPUParticleData *const data, top::GraphTopology *topology,
+    SCPUAppendParticle(SCPUParticleData<model::Entry> *const data, top::GraphTopology *topology,
                        std::vector<vertex> neighbors, ParticleTypeId type, Vec3 pos)
             : AppendParticle(topology, std::move(neighbors), type, pos), data(data), particle(pos, type) {};
 

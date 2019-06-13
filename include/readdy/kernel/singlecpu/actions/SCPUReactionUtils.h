@@ -54,7 +54,7 @@ namespace actions {
 namespace reactions {
 
 using scpu_model = readdy::kernel::scpu::SCPUStateModel;
-using scpu_data = readdy::kernel::scpu::model::SCPUParticleData;
+using scpu_data = readdy::kernel::scpu::model::SCPUParticleData<model::Entry>;
 using reaction_type = readdy::model::reactions::ReactionType;
 using context = readdy::model::Context;
 using fix_pos = context::fix_pos_fun;

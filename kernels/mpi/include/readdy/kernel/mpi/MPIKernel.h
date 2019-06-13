@@ -52,6 +52,19 @@
 
 namespace readdy::kernel::mpi {
 
+
+
+struct SpatialConfig {
+    SpatialConfig() {}
+    Vec3 centerGlobal;
+    Vec3 originGlobal;
+    Vec3 extentGlobal;
+
+    std::size_t three{3};
+    util::Index3D neighbors = util::Index3D(three,three,three);
+    std::array<int, 27> neighborRanks{};
+};
+
 class MPIKernel : public readdy::model::Kernel {
 public:
     static const std::string name;
@@ -123,13 +136,12 @@ protected:
     int worldSize;
     std::string processorName;
 
-
     MPIStateModel::Data _data;
     actions::MPIActionFactory _actions;
     observables::MPIObservableFactory _observables;
     MPIStateModel _stateModel;
 
-    bool isValidDecomposition(const std::array<std::size_t, 3> nBoxesArr);
+    bool isValidDecomposition(std::array<std::size_t, 3> dims);
 };
 
 }

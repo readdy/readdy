@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2018 Computational Molecular Biology Group,          *
+ * Copyright © 2019 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * Redistribution and use in source and binary forms, with or       *
@@ -32,32 +32,16 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                       *
  ********************************************************************/
 
-
 /**
- * << detailed description >>
+ * « detailed description »
  *
- * @file SingleCPUParticleData.cpp
- * @brief << brief description >>
- * @author clonker
- * @date 03.06.16
+ * @file MPIParticleData.h
+ * @brief « brief description »
+ * @author chrisfroe
+ * @date 13.06.19
  */
 
-#include <memory>
+#pragma once
 
-#include <readdy/common/logging.h>
-#include <readdy/kernel/singlecpu/model/SCPUParticleData.h>
-
-namespace readdy {
-namespace kernel {
-namespace scpu {
-namespace model {
-
-
-}
-}
-}
-}
-
-
-
+#include <readdy/model/Particle.h>
 
