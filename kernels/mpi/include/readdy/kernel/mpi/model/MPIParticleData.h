@@ -33,15 +33,47 @@
  ********************************************************************/
 
 /**
- * « detailed description »
- *
  * @file MPIParticleData.h
- * @brief « brief description »
+ * @brief Header file defining the type of entry, which the data container uses.
  * @author chrisfroe
  * @date 13.06.19
  */
 
 #pragma once
 
-#include <readdy/model/Particle.h>
+#include <readdy/kernel/singlecpu/model/SCPUParticleData.h>
 
+namespace readdy::kernel::mpi {
+
+/**
+ * An Entry similar to SCPU with additional rank, which is the MPI rank this particle belongs to, 
+ * because IDs are local to kernel and we need a unique identifier for particles, 
+ * which is the compound (rank, id).
+ */
+struct MPIEntry {
+    using Particle = readdy::model::Particle;
+    using Force = Particle::Position;
+
+    explicit MPIEntry(const Particle &particle, int rank)
+            : pos(particle.pos()), force(Force()), type(particle.type()), deactivated(false),
+              id(particle.id()), rank(rank) {}
+
+    bool is_deactivated() const {
+        return deactivated;
+    }
+
+    const Particle::Position &position() const {
+        return pos;
+    }
+
+    Force force;
+    Particle::Position pos;
+    Particle::Id id;
+    Particle::TypeId type;
+    bool deactivated;
+    int rank;
+};
+
+using MPIDataContainer = readdy::kernel::scpu::model::SCPUParticleData<MPIEntry>;
+
+}

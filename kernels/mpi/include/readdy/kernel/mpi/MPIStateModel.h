@@ -49,6 +49,7 @@
 #include <readdy/kernel/singlecpu/model/ObservableData.h>
 #include <readdy/model/reactions/ReactionRecord.h>
 #include <readdy/common/signals.h>
+#include <readdy/kernel/mpi/model/MPIParticleData.h>
 
 namespace readdy::kernel::mpi {
 
@@ -56,7 +57,7 @@ class MPIStateModel : public readdy::model::StateModel {
 
 public:
 
-    using Data = readdy::kernel::scpu::model::SCPUParticleData<readdy::kernel::scpu::model::Entry>;
+    using Data = MPIDataContainer;
     using Particle = readdy::model::Particle;
     using ReactionCountsMap = readdy::model::reactions::reaction_counts_map;
     using NeighborList = readdy::kernel::scpu::model::CellLinkedList;
