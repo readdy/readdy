@@ -73,16 +73,115 @@ MPIKernel::MPIKernel() : Kernel(name), _stateModel(_data, _context), _actions(th
 
 }
 
+bool MPIKernel::isValidDecomposition(const std::array<std::size_t, 3> nBoxesArr) {
+    const auto cutoff = _context.calculateMaxCutoff();
+    const auto periodic = _context.periodicBoundaryConditions();
+    const auto box = _context.boxSize();
+    const auto dx = box[0] / static_cast<scalar>(nBoxesArr[0]);
+    const auto dy = box[1] / static_cast<scalar>(nBoxesArr[1]);
+    const auto dz = box[2] / static_cast<scalar>(nBoxesArr[2]);
+    if (dx < cutoff) {
+        if (nBoxesArr[0] == 1 and not periodic[0]) {
+            /* smaller than cutoff is ok, when there are no neighbors to be considered */
+        } else {
+            return false;
+            throw std::logic_error(fmt::format("Resulting dx {} (nBoxesX {}, periodicX {}) of MPI box cannot be smaller than cutoff {}", dx, nBoxesArr[0], periodic[0], cutoff));
+        }
+    }
+    if (dy < cutoff) {
+        if (nBoxesArr[1] == 1 and not periodic[1]) {
+            /* smaller than cutoff is ok, when there are no neighbors to be considered */
+        } else {
+            return false;
+            throw std::logic_error(fmt::format("Resulting dy {} (nBoxesY {}, periodicY {}) of MPI box cannot be smaller than cutoff {}", dy, nBoxesArr[1], periodic[1], cutoff));
+        }
+    }
+    if (dz < cutoff) {
+        if (nBoxesArr[2] == 1 and not periodic[2]) {
+            /* smaller than cutoff is ok, when there are no neighbors to be considered */
+        } else {
+            return false;
+            throw std::logic_error(fmt::format("Resulting dz {} (nBoxesZ {}, periodicZ {}) of MPI box cannot be smaller than cutoff {}", dz, nBoxesArr[2], periodic[2], cutoff));
+        }
+    }
+    return true;
+}
+
 void MPIKernel::initialize() {
     readdy::model::Kernel::initialize();
 
     // todo do any user configuration here
 
+    {
+        const auto conf = _context.kernelConfiguration();
+        const auto minDx = conf.mpi.dx;
+        const auto minDy = conf.mpi.dy;
+        const auto minDz = conf.mpi.dz;
+        const auto cutoff = _context.calculateMaxCutoff();
+
+        const auto lx = _context.boxSize()[0];
+        const auto ly = _context.boxSize()[1];
+        const auto lz = _context.boxSize()[2];
+        const auto periodicX = _context.periodicBoundaryConditions()[0];
+        const auto periodicY = _context.periodicBoundaryConditions()[1];
+        const auto periodicZ = _context.periodicBoundaryConditions()[2];
+
+        auto dx = lx;
+        std::size_t nBoxesX{0};
+        while (dx > minDx) {
+            nBoxesX++;
+            dx = lx / static_cast<scalar>(nBoxesX);
+        }
+        if (nBoxesX > 1) {
+            nBoxesX--;
+            dx = lx / static_cast<scalar>(nBoxesX);
+        } else {
+            dx = lx;
+        }
+
+        auto dy = ly;
+        std::size_t nBoxesY{0};
+        while (dy > minDy) {
+            nBoxesY++;
+            dy = ly / static_cast<scalar>(nBoxesY);
+        }
+        if (nBoxesY > 1) {
+            nBoxesY--;
+            dy = ly / static_cast<scalar>(nBoxesY);
+        } else {
+            dy = ly;
+        }
+
+        auto dz = lz;
+        std::size_t nBoxesZ{0};
+        while (dz > minDz) {
+            nBoxesZ++;
+            dz = lz / static_cast<scalar>(nBoxesZ);
+        }
+        if (nBoxesZ > 1) {
+            nBoxesZ--;
+            dz = lz / static_cast<scalar>(nBoxesZ);
+        } else {
+            dz = lz;
+        }
+        
+        // todo try +1 or -1 in some directions
+        
+        auto valid = isValidDecomposition({{nBoxesX, nBoxesY, nBoxesZ}});
+
+        if (not valid) {
+            for (intdelX)
+        }
+
+        
+        auto nBoxes = nBoxesX * nBoxesY * nBoxesZ;
+    }
     // todo domain decomposition
     // domains shall be as cubic as possible to optimize communication
     // find out if number of available ranks fits
     // first get user values for dx,dy,dz, find closest and if ranks do not fit, try + or - 1 box (around that) in x, y or z
     // a box must be at least as large as largest cutoff
+    
 
 
     _stateModel.reactionRecords().clear();

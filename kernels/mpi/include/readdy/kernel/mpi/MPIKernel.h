@@ -128,6 +128,8 @@ protected:
     actions::MPIActionFactory _actions;
     observables::MPIObservableFactory _observables;
     MPIStateModel _stateModel;
+
+    bool isValidDecomposition(const std::array<std::size_t, 3> nBoxesArr);
 };
 
 }

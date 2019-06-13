@@ -64,7 +64,8 @@ TEST_CASE("Test mpi kernel running in parallel", "[mpi]") {
         //ctx.reactions().add("fusili: A +(1.) A -> B", 0.1);
         ctx.potentials().addHarmonicRepulsion("A", "A", 10., 1.);
         // todo kernel configuration into context
-        ctx.kernelConfiguration() = json{{"MPI", {"dx", 2.}, {"dy", 2.}, {"dz", 2.}}};
+        json conf{{"MPI", {"dx", 2.}, {"dy", 2.}, {"dz", 2.}}};
+        ctx.kernelConfiguration() = conf.get<readdy::conf::Configuration>();
         const std::size_t nParticles = 10000;
         for (std::size_t i = 0; i < nParticles; ++i) {
             auto x = readdy::model::rnd::uniform_real()*50. - 25.;
