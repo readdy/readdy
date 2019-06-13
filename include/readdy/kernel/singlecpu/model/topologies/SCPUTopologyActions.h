@@ -188,7 +188,7 @@ public:
 class SCPUAppendParticle : public readdy::model::top::reactions::actions::AppendParticle {
     SCPUParticleData<model::Entry> *const data;
     readdy::model::Particle particle;
-    SCPUParticleData<model::Entry>::entry_index insertIndex;
+    SCPUParticleData<model::Entry>::EntryIndex insertIndex;
     vertex newParticleIt;
 public:
     SCPUAppendParticle(SCPUParticleData<model::Entry> *const data, top::GraphTopology *topology,

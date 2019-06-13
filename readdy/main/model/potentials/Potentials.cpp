@@ -119,7 +119,7 @@ Box::Box(particle_type_type particleType, scalar forceConstant, const Vec3 &orig
           min(getMinExtent(origin, extent)), max(getMaxExtent(origin, extent)) {}
 
 std::string Box::describe() const {
-    return fmt::format("Box potential with origin={}, extent={}, and force constant k={}",
+    return fmt::format("Box potential with origin={}, extent={}, and Force constant k={}",
                        origin, extent, forceConstant);
 }
 
@@ -183,7 +183,7 @@ std::string Cylinder<false>::type() const {
  */
 
 std::string HarmonicRepulsion::describe() const {
-    return fmt::format("Harmonic repulsion with force constant k={}", _forceConstant);
+    return fmt::format("Harmonic repulsion with Force constant k={}", _forceConstant);
 }
 
 std::string HarmonicRepulsion::type() const {
@@ -195,7 +195,7 @@ std::string HarmonicRepulsion::type() const {
  */
 
 std::string WeakInteractionPiecewiseHarmonic::describe() const {
-    return fmt::format("Weak interaction piecewise harmonic potential with force constant k={}, desired distance={}, "
+    return fmt::format("Weak interaction piecewise harmonic potential with Force constant k={}, desired distance={}, "
                                "depth={}, and cutoff={}",
                        forceConstant, conf.desiredParticleDistance, conf.depthAtDesiredDistance,
                        conf.noInteractionDistance);

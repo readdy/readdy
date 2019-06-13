@@ -147,7 +147,7 @@ public:
 
     std::string describe() const override {
         std::string inOrOut = inclusion ? "inclusion" : "exclusion";
-        return fmt::format("Spherical {} potential with origin={}, radius={}, and force constant k={}",
+        return fmt::format("Spherical {} potential with origin={}, radius={}, and Force constant k={}",
                            inOrOut, origin, radius, forceConstant);
     }
 
@@ -262,7 +262,7 @@ public:
 
     std::string describe() const override {
         std::string inOrOut = inclusion ? "inclusion" : "exclusion";
-        return fmt::format("Cylindrical {} potential with force constant={}, origin={}, normal={}, and radius={}",
+        return fmt::format("Cylindrical {} potential with Force constant={}, origin={}, normal={}, and radius={}",
                            inOrOut, forceConstant, origin, normal, radius);
     }
 

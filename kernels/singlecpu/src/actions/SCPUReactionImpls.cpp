@@ -165,8 +165,8 @@ void SCPUUncontrolledApproximation::perform() {
 
     // execute reactions
     {
-        scpu_data::new_entries newParticles{};
-        std::vector<scpu_data::entry_index> decayedEntries{};
+        scpu_data::NewEntries newParticles{};
+        std::vector<scpu_data::EntryIndex> decayedEntries{};
 
         readdy::model::reactions::Reaction *reaction;
 
@@ -271,12 +271,12 @@ void gatherEvents(SCPUKernel const *const kernel,
     }
 }
 
-scpu_data::entries_update handleEventsGillespie(
+scpu_data::EntriesUpdate handleEventsGillespie(
         SCPUKernel *const kernel, scalar timeStep,
         bool filterEventsInAdvance, bool approximateRate,
         std::vector<event_t> &&events) {
-    scpu_data::new_entries newParticles{};
-    std::vector<scpu_data::entry_index> decayedEntries{};
+    scpu_data::NewEntries newParticles{};
+    std::vector<scpu_data::EntryIndex> decayedEntries{};
 
     if (!events.empty()) {
         const auto &ctx = kernel->context();
@@ -448,7 +448,7 @@ void SCPUDetailedBalance::perform() {
                 const auto energyBefore = stateModel.energy();
 
                 reaction_record record;
-                model::SCPUParticleData<model::Entry>::entries_update forwardUpdate;
+                model::SCPUParticleData<model::Entry>::EntriesUpdate forwardUpdate;
                 scalar interactionEnergy; // only relevant for FusionFission
                 if (ctx.recordReactionsWithPositions()) {
                     std::tie(forwardUpdate, interactionEnergy) = performReversibleReactionEvent(event, revReaction,
@@ -522,7 +522,7 @@ void SCPUDetailedBalance::perform() {
                 }
             } else {
                 // Perform vanilla Doi model with direct update to data structure
-                model::SCPUParticleData<model::Entry>::entries_update forwardUpdate;
+                model::SCPUParticleData<model::Entry>::EntriesUpdate forwardUpdate;
 
                 if (ctx.recordReactionsWithPositions()) {
                     reaction_record record;
@@ -553,13 +553,13 @@ void SCPUDetailedBalance::perform() {
     }
 }
 
-model::SCPUParticleData<model::Entry>::entries_update
+model::SCPUParticleData<model::Entry>::EntriesUpdate
 SCPUDetailedBalance::generateBackwardUpdate(
         const ParticleBackup &particleBackup,
-        const std::vector<model::SCPUParticleData<model::Entry>::entry_index> &updateRecord) const {
+        const std::vector<model::SCPUParticleData<model::Entry>::EntryIndex> &updateRecord) const {
     // the entries that were created by the forward update
-    std::vector<scpu_data::entry_index> decayedEntries = updateRecord;
-    scpu_data::new_entries newParticles{};
+    std::vector<scpu_data::EntryIndex> decayedEntries = updateRecord;
+    scpu_data::NewEntries newParticles{};
     if (particleBackup.nParticles == 1) {
         readdy::model::Particle p(particleBackup.pos1, particleBackup.t1);
         newParticles.emplace_back(p);
@@ -576,7 +576,7 @@ SCPUDetailedBalance::generateBackwardUpdate(
     return std::make_pair(std::move(newParticles), decayedEntries);
 }
 
-std::pair<model::SCPUParticleData<model::Entry>::entries_update, scalar> SCPUDetailedBalance::performReversibleReactionEvent(
+std::pair<model::SCPUParticleData<model::Entry>::EntriesUpdate, scalar> SCPUDetailedBalance::performReversibleReactionEvent(
         const Event &event, const readdy::model::actions::reactions::ReversibleReactionConfig *reversibleReaction,
         const readdy::model::reactions::Reaction *reaction, reaction_record *record) {
     if (reversibleReaction == nullptr) {
@@ -592,8 +592,8 @@ std::pair<model::SCPUParticleData<model::Entry>::entries_update, scalar> SCPUDet
     const auto box = ctx.boxSize().data();
     const auto pbc = ctx.periodicBoundaryConditions().data();
 
-    scpu_data::new_entries newParticles{};
-    std::vector<scpu_data::entry_index> decayedEntries{};
+    scpu_data::NewEntries newParticles{};
+    std::vector<scpu_data::EntryIndex> decayedEntries{};
 
     scalar energyDelta = 0;
     switch (reversibleReaction->reversibleType) {
