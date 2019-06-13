@@ -40,9 +40,7 @@
 #include <readdy/model/observables/io/TimeSeriesWriter.h>
 #include <readdy/model/observables/io/Types.h>
 
-namespace readdy {
-namespace model {
-namespace observables {
+namespace readdy::model::observables {
 
 struct Topologies::Impl {
     std::array<std::size_t, 2> currentLimitsParticles{{0_z, 0_z}};
@@ -57,8 +55,8 @@ struct Topologies::Impl {
     std::unique_ptr<util::TimeSeriesWriter> time{nullptr};
 };
 
-Topologies::Topologies(Kernel *kernel, stride_type stride)
-        : Observable(kernel, stride), pimpl(std::make_unique<Impl>()) {}
+Topologies::Topologies(Kernel *kernel, stride_type stride, bool useBlosc)
+        : Observable(kernel, stride), pimpl(std::make_unique<Impl>()), useBlosc(useBlosc) {}
 
 void Topologies::evaluate() {
     result.clear();
@@ -92,14 +90,16 @@ std::string Topologies::type() const {
 void Topologies::initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) {
     auto group = file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName);
     io::BloscFilter filter;
+    h5rd::File::FilterConfiguration filters;
+    if(useBlosc) filters.push_back(&filter);
     {
         // data
         h5rd::dimensions fs = {flushStride};
         h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
-        pimpl->dataSetParticles = group.createDataSet<std::size_t>("particles", fs, dims, {&filter});
+        pimpl->dataSetParticles = group.createDataSet<std::size_t>("particles", fs, dims, filters);
         fs = {flushStride, 2};
         dims = {h5rd::UNLIMITED_DIMS, 2};
-        pimpl->dataSetEdges = group.createDataSet<std::size_t>("edges", fs, dims, {&filter});
+        pimpl->dataSetEdges = group.createDataSet<std::size_t>("edges", fs, dims, filters);
     }
     {
         // limits
@@ -115,7 +115,7 @@ void Topologies::initializeDataSet(File &file, const std::string &dataSetName, s
         pimpl->types = group.createVLENDataSet<TopologyTypeId>("types", fs, dims);
     }
 
-    pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
+    pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride, "time", useBlosc);
 }
 
 void Topologies::append() {
@@ -160,8 +160,8 @@ void Topologies::append() {
     }
 }
 
-Topologies::~Topologies() = default;
+Topologies::~Topologies() {
+    flush();
+};
 
-}
-}
 }

@@ -108,8 +108,8 @@ struct FlatTrajectory::Impl {
     std::size_t current_limits[2]{0, 0};
 };
 
-FlatTrajectory::FlatTrajectory(Kernel *const kernel, unsigned int stride)
-        : Observable(kernel, stride), pimpl(std::make_unique<Impl>()) {}
+FlatTrajectory::FlatTrajectory(Kernel *const kernel, unsigned int stride, bool useBlosc)
+        : Observable(kernel, stride), pimpl(std::make_unique<Impl>()), useBlosc(useBlosc) {}
 
 void FlatTrajectory::initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) {
     if (!pimpl->dataSet) {
@@ -120,15 +120,17 @@ void FlatTrajectory::initializeDataSet(File &file, const std::string &dataSetNam
             h5rd::dimensions fs = {flushStride};
             h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
             io::BloscFilter filter;
+            h5rd::File::FilterConfiguration filters;
+            if(useBlosc) filters.push_back(&filter);
             pimpl->dataSet = group.createDataSet("records", fs, dims, std::get<0>(*pimpl->h5types),
-                                                 std::get<1>(*pimpl->h5types), {&filter});
+                                                 std::get<1>(*pimpl->h5types), filters);
         }
         {
             h5rd::dimensions fs = {flushStride, 2};
             h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS, 2};
             pimpl->limits = group.createDataSet<std::size_t>("limits", fs, dims);
         }
-        pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
+        pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride, "time", useBlosc);
 
     }
 }
@@ -161,7 +163,9 @@ std::string FlatTrajectory::type() const {
 
 FlatTrajectory::FlatTrajectory(FlatTrajectory &&) = default;
 
-FlatTrajectory::~FlatTrajectory() = default;
+FlatTrajectory::~FlatTrajectory() {
+    flush();
+};
 }
 }
 }

@@ -77,7 +77,7 @@ void ParticleTypeRegistry::add(const std::string &name, const scalar diffusionCo
 std::string ParticleTypeRegistry::describe() const {
     namespace rus = readdy::util::str;
     std::string description;
-    description += fmt::format(" - particle types:{}", rus::newline);
+    description += fmt::format(" - particle types:\n");
     auto flavorName = [](auto flavor) -> std::string {
         switch (flavor) {
             case particleflavor::NORMAL: {
@@ -95,8 +95,8 @@ std::string ParticleTypeRegistry::describe() const {
         }
     };
     for (const auto &entry : particle_info_) {
-        description += fmt::format("     * {} particle type \"{}\" with D={}{}", flavorName(entry.second.flavor),
-                                   entry.second.name, entry.second.diffusionConstant, rus::newline);
+        description += fmt::format("     * {} particle type \"{}\" with D={}\n", flavorName(entry.second.flavor),
+                                   entry.second.name, entry.second.diffusionConstant);
     }
     return description;
 }

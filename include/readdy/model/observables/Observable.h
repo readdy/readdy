@@ -111,8 +111,12 @@ public:
      * The observable's current time step, i.e., the time step when it was last evaluated.
      * @return the observable's current time step
      */
-    const time_step_type &currentTimeStep() const {
+    time_step_type currentTimeStep() const {
         return t_current;
+    }
+
+    void setCurrentTimeStep(time_step_type t) {
+        t_current = t;
     }
 
     ObservableBase(const ObservableBase&) = delete;
@@ -171,6 +175,14 @@ public:
     virtual void flush() = 0;
 
     virtual std::string type() const = 0;
+
+    void writeCurrentResult() {
+        if(writeToFile) {
+            append();
+        } else {
+            throw std::logic_error("Cannot write current result if write to file is not enabled.");
+        }
+    }
 
 protected:
     friend class readdy::model::Kernel;

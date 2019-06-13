@@ -324,7 +324,8 @@ class Trajectory(object):
         """
         return self._reactions
 
-    def convert_to_xyz(self, xyz_filename=None, generate_tcl=True, tcl_with_grid=False, particle_radii=None):
+    def convert_to_xyz(self, xyz_filename=None, generate_tcl=True, tcl_with_grid=False, particle_radii=None,
+                       color_ids=None):
         """
         Converts this trajectory to a xyz file that can be read into VMD. Assuming the TCL script was generated, the
         trajectory can be visualized by `vmd -e traj.xyz.tcl`.
@@ -333,10 +334,12 @@ class Trajectory(object):
         :param generate_tcl: generates a tcl script that can be used alongside with the xyz file
         :param tcl_with_grid: enables a grid view inside VMD
         :param particle_radii: map particle radii for visualization purposes, e.g., `{"A": 10., "B": .1}`
+        :param color_ids: map particle type names to tcl/vmd color ids, e.g., `{"A": 0, "B": 5}`, default uses
+                          consecutive numbering
         """
         from readdy.api.utils import convert_trajectory_to_xyz as to_xyz
         to_xyz(self._filename, self._name, xyz_filename=xyz_filename, generate_tcl=generate_tcl,
-               tcl_with_grid=tcl_with_grid, particle_radii=particle_radii)
+               tcl_with_grid=tcl_with_grid, particle_radii=particle_radii, color_ids=color_ids)
 
     def read(self) -> _typing.List[TrajectoryParticle]:
         """
@@ -489,8 +492,8 @@ class Trajectory(object):
         """
         Reads back the output of the "topologies" observable
         :param data_set_name: The data set name as given in the simulation setup
-        :param start: ...
-        :param stop: ...
+        :param start: start step, if None from the beginning
+        :param stop: stop step, if None until the end
         :return: a tuple which contains an array corresponding to the time as first entry and an array containing
                  lists of topologies per recorded time step
         """

@@ -171,7 +171,7 @@ py::tuple convert_readdy_viewer(const std::string &h5name, const std::string &tr
 void
 convert_xyz(const std::string &h5name, const std::string &trajName, const std::string &out, bool generateTcl = true,
             bool tclRuler = false,
-            const radiusmap &radii = {}) {
+            const radiusmap &radii = {}, const std::unordered_map<std::string, unsigned int> &colorIds = {}) {
     readdy::log::debug(R"(converting "{}" to "{}")", h5name, out);
 
     readdy::io::BloscFilter bloscFilter;
@@ -302,6 +302,13 @@ convert_xyz(const std::string &h5name, const std::string &trajName, const std::s
         }
 
         std::size_t i = 0;
+        std::unordered_set<unsigned int> predefinedColorIds;
+        {
+            predefinedColorIds.reserve(colorIds.size());
+            std::for_each(colorIds.begin(), colorIds.end(), [&predefinedColorIds](const auto &item) {
+                predefinedColorIds.emplace(std::get<1>(item));
+            });
+        }
         for (const auto &t : types) {
             auto radius = static_cast<readdy::scalar>(1.0);
             {
@@ -312,10 +319,23 @@ convert_xyz(const std::string &h5name, const std::string &trajName, const std::s
                     radius = it->second;
                 }
             }
+            std::size_t colorId = i;
+            {
+                auto it = colorIds.find(t.name);
+                if(it != colorIds.end()) {
+                    colorId = it->second;
+                } else {
+                    while(predefinedColorIds.find(colorId) != predefinedColorIds.end()) {
+                        ++colorId;
+                        ++i;
+                    }
+                }
+            }
             fs << "mol representation VDW " << std::to_string(radius * .7) << " 16.0" << std::endl;
             fs << "mol selection name type_" + std::to_string(t.type_id) << std::endl;
-            fs << "mol color ColorID " << (i++) << std::endl;
+            fs << "mol color ColorID " << colorId << std::endl;
             fs << "mol addrep top" << std::endl;
+            i++;
         }
         fs << "animate goto 0" << std::endl;
         fs << "color Display Background white" << std::endl;
@@ -399,135 +419,140 @@ readTopologies(const std::string &filename, const std::string &groupName, std::s
     readdy::io::BloscFilter bloscFilter;
     bloscFilter.registerFilter();
 
+    std::vector<readdy::time_step_type> time;
+    std::vector<std::vector<TopologyRecord>> result;
+
     auto f = h5rd::File::open(filename, h5rd::File::Flag::READ_ONLY);
-    auto group = f->getSubgroup(groupName);
+    if(f->exists(groupName)) {
+        auto group = f->getSubgroup(groupName);
 
-    std::size_t nFrames {0};
-    // limits
-    std::vector<std::size_t> limitsParticles;
-    std::vector<std::size_t> limitsEdges;
-    {
-        if (stride > 1) {
-            group.read("limitsParticles", limitsParticles, {stride, 1});
-        } else {
-            group.read("limitsParticles", limitsParticles);
-        }
-        if (stride > 1) {
-            group.read("limitsEdges", limitsEdges, {stride, 1});
-        } else {
-            group.read("limitsEdges", limitsEdges);
+        std::size_t nFrames{0};
+        // limits
+        std::vector<std::size_t> limitsParticles;
+        std::vector<std::size_t> limitsEdges;
+        {
+            if (stride > 1) {
+                group.read("limitsParticles", limitsParticles, {stride, 1});
+            } else {
+                group.read("limitsParticles", limitsParticles);
+            }
+            if (stride > 1) {
+                group.read("limitsEdges", limitsEdges, {stride, 1});
+            } else {
+                group.read("limitsEdges", limitsEdges);
+            }
+
+            if (limitsParticles.size() != limitsEdges.size()) {
+                throw std::logic_error(fmt::format("readTopologies: Incompatible limit sizes, "
+                                                   "limitsParticles.size={}, limitsEdges.size={}",
+                                                   limitsParticles.size(), limitsEdges.size()));
+            }
+
+            nFrames = limitsParticles.size() / 2;
+            from = std::min(nFrames, from);
+            to = std::min(nFrames, to);
+
+            if (from == to) {
+                throw std::invalid_argument(fmt::format("readTopologies: not enough frames to cover range ({}, {}]",
+                                                        from, to));
+            } else {
+                limitsParticles = std::vector<std::size_t>(limitsParticles.begin() + 2 * from,
+                                                           limitsParticles.begin() + 2 * to);
+                limitsEdges = std::vector<std::size_t>(limitsEdges.begin() + 2 * from,
+                                                       limitsEdges.begin() + 2 * to);
+            }
         }
 
-        if(limitsParticles.size() != limitsEdges.size()) {
-            throw std::logic_error(fmt::format("readTopologies: Incompatible limit sizes, "
-                                               "limitsParticles.size={}, limitsEdges.size={}",
-                                               limitsParticles.size(), limitsEdges.size()));
-        }
-
-        nFrames = limitsParticles.size() / 2;
         from = std::min(nFrames, from);
         to = std::min(nFrames, to);
 
-        if (from == to) {
-            throw std::invalid_argument(fmt::format("readTopologies: not enough frames to cover range ({}, {}]",
-                    from, to));
+        // time
+        if (stride > 1) {
+            group.readSelection("time", time, {from}, {stride}, {to - from});
         } else {
-            limitsParticles = std::vector<std::size_t>(limitsParticles.begin() + 2 * from,
-                                                       limitsParticles.begin() + 2 * to);
-            limitsEdges = std::vector<std::size_t>(limitsEdges.begin() + 2 * from,
-                                                   limitsEdges.begin() + 2 * to);
+            group.readSelection("time", time, {from}, {1}, {to - from});
         }
-    }
 
-    from = std::min(nFrames, from);
-    to = std::min(nFrames, to);
+        if (limitsParticles.size() % 2 != 0 || limitsEdges.size() % 2 != 0) {
+            throw std::logic_error(fmt::format(
+                    "limitsParticles size was {} and limitsEdges size was {}, they should be divisible by 2; from={}, to={}",
+                    limitsParticles.size(), limitsEdges.size(), from, to)
+            );
+        }
+        // now check that nFrames(particles) == nFrames(edges) == nFrames(time)...
+        if (to - from != limitsEdges.size() / 2 || (to - from) != time.size()) {
+            throw std::logic_error(fmt::format(
+                    "(to-from) should be equal to limitsEdges/2 and equal to the number of time steps in the recording, "
+                    "but was: (to-from) = {}, limitsEdges/2 = {}, nTimeSteps={}; from={}, to={}",
+                    to - from, limitsEdges.size() / 2, time.size(), from, to
+            ));
+        }
 
-    // time
-    std::vector<readdy::time_step_type> time;
-    if (stride > 1) {
-        group.readSelection("time", time, {from}, {stride}, {to - from});
-    } else {
-        group.readSelection("time", time, {from}, {1}, {to - from});
-    }
+        std::vector<std::vector<readdy::TopologyTypeId>> types;
+        group.readVLENSelection("types", types, {from}, {stride}, {to - from});
 
-    if (limitsParticles.size() % 2 != 0 || limitsEdges.size() % 2 != 0) {
-        throw std::logic_error(fmt::format(
-                "limitsParticles size was {} and limitsEdges size was {}, they should be divisible by 2; from={}, to={}",
-                limitsParticles.size(), limitsEdges.size(), from, to)
-        );
-    }
-    // now check that nFrames(particles) == nFrames(edges) == nFrames(time)...
-    if (to - from != limitsEdges.size() / 2 || (to - from) != time.size()) {
-        throw std::logic_error(fmt::format(
-                "(to-from) should be equal to limitsEdges/2 and equal to the number of time steps in the recording, "
-                "but was: (to-from) = {}, limitsEdges/2 = {}, nTimeSteps={}; from={}, to={}",
-                to - from, limitsEdges.size() / 2, time.size(), from, to
-        ));
-    }
+        std::size_t ix = 0;
+        for (std::size_t frame = from; frame < to; ++frame, ++ix) {
+            result.emplace_back();
+            // this frame's records
+            auto &records = result.back();
 
-    std::vector<std::vector<readdy::TopologyTypeId>> types;
-    group.readVLENSelection("types", types, {from}, {stride}, {to - from});
+            const auto &particlesLimitBegin = limitsParticles.at(2 * ix);
+            const auto &particlesLimitEnd = limitsParticles.at(2 * ix + 1);
+            // since the edges are flattened, we actually have to multiply this by 2
+            const auto &edgesLimitBegin = limitsEdges.at(2 * ix);
+            const auto &edgesLimitEnd = limitsEdges.at(2 * ix + 1);
 
-    std::vector<std::vector<TopologyRecord>> result;
+            std::vector<std::size_t> flatParticles;
+            group.readSelection("particles", flatParticles, {particlesLimitBegin}, {stride},
+                                {particlesLimitEnd - particlesLimitBegin});
+            std::vector<std::size_t> flatEdges;
+            //readdy::log::critical("edges {} - {}", edgesLimitBegin, edgesLimitEnd);
+            group.readSelection("edges", flatEdges, {edgesLimitBegin, 0}, {stride, 1},
+                                {edgesLimitEnd - edgesLimitBegin, 2});
 
-    std::size_t ix = 0;
-    for (std::size_t frame = from; frame < to; ++frame, ++ix) {
-        result.emplace_back();
-        // this frame's records
-        auto &records = result.back();
+            const auto &currentTypes = types.at(ix);
+            auto typesIt = currentTypes.begin();
+            for (auto particlesIt = flatParticles.begin();
+                 particlesIt != flatParticles.end(); ++particlesIt) {
 
-        const auto &particlesLimitBegin = limitsParticles.at(2 * ix);
-        const auto &particlesLimitEnd = limitsParticles.at(2 * ix + 1);
-        // since the edges are flattened, we actually have to multiply this by 2
-        const auto &edgesLimitBegin = limitsEdges.at(2 * ix);
-        const auto &edgesLimitEnd = limitsEdges.at(2 * ix + 1);
-
-        std::vector<std::size_t> flatParticles;
-        group.readSelection("particles", flatParticles, {particlesLimitBegin}, {stride}, {particlesLimitEnd - particlesLimitBegin});
-        std::vector<std::size_t> flatEdges;
-        //readdy::log::critical("edges {} - {}", edgesLimitBegin, edgesLimitEnd);
-        group.readSelection("edges", flatEdges, {edgesLimitBegin, 0}, {stride, 1}, {edgesLimitEnd - edgesLimitBegin, 2});
-
-        const auto &currentTypes = types.at(ix);
-        auto typesIt = currentTypes.begin();
-        for (auto particlesIt = flatParticles.begin();
-             particlesIt != flatParticles.end(); ++particlesIt) {
-
-            records.emplace_back();
-            auto nParticles = *particlesIt;
-            for (std::size_t i = 0; i < nParticles; ++i) {
-                ++particlesIt;
-                records.back().particleIndices.push_back(*particlesIt);
+                records.emplace_back();
+                auto nParticles = *particlesIt;
+                for (std::size_t i = 0; i < nParticles; ++i) {
+                    ++particlesIt;
+                    records.back().particleIndices.push_back(*particlesIt);
+                }
+                records.back().type = *typesIt;
+                ++typesIt;
             }
-            records.back().type = *typesIt;
-            ++typesIt;
-        }
 
-        if (currentTypes.size() != records.size()) {
-            throw std::logic_error(fmt::format("for frame {} had {} topology types but {} topologies",
-                                               frame, currentTypes.size(), records.size()));
-        }
+            if (currentTypes.size() != records.size()) {
+                throw std::logic_error(fmt::format("for frame {} had {} topology types but {} topologies",
+                                                   frame, currentTypes.size(), records.size()));
+            }
 
-        std::size_t recordIx = 0;
-        for (auto edgesIt = flatEdges.begin();
-             edgesIt != flatEdges.end(); ++recordIx) {
-            auto &currentRecord = records.at(recordIx);
+            std::size_t recordIx = 0;
+            for (auto edgesIt = flatEdges.begin();
+                 edgesIt != flatEdges.end(); ++recordIx) {
+                auto &currentRecord = records.at(recordIx);
 
-            auto nEdges = *edgesIt;
-            edgesIt += 2;
-
-            for (std::size_t i = 0; i < nEdges; ++i) {
-                currentRecord.edges.emplace_back(*edgesIt, *(edgesIt + 1));
+                auto nEdges = *edgesIt;
                 edgesIt += 2;
+
+                for (std::size_t i = 0; i < nEdges; ++i) {
+                    currentRecord.edges.emplace_back(*edgesIt, *(edgesIt + 1));
+                    edgesIt += 2;
+                }
+
             }
 
         }
 
-    }
-
-    if(time.size() != result.size()) {
-        throw std::logic_error(fmt::format("readTopologies: size mismatch, time size is {}, result size is {}",
-                                           time.size(), result.size()));
+        if (time.size() != result.size()) {
+            throw std::logic_error(fmt::format("readTopologies: size mismatch, time size is {}, result size is {}",
+                                               time.size(), result.size()));
+        }
+        return std::make_tuple(time, result);
     }
     return std::make_tuple(time, result);
 }
@@ -666,7 +691,8 @@ void exportUtils(py::module &m) {
                 return repr(self);
             });
     m.def("convert_xyz", &convert_xyz, "h5_file_name"_a, "traj_data_set_name"_a, "xyz_out_file_name"_a,
-          "generate_tcl"_a = true, "tcl_with_grid"_a = false, "radii"_a = radiusmap{});
+          "generate_tcl"_a = true, "tcl_with_grid"_a = false, "radii"_a = radiusmap{},
+          "color_ids"_a = std::unordered_map<std::string, unsigned int>{});
     m.def("convert_readdyviewer", &convert_readdy_viewer, "h5_file_name"_a, "traj_data_set_name"_a,
           "begin"_a = 0, "end"_a = std::numeric_limits<int>::max(), "stride"_a = 1);
     m.def("read_trajectory", &read_trajectory, "filename"_a, "name"_a);

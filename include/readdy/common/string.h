@@ -46,9 +46,7 @@
 #pragma once
 #include <string>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(util)
-NAMESPACE_BEGIN(str)
+namespace readdy::util::str {
 
 inline bool has_suffix(const std::string &str, const std::string &suffix) {
     return str.size() >= suffix.size() && str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
@@ -93,8 +91,4 @@ static inline std::string trim_copy(std::string s) {
     return s;
 }
 
-static constexpr const char newline[] = "\n";
-
-NAMESPACE_END(str)
-NAMESPACE_END(util)
-NAMESPACE_END(readdy)
+}

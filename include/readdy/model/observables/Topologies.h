@@ -56,7 +56,7 @@ NAMESPACE_BEGIN(observables)
 
 class Topologies : public Observable<std::vector<top::TopologyRecord>> {
 public:
-    explicit Topologies(Kernel *kernel, stride_type stride);
+    explicit Topologies(Kernel *kernel, stride_type stride, bool useBlosc = true);
 
     ~Topologies() override;
 
@@ -73,6 +73,8 @@ protected:
     void initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) override;
 
     void append() override;
+
+    bool useBlosc;
 };
 
 NAMESPACE_END(observables)

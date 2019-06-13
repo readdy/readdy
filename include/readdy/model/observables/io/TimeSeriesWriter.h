@@ -57,9 +57,15 @@ NAMESPACE_BEGIN(observables)
 NAMESPACE_BEGIN(util)
 
 class TimeSeriesWriter {
+    auto getFilterConfig(bool blosc) {
+        h5rd::File::FilterConfiguration result;
+        if(blosc) result.push_back(&bloscFilter);
+        return result;
+    }
 public:
-    TimeSeriesWriter(h5rd::Group &group, unsigned int chunkSize, const std::string &dsName = "time")
-            : dataSet(group.createDataSet<time_step_type>(dsName, {chunkSize}, {h5rd::UNLIMITED_DIMS}, {&bloscFilter})) {}
+    TimeSeriesWriter(h5rd::Group &group, unsigned int chunkSize, const std::string &dsName = "time", bool useBlosc=true)
+            : dataSet(group.createDataSet<time_step_type>(dsName, {chunkSize}, {h5rd::UNLIMITED_DIMS},
+                    getFilterConfig(useBlosc))) {}
 
     ~TimeSeriesWriter() = default;
 

@@ -58,21 +58,21 @@ std::string PotentialRegistry::describe() const {
     };
     std::string description;
     if (!potentialsOrder1().empty()) {
-        description += fmt::format(" - potentials of order 1:{}", rus::newline);
+        description += fmt::format(" - potentials of order 1:\n");
         for (const auto &types : potentialsOrder1()) {
-            description += fmt::format("     * for type \"{}\"{}", find_pot_name(types.first), rus::newline);
+            description += fmt::format("     * for type \"{}\"\n", find_pot_name(types.first));
             for (auto pot : types.second) {
-                description += fmt::format("         * {}{}", pot->describe(), rus::newline);
+                description += fmt::format("         * {}\n", pot->describe());
             }
         }
     }
     if (!potentialsOrder2().empty()) {
-        description += fmt::format(" - potentials of order 2:{}", rus::newline);
+        description += fmt::format(" - potentials of order 2:\n");
         for (const auto &types : potentialsOrder2()) {
             description += fmt::format(R"(     * for types "{}" and "{}"{})", find_pot_name(std::get<0>(types.first)),
-                                       find_pot_name(std::get<1>(types.first)), rus::newline);
+                                       find_pot_name(std::get<1>(types.first)), "\n");
             for (auto pot : types.second) {
-                description += fmt::format("         * {}{}", pot->describe(), rus::newline);
+                description += fmt::format("         * {}\n", pot->describe());
             }
         }
     }

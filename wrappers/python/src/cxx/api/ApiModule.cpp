@@ -57,7 +57,6 @@ using kern = readdy::model::Kernel;
 void exportTopologies(py::module &);
 void exportLoopApi(py::module &module);
 void exportKernelContext(py::module &);
-void exportSimulationParams(py::module &);
 
 std::string getSelectedKernelType(sim &self) { /* discard const reference */ return self.selectedKernelType(); }
 
