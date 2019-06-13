@@ -171,7 +171,7 @@ py::tuple convert_readdy_viewer(const std::string &h5name, const std::string &tr
 void
 convert_xyz(const std::string &h5name, const std::string &trajName, const std::string &out, bool generateTcl = true,
             bool tclRuler = false,
-            const radiusmap &radii = {}) {
+            const radiusmap &radii = {}, const std::unordered_map<std::string, unsigned int> &colorIds = {}) {
     readdy::log::debug(R"(converting "{}" to "{}")", h5name, out);
 
     readdy::io::BloscFilter bloscFilter;
@@ -302,6 +302,13 @@ convert_xyz(const std::string &h5name, const std::string &trajName, const std::s
         }
 
         std::size_t i = 0;
+        std::unordered_set<unsigned int> predefinedColorIds;
+        {
+            predefinedColorIds.reserve(colorIds.size());
+            std::for_each(colorIds.begin(), colorIds.end(), [&predefinedColorIds](const auto &item) {
+                predefinedColorIds.emplace(std::get<1>(item));
+            });
+        }
         for (const auto &t : types) {
             auto radius = static_cast<readdy::scalar>(1.0);
             {
@@ -312,10 +319,23 @@ convert_xyz(const std::string &h5name, const std::string &trajName, const std::s
                     radius = it->second;
                 }
             }
+            std::size_t colorId = i;
+            {
+                auto it = colorIds.find(t.name);
+                if(it != colorIds.end()) {
+                    colorId = it->second;
+                } else {
+                    while(predefinedColorIds.find(colorId) != predefinedColorIds.end()) {
+                        ++colorId;
+                        ++i;
+                    }
+                }
+            }
             fs << "mol representation VDW " << std::to_string(radius * .7) << " 16.0" << std::endl;
             fs << "mol selection name type_" + std::to_string(t.type_id) << std::endl;
-            fs << "mol color ColorID " << (i++) << std::endl;
+            fs << "mol color ColorID " << colorId << std::endl;
             fs << "mol addrep top" << std::endl;
+            i++;
         }
         fs << "animate goto 0" << std::endl;
         fs << "color Display Background white" << std::endl;
@@ -671,7 +691,8 @@ void exportUtils(py::module &m) {
                 return repr(self);
             });
     m.def("convert_xyz", &convert_xyz, "h5_file_name"_a, "traj_data_set_name"_a, "xyz_out_file_name"_a,
-          "generate_tcl"_a = true, "tcl_with_grid"_a = false, "radii"_a = radiusmap{});
+          "generate_tcl"_a = true, "tcl_with_grid"_a = false, "radii"_a = radiusmap{},
+          "color_ids"_a = std::unordered_map<std::string, unsigned int>{});
     m.def("convert_readdyviewer", &convert_readdy_viewer, "h5_file_name"_a, "traj_data_set_name"_a,
           "begin"_a = 0, "end"_a = std::numeric_limits<int>::max(), "stride"_a = 1);
     m.def("read_trajectory", &read_trajectory, "filename"_a, "name"_a);

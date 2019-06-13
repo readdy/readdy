@@ -384,6 +384,8 @@ class Simulation(object):
             traj = Trajectory(filename)
             ckpt = traj.list_checkpoints()
 
+            print(f"GetLatestCheckpointFile: File {filename} checkpoints {ckpt}")
+
             latest_ckpt_step = 0
             for c in ckpt:
                 latest_ckpt_step = c['step'] if latest_step is None else (c['step'] if c['step'] > latest_step
@@ -391,9 +393,11 @@ class Simulation(object):
             if latest is None:
                 latest = (filename, ckpt)
                 latest_step = latest_ckpt_step
+                print(f"  -> got new latest {latest}")
             else:
                 if latest_ckpt_step > latest_step:
                     latest = (filename, ckpt)
+                    print(f"  -> got new latest {latest}")
         return latest[0]
 
     def load_particles_from_latest_checkpoint(self, directory_name):
