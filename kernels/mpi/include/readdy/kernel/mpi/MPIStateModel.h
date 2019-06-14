@@ -44,8 +44,7 @@
 #pragma once
 
 #include <readdy/model/StateModel.h>
-#include <readdy/kernel/singlecpu/model/SCPUParticleData.h>
-#include <readdy/kernel/singlecpu/model/SCPUNeighborList.h>
+#include <readdy/kernel/mpi/model/MPINeighborList.h>
 #include <readdy/kernel/singlecpu/model/ObservableData.h>
 #include <readdy/model/reactions/ReactionRecord.h>
 #include <readdy/common/signals.h>
@@ -206,7 +205,7 @@ private:
     std::reference_wrapper<const readdy::model::Context> _context;
     std::reference_wrapper<Data> _data;
     std::unique_ptr<NeighborList> _neighborList;
-    NeighborList::cell_radius_type _neighborListCellRadius {1};
+    NeighborList::CellRadius _neighborListCellRadius {1};
     std::unique_ptr<readdy::signals::scoped_connection> _reorderConnection;
 };
 
