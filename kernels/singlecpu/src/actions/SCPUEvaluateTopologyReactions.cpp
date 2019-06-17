@@ -87,7 +87,11 @@ void SCPUEvaluateTopologyReactions::perform() {
     auto &model = kernel->getSCPUKernelStateModel();
     const auto &context = kernel->context();
     auto &topologies = model.topologies();
-
+    
+    if(context.recordReactionCounts()) {
+        model.resetTopologyReactionCounts();
+    }
+    
     if (!topologies.empty()) {
 
         auto events = gatherEvents();

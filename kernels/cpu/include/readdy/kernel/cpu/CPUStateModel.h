@@ -207,6 +207,20 @@ public:
     }
 
     void resetReactionCounts();
+    
+    void resetTopologyReactionCounts() {
+        const auto &topologies = _context.get().topologyRegistry();
+        for (const auto &entry : topologies.spatialReactionRegistry()) {
+            for (const auto &sr : entry.second) {
+                _observableData.spatialReactionCounts[sr.id()] = 0;
+            }
+        }
+        for(const auto &type : topologies.types()) {
+            for(const auto &structuralReaction : type.structuralReactions) {
+                _observableData.structuralReactionCounts[structuralReaction.id()] = 0;
+            }
+        }
+    }
 
     particle_type getParticleForIndex(std::size_t index) const override {
         return _data.get().getParticle(index);

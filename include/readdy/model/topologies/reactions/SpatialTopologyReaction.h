@@ -72,8 +72,7 @@ public:
                             util::particle_type_pair types_to, topology_type_pair top_types_to, scalar rate,
                             scalar radius, STRMode mode)
             : _name(std::move(name)), _types(std::move(types)), _types_to(std::move(types_to)), _rate(rate),
-              _radius(radius), _mode(mode), _top_types(std::move(top_types)), _top_types_to(std::move(top_types_to)),
-              _id(counter++) {};
+              _radius(radius), _mode(mode), _top_types(std::move(top_types)), _top_types_to(std::move(top_types_to)) {};
 
     ~SpatialTopologyReaction() = default;
 
@@ -172,7 +171,7 @@ public:
 private:
 
     static ReactionId counter;
-    ReactionId _id;
+    ReactionId _id {counter++};
 
     friend class STRParser;
 

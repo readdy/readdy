@@ -133,3 +133,37 @@ def get_reactions(filename, dset_path="readdy/config/registered_reactions"):
             for r in reactions:
                 result[r["name"]] = np.copy(r)
     return result
+
+
+def get_spatial_topology_reactions(filename, dset_path="readdy/config/spatial_topology_reactions"):
+    """
+    Construct a dictionary where the keys are reaction ids and value is corresponding descriptor.
+
+    :param filename: the file name
+    :param dset_path: path to the dataset
+    :return: dictionary of reactions
+    """
+    result = dict()
+    with h5py.File(filename, "r") as f:
+        if dset_path in f:
+            spatial_reactions = f[dset_path]
+            for r in spatial_reactions:
+                result[r["id"]] = r["descriptor"]
+    return result
+
+
+def get_structural_topology_reactions(filename, dset_path="readdy/config/structural_topology_reactions"):
+    """
+    Construct a dictionary where the keys are reaction ids and value is corresponding name.
+
+    :param filename: the file name
+    :param dset_path: path to the dataset
+    :return: dictionary of reactions
+    """
+    result = dict()
+    with h5py.File(filename, "r") as f:
+        if dset_path in f:
+            spatial_reactions = f[dset_path]
+            for r in spatial_reactions:
+                result[r["id"]] = r["name"]
+    return result

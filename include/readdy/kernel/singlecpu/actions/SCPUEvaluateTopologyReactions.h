@@ -48,11 +48,7 @@
 #include <readdy/model/actions/Actions.h>
 #include <readdy/kernel/singlecpu/SCPUKernel.h>
 
-namespace readdy {
-namespace kernel {
-namespace scpu {
-namespace actions {
-namespace top {
+namespace readdy::kernel::scpu::actions::top {
 
 class SCPUEvaluateTopologyReactions : public readdy::model::actions::top::EvaluateTopologyReactions {
     using rate_t = readdy::model::top::GraphTopology::topology_reaction_rate;
@@ -84,8 +80,4 @@ private:
 
 };
 
-}
-}
-}
-}
 }

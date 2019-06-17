@@ -146,31 +146,6 @@ public:
     StructuralTopologyReaction(std::string name, reaction_function reaction_function, scalar rate);
 
     /**
-     * default copy
-     */
-    StructuralTopologyReaction(const StructuralTopologyReaction &) = default;
-
-    /**
-     * default copy assign
-     */
-    StructuralTopologyReaction &operator=(const StructuralTopologyReaction &) = default;
-
-    /**
-     * default move
-     */
-    StructuralTopologyReaction(StructuralTopologyReaction &&) = default;
-
-    /**
-     * default move assign
-     */
-    StructuralTopologyReaction &operator=(StructuralTopologyReaction &&) = default;
-
-    /**
-     * default destructor
-     */
-    ~StructuralTopologyReaction() = default;
-
-    /**
      * Evaluates the rate of this reaction for a given topology.
      * @param topology the topology
      * @return the rate

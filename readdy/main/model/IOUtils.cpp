@@ -143,24 +143,40 @@ void writeTopologyReactionInformation(h5rd::Group &group, const Context &context
     std::vector<SpatialTopologyReactionInfo> spatialInfos;
     std::vector<StructuralTopologyReactionInfo> structuralInfos;
 
+    std::vector<std::string> spatialInfoDescriptors;
+    std::vector<std::string> structuralInfoNames;
+
     for(const auto &[_, reactions] : context.topologyRegistry().spatialReactionRegistry()) {
         for(const auto &reaction : reactions) {
-            spatialInfos.push_back(SpatialTopologyReactionInfo{
-                    context.topologyRegistry().generateSpatialReactionRepresentation(reaction).c_str(), reaction.id()});
+            SpatialTopologyReactionInfo info{};
+            info.id = reaction.id();
+            info.descriptor = "";
+            spatialInfoDescriptors.push_back(context.topologyRegistry().generateSpatialReactionRepresentation(reaction));
+            spatialInfos.push_back(info);
         }
     }
 
     for(const auto &topologyType : context.topologyRegistry().types()) {
         for(const auto &sr : topologyType.structuralReactions) {
-            structuralInfos.push_back(StructuralTopologyReactionInfo{std::string(sr.name()).c_str(), sr.id()});
+            StructuralTopologyReactionInfo info{};
+            info.id = sr.id();
+            info.name = "";
+            structuralInfoNames.emplace_back(sr.name());
+            structuralInfos.push_back(info);
         }
+    }
+
+    for(auto i = 0U; i < spatialInfos.size(); ++i) {
+        spatialInfos[i].descriptor = spatialInfoDescriptors[i].c_str();
+    }
+    for(auto i = 0U; i < structuralInfos.size(); ++i) {
+        structuralInfos[i].name = structuralInfoNames[i].c_str();
     }
 
     if(!spatialInfos.empty()) {
         auto h5types = getSpatialTopologyReactionInfoType(group.parentFile());
         h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
         h5rd::dimensions extent = {spatialInfos.size()};
-        std::vector<h5rd::Filter*> filters;
         auto dset = group.createDataSet("spatial_topology_reactions", extent, dims,
                 std::get<0>(h5types), std::get<1>(h5types), {});
         dset->append(extent, spatialInfos.data());
@@ -169,7 +185,6 @@ void writeTopologyReactionInformation(h5rd::Group &group, const Context &context
         auto h5types = getStructuralTopologyReactionInfoType(group.parentFile());
         h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
         h5rd::dimensions extent = {structuralInfos.size()};
-        std::vector<h5rd::Filter*> filters;
         auto dset = group.createDataSet("structural_topology_reactions", extent, dims,
                 std::get<0>(h5types), std::get<1>(h5types), {});
         dset->append(extent, structuralInfos.data());

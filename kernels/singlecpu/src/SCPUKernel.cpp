@@ -39,9 +39,7 @@
 
 #include <readdy/kernel/singlecpu/SCPUKernel.h>
 
-namespace readdy {
-namespace kernel {
-namespace scpu {
+namespace readdy::kernel::scpu {
 const std::string SCPUKernel::name = "SingleCPU";
 
 SCPUKernel::SCPUKernel() : readdy::model::Kernel(name), _actionFactory(this), _topologyActionFactory(this),
@@ -67,11 +65,10 @@ void SCPUKernel::initialize() {
     }
     getSCPUKernelStateModel().reactionRecords().clear();
     getSCPUKernelStateModel().resetReactionCounts();
+    getSCPUKernelStateModel().resetTopologyReactionCounts();
     getSCPUKernelStateModel().virial() = Matrix33{{{0, 0, 0, 0, 0, 0, 0, 0, 0}}};
 }
 
-}
-}
 }
 
 

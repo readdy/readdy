@@ -40,6 +40,7 @@ Created on 26.09.17
 import shutil
 import tempfile
 import os
+import unittest
 
 import numpy as np
 
@@ -663,9 +664,12 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
 
             time, counts = traj.read_observable_reaction_counts()
             np.testing.assert_equal(len(time), 51)
-            np.testing.assert_equal(len(counts.keys()), 3)
-            for t, rr, counts_1, counts_2, counts_3 in zip(time, records, counts["myconversion"],
-                                                           counts["myfusion"], counts["myfission"]):
+
+            counts_reactions = counts["reactions"]
+
+            np.testing.assert_equal(len(counts_reactions.keys()), 3)
+            for t, rr, counts_1, counts_2, counts_3 in zip(time, records, counts_reactions["myconversion"],
+                                                           counts_reactions["myfusion"], counts_reactions["myfission"]):
                 convrecords = [r for r in rr if r.reaction_label == "myconversion"]
                 fusrecords = [r for r in rr if r.reaction_label == "myfusion"]
                 fissrecords = [r for r in rr if r.reaction_label == "myfission"]
@@ -701,3 +705,7 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
 
     def test_topologies_integration_scpu(self):
         self._run_topology_observable_integration_test_for("SingleCPU")
+
+
+if __name__ == '__main__':
+    unittest.main()

@@ -159,19 +159,6 @@ void SCPUStateModel::resetReactionCounts() {
             }
         }
     }
-    {
-        const auto &topologies = _context.get().topologyRegistry();
-        for (const auto &entry : topologies.spatialReactionRegistry()) {
-            for (const auto &sr : entry.second) {
-                _observableData.spatialReactionCounts[sr.id()] = 0;
-            }
-        }
-        for(const auto &type : topologies.types()) {
-            for(const auto &structuralReaction : type.structuralReactions) {
-                _observableData.structuralReactionCounts[structuralReaction.id()] = 0;
-            }
-        }
-    }
 }
 
 void SCPUStateModel::toDenseParticleIndices(std::vector<std::size_t>::iterator begin,
