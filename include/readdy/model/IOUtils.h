@@ -52,46 +52,64 @@
 
 #include <h5rd/h5rd.h>
 
-#include <readdy/common/macros.h>
+#include "../common/macros.h"
 #include "Context.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(ioutils)
+namespace readdy::model::ioutils {
 
 struct ReactionInfo {
-    const char* name {""};
+    const char *name{""};
     // std::size_t index {0}; // identify reaction in map of vectors, e.g. for reaction records
-    reactions::Reaction::ReactionId id {0}; // global unique reaction id
-    std::size_t n_educts {0};
-    std::size_t n_products {0};
-    scalar rate {0};
-    scalar educt_distance {0};
-    scalar product_distance {0};
-    std::array<ParticleTypeId, 2> educt_types {{0, 0}};
-    std::array<ParticleTypeId, 2> product_types {{0, 0}};
+    ReactionId id{0}; // global unique reaction id
+    std::size_t n_educts{0};
+    std::size_t n_products{0};
+    scalar rate{0};
+    scalar educt_distance{0};
+    scalar product_distance{0};
+    std::array<ParticleTypeId, 2> educt_types{{0, 0}};
+    std::array<ParticleTypeId, 2> product_types{{0, 0}};
 };
 struct ParticleTypeInfo {
-    const char* name;
+    const char *name;
     std::size_t type_id;
     scalar diffusion_constant;
-    const char* flavor;
+    const char *flavor;
 };
 struct TopologyTypeInfo {
-    const char* name;
+    const char *name;
     std::size_t type_id;
 };
+struct SpatialTopologyReactionInfo {
+    const char* descriptor;
+    std::size_t id;
+};
+struct StructuralTopologyReactionInfo {
+    const char* name;
+    std::size_t id;
+};
 
-std::tuple<h5rd::NativeCompoundType, h5rd::STDCompoundType> getReactionInfoMemoryType(h5rd::Object::ParentFileRef ref);
-std::tuple<h5rd::NativeCompoundType, h5rd::STDCompoundType> getParticleTypeInfoType(h5rd::Object::ParentFileRef ref);
-std::tuple<h5rd::NativeCompoundType, h5rd::STDCompoundType> getTopologyTypeInfoType(h5rd::Object::ParentFileRef ref);
+using CompoundType = std::tuple<h5rd::NativeCompoundType, h5rd::STDCompoundType>;
+
+CompoundType getReactionInfoMemoryType(h5rd::Object::ParentFileRef ref);
+
+CompoundType getParticleTypeInfoType(h5rd::Object::ParentFileRef ref);
+
+CompoundType getTopologyTypeInfoType(h5rd::Object::ParentFileRef ref);
+
+CompoundType getSpatialTopologyReactionInfoType(h5rd::Object::ParentFileRef ref);
+
+CompoundType getStructuralTopologyReactionInfoType(h5rd::Object::ParentFileRef ref);
 
 void writeGeneralContextInformation(h5rd::Group &group, const Context &context);
+
 void writeSimulationSetup(h5rd::Group &group, const Context &context);
+
 void writeReactionInformation(h5rd::Group &group, const Context &context);
+
 void writeParticleTypeInformation(h5rd::Group &group, const Context &context);
+
 void writeTopologyTypeInformation(h5rd::Group &group, const Context &context);
 
-NAMESPACE_END(ioutils)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+void writeTopologyReactionInformation(h5rd::Group &group, const Context &context);
+
+}

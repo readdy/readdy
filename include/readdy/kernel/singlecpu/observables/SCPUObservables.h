@@ -261,6 +261,8 @@ public:
 
     void evaluate() override {
         std::get<0>(result) = kernel->getSCPUKernelStateModel().reactionCounts();
+        std::get<1>(result) = kernel->getSCPUKernelStateModel().spatialReactionCounts();
+        std::get<2>(result) = kernel->getSCPUKernelStateModel().structuralReactionCounts();
     };
 
 private:

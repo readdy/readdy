@@ -74,8 +74,6 @@ inline std::ostream& operator<<(std::ostream& os, const ReactionType& reactionTy
 
 class Reaction {
 public:
-    using ReactionId = unsigned short;
-
     Reaction(std::string name, scalar rate, scalar eductDistance, scalar productDistance, std::uint8_t nEducts,
              std::uint8_t nProducts)
             : _name(std::move(name)), _id(counter++), _rate(rate), _eductDistance(eductDistance),

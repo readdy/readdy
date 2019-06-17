@@ -50,11 +50,7 @@
 #include <readdy/common/boundary_condition_operations.h>
 #include "Event.h"
 
-namespace readdy {
-namespace kernel {
-namespace cpu {
-namespace actions {
-namespace reactions {
+namespace readdy::kernel::cpu::actions::reactions {
 
 using data_t = data::EntryDataContainer;
 using cpu_kernel = readdy::kernel::cpu::CPUKernel;
@@ -62,7 +58,7 @@ using reaction_type = readdy::model::reactions::ReactionType;
 using ctx_t = std::remove_const<decltype(std::declval<cpu_kernel>().context())>::type;
 using event_t = Event;
 using record_t = readdy::model::reactions::ReactionRecord;
-using reaction_counts_map = CPUStateModel::reaction_counts_map;
+using reaction_counts_map = readdy::model::reactions::ReactionCounts;
 using neighbor_list = CPUStateModel::neighbor_list;
 
 template<bool approximated>
@@ -230,8 +226,4 @@ void performReaction(data_t* data, const readdy::model::Context& context, data_t
     }
 }
 
-}
-}
-}
-}
 }

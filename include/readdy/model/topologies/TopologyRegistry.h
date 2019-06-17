@@ -176,6 +176,28 @@ public:
         throw std::invalid_argument(fmt::format("The requested type \"{}\" did not exist.", name));
     }
 
+    std::string spatialDescriptorById(ReactionId id) const {
+        for(const auto &[_, reactions] : _spatialReactions) {
+            for(const auto & reaction : reactions) {
+                if(reaction.id() == id) {
+                    return generateSpatialReactionRepresentation(reaction);
+                }
+            }
+        }
+        throw std::invalid_argument(fmt::format("Could not find spatial reaction with id {}.", id));
+    }
+
+    std::string_view structuralNameById(ReactionId id) const {
+        for(const auto &type : _registry) {
+            for(const auto &structuralReaction : type.structuralReactions) {
+                if(structuralReaction.id() == id) {
+                    return structuralReaction.name();
+                }
+            }
+        }
+        throw std::invalid_argument(fmt::format("Could not find structural reaction with id {}.", id));
+    }
+
     bool empty() {
         return _registry.empty();
     }

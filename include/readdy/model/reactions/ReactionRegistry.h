@@ -63,8 +63,6 @@ NAMESPACE_BEGIN(reactions)
 
 class ReactionRegistry {
 public:
-    using ReactionId = Reaction::ReactionId;
-
     using ReactionsCollection = std::vector<Reaction *>;
     using ReactionsO1Map = std::unordered_map<ParticleTypeId, ReactionsCollection>;
     using ReactionsO2Map = util::particle_type_pair_unordered_map<ReactionsCollection>;
@@ -285,7 +283,7 @@ private:
 
     bool reactionNameExists(const std::string &name) const;
 
-    ReactionRegistry::ReactionId emplaceReaction(const std::shared_ptr<Reaction> &reaction);
+    ReactionId emplaceReaction(const std::shared_ptr<Reaction> &reaction);
 
     std::size_t _n_order1{0};
     std::size_t _n_order2{0};

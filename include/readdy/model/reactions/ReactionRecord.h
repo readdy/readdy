@@ -60,7 +60,7 @@ struct ReactionRecord {
     /**
      * unique reaction id
      */
-    readdy::model::reactions::Reaction::ReactionId id{0};
+    ReactionId id{0};
 
     friend std::ostream &operator<<(std::ostream &os, const ReactionRecord &record) {
         auto reactionType = ReactionType(record.type);
@@ -95,8 +95,8 @@ struct ReactionRecord {
     };
 };
 
-using ReactionCounts = std::unordered_map<reactions::Reaction::ReactionId, std::size_t>;
-using SpatialTopologyReactionCounts = std::unordered_map<std::string, std::size_t>;
-using StructuralTopologyReactionCounts = std::unordered_map<std::string, std::size_t>;
+using ReactionCounts = std::unordered_map<ReactionId, std::size_t>;
+using SpatialTopologyReactionCounts = std::unordered_map<ReactionId, std::size_t>;
+using StructuralTopologyReactionCounts = std::unordered_map<ReactionId, std::size_t>;
 
 }

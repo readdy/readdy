@@ -53,10 +53,12 @@
 
 namespace readdy::model::top::reactions {
 
+ReactionId StructuralTopologyReaction::counter = 0;
+
 StructuralTopologyReaction::StructuralTopologyReaction(std::string name, reaction_function reaction_function,
         rate_function rate_function)
-        : _reaction_function(std::move(reaction_function))
-        , _rate_function(std::move(rate_function)), _name(std::move(name)) { }
+        : _reaction_function(std::move(reaction_function)), _rate_function(std::move(rate_function)),
+          _name(std::move(name)), _id(counter++) { }
 
 
 StructuralTopologyReaction::StructuralTopologyReaction(std::string name,  reaction_function reaction_function,

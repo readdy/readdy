@@ -62,7 +62,7 @@ namespace reactions {
 
 const ReactionRegistry::ReactionsCollection ReactionRegistry::DEFAULT_REACTIONS = {};
 
-ReactionRegistry::ReactionId ReactionRegistry::emplaceReaction(const std::shared_ptr<Reaction> &reaction) {
+ReactionId ReactionRegistry::emplaceReaction(const std::shared_ptr<Reaction> &reaction) {
     if (reactionNameExists(reaction->name())) {
         throw std::invalid_argument(fmt::format("A reaction with the name {} exists already", reaction->name()));
     }
@@ -154,7 +154,7 @@ std::string ReactionRegistry::describe() const {
     return description;
 }
 
-ReactionRegistry::ReactionId ReactionRegistry::add(const std::string &descriptor, scalar rate) {
+ReactionId ReactionRegistry::add(const std::string &descriptor, scalar rate) {
     namespace mutil = readdy::model::util;
     namespace rutil = readdy::util;
     log::trace("begin parsing \"{}\"", descriptor);
@@ -300,10 +300,10 @@ ReactionRegistry::ReactionId ReactionRegistry::add(const std::string &descriptor
 
 namespace {
 struct FindId {
-    explicit FindId(std::string name, Reaction::ReactionId &id) : name(std::move(name)), id(id) {}
+    explicit FindId(std::string name, ReactionId &id) : name(std::move(name)), id(id) {}
 
     std::string name {""};
-    std::reference_wrapper<Reaction::ReactionId> id;
+    std::reference_wrapper<ReactionId> id;
     std::shared_ptr<bool> found = std::make_shared<bool>(false);
 
     template<typename T>
@@ -316,9 +316,9 @@ struct FindId {
 };
 
 struct FindName {
-    explicit FindName(Reaction::ReactionId id, std::string &name) : id(id), name(name) {}
+    explicit FindName(ReactionId id, std::string &name) : id(id), name(name) {}
 
-    Reaction::ReactionId id {0};
+    ReactionId id {0};
     std::reference_wrapper<std::string> name;
     std::shared_ptr<bool> found = std::make_shared<bool>(false);
 
@@ -332,7 +332,7 @@ struct FindName {
 };
 
 struct FindReactionById {
-    explicit FindReactionById(Reaction::ReactionId id) : id(id) {}
+    explicit FindReactionById(ReactionId id) : id(id) {}
 
     bool found() const {
         return _found;
@@ -368,21 +368,21 @@ private:
         reaction = r2.get();
     }
 
-    const Reaction::ReactionId id;
+    const ReactionId id;
     const Reaction* reaction = nullptr;
     bool _found = false;
 };
 }
 
 bool ReactionRegistry::reactionNameExists(const std::string &name) const {
-    Reaction::ReactionId id;
+    ReactionId id;
     FindId findId(name, id);
     readdy::util::collections::for_each_value_ref(_ownO1Reactions, findId);
     readdy::util::collections::for_each_value_ref(_ownO2Reactions, findId);
     return *(findId.found);
 }
 
-std::string ReactionRegistry::nameOf(ReactionRegistry::ReactionId id) const {
+std::string ReactionRegistry::nameOf(ReactionId id) const {
     std::string name;
     FindName findName(id, name);
     readdy::util::collections::for_each_value_ref(_ownO1Reactions, findName);
@@ -394,8 +394,8 @@ std::string ReactionRegistry::nameOf(ReactionRegistry::ReactionId id) const {
     }
 }
 
-ReactionRegistry::ReactionId ReactionRegistry::idOf(const std::string &name) const {
-    Reaction::ReactionId id;
+ReactionId ReactionRegistry::idOf(const std::string &name) const {
+    ReactionId id;
     FindId findId(name, id);
     readdy::util::collections::for_each_value_ref(_ownO1Reactions, findId);
     readdy::util::collections::for_each_value_ref(_ownO2Reactions, findId);
@@ -406,7 +406,7 @@ ReactionRegistry::ReactionId ReactionRegistry::idOf(const std::string &name) con
     }
 }
 
-const Reaction* ReactionRegistry::byId(ReactionRegistry::ReactionId id) const {
+const Reaction* ReactionRegistry::byId(ReactionId id) const {
     FindReactionById findReaction(id);
     readdy::util::collections::for_each_value_ref(_ownO1Reactions, findReaction);
     readdy::util::collections::for_each_value_ref(_ownO2Reactions, findReaction);

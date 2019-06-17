@@ -63,6 +63,7 @@ using Vec3 = _internal::ReaDDyVec3<scalar>;
 using Matrix33 = _internal::ReaDDyMatrix33<scalar>;
 using time_step_type = unsigned long;
 using ParticleTypeId = unsigned short;
+using ReactionId = unsigned short;
 // signed short as sometimes it is needed to have a "blank" topology type (corresponding to -1)
 using TopologyTypeId = short;
 constexpr TopologyTypeId EmptyTopologyId = static_cast<TopologyTypeId>(-1);

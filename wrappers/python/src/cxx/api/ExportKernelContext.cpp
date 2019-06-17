@@ -64,15 +64,15 @@ void exportKernelContext(py::module &module) {
 
     py::class_<ReactionRegistry>(module, "ReactionRegistry")
             .def("add", &ReactionRegistry::add)
-            .def("add_conversion", (ReactionRegistry::ReactionId(ReactionRegistry::*)(
+            .def("add_conversion", (readdy::ReactionId(ReactionRegistry::*)(
     const std::string &, const std::string &, const std::string &, scalar)) &ReactionRegistry::addConversion)
-    .def("add_enzymatic", (ReactionRegistry::ReactionId(ReactionRegistry::*)(
+    .def("add_enzymatic", (readdy::ReactionId(ReactionRegistry::*)(
     const std::string &, const std::string &, const std::string &, const std::string &, scalar, scalar)) &ReactionRegistry::addEnzymatic)
-    .def("add_fission", (ReactionRegistry::ReactionId(ReactionRegistry::*)(
+    .def("add_fission", (readdy::ReactionId(ReactionRegistry::*)(
     const std::string &, const std::string &, const std::string &, const std::string &, scalar, scalar, scalar, scalar)) &ReactionRegistry::addFission)
-    .def("add_fusion", (ReactionRegistry::ReactionId(ReactionRegistry::*)(
+    .def("add_fusion", (readdy::ReactionId(ReactionRegistry::*)(
     const std::string &, const std::string &, const std::string &, const std::string &, scalar, scalar, scalar, scalar)) &ReactionRegistry::addFusion)
-    .def("add_decay", (ReactionRegistry::ReactionId(ReactionRegistry::*)(
+    .def("add_decay", (readdy::ReactionId(ReactionRegistry::*)(
     const std::string &, const std::string &, scalar)) &ReactionRegistry::addDecay);
 
     py::class_<ParticleTypeRegistry>(module, "ParticleTypeRegistry")

@@ -256,6 +256,10 @@ public:
         return _name;
     }
 
+    ReactionId id() const {
+        return _id;
+    }
+
     /**
      * Executes the topology reaction on a topology and a kernel, possibly returns child topologies.
      * @param topology the topology
@@ -265,6 +269,10 @@ public:
     std::vector<GraphTopology> execute(GraphTopology &topology, const Kernel *kernel) const;
 
 private:
+
+    static ReactionId counter;
+    ReactionId _id;
+
     /**
      * the reaction function responsible of generating the reaction recipe out of a topology
      */
@@ -281,6 +289,8 @@ private:
      * name of this reaction, has to be unique
      */
     std::string _name;
+
+
 };
 
 }

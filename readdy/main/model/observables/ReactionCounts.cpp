@@ -52,9 +52,9 @@
 namespace readdy::model::observables {
 
 using data_set = h5rd::DataSet;
-using ReactionsDataSets = std::unordered_map<reactions::Reaction::ReactionId, std::unique_ptr<data_set>>;
-using SpatialReactionsDataSets = std::unordered_map<std::string, std::unique_ptr<data_set>>;
-using StructuralReactionsDataSets = std::unordered_map<std::string, std::unique_ptr<data_set>>;
+using ReactionsDataSets = std::unordered_map<ReactionId, std::unique_ptr<data_set>>;
+using SpatialReactionsDataSets = std::unordered_map<ReactionId, std::unique_ptr<data_set>>;
+using StructuralReactionsDataSets = std::unordered_map<ReactionId, std::unique_ptr<data_set>>;
 
 struct ReactionCounts::Impl {
     std::unique_ptr<h5rd::Group> group;
@@ -80,12 +80,7 @@ void ReactionCounts::flush() {
 }
 
 void ReactionCounts::initialize(Kernel *const kernel) {
-    // fixme why is this warning here? e.g. virial silently sets its corresponding flag in context
-    if (!kernel->context().recordReactionCounts()) {
-        log::warn("The \"ReactionCounts\"-observable set context.recordReactionCounts() to true. "
-                          "If this is undesired, the observable should not be registered.");
-        kernel->context().recordReactionCounts() = true;
-    }
+    kernel->context().recordReactionCounts() = true;
 }
 
 void ReactionCounts::initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) {
@@ -127,15 +122,34 @@ void ReactionCounts::append() {
                 for (const auto &spatialReaction : entry.second) {
                     h5rd::dimensions chunkSize = {pimpl->flushStride};
                     h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
-                    auto dset = spatialSubgroup.createDataSet<std::size_t>(std::string(spatialReaction.name()),
+                    auto dset = spatialSubgroup.createDataSet<std::size_t>(std::to_string(spatialReaction.id()),
                             chunkSize, dims, {&pimpl->bloscFilter});
+                    pimpl->spatialReactionsDataSets[spatialReaction.id()] = std::move(dset);
+                }
+            }
+        }
+        {
+            const auto &topologyRegistry = kernel->context().topologyRegistry();
+            auto structuralSubgroup = pimpl->group->createGroup("structuralCounts");
+            for (const auto &entry : topologyRegistry.types()) {
+                for (const auto &structuralReaction : entry.structuralReactions) {
+                    h5rd::dimensions chunkSize = {pimpl->flushStride};
+                    h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
+                    auto dset = structuralSubgroup.createDataSet<std::size_t>(std::to_string(structuralReaction.id()),
+                                                                           chunkSize, dims, {&pimpl->bloscFilter});
+                    pimpl->structuralReactionsDataSets[structuralReaction.id()] = std::move(dset);
                 }
             }
         }
     }
-    for (const auto &reactionEntry : reactionCounts) {
-        auto copy = reactionEntry.second;
-        pimpl->dataSets.at(reactionEntry.first)->append({1}, &copy);
+    for (const auto [id, count] : reactionCounts) {
+        pimpl->dataSets.at(id)->append({1}, &count);
+    }
+    for(const auto [id, count] : spatialReactionCounts) {
+        pimpl->spatialReactionsDataSets.at(id)->append({1}, &count);
+    }
+    for(const auto [id, count] : structuralReactionCounts) {
+        pimpl->structuralReactionsDataSets.at(id)->append({1}, &count);
     }
     pimpl->time->append(t_current);
 }

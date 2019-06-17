@@ -48,20 +48,16 @@
 #include <readdy/model/reactions/ReactionRecord.h>
 #include <readdy/common/common.h>
 
-namespace readdy {
-namespace kernel {
-namespace cpu {
-namespace data {
+namespace readdy::kernel::cpu::data {
 
 struct ObservableData {
     std::vector<readdy::model::reactions::ReactionRecord> reactionRecords;
     readdy::model::reactions::ReactionCounts reactionCounts;
+    readdy::model::reactions::SpatialTopologyReactionCounts spatialReactionCounts {};
+    readdy::model::reactions::StructuralTopologyReactionCounts structuralReactionCounts {};
     scalar energy = 0;
     scalar time = 0;
     Matrix33 virial;
 };
 
-}
-}
-}
 }

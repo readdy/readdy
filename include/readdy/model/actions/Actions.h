@@ -165,8 +165,7 @@ protected:
     std::vector<std::shared_ptr<const ReversibleReactionConfig>> _reversibleReactionsContainer;
     // the map provides a view on the container for quick runtime lookup,
     // usually two (unidirectional) reaction ids point to the same ReversibleReactionConfig
-    std::unordered_map<model::reactions::Reaction::ReactionId, std::shared_ptr<const ReversibleReactionConfig>>
-            _reversibleReactionsMap;
+    std::unordered_map<ReactionId, std::shared_ptr<const ReversibleReactionConfig>> _reversibleReactionsMap;
 };
 
 NAMESPACE_END(reactions)

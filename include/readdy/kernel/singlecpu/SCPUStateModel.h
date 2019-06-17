@@ -165,6 +165,22 @@ public:
         return _observableData.reactionCounts;
     }
 
+    const readdy::model::reactions::SpatialTopologyReactionCounts &spatialReactionCounts() const {
+        return _observableData.spatialReactionCounts;
+    }
+
+    readdy::model::reactions::SpatialTopologyReactionCounts &spatialReactionCounts() {
+        return _observableData.spatialReactionCounts;
+    }
+
+    const readdy::model::reactions::StructuralTopologyReactionCounts &structuralReactionCounts() const {
+        return _observableData.structuralReactionCounts;
+    }
+
+    readdy::model::reactions::StructuralTopologyReactionCounts &structuralReactionCounts() {
+        return _observableData.structuralReactionCounts;
+    }
+
     Matrix33 &virial() {
         return _observableData.virial;
     }

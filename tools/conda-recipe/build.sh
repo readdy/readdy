@@ -64,7 +64,7 @@ err_code=0
 ret_code=0
 
 echo "calling c++ core unit tests"
-CONDA_ENV_PATH=${PREFIX} bin/runUnitTests --success
+CONDA_ENV_PATH=${PREFIX} bin/runUnitTests --durations
 err_code=$?
 if [ ${err_code} -ne 0 ]; then
     ret_code=${err_code}
@@ -72,7 +72,7 @@ if [ ${err_code} -ne 0 ]; then
 fi
 
 echo "calling c++ integration tests"
-CONDA_ENV_PATH=${PREFIX} bin/runUnitTests --success [integration]
+CONDA_ENV_PATH=${PREFIX} bin/runUnitTests --durations [integration]
 err_code=$?
 if [ ${err_code} -ne 0 ]; then
     ret_code=${err_code}
@@ -80,7 +80,7 @@ if [ ${err_code} -ne 0 ]; then
 fi
 
 echo "calling c++ singlecpu unit tests"
-CONDA_ENV_PATH=${PREFIX} bin/runUnitTests_singlecpu --success
+CONDA_ENV_PATH=${PREFIX} bin/runUnitTests_singlecpu --durations
 err_code=$?
 if [ ${err_code} -ne 0 ]; then
     ret_code=${err_code}
@@ -88,7 +88,7 @@ if [ ${err_code} -ne 0 ]; then
 fi
 
 echo "calling c++ cpu unit tests"
-CONDA_ENV_PATH=${PREFIX} bin/runUnitTests_cpu --success
+CONDA_ENV_PATH=${PREFIX} bin/runUnitTests_cpu --durations
 err_code=$?
 if [ ${err_code} -ne 0 ]; then
     ret_code=${err_code}

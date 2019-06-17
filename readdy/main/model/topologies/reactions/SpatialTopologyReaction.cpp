@@ -49,10 +49,9 @@
 #include <readdy/model/topologies/TopologyRegistry.h>
 #include <readdy/model/Utils.h>
 
-namespace readdy {
-namespace model {
-namespace top {
-namespace reactions {
+namespace readdy::model::top::reactions {
+
+ReactionId SpatialTopologyReaction::counter = 0;
 
 SpatialTopologyReaction STRParser::parse(const std::string &descriptor, scalar rate, scalar radius) const {
     namespace mutil = readdy::model::util;
@@ -203,7 +202,4 @@ SpatialTopologyReaction STRParser::parse(const std::string &descriptor, scalar r
     return reaction;
 }
 
-}
-}
-}
 }

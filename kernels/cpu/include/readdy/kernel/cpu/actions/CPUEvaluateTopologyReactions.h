@@ -49,11 +49,7 @@
 #include <readdy/model/actions/Actions.h>
 #include "../CPUKernel.h"
 
-namespace readdy {
-namespace kernel {
-namespace cpu {
-namespace actions {
-namespace top {
+namespace readdy::kernel::cpu::actions::top {
 
 class CPUEvaluateTopologyReactions : public readdy::model::actions::top::EvaluateTopologyReactions {
     using rate_t = readdy::model::top::GraphTopology::topology_reaction_rate;
@@ -86,8 +82,4 @@ private:
 };
 
 
-}
-}
-}
-}
 }

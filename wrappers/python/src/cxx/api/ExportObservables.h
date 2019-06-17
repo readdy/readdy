@@ -108,13 +108,22 @@ inline obs_handle_t registerObservable_ReactionCounts(sim &self, unsigned int st
             const auto& countsStructural = std::get<2>(result);
 
             std::unordered_map<std::string, std::size_t> converted;
-            std::unordered_map<std::string, std::size_t> convertedSpatial {countsSpatial};
-            std::unordered_map<std::string, std::size_t> convertedStructural {countsStructural};
+            std::unordered_map<std::string, std::size_t> convertedSpatial;
+            std::unordered_map<std::string, std::size_t> convertedStructural;
 
             const auto &reactionRegistry = self.context().reactions();
             for(const auto &e : counts) {
                 converted[reactionRegistry.nameOf(e.first)] = e.second;
             }
+
+            const auto &topologyRegistry = self.context().topologyRegistry();
+            for(const auto &[id, count] : countsSpatial) {
+                convertedSpatial[topologyRegistry.spatialDescriptorById(id)] = count;
+            }
+            for(const auto &[id, count] : countsStructural) {
+                convertedStructural[std::string(topologyRegistry.structuralNameById(id))] = count;
+            }
+
             callback(std::make_tuple(converted, convertedSpatial, convertedStructural));
         };
         return self.registerObservable(std::move(obs), internalCallback);
