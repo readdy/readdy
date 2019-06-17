@@ -85,7 +85,7 @@ public:
 
     SpatialTopologyReaction &operator=(SpatialTopologyReaction &&) = default;
 
-    const std::string &name() const {
+    std::string_view name() const {
         return _name;
     }
 

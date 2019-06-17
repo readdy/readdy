@@ -100,14 +100,22 @@ inline obs_handle_t registerObservable_ReactionCounts(sim &self, unsigned int st
     if (callback.is_none()) {
         return self.registerObservable(std::move(obs));
     } else {
-        auto internalCallback = [&self, callback](const readdy::model::observables::ReactionCounts::result_type &counts) mutable {
+        auto internalCallback = [&self, callback](const readdy::model::observables::ReactionCounts::result_type &result) mutable {
             py::gil_scoped_acquire gil;
+
+            const auto& counts = std::get<0>(result);
+            const auto& countsSpatial = std::get<1>(result);
+            const auto& countsStructural = std::get<2>(result);
+
             std::unordered_map<std::string, std::size_t> converted;
+            std::unordered_map<std::string, std::size_t> convertedSpatial {countsSpatial};
+            std::unordered_map<std::string, std::size_t> convertedStructural {countsStructural};
+
             const auto &reactionRegistry = self.context().reactions();
             for(const auto &e : counts) {
                 converted[reactionRegistry.nameOf(e.first)] = e.second;
             }
-            callback(converted);
+            callback(std::make_tuple(converted, convertedSpatial, convertedStructural));
         };
         return self.registerObservable(std::move(obs), internalCallback);
     }

@@ -387,12 +387,13 @@ TEMPLATE_TEST_CASE("Detailed balance integration tests.", "[detailed-balance]", 
 
             auto countsObs = kernel->observe().reactionCounts(1);
             countsObs->callback() = [&idForward, &idBackward](const readdy::model::observables::ReactionCounts::result_type &result) {
-                if (result.empty()) {
+                const auto& counts = std::get<0>(result);
+                if (counts.empty()) {
                     readdy::log::trace("reaction counts is empty, no reaction handler ran so far, skip test");
                     return;
                 }
-                REQUIRE(result.at(idBackward) == 0);
-                REQUIRE(result.at(idForward) == 0);
+                REQUIRE(counts.at(idBackward) == 0);
+                REQUIRE(counts.at(idForward) == 0);
             };
             auto countsConnection = kernel->connectObservable(countsObs.get());
 
@@ -429,12 +430,13 @@ TEMPLATE_TEST_CASE("Detailed balance integration tests.", "[detailed-balance]", 
 
             auto countsObs = kernel->observe().reactionCounts(1);
             countsObs->callback() = [&idForward, &idBackward](const readdy::model::observables::ReactionCounts::result_type &result) {
-                if (result.empty()) {
+                const auto& counts = std::get<0>(result);
+                if (counts.empty()) {
                     readdy::log::trace("reaction counts is empty, no reaction handler ran so far, skip test");
                     return;
                 }
-                REQUIRE(result.at(idBackward) == 0);
-                REQUIRE(result.at(idForward) == 1);
+                REQUIRE(counts.at(idBackward) == 0);
+                REQUIRE(counts.at(idForward) == 1);
             };
             auto countsConnection = kernel->connectObservable(countsObs.get());
 
@@ -475,12 +477,13 @@ TEMPLATE_TEST_CASE("Detailed balance integration tests.", "[detailed-balance]", 
 
             auto countsObs = kernel->observe().reactionCounts(1);
             countsObs->callback() = [&idfus, &idfis](const readdy::model::observables::ReactionCounts::result_type &result) {
-                if (result.empty()) {
+                const auto& counts = std::get<0>(result);
+                if (counts.empty()) {
                     readdy::log::trace("reaction counts is empty, no reaction handler ran so far, skip test");
                     return;
                 }
-                REQUIRE(result.at(idfus) == 1); // fusion must occur
-                REQUIRE(result.at(idfis) == 0); // fission shall not occur
+                REQUIRE(counts.at(idfus) == 1); // fusion must occur
+                REQUIRE(counts.at(idfis) == 0); // fission shall not occur
             };
             auto countsConnection = kernel->connectObservable(countsObs.get());
 
@@ -522,14 +525,15 @@ TEMPLATE_TEST_CASE("Detailed balance integration tests.", "[detailed-balance]", 
 
             auto countsObs = kernel->observe().reactionCounts(1);
             countsObs->callback() = [&idfus, &idfis](const readdy::model::observables::ReactionCounts::result_type &result) {
-                if (result.empty()) {
+                const auto& counts = std::get<0>(result);
+                if (counts.empty()) {
                     readdy::log::trace("reaction counts is empty, no reaction handler ran so far, skip test");
                     return;
                 }
                 // fusion shall not occur
-                REQUIRE(result.at(idfus) == 0);
+                REQUIRE(counts.at(idfus) == 0);
                 // fission shall not occur
-                REQUIRE(result.at(idfis) == 0);
+                REQUIRE(counts.at(idfis) == 0);
             };
             auto countsConnection = kernel->connectObservable(countsObs.get());
 
@@ -578,12 +582,13 @@ TEMPLATE_TEST_CASE("Detailed balance integration tests.", "[detailed-balance]", 
 
             auto countsObs = kernel->observe().reactionCounts(1);
             countsObs->callback() = [&idfus, &idfis](const readdy::model::observables::ReactionCounts::result_type &result) {
-                if (result.empty()) {
+                const auto& counts = std::get<0>(result);
+                if (counts.empty()) {
                     readdy::log::trace("reaction counts is empty, no reaction handler ran so far, skip test");
                     return;
                 }
-                REQUIRE(result.at(idfis) == 1); // fission must occur
-                REQUIRE(result.at(idfus) == 0); // fusion shall not occur
+                REQUIRE(counts.at(idfis) == 1); // fission must occur
+                REQUIRE(counts.at(idfus) == 0); // fusion shall not occur
             };
             auto countsConnection = kernel->connectObservable(countsObs.get());
 
@@ -624,12 +629,13 @@ TEMPLATE_TEST_CASE("Detailed balance integration tests.", "[detailed-balance]", 
 
             auto countsObs = kernel->observe().reactionCounts(1);
             countsObs->callback() = [&idfus, &idfis](const readdy::model::observables::ReactionCounts::result_type &result) {
-                if (result.empty()) {
+                const auto& counts = std::get<0>(result);
+                if (counts.empty()) {
                     readdy::log::trace("reaction counts is empty, no reaction handler ran so far, skip test");
                     return;
                 }
-                REQUIRE(result.at(idfis) == 0); // fission shall not occur
-                REQUIRE(result.at(idfus) == 0); // fusion shall not occur
+                REQUIRE(counts.at(idfis) == 0); // fission shall not occur
+                REQUIRE(counts.at(idfus) == 0); // fusion shall not occur
             };
             auto countsConnection = kernel->connectObservable(countsObs.get());
 
@@ -673,12 +679,13 @@ TEMPLATE_TEST_CASE("Detailed balance integration tests.", "[detailed-balance]", 
 
             auto countsObs = kernel->observe().reactionCounts(1);
             countsObs->callback() = [&idForward, &idBackward](const readdy::model::observables::ReactionCounts::result_type &result) {
-                if (result.empty()) {
+                const auto& counts = std::get<0>(result);
+                if (counts.empty()) {
                     readdy::log::trace("reaction counts is empty, no reaction handler ran so far, skip test");
                     return;
                 }
-                REQUIRE(result.at(idBackward) == 0);
-                REQUIRE(result.at(idForward) == 1);
+                REQUIRE(counts.at(idBackward) == 0);
+                REQUIRE(counts.at(idForward) == 1);
             };
             auto countsConnection = kernel->connectObservable(countsObs.get());
 
@@ -717,12 +724,13 @@ TEMPLATE_TEST_CASE("Detailed balance integration tests.", "[detailed-balance]", 
 
             auto countsObs = kernel->observe().reactionCounts(1);
             countsObs->callback() = [&idForward, &idBackward](const readdy::model::observables::ReactionCounts::result_type &result) {
-                if (result.empty()) {
+                const auto& counts = std::get<0>(result);
+                if (counts.empty()) {
                     readdy::log::trace("reaction counts is empty, no reaction handler ran so far, skip test");
                     return;
                 }
-                REQUIRE(result.at(idBackward) == 0);
-                REQUIRE(result.at(idForward) == 0);
+                REQUIRE(counts.at(idBackward) == 0);
+                REQUIRE(counts.at(idForward) == 0);
             };
             auto countsConnection = kernel->connectObservable(countsObs.get());
 

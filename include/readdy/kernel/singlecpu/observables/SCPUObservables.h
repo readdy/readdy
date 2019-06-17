@@ -260,7 +260,7 @@ public:
     ~SCPUReactionCounts() override = default;
 
     void evaluate() override {
-        result = kernel->getSCPUKernelStateModel().reactionCounts();
+        std::get<0>(result) = kernel->getSCPUKernelStateModel().reactionCounts();
     };
 
 private:

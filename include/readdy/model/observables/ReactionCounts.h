@@ -54,7 +54,9 @@
 
 namespace readdy::model::observables {
 
-class ReactionCounts : public Observable<reactions::ReactionCountsMap> {
+class ReactionCounts : public Observable<std::tuple<reactions::ReactionCounts, 
+                                                    reactions::SpatialTopologyReactionCounts, 
+                                                    reactions::StructuralTopologyReactionCounts>> {
 public:
     using reaction_counts_map = result_type;
 

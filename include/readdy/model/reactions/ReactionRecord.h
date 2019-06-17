@@ -95,6 +95,8 @@ struct ReactionRecord {
     };
 };
 
-using ReactionCountsMap = std::unordered_map<reactions::Reaction::ReactionId, std::size_t>;
+using ReactionCounts = std::unordered_map<reactions::Reaction::ReactionId, std::size_t>;
+using SpatialTopologyReactionCounts = std::unordered_map<std::string, std::size_t>;
+using StructuralTopologyReactionCounts = std::unordered_map<std::string, std::size_t>;
 
 }

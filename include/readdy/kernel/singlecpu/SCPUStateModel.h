@@ -60,7 +60,7 @@ namespace scpu {
 class SCPUStateModel : public readdy::model::StateModel {
     using topology_action_factory = readdy::model::top::TopologyActionFactory;
 public:
-    using reaction_counts_map = readdy::model::reactions::ReactionCountsMap;
+    using reaction_counts_map = readdy::model::reactions::ReactionCounts;
     using topology = readdy::model::top::GraphTopology;
     using topology_ref = std::unique_ptr<topology>;
     using topologies_vec = readdy::util::index_persistent_vector<topology_ref>;

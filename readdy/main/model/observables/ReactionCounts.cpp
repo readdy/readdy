@@ -52,11 +52,15 @@
 namespace readdy::model::observables {
 
 using data_set = h5rd::DataSet;
-using data_set_map = std::unordered_map<reactions::Reaction::ReactionId, std::unique_ptr<data_set>>;
+using ReactionsDataSets = std::unordered_map<reactions::Reaction::ReactionId, std::unique_ptr<data_set>>;
+using SpatialReactionsDataSets = std::unordered_map<std::string, std::unique_ptr<data_set>>;
+using StructuralReactionsDataSets = std::unordered_map<std::string, std::unique_ptr<data_set>>;
 
 struct ReactionCounts::Impl {
     std::unique_ptr<h5rd::Group> group;
-    data_set_map dataSets;
+    ReactionsDataSets dataSets;
+    SpatialReactionsDataSets spatialReactionsDataSets;
+    StructuralReactionsDataSets structuralReactionsDataSets;
     std::unique_ptr<util::TimeSeriesWriter> time;
     unsigned int flushStride = 0;
     bool firstWrite = true;
@@ -93,26 +97,43 @@ void ReactionCounts::initializeDataSet(File &file, const std::string &dataSetNam
 }
 
 void ReactionCounts::append() {
+    const auto &[reactionCounts, spatialReactionCounts, structuralReactionCounts] = result;
+
     if (pimpl->firstWrite) {
         pimpl->firstWrite = false;
-        const auto &reactionRegistry = kernel->context().reactions();
-        auto subgroup = pimpl->group->createGroup("counts");
-        for (const auto &reaction : reactionRegistry.order1Flat()) {
-            h5rd::dimensions chunkSize = {pimpl->flushStride};
-            h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
-            auto dset = subgroup.createDataSet<std::size_t>(std::to_string(reaction->id()), chunkSize, dims,
-                                                                 {&pimpl->bloscFilter});
-            pimpl->dataSets[reaction->id()] = std::move(dset);
+
+        {
+            const auto &reactionRegistry = kernel->context().reactions();
+            auto subgroup = pimpl->group->createGroup("counts");
+            for (const auto &reaction : reactionRegistry.order1Flat()) {
+                h5rd::dimensions chunkSize = {pimpl->flushStride};
+                h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
+                auto dset = subgroup.createDataSet<std::size_t>(std::to_string(reaction->id()), chunkSize, dims,
+                                                                {&pimpl->bloscFilter});
+                pimpl->dataSets[reaction->id()] = std::move(dset);
+            }
+            for (const auto &reaction : reactionRegistry.order2Flat()) {
+                h5rd::dimensions chunkSize = {pimpl->flushStride};
+                h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
+                auto dset = subgroup.createDataSet<std::size_t>(std::to_string(reaction->id()), chunkSize, dims,
+                                                                {&pimpl->bloscFilter});
+                pimpl->dataSets[reaction->id()] = std::move(dset);
+            }
         }
-        for (const auto &reaction : reactionRegistry.order2Flat()) {
-            h5rd::dimensions chunkSize = {pimpl->flushStride};
-            h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
-            auto dset = subgroup.createDataSet<std::size_t>(std::to_string(reaction->id()), chunkSize, dims,
-                                                            {&pimpl->bloscFilter});
-            pimpl->dataSets[reaction->id()] = std::move(dset);
+        {
+            const auto &topologyRegistry = kernel->context().topologyRegistry();
+            auto spatialSubgroup = pimpl->group->createGroup("spatialCounts");
+            for (const auto &entry : topologyRegistry.spatialReactionRegistry()) {
+                for (const auto &spatialReaction : entry.second) {
+                    h5rd::dimensions chunkSize = {pimpl->flushStride};
+                    h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
+                    auto dset = spatialSubgroup.createDataSet<std::size_t>(std::string(spatialReaction.name()),
+                            chunkSize, dims, {&pimpl->bloscFilter});
+                }
+            }
         }
     }
-    for (const auto &reactionEntry : result) {
+    for (const auto &reactionEntry : reactionCounts) {
         auto copy = reactionEntry.second;
         pimpl->dataSets.at(reactionEntry.first)->append({1}, &copy);
     }
