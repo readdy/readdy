@@ -49,13 +49,10 @@
 #include <unordered_map>
 #include <readdy/common/Utils.h>
 #include <readdy/model/observables/Observables.h>
-#include "Aggregators.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
+namespace readdy::model {
 class Kernel;
-
-NAMESPACE_BEGIN(observables)
+namespace observables {
 
 namespace detail {
 template<typename T>
@@ -68,11 +65,6 @@ public:
     
     explicit ObservableFactory(Kernel *const kernel) : kernel(kernel) {};
 
-    template<typename T>
-    std::unique_ptr<Trivial<T>> collect(stride_type stride, T* observable, detail::is_observable_type<T>* = 0) const {
-        return std::make_unique<Trivial<T>>(kernel, stride, observable);
-    }
-    
     std::unique_ptr<Energy> energy(stride_type stride) const {
         return std::make_unique<Energy>(kernel, stride);
     };
@@ -102,9 +94,6 @@ public:
 
     virtual std::unique_ptr<Particles> particles(stride_type stride) const = 0;
 
-    virtual std::unique_ptr<MeanSquaredDisplacement> msd(stride_type stride, std::vector<std::string> typesToCount, 
-                                                         Particles *particlesObservable) const = 0;
-
     virtual std::unique_ptr<Reactions> reactions(stride_type stride) const = 0;
 
     virtual std::unique_ptr<ReactionCounts> reactionCounts(stride_type stride) const = 0;
@@ -125,6 +114,5 @@ protected:
     Kernel *const kernel;
 };
 
-NAMESPACE_END(observables)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}
+}

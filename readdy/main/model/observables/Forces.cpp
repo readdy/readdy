@@ -90,8 +90,10 @@ void Forces::append() {
     pimpl->timeSeries->append(t_current);
 }
 
-std::string Forces::type() const {
-    return "Forces";
+constexpr static auto& t = "Forces";
+
+std::string_view Forces::type() const {
+    return t;
 }
 
 Forces::~Forces() = default;

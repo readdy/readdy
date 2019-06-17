@@ -255,7 +255,7 @@ private:
 
 class SCPUReactionCounts : public readdy::model::observables::ReactionCounts {
 public:
-    SCPUReactionCounts(SCPUKernel *const kernel, unsigned int stride) : ReactionCounts(kernel, stride), kernel(kernel) {}
+    SCPUReactionCounts(SCPUKernel *const kernel, stride_type stride) : ReactionCounts(kernel, stride), kernel(kernel) {}
 
     ~SCPUReactionCounts() override = default;
 

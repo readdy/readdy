@@ -48,11 +48,7 @@
 #include <readdy/model/observables/io/TimeSeriesWriter.h>
 #include <readdy/model/observables/io/Types.h>
 
-namespace readdy {
-namespace model {
-namespace observables {
-
-const std::string Trajectory::TRAJECTORY_GROUP_PATH = "/readdy/trajectory";
+namespace readdy::model::observables {
 
 struct Trajectory::Impl {
     std::unique_ptr<h5rd::VLENDataSet> dataSet {nullptr};
@@ -96,8 +92,10 @@ void Trajectory::append() {
     pimpl->time->append(t_current);
 }
 
-std::string Trajectory::type() const {
-    return "Trajectory";
+static constexpr auto& tTraj = "Trajectory";
+
+std::string_view Trajectory::type() const {
+    return tTraj;
 }
 
 struct FlatTrajectory::Impl {
@@ -157,15 +155,15 @@ void FlatTrajectory::append() {
     pimpl->limits->append({1, 2}, pimpl->current_limits);
 }
 
-std::string FlatTrajectory::type() const {
-    return "FlatTrajectory";
+static constexpr auto& tFlatTraj = "FlatTrajectory";
+
+std::string_view FlatTrajectory::type() const {
+    return tFlatTraj;
 }
 
-FlatTrajectory::FlatTrajectory(FlatTrajectory &&) = default;
+FlatTrajectory::FlatTrajectory(FlatTrajectory &&) noexcept = default;
 
 FlatTrajectory::~FlatTrajectory() {
     flush();
 };
-}
-}
 }

@@ -73,16 +73,13 @@ public:
 
     ~Positions() override;
 
+    std::string_view type() const override;
+
 protected:
 
     void initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) override;
 
     void append() override;
-
-public:
-    std::string type() const override;
-
-protected:
 
     std::vector<ParticleTypeId> typesToCount;
 

@@ -99,8 +99,10 @@ void HistogramAlongAxis::flush() {
     if (pimpl->time) pimpl->time->flush();
 }
 
-std::string HistogramAlongAxis::type() const {
-    return "HistogramAlongAxis";
+constexpr static auto& t = "HistogramAlongAxis";
+
+std::string_view HistogramAlongAxis::type() const {
+    return t;
 }
 
 HistogramAlongAxis::~HistogramAlongAxis() = default;

@@ -22,7 +22,7 @@
 project(runUnitTests)
 
 add_executable(${PROJECT_NAME}
-        TestMain.cpp TestAggregators.cpp TestAlgorithms.cpp TestCompartments.cpp TestContext.cpp
+        TestMain.cpp TestAlgorithms.cpp TestCompartments.cpp TestContext.cpp
         TestDetailedBalance.cpp TestIndex.cpp TestIndexPersistentVector.cpp TestIntegration.cpp
         TestMatrix33.cpp TestObservables.cpp TestPlugins.cpp TestPotentials.cpp TestReactions.cpp
         TestSignals.cpp TestSimulationLoop.cpp TestStateModel.cpp TestTopologies.cpp TestTopologyGraphs.cpp

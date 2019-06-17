@@ -94,8 +94,10 @@ void NParticles::flush() {
     if(pimpl->time) pimpl->time->flush();
 }
 
-std::string NParticles::type() const {
-    return "NParticles";
+constexpr static const char* t = "NParticles";
+
+std::string_view NParticles::type() const {
+    return t;
 }
 }
 }

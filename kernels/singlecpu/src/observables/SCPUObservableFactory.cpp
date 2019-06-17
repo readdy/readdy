@@ -46,7 +46,6 @@
 
 #include <readdy/kernel/singlecpu/observables/SCPUObservableFactory.h>
 #include <readdy/kernel/singlecpu/observables/SCPUObservables.h>
-#include <readdy/kernel/singlecpu/observables/SCPUAggregators.h>
 
 namespace readdy {
 namespace kernel {
@@ -88,12 +87,6 @@ SCPUObservableFactory::radialDistribution(stride_type stride, std::vector<scalar
 std::unique_ptr<readdy::model::observables::Particles>
 SCPUObservableFactory::particles(stride_type stride) const {
     return {std::make_unique<SCPUParticles>(kernel, stride)};
-}
-
-std::unique_ptr<readdy::model::observables::MeanSquaredDisplacement>
-SCPUObservableFactory::msd(stride_type stride, std::vector<std::string> typesToCount,
-                           readdy::model::observables::Particles *particlesObservable) const {
-    return {std::make_unique<SCPUMeanSquaredDisplacement<>>(kernel, stride, typesToCount, particlesObservable)};
 }
 
 std::unique_ptr<readdy::model::observables::Reactions>

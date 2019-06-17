@@ -49,26 +49,24 @@
 #include <readdy/model/Particle.h>
 #include <readdy/model/reactions/Reaction.h>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(reactions)
+namespace readdy::model::reactions {
 
 struct ReactionRecord {
-    int type {0}; // int corresponding to the enum readdy::model::reactions::ReactionType
-    std::array<Particle::id_type, 2> educts {{0, 0}};
-    std::array<Particle::id_type, 2> products {{0, 0}};
-    std::array<Particle::type_type, 2> types_from {{0, 0}};
-    Vec3 where {0, 0, 0};
+    int type{0}; // int corresponding to the enum readdy::model::reactions::ReactionType
+    std::array<Particle::id_type, 2> educts{{0, 0}};
+    std::array<Particle::id_type, 2> products{{0, 0}};
+    std::array<Particle::type_type, 2> types_from{{0, 0}};
+    Vec3 where{0, 0, 0};
     /**
      * unique reaction id
      */
-    readdy::model::reactions::Reaction::ReactionId id {0};
+    readdy::model::reactions::Reaction::ReactionId id{0};
 
     friend std::ostream &operator<<(std::ostream &os, const ReactionRecord &record) {
-        auto type = ReactionType(record.type);
-        os << "ReactionRecord[type: " << type;
-        switch (type) {
-            case ReactionType::Decay:{
+        auto reactionType = ReactionType(record.type);
+        os << "ReactionRecord[type: " << reactionType;
+        switch (reactionType) {
+            case ReactionType::Decay: {
                 os << ", educt: " << record.educts[0];
                 break;
             }
@@ -77,11 +75,13 @@ struct ReactionRecord {
                 break;
             }
             case ReactionType::Fusion: {
-                os << ", educts: [" << record.educts[0] << "," << record.educts[1] << "], product: " << record.products[0];
+                os << ", educts: [" << record.educts[0] << "," << record.educts[1] << "], product: "
+                   << record.products[0];
                 break;
             }
             case ReactionType::Fission: {
-                os << ", educt: " << record.educts[0] << ", products: [" << record.products[0] << "," << record.products[1] << "]";
+                os << ", educt: " << record.educts[0] << ", products: [" << record.products[0] << ","
+                   << record.products[1] << "]";
                 break;
             }
             case ReactionType::Enzymatic: {
@@ -95,8 +95,6 @@ struct ReactionRecord {
     };
 };
 
-using reaction_counts_map = std::unordered_map<reactions::Reaction::ReactionId, std::size_t>;
+using ReactionCountsMap = std::unordered_map<reactions::Reaction::ReactionId, std::size_t>;
 
-NAMESPACE_END(reactions)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

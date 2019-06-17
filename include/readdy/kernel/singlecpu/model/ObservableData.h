@@ -55,7 +55,7 @@ namespace model {
 
 struct ObservableData {
 
-    using reaction_counts_map = readdy::model::reactions::reaction_counts_map;
+    using reaction_counts_map = readdy::model::reactions::ReactionCountsMap;
 
     scalar energy = 0;
     scalar time = 0;

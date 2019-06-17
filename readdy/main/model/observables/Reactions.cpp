@@ -96,8 +96,10 @@ void Reactions::initialize(Kernel *const kernel) {
     }
 }
 
-std::string Reactions::type() const {
-    return "Reactions";
+constexpr static auto& t = "Reactions";
+
+std::string_view Reactions::type() const {
+    return t;
 }
 
 Reactions::~Reactions() = default;

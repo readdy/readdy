@@ -84,8 +84,10 @@ void Virial::append() {
     pimpl->time->append(t_current);
 }
 
-std::string Virial::type() const {
-    return "Virial";
+constexpr static auto& t = "Virial";
+
+std::string_view Virial::type() const {
+    return t;
 }
 
 Virial::~Virial() = default;

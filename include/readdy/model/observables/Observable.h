@@ -174,7 +174,7 @@ public:
      */
     virtual void flush() = 0;
 
-    virtual std::string type() const = 0;
+    virtual std::string_view type() const = 0;
 
     void writeCurrentResult() {
         if(writeToFile) {

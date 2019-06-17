@@ -91,8 +91,10 @@ void Positions::flush() {
     if (pimpl->time) pimpl->time->flush();
 }
 
-std::string Positions::type() const {
-    return "Positions";
+constexpr static auto& t = "Positions";
+
+std::string_view Positions::type() const {
+    return t;
 }
 
 Positions::~Positions() = default;

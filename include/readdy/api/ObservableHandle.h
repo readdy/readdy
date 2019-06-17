@@ -79,7 +79,7 @@ public:
         }
     }
 
-    std::string type() const {
+    std::string_view type() const {
         if(_observable) {
             return _observable->type();
         }

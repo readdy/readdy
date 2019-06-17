@@ -49,9 +49,7 @@
 #include <readdy/model/observables/io/Types.h>
 #include <readdy/model/observables/io/TimeSeriesWriter.h>
 
-namespace readdy {
-namespace model {
-namespace observables {
+namespace readdy::model::observables {
 
 using data_set = h5rd::DataSet;
 using data_set_map = std::unordered_map<reactions::Reaction::ReactionId, std::unique_ptr<data_set>>;
@@ -121,12 +119,12 @@ void ReactionCounts::append() {
     pimpl->time->append(t_current);
 }
 
-std::string ReactionCounts::type() const {
-    return "ReactionCounts";
+constexpr static auto& t = "ReactionCounts";
+
+std::string_view ReactionCounts::type() const {
+    return t;
 }
 
 ReactionCounts::~ReactionCounts() = default;
 
-}
-}
 }

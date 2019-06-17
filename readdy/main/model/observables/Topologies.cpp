@@ -83,8 +83,10 @@ void Topologies::flush() {
     if (pimpl->types) pimpl->types->flush();
 }
 
-std::string Topologies::type() const {
-    return "Topologies";
+constexpr static auto& t = "Topologies";
+
+std::string_view Topologies::type() const {
+    return t;
 }
 
 void Topologies::initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) {

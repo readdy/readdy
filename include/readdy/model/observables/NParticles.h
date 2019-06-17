@@ -64,7 +64,7 @@ public:
 
     NParticles(const NParticles&) = delete;
 
-    std::string type() const override;
+    std::string_view type() const override;
 
     NParticles& operator=(const NParticles&) = delete;
     NParticles(NParticles&&) = default;

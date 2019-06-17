@@ -46,12 +46,8 @@
 #include <readdy/kernel/cpu/CPUKernel.h>
 #include <readdy/kernel/cpu/observables/CPUObservables.h>
 #include <readdy/kernel/singlecpu/observables/SCPUObservables.h>
-#include <readdy/kernel/singlecpu/observables/SCPUAggregators.h>
 
-namespace readdy {
-namespace kernel {
-namespace cpu {
-namespace observables {
+namespace readdy::kernel::cpu::observables {
 CPUObservableFactory::CPUObservableFactory(CPUKernel *const kernel) : readdy::model::observables::ObservableFactory(kernel),
                                                                 kernel(kernel) {
 }
@@ -90,14 +86,6 @@ std::unique_ptr<model::observables::Particles> CPUObservableFactory::particles(s
     return {std::make_unique<CPUParticles>(kernel, stride)};
 }
 
-std::unique_ptr<model::observables::MeanSquaredDisplacement>
-CPUObservableFactory::msd(stride_type stride, std::vector<std::string> typesToCount,
-                          model::observables::Particles *particlesObservable) const {
-    return {std::make_unique<readdy::kernel::scpu::observables::SCPUMeanSquaredDisplacement<CPUKernel>>(
-            kernel, stride, typesToCount, particlesObservable
-    )};
-}
-
 std::unique_ptr<model::observables::Reactions> CPUObservableFactory::reactions(stride_type stride) const {
     return {std::make_unique<CPUReactions>(kernel, stride)};
 }
@@ -111,7 +99,4 @@ CPUObservableFactory::virial(stride_type stride) const {
     return {std::make_unique<CPUVirial>(kernel, stride)};
 }
 
-}
-}
-}
 }

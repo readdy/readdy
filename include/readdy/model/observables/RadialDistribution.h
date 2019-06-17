@@ -68,7 +68,7 @@ public:
 
     const std::vector<scalar> &getBinBorders() const;
 
-    std::string type() const override;
+    std::string_view type() const override;
 
     void evaluate() override;
 

@@ -60,7 +60,7 @@ public:
 
     ~Virial() override;
 
-    std::string type() const override;
+    std::string_view type() const override;
 
     void flush() override;
 

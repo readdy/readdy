@@ -52,11 +52,9 @@
 #include <readdy/model/reactions/Reaction.h>
 #include <readdy/model/reactions/ReactionRecord.h>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(observables)
+namespace readdy::model::observables {
 
-class ReactionCounts : public Observable<reactions::reaction_counts_map> {
+class ReactionCounts : public Observable<reactions::ReactionCountsMap> {
 public:
     using reaction_counts_map = result_type;
 
@@ -74,7 +72,7 @@ public:
 
     void flush() override;
 
-    std::string type() const override;
+    std::string_view type() const override;
 
 
 protected:
@@ -88,6 +86,4 @@ protected:
     std::unique_ptr<Impl> pimpl;
 };
 
-NAMESPACE_END(observables)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

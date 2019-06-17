@@ -81,8 +81,10 @@ void Energy::evaluate() {
     result = kernel->stateModel().energy();
 }
 
-std::string Energy::type() const {
-    return "Energy";
+static constexpr auto& t = "Energy";
+
+std::string_view Energy::type() const {
+    return t;
 }
 
 Energy::~Energy() = default;

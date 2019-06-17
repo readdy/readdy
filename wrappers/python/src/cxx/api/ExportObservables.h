@@ -253,7 +253,7 @@ void exportObservables(py::module &apiModule, py::class_<type_, options...> &sim
             .def("enable_write_to_file", &obs_handle_t::enableWriteToFile, "file"_a, "data_set_name"_a, "chunk_size"_a)
             .def("flush", &obs_handle_t::flush)
             .def("__repr__", [](const obs_handle_t &self) {
-                return "ObservableHandle(type=" + self.type() + ")";
+                return fmt::format("ObservableHandle(type={})", self.type());
             });
 
     using record_t = readdy::model::reactions::ReactionRecord;

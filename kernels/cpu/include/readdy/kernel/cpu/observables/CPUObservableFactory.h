@@ -46,9 +46,7 @@
 
 #include <readdy/model/observables/ObservableFactory.h>
 
-namespace readdy {
-namespace kernel {
-namespace cpu {
+namespace readdy::kernel::cpu {
 class CPUKernel;
 namespace observables {
 
@@ -78,10 +76,6 @@ public:
 
     std::unique_ptr<model::observables::Particles> particles(stride_type stride) const override;
 
-    std::unique_ptr<model::observables::MeanSquaredDisplacement>
-    msd(stride_type stride, std::vector<std::string> typesToCount,
-        model::observables::Particles *particlesObservable) const override;
-
     std::unique_ptr<model::observables::Reactions> reactions(stride_type stride) const override;
 
     std::unique_ptr<model::observables::ReactionCounts> reactionCounts(stride_type stride) const override;
@@ -90,7 +84,5 @@ private:
     CPUKernel *const kernel;
 };
 
-}
-}
 }
 }

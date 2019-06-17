@@ -101,8 +101,10 @@ void Particles::flush() {
     if (pimpl->time) pimpl->time->flush();
 }
 
-std::string Particles::type() const {
-    return "Particles";
+constexpr static auto& t = "Particles";
+
+std::string_view Particles::type() const {
+    return t;
 }
 
 Particles::~Particles() = default;

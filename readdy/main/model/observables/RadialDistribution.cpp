@@ -180,8 +180,10 @@ void RadialDistribution::flush() {
     if (pimpl->time) pimpl->time->flush();
 }
 
-std::string RadialDistribution::type() const {
-    return "RadialDistribution";
+constexpr static auto& t = "RadialDistribution";
+
+std::string_view RadialDistribution::type() const {
+    return t;
 }
 
 RadialDistribution::~RadialDistribution() = default;

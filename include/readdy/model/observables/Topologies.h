@@ -64,7 +64,7 @@ public:
 
     void flush() override;
 
-    std::string type() const override;
+    std::string_view type() const override;
 
 protected:
     struct Impl;

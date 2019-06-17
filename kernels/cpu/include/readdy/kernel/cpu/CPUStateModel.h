@@ -70,7 +70,7 @@ public:
 
     using data_type = readdy::kernel::cpu::data::DefaultDataContainer;
     using particle_type = readdy::model::Particle;
-    using reaction_counts_map = readdy::model::reactions::reaction_counts_map;
+    using reaction_counts_map = readdy::model::reactions::ReactionCountsMap;
 
     using topology = readdy::model::top::GraphTopology;
     using topology_ref = std::unique_ptr<topology>;
