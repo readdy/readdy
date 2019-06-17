@@ -55,7 +55,7 @@ public:
     void perform() override;
 
 private:
-    MPIKernel *kernel;
+    MPIKernel *const kernel;
 };
 
 class MPICalculateForces : public readdy::model::actions::CalculateForces {
@@ -72,7 +72,7 @@ public:
     }
 
 private:
-    MPIKernel *kernel;
+    MPIKernel *const kernel;
 
     template<bool COMPUTE_VIRIAL>
     void performImpl();
@@ -88,7 +88,7 @@ public:
     }
 
 private:
-    MPIKernel *kernel;
+    MPIKernel *const kernel;
 
 };
 
@@ -101,7 +101,7 @@ public:
     }
 
 private:
-    MPIKernel *kernel;
+    MPIKernel *const kernel;
 };
 
 class MPIClearNeighborList : public readdy::model::actions::ClearNeighborList {
@@ -113,7 +113,7 @@ public:
     }
 
 private:
-    MPIKernel *kernel;
+    MPIKernel *const kernel;
 };
 
 class MPIEvaluateCompartments : public readdy::model::actions::EvaluateCompartments {
@@ -139,7 +139,7 @@ public:
     }
 
 protected:
-    MPIKernel *kernel;
+    MPIKernel *const kernel;
 };
 
 namespace reactions {

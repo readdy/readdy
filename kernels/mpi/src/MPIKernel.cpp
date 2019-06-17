@@ -73,23 +73,7 @@ MPIKernel::MPIKernel() : Kernel(name), _stateModel(_data, _context), _actions(th
 
 }
 
-bool MPIKernel::isValidDecomposition(const std::array<std::size_t, 3> dims) {
-    const auto cutoff = _context.calculateMaxCutoff();
-    const auto periodic = _context.periodicBoundaryConditions();
-    const auto boxSize = _context.boxSize();
-    std::array<scalar, 3> boxWidths{};
-    for (std::size_t i=0; i<3; ++i) {
-        boxWidths[i] = boxSize[i] / static_cast<scalar>(dims[i]);
-        if (boxWidths[i] < cutoff) {
-            if (dims[i] == 1 and not periodic[0]) {
-                /* smaller than cutoff is ok, when there are no neighbors to be considered */
-            } else {
-                return false;
-            }
-        }
-    }
-    return true;
-}
+
 
 void MPIKernel::initialize() {
     readdy::model::Kernel::initialize();
@@ -97,41 +81,10 @@ void MPIKernel::initialize() {
     // Spatial decomposition
     {
         const auto conf = _context.kernelConfiguration();
-        std::array<scalar, 3> minBoxWidths {conf.mpi.dx, conf.mpi.dy, conf.mpi.dz};
-        const auto cutoff = _context.calculateMaxCutoff();
-        const auto &boxSize = _context.boxSize();
-        const auto &periodic = _context.periodicBoundaryConditions();
-
-        std::array<std::size_t, 3> dims{};
-        std::array<scalar, 3> boxWidths{};
-        for (std::size_t i=0; i<3; ++i) {
-            dims[i] = static_cast<unsigned int>(std::max(1., std::floor(boxSize[i] / minBoxWidths[i])));
-            boxWidths[i] = boxSize[i] / static_cast<scalar>(dims[i]);
-        }
-
-        if (rank==0) {
-            readdy::log::info("MPI spatial decomposition:");
-            readdy::log::info("The user given minimal box widths were ({}, {}, {})", minBoxWidths[0], minBoxWidths[1],
-                              minBoxWidths[2]);
-            readdy::log::info("there will be {} * {} * {} = {} number of boxes", dims[0], dims[1],
-                              dims[2], dims[0] * dims[1] * dims[2]);
-            readdy::log::info("with actual widths dx {} dy {} dz {}", boxWidths[0], boxWidths[1], boxWidths[2]);
-        }
-
-        if (not isValidDecomposition(dims)) {
-            throw std::logic_error("Spatial decomposition is not valid.");
-        }
-
-        const auto nBoxes = dims[0] * dims[1] * dims[2];
-        if (nBoxes != worldSize - 1) {// subtract one for master rank 0
-            throw std::logic_error(fmt::format("There are {} + 1 worker positions to be filled, but there are {} workers", nBoxes, worldSize));
-        }
-
-
+        std::array<scalar, 3> minDomainWidths {conf.mpi.dx, conf.mpi.dy, conf.mpi.dz};
+        domain = std::make_unique<model::MPIDomain>(rank, worldSize, minDomainWidths, _context);
 
         // set up neighborList ? make halo regions clear for each kernel,
-        
-
     }
     // todo domain decomposition
     // domains shall be as cubic as possible to optimize communication

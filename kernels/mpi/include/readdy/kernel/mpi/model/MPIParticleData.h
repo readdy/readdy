@@ -54,7 +54,7 @@ struct MPIEntry {
     using Particle = readdy::model::Particle;
     using Force = Particle::Position;
 
-    explicit MPIEntry(const Particle &particle, int rank)
+    explicit MPIEntry(const Particle &particle, int rank = -1)
             : pos(particle.pos()), force(Force()), type(particle.type()), deactivated(false),
               id(particle.id()), rank(rank) {}
 

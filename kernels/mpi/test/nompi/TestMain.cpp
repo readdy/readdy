@@ -32,60 +32,34 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                       *
  ********************************************************************/
 
+
+
 /**
  * « detailed description »
  *
- * @file MPIObservableFactory.h
+ * @file TestMain.cpp
  * @brief « brief description »
  * @author chrisfroe
- * @date 03.06.19
+ * @date 17.06.19
  */
 
-#pragma once
+#define CATCH_CONFIG_RUNNER
 
-#include <readdy/model/observables/ObservableFactory.h>
+#include <catch2/catch.hpp>
 
-namespace readdy::kernel::mpi {
-class MPIKernel;
-namespace observables {
+#include <readdy/testing/Utils.h>
+#include <readdy/plugin/KernelProvider.h>
 
-class MPIObservableFactory : public readdy::model::observables::ObservableFactory {
+int main(int argc, char **argv) {
+    readdy::log::console()->set_level(spdlog::level::warn);
+    Catch::Session session;
+    int returnCode = session.applyCommandLine(argc, argv);
+    if (returnCode != 0) return returnCode;
 
-public:
-    explicit MPIObservableFactory(MPIKernel* kernel);
+    if (!session.config().listTestNamesOnly()) {
+        const auto dir = readdy::testing::getPluginsDirectory();
+        readdy::plugin::KernelProvider::getInstance().loadKernelsFromDirectory(dir);
+    }
 
-    std::unique_ptr<readdy::model::observables::Virial> virial(stride_type stride) const override;
-
-    std::unique_ptr<readdy::model::observables::HistogramAlongAxis>
-    histogramAlongAxis(stride_type stride, std::vector<scalar> binBorders, std::vector<std::string> typesToCount,
-                       unsigned int axis) const override;
-
-    std::unique_ptr<readdy::model::observables::NParticles>
-    nParticles(stride_type stride, std::vector<std::string> typesToCount) const override;
-
-    std::unique_ptr<readdy::model::observables::Forces>
-    forces(stride_type stride, std::vector<std::string> typesToCount) const override;
-
-    std::unique_ptr<readdy::model::observables::Positions>
-    positions(stride_type stride, std::vector<std::string> typesToCount) const override;
-
-    std::unique_ptr<readdy::model::observables::RadialDistribution>
-    radialDistribution(stride_type stride, std::vector<scalar> binBorders, std::vector<std::string> typeCountFrom,
-                       std::vector<std::string> typeCountTo, scalar particleDensity) const override;
-
-    std::unique_ptr<readdy::model::observables::Particles> particles(stride_type stride) const override;
-
-    std::unique_ptr<readdy::model::observables::MeanSquaredDisplacement>
-    msd(stride_type stride, std::vector<std::string> typesToCount,
-        readdy::model::observables::Particles *particlesObservable) const override;
-
-    std::unique_ptr<readdy::model::observables::Reactions> reactions(stride_type stride) const override;
-
-    std::unique_ptr<readdy::model::observables::ReactionCounts> reactionCounts(stride_type stride) const override;
-
-private:
-    MPIKernel *const kernel;
-};
-
-}
+    return session.run();
 }

@@ -56,33 +56,33 @@ class MPIActionFactory : public readdy::model::actions::ActionFactory {
 public:
     explicit MPIActionFactory(MPIKernel *kernel);
 
-    std::unique_ptr<model::actions::AddParticles>
-    addParticles(const std::vector<model::Particle> &particles) const override;
+    std::unique_ptr<readdy::model::actions::AddParticles>
+    addParticles(const std::vector<readdy::model::Particle> &particles) const override;
 
-    std::unique_ptr<model::actions::EulerBDIntegrator> eulerBDIntegrator(scalar timeStep) const override;
+    std::unique_ptr<readdy::model::actions::EulerBDIntegrator> eulerBDIntegrator(scalar timeStep) const override;
 
     std::unique_ptr<readdy::model::actions::MdgfrdIntegrator> mdgfrdIntegrator(scalar timeStep) const override;
 
     std::unique_ptr<readdy::model::actions::CalculateForces> calculateForces() const override;
 
-    std::unique_ptr<model::actions::CreateNeighborList> createNeighborList(scalar interactionDistance) const override;
+    std::unique_ptr<readdy::model::actions::CreateNeighborList> createNeighborList(scalar interactionDistance) const override;
 
-    std::unique_ptr<model::actions::UpdateNeighborList> updateNeighborList() const override;
+    std::unique_ptr<readdy::model::actions::UpdateNeighborList> updateNeighborList() const override;
 
-    std::unique_ptr<model::actions::ClearNeighborList> clearNeighborList() const override;
+    std::unique_ptr<readdy::model::actions::ClearNeighborList> clearNeighborList() const override;
 
-    std::unique_ptr<model::actions::EvaluateCompartments> evaluateCompartments() const override;
+    std::unique_ptr<readdy::model::actions::EvaluateCompartments> evaluateCompartments() const override;
 
-    std::unique_ptr<model::actions::reactions::UncontrolledApproximation>
+    std::unique_ptr<readdy::model::actions::reactions::UncontrolledApproximation>
     uncontrolledApproximation(scalar timeStep) const override;
 
-    std::unique_ptr<model::actions::reactions::Gillespie>
+    std::unique_ptr<readdy::model::actions::reactions::Gillespie>
     gillespie(scalar timeStep) const override;
 
-    std::unique_ptr<model::actions::reactions::DetailedBalance>
+    std::unique_ptr<readdy::model::actions::reactions::DetailedBalance>
     detailedBalance(scalar timeStep) const override;
 
-    std::unique_ptr<model::actions::top::EvaluateTopologyReactions>
+    std::unique_ptr<readdy::model::actions::top::EvaluateTopologyReactions>
     evaluateTopologyReactions(scalar timeStep) const override;
 };
 

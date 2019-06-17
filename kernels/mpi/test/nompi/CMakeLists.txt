@@ -32,12 +32,12 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                       #
 ####################################################################
 
+# tests that do not need mpi running, i.e. independent helper components
+project(runUnitTests_mpi_nompi LANGUAGES C CXX)
 
-project(runUnitTests_mpi LANGUAGES C CXX)
+add_executable(${PROJECT_NAME} TestMain.cpp TestMPIDomain.cpp ${TESTING_INCLUDE_DIR})
 
-add_executable(${PROJECT_NAME} TestMain.cpp TestSetupMPI.cpp IntegrationTest.cpp ${TESTING_INCLUDE_DIR})
-
-target_include_directories(${PROJECT_NAME} PUBLIC ${READDY_INCLUDE_DIRS} ${TESTING_INCLUDE_DIR} ${MPI_INCLUDE_DIR})
+target_include_directories(${PROJECT_NAME} PUBLIC ${READDY_INCLUDE_DIRS} ${TESTING_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} PUBLIC readdy readdy_kernel_mpi Catch2::Catch2)
 set_target_properties(${PROJECT_NAME} PROPERTIES
         LINK_FLAGS "${EXTRA_LINK_FLAGS}"
@@ -50,5 +50,3 @@ if (READDY_INSTALL_UNIT_TEST_EXECUTABLE)
             LIBRARY DESTINATION lib
             ARCHIVE DESTINATION lib)
 endif (READDY_INSTALL_UNIT_TEST_EXECUTABLE)
-
-add_subdirectory(nompi)

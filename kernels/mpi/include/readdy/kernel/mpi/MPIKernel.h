@@ -49,21 +49,9 @@
 #include <readdy/kernel/mpi/MPIStateModel.h>
 #include <readdy/kernel/mpi/actions/MPIActionFactory.h>
 #include <readdy/kernel/mpi/observables/MPIObservableFactory.h>
+#include <readdy/kernel/mpi/model/MPIDomain.h>
 
 namespace readdy::kernel::mpi {
-
-
-
-struct SpatialConfig {
-    SpatialConfig() {}
-    Vec3 centerGlobal;
-    Vec3 originGlobal;
-    Vec3 extentGlobal;
-
-    std::size_t three{3};
-    util::Index3D neighbors = util::Index3D(three,three,three);
-    std::array<int, 27> neighborRanks{};
-};
 
 class MPIKernel : public readdy::model::Kernel {
 public:
@@ -92,27 +80,27 @@ public:
         return _stateModel;
     };
 
-    const model::StateModel &stateModel() const override {
+    const readdy::model::StateModel &stateModel() const override {
         return _stateModel;
     };
 
-    model::StateModel &stateModel() override {
+    readdy::model::StateModel &stateModel() override {
         return _stateModel;
     };
 
-    const model::actions::ActionFactory &actions() const override {
+    const readdy::model::actions::ActionFactory &actions() const override {
         return _actions;
     };
 
-    model::actions::ActionFactory &actions() override {
+    readdy::model::actions::ActionFactory &actions() override {
         return _actions;
     };
 
-    const model::observables::ObservableFactory &observe() const override {
+    const readdy::model::observables::ObservableFactory &observe() const override {
         return _observables;
     };
 
-    model::observables::ObservableFactory &observe() override {
+    readdy::model::observables::ObservableFactory &observe() override {
         return _observables;
     };
 
@@ -123,11 +111,11 @@ public:
      */
     void initialize() override;
 
-    const model::top::TopologyActionFactory *const getTopologyActionFactory() const override {
+    const readdy::model::top::TopologyActionFactory *const getTopologyActionFactory() const override {
         return nullptr;
     };
 
-    model::top::TopologyActionFactory *const getTopologyActionFactory() override {
+    readdy::model::top::TopologyActionFactory *const getTopologyActionFactory() override {
         return nullptr;
     };
 
@@ -140,8 +128,7 @@ protected:
     actions::MPIActionFactory _actions;
     observables::MPIObservableFactory _observables;
     MPIStateModel _stateModel;
-
-    bool isValidDecomposition(std::array<std::size_t, 3> dims);
+    std::unique_ptr<model::MPIDomain> domain{nullptr}; // construction is delayed until initialize()
 };
 
 }

@@ -101,7 +101,7 @@ public:
                 _cellNeighborsContent.resize(_cellNeighbors.size());
                 {
                     auto pbc = _context.get().periodicBoundaryConditions();
-                    auto fixBoxIx = [&](auto cix, auto boxIx, std::uint8_t axis) {
+                    auto fixBoxIx = [&](auto boxIx, std::uint8_t axis) {
                         auto nCells = static_cast<int>(_cellIndex[axis]);
                         if (pbc[axis] && nCells > 2) {
                             return (boxIx % nCells + nCells) % nCells;
@@ -145,7 +145,7 @@ public:
                                     std::transform(boxCoords.begin(), boxCoords.end(), boxCoords.begin(),
                                                    [&](auto arr) {
                                                        for (std::uint8_t d = 0; d < 3; ++d) {
-                                                           arr.at(d) = fixBoxIx(ijk[d], arr.at(d), d);
+                                                           arr.at(d) = fixBoxIx(arr.at(d), d);
                                                        }
                                                        return arr;
                                                    }
