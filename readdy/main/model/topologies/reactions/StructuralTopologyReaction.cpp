@@ -1,3 +1,5 @@
+#include <utility>
+
 /********************************************************************
  * Copyright © 2018 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
@@ -49,18 +51,18 @@
 #include <readdy/model/topologies/Utils.h>
 #include <readdy/model/topologies/reactions/TopologyReactionException.h>
 
-namespace readdy {
-namespace model {
-namespace top {
-namespace reactions {
+namespace readdy::model::top::reactions {
 
-StructuralTopologyReaction::StructuralTopologyReaction(const reaction_function& reaction_function, const rate_function &rate_function)
-        : _reaction_function(reaction_function)
-        , _rate_function(rate_function) { }
+StructuralTopologyReaction::StructuralTopologyReaction(std::string name, reaction_function reaction_function,
+        rate_function rate_function)
+        : _reaction_function(std::move(reaction_function))
+        , _rate_function(std::move(rate_function)), _name(std::move(name)) { }
 
 
-StructuralTopologyReaction::StructuralTopologyReaction(const StructuralTopologyReaction::reaction_function &reaction_function, const scalar  &rate)
-        : StructuralTopologyReaction(reaction_function, [rate](const GraphTopology&) -> scalar { return rate; }) {}
+StructuralTopologyReaction::StructuralTopologyReaction(std::string name,  reaction_function reaction_function,
+        scalar rate)
+        : StructuralTopologyReaction(std::move(name), std::move(reaction_function),
+                [rate](const GraphTopology&) -> scalar { return rate; }) {}
 
 std::vector<GraphTopology> StructuralTopologyReaction::execute(GraphTopology &topology, const Kernel* const kernel) const {
     const auto &types = kernel->context().particleTypes();
@@ -150,7 +152,4 @@ std::vector<GraphTopology> StructuralTopologyReaction::execute(GraphTopology &to
 }
 
 
-}
-}
-}
 }

@@ -53,14 +53,11 @@
 #include "model/ObservableData.h"
 #include <readdy/common/index_persistent_vector.h>
 
-namespace readdy {
-namespace kernel {
-namespace scpu {
+namespace readdy::kernel::scpu {
 
 class SCPUStateModel : public readdy::model::StateModel {
     using topology_action_factory = readdy::model::top::TopologyActionFactory;
 public:
-    using reaction_counts_map = readdy::model::reactions::ReactionCounts;
     using topology = readdy::model::top::GraphTopology;
     using topology_ref = std::unique_ptr<topology>;
     using topologies_vec = readdy::util::index_persistent_vector<topology_ref>;
@@ -160,11 +157,11 @@ public:
         return _observableData.reactionRecords;
     }
 
-    const reaction_counts_map & reactionCounts() const {
+    const readdy::model::reactions::ReactionCounts& reactionCounts() const {
         return _observableData.reactionCounts;
     }
 
-    reaction_counts_map &reactionCounts() {
+    readdy::model::reactions::ReactionCounts &reactionCounts() {
         return _observableData.reactionCounts;
     }
 
@@ -219,6 +216,4 @@ private:
     model::ObservableData _observableData;
 };
 
-}
-}
 }

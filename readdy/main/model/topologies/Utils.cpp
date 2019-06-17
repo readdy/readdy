@@ -46,10 +46,7 @@
 #include <readdy/model/topologies/Utils.h>
 #include <sstream>
 
-namespace readdy {
-namespace model {
-namespace top {
-namespace util {
+namespace readdy::model::top::util {
 
 std::string to_gexf(graph::Graph& graph) {
     std::ostringstream ss;
@@ -87,7 +84,4 @@ std::string to_gexf(graph::Graph& graph) {
     return ss.str();
 }
 
-}
-}
-}
 }

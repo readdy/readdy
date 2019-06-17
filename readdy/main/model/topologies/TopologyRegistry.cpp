@@ -46,20 +46,8 @@
 #include <readdy/model/topologies/TopologyRegistry.h>
 #include <readdy/model/Utils.h>
 
-namespace readdy {
-namespace model {
-namespace top {
+namespace readdy::model::top {
 TopologyTypeId TopologyRegistry::counter = 0;
-
-void TopologyRegistry::addStructuralReaction(TopologyTypeId id,
-                                             const reactions::StructuralTopologyReaction &reaction) {
-    typeById(id).structuralReactions.push_back(reaction);
-}
-
-void TopologyRegistry::addStructuralReaction(TopologyTypeId id,
-                                             reactions::StructuralTopologyReaction &&reaction) {
-    typeById(id).structuralReactions.push_back(std::move(reaction));
-}
 
 std::string TopologyRegistry::describe() const {
     namespace rus = readdy::util::str;
@@ -366,6 +354,4 @@ std::string TopologyRegistry::generateSpatialReactionRepresentation(const Spatia
     return ss.str();
 }
 
-}
-}
 }

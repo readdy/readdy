@@ -144,7 +144,7 @@ TEMPLATE_TEST_CASE("Test observables", "[observables]", SingleCPU, CPU) {
             auto rateFunction = [](const readdy::model::top::GraphTopology &top) {
                 return top.getNParticles() > 1 ? top.getNParticles() / 50. : 0;
             };
-            readdy::model::top::reactions::StructuralTopologyReaction reaction{reactionFunction, rateFunction};
+            readdy::model::top::reactions::StructuralTopologyReaction reaction{"r", reactionFunction, rateFunction};
             reaction.create_child_topologies_after_reaction();
             reaction.roll_back_if_invalid();
 
@@ -166,7 +166,7 @@ TEMPLATE_TEST_CASE("Test observables", "[observables]", SingleCPU, CPU) {
             auto rateFunction = [](const readdy::model::top::GraphTopology &top) {
                 return top.getNParticles() > 1 ? 0 : 1;
             };
-            readdy::model::top::reactions::StructuralTopologyReaction reaction{reactionFunction, rateFunction};
+            readdy::model::top::reactions::StructuralTopologyReaction reaction{"r2", reactionFunction, rateFunction};
             reaction.create_child_topologies_after_reaction();
             reaction.roll_back_if_invalid();
             toptypes.addStructuralReaction("TA", reaction);

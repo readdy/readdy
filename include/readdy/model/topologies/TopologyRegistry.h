@@ -103,9 +103,20 @@ public:
 
     TopologyTypeId addType(const std::string &name, const StructuralReactionCollection &reactions = {});
 
-    void addStructuralReaction(TopologyTypeId type, const reactions::StructuralTopologyReaction &reaction);
-
-    void addStructuralReaction(TopologyTypeId type, reactions::StructuralTopologyReaction &&reaction);
+    void addStructuralReaction(TopologyTypeId typeId, reactions::StructuralTopologyReaction reaction) {
+        {
+            // test uniqueness of name
+            for(const auto &topologyType : _registry) {
+                for(const auto &structuralReaction : topologyType.structuralReactions) {
+                    if(reaction.name() == structuralReaction.name()) {
+                        throw std::invalid_argument(fmt::format("Structural topology reaction with name "
+                                                                "\"{}\" already exists.", reaction.name()));
+                    }
+                }
+            }
+        }
+        typeById(typeId).structuralReactions.push_back(std::move(reaction));
+    }
 
     void addStructuralReaction(const std::string &type, const reactions::StructuralTopologyReaction &reaction) {
         addStructuralReaction(idOf(type), reaction);

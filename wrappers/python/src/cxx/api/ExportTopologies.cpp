@@ -103,7 +103,7 @@ void exportTopologies(py::module &m) {
     py::class_<rate_function_sink>(m, "RateFunction").def(py::init<py::function>());
 
     py::class_<reaction>(m, "StructuralTopologyReaction")
-            .def(py::init<reaction_function_sink, rate_function_sink>())
+            .def(py::init<std::string, reaction_function_sink, rate_function_sink>())
             .def("rate", &reaction::rate, "topology"_a)
             .def("raises_if_invalid", &reaction::raises_if_invalid)
             .def("raise_if_invalid", &reaction::raise_if_invalid)
