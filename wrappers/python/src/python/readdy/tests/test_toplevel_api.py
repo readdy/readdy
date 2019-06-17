@@ -199,7 +199,7 @@ class TestTopLevelAPI(ReaDDyTestCase):
         def rate_fun(topology):
             return len(topology.particles)
 
-        rds.topologies.add_structural_reaction("foofoo", reaction_fun, rate_fun)
+        rds.topologies.add_structural_reaction("test", "foofoo", reaction_fun, rate_fun)
 
     def test_potentials(self):
         rds = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.])
@@ -402,7 +402,7 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
             recipe.change_topology_type("unstable")
             return recipe
 
-        system.topologies.add_structural_reaction(topology_type="intermediate",
+        system.topologies.add_structural_reaction(name="intermediate_reaction", topology_type="intermediate",
                                                   reaction_function=intermediate_reaction_function,
                                                   rate_function=intermediate_rate_function)
 
@@ -417,7 +417,7 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
             recipe.change_particle_position(index, [0, 0, 0])
             return recipe
 
-        system.topologies.add_structural_reaction(topology_type="unstable",
+        system.topologies.add_structural_reaction("unstable_reaction", topology_type="unstable",
                                                   reaction_function=unstable_reaction_function,
                                                   rate_function=unstable_rate_function)
         simulation = system.simulation(kernel=kernel)
@@ -509,7 +509,7 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
             recipe.change_particle_type(index, "Decay")
             return recipe
 
-        system.topologies.add_structural_reaction(topology_type="unstable",
+        system.topologies.add_structural_reaction(name="unstable_reaction", topology_type="unstable",
                                                   reaction_function=unstable_reaction_function,
                                                   rate_function=unstable_rate_function)
         simulation = system.simulation(kernel=kernel)
