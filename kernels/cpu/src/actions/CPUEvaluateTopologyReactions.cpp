@@ -438,6 +438,8 @@ bool CPUEvaluateTopologyReactions::eventsDependent(const CPUEvaluateTopologyReac
     if(evt1.topology_idx == evt2.topology_idx || evt1.topology_idx == evt2.topology_idx2) {
         return true;
     }
+    auto tpWithSameP = evt1.topology_idx2 < 0 && evt2.topology_idx2 < 0 && evt1.idx2 == evt2.idx2;
+    if(tpWithSameP) return true;
     return evt1.topology_idx2 >= 0 && (evt1.topology_idx2 == evt2.topology_idx || evt1.topology_idx2 == evt2.topology_idx2);
 }
 

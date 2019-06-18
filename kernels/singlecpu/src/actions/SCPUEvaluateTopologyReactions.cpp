@@ -215,8 +215,6 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
                             std::size_t reaction_index = 0;
                             for (const auto &reaction : reactions) {
                                 if (distSquared < reaction.radius() * reaction.radius()) {
-                                    //if(entry.deactivated) throw std::logic_error("nein");
-                                    //if(neighbor.deactivated) throw std::logic_error("nein2");
                                     TREvent event{};
                                     event.reactionId = reaction.id();
                                     event.rate = reaction.rate();
@@ -294,6 +292,8 @@ bool SCPUEvaluateTopologyReactions::eventsDependent(const SCPUEvaluateTopologyRe
     if(evt1.topology_idx == evt2.topology_idx || evt1.topology_idx == evt2.topology_idx2) {
         return true;
     }
+    auto tpWithSameP = evt1.topology_idx2 < 0 && evt2.topology_idx2 < 0 && evt1.idx2 == evt2.idx2;
+    if(tpWithSameP) return true;
     return evt1.topology_idx2 >= 0 && (evt1.topology_idx2 == evt2.topology_idx || evt1.topology_idx2 == evt2.topology_idx2);
 }
 
