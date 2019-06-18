@@ -54,7 +54,7 @@ namespace observables {
 
 class CPUVirial : public readdy::model::observables::Virial {
 public:
-    CPUVirial(CPUKernel *kernel, stride_type stride);
+    CPUVirial(CPUKernel *kernel, Stride stride);
 
     void evaluate() override;
 

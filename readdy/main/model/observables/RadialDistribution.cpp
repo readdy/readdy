@@ -64,7 +64,7 @@ struct RadialDistribution::Impl {
     std::unique_ptr<util::TimeSeriesWriter> time;
 };
 
-RadialDistribution::RadialDistribution(Kernel *const kernel, stride_type stride,
+RadialDistribution::RadialDistribution(Kernel *const kernel, Stride stride,
                                        std::vector<scalar> binBorders, std::vector<ParticleTypeId> typeCountFrom,
                                        std::vector<ParticleTypeId> typeCountTo, scalar particleToDensity)
         : Observable(kernel, stride), typeCountFrom(std::move(typeCountFrom)), typeCountTo(std::move(typeCountTo)),

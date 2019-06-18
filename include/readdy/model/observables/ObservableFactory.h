@@ -61,52 +61,50 @@ using is_observable_type = std::enable_if_t<std::is_base_of<model::observables::
 
 class ObservableFactory {
 public:
-    using stride_type = ObservableBase::stride_type;
-    
     explicit ObservableFactory(Kernel *const kernel) : kernel(kernel) {};
 
-    std::unique_ptr<Energy> energy(stride_type stride) const {
+    std::unique_ptr<Energy> energy(Stride stride) const {
         return std::make_unique<Energy>(kernel, stride);
     };
 
-    virtual std::unique_ptr<Virial> virial(stride_type stride) const = 0;
+    virtual std::unique_ptr<Virial> virial(Stride stride) const = 0;
     
-    virtual std::unique_ptr<HistogramAlongAxis> histogramAlongAxis(stride_type stride, std::vector<scalar> binBorders, 
+    virtual std::unique_ptr<HistogramAlongAxis> histogramAlongAxis(Stride stride, std::vector<scalar> binBorders, 
                                                                    std::vector<std::string> typesToCount, 
                                                                    unsigned int axis) const = 0;
     
-    std::unique_ptr<NParticles> nParticles(stride_type stride) const { return nParticles(stride, {}); }
+    std::unique_ptr<NParticles> nParticles(Stride stride) const { return nParticles(stride, {}); }
     
-    virtual std::unique_ptr<NParticles> nParticles(stride_type stride, std::vector<std::string> typesToCount) const = 0;
+    virtual std::unique_ptr<NParticles> nParticles(Stride stride, std::vector<std::string> typesToCount) const = 0;
 
-    std::unique_ptr<Forces> forces(stride_type stride) const { return forces(stride, {}); }
+    std::unique_ptr<Forces> forces(Stride stride) const { return forces(stride, {}); }
     
-    virtual std::unique_ptr<Forces> forces(stride_type stride, std::vector<std::string> typesToCount) const  = 0;
+    virtual std::unique_ptr<Forces> forces(Stride stride, std::vector<std::string> typesToCount) const  = 0;
 
-    std::unique_ptr<Positions> positions(stride_type stride) const { return positions(stride, {}); }
+    std::unique_ptr<Positions> positions(Stride stride) const { return positions(stride, {}); }
 
-    virtual std::unique_ptr<Positions> positions(stride_type stride, std::vector<std::string> typesToCount) const = 0;
+    virtual std::unique_ptr<Positions> positions(Stride stride, std::vector<std::string> typesToCount) const = 0;
 
-    virtual std::unique_ptr<RadialDistribution> radialDistribution(stride_type stride, std::vector<scalar> binBorders, 
+    virtual std::unique_ptr<RadialDistribution> radialDistribution(Stride stride, std::vector<scalar> binBorders, 
                                                                    std::vector<std::string> typeCountFrom,
                                                                    std::vector<std::string> typeCountTo,
                                                                    scalar particleDensity) const = 0;
 
-    virtual std::unique_ptr<Particles> particles(stride_type stride) const = 0;
+    virtual std::unique_ptr<Particles> particles(Stride stride) const = 0;
 
-    virtual std::unique_ptr<Reactions> reactions(stride_type stride) const = 0;
+    virtual std::unique_ptr<Reactions> reactions(Stride stride) const = 0;
 
-    virtual std::unique_ptr<ReactionCounts> reactionCounts(stride_type stride) const = 0;
+    virtual std::unique_ptr<ReactionCounts> reactionCounts(Stride stride) const = 0;
 
-    std::unique_ptr<Trajectory> trajectory(stride_type stride) const {
+    std::unique_ptr<Trajectory> trajectory(Stride stride) const {
         return std::make_unique<Trajectory>(kernel, stride);
     }
 
-    std::unique_ptr<FlatTrajectory> flatTrajectory(stride_type stride) const {
+    std::unique_ptr<FlatTrajectory> flatTrajectory(Stride stride) const {
         return std::make_unique<FlatTrajectory>(kernel, stride);
     }
 
-    std::unique_ptr<Topologies> topologies(stride_type stride) const {
+    std::unique_ptr<Topologies> topologies(Stride stride) const {
         return std::make_unique<Topologies>(kernel, stride);
     }
 

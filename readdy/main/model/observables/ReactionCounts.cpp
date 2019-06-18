@@ -70,7 +70,7 @@ struct ReactionCounts::Impl {
     io::BloscFilter bloscFilter {};
 };
 
-ReactionCounts::ReactionCounts(Kernel *const kernel, stride_type stride)
+ReactionCounts::ReactionCounts(Kernel *const kernel, Stride stride)
         : Observable(kernel, stride), pimpl(std::make_unique<Impl>()) {
 }
 
@@ -83,7 +83,7 @@ void ReactionCounts::initialize(Kernel *const kernel) {
     kernel->context().recordReactionCounts() = true;
 }
 
-void ReactionCounts::initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) {
+void ReactionCounts::initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) {
     pimpl->firstWrite = true;
     pimpl->group = std::make_unique<h5rd::Group>(
             file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName));

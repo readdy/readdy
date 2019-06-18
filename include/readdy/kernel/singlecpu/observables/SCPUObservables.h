@@ -227,7 +227,7 @@ protected:
 
 class SCPUVirial : public readdy::model::observables::Virial {
 public:
-    SCPUVirial(SCPUKernel *kernel, stride_type stride) : Virial(kernel, stride), _kernel(kernel) {};
+    SCPUVirial(SCPUKernel *kernel, Stride stride) : Virial(kernel, stride), _kernel(kernel) {};
 
     void evaluate() override {
         result = _kernel->getSCPUKernelStateModel().virial();
@@ -255,7 +255,7 @@ private:
 
 class SCPUReactionCounts : public readdy::model::observables::ReactionCounts {
 public:
-    SCPUReactionCounts(SCPUKernel *const kernel, stride_type stride) : ReactionCounts(kernel, stride), kernel(kernel) {}
+    SCPUReactionCounts(SCPUKernel *const kernel, Stride stride) : ReactionCounts(kernel, stride), kernel(kernel) {}
 
     ~SCPUReactionCounts() override = default;
 

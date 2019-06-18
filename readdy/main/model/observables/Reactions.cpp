@@ -62,7 +62,7 @@ struct Reactions::Impl {
     std::unique_ptr<util::CompoundH5Types> h5types;
 };
 
-Reactions::Reactions(Kernel *const kernel, stride_type stride)
+Reactions::Reactions(Kernel *const kernel, Stride stride)
         : super(kernel, stride), pimpl(std::make_unique<Impl>()) {
 }
 
@@ -71,7 +71,7 @@ void Reactions::flush() {
     if (pimpl->time) pimpl->time->flush();
 }
 
-void Reactions::initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) {
+void Reactions::initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) {
     result.clear();
     h5rd::dimensions fs = {flushStride};
     h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};

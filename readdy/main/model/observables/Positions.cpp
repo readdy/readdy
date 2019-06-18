@@ -59,12 +59,12 @@ struct Positions::Impl {
     std::unique_ptr<util::CompoundH5Types> h5types;
 };
 
-Positions::Positions(Kernel *const kernel, stride_type stride,
+Positions::Positions(Kernel *const kernel, Stride stride,
                      std::vector<std::string> typesToCount) :
         Positions(kernel, stride,
                   _internal::util::transformTypes2(typesToCount, kernel->context())) {}
 
-Positions::Positions(Kernel *const kernel, stride_type stride,
+Positions::Positions(Kernel *const kernel, Stride stride,
                      std::vector<ParticleTypeId> typesToCount) :
         Observable(kernel, stride), typesToCount(std::move(typesToCount)), pimpl(std::make_unique<Impl>()) {}
 
@@ -74,9 +74,9 @@ void Positions::append() {
     pimpl->time->append(t_current);
 }
 
-Positions::Positions(Kernel *const kernel, stride_type stride) : Observable(kernel, stride) {}
+Positions::Positions(Kernel *const kernel, Stride stride) : Observable(kernel, stride) {}
 
-void Positions::initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) {
+void Positions::initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) {
     pimpl->h5types = std::make_unique<util::CompoundH5Types>(util::getVec3Types(file.ref()));
     h5rd::dimensions fs = {flushStride};
     h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};

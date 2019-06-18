@@ -56,11 +56,11 @@ NAMESPACE_BEGIN(observables)
 class NParticles : public Observable<std::vector<unsigned long>> {
 
 public:
-    NParticles(Kernel* kernel, stride_type stride);
+    NParticles(Kernel* kernel, Stride stride);
 
-    NParticles(Kernel* kernel, stride_type stride, std::vector<std::string> typesToCount);
+    NParticles(Kernel* kernel, Stride stride, std::vector<std::string> typesToCount);
 
-    NParticles(Kernel* kernel, stride_type stride, std::vector<ParticleTypeId> typesToCount);
+    NParticles(Kernel* kernel, Stride stride, std::vector<ParticleTypeId> typesToCount);
 
     NParticles(const NParticles&) = delete;
 
@@ -78,7 +78,7 @@ protected:
     struct Impl;
     std::unique_ptr<Impl> pimpl;
 
-    void initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) override;
+    void initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) override;
 
     void append() override;
 

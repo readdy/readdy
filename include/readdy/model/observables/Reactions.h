@@ -58,7 +58,7 @@ class Reactions : public Observable<std::vector<reactions::ReactionRecord>> {
     using super = Observable<std::vector<reactions::ReactionRecord>>;
 
 public:
-    Reactions(Kernel *kernel, stride_type stride);
+    Reactions(Kernel *kernel, Stride stride);
 
     Reactions(const Reactions &) = delete;
 
@@ -77,7 +77,7 @@ public:
 protected:
     void initialize(Kernel *kernel) override;
 
-    void initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) override;
+    void initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) override;
 
     void append() override;
 

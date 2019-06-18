@@ -87,23 +87,18 @@ using observable_type = signal_type::slot_type;
 class ObservableBase {
 public:
     /**
-     * The type of the stride
-     */
-    using stride_type = readdy::stride_type;
-
-    /**
      * Constructs an object of type ObservableBase. Needs a kernel and a stride, which is defaulted to 1, i.e.,
      * evaluation in every time step.
      * @param kernel the kernel
      * @param stride the stride
      */
-    explicit ObservableBase(Kernel* kernel, stride_type stride = 1) : _stride(stride), kernel(kernel) {};
+    explicit ObservableBase(Kernel* kernel, Stride stride = 1) : _stride(stride), kernel(kernel) {};
 
     /**
      * The stride at which the observable gets evaluated. Can be 0, which is equivalent to stride = 1.
      * @return the stride
      */
-    stride_type stride() const {
+    Stride stride() const {
         return _stride;
     }
 
@@ -164,7 +159,7 @@ public:
      * @param dataSetName the name of the data set, automatically placed under the group /readdy/observables
      * @param flushStride performance parameter, determining the hdf5-internal chunk size
      */
-    void enableWriteToFile(File &file, const std::string &dataSetName, stride_type flushStride) {
+    void enableWriteToFile(File &file, const std::string &dataSetName, Stride flushStride) {
         writeToFile = true;
         initializeDataSet(file, dataSetName, flushStride);
     }
@@ -200,7 +195,7 @@ protected:
      * @param dataSetName the name of the data set to be created
      * @param flushStride the flush stride, more specifically the internal hdf5 chunk size
      */
-    virtual void initializeDataSet(File &, const std::string &dataSetName, stride_type flushStride) = 0;
+    virtual void initializeDataSet(File &, const std::string &dataSetName, Stride flushStride) = 0;
 
     /**
      * Called whenever result should be written into the file
@@ -210,7 +205,7 @@ protected:
     /**
      * Stride at which the observable gets evaluated
      */
-    stride_type _stride;
+    Stride _stride;
     /**
      * The kernel which created this observable
      */
@@ -253,7 +248,7 @@ public:
      * @param kernel the kernel
      * @param stride the stride
      */
-    Observable(Kernel * kernel, stride_type stride)
+    Observable(Kernel * kernel, Stride stride)
             : ObservableBase(kernel, stride), result() {
     }
 

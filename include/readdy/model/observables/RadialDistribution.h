@@ -56,11 +56,11 @@ NAMESPACE_BEGIN(observables)
 
 class RadialDistribution : public Observable<std::pair<std::vector<scalar>, std::vector<scalar>>> {
 public:
-    RadialDistribution(Kernel *kernel, stride_type stride, std::vector<scalar> binBorders,
+    RadialDistribution(Kernel *kernel, Stride stride, std::vector<scalar> binBorders,
                        std::vector<ParticleTypeId> typeCountFrom, std::vector<ParticleTypeId> typeCountTo,
                        scalar particleToDensity);
 
-    RadialDistribution(Kernel *kernel, stride_type stride, const std::vector<scalar> &binBorders,
+    RadialDistribution(Kernel *kernel, Stride stride, const std::vector<scalar> &binBorders,
                        const std::vector<std::string> &typeCountFrom, const std::vector<std::string> &typeCountTo,
                        scalar particleToDensity);
 
@@ -78,7 +78,7 @@ protected:
 
     void setBinBorders(const std::vector<scalar> &binBorders);
 
-    void initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) override;
+    void initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) override;
 
     void append() override;
 

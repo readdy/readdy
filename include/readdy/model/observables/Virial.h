@@ -56,7 +56,7 @@ class Virial : public Observable<Matrix33> {
     using super = Observable<Matrix33>;
 public:
 
-    Virial(Kernel* kernel, stride_type stride);
+    Virial(Kernel* kernel, Stride stride);
 
     ~Virial() override;
 
@@ -67,7 +67,7 @@ public:
 protected:
     void initialize(Kernel * kernel) override;
 
-    void initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) override;
+    void initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) override;
 
     void append() override;
 

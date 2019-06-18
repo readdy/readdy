@@ -57,7 +57,7 @@ using rvp = py::return_value_policy;
 using sim = readdy::Simulation;
 using obs_handle_t = readdy::ObservableHandle;
 
-inline obs_handle_t registerObservable_Reactions(sim &self, unsigned int stride,
+inline obs_handle_t registerObservable_Reactions(sim &self, readdy::Stride stride,
                                                  const py::object& callback = py::none()) {
     auto obs = self.observe().reactions(stride);
     if (callback.is_none()) {
@@ -83,7 +83,7 @@ inline obs_handle_t registerObservable_Reactions(sim &self, unsigned int stride,
     }
 }
 
-inline obs_handle_t registerObservable_Topologies(sim &self, readdy::stride_type stride,
+inline obs_handle_t registerObservable_Topologies(sim &self, readdy::Stride stride,
                                                   const py::object &callback = py::none()) {
     auto obs = self.observe().topologies(stride);
     if(callback.is_none()) {
@@ -94,7 +94,7 @@ inline obs_handle_t registerObservable_Topologies(sim &self, readdy::stride_type
     }
 }
 
-inline obs_handle_t registerObservable_ReactionCounts(sim &self, unsigned int stride,
+inline obs_handle_t registerObservable_ReactionCounts(sim &self, readdy::Stride stride,
                                                       const py::object& callback = py::none()) {
     auto obs = self.observe().reactionCounts(stride);
     if (callback.is_none()) {
@@ -131,7 +131,7 @@ inline obs_handle_t registerObservable_ReactionCounts(sim &self, unsigned int st
 }
 
 inline obs_handle_t
-registerObservable_Positions(sim &self, unsigned int stride,
+registerObservable_Positions(sim &self, readdy::Stride stride,
                              const std::vector<std::string> &types, const pybind11::object& callbackFun = py::none()) {
     auto obs = self.observe().positions(stride, types);
     if (callbackFun.is_none()) {
@@ -142,7 +142,7 @@ registerObservable_Positions(sim &self, unsigned int stride,
     }
 }
 
-inline obs_handle_t registerObservable_Particles(sim &self, unsigned int stride,
+inline obs_handle_t registerObservable_Particles(sim &self, readdy::Stride stride,
                                                  const pybind11::object& callbackFun = py::none()) {
     auto obs = self.observe().particles(stride);
     if (callbackFun.is_none()) {
@@ -172,7 +172,7 @@ inline obs_handle_t registerObservable_Particles(sim &self, unsigned int stride,
 
 
 inline obs_handle_t
-registerObservable_RadialDistribution(sim &self, unsigned int stride, py::array_t<readdy::scalar> &binBorders,
+registerObservable_RadialDistribution(sim &self, readdy::Stride stride, py::array_t<readdy::scalar> &binBorders,
                                       const std::vector<std::string> &typeCountFrom, const std::vector<std::string> &typeCountTo,
                                       readdy::scalar particleToDensity, const pybind11::object& callbackFun = py::none()) {
     const auto info = binBorders.request();
@@ -191,7 +191,7 @@ registerObservable_RadialDistribution(sim &self, unsigned int stride, py::array_
 }
 
 inline obs_handle_t
-registerObservable_HistogramAlongAxisObservable(sim &self, unsigned int stride, py::array_t<readdy::scalar> binBorders,
+registerObservable_HistogramAlongAxisObservable(sim &self, readdy::Stride stride, py::array_t<readdy::scalar> binBorders,
                                                 unsigned int axis, std::vector<std::string> types,
                                                 const py::object &callbackFun = py::none()) {
     const auto info = binBorders.request();
@@ -212,7 +212,7 @@ registerObservable_HistogramAlongAxisObservable(sim &self, unsigned int stride, 
 }
 
 inline obs_handle_t
-registerObservable_NParticles(sim &self, unsigned int stride, std::vector<std::string> types,
+registerObservable_NParticles(sim &self, readdy::Stride stride, std::vector<std::string> types,
                               const py::object &callbackFun = py::none()) {
     auto obs = self.observe().nParticles(stride, std::move(types));
     if (callbackFun.is_none()) {
@@ -223,7 +223,7 @@ registerObservable_NParticles(sim &self, unsigned int stride, std::vector<std::s
     }
 }
 
-inline obs_handle_t registerObservable_ForcesObservable(sim &self, unsigned int stride, std::vector<std::string> types,
+inline obs_handle_t registerObservable_ForcesObservable(sim &self, readdy::Stride stride, std::vector<std::string> types,
                                                         const py::object& callbackFun = py::none()) {
     auto obs = self.observe().forces(stride, std::move(types));
     if (callbackFun.is_none()) {
@@ -234,7 +234,7 @@ inline obs_handle_t registerObservable_ForcesObservable(sim &self, unsigned int 
     }
 }
 
-inline obs_handle_t registerObservable_Energy(sim &self, unsigned int stride, const py::object &callbackFun = py::none()) {
+inline obs_handle_t registerObservable_Energy(sim &self, readdy::Stride stride, const py::object &callbackFun = py::none()) {
     auto obs = self.observe().energy(stride);
     if(callbackFun.is_none()) {
         return self.registerObservable(std::move(obs));
@@ -244,7 +244,7 @@ inline obs_handle_t registerObservable_Energy(sim &self, unsigned int stride, co
     }
 }
 
-inline obs_handle_t registerObservable_Virial(sim &self, readdy::stride_type stride,
+inline obs_handle_t registerObservable_Virial(sim &self, readdy::Stride stride,
                                               const py::object &callback = py::none()) {
     auto obs = self.observe().virial(stride);
     if(callback.is_none()) {
@@ -255,11 +255,11 @@ inline obs_handle_t registerObservable_Virial(sim &self, readdy::stride_type str
     }
 }
 
-inline obs_handle_t registerObservable_Trajectory(sim& self, unsigned int stride) {
+inline obs_handle_t registerObservable_Trajectory(sim& self, readdy::Stride stride) {
     return self.registerObservable(self.observe().trajectory(stride));
 }
 
-inline obs_handle_t registerObservable_FlatTrajectory(sim& self, unsigned int stride) {
+inline obs_handle_t registerObservable_FlatTrajectory(sim& self, readdy::Stride stride) {
     return self.registerObservable(self.observe().flatTrajectory(stride));
 }
 

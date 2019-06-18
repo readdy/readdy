@@ -53,7 +53,7 @@ NAMESPACE_BEGIN(observables)
 
 class Energy : public Observable<scalar> {
 public:
-    Energy(Kernel *kernel, stride_type stride);
+    Energy(Kernel *kernel, Stride stride);
 
     Energy(const Energy &) = delete;
 
@@ -75,7 +75,7 @@ private:
     struct Impl;
     std::unique_ptr<Impl> pimpl;
 
-    void initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) override;
+    void initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) override;
 
     void append() override;
 

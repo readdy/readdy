@@ -60,7 +60,7 @@ class ReactionCounts : public Observable<std::tuple<reactions::ReactionCounts,
 public:
     using reaction_counts_map = result_type;
 
-    ReactionCounts(Kernel *kernel, stride_type stride);
+    ReactionCounts(Kernel *kernel, Stride stride);
 
     ReactionCounts(const ReactionCounts &) = delete;
 
@@ -80,7 +80,7 @@ public:
 protected:
     void initialize(Kernel *kernel) override;
 
-    void initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) override;
+    void initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) override;
 
     void append() override;
 

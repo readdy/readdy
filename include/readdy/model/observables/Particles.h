@@ -56,7 +56,7 @@ NAMESPACE_BEGIN(observables)
 class Particles
         : public Observable<std::tuple<std::vector<readdy::model::Particle::type_type>, std::vector<readdy::model::Particle::id_type>, std::vector<Vec3>>> {
 public:
-    explicit Particles(Kernel* kernel, stride_type stride = 1);
+    explicit Particles(Kernel* kernel, Stride stride = 1);
 
     Particles(const Particles&) = delete;
     Particles& operator=(const Particles&) = delete;
@@ -70,7 +70,7 @@ public:
     std::string_view type() const override;
 
 protected:
-    void initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) override;
+    void initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) override;
 
     void append() override;
 
