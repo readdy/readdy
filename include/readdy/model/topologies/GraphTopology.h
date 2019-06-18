@@ -53,10 +53,9 @@
 #include "TopologyRegistry.h"
 #include "Utils.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
+namespace readdy::model {
 class StateModel;
-NAMESPACE_BEGIN(top)
+namespace top {
 
 class GraphTopology : public Topology {
 public:
@@ -77,7 +76,7 @@ public:
      * @param stateModel the kernel's state model
      */
     GraphTopology(TopologyTypeId type, const particle_indices &particles, const types_vec &types,
-                  const model::Context &context, const StateModel* stateModel);
+                  const model::Context &context, const StateModel *stateModel);
 
     /**
      * Will create a graph topology out of an already existing graph and a list of particles, where the i-th vertex
@@ -89,7 +88,7 @@ public:
      * @param stateModel the kernels state model
      */
     GraphTopology(TopologyTypeId type, particle_indices &&particles, topology_graph &&graph,
-                  const model::Context &context, const StateModel* stateModel);
+                  const model::Context &context, const StateModel *stateModel);
 
     ~GraphTopology() override = default;
 
@@ -149,7 +148,7 @@ public:
                         particle_index counterPart, ParticleTypeId counterPartType);
 
     void appendParticle(particle_index newParticle, ParticleTypeId newParticleType,
-            topology_graph::vertex_ref counterPart, ParticleTypeId counterPartType);
+                        topology_graph::vertex_ref counterPart, ParticleTypeId counterPartType);
 
     void appendTopology(GraphTopology &other, particle_index otherParticle, ParticleTypeId otherNewParticleType,
                         particle_index thisParticle, ParticleTypeId thisNewParticleType, TopologyTypeId newType);
@@ -164,7 +163,7 @@ public:
 
     topology_graph::vertex_ref vertexForParticle(particle_index particle) {
         auto it = std::find(particles.begin(), particles.end(), particle);
-        if(it != particles.end()) {
+        if (it != particles.end()) {
             return std::next(graph_.vertices().begin(), std::distance(particles.begin(), it));
         }
         return graph_.vertices().end();
@@ -204,6 +203,5 @@ protected:
     bool deactivated{false};
 };
 
-NAMESPACE_END(top)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}
+}

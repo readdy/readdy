@@ -50,8 +50,7 @@
 #include <readdy/common/common.h>
 #include <readdy/common/ParticleTypeTuple.h>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(api)
+namespace readdy::api {
 
 /**
  * strongly typed enum holding the various bond types
@@ -115,15 +114,15 @@ struct TorsionAngle {
     /**
      * the stiffness of the torsion potential
      */
-    scalar forceConstant {0};
+    scalar forceConstant{0};
     /**
      * multiplicity of the torsion potential, indicating the number of minima as the bond is rotated through 360 degrees
      */
-    scalar multiplicity {0};
+    scalar multiplicity{0};
     /**
      * the preferred torsion angle w.r.t. this potential
      */
-    scalar phi_0 {0};
+    scalar phi_0{0};
     /**
      * the type of torsion potential
      */
@@ -161,5 +160,4 @@ struct PotentialConfiguration {
     torsion_potential_map torsionPotentials;
 };
 
-NAMESPACE_END(api)
-NAMESPACE_END(readdy)
+}

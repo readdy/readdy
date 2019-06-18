@@ -48,10 +48,7 @@
 
 #define SMALL 1e-10
 
-namespace readdy {
-namespace model {
-namespace top {
-namespace pot {
+namespace readdy::model::top::pot {
 
 std::unique_ptr<EvaluatePotentialAction>
 HarmonicAnglePotential::createForceAndEnergyAction(const TopologyActionFactory *const factory) {
@@ -84,29 +81,26 @@ void HarmonicAnglePotential::calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, con
     if (norm_product < SMALL) {
         norm_product = SMALL;
     }
-    const scalar inv_norm_product = c_::one / norm_product;
+    const scalar inv_norm_product = 1. / norm_product;
 
     scalar cos_theta = inv_norm_product * scalarProduct;
-    cos_theta = readdy::util::numeric::clamp(cos_theta, -c_::one, c_::one);
+    cos_theta = readdy::util::numeric::clamp(cos_theta, -1., 1.);
 
-    scalar sin_theta_inv = std::sqrt(c_::one - cos_theta * cos_theta);
+    scalar sin_theta_inv = std::sqrt(1. - cos_theta * cos_theta);
     // avoid too small values of sin_theta
     if (sin_theta_inv < SMALL) {
         sin_theta_inv = SMALL;
     }
-    sin_theta_inv = c_::one / sin_theta_inv;
+    sin_theta_inv = 1. / sin_theta_inv;
 
-    const scalar c = c_::two * angle.forceConstant * (std::acos(cos_theta) - angle.equilibriumAngle) * sin_theta_inv;
+    const scalar c = 2. * angle.forceConstant * (std::acos(cos_theta) - angle.equilibriumAngle) * sin_theta_inv;
 
-    const Vec3 force_i = c * cos_theta * (c_::one / norm_ji_2) * x_ji - c * inv_norm_product * x_jk;
-    const Vec3 force_k = -c * inv_norm_product * x_ji + c * cos_theta * (c_::one / norm_jk_2) * x_jk;
+    const Vec3 force_i = c * cos_theta * (1. / norm_ji_2) * x_ji - c * inv_norm_product * x_jk;
+    const Vec3 force_k = -c * inv_norm_product * x_ji + c * cos_theta * (1. / norm_jk_2) * x_jk;
 
     f_i -= force_i;
     f_j += force_i + force_k;
     f_k -= force_k;
 }
 
-}
-}
-}
 }

@@ -47,20 +47,16 @@
 #include <h5rd/h5rd.h>
 #include <readdy/common/macros.h>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(observables)
-NAMESPACE_BEGIN(util)
+namespace readdy::model::observables::util {
 
 constexpr auto OBSERVABLES_GROUP_PATH = "/readdy/observables";
 
 using CompoundH5Types = std::tuple<h5rd::NativeCompoundType, h5rd::STDCompoundType>;
 
 CompoundH5Types getVec3Types(h5rd::Object::ParentFileRef ref);
+
 CompoundH5Types getReactionRecordTypes(h5rd::Object::ParentFileRef ref);
+
 CompoundH5Types getTrajectoryEntryTypes(h5rd::Object::ParentFileRef ref);
 
-NAMESPACE_END(util)
-NAMESPACE_END(observables)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

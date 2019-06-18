@@ -48,33 +48,30 @@
 #include <readdy/model/topologies/TopologyActionFactory.h>
 #include <readdy/model/topologies/reactions/TopologyReactionActionFactory.h>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(kernel)
-NAMESPACE_BEGIN(scpu)
+namespace readdy::kernel::scpu {
 class SCPUKernel;
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(top)
+namespace model::top {
 
 namespace top = readdy::model::top;
 
 class SCPUTopologyActionFactory : public top::TopologyActionFactory {
     SCPUKernel *const kernel;
 public:
-    explicit SCPUTopologyActionFactory(SCPUKernel* kernel);
+    explicit SCPUTopologyActionFactory(SCPUKernel *kernel);
 
     std::unique_ptr<top::pot::CalculateHarmonicBondPotential>
-    createCalculateHarmonicBondPotential(const harmonic_bond * potential) const override;
+    createCalculateHarmonicBondPotential(const harmonic_bond *potential) const override;
 
     std::unique_ptr<top::pot::CalculateHarmonicAnglePotential>
-    createCalculateHarmonicAnglePotential(const harmonic_angle* potential) const override;
+    createCalculateHarmonicAnglePotential(const harmonic_angle *potential) const override;
 
     std::unique_ptr<top::pot::CalculateCosineDihedralPotential>
-    createCalculateCosineDihedralPotential(const cos_dihedral* potential) const override;
+    createCalculateCosineDihedralPotential(const cos_dihedral *potential) const override;
 
-    action_ref createChangeParticleType(top::GraphTopology* topology, const vertex &v,
-                                           const ParticleTypeId &type_to) const override;
+    action_ref createChangeParticleType(top::GraphTopology *topology, const vertex &v,
+                                        const ParticleTypeId &type_to) const override;
 
-    action_ref createChangeTopologyType(top::GraphTopology * topology, const std::string &type_to) const override;
+    action_ref createChangeTopologyType(top::GraphTopology *topology, const std::string &type_to) const override;
 
     action_ref
     createChangeParticlePosition(top::GraphTopology *topology, const vertex &v, Vec3 position) const override;
@@ -84,8 +81,5 @@ public:
                          const Vec3 &position) const override;
 };
 
-NAMESPACE_END(top)
-NAMESPACE_END(model)
-NAMESPACE_END(scpu)
-NAMESPACE_END(kernel)
-NAMESPACE_END(readdy)
+}
+}

@@ -48,7 +48,7 @@
 
 #include <readdy/model/observables/Observable.h>
 
-NAMESPACE_BEGIN(readdy)
+namespace readdy {
 
 namespace detail {
 template<typename T>
@@ -80,7 +80,7 @@ public:
     }
 
     std::string_view type() const {
-        if(_observable) {
+        if (_observable) {
             return _observable->type();
         }
         throw std::runtime_error("No observable attached to this handle, therefore no type");
@@ -90,7 +90,7 @@ public:
      * Triggers a flush, i.e., everything that can be written will be written
      */
     void flush() {
-        if(_observable) {
+        if (_observable) {
             _observable->flush();
         }
     }
@@ -106,4 +106,4 @@ private:
     readdy::model::observables::ObservableBase *const _observable;
 };
 
-NAMESPACE_END(readdy)
+}

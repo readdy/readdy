@@ -51,10 +51,9 @@
 
 namespace readdy::model::observables {
 
-using data_set = h5rd::DataSet;
-using ReactionsDataSets = std::unordered_map<ReactionId, std::unique_ptr<data_set>>;
-using SpatialReactionsDataSets = std::unordered_map<ReactionId, std::unique_ptr<data_set>>;
-using StructuralReactionsDataSets = std::unordered_map<ReactionId, std::unique_ptr<data_set>>;
+using ReactionsDataSets = std::unordered_map<ReactionId, std::unique_ptr<h5rd::DataSet>>;
+using SpatialReactionsDataSets = std::unordered_map<ReactionId, std::unique_ptr<h5rd::DataSet>>;
+using StructuralReactionsDataSets = std::unordered_map<ReactionId, std::unique_ptr<h5rd::DataSet>>;
 
 struct ReactionCounts::Impl {
     std::unique_ptr<h5rd::Group> group;
@@ -64,7 +63,7 @@ struct ReactionCounts::Impl {
     std::unique_ptr<util::TimeSeriesWriter> time;
     unsigned int flushStride = 0;
     bool firstWrite = true;
-    std::function<void(std::unique_ptr<data_set> &)> flushFun = [](std::unique_ptr<data_set> &value) {
+    std::function<void(std::unique_ptr<h5rd::DataSet> &)> flushFun = [](std::unique_ptr<h5rd::DataSet> &value) {
         if(value) value->flush();
     };
     io::BloscFilter bloscFilter {};

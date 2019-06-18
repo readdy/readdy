@@ -58,8 +58,7 @@
 #include <utility>
 #include <readdy/common/common.h>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(util)
+namespace readdy::util {
 std::string getOS();
 
 bool isWindows();
@@ -68,7 +67,7 @@ std::vector<std::string> &split(const std::string &s, char delim, std::vector<st
 
 std::vector<std::string> split(const std::string &s, char delim);
 
-NAMESPACE_BEGIN(collections)
+namespace collections {
 
 template<typename MapType, typename KeyType = std::string>
 inline bool hasKey(const MapType &map, const KeyType &key) {
@@ -85,26 +84,26 @@ inline const V &getOrDefault(const C<K, V, Args...> &m, const K &key, const V &d
 }
 
 template<typename Collection, typename Fun>
-inline void for_each_value(const Collection& collection, Fun f)  {
-    for(auto&& e : collection) {
-        for(auto&& inner : e.second) {
+inline void for_each_value(const Collection &collection, Fun f) {
+    for (auto &&e : collection) {
+        for (auto &&inner : e.second) {
             f(e.first, inner);
         }
     }
 }
 
 template<typename Collection, typename Fun>
-inline void for_each_value_ref(const Collection& collection, Fun &f)  {
-    for(auto&& e : collection) {
-        for(auto&& inner : e.second) {
+inline void for_each_value_ref(const Collection &collection, Fun &f) {
+    for (auto &&e : collection) {
+        for (auto &&inner : e.second) {
             f(inner);
         }
     }
 }
 
-template <typename map, typename Fun>
+template<typename map, typename Fun>
 inline void for_each_value_in_map(map &m, Fun f) {
-    for (auto&& entry : m) {
+    for (auto &&entry : m) {
         f(entry.second);
     }
 }
@@ -135,28 +134,27 @@ typename std::vector<T>::iterator insert_sorted(std::vector<T> &vec, T const &it
     return vec.insert(std::upper_bound(vec.begin(), vec.end(), item, pred), item);
 }
 
-NAMESPACE_END(collections)
+}
 
 template<typename Derived, typename Base, typename Del>
-std::unique_ptr<Derived, Del> static_unique_ptr_cast( std::unique_ptr<Base, Del>&& p ) {
+std::unique_ptr<Derived, Del> static_unique_ptr_cast(std::unique_ptr<Base, Del> &&p) {
     auto d = static_cast<Derived *>(p.release());
     return std::unique_ptr<Derived, Del>(d, std::move(p.get_deleter()));
 }
 
 template<typename Derived, typename Base>
-std::unique_ptr<Derived> static_unique_ptr_cast_no_del( std::unique_ptr<Base>&& p ) {
+std::unique_ptr<Derived> static_unique_ptr_cast_no_del(std::unique_ptr<Base> &&p) {
     auto d = static_cast<Derived *>(p.release());
     return std::unique_ptr<Derived>(d);
 }
 
 template<typename Derived, typename Base, typename Del>
-std::unique_ptr<Derived, Del> dynamic_unique_ptr_cast( std::unique_ptr<Base, Del>&& p ) {
-    if(auto *result = dynamic_cast<Derived *>(p.get())) {
+std::unique_ptr<Derived, Del> dynamic_unique_ptr_cast(std::unique_ptr<Base, Del> &&p) {
+    if (auto *result = dynamic_cast<Derived *>(p.get())) {
         p.release();
         return std::unique_ptr<Derived, Del>(result, std::move(p.get_deleter()));
     }
     return std::unique_ptr<Derived, Del>(nullptr, p.get_deleter());
 }
 
-NAMESPACE_END(util)
-NAMESPACE_END(readdy)
+}

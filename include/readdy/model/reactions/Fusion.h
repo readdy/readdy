@@ -46,16 +46,14 @@
 #pragma once
 #include "Reaction.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(reactions)
+namespace readdy::model::reactions {
 
 class Fusion : public Reaction {
     using super = Reaction;
 public:
     Fusion(const std::string &name, ParticleTypeId from1, ParticleTypeId from2, ParticleTypeId to,
            const scalar rate, const scalar eductDistance, const scalar weight1 = 0.5,
-           const scalar weight2 = 0.5) : Reaction(name, rate, eductDistance, 0, 2, 1){
+           const scalar weight2 = 0.5) : Reaction(name, rate, eductDistance, 0, 2, 1) {
         super::_weight1 = weight1;
         super::_weight2 = weight2;
         _educts = {from1, from2};
@@ -66,7 +64,7 @@ public:
             this->_weight1 /= sum;
             this->_weight2 /= sum;
             log::warn("The weights did not add up to 1, they were changed to weight1={}, weight2={}",
-                                 this->_weight1, this->_weight2);
+                      this->_weight1, this->_weight2);
         }
     }
 
@@ -88,6 +86,5 @@ public:
 
 
 };
-NAMESPACE_END(reactions)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+
+}

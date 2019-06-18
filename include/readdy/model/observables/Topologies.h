@@ -50,9 +50,7 @@
 #include <readdy/model/topologies/TopologyRecord.h>
 #include "Observable.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(observables)
+namespace readdy::model::observables {
 
 class Topologies : public Observable<std::vector<top::TopologyRecord>> {
 public:
@@ -77,6 +75,4 @@ protected:
     bool useBlosc;
 };
 
-NAMESPACE_END(observables)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

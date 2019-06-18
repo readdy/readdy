@@ -52,7 +52,7 @@
 #include <readdy/model/topologies/reactions/StructuralTopologyReaction.h>
 #include <readdy/api/ObservableHandle.h>
 
-NAMESPACE_BEGIN(readdy)
+namespace readdy {
 /**
  * Simulation is the focus of the high-level C++ API of ReaDDy.
  * This is where the system is set up and run for a certain number of
@@ -302,4 +302,4 @@ private:
     std::vector<readdy::signals::scoped_connection> _observableConnections{};
 };
 
-NAMESPACE_END(readdy)
+}

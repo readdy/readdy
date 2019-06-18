@@ -47,28 +47,28 @@
 #include <readdy/common/macros.h>
 #include <readdy/model/topologies/potentials/TopologyPotentialAction.h>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(top)
+namespace readdy::model::top {
 class Topology;
+
 class TopologyActionFactory;
-NAMESPACE_BEGIN(pot)
+namespace pot {
 
 class TopologyPotential {
 public:
     TopologyPotential() = default;
 
-    TopologyPotential(const TopologyPotential&) = default;
-    TopologyPotential& operator=(const TopologyPotential&) = delete;
-    TopologyPotential(TopologyPotential&&) = default;
-    TopologyPotential& operator=(TopologyPotential&&) = delete;
+    TopologyPotential(const TopologyPotential &) = default;
+
+    TopologyPotential &operator=(const TopologyPotential &) = delete;
+
+    TopologyPotential(TopologyPotential &&) = default;
+
+    TopologyPotential &operator=(TopologyPotential &&) = delete;
 
     virtual ~TopologyPotential() = default;
 
-    virtual std::unique_ptr<EvaluatePotentialAction> createForceAndEnergyAction(const TopologyActionFactory*) = 0;
+    virtual std::unique_ptr<EvaluatePotentialAction> createForceAndEnergyAction(const TopologyActionFactory *) = 0;
 };
 
-NAMESPACE_END(pot)
-NAMESPACE_END(top)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}
+}

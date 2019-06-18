@@ -49,9 +49,7 @@
 #include <readdy/io/BloscFilter.h>
 #include "Observable.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(observables)
+namespace readdy::model::observables {
 
 class HistogramAlongAxis : public Observable<std::vector<scalar>> {
 
@@ -85,6 +83,4 @@ protected:
     io::BloscFilter bloscFilter{};
 };
 
-NAMESPACE_END(observables)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

@@ -48,12 +48,9 @@
 #include <readdy/common/macros.h>
 #include <readdy/model/topologies/graph/Graph.h>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(top)
+namespace readdy::model::top {
 class GraphTopology;
-NAMESPACE_BEGIN(reactions)
-NAMESPACE_BEGIN(actions)
+namespace reactions::actions {
 
 class TopologyReactionAction {
 public:
@@ -85,22 +82,22 @@ public:
     /**
      * default copy
      */
-    TopologyReactionAction(const TopologyReactionAction&) = default;
+    TopologyReactionAction(const TopologyReactionAction &) = default;
 
     /**
      * no copy assign
      */
-    TopologyReactionAction& operator=(const TopologyReactionAction&) = delete;
+    TopologyReactionAction &operator=(const TopologyReactionAction &) = delete;
 
     /**
      * default move
      */
-    TopologyReactionAction(TopologyReactionAction&&) = default;
+    TopologyReactionAction(TopologyReactionAction &&) = default;
 
     /**
      * no move assign
      */
-    TopologyReactionAction& operator=(TopologyReactionAction&&) = delete;
+    TopologyReactionAction &operator=(TopologyReactionAction &&) = delete;
 
     /**
      * base method for executing the action
@@ -162,7 +159,7 @@ public:
 
 protected:
     std::vector<vertex> neighbors;
-    ParticleTypeId  type;
+    ParticleTypeId type;
     Vec3 pos;
 };
 
@@ -245,11 +242,8 @@ private:
     /**
      * the previous type, stored for undo
      */
-    TopologyTypeId _prevType {0};
+    TopologyTypeId _prevType{0};
 };
 
-NAMESPACE_END(actions)
-NAMESPACE_END(reactions)
-NAMESPACE_END(top)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}
+}

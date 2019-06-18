@@ -113,8 +113,8 @@ void RadialDistribution::evaluate() {
                 const auto upperRadius = binBorders[idx + 1];
                 *it_distribution =
                         (*it_counts) /
-                        (c_::four / c_::three * readdy::util::numeric::pi<scalar>() * (std::pow(upperRadius, c_::three)
-                                                                       - std::pow(lowerRadius, c_::three))
+                        (4. / 3. * readdy::util::numeric::pi<scalar>() * (std::pow(upperRadius, 3.)
+                                                                       - std::pow(lowerRadius, 3.))
                          * nFromParticles * particleToDensity);
                 ++it_distribution;
                 ++it_centers;

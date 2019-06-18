@@ -48,14 +48,14 @@
 #include "logging.h"
 #include "ReaDDyVec3.h"
 
-NAMESPACE_BEGIN(h5rd)
+namespace h5rd {
 class File;
 class Group;
-NAMESPACE_END(h5rd)
+}
 
-NAMESPACE_BEGIN(readdy)
+namespace readdy {
 
-constexpr inline std::size_t operator "" _z ( unsigned long long n ) { return n; }
+constexpr inline std::size_t operator "" _z(unsigned long long n) { return n; }
 
 using scalar = double;
 using Stride = std::uint32_t;
@@ -70,16 +70,6 @@ constexpr TopologyTypeId EmptyTopologyId = static_cast<TopologyTypeId>(-1);
 
 constexpr bool single_precision = std::is_same<scalar, float>::value;
 constexpr bool double_precision = std::is_same<scalar, double>::value;
-
-NAMESPACE_BEGIN(c_)
-constexpr scalar zero = static_cast<scalar>(0.0);
-constexpr scalar one = static_cast<scalar>(1.0);
-constexpr scalar two = static_cast<scalar>(2.0);
-constexpr scalar three = static_cast<scalar>(3.0);
-constexpr scalar four = static_cast<scalar>(4.0);
-constexpr scalar five = static_cast<scalar>(5.0);
-constexpr scalar half = static_cast<scalar>(.5);
-NAMESPACE_END(c_)
 
 using File = h5rd::File;
 
@@ -99,4 +89,4 @@ inline auto readdy_default_n_threads() -> decltype(std::thread::hardware_concurr
     return m_nThreads;
 }
 
-NAMESPACE_END(readdy)
+}

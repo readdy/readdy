@@ -48,15 +48,13 @@
 #include <readdy/common/macros.h>
 #include "Observable.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(observables)
+namespace readdy::model::observables {
 
 class Virial : public Observable<Matrix33> {
     using super = Observable<Matrix33>;
 public:
 
-    Virial(Kernel* kernel, Stride stride);
+    Virial(Kernel *kernel, Stride stride);
 
     ~Virial() override;
 
@@ -65,7 +63,7 @@ public:
     void flush() override;
 
 protected:
-    void initialize(Kernel * kernel) override;
+    void initialize(Kernel *kernel) override;
 
     void initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) override;
 
@@ -75,6 +73,4 @@ protected:
     std::unique_ptr<Impl> pimpl;
 };
 
-NAMESPACE_END(observables)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

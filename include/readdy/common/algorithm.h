@@ -69,7 +69,7 @@ inline void performEvents(Events &events, const ShouldEvaluate &shouldEvaluate, 
 
         {
             // update cumulative rates
-            scalar cumulativeRate = c_::zero;
+            scalar cumulativeRate = 0.;
             for(auto &event : events) {
                 event.cumulativeRate = event.rate + cumulativeRate;
                 cumulativeRate = event.cumulativeRate;
@@ -78,7 +78,7 @@ inline void performEvents(Events &events, const ShouldEvaluate &shouldEvaluate, 
 
         while(nDeactivated < nEvents) {
             const auto cumulativeRate = (std::end(events) - nDeactivated - 1)->cumulativeRate;
-            const auto x = readdy::model::rnd::uniform_real(c_::zero, cumulativeRate);
+            const auto x = readdy::model::rnd::uniform_real(0., cumulativeRate);
             const auto eventIt = std::lower_bound(
                     std::begin(events), std::end(events) - nDeactivated, x, [](const auto &elem1, const auto elem2) {
                         return elem1.cumulativeRate < elem2;

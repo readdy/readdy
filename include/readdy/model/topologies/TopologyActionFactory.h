@@ -47,12 +47,10 @@
 #include <readdy/model/topologies/reactions/TopologyReactionActionFactory.h>
 #include <readdy/model/topologies/potentials/TopologyPotentialActionFactory.h>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(top)
+namespace readdy::model::top {
 
-class TopologyActionFactory : public pot::TopologyPotentialActionFactory, public reactions::actions::TopologyReactionActionFactory{};
+class TopologyActionFactory
+        : public pot::TopologyPotentialActionFactory, public reactions::actions::TopologyReactionActionFactory {
+};
 
-NAMESPACE_END(top)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

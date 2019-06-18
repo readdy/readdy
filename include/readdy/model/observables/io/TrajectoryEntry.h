@@ -50,31 +50,28 @@
 #include <readdy/model/Particle.h>
 #include <readdy/model/ParticleTypeRegistry.h>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(observables)
+namespace readdy::model::observables {
 
 struct TrajectoryEntry {
 
     TrajectoryEntry() = default;
 
-    explicit TrajectoryEntry(const readdy::model::Particle &p, const readdy::model::ParticleTypeRegistry& ptr)
+    explicit TrajectoryEntry(const readdy::model::Particle &p, const readdy::model::ParticleTypeRegistry &ptr)
             : typeId(p.type()), id(p.id()), pos(p.pos()), flavor(ptr.infoOf(p.type()).flavor) {}
 
-    readdy::model::Particle::type_type typeId {0};
-    readdy::model::Particle::id_type id {0};
-    readdy::model::particle_flavor flavor {0};
+    readdy::model::Particle::type_type typeId{0};
+    readdy::model::Particle::id_type id{0};
+    readdy::model::particle_flavor flavor{0};
     readdy::model::Particle::pos_type pos;
 
     friend std::ostream &operator<<(std::ostream & /*os*/, const TrajectoryEntry & /*p*/);
 };
 
 inline std::ostream &operator<<(std::ostream &os, const TrajectoryEntry &p) {
-    os << "TrajectoryEntry(id=" << p.id << ", type=" << p.typeId << ", position=" << p.pos << ", flavor=" << (int) p.flavor
+    os << "TrajectoryEntry(id=" << p.id << ", type=" << p.typeId << ", position=" << p.pos << ", flavor="
+       << (int) p.flavor
        << ")";
     return os;
 }
 
-NAMESPACE_END(observables)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

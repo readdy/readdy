@@ -57,9 +57,7 @@
 #include "PotentialsOrder2.h"
 #include "PotentialsOrder1.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(potentials)
+namespace readdy::model::potentials {
 
 class PotentialRegistry {
 public:
@@ -102,6 +100,7 @@ public:
     void addBox(const std::string &particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &extent) {
         addBox(_types(particleType), forceConstant, origin, extent);
     }
+
     void addBox(ParticleTypeId particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &extent) {
         auto &pots = _ownPotentialsO1[particleType];
         pots.emplace_back(std::make_shared<Box>(particleType, forceConstant, origin, extent));
@@ -120,6 +119,7 @@ public:
                               scalar interactionDistance) {
         addHarmonicRepulsion(_types(type1), _types(type2), forceConstant, interactionDistance);
     }
+
     void addHarmonicRepulsion(ParticleTypeId type1, ParticleTypeId type2, scalar forceConstant,
                               scalar interactionDistance) {
         auto &pots = _ownPotentialsP2[std::tie(type1, type2)];
@@ -142,16 +142,19 @@ public:
         WeakInteractionPiecewiseHarmonic::Configuration conf{desiredDist, depth, cutoff};
         addWeakInteractionPiecewiseHarmonic(type1, type2, forceConstant, conf);
     }
+
     void addWeakInteractionPiecewiseHarmonic(const std::string &type1, const std::string &type2,
                                              scalar forceConstant, scalar desiredDist, scalar depth, scalar cutoff) {
         addWeakInteractionPiecewiseHarmonic(_types(type1), _types(type2), forceConstant, desiredDist,
                                             depth, cutoff);
     }
+
     void
     addWeakInteractionPiecewiseHarmonic(const std::string &type1, const std::string &type2, scalar forceConstant,
                                         const WeakInteractionPiecewiseHarmonic::Configuration &config) {
         addWeakInteractionPiecewiseHarmonic(_types(type1), _types(type2), forceConstant, config);
     }
+
     void
     addWeakInteractionPiecewiseHarmonic(ParticleTypeId type1, ParticleTypeId type2, scalar forceConstant,
                                         const WeakInteractionPiecewiseHarmonic::Configuration &config) {
@@ -185,6 +188,7 @@ public:
                          scalar cutoff, bool shift, scalar epsilon, scalar sigma) {
         addLennardJones(_types(type1), _types(type2), m, n, cutoff, shift, epsilon, sigma);
     }
+
     void addLennardJones(ParticleTypeId type1, ParticleTypeId type2, unsigned int m, unsigned int n,
                          scalar cutoff, bool shift, scalar epsilon, scalar sigma) {
         auto &pots = _ownPotentialsP2[std::tie(type1, type2)];
@@ -219,6 +223,7 @@ public:
         addScreenedElectrostatics(_types(particleType1), _types(particleType2), electrostaticStrength,
                                   inverseScreeningDepth, repulsionStrength, repulsionDistance, exponent, cutoff);
     }
+
     void addScreenedElectrostatics(ParticleTypeId particleType1, ParticleTypeId particleType2,
                                    scalar electrostaticStrength, scalar inverseScreeningDepth,
                                    scalar repulsionStrength, scalar repulsionDistance, unsigned int exponent,
@@ -241,10 +246,13 @@ public:
      * @param radius the extent of the sphere
      * @param inclusion if true, the potential will include particles, otherwise exclude them from the volume
      */
-    void addSphere(const std::string &particleType, scalar forceConstant, const Vec3 &origin, scalar radius, bool inclusion) {
+    void addSphere(const std::string &particleType, scalar forceConstant, const Vec3 &origin, scalar radius,
+                   bool inclusion) {
         addSphere(_types(particleType), forceConstant, origin, radius, inclusion);
     }
-    void addSphere(ParticleTypeId particleType, scalar forceConstant, const Vec3 &origin, scalar radius, bool inclusion) {
+
+    void
+    addSphere(ParticleTypeId particleType, scalar forceConstant, const Vec3 &origin, scalar radius, bool inclusion) {
         auto &pots = _ownPotentialsO1[particleType];
         if (inclusion) {
             pots.emplace_back(std::make_shared<Sphere<true>>(particleType, forceConstant, origin, radius));
@@ -268,6 +276,7 @@ public:
                              scalar radius) {
         addSphericalBarrier(_types(particleType), height, width, origin, radius);
     }
+
     void addSphericalBarrier(ParticleTypeId particleType, scalar height, scalar width, const Vec3 &origin,
                              scalar radius) {
         auto &pots = _ownPotentialsO1[particleType];
@@ -289,12 +298,12 @@ public:
      * @param inclusion if true, the potential will include particles, otherwise exclude them from the volume
      */
     void addCylinder(const std::string &particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &normal,
-                       scalar radius, bool inclusion) {
+                     scalar radius, bool inclusion) {
         addCylinder(_types(particleType), forceConstant, origin, normal, radius, inclusion);
     }
 
     void addCylinder(ParticleTypeId particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &normal,
-                       scalar radius, bool inclusion) {
+                     scalar radius, bool inclusion) {
         auto &pots = _ownPotentialsO1[particleType];
         if (inclusion) {
             pots.emplace_back(std::make_shared<Cylinder<true>>(particleType, forceConstant, origin, normal, radius));
@@ -373,6 +382,4 @@ private:
 
 };
 
-NAMESPACE_END(potentials)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

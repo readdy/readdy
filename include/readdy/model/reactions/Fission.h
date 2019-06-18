@@ -48,9 +48,7 @@
 #include <readdy/common/logging.h>
 #include "Reaction.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(reactions)
+namespace readdy::model::reactions {
 
 class Fission : public Reaction {
     using super = Reaction;
@@ -87,6 +85,5 @@ public:
     const ReactionType type() const override { return ReactionType::Fission; }
 
 };
-NAMESPACE_END(reactions)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+
+}

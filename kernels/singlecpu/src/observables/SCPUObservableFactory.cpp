@@ -47,10 +47,7 @@
 #include <readdy/kernel/singlecpu/observables/SCPUObservableFactory.h>
 #include <readdy/kernel/singlecpu/observables/SCPUObservables.h>
 
-namespace readdy {
-namespace kernel {
-namespace scpu {
-namespace observables {
+namespace readdy::kernel::scpu::observables {
 SCPUObservableFactory::SCPUObservableFactory(readdy::kernel::scpu::SCPUKernel *const kernel)
         : ObservableFactory(kernel), kernel(kernel) {
 }
@@ -104,7 +101,4 @@ SCPUObservableFactory::virial(Stride stride) const {
     return {std::make_unique<SCPUVirial>(kernel, stride)};
 }
 
-}
-}
-}
 }

@@ -46,9 +46,7 @@
 #include <condition_variable>
 #include <readdy/common/macros.h>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(util)
-NAMESPACE_BEGIN(thread)
+namespace readdy::util::thread {
 
 /**
  * thread barrier that syncs up a bunch of threads
@@ -59,7 +57,7 @@ public:
      * constructs a new barrier
      * @param count the number of threads to synchronize
      */
-    explicit barrier(std::size_t count) : fallback(count), count(count), generation(0) { }
+    explicit barrier(std::size_t count) : fallback(count), count(count), generation(0) {}
 
     /**
      * waste time until all threads reached the barrier
@@ -85,6 +83,4 @@ private:
     mutable std::size_t generation;
 };
 
-NAMESPACE_END(thread)
-NAMESPACE_END(util)
-NAMESPACE_END(readdy)
+}

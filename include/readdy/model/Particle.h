@@ -52,8 +52,7 @@
 #include <readdy/common/common.h>
 #include "readdy/common/ReaDDyVec3.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
+namespace readdy::model {
 
 class READDY_API Particle {
 public:
@@ -69,13 +68,13 @@ public:
 
     Particle(Vec3 pos, type_type type, id_type id) : _pos(pos), _type(type), _id(id) {}
 
-    Particle(const Particle&) = default;
+    Particle(const Particle &) = default;
 
-    Particle& operator=(const Particle&) = default;
+    Particle &operator=(const Particle &) = default;
 
-    Particle(Particle&&) = default;
+    Particle(Particle &&) = default;
 
-    Particle& operator=(Particle&&) = default;
+    Particle &operator=(Particle &&) = default;
 
     virtual ~Particle() = default;
 
@@ -125,5 +124,4 @@ public:
     using Particle::Particle;
 };
 
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

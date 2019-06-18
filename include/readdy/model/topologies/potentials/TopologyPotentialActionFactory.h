@@ -51,10 +51,7 @@
 #include "AnglePotential.h"
 #include "TorsionPotential.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(top)
-NAMESPACE_BEGIN(pot)
+namespace readdy::model::top::pot {
 
 class TopologyPotentialActionFactory {
 public:
@@ -73,7 +70,4 @@ public:
     createCalculateCosineDihedralPotential(const cos_dihedral *) const = 0;
 };
 
-NAMESPACE_END(pot)
-NAMESPACE_END(top)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

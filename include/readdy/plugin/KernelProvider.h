@@ -49,14 +49,12 @@
 
 #include <readdy/model/Kernel.h>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(util)
-NAMESPACE_BEGIN(dll)
+namespace readdy {
+namespace util::dll {
 class shared_library;
-NAMESPACE_END(dll)
-NAMESPACE_END(util)
+}
+namespace plugin {
 
-NAMESPACE_BEGIN(plugin)
 class KernelDeleter {
     std::shared_ptr<readdy::util::dll::shared_library> ptr;
 public:
@@ -208,5 +206,5 @@ private:
 
 };
 
-NAMESPACE_END(plugin)
-NAMESPACE_END(readdy)
+}
+}

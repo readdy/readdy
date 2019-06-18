@@ -55,19 +55,29 @@
 #include <readdy/model/Particle.h>
 #include <readdy/model/RandomProvider.h>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(reactions)
+namespace readdy::model::reactions {
 
-enum class ReactionType { Conversion, Fusion, Fission, Enzymatic, Decay };
+enum class ReactionType {
+    Conversion, Fusion, Fission, Enzymatic, Decay
+};
 
-inline std::ostream& operator<<(std::ostream& os, const ReactionType& reactionType) {
+inline std::ostream &operator<<(std::ostream &os, const ReactionType &reactionType) {
     switch (reactionType) {
-        case ReactionType::Decay: os << "Decay"; break;
-        case ReactionType::Conversion: os << "Conversion"; break;
-        case ReactionType::Fusion: os << "Fusion"; break;
-        case ReactionType::Fission: os << "Fission"; break;
-        case ReactionType::Enzymatic: os << "Enzymatic"; break;
+        case ReactionType::Decay:
+            os << "Decay";
+            break;
+        case ReactionType::Conversion:
+            os << "Conversion";
+            break;
+        case ReactionType::Fusion:
+            os << "Fusion";
+            break;
+        case ReactionType::Fission:
+            os << "Fission";
+            break;
+        case ReactionType::Enzymatic:
+            os << "Enzymatic";
+            break;
     }
     return os;
 }
@@ -159,8 +169,8 @@ protected:
 
     std::uint8_t _nEducts;
     std::uint8_t _nProducts;
-    std::array<ParticleTypeId, 2> _educts {{0, 0}};
-    std::array<ParticleTypeId, 2> _products {{0, 0}};
+    std::array<ParticleTypeId, 2> _educts{{0, 0}};
+    std::array<ParticleTypeId, 2> _products{{0, 0}};
     std::string _name;
     ReactionId _id;
     scalar _rate;
@@ -170,6 +180,4 @@ protected:
     scalar _weight1 = .5, _weight2 = .5;
 };
 
-NAMESPACE_END(reactions)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

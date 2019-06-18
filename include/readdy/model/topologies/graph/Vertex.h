@@ -53,10 +53,7 @@
 #include <readdy/common/common.h>
 #include <readdy/model/Particle.h>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(top)
-NAMESPACE_BEGIN(graph)
+namespace readdy::model::top::graph {
 
 class Graph;
 
@@ -99,7 +96,7 @@ public:
     /**
      * particle index in the topology this vertex belongs to
      */
-    std::size_t particleIndex {0};
+    std::size_t particleIndex{0};
 
     bool operator==(const Vertex &rhs) const {
         return particleIndex == rhs.particleIndex;
@@ -150,7 +147,7 @@ public:
     /**
      * flag if this vertex has been visited (for BFS/DFS)
      */
-    bool visited {false};
+    bool visited{false};
 
 private:
     friend class readdy::model::top::graph::Graph;
@@ -160,10 +157,7 @@ private:
      */
     std::vector<vertex_ptr> neighbors_{};
 
-    ParticleTypeId particleType_ {0};
+    ParticleTypeId particleType_{0};
 };
 
-NAMESPACE_END(graph)
-NAMESPACE_END(top)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

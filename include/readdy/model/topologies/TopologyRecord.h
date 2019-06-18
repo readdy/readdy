@@ -47,9 +47,7 @@
 #include <readdy/common/macros.h>
 #include "Topology.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(top)
+namespace readdy::model::top {
 
 struct TopologyRecord {
     Topology::particle_indices particleIndices;
@@ -61,6 +59,4 @@ struct TopologyRecord {
     }
 };
 
-NAMESPACE_END(top)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

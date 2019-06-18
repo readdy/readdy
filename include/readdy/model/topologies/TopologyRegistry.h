@@ -57,10 +57,7 @@
 
 #include "TopologyParticleTypeMap.h"
 
-
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(top)
+namespace readdy::model::top {
 
 struct TopologyType {
     using StructuralReaction = reactions::StructuralTopologyReaction;
@@ -106,9 +103,9 @@ public:
     void addStructuralReaction(TopologyTypeId typeId, reactions::StructuralTopologyReaction reaction) {
         {
             // test uniqueness of name
-            for(const auto &topologyType : _registry) {
-                for(const auto &structuralReaction : topologyType.structuralReactions) {
-                    if(reaction.name() == structuralReaction.name()) {
+            for (const auto &topologyType : _registry) {
+                for (const auto &structuralReaction : topologyType.structuralReactions) {
+                    if (reaction.name() == structuralReaction.name()) {
                         throw std::invalid_argument(fmt::format("Structural topology reaction with name "
                                                                 "\"{}\" already exists.", reaction.name()));
                     }
@@ -177,9 +174,9 @@ public:
     }
 
     std::string spatialDescriptorById(ReactionId id) const {
-        for(const auto &[_, reactions] : _spatialReactions) {
-            for(const auto & reaction : reactions) {
-                if(reaction.id() == id) {
+        for (const auto &[_, reactions] : _spatialReactions) {
+            for (const auto &reaction : reactions) {
+                if (reaction.id() == id) {
                     return generateSpatialReactionRepresentation(reaction);
                 }
             }
@@ -188,9 +185,9 @@ public:
     }
 
     std::string_view structuralNameById(ReactionId id) const {
-        for(const auto &type : _registry) {
-            for(const auto &structuralReaction : type.structuralReactions) {
-                if(structuralReaction.id() == id) {
+        for (const auto &type : _registry) {
+            for (const auto &structuralReaction : type.structuralReactions) {
+                if (structuralReaction.id() == id) {
                     return structuralReaction.name();
                 }
             }
@@ -279,15 +276,15 @@ public:
     }
 
     const SpatialReactionCollection &spatialReactionsByType(ParticleTypeId t1, TopologyTypeId tt1,
-                                                    ParticleTypeId t2, TopologyTypeId tt2) const {
+                                                            ParticleTypeId t2, TopologyTypeId tt2) const {
         auto it = _spatialReactions.find(std::make_tuple(t1, tt1, t2, tt2));
         return it != _spatialReactions.end() ? it->second : _defaultTopologyReactions;
     }
 
     const SpatialReaction &spatialReactionByName(const std::string &name) const {
-        for(const auto &e : _spatialReactions) {
-            for(const auto &reaction : e.second) {
-                if(reaction.name() == name) {
+        for (const auto &e : _spatialReactions) {
+            for (const auto &reaction : e.second) {
+                if (reaction.name() == name) {
                     return reaction;
                 }
             }
@@ -296,9 +293,9 @@ public:
     }
 
     SpatialReaction &spatialReactionByName(const std::string &name) {
-        for(auto &e : _spatialReactions) {
-            for(auto &reaction : e.second) {
-                if(reaction.name() == name) {
+        for (auto &e : _spatialReactions) {
+            for (auto &reaction : e.second) {
+                if (reaction.name() == name) {
                     return reaction;
                 }
             }
@@ -382,6 +379,4 @@ private:
     api::PotentialConfiguration _potentialConfiguration{};
 };
 
-NAMESPACE_END(top)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

@@ -50,19 +50,18 @@
 #include <readdy/common/numeric.h>
 #include "TopologyPotential.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(top)
-NAMESPACE_BEGIN(pot)
+namespace readdy::model::top::pot {
 
-class TorsionPotential : public TopologyPotential {};
+class TorsionPotential : public TopologyPotential {
+};
 
 struct DihedralConfiguration {
     DihedralConfiguration(size_t idx1, size_t idx2, size_t idx3, size_t idx4, scalar forceConstant, scalar multiplicity,
-             scalar equilibriumAngle)   : idx1(idx1), idx2(idx2), idx3(idx3), idx4(idx4), forceConstant(forceConstant),
-                                          phi_0(equilibriumAngle), multiplicity(multiplicity) {
+                          scalar equilibriumAngle) : idx1(idx1), idx2(idx2), idx3(idx3), idx4(idx4),
+                                                     forceConstant(forceConstant),
+                                                     phi_0(equilibriumAngle), multiplicity(multiplicity) {
         if (equilibriumAngle > readdy::util::numeric::pi<scalar>()
-                || equilibriumAngle < -readdy::util::numeric::pi<scalar>()) {
+            || equilibriumAngle < -readdy::util::numeric::pi<scalar>()) {
             throw std::invalid_argument("the equilibrium angle should be within [-pi, pi], but was "
                                         + std::to_string(equilibriumAngle));
         }
@@ -86,8 +85,9 @@ public:
 
     scalar calculateEnergy(const Vec3 &x_ji, const Vec3 &x_kj, const Vec3 &x_kl, const dihedral_configuration &) const;
 
-    void calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, Vec3 &f_l, const Vec3 &x_ji, const Vec3 &x_kj, const Vec3 &x_kl,
-                        const dihedral_configuration &) const;
+    void
+    calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, Vec3 &f_l, const Vec3 &x_ji, const Vec3 &x_kj, const Vec3 &x_kl,
+                   const dihedral_configuration &) const;
 
     std::unique_ptr<EvaluatePotentialAction>
     createForceAndEnergyAction(const TopologyActionFactory *factory) override;
@@ -96,7 +96,4 @@ protected:
     dihedral_configurations dihedrals;
 };
 
-NAMESPACE_END(pot)
-NAMESPACE_END(top)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

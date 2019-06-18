@@ -47,11 +47,7 @@
 #include <readdy/common/macros.h>
 #include "TopologyReactionAction.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(top)
-NAMESPACE_BEGIN(reactions)
-NAMESPACE_BEGIN(actions)
+namespace readdy::model::top::reactions::actions {
 
 class TopologyReactionActionFactory {
 public:
@@ -113,12 +109,8 @@ public:
      * @param type_to the target type
      * @return a unique pointer to the action
      */
-    virtual action_ref createChangeTopologyType(GraphTopology *topology, const std::string& type_to) const = 0;
+    virtual action_ref createChangeTopologyType(GraphTopology *topology, const std::string &type_to) const = 0;
 
 };
 
-NAMESPACE_END(actions)
-NAMESPACE_END(reactions)
-NAMESPACE_END(top)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

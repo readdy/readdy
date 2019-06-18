@@ -46,10 +46,7 @@
 #include <readdy/common/macros.h>
 #include <stdexcept>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(top)
-NAMESPACE_BEGIN(reactions)
+namespace readdy::model::top::reactions {
 
 class TopologyReactionException : public std::runtime_error {
 public:
@@ -61,7 +58,4 @@ public:
     explicit TopologyReactionException(const std::string &message) : runtime_error(message) {}
 };
 
-NAMESPACE_END(reactions)
-NAMESPACE_END(top)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

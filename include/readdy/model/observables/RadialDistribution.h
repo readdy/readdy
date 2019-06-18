@@ -50,9 +50,7 @@
 #include <readdy/io/BloscFilter.h>
 #include "Observable.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(observables)
+namespace readdy::model::observables {
 
 class RadialDistribution : public Observable<std::pair<std::vector<scalar>, std::vector<scalar>>> {
 public:
@@ -88,9 +86,7 @@ protected:
     std::vector<scalar> counts;
     std::vector<ParticleTypeId> typeCountFrom, typeCountTo;
     scalar particleToDensity;
-    readdy::io::BloscFilter bloscFilter;
+    io::BloscFilter bloscFilter;
 };
 
-NAMESPACE_END(observables)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

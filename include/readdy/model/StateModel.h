@@ -48,21 +48,20 @@
 #include "Particle.h"
 #include "readdy/common/ReaDDyVec3.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
+namespace readdy::model {
 
 class StateModel {
 public:
 
     StateModel() = default;
 
-    StateModel(const StateModel&) = delete;
+    StateModel(const StateModel &) = delete;
 
-    StateModel&operator=(const StateModel&) = delete;
+    StateModel &operator=(const StateModel &) = delete;
 
-    StateModel(StateModel&&) = default;
+    StateModel(StateModel &&) = default;
 
-    StateModel& operator=(StateModel&&) = default;
+    StateModel &operator=(StateModel &&) = default;
 
     virtual ~StateModel() = default;
 
@@ -93,15 +92,16 @@ public:
 
     virtual void addParticles(const std::vector<Particle> &p) = 0;
 
-    virtual readdy::model::top::GraphTopology *const addTopology(TopologyTypeId type, const std::vector<TopologyParticle> &particles) = 0;
+    virtual readdy::model::top::GraphTopology *const
+    addTopology(TopologyTypeId type, const std::vector<TopologyParticle> &particles) = 0;
 
     virtual std::vector<Particle> getParticlesForTopology(const top::GraphTopology &topology) const;
 
-    virtual std::vector<top::GraphTopology*> getTopologies() = 0;
+    virtual std::vector<top::GraphTopology *> getTopologies() = 0;
 
-    virtual top::GraphTopology const* getTopologyForParticle(top::Topology::particle_index particle) const = 0;
+    virtual top::GraphTopology const *getTopologyForParticle(top::Topology::particle_index particle) const = 0;
 
-    virtual top::GraphTopology* getTopologyForParticle(top::Topology::particle_index particle) = 0;
+    virtual top::GraphTopology *getTopologyForParticle(top::Topology::particle_index particle) = 0;
 
     virtual void removeParticle(const Particle &p) = 0;
 
@@ -121,5 +121,4 @@ public:
     virtual void clear() = 0;
 };
 
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

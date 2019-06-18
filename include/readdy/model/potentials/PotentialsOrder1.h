@@ -50,15 +50,13 @@
 #include <ostream>
 #include "PotentialOrder1.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(potentials)
+namespace readdy::model::potentials {
 
 // @todo allow box exclusion
 class Box : public PotentialOrder1 {
     using super = PotentialOrder1;
 public:
-    Box(particle_type_type particleType, scalar forceConstant, const Vec3& origin, const Vec3& extent);
+    Box(particle_type_type particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &extent);
 
     const Vec3 &getOrigin() const {
         return origin;
@@ -113,7 +111,7 @@ template<bool inclusion>
 class Sphere : public PotentialOrder1 {
     using super = PotentialOrder1;
 public:
-    Sphere(particle_type_type particleType, scalar forceConstant, const Vec3& origin, scalar radius)
+    Sphere(particle_type_type particleType, scalar forceConstant, const Vec3 &origin, scalar radius)
             : super(particleType), origin(origin), radius(radius), forceConstant(forceConstant) {}
 
     scalar calculateEnergy(const Vec3 &position) const override {
@@ -180,13 +178,16 @@ public:
             return static_cast<scalar>(0.);
         }
         if (r1 <= distance && distance < r2) {
-            return static_cast<scalar>(0.5) * effectiveForceConstant * std::pow(distance - radius + width, static_cast<scalar>(2.));
+            return static_cast<scalar>(0.5) * effectiveForceConstant *
+                   std::pow(distance - radius + width, static_cast<scalar>(2.));
         }
         if (r2 <= distance && distance < r3) {
-            return height - static_cast<scalar>(0.5) * effectiveForceConstant * std::pow(distance - radius, static_cast<scalar>(2.));
+            return height - static_cast<scalar>(0.5) * effectiveForceConstant *
+                            std::pow(distance - radius, static_cast<scalar>(2.));
         }
         if (r3 <= distance && distance < r4) {
-            return static_cast<scalar>(0.5) * effectiveForceConstant * std::pow(distance - radius - width, static_cast<scalar>(2.));
+            return static_cast<scalar>(0.5) * effectiveForceConstant *
+                   std::pow(distance - radius - width, static_cast<scalar>(2.));
         }
         throw std::runtime_error("Critical error in calculateEnergy of spherical barrier");
     }
@@ -199,11 +200,11 @@ public:
         } else if (r4 <= distance) {
             // nothing happens
         } else if (r1 <= distance && distance < r2) {
-            force += - effectiveForceConstant * (distance - radius + width) * difference / distance;
+            force += -effectiveForceConstant * (distance - radius + width) * difference / distance;
         } else if (r2 <= distance && distance < r3) {
             force += effectiveForceConstant * (distance - radius) * difference / distance;
         } else if (r3 <= distance && distance < r4) {
-            force += - effectiveForceConstant * (distance - radius - width) * difference / distance;
+            force += -effectiveForceConstant * (distance - radius - width) * difference / distance;
         } else {
             throw std::runtime_error("Critical error in calculateForce of spherical barrier");
         }
@@ -277,28 +278,30 @@ template<typename T>
 const std::string getPotentialName(typename std::enable_if<std::is_base_of<Box, T>::value>::type * = 0) {
     return "Box";
 }
+
 template<typename T>
-const std::string getPotentialName(typename std::enable_if<std::is_base_of<Sphere<true>, T>::value>::type* = 0) {
+const std::string getPotentialName(typename std::enable_if<std::is_base_of<Sphere<true>, T>::value>::type * = 0) {
     return "SphereInclusion";
 }
+
 template<typename T>
-const std::string getPotentialName(typename std::enable_if<std::is_base_of<Sphere<false>, T>::value>::type* = 0) {
+const std::string getPotentialName(typename std::enable_if<std::is_base_of<Sphere<false>, T>::value>::type * = 0) {
     return "SphereExclusion";
 }
-template <typename T>
+
+template<typename T>
 const std::string getPotentialName(typename std::enable_if<std::is_base_of<SphericalBarrier, T>::value>::type * = 0) {
     return "SphericalBarrier";
 }
-template <typename T>
+
+template<typename T>
 const std::string getPotentialName(typename std::enable_if<std::is_base_of<Cylinder<true>, T>::value>::type * = 0) {
     return "CylinderInclusion";
 }
-template <typename T>
+
+template<typename T>
 const std::string getPotentialName(typename std::enable_if<std::is_base_of<Cylinder<false>, T>::value>::type * = 0) {
     return "CylinderExclusion";
 }
 
-
-NAMESPACE_END(potentials)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

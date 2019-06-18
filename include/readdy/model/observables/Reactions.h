@@ -49,10 +49,7 @@
 #include <readdy/model/reactions/ReactionRecord.h>
 #include "Observable.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(observables)
-
+namespace readdy::model::observables {
 
 class Reactions : public Observable<std::vector<reactions::ReactionRecord>> {
     using super = Observable<std::vector<reactions::ReactionRecord>>;
@@ -85,6 +82,4 @@ protected:
     std::unique_ptr<Impl> pimpl;
 };
 
-NAMESPACE_END(observables)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

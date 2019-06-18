@@ -49,30 +49,29 @@
 #if READDY_OSX || READDY_LINUX
 #include <dlfcn.h>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(util)
-NAMESPACE_BEGIN(dll)
+namespace readdy::util::dll {
 
 struct shared_library {
 
-    void* handle = nullptr;
+    void *handle = nullptr;
 
-    shared_library(const std::string& path, int mode) {
+    shared_library(const std::string &path, int mode) {
         handle = dlopen(path.c_str(), mode);
     }
 
-    shared_library(const shared_library&) = delete;
-    shared_library& operator=(const shared_library&) = delete;
+    shared_library(const shared_library &) = delete;
 
-    bool has_symbol(const std::string& symbol) {
-        if(handle) {
+    shared_library &operator=(const shared_library &) = delete;
+
+    bool has_symbol(const std::string &symbol) {
+        if (handle) {
             return dlsym(handle, symbol.c_str()) != nullptr;
         }
         return false;
     }
 
     virtual ~shared_library() {
-        if(handle) {
+        if (handle) {
             dlclose(handle);
             handle = 0;
         }
@@ -82,19 +81,17 @@ struct shared_library {
     std::function<Signature> load(const std::string &symbol) {
         dlerror();
         const auto result = dlsym(handle, symbol.c_str());
-        if(!result) {
+        if (!result) {
             const auto error = dlerror();
-            if(error) {
-                throw std::logic_error("couldn't find symbol \""+symbol+"\": " + error);
+            if (error) {
+                throw std::logic_error("couldn't find symbol \"" + symbol + "\": " + error);
             }
         }
-        return reinterpret_cast<Signature*>(result);
+        return reinterpret_cast<Signature *>(result);
     }
 
 };
 
-NAMESPACE_END(dll)
-NAMESPACE_END(util)
-NAMESPACE_END(readdy)
+}
 
 #endif

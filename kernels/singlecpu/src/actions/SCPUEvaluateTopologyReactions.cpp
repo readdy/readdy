@@ -215,6 +215,8 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
                             std::size_t reaction_index = 0;
                             for (const auto &reaction : reactions) {
                                 if (distSquared < reaction.radius() * reaction.radius()) {
+                                    //if(entry.deactivated) throw std::logic_error("nein");
+                                    //if(neighbor.deactivated) throw std::logic_error("nein2");
                                     TREvent event{};
                                     event.reactionId = reaction.id();
                                     event.rate = reaction.rate();

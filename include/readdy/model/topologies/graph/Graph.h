@@ -52,10 +52,7 @@
 #include <readdy/common/macros.h>
 #include "Vertex.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(top)
-NAMESPACE_BEGIN(graph)
+namespace readdy::model::top::graph {
 
 class Graph {
 public:
@@ -128,11 +125,11 @@ public:
         ));
     }
 
-    bool containsEdge(const cedge& edge) const {
-        const auto& v1 = std::get<0>(edge);
-        const auto& v2 = std::get<1>(edge);
-        const auto& v1Neighbors = v1->neighbors();
-        const auto& v2Neighbors = v2->neighbors();
+    bool containsEdge(const cedge &edge) const {
+        const auto &v1 = std::get<0>(edge);
+        const auto &v2 = std::get<1>(edge);
+        const auto &v1Neighbors = v1->neighbors();
+        const auto &v2Neighbors = v2->neighbors();
         return std::find(v1Neighbors.begin(), v1Neighbors.end(), v2) != v1Neighbors.end()
                && std::find(v2Neighbors.begin(), v2Neighbors.end(), v1) != v2Neighbors.end();
     }
@@ -160,7 +157,7 @@ public:
         v2->addNeighbor(v1);
     }
 
-    void addEdge(const edge& edge) {
+    void addEdge(const edge &edge) {
         addEdge(std::get<0>(edge), std::get<1>(edge));
     }
 
@@ -181,7 +178,7 @@ public:
         v2->removeNeighbor(v1);
     }
 
-    void removeEdge(const edge& edge) {
+    void removeEdge(const edge &edge) {
         removeEdge(std::get<0>(edge), std::get<1>(edge));
     }
 
@@ -203,10 +200,10 @@ public:
     }
 
     bool isConnected();
-    
+
     std::vector<std::tuple<vertex_ref, vertex_ref>> edges() {
         std::vector<std::tuple<Graph::vertex_ref, Graph::vertex_ref>> result;
-        findEdges([&result](const edge& tup) {
+        findEdges([&result](const edge &tup) {
             result.push_back(tup);
         });
         return result;
@@ -221,7 +218,7 @@ public:
     }
 
     void findEdges(const edge_callback &edgeCallback);
-    
+
     void findNTuples(const edge_callback &tuple_callback,
                      const path_len_2_callback &triple_callback,
                      const path_len_3_callback &quadruple_callback);
@@ -229,11 +226,11 @@ public:
     std::tuple<std::vector<edge>, std::vector<path_len_2>, std::vector<path_len_3>>
     findNTuples() {
         auto tuple = std::make_tuple(std::vector<edge>(), std::vector<path_len_2>(), std::vector<path_len_3>());
-        findNTuples([&](const edge& tup) {
+        findNTuples([&](const edge &tup) {
             std::get<0>(tuple).push_back(tup);
-        }, [&](const path_len_2& path2) {
+        }, [&](const path_len_2 &path2) {
             std::get<1>(tuple).push_back(path2);
-        }, [&](const path_len_3& path3) {
+        }, [&](const path_len_3 &path3) {
             std::get<2>(tuple).push_back(path3);
         });
         return tuple;
@@ -246,7 +243,7 @@ public:
     std::vector<Graph> connectedComponentsDestructive();
 
 private:
-    vertex_list _vertices {};
+    vertex_list _vertices{};
 
     void removeNeighborsEdges(vertex_ref vertex) {
         std::for_each(std::begin(vertex->neighbors()), std::end(vertex->neighbors()), [vertex](const auto neighbor) {
@@ -261,7 +258,4 @@ private:
     }
 };
 
-NAMESPACE_END(graph)
-NAMESPACE_END(top)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

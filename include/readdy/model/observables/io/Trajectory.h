@@ -55,18 +55,17 @@
 
 #include "TrajectoryEntry.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
+namespace readdy::model {
 class Kernel;
-NAMESPACE_BEGIN(observables)
+namespace observables {
 
 class Trajectory : public Observable<std::vector<TrajectoryEntry>> {
     using super = Observable<std::vector<TrajectoryEntry>>;
 public:
 
-    constexpr static auto& TRAJECTORY_GROUP_PATH = "/readdy/trajectory";
+    constexpr static auto &TRAJECTORY_GROUP_PATH = "/readdy/trajectory";
 
-    Trajectory(model::Kernel * kernel, unsigned int stride);
+    Trajectory(model::Kernel *kernel, unsigned int stride);
 
     ~Trajectory() override;
 
@@ -89,11 +88,11 @@ class FlatTrajectory : public Observable<std::vector<TrajectoryEntry>> {
     using super = Observable<std::vector<TrajectoryEntry>>;
 public:
 
-    FlatTrajectory(Kernel* kernel, unsigned int stride, bool useBlosc = true);
+    FlatTrajectory(Kernel *kernel, unsigned int stride, bool useBlosc = true);
 
     ~FlatTrajectory() override;
 
-    FlatTrajectory(FlatTrajectory&&) noexcept;
+    FlatTrajectory(FlatTrajectory &&) noexcept;
 
     void evaluate() override;
 
@@ -109,9 +108,8 @@ protected:
     struct Impl;
     std::unique_ptr<Impl> pimpl;
 
-    bool useBlosc {true};
+    bool useBlosc{true};
 };
 
-NAMESPACE_END(observables)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}
+}

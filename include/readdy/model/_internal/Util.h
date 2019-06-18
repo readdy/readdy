@@ -48,10 +48,7 @@
 #include <set>
 #include <sstream>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(_internal)
-NAMESPACE_BEGIN(util)
+namespace readdy::model::_internal::util {
 
 template<typename Context>
 inline std::set<ParticleTypeId> transformTypes(const std::vector<std::string> &types, const Context &ctx) {
@@ -83,20 +80,17 @@ transformTypesMap(const std::unordered_map<std::string, std::string> &stringMap,
 }
 
 template<typename T>
-std::string to_string(const T& ref) {
+std::string to_string(const T &ref) {
     std::stringstream ss;
     ss << ref;
     return ss.str();
 }
 
 template<typename T>
-std::string to_string(const T* const ptr) {
+std::string to_string(const T *const ptr) {
     std::stringstream ss;
     ss << *ptr;
     return ss.str();
 }
 
-NAMESPACE_END(util)
-NAMESPACE_END(_internal)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

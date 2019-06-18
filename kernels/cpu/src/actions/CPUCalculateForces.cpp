@@ -41,10 +41,7 @@
 
 #include "readdy/kernel/cpu/actions/CPUCalculateForces.h"
 
-namespace readdy {
-namespace kernel {
-namespace cpu {
-namespace actions {
+namespace readdy::kernel::cpu::actions {
 
 void CPUCalculateForces::perform() {
 
@@ -304,7 +301,7 @@ void CPUCalculateForces::calculateOrder1(std::size_t, data_bounds dataBounds,
         auto &entry = *it;
         if (!entry.deactivated) {
             auto &force = entry.force;
-            force = {c_::zero, c_::zero, c_::zero};
+            force = {0., 0., 0.};
             const auto &myPos = entry.pos;
             auto find_it = pot1.find(entry.type);
             if (find_it != pot1.end()) {
@@ -315,8 +312,5 @@ void CPUCalculateForces::calculateOrder1(std::size_t, data_bounds dataBounds,
         }
     }
     energyPromise.set_value(energyUpdate);
-}
-}
-}
 }
 }

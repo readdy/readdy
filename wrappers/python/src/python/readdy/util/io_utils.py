@@ -163,7 +163,7 @@ def get_structural_topology_reactions(filename, dset_path="readdy/config/structu
     result = dict()
     with h5py.File(filename, "r") as f:
         if dset_path in f:
-            spatial_reactions = f[dset_path]
-            for r in spatial_reactions:
+            structural_reactions = f[dset_path]
+            for r in structural_reactions:
                 result[r["id"]] = r["name"]
     return result

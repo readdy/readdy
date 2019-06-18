@@ -47,9 +47,7 @@
 
 #include "Compartment.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(compartments)
+namespace readdy::model::compartments {
 
 class Sphere : public Compartment {
 public:
@@ -102,6 +100,4 @@ const std::string getCompartmentTypeName(typename std::enable_if<std::is_base_of
     return "Plane";
 }
 
-NAMESPACE_END(compartments)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

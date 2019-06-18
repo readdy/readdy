@@ -50,9 +50,7 @@
 
 #include "TopologyActionFactory.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(top)
+namespace readdy::model::top {
 
 /**
  * Topologies are superstructures grouping particles to e.g. molecules.
@@ -77,7 +75,7 @@ public:
     using torsion_potential = pot::TorsionPotential;
     using cos_dihedral = TopologyActionFactory::cos_dihedral;
 
-    explicit Topology(particle_indices particles) : particles(std::move(particles)) { }
+    explicit Topology(particle_indices particles) : particles(std::move(particles)) {}
 
     Topology(const Topology &) = delete;
 
@@ -120,12 +118,14 @@ public:
 
     void addBondedPotential(std::unique_ptr<bonded_potential> &&pot) {
         const auto n = getNParticles();
-        for(const auto& bond : pot->getBonds()) {
+        for (const auto &bond : pot->getBonds()) {
             if (bond.idx1 >= n) {
-                throw std::invalid_argument("the first particle (" + std::to_string(bond.idx1) + ") was out of bounds!");
+                throw std::invalid_argument(
+                        "the first particle (" + std::to_string(bond.idx1) + ") was out of bounds!");
             }
             if (bond.idx2 >= n) {
-                throw std::invalid_argument("the second particle (" + std::to_string(bond.idx2) + ") was out of bounds!");
+                throw std::invalid_argument(
+                        "the second particle (" + std::to_string(bond.idx2) + ") was out of bounds!");
             }
         }
         bondedPotentials.push_back(std::move(pot));
@@ -162,6 +162,4 @@ protected:
     std::vector<std::unique_ptr<torsion_potential>> torsionPotentials;
 };
 
-NAMESPACE_END(top)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

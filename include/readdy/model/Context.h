@@ -64,8 +64,7 @@
 #include <readdy/model/topologies/TopologyRegistry.h>
 #include <readdy/model/compartments/CompartmentRegistry.h>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
+namespace readdy::model {
 
 class Context {
 public:
@@ -255,5 +254,4 @@ private:
     bool _recordVirial{false};
 };
 
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

@@ -50,9 +50,7 @@
 #include <readdy/model/_internal/Util.h>
 #include "Compartment.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(compartments)
+namespace readdy::model::compartments {
 
 class CompartmentRegistry {
 public:
@@ -89,11 +87,9 @@ public:
     }
 
 private:
-     CompartmentVector _compartments;
+    CompartmentVector _compartments;
 
     std::reference_wrapper<const ParticleTypeRegistry> _types;
 };
 
-NAMESPACE_END(compartments)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

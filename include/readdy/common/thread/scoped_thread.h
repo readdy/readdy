@@ -45,9 +45,7 @@
 #include <thread>
 #include <readdy/common/macros.h>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(util)
-NAMESPACE_BEGIN(thread)
+namespace readdy::util::thread {
 
 /**
  * scoped_thread implementation
@@ -106,6 +104,4 @@ public:
     scoped_thread &operator=(const scoped_thread &) = delete;
 };
 
-NAMESPACE_END(thread)
-NAMESPACE_END(util)
-NAMESPACE_END(readdy)
+}

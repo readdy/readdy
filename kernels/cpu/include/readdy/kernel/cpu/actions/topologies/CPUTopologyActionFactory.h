@@ -47,11 +47,7 @@
 #include <readdy/model/topologies/TopologyActionFactory.h>
 #include <readdy/kernel/cpu/data/DefaultDataContainer.h>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(kernel)
-NAMESPACE_BEGIN(cpu)
-NAMESPACE_BEGIN(actions)
-NAMESPACE_BEGIN(top)
+namespace readdy::kernel::cpu::actions::top {
 
 namespace top = readdy::model::top;
 
@@ -61,7 +57,7 @@ public:
             : _context(context), _data(data) {};
 
     std::unique_ptr<top::pot::CalculateHarmonicBondPotential>
-    createCalculateHarmonicBondPotential(const harmonic_bond* potential) const override;
+    createCalculateHarmonicBondPotential(const harmonic_bond *potential) const override;
 
     std::unique_ptr<top::pot::CalculateHarmonicAnglePotential>
     createCalculateHarmonicAnglePotential(const harmonic_angle *potential) const override;
@@ -69,7 +65,7 @@ public:
     std::unique_ptr<top::pot::CalculateCosineDihedralPotential>
     createCalculateCosineDihedralPotential(const cos_dihedral *potential) const override;
 
-    action_ref createChangeParticleType(top::GraphTopology* topology, const vertex &v,
+    action_ref createChangeParticleType(top::GraphTopology *topology, const vertex &v,
                                         const ParticleTypeId &type_to) const override;
 
     action_ref
@@ -86,8 +82,4 @@ private:
     std::reference_wrapper<data::DefaultDataContainer> _data;
 };
 
-NAMESPACE_END(top)
-NAMESPACE_END(actions)
-NAMESPACE_END(cpu)
-NAMESPACE_END(kernel)
-NAMESPACE_END(readdy)
+}

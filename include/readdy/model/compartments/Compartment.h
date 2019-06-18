@@ -49,9 +49,7 @@
 
 #include <readdy/model/Particle.h>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(compartments)
+namespace readdy::model::compartments {
 
 class Compartment {
 public:
@@ -91,6 +89,4 @@ protected:
     conversion_map conversions;
 };
 
-NAMESPACE_END(compartments)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

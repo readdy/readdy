@@ -48,23 +48,24 @@
 #include <readdy/common/macros.h>
 #include "Observable.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(observables)
+namespace readdy::model::observables {
 
 class Forces : public Observable<std::vector<Vec3>> {
 
 public:
-    Forces(Kernel* kernel, Stride stride);
+    Forces(Kernel *kernel, Stride stride);
 
-    Forces(Kernel* kernel, Stride stride, std::vector<std::string> typesToCount);
+    Forces(Kernel *kernel, Stride stride, std::vector<std::string> typesToCount);
 
-    Forces(Kernel* kernel, Stride stride, const std::vector<ParticleTypeId> &typesToCount);
+    Forces(Kernel *kernel, Stride stride, const std::vector<ParticleTypeId> &typesToCount);
 
-    Forces(const Forces&) = delete;
-    Forces& operator=(const Forces&) = delete;
-    Forces(Forces&&) = default;
-    Forces& operator=(Forces&&) = delete;
+    Forces(const Forces &) = delete;
+
+    Forces &operator=(const Forces &) = delete;
+
+    Forces(Forces &&) = default;
+
+    Forces &operator=(Forces &&) = delete;
 
     ~Forces() override;
 
@@ -82,6 +83,5 @@ protected:
 
     std::vector<ParticleTypeId> typesToCount;
 };
-NAMESPACE_END(observables)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+
+}

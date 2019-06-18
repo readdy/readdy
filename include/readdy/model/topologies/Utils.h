@@ -48,14 +48,8 @@
 #include <readdy/common/macros.h>
 #include <readdy/model/topologies/graph/Graph.h>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(top)
-NAMESPACE_BEGIN(util)
+namespace readdy::model::top::util {
 
-std::string to_gexf(graph::Graph& graph);
+std::string to_gexf(graph::Graph &graph);
 
-NAMESPACE_END(util)
-NAMESPACE_END(top)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

@@ -47,9 +47,7 @@
 #include <readdy/common/common.h>
 #include "Observable.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(observables)
+namespace readdy::model::observables {
 
 class Energy : public Observable<scalar> {
 public:
@@ -81,6 +79,4 @@ private:
 
 };
 
-NAMESPACE_END(observables)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

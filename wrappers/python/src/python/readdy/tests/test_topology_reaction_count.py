@@ -74,6 +74,10 @@ class TestTopologyReactionCount(unittest.TestCase):
 
         assert not counts["reactions"]
 
+        reaction_name = "attach: T1(B) + (A) -> T1(B--B)"
+        print("sum", np.sum(counts["spatial_topology_reactions"][reaction_name]))
+        n_spatial = 0
+
         for t, (cA, cB, cC), cc in zip(times, n_particles, collected_counts):
             np.testing.assert_equal(cA + cB + cC, 1010)
             cc_normal = cc[0]
@@ -81,8 +85,15 @@ class TestTopologyReactionCount(unittest.TestCase):
             cc_spatial = cc[1]
             cc_structural = cc[2]
 
+            spatials = counts["spatial_topology_reactions"]
+
+
+            print("spatials", spatials[reaction_name][t])
+            n_spatial += spatials[reaction_name][t]
+            assert cA == 1000 - n_spatial, f"Got {cA} A particles, expected {1000 - n_spatial}, at time t {t}"
+
             for sp in cc_spatial.keys():
-                recorded = counts["spatial_topology_reactions"][sp][t]
+                recorded = spatials[sp][t]
                 assert cc_spatial[sp] == recorded, f"Got {cc_spatial[sp]} != {recorded} (t={t})"
             for st in cc_structural.keys():
                 recorded = counts["structural_topology_reactions"][st][t]

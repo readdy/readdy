@@ -54,12 +54,9 @@
 #include "TopologyReactionAction.h"
 #include "TopologyReactionActionFactory.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(top)
+namespace readdy::model::top {
 class GraphTopology;
-NAMESPACE_BEGIN(reactions)
-NAMESPACE_BEGIN(op)
+namespace reactions::op {
 
 class Operation {
 public:
@@ -129,7 +126,7 @@ class AppendParticle : public Operation {
 public:
 
     AppendParticle(std::vector<vertex_ref> neighbors, ParticleTypeId type, const Vec3 &pos)
-        : neighbors(std::move(neighbors)), type(type), pos(pos) {};
+            : neighbors(std::move(neighbors)), type(type), pos(pos) {};
 
     action_ptr create_action(topology_ref topology, factory_ref factory) const override {
         return factory->createAppendParticle(topology, neighbors, type, pos);
@@ -220,8 +217,5 @@ private:
     edge _edge;
 };
 
-NAMESPACE_END(op)
-NAMESPACE_END(reactions)
-NAMESPACE_END(top)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}
+}
