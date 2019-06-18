@@ -187,7 +187,3 @@ void SCPUStateModel::clear() {
 }
 }
 }
-
-
-
-

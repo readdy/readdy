@@ -48,14 +48,12 @@
 #include <readdy/common/common.h>
 #include <readdy/common/hash.h>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(top)
+namespace readdy::model::top {
 
 using topology_type_pair = std::tuple<TopologyTypeId, TopologyTypeId>;
 using topology_particle_type_tuple = std::tuple<ParticleTypeId, TopologyTypeId, ParticleTypeId, TopologyTypeId>;
 
-NAMESPACE_BEGIN(detail)
+namespace detail {
 
 class TopologyParticleTypeHasher {
 public:
@@ -65,15 +63,15 @@ public:
      * Thus first compute hashes of both sub-tuples and compare them accordingly, which already gives a unique hash.
      * A weaker/faster version e.g. could only hash (t1, t2) and neglect x1 and x2, leaving the rest to the comparator.
      */
-    std::size_t operator()(const topology_particle_type_tuple& tup) const {
-        std::size_t seed1 {0};
+    std::size_t operator()(const topology_particle_type_tuple &tup) const {
+        std::size_t seed1{0};
         util::hash::combine(seed1, std::get<0>(tup));
         util::hash::combine(seed1, std::get<1>(tup));
-        std::size_t seed2 {0};
+        std::size_t seed2{0};
         util::hash::combine(seed2, std::get<2>(tup));
         util::hash::combine(seed2, std::get<3>(tup));
 
-        std::size_t seed {0};
+        std::size_t seed{0};
         if (seed1 > seed2) {
             util::hash::combine(seed, seed1);
             util::hash::combine(seed, seed2);
@@ -94,13 +92,11 @@ public:
     }
 };
 
-NAMESPACE_END(detail)
+}
 
 template<typename T>
 using topology_particle_type_tuple_umap = std::unordered_map<topology_particle_type_tuple, T,
                                                              detail::TopologyParticleTypeHasher,
                                                              detail::TopologyParticleTypeEq>;
 
-NAMESPACE_END(top)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

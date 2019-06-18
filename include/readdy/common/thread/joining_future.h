@@ -48,9 +48,7 @@
 #include <future>
 #include <readdy/common/macros.h>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(util)
-NAMESPACE_BEGIN(thread)
+namespace readdy::util::thread {
 
 template<typename T>
 class joining_future {
@@ -91,6 +89,4 @@ public:
     }
 };
 
-NAMESPACE_END(thread)
-NAMESPACE_END(util)
-NAMESPACE_END(readdy)
+}

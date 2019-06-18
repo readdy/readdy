@@ -47,13 +47,11 @@
 #include <readdy/common/common.h>
 #include "Observable.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(observables)
+namespace readdy::model::observables {
 
 class Energy : public Observable<scalar> {
 public:
-    Energy(Kernel *kernel, stride_type stride);
+    Energy(Kernel *kernel, Stride stride);
 
     Energy(const Energy &) = delete;
 
@@ -69,18 +67,16 @@ public:
 
     void evaluate() override;
 
-    std::string type() const override;
+    std::string_view type() const override;
 
 private:
     struct Impl;
     std::unique_ptr<Impl> pimpl;
 
-    void initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) override;
+    void initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) override;
 
     void append() override;
 
 };
 
-NAMESPACE_END(observables)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

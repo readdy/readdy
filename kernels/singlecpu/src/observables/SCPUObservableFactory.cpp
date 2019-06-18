@@ -46,39 +46,35 @@
 
 #include <readdy/kernel/singlecpu/observables/SCPUObservableFactory.h>
 #include <readdy/kernel/singlecpu/observables/SCPUObservables.h>
-#include <readdy/kernel/singlecpu/observables/SCPUAggregators.h>
 
-namespace readdy {
-namespace kernel {
-namespace scpu {
-namespace observables {
+namespace readdy::kernel::scpu::observables {
 SCPUObservableFactory::SCPUObservableFactory(readdy::kernel::scpu::SCPUKernel *const kernel)
         : ObservableFactory(kernel), kernel(kernel) {
 }
 
 std::unique_ptr<readdy::model::observables::HistogramAlongAxis>
-SCPUObservableFactory::histogramAlongAxis(stride_type stride, std::vector<scalar> binBorders,
+SCPUObservableFactory::histogramAlongAxis(Stride stride, std::vector<scalar> binBorders,
                                           std::vector<std::string> typesToCount, unsigned int axis) const {
     return {std::make_unique<SCPUHistogramAlongAxis>(kernel, stride, binBorders, typesToCount, axis)};
 }
 
 std::unique_ptr<readdy::model::observables::NParticles>
-SCPUObservableFactory::nParticles(stride_type stride, std::vector<std::string> typesToCount) const {
+SCPUObservableFactory::nParticles(Stride stride, std::vector<std::string> typesToCount) const {
     return {std::make_unique<SCPUNParticles>(kernel, stride, typesToCount)};
 }
 
 std::unique_ptr<readdy::model::observables::Forces>
-SCPUObservableFactory::forces(stride_type stride, std::vector<std::string> typesToCount) const {
+SCPUObservableFactory::forces(Stride stride, std::vector<std::string> typesToCount) const {
     return {std::make_unique<SCPUForces>(kernel, stride, typesToCount)};
 }
 
 std::unique_ptr<readdy::model::observables::Positions>
-SCPUObservableFactory::positions(stride_type stride, std::vector<std::string> typesToCount) const {
+SCPUObservableFactory::positions(Stride stride, std::vector<std::string> typesToCount) const {
     return {std::make_unique<SCPUPositions>(kernel, stride, typesToCount)};
 }
 
 std::unique_ptr<readdy::model::observables::RadialDistribution>
-SCPUObservableFactory::radialDistribution(stride_type stride, std::vector<scalar> binBorders,
+SCPUObservableFactory::radialDistribution(Stride stride, std::vector<scalar> binBorders,
                                           std::vector<std::string> typeCountFrom, std::vector<std::string> typeCountTo,
                                           scalar particleDensity) const {
     return {std::make_unique<readdy::model::observables::RadialDistribution>(kernel, stride, binBorders, typeCountFrom,
@@ -86,32 +82,23 @@ SCPUObservableFactory::radialDistribution(stride_type stride, std::vector<scalar
 }
 
 std::unique_ptr<readdy::model::observables::Particles>
-SCPUObservableFactory::particles(stride_type stride) const {
+SCPUObservableFactory::particles(Stride stride) const {
     return {std::make_unique<SCPUParticles>(kernel, stride)};
 }
 
-std::unique_ptr<readdy::model::observables::MeanSquaredDisplacement>
-SCPUObservableFactory::msd(stride_type stride, std::vector<std::string> typesToCount,
-                           readdy::model::observables::Particles *particlesObservable) const {
-    return {std::make_unique<SCPUMeanSquaredDisplacement<>>(kernel, stride, typesToCount, particlesObservable)};
-}
-
 std::unique_ptr<readdy::model::observables::Reactions>
-SCPUObservableFactory::reactions(readdy::model::observables::ObservableFactory::stride_type stride) const {
+SCPUObservableFactory::reactions(Stride stride) const {
     return {std::make_unique<SCPUReactions>(kernel, stride)};
 }
 
 std::unique_ptr<readdy::model::observables::ReactionCounts>
-SCPUObservableFactory::reactionCounts(readdy::model::observables::ObservableFactory::stride_type stride) const {
+SCPUObservableFactory::reactionCounts(Stride stride) const {
     return {std::make_unique<SCPUReactionCounts>(kernel, stride)};
 }
 
 std::unique_ptr<readdy::model::observables::Virial>
-SCPUObservableFactory::virial(readdy::model::observables::ObservableFactory::stride_type stride) const {
+SCPUObservableFactory::virial(Stride stride) const {
     return {std::make_unique<SCPUVirial>(kernel, stride)};
 }
 
-}
-}
-}
 }

@@ -522,47 +522,36 @@ class Simulation(object):
         import os
         from contextlib import closing
         import readdy._internal.readdybinding.common.io as io
-        from readdy._internal.readdybinding.common.util import ostream_redirect
+        # from readdy._internal.readdybinding.common.util import ostream_redirect
 
-        with ostream_redirect(stdout=True, stderr=True):
+        self._simulation.context.validate()
 
-            self._simulation.context.validate()
+        timestep = self._unit_conf.convert(timestep, self.time_unit)
+        assert timestep > 0.
 
-            timestep = self._unit_conf.convert(timestep, self.time_unit)
-            assert timestep > 0.
+        if self.output_file is not None and len(self.output_file) > 0 and os.path.exists(self.output_file):
+            raise ValueError("Output file already existed: {}".format(self.output_file))
 
-            if self.output_file is not None and len(self.output_file) > 0 and os.path.exists(self.output_file):
-                raise ValueError("Output file already existed: {}".format(self.output_file))
+        self._simulation.set_kernel_config(self.kernel_configuration.to_json())
 
-            self._simulation.set_kernel_config(self.kernel_configuration.to_json())
+        loop = self._simulation.create_loop(timestep)
+        loop.use_integrator(self.integrator)
+        loop.evaluate_forces(self.evaluate_forces)
+        loop.evaluate_topology_reactions(self.evaluate_topology_reactions, timestep)
+        loop.use_reaction_scheduler(self.reaction_handler)
+        loop.evaluate_observables(self.evaluate_observables)
+        if self.integrator == "MdgfrdIntegrator":
+            loop.neighbor_list_cutoff = max(2. * loop.calculate_max_cutoff(), loop.neighbor_list_cutoff)
+        if self._skin > 0.:
+            loop.neighbor_list_cutoff = loop.neighbor_list_cutoff + self._skin
+        if self._checkpoint_saver is not None:
+            loop.make_checkpoints(self._checkpoint_saver, self._checkpoint_stride)
 
-            loop = self._simulation.create_loop(timestep)
-            loop.use_integrator(self.integrator)
-            loop.evaluate_forces(self.evaluate_forces)
-            loop.evaluate_topology_reactions(self.evaluate_topology_reactions, timestep)
-            loop.use_reaction_scheduler(self.reaction_handler)
-            loop.evaluate_observables(self.evaluate_observables)
-            if self.integrator == "MdgfrdIntegrator":
-                loop.neighbor_list_cutoff = max(2. * loop.calculate_max_cutoff(), loop.neighbor_list_cutoff)
-            if self._skin > 0.:
-                loop.neighbor_list_cutoff = loop.neighbor_list_cutoff + self._skin
-            if self._checkpoint_saver is not None:
-                loop.make_checkpoints(self._checkpoint_saver, self._checkpoint_stride)
-
-            if self.output_file is not None and len(self.output_file) > 0:
-                with closing(io.File.create(self.output_file)) as f:
-                    for name, chunk_size, handle in self._observables._observable_handles:
-                        handle.enable_write_to_file(f, name, chunk_size)
-                    loop.write_config_to_file(f)
-                    if self.show_progress:
-                        self._progress = _SimulationProgress(n_steps // self._progress_output_stride)
-                        loop.progress_callback = self._progress.callback
-                        loop.progress_output_stride = self._progress_output_stride
-                    if show_summary:
-                        print(self._simulation.context.describe())
-                        print(loop.describe())
-                    loop.run(n_steps)
-            else:
+        if self.output_file is not None and len(self.output_file) > 0:
+            with closing(io.File.create(self.output_file)) as f:
+                for name, chunk_size, handle in self._observables._observable_handles:
+                    handle.enable_write_to_file(f, name, chunk_size)
+                loop.write_config_to_file(f)
                 if self.show_progress:
                     self._progress = _SimulationProgress(n_steps // self._progress_output_stride)
                     loop.progress_callback = self._progress.callback
@@ -571,5 +560,14 @@ class Simulation(object):
                     print(self._simulation.context.describe())
                     print(loop.describe())
                 loop.run(n_steps)
+        else:
             if self.show_progress:
-                self._progress.finish()
+                self._progress = _SimulationProgress(n_steps // self._progress_output_stride)
+                loop.progress_callback = self._progress.callback
+                loop.progress_output_stride = self._progress_output_stride
+            if show_summary:
+                print(self._simulation.context.describe())
+                print(loop.describe())
+            loop.run(n_steps)
+        if self.show_progress:
+            self._progress.finish()

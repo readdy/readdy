@@ -61,17 +61,14 @@
 #include <readdy/kernel/cpu/nl/ContiguousCellLinkedList.h>
 #include <readdy/kernel/cpu/data/ObservableData.h>
 
-namespace readdy {
-namespace kernel {
-namespace cpu {
+namespace readdy::kernel::cpu {
 class CPUStateModel : public readdy::model::StateModel {
 
 public:
 
     using data_type = readdy::kernel::cpu::data::DefaultDataContainer;
     using particle_type = readdy::model::Particle;
-    using reaction_counts_map = readdy::model::reactions::reaction_counts_map;
-
+    
     using topology = readdy::model::top::GraphTopology;
     using topology_ref = std::unique_ptr<topology>;
     using topologies_vec = readdy::util::index_persistent_vector<topology_ref>;
@@ -185,15 +182,45 @@ public:
         return _observableData.reactionRecords;
     };
 
-    const reaction_counts_map & reactionCounts() const {
+    const readdy::model::reactions::ReactionCounts & reactionCounts() const {
         return _observableData.reactionCounts;
     };
 
-    reaction_counts_map &reactionCounts() {
+    readdy::model::reactions::ReactionCounts &reactionCounts() {
         return _observableData.reactionCounts;
     };
+
+    const readdy::model::reactions::SpatialTopologyReactionCounts &spatialReactionCounts() const {
+        return _observableData.spatialReactionCounts;
+    }
+
+    readdy::model::reactions::SpatialTopologyReactionCounts &spatialReactionCounts() {
+        return _observableData.spatialReactionCounts;
+    }
+
+    const readdy::model::reactions::StructuralTopologyReactionCounts &structuralReactionCounts() const {
+        return _observableData.structuralReactionCounts;
+    }
+
+    readdy::model::reactions::StructuralTopologyReactionCounts &structuralReactionCounts() {
+        return _observableData.structuralReactionCounts;
+    }
 
     void resetReactionCounts();
+    
+    void resetTopologyReactionCounts() {
+        const auto &topologies = _context.get().topologyRegistry();
+        for (const auto &entry : topologies.spatialReactionRegistry()) {
+            for (const auto &sr : entry.second) {
+                _observableData.spatialReactionCounts[sr.id()] = 0;
+            }
+        }
+        for(const auto &type : topologies.types()) {
+            for(const auto &structuralReaction : type.structuralReactions) {
+                _observableData.structuralReactionCounts[structuralReaction.id()] = 0;
+            }
+        }
+    }
 
     particle_type getParticleForIndex(std::size_t index) const override {
         return _data.get().getParticle(index);
@@ -235,6 +262,4 @@ private:
     std::reference_wrapper<const readdy::model::top::TopologyActionFactory> _topologyActionFactory;
     topologies_vec _topologies{};
 };
-}
-}
 }

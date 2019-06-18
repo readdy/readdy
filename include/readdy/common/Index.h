@@ -54,11 +54,10 @@
 #include "macros.h"
 #include "tuple_utils.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(util)
+namespace readdy::util {
 
-NAMESPACE_BEGIN(detail)
-template <typename T1, typename... T>
+namespace detail {
+template<typename T1, typename... T>
 struct variadic_first {
     /**
      * type of the first element of a variadic type tuple
@@ -72,11 +71,11 @@ struct all_of_type_impl {
     /**
      * type of the n-th element of a packed variadic type tuple
      */
-    using nth_elem = typename std::decay<typename std::tuple_element<N-1, Tuple>::type>::type;
+    using nth_elem = typename std::decay<typename std::tuple_element<N - 1, Tuple>::type>::type;
     /**
      * if this is true, all elements in the parameter pack were of type T
      */
-    static constexpr bool value = std::is_same<nth_elem, T>::value && all_of_type_impl<N-1, T, Tuple>::value;
+    static constexpr bool value = std::is_same<nth_elem, T>::value && all_of_type_impl<N - 1, T, Tuple>::value;
 };
 
 template<typename T, typename Tuple>
@@ -95,7 +94,7 @@ struct all_of_type {
     static constexpr bool value = all_of_type_impl<sizeof...(Args), T, typename std::tuple<Args...>>::value;
 };
 
-NAMESPACE_END(detail)
+}
 
 template<std::size_t Dims>
 class Index {
@@ -221,5 +220,4 @@ using Index2D = Index<2>;
  */
 using Index3D = Index<3>;
 
-NAMESPACE_END(util)
-NAMESPACE_END(readdy)
+}

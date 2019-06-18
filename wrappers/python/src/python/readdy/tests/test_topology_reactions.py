@@ -86,7 +86,7 @@ class TestTopologyReactions(ReaDDyTestCase):
         fun1 = top.ReactionFunction(reaction_function)
         fun2 = top.RateFunction(rate_function)
 
-        reaction = top.StructuralTopologyReaction(fun1, fun2)
+        reaction = top.StructuralTopologyReaction("split", fun1, fun2)
         reaction.roll_back_if_invalid()
         reaction.create_child_topologies_after_reaction()
         return reaction
@@ -102,7 +102,7 @@ class TestTopologyReactions(ReaDDyTestCase):
             return 1.0 if topology.get_n_particles() == 1 else 0
 
         fun1, fun2 = top.ReactionFunction(reaction_function), top.RateFunction(rate_function)
-        reaction = top.StructuralTopologyReaction(fun1, fun2)
+        reaction = top.StructuralTopologyReaction("decay", fun1, fun2)
         reaction.raise_if_invalid()
         reaction.create_child_topologies_after_reaction()
         return reaction

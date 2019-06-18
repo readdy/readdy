@@ -52,8 +52,7 @@
 #include <utility>
 #include "logging.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(signals)
+namespace readdy::signals {
 
 class connection {
 public:
@@ -104,8 +103,8 @@ public:
      * connections can be moved
      * @param rhs the other connection
      */
-    connection(connection &&rhs) noexcept : disconnector(std::move(rhs.disconnector)), 
-                                            slots_container(std::move(rhs.slots_container)) { }
+    connection(connection &&rhs) noexcept : disconnector(std::move(rhs.disconnector)),
+                                            slots_container(std::move(rhs.slots_container)) {}
 
     /**
      * connections can be move-assigned
@@ -121,7 +120,8 @@ public:
 private:
 
     template<typename T>
-    friend class slots_container;
+    friend
+    class slots_container;
 
     friend class scoped_connection;
 
@@ -152,7 +152,7 @@ public:
      * constructs a new scoped connection based on an already existing connection
      * @param connection the already existing connection
      */
-    explicit scoped_connection(connection&& connection) : conn(std::move(connection)) {}
+    explicit scoped_connection(connection &&connection) : conn(std::move(connection)) {}
 
     /**
      * disconnect
@@ -282,7 +282,7 @@ public:
      * @param args arguments for the slots
      */
     void fire_signal(Args... args) {
-        for(auto &slot : *this) {
+        for (auto &slot : *this) {
             slot(std::forward<Args>(args)...);
         }
     }
@@ -296,5 +296,4 @@ public:
     }
 };
 
-NAMESPACE_END(signals)
-NAMESPACE_END(readdy)
+}

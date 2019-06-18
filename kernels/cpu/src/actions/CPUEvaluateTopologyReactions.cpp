@@ -72,7 +72,7 @@ struct CPUEvaluateTopologyReactions::TREvent {
     // idx1 is always the particle that belongs to a topology
     index_type idx1{0}, idx2{0};
     bool spatial {false};
-
+    ReactionId reactionId {0};
 };
 
 template<bool approximated>
@@ -93,6 +93,10 @@ void CPUEvaluateTopologyReactions::perform() {
     const auto &context = kernel->context();
     auto &topologies = model.topologies();
 
+    if(context.recordReactionCounts()) {
+        model.resetTopologyReactionCounts();
+    }
+    
     if (!topologies.empty()) {
 
         auto events = gatherEvents();
@@ -118,6 +122,9 @@ void CPUEvaluateTopologyReactions::perform() {
                     assert(!topology->isDeactivated());
                     if (!event.spatial) {
                         handleStructuralReaction(topologies, new_topologies, event, topology);
+                        if(kernel->context().recordReactionCounts()) {
+                            kernel->getCPUKernelStateModel().structuralReactionCounts()[event.reactionId] += 1;
+                        }
                     } else {
                         if (event.topology_idx2 >= 0) {
                             auto &top2 = topologies.at(static_cast<std::size_t>(event.topology_idx2));
@@ -129,6 +136,9 @@ void CPUEvaluateTopologyReactions::perform() {
                             handleTopologyTopologyReaction(topology, top2, event);
                         } else {
                             handleTopologyParticleReaction(topology, event);
+                        }
+                        if(kernel->context().recordReactionCounts()) {
+                            kernel->getCPUKernelStateModel().spatialReactionCounts()[event.reactionId] += 1;
                         }
                     }
                 };
@@ -205,6 +215,7 @@ CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReacti
                 std::size_t reaction_idx = 0;
                 for (const auto &reaction : topology_types.structuralReactionsOf(top->type())) {
                     TREvent event{};
+                    event.reactionId = reaction.id();
                     event.rate = top->rates().at(reaction_idx);
                     event.cumulativeRate = event.rate + current_cumulative_rate;
                     current_cumulative_rate = event.cumulativeRate;
@@ -268,6 +279,7 @@ CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReacti
                                 }
                                 if (distSquared < reaction.radius() * reaction.radius()) {
                                     TREvent event{};
+                                    event.reactionId = reaction.id();
                                     event.rate = reaction.rate();
                                     event.cumulativeRate = event.rate + current_cumulative_rate;
                                     current_cumulative_rate = event.cumulativeRate;
@@ -426,6 +438,8 @@ bool CPUEvaluateTopologyReactions::eventsDependent(const CPUEvaluateTopologyReac
     if(evt1.topology_idx == evt2.topology_idx || evt1.topology_idx == evt2.topology_idx2) {
         return true;
     }
+    auto tpWithSameP = evt1.topology_idx2 < 0 && evt2.topology_idx2 < 0 && evt1.idx2 == evt2.idx2;
+    if(tpWithSameP) return true;
     return evt1.topology_idx2 >= 0 && (evt1.topology_idx2 == evt2.topology_idx || evt1.topology_idx2 == evt2.topology_idx2);
 }
 

@@ -45,12 +45,8 @@
 #include "readdy/model/reactions/Reaction.h"
 #include "readdy/model/reactions/ReactionRecord.h"
 
-namespace readdy {
-namespace model {
-namespace reactions {
+namespace readdy::model::reactions {
 
-Reaction::ReactionId Reaction::counter = 0;
+ReactionId Reaction::counter = 0;
 
-}
-}
 }

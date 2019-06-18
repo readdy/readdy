@@ -50,9 +50,7 @@
 
 using json = nlohmann::json;
 
-namespace readdy {
-namespace model {
-namespace ioutils {
+namespace readdy::model::ioutils {
 
 void writeReactionInformation(h5rd::Group &group, const Context &context) {
     const auto &reactionRegistry = context.reactions();
@@ -141,7 +139,59 @@ void writeTopologyTypeInformation(h5rd::Group &group, const Context &context) {
     }
 }
 
-std::tuple<h5rd::NativeCompoundType, h5rd::STDCompoundType> getParticleTypeInfoType(h5rd::Object::ParentFileRef ref) {
+void writeTopologyReactionInformation(h5rd::Group &group, const Context &context) {
+    std::vector<SpatialTopologyReactionInfo> spatialInfos;
+    std::vector<StructuralTopologyReactionInfo> structuralInfos;
+
+    std::vector<std::string> spatialInfoDescriptors;
+    std::vector<std::string> structuralInfoNames;
+
+    for(const auto &[_, reactions] : context.topologyRegistry().spatialReactionRegistry()) {
+        for(const auto &reaction : reactions) {
+            SpatialTopologyReactionInfo info{};
+            info.id = reaction.id();
+            info.descriptor = "";
+            spatialInfoDescriptors.push_back(context.topologyRegistry().generateSpatialReactionRepresentation(reaction));
+            spatialInfos.push_back(info);
+        }
+    }
+
+    for(const auto &topologyType : context.topologyRegistry().types()) {
+        for(const auto &sr : topologyType.structuralReactions) {
+            StructuralTopologyReactionInfo info{};
+            info.id = sr.id();
+            info.name = "";
+            structuralInfoNames.emplace_back(sr.name());
+            structuralInfos.push_back(info);
+        }
+    }
+
+    for(auto i = 0U; i < spatialInfos.size(); ++i) {
+        spatialInfos[i].descriptor = spatialInfoDescriptors[i].c_str();
+    }
+    for(auto i = 0U; i < structuralInfos.size(); ++i) {
+        structuralInfos[i].name = structuralInfoNames[i].c_str();
+    }
+
+    if(!spatialInfos.empty()) {
+        auto h5types = getSpatialTopologyReactionInfoType(group.parentFile());
+        h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
+        h5rd::dimensions extent = {spatialInfos.size()};
+        auto dset = group.createDataSet("spatial_topology_reactions", extent, dims,
+                std::get<0>(h5types), std::get<1>(h5types), {});
+        dset->append(extent, spatialInfos.data());
+    }
+    if(!structuralInfos.empty()) {
+        auto h5types = getStructuralTopologyReactionInfoType(group.parentFile());
+        h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
+        h5rd::dimensions extent = {structuralInfos.size()};
+        auto dset = group.createDataSet("structural_topology_reactions", extent, dims,
+                std::get<0>(h5types), std::get<1>(h5types), {});
+        dset->append(extent, structuralInfos.data());
+    }
+}
+
+CompoundType getParticleTypeInfoType(h5rd::Object::ParentFileRef ref) {
     using namespace h5rd;
     NativeCompoundType nct = NativeCompoundTypeBuilder(sizeof(ParticleTypeInfo), std::move(ref))
             .insertString("name", offsetof(ParticleTypeInfo, name))
@@ -152,7 +202,7 @@ std::tuple<h5rd::NativeCompoundType, h5rd::STDCompoundType> getParticleTypeInfoT
     return std::make_tuple(nct, STDCompoundType(nct));
 };
 
-std::tuple<h5rd::NativeCompoundType, h5rd::STDCompoundType> getTopologyTypeInfoType(h5rd::Object::ParentFileRef ref) {
+CompoundType getTopologyTypeInfoType(h5rd::Object::ParentFileRef ref) {
     using namespace h5rd;
     NativeCompoundType nct = NativeCompoundTypeBuilder(sizeof(TopologyTypeInfo), std::move(ref))
             .insertString("name", offsetof(TopologyTypeInfo, name))
@@ -161,7 +211,7 @@ std::tuple<h5rd::NativeCompoundType, h5rd::STDCompoundType> getTopologyTypeInfoT
     return std::make_tuple(nct, STDCompoundType(nct));
 }
 
-std::tuple<h5rd::NativeCompoundType, h5rd::STDCompoundType> getReactionInfoMemoryType(h5rd::Object::ParentFileRef ref) {
+CompoundType getReactionInfoMemoryType(h5rd::Object::ParentFileRef ref) {
     using namespace h5rd;
     NativeCompoundType nct  = NativeCompoundTypeBuilder(sizeof(ReactionInfo), std::move(ref))
             .insertString("name", offsetof(ReactionInfo, name))
@@ -178,13 +228,32 @@ std::tuple<h5rd::NativeCompoundType, h5rd::STDCompoundType> getReactionInfoMemor
     return std::make_tuple(nct, sct);
 };
 
+CompoundType getSpatialTopologyReactionInfoType(h5rd::Object::ParentFileRef ref) {
+    using namespace h5rd;
+    NativeCompoundType nct = NativeCompoundTypeBuilder(sizeof(SpatialTopologyReactionInfo), std::move(ref))
+            .insertString("descriptor", offsetof(SpatialTopologyReactionInfo, descriptor))
+            .insert<decltype(std::declval<SpatialTopologyReactionInfo>().id)>("id", offsetof(SpatialTopologyReactionInfo, id))
+            .build();
+    return std::make_tuple(nct, STDCompoundType(nct));
+}
+
+CompoundType getStructuralTopologyReactionInfoType(h5rd::Object::ParentFileRef ref) {
+    using namespace h5rd;
+    NativeCompoundType nct = NativeCompoundTypeBuilder(sizeof(StructuralTopologyReactionInfo), std::move(ref))
+            .insertString("name", offsetof(StructuralTopologyReactionInfo, name))
+            .insert<decltype(std::declval<StructuralTopologyReactionInfo>().id)>("id", offsetof(StructuralTopologyReactionInfo, id))
+            .build();
+    return std::make_tuple(nct, STDCompoundType(nct));
+}
+
 void writeSimulationSetup(h5rd::Group &group, const Context &context) {
     writeParticleTypeInformation(group, context);
-    writeTopologyTypeInformation(group, context);
     writeReactionInformation(group, context);
+
+    writeTopologyTypeInformation(group, context);
+    writeTopologyReactionInformation(group, context);
+
     writeGeneralContextInformation(group, context);
 }
 
-}
-}
 }

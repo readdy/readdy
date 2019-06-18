@@ -57,14 +57,10 @@
 #include "Fusion.h"
 #include "Decay.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(reactions)
+namespace readdy::model::reactions {
 
 class ReactionRegistry {
 public:
-    using ReactionId = Reaction::ReactionId;
-
     using ReactionsCollection = std::vector<Reaction *>;
     using ReactionsO1Map = std::unordered_map<ParticleTypeId, ReactionsCollection>;
     using ReactionsO2Map = util::particle_type_pair_unordered_map<ReactionsCollection>;
@@ -99,7 +95,7 @@ public:
         return result;
     }
 
-    const Reaction* order1ByName(const std::string &name) const {
+    const Reaction *order1ByName(const std::string &name) const {
         for (const auto &mapEntry : _o1Reactions) {
             for (const auto &reaction : mapEntry.second) {
                 if (reaction->name() == name) return reaction;
@@ -108,7 +104,7 @@ public:
         throw std::invalid_argument(fmt::format("No first order reaction with name \"{}\" found.", name));
     }
 
-    Reaction* order1ByName(const std::string &name) {
+    Reaction *order1ByName(const std::string &name) {
         for (auto &mapEntry : _o1Reactions) {
             for (auto &reaction : mapEntry.second) {
                 if (reaction->name() == name) return reaction;
@@ -139,7 +135,7 @@ public:
         return result;
     }
 
-    const Reaction* order2ByName(const std::string &name) const {
+    const Reaction *order2ByName(const std::string &name) const {
         for (const auto &mapEntry : _o2Reactions) {
             for (const auto &reaction : mapEntry.second) {
                 if (reaction->name() == name) return reaction;
@@ -148,7 +144,7 @@ public:
         throw std::invalid_argument(fmt::format("No second order reaction with name \"{}\" found.", name));
     }
 
-    Reaction* order2ByName(const std::string &name) {
+    Reaction *order2ByName(const std::string &name) {
         for (auto &mapEntry : _o2Reactions) {
             for (auto &reaction : mapEntry.second) {
                 if (reaction->name() == name) return reaction;
@@ -174,7 +170,7 @@ public:
 
     ReactionId idOf(const std::string &name) const;
 
-    const Reaction* byId(ReactionId id) const;
+    const Reaction *byId(ReactionId id) const;
 
     ReactionId add(const std::string &descriptor, scalar rate);
 
@@ -189,6 +185,7 @@ public:
     ReactionId addConversion(const std::string &name, const std::string &from, const std::string &to, scalar rate) {
         return addConversion(name, _types(from), _types(to), rate);
     }
+
     ReactionId addConversion(const std::string &name, ParticleTypeId from, ParticleTypeId to, scalar rate) {
         return emplaceReaction(std::make_shared<Conversion>(name, from, to, rate));
     }
@@ -204,12 +201,13 @@ public:
      * @return a uuid
      */
     ReactionId addEnzymatic(const std::string &name, const std::string &catalyst, const std::string &from,
-                             const std::string &to, scalar rate, scalar eductDistance) {
+                            const std::string &to, scalar rate, scalar eductDistance) {
         return addEnzymatic(name, _types(catalyst), _types(from), _types(to),
                             rate, eductDistance);
     }
+
     ReactionId addEnzymatic(const std::string &name, ParticleTypeId catalyst, ParticleTypeId from,
-                             ParticleTypeId to, scalar rate, scalar eductDistance) {
+                            ParticleTypeId to, scalar rate, scalar eductDistance) {
         return emplaceReaction(std::make_shared<Enzymatic>(name, catalyst, from, to, rate, eductDistance));
     }
 
@@ -226,15 +224,17 @@ public:
      * @return a uuid
      */
     ReactionId addFission(const std::string &name, const std::string &from, const std::string &to1,
-                           const std::string &to2, scalar rate, scalar productDistance,
-                           scalar weight1 = 0.5, scalar weight2 = 0.5) {
+                          const std::string &to2, scalar rate, scalar productDistance,
+                          scalar weight1 = 0.5, scalar weight2 = 0.5) {
         return addFission(name, _types(from), _types(to1), _types(to2), rate,
                           productDistance, weight1, weight2);
     }
+
     ReactionId addFission(const std::string &name, ParticleTypeId from, ParticleTypeId to1,
-                           ParticleTypeId to2, scalar rate, scalar productDistance,
-                           scalar weight1 = 0.5, scalar weight2 = 0.5) {
-        return emplaceReaction(std::make_shared<Fission>(name, from, to1, to2, rate, productDistance, weight1, weight2));
+                          ParticleTypeId to2, scalar rate, scalar productDistance,
+                          scalar weight1 = 0.5, scalar weight2 = 0.5) {
+        return emplaceReaction(
+                std::make_shared<Fission>(name, from, to1, to2, rate, productDistance, weight1, weight2));
     }
 
     /**
@@ -250,14 +250,15 @@ public:
      * @return a uuid
      */
     ReactionId addFusion(const std::string &name, const std::string &from1, const std::string &from2,
-                          const std::string &to, scalar rate, scalar eductDistance,
-                          scalar weight1 = 0.5, scalar weight2 = 0.5) {
+                         const std::string &to, scalar rate, scalar eductDistance,
+                         scalar weight1 = 0.5, scalar weight2 = 0.5) {
         return addFusion(name, _types(from1), _types(from2), _types(to), rate,
                          eductDistance, weight1, weight2);
     }
+
     ReactionId addFusion(const std::string &name, ParticleTypeId from1, ParticleTypeId from2,
-                          ParticleTypeId to, scalar rate, scalar eductDistance,
-                          scalar weight1 = 0.5, scalar weight2 = 0.5) {
+                         ParticleTypeId to, scalar rate, scalar eductDistance,
+                         scalar weight1 = 0.5, scalar weight2 = 0.5) {
         return emplaceReaction(std::make_shared<Fusion>(name, from1, from2, to, rate, eductDistance, weight1, weight2));
     }
 
@@ -271,6 +272,7 @@ public:
     ReactionId addDecay(const std::string &name, const std::string &type, scalar rate) {
         return addDecay(name, _types(type), rate);
     }
+
     ReactionId addDecay(const std::string &name, ParticleTypeId type, scalar rate) {
         return emplaceReaction(std::make_shared<Decay>(name, type, rate));
     }
@@ -285,7 +287,7 @@ private:
 
     bool reactionNameExists(const std::string &name) const;
 
-    ReactionRegistry::ReactionId emplaceReaction(const std::shared_ptr<Reaction> &reaction);
+    ReactionId emplaceReaction(const std::shared_ptr<Reaction> &reaction);
 
     std::size_t _n_order1{0};
     std::size_t _n_order2{0};
@@ -301,6 +303,4 @@ private:
     static const ReactionsCollection DEFAULT_REACTIONS;
 };
 
-NAMESPACE_END(reactions)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

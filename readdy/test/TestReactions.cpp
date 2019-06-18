@@ -125,8 +125,8 @@ TEMPLATE_TEST_CASE("Test reaction handlers", "[reactions]", SingleCPU, CPU) {
                 ctx.periodicBoundaryConditions() = {{true, true, true}};
                 ctx.boxSize() = {{20, 20, 20}};
 
-                const readdy::scalar weightF {static_cast<readdy::scalar>(0)};
-                const readdy::scalar weightA  {static_cast<readdy::scalar>(1.)};
+                const readdy::scalar weightF{static_cast<readdy::scalar>(0)};
+                const readdy::scalar weightA{static_cast<readdy::scalar>(1.)};
                 ctx.reactions().addFusion("F+A->F", "F", "A", "F", 1.0, 2.0, weightF, weightA);
                 ctx.reactions().addFission("F->F+A", "F", "F", "A", 1.0, 2.0, weightF, weightA);
 
@@ -158,7 +158,7 @@ TEMPLATE_TEST_CASE("Test reaction handlers", "[reactions]", SingleCPU, CPU) {
                         };
                 auto connection = kernel->connectObservable(obs.get());
                 {
-                    readdy::api::SimulationLoop loop (kernel.get(), .1);
+                    readdy::api::SimulationLoop loop(kernel.get(), .1);
                     loop.useReactionScheduler(handler);
                     loop.run(1);
                 }
@@ -208,89 +208,8 @@ TEMPLATE_TEST_CASE("Test reaction handlers", "[reactions]", SingleCPU, CPU) {
                 if (pos1.x <= 0.) {
                     REQUIRE(pos2.x > 0.);
                 } else if (pos1.x >= 0.) {
-                    REQUIRE(pos2.x< 0.);
+                    REQUIRE(pos2.x < 0.);
                 }
-            }
-
-            SECTION("Michaelis Menten") {
-                // this is an integration test
-                // todo consider integration tests as another build target in CMake project
-                /**
-                * Since comparing the value of a stochastic process (number of particles over time) is not well
-                * suited for testing, here integrate the stochastic process over the simulated time,
-                * giving a quite robust observable. This can be compared to an analytic value from ODE kinetics.
-                */
-                namespace rnd = readdy::model::rnd;
-
-                readdy::scalar length {10.};
-                ctx.boxSize() = {{length, length, length}};
-                ctx.periodicBoundaryConditions() = {true, true, true};
-
-                ctx.particleTypes().add("E", 0.5);
-                ctx.particleTypes().add("S", 0.5);
-                ctx.particleTypes().add("ES", 0.5);
-                ctx.particleTypes().add("P", 0.5);
-
-                ctx.reactions().add("fwd: E +(1.0) S -> ES", 0.0023417691399750494);
-                ctx.reactions().add("back: ES -> E +(1.0) S", 1.);
-                ctx.reactions().add("prod: ES -> E +(1.0) P", 1.);
-
-                readdy::scalar dt {8e-3};
-                auto &&reactions = kernel->actions().createReactionScheduler(handler, dt);
-                auto &&bd = kernel->actions().eulerBDIntegrator(dt);
-                auto &&initNeighborList = kernel->actions().createNeighborList(1.0);
-                auto &&neighborList = kernel->actions().updateNeighborList();
-
-                std::size_t nParticlesE {70};
-                std::size_t nParticlesS {700};
-
-                for (int i = 0; i < nParticlesE; ++i) {
-                    readdy::Vec3 pos{rnd::uniform_real() * length - 0.5 * length,
-                                     rnd::uniform_real() * length - 0.5 * length,
-                                     rnd::uniform_real() * length - 0.5 * length};
-                    kernel->addParticle("E", pos);
-                }
-
-                for (int i = 0; i < nParticlesS; ++i) {
-                    readdy::Vec3 pos{rnd::uniform_real() * length - 0.5 * length,
-                                     rnd::uniform_real() * length - 0.5 * length,
-                                     rnd::uniform_real() * length - 0.5 * length};
-                    kernel->addParticle("S", pos);
-                }
-
-                std::size_t nSteps {37500};
-
-                std::vector<std::string> typesToCount {{"S"}};
-                auto &&obs = kernel->observe().nParticles(1, typesToCount);
-                readdy::scalar meanS {0.};
-
-                obs->callback() = [&](const readdy::model::observables::NParticles::result_type &result) {
-                    meanS += static_cast<readdy::scalar>(result[0]);
-                };
-
-                auto &&connection = kernel->connectObservable(obs.get());
-
-                initNeighborList->perform();
-                neighborList->perform();
-                kernel->evaluateObservables(0);
-                auto t1 = std::chrono::high_resolution_clock::now();
-                for (readdy::time_step_type t = 1; t < nSteps+1; t++) {
-                    if (t == (nSteps+1)/100) {
-                        auto t2 = std::chrono::high_resolution_clock::now();
-                        auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-                        readdy::log::warn("1% done in {} ms, ETA is {} seconds", dur, dur / 10.);
-                    }
-                    bd->perform();
-                    neighborList->perform();
-                    reactions->perform();
-                    neighborList->perform();
-                    kernel->evaluateObservables(t);
-                }
-
-                meanS /= static_cast<readdy::scalar>(nSteps+1);
-
-                CHECK(meanS < 665.2 + 0.03 * 665.2);
-                CHECK(meanS > 665.2 - 0.03 * 665.2);
             }
         }
     }

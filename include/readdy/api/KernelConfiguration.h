@@ -50,11 +50,10 @@
 
 #include "readdy/common/macros.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(conf)
+namespace readdy::conf {
 using json = nlohmann::json;
 
-NAMESPACE_BEGIN(cpu)
+namespace cpu {
 /**
  * Struct with configuration attributes for the CPU neighbor list implementations
  */
@@ -63,14 +62,16 @@ struct NeighborList {
      * The radius in the box space of cell-linked lists to consider as neighboring cells. A larger value can 
      * drastically increase memory requirements.
      */
-    std::uint8_t cll_radius {1};
+    std::uint8_t cll_radius{1};
 };
+
 /**
  * Json serialization of NeighborList config struct
  * @param j the json object
  * @param nl the configurational object
  */
 void to_json(json &j, const NeighborList &nl);
+
 /**
  * Json deserialization to NeighborList config struct
  * @param j the json object
@@ -88,21 +89,23 @@ struct ThreadConfig {
      *     * n_cores in case of a DEBUG build
      *     * the value of the environment variable READDY_N_CORES, if set (superseeds the other two options)
      */
-    int nThreads {-1};
+    int nThreads{-1};
 
     int getNThreads() const {
-        if(nThreads >= 0) {
+        if (nThreads >= 0) {
             return nThreads;
         }
         return readdy_default_n_threads();
     }
 };
+
 /**
  * Json serialization of ThreadConfig
  * @param j the json object
  * @param nl the config
  */
 void to_json(json &j, const ThreadConfig &nl);
+
 /**
  * Json deserialization to ThreadConfig
  * @param j the json object
@@ -117,35 +120,36 @@ struct Configuration {
     /**
      * Configuration of the neighbor list
      */
-    NeighborList neighborList {};
+    NeighborList neighborList{};
     /**
      * Configuration of the threading behavior
      */
-    ThreadConfig threadConfig {};
+    ThreadConfig threadConfig{};
 };
+
 /**
  * Json serialization of ThreadConfig
  * @param j the json object
  * @param conf the config
  */
 void to_json(json &j, const Configuration &conf);
+
 /**
  * Json deserialization of ThreadConfig
  * @param j the json object
  * @param conf the config
  */
 void from_json(const json &j, Configuration &conf);
-NAMESPACE_END(cpu)
+}
 
-NAMESPACE_BEGIN(scpu)
+namespace scpu {
 /**
  * Struct that contains configuration information for the SingleCPU kernel. Currently empty, as there is nothing to
  * be configured.
  */
 struct Configuration {
 };
-NAMESPACE_END(scpu)
-
+}
 /**
  * Struct that contains configuration information for the SingleCPU as well as the CPU kernel.
  */
@@ -159,12 +163,14 @@ struct Configuration {
      */
     cpu::Configuration cpu;
 };
+
 /**
  * Json serialization of the Configuration
  * @param j json object
  * @param conf configuration
  */
 void to_json(json &j, const Configuration &conf);
+
 /**
  * Json deserialization of the Configuration
  * @param j json object
@@ -172,5 +178,4 @@ void to_json(json &j, const Configuration &conf);
  */
 void from_json(const json &j, Configuration &conf);
 
-NAMESPACE_END(conf)
-NAMESPACE_END(readdy)
+}

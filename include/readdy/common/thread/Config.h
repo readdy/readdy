@@ -48,9 +48,7 @@
 #include <readdy/common/common.h>
 #include "executor.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(util)
-NAMESPACE_BEGIN(thread)
+namespace readdy::util::thread {
 
 /**
  * Strongly typed enum which contains the different threading modes.
@@ -73,10 +71,11 @@ struct Config {
      * constructs a new config (should only be performed by the kernels)
      */
     Config();
-     /**
-      * constructs a new config with a certain mode
-      * @param mode the mode
-      */
+
+    /**
+     * constructs a new config with a certain mode
+     * @param mode the mode
+     */
     Config(ThreadMode mode);
 
     /**
@@ -123,6 +122,4 @@ private:
     void update();
 };
 
-NAMESPACE_END(thread)
-NAMESPACE_END(util)
-NAMESPACE_END(readdy)
+}

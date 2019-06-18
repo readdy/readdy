@@ -64,7 +64,7 @@ struct RadialDistribution::Impl {
     std::unique_ptr<util::TimeSeriesWriter> time;
 };
 
-RadialDistribution::RadialDistribution(Kernel *const kernel, stride_type stride,
+RadialDistribution::RadialDistribution(Kernel *const kernel, Stride stride,
                                        std::vector<scalar> binBorders, std::vector<ParticleTypeId> typeCountFrom,
                                        std::vector<ParticleTypeId> typeCountTo, scalar particleToDensity)
         : Observable(kernel, stride), typeCountFrom(std::move(typeCountFrom)), typeCountTo(std::move(typeCountTo)),
@@ -113,8 +113,8 @@ void RadialDistribution::evaluate() {
                 const auto upperRadius = binBorders[idx + 1];
                 *it_distribution =
                         (*it_counts) /
-                        (c_::four / c_::three * readdy::util::numeric::pi<scalar>() * (std::pow(upperRadius, c_::three)
-                                                                       - std::pow(lowerRadius, c_::three))
+                        (4. / 3. * readdy::util::numeric::pi<scalar>() * (std::pow(upperRadius, 3.)
+                                                                       - std::pow(lowerRadius, 3.))
                          * nFromParticles * particleToDensity);
                 ++it_distribution;
                 ++it_centers;
@@ -180,8 +180,10 @@ void RadialDistribution::flush() {
     if (pimpl->time) pimpl->time->flush();
 }
 
-std::string RadialDistribution::type() const {
-    return "RadialDistribution";
+constexpr static auto& t = "RadialDistribution";
+
+std::string_view RadialDistribution::type() const {
+    return t;
 }
 
 RadialDistribution::~RadialDistribution() = default;

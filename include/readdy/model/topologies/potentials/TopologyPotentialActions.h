@@ -49,15 +49,14 @@
 #include "AnglePotential.h"
 #include "TorsionPotential.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(top)
-NAMESPACE_BEGIN(pot)
+namespace readdy::model::top::pot {
 
 class CalculateHarmonicBondPotential : public EvaluatePotentialAction {
 public:
     using harmonic_bond = HarmonicBondPotential;
+
     explicit CalculateHarmonicBondPotential(const Context *const context) : EvaluatePotentialAction(context) {}
+
     ~CalculateHarmonicBondPotential() override = default;
 };
 
@@ -66,6 +65,7 @@ public:
     using harmonic_angle = HarmonicAnglePotential;
 
     explicit CalculateHarmonicAnglePotential(const Context *const context) : EvaluatePotentialAction(context) {}
+
     ~CalculateHarmonicAnglePotential() override = default;
 };
 
@@ -74,10 +74,8 @@ public:
     using cos_dihedral = CosineDihedralPotential;
 
     explicit CalculateCosineDihedralPotential(const Context *const context) : EvaluatePotentialAction(context) {}
+
     ~CalculateCosineDihedralPotential() override = default;
 };
 
-NAMESPACE_END(pot)
-NAMESPACE_END(top)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

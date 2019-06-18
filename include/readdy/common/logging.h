@@ -47,8 +47,7 @@
 #include <spdlog/spdlog.h>
 #include "macros.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(log)
+namespace readdy::log {
 
 std::shared_ptr<spdlog::logger> console();
 
@@ -91,10 +90,15 @@ public:
     explicit Level(spdlog::level::level_enum newLevel) : oldLevel(console()->level()) {
         console()->set_level(newLevel);
     }
-    Level(const Level&) = default;
-    Level& operator=(const Level&) = default;
-    Level(Level&&) = default;
-    Level& operator=(Level&&) = default;
+
+    Level(const Level &) = default;
+
+    Level &operator=(const Level &) = default;
+
+    Level(Level &&) = default;
+
+    Level &operator=(Level &&) = default;
+
     ~Level() {
         console()->set_level(oldLevel);
     }
@@ -103,5 +107,4 @@ private:
     spdlog::level::level_enum oldLevel;
 };
 
-NAMESPACE_END(log)
-NAMESPACE_END(readdy)
+}

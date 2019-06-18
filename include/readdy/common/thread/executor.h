@@ -57,15 +57,16 @@
 #include "scoped_async.h"
 #include "ctpl.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(util)
-NAMESPACE_BEGIN(thread)
+namespace readdy::util::thread {
 
-NAMESPACE_BEGIN(executor_type)
-struct pool {};
-struct std_thread {};
-struct std_async {};
-NAMESPACE_END(executor_type)
+namespace executor_type {
+struct pool {
+};
+struct std_thread {
+};
+struct std_async {
+};
+}
 
 class executor_base {
 public:
@@ -171,8 +172,8 @@ public:
     };
 
 private:
-    mutable ctpl::thread_pool *pool {nullptr};
-    mutable std::mutex mutex {};
+    mutable ctpl::thread_pool *pool{nullptr};
+    mutable std::mutex mutex{};
 
     /**
      * std_async implementation of execute_and_wait
@@ -220,6 +221,4 @@ private:
     }
 };
 
-NAMESPACE_END(thread)
-NAMESPACE_END(util)
-NAMESPACE_END(readdy)
+}

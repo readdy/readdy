@@ -57,12 +57,11 @@
 #include "Operations.h"
 #include "Recipe.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
+namespace readdy::model {
 class Kernel;
-NAMESPACE_BEGIN(top)
+namespace top {
 class GraphTopology;
-NAMESPACE_BEGIN(reactions)
+namespace reactions {
 
 /**
  * Struct holding the mode of the reaction:
@@ -125,50 +124,26 @@ public:
     /**
      * reaction function type, yielding a recipe
      */
-    using reaction_function = std::function<reaction_recipe(GraphTopology&)>;
+    using reaction_function = std::function<reaction_recipe(GraphTopology &)>;
     /**
      * rate function type, yielding a rate
      */
-    using rate_function = std::function<scalar(const GraphTopology&)>;
+    using rate_function = std::function<scalar(const GraphTopology &)>;
 
     /**
      * creates a new instance by supplying a reaction function and a rate function
+     * @param name name of the reaction
      * @param reaction_function the reaction function
      * @param rate_function the rate function
      */
-    StructuralTopologyReaction(const reaction_function &reaction_function, const rate_function &rate_function);
+    StructuralTopologyReaction(std::string name, reaction_function reaction_function, rate_function rate_function);
 
     /**
      * creates a new instance by supplying a reaction function and a constant rate
      * @param reaction_function the reaction function
      * @param rate the rate
      */
-    StructuralTopologyReaction(const reaction_function &reaction_function, const scalar &rate);
-
-    /**
-     * default copy
-     */
-    StructuralTopologyReaction(const StructuralTopologyReaction&) = default;
-
-    /**
-     * default copy assign
-     */
-    StructuralTopologyReaction& operator=(const StructuralTopologyReaction&) = default;
-
-    /**
-     * default move
-     */
-    StructuralTopologyReaction(StructuralTopologyReaction&&) = default;
-
-    /**
-     * default move assign
-     */
-    StructuralTopologyReaction& operator=(StructuralTopologyReaction&&) = default;
-
-    /**
-     * default destructor
-     */
-    ~StructuralTopologyReaction() = default;
+    StructuralTopologyReaction(std::string name, reaction_function reaction_function, scalar rate);
 
     /**
      * Evaluates the rate of this reaction for a given topology.
@@ -252,15 +227,27 @@ public:
         mode_.create_children();
     }
 
+    std::string_view name() const {
+        return _name;
+    }
+
+    ReactionId id() const {
+        return _id;
+    }
+
     /**
      * Executes the topology reaction on a topology and a kernel, possibly returns child topologies.
      * @param topology the topology
      * @param kernel the kernel
      * @return a vector of child topologies if they were created in the process
      */
-    std::vector<GraphTopology> execute(GraphTopology &topology, const Kernel * kernel) const;
+    std::vector<GraphTopology> execute(GraphTopology &topology, const Kernel *kernel) const;
 
 private:
+
+    static ReactionId counter;
+    ReactionId _id;
+
     /**
      * the reaction function responsible of generating the reaction recipe out of a topology
      */
@@ -273,9 +260,14 @@ private:
      * the execution mode
      */
     mode mode_;
+    /**
+     * name of this reaction, has to be unique
+     */
+    std::string _name;
+
+
 };
 
-NAMESPACE_END(reactions)
-NAMESPACE_END(top)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}
+}
+}

@@ -46,9 +46,7 @@
 
 #include <cstddef>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(util)
-NAMESPACE_BEGIN(hash)
+namespace readdy::util::hash {
 
 /**
  * Simplified version of boost hash combine.
@@ -67,6 +65,4 @@ struct EnumClassHash {
     }
 };
 
-NAMESPACE_END(hash)
-NAMESPACE_END(util)
-NAMESPACE_END(readdy)
+}

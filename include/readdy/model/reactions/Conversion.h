@@ -46,9 +46,7 @@
 #pragma once
 #include "Reaction.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(reactions)
+namespace readdy::model::reactions {
 
 class Conversion : public Reaction {
 
@@ -65,6 +63,5 @@ public:
 
     const ReactionType type() const override { return ReactionType::Conversion; }
 };
-NAMESPACE_END(reactions)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+
+}

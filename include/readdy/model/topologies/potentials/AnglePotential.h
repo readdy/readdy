@@ -50,10 +50,7 @@
 #include <vector>
 #include "TopologyPotential.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(top)
-NAMESPACE_BEGIN(pot)
+namespace readdy::model::top::pot {
 
 class AnglePotential : public TopologyPotential {
 public:
@@ -80,10 +77,14 @@ public:
     using angle_configurations = std::vector<AngleConfiguration>;
 
     explicit HarmonicAnglePotential(angle_configurations angles) : AnglePotential(), angles(std::move(angles)) {}
-    HarmonicAnglePotential(const HarmonicAnglePotential&) = default;
-    HarmonicAnglePotential& operator=(const HarmonicAnglePotential&) = delete;
-    HarmonicAnglePotential(HarmonicAnglePotential&&) = default;
-    HarmonicAnglePotential& operator=(HarmonicAnglePotential&&) = delete;
+
+    HarmonicAnglePotential(const HarmonicAnglePotential &) = default;
+
+    HarmonicAnglePotential &operator=(const HarmonicAnglePotential &) = delete;
+
+    HarmonicAnglePotential(HarmonicAnglePotential &&) = default;
+
+    HarmonicAnglePotential &operator=(HarmonicAnglePotential &&) = delete;
 
     ~HarmonicAnglePotential() override = default;
 
@@ -103,7 +104,4 @@ protected:
     angle_configurations angles;
 };
 
-NAMESPACE_END(pot)
-NAMESPACE_END(top)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

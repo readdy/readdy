@@ -233,10 +233,12 @@ CPUReactionCounts::CPUReactionCounts(CPUKernel *const kernel, unsigned int strid
         : ReactionCounts(kernel, stride), kernel(kernel) {}
 
 void CPUReactionCounts::evaluate() {
-    result = kernel->getCPUKernelStateModel().reactionCounts();
+    std::get<0>(result) = kernel->getCPUKernelStateModel().reactionCounts();
+    std::get<1>(result) = kernel->getCPUKernelStateModel().spatialReactionCounts();
+    std::get<2>(result) = kernel->getCPUKernelStateModel().structuralReactionCounts();
 }
 
-CPUVirial::CPUVirial(CPUKernel *kernel, stride_type stride) : Virial(kernel, stride), kernel(kernel) {}
+CPUVirial::CPUVirial(CPUKernel *kernel, Stride stride) : Virial(kernel, stride), kernel(kernel) {}
 
 void CPUVirial::evaluate() {
     result = kernel->getCPUKernelStateModel().virial();

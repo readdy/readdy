@@ -47,39 +47,44 @@
 #include <readdy/common/macros.h>
 #include <readdy/model/Context.h>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(top)
+namespace readdy::model::top {
 class Topology;
-NAMESPACE_BEGIN(pot)
+namespace pot {
 
 class TopologyPotentialAction {
 public:
     explicit TopologyPotentialAction(const Context *const context) : context(context) {}
-    TopologyPotentialAction(const TopologyPotentialAction&) = default;
-    TopologyPotentialAction& operator=(const TopologyPotentialAction&) = delete;
-    TopologyPotentialAction(TopologyPotentialAction&&) = default;
-    TopologyPotentialAction& operator=(TopologyPotentialAction&&) = delete;
+
+    TopologyPotentialAction(const TopologyPotentialAction &) = default;
+
+    TopologyPotentialAction &operator=(const TopologyPotentialAction &) = delete;
+
+    TopologyPotentialAction(TopologyPotentialAction &&) = default;
+
+    TopologyPotentialAction &operator=(TopologyPotentialAction &&) = delete;
+
     virtual ~TopologyPotentialAction() = default;
 
 protected:
-    const Context* const context;
+    const Context *const context;
 };
 
 class EvaluatePotentialAction : public TopologyPotentialAction {
 public:
     explicit EvaluatePotentialAction(const Context *const context) : TopologyPotentialAction(context) {}
-    EvaluatePotentialAction(const EvaluatePotentialAction&) = default;
-    EvaluatePotentialAction& operator=(const EvaluatePotentialAction&) = delete;
-    EvaluatePotentialAction(EvaluatePotentialAction&&) = default;
-    EvaluatePotentialAction& operator=(EvaluatePotentialAction&&) = delete;
+
+    EvaluatePotentialAction(const EvaluatePotentialAction &) = default;
+
+    EvaluatePotentialAction &operator=(const EvaluatePotentialAction &) = delete;
+
+    EvaluatePotentialAction(EvaluatePotentialAction &&) = default;
+
+    EvaluatePotentialAction &operator=(EvaluatePotentialAction &&) = delete;
 
     ~EvaluatePotentialAction() override = default;
 
-    virtual scalar perform(const Topology*topology) = 0;
+    virtual scalar perform(const Topology *topology) = 0;
 };
 
-NAMESPACE_END(pot)
-NAMESPACE_END(top)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}
+}

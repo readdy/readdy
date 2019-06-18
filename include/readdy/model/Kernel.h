@@ -60,8 +60,7 @@
 #include <readdy/model/topologies/TopologyActionFactory.h>
 #include <readdy/model/_internal/Util.h>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
+namespace readdy::model {
 
 /**
  * Base class of kernels.
@@ -75,7 +74,7 @@ public:
     /**
      * Constructs a kernel with a given name.
      */
-    explicit Kernel(std::string name) :_name(std::move(name)), _signal() {};
+    explicit Kernel(std::string name) : _name(std::move(name)), _signal() {};
 
     /**
      * The kernel destructor.
@@ -128,18 +127,18 @@ public:
      * Adds a particle of the type "type" at position "pos".
      */
     readdy::model::Particle::id_type addParticle(const std::string &type, const Vec3 &pos) {
-        readdy::model::Particle particle {pos[0], pos[1], pos[2], context().particleTypes().idOf(type)};
+        readdy::model::Particle particle{pos[0], pos[1], pos[2], context().particleTypes().idOf(type)};
         stateModel().addParticle(particle);
         return particle.id();
     };
 
     TopologyParticle createTopologyParticle(const std::string &type, const Vec3 &pos) const {
-        const auto& info = context().particleTypes().infoOf(type);
-        if(info.flavor != particleflavor::TOPOLOGY) {
+        const auto &info = context().particleTypes().infoOf(type);
+        if (info.flavor != particleflavor::TOPOLOGY) {
             throw std::invalid_argument(fmt::format(
                     "You can only create topology particles of a type that is topology flavored. "
                     "Type was {}, flavor {}.", type, readdy::model::particleflavor::particleFlavorToString(info.flavor)
-                    ));
+            ));
         }
         return TopologyParticle(pos, info.typeId);
     };
@@ -197,5 +196,4 @@ protected:
     observables::signal_type _signal;
 };
 
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

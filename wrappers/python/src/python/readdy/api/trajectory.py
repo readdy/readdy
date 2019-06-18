@@ -244,6 +244,8 @@ class Trajectory(object):
                                 reaction["product_distance"], reaction["educt_types"], reaction["product_types"],
                                 self._inverse_types_map)
             self._reactions.append(info)
+        self._spatial_topology_reaction_mapping = _io_utils.get_spatial_topology_reactions(filename)
+        self._structural_topology_reaction_mapping = _io_utils.get_structural_topology_reactions(filename)
 
     def species_name(self, id):
         """
@@ -441,7 +443,8 @@ class Trajectory(object):
         """
         Reads back the output of the "reaction_counts" observable
         :param data_set_name: The data set name as given in the simulation setup
-        :return:
+        :return: a time array and a dictionary with keys `reactions`, `spatial_topology_reactions`,
+                 `structural_topology_reactions`
         """
         group_path = "readdy/observables/" + data_set_name
         with _h5py.File(self._filename, "r") as f:
@@ -449,12 +452,33 @@ class Trajectory(object):
                 raise ValueError("The reaction counts observable was not recorded in the file or recorded under a "
                                  "different name!")
             time = f[group_path]["time"][:]
-            counts = {}
+
+            counts_reactions = {}
+            counts_spatial = {}
+            counts_structural = {}
+
             counts_group = f[group_path]["counts"]
             for reaction in self.reactions:
                 if str(reaction.reaction_id) in counts_group:
-                    counts[reaction.name] = counts_group[str(reaction.reaction_id)][:]
-            return time, counts
+                    counts_reactions[reaction.name] = counts_group[str(reaction.reaction_id)][:]
+
+            if "spatialCounts" in f[group_path]:
+                spatial_group = f[group_path]["spatialCounts"]
+                for reaction_id in self._spatial_topology_reaction_mapping.keys():
+                    name = self._spatial_topology_reaction_mapping[reaction_id]
+                    counts_spatial[name] = spatial_group[str(reaction_id)][:]
+
+            if "structuralCounts" in f[group_path]:
+                structural_group = f[group_path]["structuralCounts"]
+                for reaction_id in self._structural_topology_reaction_mapping.keys():
+                    name = self._structural_topology_reaction_mapping[reaction_id]
+                    counts_structural[name] = structural_group[str(reaction_id)][:]
+
+            return time, {
+                'reactions': counts_reactions,
+                'spatial_topology_reactions': counts_spatial,
+                'structural_topology_reactions': counts_structural
+            }
 
     def read_observable_energy(self, data_set_name="energy"):
         """

@@ -53,24 +53,27 @@
 
 #include "Particle.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
+namespace readdy::model {
 
 using particle_flavor = std::uint8_t;
-NAMESPACE_BEGIN(particleflavor)
+namespace particleflavor {
 static constexpr particle_flavor NORMAL = 0;
 static constexpr particle_flavor TOPOLOGY = 1;
 static constexpr particle_flavor MEMBRANE = 2;
 
 inline static std::string particleFlavorToString(particle_flavor flavor) {
-    switch(flavor) {
-        case model::particleflavor::NORMAL: return "NORMAL";
-        case model::particleflavor::TOPOLOGY: return "TOPOLOGY";
-        case model::particleflavor::MEMBRANE: return "MEMBRANE";
-        default: return "UNKNOWN";
+    switch (flavor) {
+        case model::particleflavor::NORMAL:
+            return "NORMAL";
+        case model::particleflavor::TOPOLOGY:
+            return "TOPOLOGY";
+        case model::particleflavor::MEMBRANE:
+            return "MEMBRANE";
+        default:
+            return "UNKNOWN";
     }
 }
-NAMESPACE_END(particleflavor)
+}
 
 struct ParticleTypeInfo {
     std::string name;
@@ -125,7 +128,7 @@ public:
         return diffusionConstantOf(idOf(particleType));
     }
 
-    scalar& diffusionConstantOf(const std::string &particleType) {
+    scalar &diffusionConstantOf(const std::string &particleType) {
         return diffusionConstantOf(idOf(particleType));
     }
 
@@ -133,7 +136,7 @@ public:
         return particle_info_.at(particleType).diffusionConstant;
     }
 
-    scalar& diffusionConstantOf(ParticleTypeId particleType) {
+    scalar &diffusionConstantOf(ParticleTypeId particleType) {
         return particle_info_.at(particleType).diffusionConstant;
     }
 
@@ -176,10 +179,9 @@ private:
 
     std::size_t n_types_ = 0;
     ParticleTypeId type_counter_ = 0;
-    type_map type_mapping_ {};
-    std::unordered_map<ParticleTypeId, ParticleTypeInfo> particle_info_ {};
+    type_map type_mapping_{};
+    std::unordered_map<ParticleTypeId, ParticleTypeInfo> particle_info_{};
 
 };
 
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

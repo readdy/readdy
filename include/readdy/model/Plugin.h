@@ -49,8 +49,7 @@
 #include <sstream>
 #include <unordered_map>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
+namespace readdy::model {
 
 class Plugin {
 public:
@@ -59,5 +58,4 @@ public:
     virtual ~Plugin() {};
 };
 
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

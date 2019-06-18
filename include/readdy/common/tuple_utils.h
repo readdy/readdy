@@ -50,9 +50,9 @@
 
 #include "macros.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(util)
-NAMESPACE_BEGIN(detail)
+namespace readdy::util {
+
+namespace detail {
 
 template<typename R, template<typename...> class Params, typename... Args, std::size_t... I>
 R call_helper(std::function<R(Args...)> const &func, Params<Args...> const &params, std::index_sequence<I...>) {
@@ -73,13 +73,13 @@ auto reverse_impl(T &&t, std::index_sequence<I...>) -> std::tuple<typename std::
 template<class F, class...Ts, std::size_t...Is>
 void for_each_in_tuple_impl(const std::tuple<Ts...> &tuple, F func, std::index_sequence<Is...>) {
     using expander = int[];
-    (void) expander {0, ((void) func(std::get<Is>(tuple)), 0)...};
+    (void) expander{0, ((void) func(std::get<Is>(tuple)), 0)...};
 }
 
 template<class F, class...Ts, std::size_t...Is>
 void for_each_in_tuple_reverse_impl(const std::tuple<Ts...> &tuple, F func, std::index_sequence<Is...>) {
     using expander = int[];
-    (void) expander {0, ((void) func(std::get<sizeof...(Is) - 1 - Is>(tuple)), 0)...};
+    (void) expander{0, ((void) func(std::get<sizeof...(Is) - 1 - Is>(tuple)), 0)...};
 }
 
 template<class Ch, class Tr, class Tuple, std::size_t... Is>
@@ -88,8 +88,7 @@ void print_tuple_impl(std::basic_ostream<Ch, Tr> &os, const Tuple &t, std::index
     (void) swallow{0, (void(os << (Is == 0 ? "" : ", ") << std::get<Is>(t)), 0)...};
 }
 
-
-NAMESPACE_END(detail)
+}
 
 /**
  * Invoke the callable object func with a tuple of arguments.
@@ -158,8 +157,7 @@ void for_each_in_tuple(const std::tuple<Ts...> &tuple, F func) {
     detail::for_each_in_tuple_impl(tuple, func, std::make_index_sequence<sizeof...(Ts)>());
 }
 
-NAMESPACE_END(util)
-NAMESPACE_END(readdy)
+}
 
 /**
  * pretty print a tuple

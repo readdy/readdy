@@ -49,16 +49,13 @@
 #include <readdy/model/reactions/ReactionRecord.h>
 #include "Observable.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(observables)
-
+namespace readdy::model::observables {
 
 class Reactions : public Observable<std::vector<reactions::ReactionRecord>> {
     using super = Observable<std::vector<reactions::ReactionRecord>>;
 
 public:
-    Reactions(Kernel *kernel, stride_type stride);
+    Reactions(Kernel *kernel, Stride stride);
 
     Reactions(const Reactions &) = delete;
 
@@ -70,14 +67,14 @@ public:
 
     ~Reactions() override;
 
-    std::string type() const override;
+    std::string_view type() const override;
 
     void flush() override;
 
 protected:
     void initialize(Kernel *kernel) override;
 
-    void initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) override;
+    void initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) override;
 
     void append() override;
 
@@ -85,6 +82,4 @@ protected:
     std::unique_ptr<Impl> pimpl;
 };
 
-NAMESPACE_END(observables)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

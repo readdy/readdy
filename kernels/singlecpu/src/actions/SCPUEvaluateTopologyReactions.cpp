@@ -47,11 +47,7 @@
 #include <readdy/common/algorithm.h>
 #include <readdy/common/boundary_condition_operations.h>
 
-namespace readdy {
-namespace kernel {
-namespace scpu {
-namespace actions {
-namespace top {
+namespace readdy::kernel::scpu::actions::top {
 
 /**
  * Struct holding information about a topology reaction event.
@@ -71,9 +67,9 @@ struct SCPUEvaluateTopologyReactions::TREvent {
     // idx1 is always the particle that belongs to a topology
     index_type idx1{0}, idx2{0};
     bool spatial {false};
+    readdy::ReactionId reactionId {0};
 
 };
-
 
 SCPUEvaluateTopologyReactions::SCPUEvaluateTopologyReactions(SCPUKernel *const kernel, scalar timeStep)
         : EvaluateTopologyReactions(timeStep), kernel(kernel) {}
@@ -91,7 +87,11 @@ void SCPUEvaluateTopologyReactions::perform() {
     auto &model = kernel->getSCPUKernelStateModel();
     const auto &context = kernel->context();
     auto &topologies = model.topologies();
-
+    
+    if(context.recordReactionCounts()) {
+        model.resetTopologyReactionCounts();
+    }
+    
     if (!topologies.empty()) {
 
         auto events = gatherEvents();
@@ -127,6 +127,9 @@ void SCPUEvaluateTopologyReactions::perform() {
                         handleTopologyTopologyReaction(topology, top2, event);
                     } else {
                         handleTopologyParticleReaction(topology, event);
+                    }
+                    if(context.recordReactionCounts()) {
+                        kernel->getSCPUKernelStateModel().spatialReactionCounts()[event.reactionId] += 1;
                     }
                 }
             };
@@ -168,6 +171,7 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
                     current_cumulative_rate = event.cumulativeRate;
                     event.topology_idx = topology_idx;
                     event.reaction_idx = reaction_idx;
+                    event.reactionId = reaction.id();
 
                     events.push_back(event);
                     ++reaction_idx;
@@ -212,6 +216,7 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
                             for (const auto &reaction : reactions) {
                                 if (distSquared < reaction.radius() * reaction.radius()) {
                                     TREvent event{};
+                                    event.reactionId = reaction.id();
                                     event.rate = reaction.rate();
                                     event.cumulativeRate = event.rate + current_cumulative_rate;
                                     current_cumulative_rate = event.cumulativeRate;
@@ -287,6 +292,8 @@ bool SCPUEvaluateTopologyReactions::eventsDependent(const SCPUEvaluateTopologyRe
     if(evt1.topology_idx == evt2.topology_idx || evt1.topology_idx == evt2.topology_idx2) {
         return true;
     }
+    auto tpWithSameP = evt1.topology_idx2 < 0 && evt2.topology_idx2 < 0 && evt1.idx2 == evt2.idx2;
+    if(tpWithSameP) return true;
     return evt1.topology_idx2 >= 0 && (evt1.topology_idx2 == evt2.topology_idx || evt1.topology_idx2 == evt2.topology_idx2);
 }
 
@@ -408,6 +415,9 @@ void SCPUEvaluateTopologyReactions::handleStructuralReaction(SCPUStateModel::top
     const auto &reactions = context.topologyRegistry().structuralReactionsOf(topology->type());
     const auto &reaction = reactions.at(static_cast<std::size_t>(event.reaction_idx));
     auto result = reaction.execute(*topology, kernel);
+    if(context.recordReactionCounts()) {
+        kernel->getSCPUKernelStateModel().structuralReactionCounts()[event.reactionId] += 1;
+    }
     /*if(result.size() != 2) {
         throw std::logic_error("result size was not 2, split did not work");
     }
@@ -443,8 +453,4 @@ bool SCPUEvaluateTopologyReactions::topologyDeactivated(std::size_t index) const
 }
 
 
-}
-}
-}
-}
 }

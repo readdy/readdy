@@ -51,11 +51,7 @@
 #include <readdy/kernel/cpu/CPUStateModel.h>
 #include <readdy/model/topologies/GraphTopology.h>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(kernel)
-NAMESPACE_BEGIN(cpu)
-NAMESPACE_BEGIN(actions)
-NAMESPACE_BEGIN(top)
+namespace readdy::kernel::cpu::actions::top {
 
 class CPUCalculateHarmonicBondPotential : public readdy::model::top::pot::CalculateHarmonicBondPotential {
 
@@ -92,8 +88,7 @@ public:
     readdy::scalar perform(const readdy::model::top::Topology *topology) override;
 };
 
-NAMESPACE_BEGIN(reactions)
-NAMESPACE_BEGIN(op)
+namespace reactions::op {
 
 class CPUChangeParticleType : public readdy::model::top::reactions::actions::ChangeParticleType {
     CPUStateModel::data_type *const data;
@@ -125,8 +120,8 @@ class CPUAppendParticle : public readdy::model::top::reactions::actions::AppendP
     vertex newParticleIt;
 public:
     CPUAppendParticle(CPUStateModel::data_type *const data, model::top::GraphTopology *topology,
-            std::vector<vertex> neighbors, ParticleTypeId type, Vec3 pos)
-    : AppendParticle(topology, std::move(neighbors), type, pos), data(data), particle(pos, type) {};
+                      std::vector<vertex> neighbors, ParticleTypeId type, Vec3 pos)
+            : AppendParticle(topology, std::move(neighbors), type, pos), data(data), particle(pos, type) {};
 
     void execute() override {
         auto entry = CPUStateModel::data_type::entry_type(particle);
@@ -136,7 +131,7 @@ public:
         topology->appendParticle(insertIndex, type, firstNeighbor, firstNeighbor->particleType());
         // new particles get appended to the end of the linked list
         newParticleIt = std::prev(topology->graph().vertices().end());
-        for(auto it = neighbors.begin() + 1; it != neighbors.end(); ++it) {
+        for (auto it = neighbors.begin() + 1; it != neighbors.end(); ++it) {
             topology->graph().addEdge(newParticleIt, *it);
         }
     }
@@ -151,11 +146,6 @@ public:
     }
 };
 
-NAMESPACE_END(op)
-NAMESPACE_END(reactions)
+}
 
-NAMESPACE_END(top)
-NAMESPACE_END(actions)
-NAMESPACE_END(cpu)
-NAMESPACE_END(kernel)
-NAMESPACE_END(readdy)
+}

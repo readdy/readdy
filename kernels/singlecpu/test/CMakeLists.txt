@@ -42,7 +42,6 @@ target_link_libraries(${PROJECT_NAME} PUBLIC readdy Catch2::Catch2)
 set_target_properties(${PROJECT_NAME} PROPERTIES
         LINK_FLAGS "${EXTRA_LINK_FLAGS}"
         COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}")
-catch_discover_tests(${PROJECT_NAME})
 
 if (READDY_INSTALL_UNIT_TEST_EXECUTABLE)
     install(TARGETS ${PROJECT_NAME}

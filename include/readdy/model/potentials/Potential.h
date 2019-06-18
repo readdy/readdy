@@ -50,9 +50,7 @@
 #include <array>
 #include <readdy/model/Particle.h>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(potentials)
+namespace readdy::model::potentials {
 
 class Potential {
 public:
@@ -69,6 +67,4 @@ public:
 
 };
 
-NAMESPACE_END(potentials)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

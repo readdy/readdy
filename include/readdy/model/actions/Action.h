@@ -53,14 +53,13 @@
 #include <string>
 #endif
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(actions)
+namespace readdy::model::actions {
 
 class Action {
 public:
 
     Action() = default;
+
     virtual ~Action() = default;
 
     virtual void perform() = 0;
@@ -74,12 +73,11 @@ public:
     ~TimeStepDependentAction() override = default;
 
     scalar &timeStep() { return _timeStep; }
+
     const scalar &timeStep() const { return _timeStep; }
 
 protected:
     scalar _timeStep;
 };
 
-NAMESPACE_END(actions)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

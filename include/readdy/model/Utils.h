@@ -47,14 +47,12 @@
 #include <readdy/model/Context.h>
 #include <readdy/model/observables/Observable.h>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(util)
+namespace readdy::model::util {
 
 //scalar getRecommendedTimeStep(unsigned int N, Context&);
 //scalar getMaximumDisplacement(Context&, scalar timeStep);
 
-constexpr inline std::array<const char*, 8> invalidCharacterSequences() {
+constexpr inline std::array<const char *, 8> invalidCharacterSequences() {
     return {{"[", "]", "(", ")", "->", "--", ":", "+"}};
 };
 
@@ -63,6 +61,4 @@ static constexpr const char bond[] = "--";
 
 void validateTypeName(const std::string &typeName);
 
-NAMESPACE_END(util)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

@@ -56,7 +56,7 @@ struct Virial::Impl {
     io::BloscFilter bloscFilter{};
 };
 
-Virial::Virial(Kernel *kernel, stride_type stride) : super(kernel, stride), pimpl(std::make_unique<Impl>()) {}
+Virial::Virial(Kernel *kernel, Stride stride) : super(kernel, stride), pimpl(std::make_unique<Impl>()) {}
 
 void Virial::flush() {
     if (pimpl->ds) pimpl->ds->flush();
@@ -71,7 +71,7 @@ void Virial::initialize(Kernel *const kernel) {
     }
 }
 
-void Virial::initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) {
+void Virial::initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) {
     h5rd::dimensions fs = {flushStride, Matrix33::n(), Matrix33::m()};
     h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS, Matrix33::n(), Matrix33::m()};
     auto group = file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName);
@@ -84,8 +84,10 @@ void Virial::append() {
     pimpl->time->append(t_current);
 }
 
-std::string Virial::type() const {
-    return "Virial";
+constexpr static auto& t = "Virial";
+
+std::string_view Virial::type() const {
+    return t;
 }
 
 Virial::~Virial() = default;

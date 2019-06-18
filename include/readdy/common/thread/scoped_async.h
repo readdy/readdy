@@ -49,9 +49,7 @@
 #include <readdy/common/macros.h>
 #include <readdy/common/logging.h>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(util)
-NAMESPACE_BEGIN(thread)
+namespace readdy::util::thread {
 
 class scoped_async {
     std::future<void> async_;
@@ -73,7 +71,7 @@ public:
      * wait for the task to finish if valid
      */
     ~scoped_async() {
-        if(async_.valid()) async_.wait();
+        if (async_.valid()) async_.wait();
     }
 
     /**
@@ -97,6 +95,4 @@ public:
     scoped_async &operator=(scoped_async &&) = default;
 };
 
-NAMESPACE_END(thread)
-NAMESPACE_END(util)
-NAMESPACE_END(readdy)
+}

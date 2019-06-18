@@ -52,14 +52,14 @@ namespace readdy {
 namespace model {
 namespace observables {
 
-NParticles::NParticles(Kernel *const kernel, stride_type stride,
+NParticles::NParticles(Kernel *const kernel, Stride stride,
                        std::vector<std::string> typesToCount)
         : NParticles(kernel, stride,
                      _internal::util::transformTypes2(typesToCount, kernel->context())) {
 
 }
 
-NParticles::NParticles(Kernel *const kernel, stride_type stride,
+NParticles::NParticles(Kernel *const kernel, Stride stride,
                        std::vector<ParticleTypeId> typesToCount)
         : Observable(kernel, stride), typesToCount(std::move(typesToCount)), pimpl(std::make_unique<Impl>()) {
 }
@@ -72,10 +72,10 @@ struct NParticles::Impl {
     io::BloscFilter bloscFilter {};
 };
 
-NParticles::NParticles(Kernel *const kernel, stride_type stride)
+NParticles::NParticles(Kernel *const kernel, Stride stride)
         : Observable(kernel, stride), pimpl(std::make_unique<Impl>()) {}
 
-void NParticles::initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) {
+void NParticles::initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) {
     const auto size = typesToCount.empty() ? 1 : typesToCount.size();
     h5rd::dimensions fs = {flushStride, size};
     h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS, size};
@@ -94,8 +94,10 @@ void NParticles::flush() {
     if(pimpl->time) pimpl->time->flush();
 }
 
-std::string NParticles::type() const {
-    return "NParticles";
+constexpr static const char* t = "NParticles";
+
+std::string_view NParticles::type() const {
+    return t;
 }
 }
 }

@@ -37,15 +37,16 @@ Created on 02.10.17
 
 @author: clonker
 """
-from progress_reporter import ProgressReporter as _ProgressReporter
+import tqdm
 
 
-class SimulationProgress(_ProgressReporter):
+class SimulationProgress():
     def __init__(self, n_callbacks):
-        self._progress_register(n_callbacks, description="Simulation progress")
+        self._bar = tqdm.tqdm(total=n_callbacks)
+        self._it = self._bar.__enter__()
 
     def callback(self, current_t):
-        self._progress_update(1)
+        self._it.update(1)
 
     def finish(self):
-        self._progress_force_finish()
+        self._bar.__exit__()

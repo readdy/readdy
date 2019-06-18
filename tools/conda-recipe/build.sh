@@ -71,6 +71,14 @@ if [ ${err_code} -ne 0 ]; then
     echo "core unit tests failed with ${ret_code}"
 fi
 
+echo "calling c++ integration tests"
+CONDA_ENV_PATH=${PREFIX} bin/runUnitTests --durations yes [integration]
+err_code=$?
+if [ ${err_code} -ne 0 ]; then
+    ret_code=${err_code}
+    echo "core unit tests failed with ${ret_code}"
+fi
+
 echo "calling c++ singlecpu unit tests"
 CONDA_ENV_PATH=${PREFIX} bin/runUnitTests_singlecpu --durations yes
 err_code=$?

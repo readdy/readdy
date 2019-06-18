@@ -78,6 +78,7 @@ void CPUKernel::initialize() {
     }
     _stateModel.reactionRecords().clear();
     _stateModel.resetReactionCounts();
+    _stateModel.resetTopologyReactionCounts();
     _stateModel.virial() = Matrix33{{{0, 0, 0, 0, 0, 0, 0, 0, 0}}};
 }
 

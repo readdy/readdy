@@ -51,11 +51,9 @@
 #include "Operations.h"
 #include "TopologyReactionAction.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
+namespace readdy::model {
 class Kernel;
-NAMESPACE_BEGIN(top)
-NAMESPACE_BEGIN(reactions)
+namespace top::reactions {
 
 class Recipe {
 public:
@@ -155,7 +153,5 @@ private:
     reaction_operations _steps;
 };
 
-NAMESPACE_END(reactions)
-NAMESPACE_END(top)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}
+}

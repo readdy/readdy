@@ -53,11 +53,7 @@
 #include <readdy/model/topologies/Topology.h>
 #include <readdy/common/boundary_condition_operations.h>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(kernel)
-NAMESPACE_BEGIN(scpu)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(top)
+namespace readdy::kernel::scpu::model::top {
 
 class SCPUCalculateHarmonicBondPotential : public readdy::model::top::pot::CalculateHarmonicBondPotential {
 
@@ -67,16 +63,16 @@ class SCPUCalculateHarmonicBondPotential : public readdy::model::top::pot::Calcu
 
 public:
     SCPUCalculateHarmonicBondPotential(const readdy::model::Context *const context,
-                                       SCPUParticleData *const data, model::ObservableData * observableData,
+                                       SCPUParticleData *const data, model::ObservableData *observableData,
                                        const harmonic_bond *const potential)
             : CalculateHarmonicBondPotential(context), potential(potential), data(data),
               observableData(observableData) {}
 
-    scalar perform(const readdy::model::top::Topology* const topology) override {
+    scalar perform(const readdy::model::top::Topology *const topology) override {
         scalar energy = 0;
         const auto &particleIndices = topology->getParticles();
         for (const auto &bond : potential->getBonds()) {
-            if(bond.forceConstant == 0) continue;
+            if (bond.forceConstant == 0) continue;
 
             Vec3 forceUpdate{0, 0, 0};
             auto &e1 = data->entry_at(particleIndices.at(bond.idx1));
@@ -99,11 +95,11 @@ class SCPUCalculateHarmonicAnglePotential : public readdy::model::top::pot::Calc
     model::ObservableData *const observableData;
 public:
     SCPUCalculateHarmonicAnglePotential(const readdy::model::Context *const context, SCPUParticleData *const data,
-                                        model::ObservableData * observableData, const harmonic_angle *const potential)
+                                        model::ObservableData *observableData, const harmonic_angle *const potential)
             : CalculateHarmonicAnglePotential(context), potential(potential), data(data),
               observableData(observableData) {}
 
-    scalar perform(const readdy::model::top::Topology* const topology) override {
+    scalar perform(const readdy::model::top::Topology *const topology) override {
         scalar energy = 0;
         const auto &particleIndices = topology->getParticles();
 
@@ -132,7 +128,7 @@ public:
             : CalculateCosineDihedralPotential(context), potential(pot), data(data) {
     }
 
-    scalar perform(const readdy::model::top::Topology* const topology) override {
+    scalar perform(const readdy::model::top::Topology *const topology) override {
         scalar energy = 0;
         const auto &particleIndices = topology->getParticles();
 
@@ -154,8 +150,7 @@ public:
     }
 };
 
-NAMESPACE_BEGIN(reactions)
-NAMESPACE_BEGIN(op)
+namespace reactions::op {
 
 class SCPUChangeParticleType : public readdy::model::top::reactions::actions::ChangeParticleType {
     SCPUParticleData *const data;
@@ -199,7 +194,7 @@ class SCPUAppendParticle : public readdy::model::top::reactions::actions::Append
 public:
     SCPUAppendParticle(SCPUParticleData *const data, top::GraphTopology *topology,
                        std::vector<vertex> neighbors, ParticleTypeId type, Vec3 pos)
-                       : AppendParticle(topology, std::move(neighbors), type, pos), data(data), particle(pos, type) {};
+            : AppendParticle(topology, std::move(neighbors), type, pos), data(data), particle(pos, type) {};
 
     void execute() override {
         auto entry = Entry(particle);
@@ -208,7 +203,7 @@ public:
         topology->appendParticle(insertIndex, type, firstNeighbor, firstNeighbor->particleType());
         // new particles get appended to the end of the linked list
         newParticleIt = std::prev(topology->graph().vertices().end());
-        for(auto it = neighbors.begin() + 1; it != neighbors.end(); ++it) {
+        for (auto it = neighbors.begin() + 1; it != neighbors.end(); ++it) {
             topology->graph().addEdge(newParticleIt, *it);
         }
     }
@@ -223,11 +218,6 @@ public:
     }
 };
 
-NAMESPACE_END(op)
-NAMESPACE_END(reactions)
+}
 
-NAMESPACE_END(top)
-NAMESPACE_END(model)
-NAMESPACE_END(scpu)
-NAMESPACE_END(kernel)
-NAMESPACE_END(readdy)
+}

@@ -46,9 +46,7 @@
 
 #include <readdy/model/observables/ObservableFactory.h>
 
-namespace readdy {
-namespace kernel {
-namespace cpu {
+namespace readdy::kernel::cpu {
 class CPUKernel;
 namespace observables {
 
@@ -57,40 +55,34 @@ class CPUObservableFactory : public readdy::model::observables::ObservableFactor
 public:
     explicit CPUObservableFactory(CPUKernel* kernel);
 
-    std::unique_ptr<model::observables::Virial> virial(stride_type stride) const override;
+    std::unique_ptr<model::observables::Virial> virial(Stride stride) const override;
 
     std::unique_ptr<model::observables::HistogramAlongAxis>
-    histogramAlongAxis(stride_type stride, std::vector<scalar> binBorders, std::vector<std::string> typesToCount,
+    histogramAlongAxis(Stride stride, std::vector<scalar> binBorders, std::vector<std::string> typesToCount,
                        unsigned int axis) const override;
 
     std::unique_ptr<model::observables::NParticles>
-    nParticles(stride_type stride, std::vector<std::string> typesToCount) const override;
+    nParticles(Stride stride, std::vector<std::string> typesToCount) const override;
 
     std::unique_ptr<model::observables::Forces>
-    forces(stride_type stride, std::vector<std::string> typesToCount) const override;
+    forces(Stride stride, std::vector<std::string> typesToCount) const override;
 
     std::unique_ptr<model::observables::Positions>
-    positions(stride_type stride, std::vector<std::string> typesToCount) const override;
+    positions(Stride stride, std::vector<std::string> typesToCount) const override;
 
     std::unique_ptr<model::observables::RadialDistribution>
-    radialDistribution(stride_type stride, std::vector<scalar> binBorders, std::vector<std::string> typeCountFrom,
+    radialDistribution(Stride stride, std::vector<scalar> binBorders, std::vector<std::string> typeCountFrom,
                        std::vector<std::string> typeCountTo, scalar particleDensity) const override;
 
-    std::unique_ptr<model::observables::Particles> particles(stride_type stride) const override;
+    std::unique_ptr<model::observables::Particles> particles(Stride stride) const override;
 
-    std::unique_ptr<model::observables::MeanSquaredDisplacement>
-    msd(stride_type stride, std::vector<std::string> typesToCount,
-        model::observables::Particles *particlesObservable) const override;
+    std::unique_ptr<model::observables::Reactions> reactions(Stride stride) const override;
 
-    std::unique_ptr<model::observables::Reactions> reactions(stride_type stride) const override;
-
-    std::unique_ptr<model::observables::ReactionCounts> reactionCounts(stride_type stride) const override;
+    std::unique_ptr<model::observables::ReactionCounts> reactionCounts(Stride stride) const override;
 
 private:
     CPUKernel *const kernel;
 };
 
-}
-}
 }
 }

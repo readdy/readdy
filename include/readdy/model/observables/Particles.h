@@ -49,28 +49,29 @@
 #include <readdy/model/Particle.h>
 #include "Observable.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(observables)
+namespace readdy::model::observables {
 
 class Particles
         : public Observable<std::tuple<std::vector<readdy::model::Particle::type_type>, std::vector<readdy::model::Particle::id_type>, std::vector<Vec3>>> {
 public:
-    explicit Particles(Kernel* kernel, stride_type stride = 1);
+    explicit Particles(Kernel *kernel, Stride stride = 1);
 
-    Particles(const Particles&) = delete;
-    Particles& operator=(const Particles&) = delete;
-    Particles(Particles&&) = default;
-    Particles& operator=(Particles&&) = delete;
+    Particles(const Particles &) = delete;
+
+    Particles &operator=(const Particles &) = delete;
+
+    Particles(Particles &&) = default;
+
+    Particles &operator=(Particles &&) = delete;
 
     ~Particles() override;
 
     void flush() override;
 
-    std::string type() const override;
+    std::string_view type() const override;
 
 protected:
-    void initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) override;
+    void initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) override;
 
     void append() override;
 
@@ -78,6 +79,4 @@ protected:
     std::unique_ptr<Impl> pimpl;
 };
 
-NAMESPACE_END(observables)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

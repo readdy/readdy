@@ -92,7 +92,7 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
             reactions::StructuralTopologyReaction::reaction_recipe recipe {t};
             return recipe;
         };
-        reactions::StructuralTopologyReaction topologyReaction (rfun, [](const GraphTopology &) {
+        reactions::StructuralTopologyReaction topologyReaction ("r", rfun, [](const GraphTopology &) {
             return 0;
         });
         topologyReaction.expect_connected_after_reaction();
@@ -122,7 +122,7 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
                 recipe.changeParticleType(top.graph().vertices().begin(), types.idOf("Topology B"));
                 return recipe;
             };
-            model::top::reactions::StructuralTopologyReaction reaction {reactionFunction, 5};
+            model::top::reactions::StructuralTopologyReaction reaction {"r", reactionFunction, 5};
             reaction.expect_connected_after_reaction();
             reaction.raise_if_invalid();
             kernel->context().topologyRegistry().addStructuralReaction(tid, reaction);
@@ -136,7 +136,7 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
             auto rateFunction = [&](const model::top::GraphTopology &top) {
                 return 15;
             };
-            model::top::reactions::StructuralTopologyReaction reaction {reactionFunction, rateFunction};
+            model::top::reactions::StructuralTopologyReaction reaction {"r2", reactionFunction, rateFunction};
             reaction.expect_connected_after_reaction();
             reaction.raise_if_invalid();
             kernel->context().topologyRegistry().addStructuralReaction(tid, reaction);
@@ -176,7 +176,7 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
                 recipe.addEdge(top.graph().vertices().begin(), std::prev(top.graph().vertices().end()));
                 return recipe;
             };
-            model::top::reactions::StructuralTopologyReaction reaction {reactionFunction, 5};
+            model::top::reactions::StructuralTopologyReaction reaction {"r", reactionFunction, 5};
             reaction.expect_connected_after_reaction();
             reaction.raise_if_invalid();
             kernel->context().topologyRegistry().addStructuralReaction(tid, reaction);
@@ -198,7 +198,7 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
                 recipe.addEdge(std::make_tuple(top.graph().vertices().begin(), --top.graph().vertices().end()));
                 return recipe;
             };
-            model::top::reactions::StructuralTopologyReaction reaction {reactionFunction, 5};
+            model::top::reactions::StructuralTopologyReaction reaction {"r", reactionFunction, 5};
             reaction.expect_connected_after_reaction();
             reaction.raise_if_invalid();
             kernel->context().topologyRegistry().addStructuralReaction(tid, reaction);
@@ -220,7 +220,7 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
                 recipe.removeEdge(top.graph().vertices().begin(), ++top.graph().vertices().begin());
                 return recipe;
             };
-            model::top::reactions::StructuralTopologyReaction reaction {reactionFunction, 5};
+            model::top::reactions::StructuralTopologyReaction reaction {"r", reactionFunction, 5};
             reaction.create_child_topologies_after_reaction();
             reaction.raise_if_invalid();
             kernel->context().topologyRegistry().addStructuralReaction("TA", reaction);
@@ -271,7 +271,7 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
                 recipe.removeEdge(top.graph().vertices().begin(), ++top.graph().vertices().begin());
                 return recipe;
             };
-            model::top::reactions::StructuralTopologyReaction reaction {reactionFunction, 5};
+            model::top::reactions::StructuralTopologyReaction reaction {"r", reactionFunction, 5};
             reaction.expect_connected_after_reaction();
             reaction.roll_back_if_invalid();
             toptypes.addStructuralReaction("TA", reaction);
@@ -339,7 +339,7 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
             auto rateFunction = [](const model::top::GraphTopology &top) {
                 return top.getNParticles() > 1 ? top.getNParticles()/50. : 0;
             };
-            model::top::reactions::StructuralTopologyReaction reaction {reactionFunction, rateFunction};
+            model::top::reactions::StructuralTopologyReaction reaction {"r", reactionFunction, rateFunction};
             reaction.create_child_topologies_after_reaction();
             reaction.roll_back_if_invalid();
             toptypes.addStructuralReaction("TA", reaction);
@@ -419,7 +419,7 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
             auto rateFunction = [](const model::top::GraphTopology &top) {
                 return top.getNParticles() > 1 ? top.getNParticles()/50. : 0;
             };
-            model::top::reactions::StructuralTopologyReaction reaction {reactionFunction, rateFunction};
+            model::top::reactions::StructuralTopologyReaction reaction {"r", reactionFunction, rateFunction};
             reaction.create_child_topologies_after_reaction();
             reaction.roll_back_if_invalid();
 
@@ -441,7 +441,7 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
             auto rateFunction = [](const model::top::GraphTopology &top) {
                 return top.getNParticles() > 1 ? 0 : 1;
             };
-            model::top::reactions::StructuralTopologyReaction reaction {reactionFunction, rateFunction};
+            model::top::reactions::StructuralTopologyReaction reaction {"r2", reactionFunction, rateFunction};
             reaction.create_child_topologies_after_reaction();
             reaction.roll_back_if_invalid();
             toptypes.addStructuralReaction("TA", reaction);
@@ -556,135 +556,6 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
                 INFO("at least one "+std::string(ptype)+" particle should be contained");
                 REQUIRE(itX != particles.end());
                 particles.erase(itX);
-            }
-        }
-    }
-}
-
-TEMPLATE_TEST_CASE("Test topology reactions chaindecay integration test", "[topologies][integration]", SingleCPU, CPU) {
-    auto kernel = create<TestType>();
-    auto &ctx = kernel->context();
-    ctx.boxSize() = {{150, 150, 150}};
-    ctx.periodicBoundaryConditions() = {{true, true, true}};
-
-    ctx.particleTypes().add("Decay", 1.);
-    ctx.particleTypes().addTopologyType("T", 1.);
-    ctx.particleTypes().add("whatever", 1.);
-    ctx.reactions().add("decay: Decay ->", 1000.);
-    ctx.reactions().add("whatever: whatever ->", 1000.);
-    ctx.potentials().addBox("Decay", 10, {-70, -70, -70}, {130, 130, 130});
-    ctx.potentials().addBox("T", 10, {-70, -70, -70}, {130, 130, 130});
-
-    ctx.topologyRegistry().configureBondPotential("T", "T", {20, 2});
-    ctx.topologyRegistry().addType("unstable");
-    // decay reaction
-    auto reactionFunction = [&](model::top::GraphTopology &top) {
-        model::top::reactions::Recipe recipe (top);
-        auto& vertices = top.graph().vertices();
-        auto current_n_vertices = vertices.size();
-        auto vIdx = readdy::model::rnd::uniform_int<>(0, static_cast<int>(current_n_vertices - 1));
-        auto v = vertices.begin();
-        std::advance(v, vIdx);
-        recipe.separateVertex(v);
-        recipe.changeParticleType(v, "Decay");
-        return recipe;
-    };
-    auto rateFunction = [](const model::top::GraphTopology &top) {
-        return .1;
-    };
-    model::top::reactions::StructuralTopologyReaction reaction {reactionFunction, rateFunction};
-    ctx.topologyRegistry().addStructuralReaction("unstable", reaction);
-
-    std::vector<readdy::model::TopologyParticle> topologyParticles;
-    {
-        topologyParticles.reserve(70);
-        for (std::size_t i = 0; i < 70; ++i) {
-            const auto id = ctx.particleTypes().idOf("T");
-            topologyParticles.emplace_back(-5 + i * 10. / static_cast<readdy::scalar>(70), 0, 0, id);
-        }
-    }
-
-    for(auto i = 0_z; i < 50; ++i) {
-        kernel->stateModel().addParticle(model::Particle(0, 0, 0, ctx.particleTypes().idOf("whatever")));
-    }
-
-    auto topology = kernel->stateModel().addTopology(ctx.topologyRegistry().idOf("unstable"), topologyParticles);
-    {
-        auto it = topology->graph().vertices().begin();
-        auto it2 = ++topology->graph().vertices().begin();
-        while(it2 != topology->graph().vertices().end()) {
-            topology->graph().addEdge(it, it2);
-            std::advance(it, 1);
-            std::advance(it2, 1);
-        }
-    }
-
-    auto topsobs = kernel->observe().topologies(1);
-    auto connection = kernel->connectObservable(topsobs.get());
-    topsobs->callback() = [&](const model::observables::Topologies::result_type &result) {
-        auto tops = kernel->stateModel().getTopologies();
-        REQUIRE(result.size() == tops.size());
-        for(std::size_t i = 0; i < tops.size(); ++i) {
-            auto top = tops.at(i);
-            auto record = result.at(i);
-
-            auto edges = top->graph().edges();
-            REQUIRE(edges.size() == record.edges.size());
-
-            auto particles = top->fetchParticles();
-
-            REQUIRE(record.particleIndices.size() == particles.size());
-            for(std::size_t j = 0; j < record.particleIndices.size(); ++j) {
-                auto topParticles = top->getParticles();
-                kernel->stateModel().toDenseParticleIndices(topParticles.begin(), topParticles.end());
-                REQUIRE(std::find(topParticles.begin(), topParticles.end(),
-                        record.particleIndices.at(j)) != topParticles.end());
-                REQUIRE(particles.at(j).type() == ctx.particleTypes().idOf("T"));
-            }
-
-            for(const auto &edge : record.edges) {
-                auto it = std::find_if(edges.begin(), edges.end(), [&](const auto &e) {
-                    auto p1Idx = std::get<0>(e)->particleIndex;
-                    auto p2Idx = std::get<1>(e)->particleIndex;
-                    return (p1Idx == std::get<0>(edge) && p2Idx == std::get<1>(edge))
-                           || (p1Idx == std::get<1>(edge) && p2Idx == std::get<0>(edge));
-                });
-                REQUIRE(it != edges.end());
-            }
-
-        }
-    };
-
-    {
-        auto integrator = kernel->actions().createIntegrator("EulerBDIntegrator", 1e-2);
-        auto forces = kernel->actions().calculateForces();
-        auto topReactions = kernel->actions().evaluateTopologyReactions(1e-2);
-        auto reactions = kernel->actions().uncontrolledApproximation(1e-2);
-
-        std::size_t time = 0;
-        std::size_t n_time_steps = 10000;
-
-        kernel->initialize();
-
-        forces->perform();
-        kernel->evaluateObservables(time);
-        for(time = 1; time < n_time_steps; ++time) {
-            integrator->perform();
-            topReactions->perform();
-            forces->perform();
-            reactions->perform();
-            kernel->evaluateObservables(time);
-            for(auto topPtr : kernel->stateModel().getTopologies()) {
-                // check that all topologies are just containing T particles and their edges are also fine
-                for(const auto &p : topPtr->fetchParticles()) {
-                    REQUIRE(p.type() == ctx.particleTypes().idOf("T"));
-                }
-                for(auto edge : topPtr->graph().edges()) {
-                    auto v1 = std::get<0>(edge);
-                    auto v2 = std::get<1>(edge);
-                    REQUIRE(topPtr->particleForVertex(v1).type() == ctx.particleTypes().idOf("T"));
-                    REQUIRE(topPtr->particleForVertex(v2).type() == ctx.particleTypes().idOf("T"));
-                }
             }
         }
     }

@@ -49,26 +49,26 @@
 #include <vector>
 #include "Observable.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(observables)
+namespace readdy::model::observables {
 
 class NParticles : public Observable<std::vector<unsigned long>> {
 
 public:
-    NParticles(Kernel* kernel, stride_type stride);
+    NParticles(Kernel *kernel, Stride stride);
 
-    NParticles(Kernel* kernel, stride_type stride, std::vector<std::string> typesToCount);
+    NParticles(Kernel *kernel, Stride stride, std::vector<std::string> typesToCount);
 
-    NParticles(Kernel* kernel, stride_type stride, std::vector<ParticleTypeId> typesToCount);
+    NParticles(Kernel *kernel, Stride stride, std::vector<ParticleTypeId> typesToCount);
 
-    NParticles(const NParticles&) = delete;
+    NParticles(const NParticles &) = delete;
 
-    std::string type() const override;
+    std::string_view type() const override;
 
-    NParticles& operator=(const NParticles&) = delete;
-    NParticles(NParticles&&) = default;
-    NParticles& operator=(NParticles&&) = delete;
+    NParticles &operator=(const NParticles &) = delete;
+
+    NParticles(NParticles &&) = default;
+
+    NParticles &operator=(NParticles &&) = delete;
 
     void flush() override;
 
@@ -78,13 +78,11 @@ protected:
     struct Impl;
     std::unique_ptr<Impl> pimpl;
 
-    void initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) override;
+    void initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) override;
 
     void append() override;
 
     std::vector<ParticleTypeId> typesToCount;
 };
 
-NAMESPACE_END(observables)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

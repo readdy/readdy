@@ -59,10 +59,10 @@ struct Particles::Impl {
     std::unique_ptr<util::TimeSeriesWriter> time;
 };
 
-Particles::Particles(Kernel *const kernel, stride_type stride) : Observable(kernel, stride),
+Particles::Particles(Kernel *const kernel, Stride stride) : Observable(kernel, stride),
                                                                   pimpl(std::make_unique<Impl>()) {}
 
-void Particles::initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) {
+void Particles::initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) {
     using particle_t = readdy::model::Particle;
     h5rd::dimensions fs = {flushStride};
     h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
@@ -101,8 +101,10 @@ void Particles::flush() {
     if (pimpl->time) pimpl->time->flush();
 }
 
-std::string Particles::type() const {
-    return "Particles";
+constexpr static auto& t = "Particles";
+
+std::string_view Particles::type() const {
+    return t;
 }
 
 Particles::~Particles() = default;

@@ -51,12 +51,12 @@
 
 #include "Potential.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
+namespace readdy::model {
 class ParticleTypeRegistry;
 
-NAMESPACE_BEGIN(potentials)
+namespace potentials {
 class PotentialRegistry;
+
 class PotentialOrder2 : public Potential {
 protected:
     using particle_type_type = readdy::model::Particle::type_type;
@@ -96,6 +96,5 @@ protected:
     particle_type_type _particleType1, _particleType2;
 };
 
-NAMESPACE_END(potentials)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}
+}

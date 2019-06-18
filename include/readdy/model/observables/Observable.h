@@ -66,12 +66,10 @@
 #include <readdy/common/tuple_utils.h>
 #include <readdy/common/ReaDDyVec3.h>
 
-NAMESPACE_BEGIN(readdy)
-
-NAMESPACE_BEGIN(model)
+namespace readdy::model {
 class Kernel;
 
-NAMESPACE_BEGIN(observables)
+namespace observables {
 /**
  * The signal type for the observable-evaluation callback.
  */
@@ -87,23 +85,18 @@ using observable_type = signal_type::slot_type;
 class ObservableBase {
 public:
     /**
-     * The type of the stride
-     */
-    using stride_type = readdy::stride_type;
-
-    /**
      * Constructs an object of type ObservableBase. Needs a kernel and a stride, which is defaulted to 1, i.e.,
      * evaluation in every time step.
      * @param kernel the kernel
      * @param stride the stride
      */
-    explicit ObservableBase(Kernel* kernel, stride_type stride = 1) : _stride(stride), kernel(kernel) {};
+    explicit ObservableBase(Kernel *kernel, Stride stride = 1) : _stride(stride), kernel(kernel) {};
 
     /**
      * The stride at which the observable gets evaluated. Can be 0, which is equivalent to stride = 1.
      * @return the stride
      */
-    stride_type stride() const {
+    Stride stride() const {
         return _stride;
     }
 
@@ -119,10 +112,13 @@ public:
         t_current = t;
     }
 
-    ObservableBase(const ObservableBase&) = delete;
-    ObservableBase& operator=(const ObservableBase&) = delete;
-    ObservableBase(ObservableBase&&) = default;
-    ObservableBase& operator=(ObservableBase&&) = delete;
+    ObservableBase(const ObservableBase &) = delete;
+
+    ObservableBase &operator=(const ObservableBase &) = delete;
+
+    ObservableBase(ObservableBase &&) = default;
+
+    ObservableBase &operator=(ObservableBase &&) = delete;
 
     /**
      * The destructor.
@@ -164,7 +160,7 @@ public:
      * @param dataSetName the name of the data set, automatically placed under the group /readdy/observables
      * @param flushStride performance parameter, determining the hdf5-internal chunk size
      */
-    void enableWriteToFile(File &file, const std::string &dataSetName, stride_type flushStride) {
+    void enableWriteToFile(File &file, const std::string &dataSetName, Stride flushStride) {
         writeToFile = true;
         initializeDataSet(file, dataSetName, flushStride);
     }
@@ -174,10 +170,10 @@ public:
      */
     virtual void flush() = 0;
 
-    virtual std::string type() const = 0;
+    virtual std::string_view type() const = 0;
 
     void writeCurrentResult() {
-        if(writeToFile) {
+        if (writeToFile) {
             append();
         } else {
             throw std::logic_error("Cannot write current result if write to file is not enabled.");
@@ -192,7 +188,7 @@ protected:
      * modify the simulation setup to the observable's needs.
      * @param kernel the kernel
      */
-    virtual void initialize(Kernel * kernel) {};
+    virtual void initialize(Kernel *kernel) {};
 
     /**
      * Method that will be called once, if enableWriteToFile() is called and should create a readdy::io::DataSet that
@@ -200,7 +196,7 @@ protected:
      * @param dataSetName the name of the data set to be created
      * @param flushStride the flush stride, more specifically the internal hdf5 chunk size
      */
-    virtual void initializeDataSet(File &, const std::string &dataSetName, stride_type flushStride) = 0;
+    virtual void initializeDataSet(File &, const std::string &dataSetName, Stride flushStride) = 0;
 
     /**
      * Called whenever result should be written into the file
@@ -210,11 +206,11 @@ protected:
     /**
      * Stride at which the observable gets evaluated
      */
-    stride_type _stride;
+    Stride _stride;
     /**
      * The kernel which created this observable
      */
-    readdy::model::Kernel * kernel;
+    readdy::model::Kernel *kernel;
     /**
      * The current time step of the observable
      */
@@ -253,7 +249,7 @@ public:
      * @param kernel the kernel
      * @param stride the stride
      */
-    Observable(Kernel * kernel, stride_type stride)
+    Observable(Kernel *kernel, Stride stride)
             : ObservableBase(kernel, stride), result() {
     }
 
@@ -268,11 +264,11 @@ public:
     callback_function &callback() {
         return externalCallback;
     }
-    
+
     const callback_function &callback() const {
         return externalCallback;
     }
-    
+
     /**
      * Function that will evaluate the observable and trigger a callback if ObservableBase#shouldExecuteCallback()
      * is true.
@@ -319,7 +315,7 @@ public:
      * @param stride a stride
      * @param parents the parent observables
      */
-    Combiner(Kernel* kernel, stride_type stride, PARENT_OBS *... parents)
+    Combiner(Kernel *kernel, stride_type stride, PARENT_OBS *... parents)
             : Observable<RESULT>(kernel, stride), parentObservables(std::forward<PARENT_OBS *>(parents)...) {}
 
     /**
@@ -392,7 +388,5 @@ private:
     };
 };
 
-
-NAMESPACE_END(observables)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}
+}

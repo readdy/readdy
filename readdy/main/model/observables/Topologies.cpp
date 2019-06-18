@@ -55,7 +55,7 @@ struct Topologies::Impl {
     std::unique_ptr<util::TimeSeriesWriter> time{nullptr};
 };
 
-Topologies::Topologies(Kernel *kernel, stride_type stride, bool useBlosc)
+Topologies::Topologies(Kernel *kernel, Stride stride, bool useBlosc)
         : Observable(kernel, stride), pimpl(std::make_unique<Impl>()), useBlosc(useBlosc) {}
 
 void Topologies::evaluate() {
@@ -83,11 +83,13 @@ void Topologies::flush() {
     if (pimpl->types) pimpl->types->flush();
 }
 
-std::string Topologies::type() const {
-    return "Topologies";
+constexpr static auto& t = "Topologies";
+
+std::string_view Topologies::type() const {
+    return t;
 }
 
-void Topologies::initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) {
+void Topologies::initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) {
     auto group = file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName);
     io::BloscFilter filter;
     h5rd::File::FilterConfiguration filters;

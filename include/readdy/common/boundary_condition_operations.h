@@ -48,31 +48,30 @@
 #include "common.h"
 #include "ReaDDyVec3.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(bcs)
+namespace readdy::bcs {
 
 template<typename Container, typename PBC, int DIM = 3>
 inline void fixPosition(Vec3 &vec, const Container &box, const PBC &periodic) {
-    for(int d = 0; d < DIM; ++d) {
-        if(periodic[d]) {
-            while(vec[d] >= .5*box[d]) vec[d] -= box[d];
-            while(vec[d] < -.5*box[d]) vec[d] += box[d];
+    for (int d = 0; d < DIM; ++d) {
+        if (periodic[d]) {
+            while (vec[d] >= .5 * box[d]) vec[d] -= box[d];
+            while (vec[d] < -.5 * box[d]) vec[d] += box[d];
         }
     }
 };
 
-template<typename PBC, int DIM=3>
+template<typename PBC, int DIM = 3>
 inline Vec3 applyPBC(const Vec3 &in, const scalar *const box, const PBC &periodic) {
     Vec3 out(in);
-    fixPosition<const scalar* const, PBC, DIM>(out, box, periodic);
+    fixPosition<const scalar *const, PBC, DIM>(out, box, periodic);
     return out;
 };
 
 template<typename Container, typename PBC, int DIM = 3>
 inline Vec3 shortestDifference(const Vec3 &lhs, const Vec3 &rhs, const Container &box, const PBC &periodic) {
     auto dv = rhs - lhs;
-    for(int i = 0; i < DIM; ++i) {
-        if(periodic[i]) {
+    for (int i = 0; i < DIM; ++i) {
+        if (periodic[i]) {
             if (dv[i] > box[i] * .5) dv[i] -= box[i];
             else if (dv[i] <= -box[i] * .5) dv[i] += box[i];
         }
@@ -80,16 +79,15 @@ inline Vec3 shortestDifference(const Vec3 &lhs, const Vec3 &rhs, const Container
     return dv;
 };
 
-template<typename Container, typename PBC, int DIM=3>
+template<typename Container, typename PBC, int DIM = 3>
 inline scalar distSquared(const Vec3 &lhs, const Vec3 &rhs, const Container &box, const PBC &periodic) {
     auto dv = shortestDifference<Container, PBC, DIM>(lhs, rhs, box, periodic);
     return dv * dv;
 }
 
-template<typename Container, typename PBC, int DIM=3>
+template<typename Container, typename PBC, int DIM = 3>
 inline scalar dist(const Vec3 &lhs, const Vec3 &rhs, const Container &box, const PBC &periodic) {
     return std::sqrt(distSquared<Container, PBC, DIM>(lhs, rhs, box, periodic));
 }
 
-NAMESPACE_END(bcs)
-NAMESPACE_END(readdy)
+}

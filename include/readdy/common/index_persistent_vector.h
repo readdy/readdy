@@ -53,21 +53,24 @@
 #include "macros.h"
 #include "traits.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(util)
+namespace readdy::util {
 
-NAMESPACE_BEGIN(detail)
+namespace detail {
 template<typename T, typename = void>
-struct can_be_deactivated : std::false_type {};
+struct can_be_deactivated : std::false_type {
+};
 template<typename T>
-struct can_be_deactivated<T, void_t<decltype(std::declval<T>().deactivate())>> : std::true_type {};
+struct can_be_deactivated<T, void_t<decltype(std::declval<T>().deactivate())>> : std::true_type {
+};
 
 template<typename T, typename = void>
-struct can_be_ptr_deactivated : std::false_type {};
+struct can_be_ptr_deactivated : std::false_type {
+};
 template<typename T>
-struct can_be_ptr_deactivated<T, void_t<decltype(std::declval<T>()->deactivate())>> : std::true_type {};
+struct can_be_ptr_deactivated<T, void_t<decltype(std::declval<T>()->deactivate())>> : std::true_type {
+};
 
-NAMESPACE_END(detail)
+}
 
 template<typename T>
 class index_persistent_vector {
@@ -199,7 +202,7 @@ public:
      * @return an iterator pointed to the emplaced element
      */
     template<typename... Args>
-    iterator emplace_back(Args&&... args) {
+    iterator emplace_back(Args &&... args) {
         if (_blanks.empty()) {
             _backing_vector.emplace_back(std::forward<Args>(args)...);
             return std::prev(_backing_vector.end());
@@ -391,5 +394,4 @@ private:
     backing_vector _backing_vector;
 };
 
-NAMESPACE_END(util)
-NAMESPACE_END(readdy)
+}

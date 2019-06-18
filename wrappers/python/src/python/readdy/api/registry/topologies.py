@@ -156,7 +156,7 @@ class TopologyRegistry(object):
         radius = self._units.convert(radius, self._units.length_unit)
         self._registry.add_spatial_reaction(descriptor, rate, radius)
 
-    def add_structural_reaction(self, topology_type, reaction_function, rate_function,
+    def add_structural_reaction(self, name, topology_type, reaction_function, rate_function,
                                 raise_if_invalid=True, expect_connected=False):
         """
         Adds a spatially independent structural topology reaction for a certain topology type. It basically consists
@@ -170,6 +170,7 @@ class TopologyRegistry(object):
         as possible. The reaction function is evaluated when the actual reaction takes place. Also the rate is expected
         to be returned in terms of the magnitude w.r.t. the default units.
 
+        :param name: name of the structural reaction, has to be unique; otherwise an exception is raised
         :param topology_type: the topology type for which this reaction is evaluated
         :param reaction_function: the reaction function, as described above
         :param rate_function: the rate function, as described above
@@ -180,7 +181,7 @@ class TopologyRegistry(object):
                                  two or more independent components, depending on the value of `raise_if_invalid`.
         """
         fun1, fun2 = _top.ReactionFunction(lambda x: reaction_function(x)._get()), _top.RateFunction(rate_function)
-        reaction = _top.StructuralTopologyReaction(fun1, fun2)
+        reaction = _top.StructuralTopologyReaction(name, fun1, fun2)
         if raise_if_invalid:
             reaction.raise_if_invalid()
         else:
@@ -191,10 +192,11 @@ class TopologyRegistry(object):
             reaction.create_child_topologies_after_reaction()
         self._registry.add_structural_reaction(topology_type, reaction)
 
-    def add_topology_dissociation(self, topology_type, bond_breaking_rate):
+    def add_topology_dissociation(self, name, topology_type, bond_breaking_rate):
         """
         Adds a (structural) topology dissociation reaction to a certain topology type, i.e., with a rate of
         `n_edges * bond_breaking_rate` an edge will be removed from the graph, possibly yielding sub-topology instances.
+        :param name: name of the dissociation reaction, has to be unique in the simulation object
         :param topology_type: the type
         :param bond_breaking_rate: the rate per edge, assuming that every edge corresponds to exactly one bond
         """
@@ -207,4 +209,4 @@ class TopologyRegistry(object):
             edge = edges[_np.random.randint(0, len(edges))]
             return _Recipe(topology).remove_edge(edge)
 
-        self.add_structural_reaction(topology_type, reaction_function, rate_function, False, False)
+        self.add_structural_reaction(name, topology_type, reaction_function, rate_function, False, False)

@@ -69,9 +69,7 @@
 #include <functional>
 #endif
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(actions)
+namespace readdy::model::actions {
 
 class AddParticles : public Action {
 
@@ -126,11 +124,13 @@ protected:
     scalar _cutoffDistance;
 };
 
-class UpdateNeighborList : public Action {};
+class UpdateNeighborList : public Action {
+};
 
-class ClearNeighborList : public Action {};
+class ClearNeighborList : public Action {
+};
 
-NAMESPACE_BEGIN(reactions)
+namespace reactions {
 
 class UncontrolledApproximation : public TimeStepDependentAction {
 
@@ -153,6 +153,7 @@ public:
     explicit DetailedBalance(scalar timeStep);
 
     ~DetailedBalance() override = default;
+
     const std::vector<std::shared_ptr<const ReversibleReactionConfig>> &reversibleReactions() const {
         return _reversibleReactionsContainer;
     }
@@ -165,13 +166,12 @@ protected:
     std::vector<std::shared_ptr<const ReversibleReactionConfig>> _reversibleReactionsContainer;
     // the map provides a view on the container for quick runtime lookup,
     // usually two (unidirectional) reaction ids point to the same ReversibleReactionConfig
-    std::unordered_map<model::reactions::Reaction::ReactionId, std::shared_ptr<const ReversibleReactionConfig>>
-            _reversibleReactionsMap;
+    std::unordered_map<ReactionId, std::shared_ptr<const ReversibleReactionConfig>> _reversibleReactionsMap;
 };
 
-NAMESPACE_END(reactions)
+}
 
-NAMESPACE_BEGIN(top)
+namespace top {
 
 class EvaluateTopologyReactions : public TimeStepDependentAction {
 public:
@@ -180,7 +180,7 @@ public:
     ~EvaluateTopologyReactions() override = default;
 };
 
-NAMESPACE_END(top)
+}
 
 /**
  * The Compartments feature defines compartments via characteristic functions that map from Vec3 to bool.
@@ -259,6 +259,4 @@ const std::string getActionName(typename std::enable_if<std::is_base_of<Evaluate
     return "EvaluateCompartments";
 }
 
-NAMESPACE_END(actions)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

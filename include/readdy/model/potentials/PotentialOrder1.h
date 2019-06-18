@@ -50,12 +50,12 @@
 
 #include <utility>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
+namespace readdy::model {
 class ParticleTypeRegistry;
 
-NAMESPACE_BEGIN(potentials)
+namespace potentials {
 class PotentialRegistry;
+
 class PotentialOrder1 : public Potential {
 protected:
     using particle_type_type = readdy::model::Particle::type_type;
@@ -84,6 +84,5 @@ protected:
     particle_type_type _particleType;
 };
 
-NAMESPACE_END(potentials)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}
+}

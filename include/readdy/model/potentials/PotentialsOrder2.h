@@ -49,9 +49,7 @@
 #include <ostream>
 #include "PotentialOrder2.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(potentials)
+namespace readdy::model::potentials {
 
 class HarmonicRepulsion : public PotentialOrder2 {
     using super = PotentialOrder2;
@@ -59,7 +57,7 @@ public:
     HarmonicRepulsion(particle_type_type type1, particle_type_type type2,
                       scalar forceConstant, scalar interactionDistance)
             : super(type1, type2), _forceConstant(forceConstant), _interactionDistance(interactionDistance),
-              _interactionDistanceSquared(interactionDistance*interactionDistance) {}
+              _interactionDistanceSquared(interactionDistance * interactionDistance) {}
 
     scalar interactionDistance() const {
         return _interactionDistance;
@@ -135,18 +133,21 @@ public:
         const auto len_part2 = conf.noInteractionDistance - conf.desiredParticleDistance;
         if (dist < conf.desiredParticleDistance) {
             // repulsive as we are closer than the desired distance
-            return static_cast<scalar>(.5) * forceConstant * (dist - conf.desiredParticleDistance) * (dist - conf.desiredParticleDistance) -
+            return static_cast<scalar>(.5) * forceConstant * (dist - conf.desiredParticleDistance) *
+                   (dist - conf.desiredParticleDistance) -
                    conf.depthAtDesiredDistance;
         }
         // attractive as we are further (but not too far) apart than the desired distance
-        if (dist < conf.desiredParticleDistance + c_::half * len_part2) {
-            return c_::half * conf.depthAtDesiredDistance * (c_::one / (c_::half * len_part2)) * (c_::one / (c_::half * len_part2)) *
+        if (dist < conf.desiredParticleDistance + .5 * len_part2) {
+            return .5 * conf.depthAtDesiredDistance * (1. / (.5 * len_part2)) *
+                   (1. / (.5 * len_part2)) *
                    (dist - conf.desiredParticleDistance) * (dist - conf.desiredParticleDistance) -
                    conf.depthAtDesiredDistance;
         }
         // if we are not too far apart but still further than in the previous case, attractive
         if (dist < conf.noInteractionDistance) {
-            return -c_::half * conf.depthAtDesiredDistance * (c_::one / (c_::half * len_part2)) * (c_::one / (c_::half * len_part2)) *
+            return -.5 * conf.depthAtDesiredDistance * (1. / (.5 * len_part2)) *
+                   (1. / (.5 * len_part2)) *
                    (dist - conf.noInteractionDistance) * (dist - conf.noInteractionDistance);
         }
         return 0;
@@ -155,19 +156,21 @@ public:
     void calculateForce(Vec3 &force, const Vec3 &x_ij) const override {
         const auto dist = std::sqrt(x_ij * x_ij);
         const auto len_part2 = conf.noInteractionDistance - conf.desiredParticleDistance;
-        scalar  factor = 0;
+        scalar factor = 0;
         if (dist < conf.desiredParticleDistance) {
             // repulsive as we are closer than the desired distance
             factor = -1 * forceConstant * (conf.desiredParticleDistance - dist);
         } else {
             // attractive as we are further (but not too far) apart than the desired distance
             if (dist < conf.desiredParticleDistance + .5 * len_part2) {
-                factor = -c_::one * conf.depthAtDesiredDistance * (c_::one / (c_::half * len_part2)) * (c_::one / (c_::half * len_part2)) *
+                factor = -1. * conf.depthAtDesiredDistance * (1. / (.5 * len_part2)) *
+                         (1. / (.5 * len_part2)) *
                          (conf.desiredParticleDistance - dist);
             } else {
                 // if we are not too far apart but still further than in the previous case, attractive
                 if (dist < conf.noInteractionDistance) {
-                    factor = conf.depthAtDesiredDistance * (c_::one / (c_::half * len_part2)) * (c_::one / (c_::half * len_part2)) *
+                    factor = conf.depthAtDesiredDistance * (1. / (.5 * len_part2)) *
+                             (1. / (.5 * len_part2)) *
                              (conf.noInteractionDistance - dist);
                 }
             }
@@ -286,8 +289,8 @@ public:
     ~ScreenedElectrostatics() override = default;
 
     scalar calculateEnergy(const Vec3 &x_ij) const override {
-        const scalar  distance = x_ij.norm();
-        scalar  result = electrostaticStrength * std::exp(-inverseScreeningDepth * distance) / distance;
+        const scalar distance = x_ij.norm();
+        scalar result = electrostaticStrength * std::exp(-inverseScreeningDepth * distance) / distance;
         result += repulsionStrength * std::pow(repulsionDistance / distance, exponent);
         return result;
     }
@@ -295,9 +298,10 @@ public:
     void calculateForce(Vec3 &force, const Vec3 &x_ij) const override {
         auto distance = x_ij.norm();
         auto forceFactor = electrostaticStrength * std::exp(-inverseScreeningDepth * distance);
-        forceFactor *= (inverseScreeningDepth / distance + c_::one / std::pow(distance, c_::two));
-        forceFactor += repulsionStrength * exponent / repulsionDistance * std::pow( repulsionDistance / distance, exponent + c_::one);
-        force += forceFactor * (- c_::one * x_ij / distance);
+        forceFactor *= (inverseScreeningDepth / distance + 1. / std::pow(distance, 2.));
+        forceFactor += repulsionStrength * exponent / repulsionDistance *
+                       std::pow(repulsionDistance / distance, exponent + 1.);
+        force += forceFactor * (-1. * x_ij / distance);
     }
 
     std::string describe() const override;
@@ -340,6 +344,5 @@ const std::string
 getPotentialName(typename std::enable_if<std::is_base_of<ScreenedElectrostatics, T>::value>::type * = 0) {
     return "ScreenedElectrostatics";
 }
-NAMESPACE_END(potentials)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+
+}

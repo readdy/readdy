@@ -40,6 +40,7 @@ Created on 26.09.17
 import shutil
 import tempfile
 import os
+import unittest
 
 import numpy as np
 
@@ -199,7 +200,7 @@ class TestTopLevelAPI(ReaDDyTestCase):
         def rate_fun(topology):
             return len(topology.particles)
 
-        rds.topologies.add_structural_reaction("foofoo", reaction_fun, rate_fun)
+        rds.topologies.add_structural_reaction("test", "foofoo", reaction_fun, rate_fun)
 
     def test_potentials(self):
         rds = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.])
@@ -402,7 +403,7 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
             recipe.change_topology_type("unstable")
             return recipe
 
-        system.topologies.add_structural_reaction(topology_type="intermediate",
+        system.topologies.add_structural_reaction(name="intermediate_reaction", topology_type="intermediate",
                                                   reaction_function=intermediate_reaction_function,
                                                   rate_function=intermediate_rate_function)
 
@@ -417,7 +418,7 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
             recipe.change_particle_position(index, [0, 0, 0])
             return recipe
 
-        system.topologies.add_structural_reaction(topology_type="unstable",
+        system.topologies.add_structural_reaction("unstable_reaction", topology_type="unstable",
                                                   reaction_function=unstable_reaction_function,
                                                   rate_function=unstable_rate_function)
         simulation = system.simulation(kernel=kernel)
@@ -509,7 +510,7 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
             recipe.change_particle_type(index, "Decay")
             return recipe
 
-        system.topologies.add_structural_reaction(topology_type="unstable",
+        system.topologies.add_structural_reaction(name="unstable_reaction", topology_type="unstable",
                                                   reaction_function=unstable_reaction_function,
                                                   rate_function=unstable_rate_function)
         simulation = system.simulation(kernel=kernel)
@@ -663,9 +664,12 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
 
             time, counts = traj.read_observable_reaction_counts()
             np.testing.assert_equal(len(time), 51)
-            np.testing.assert_equal(len(counts.keys()), 3)
-            for t, rr, counts_1, counts_2, counts_3 in zip(time, records, counts["myconversion"],
-                                                           counts["myfusion"], counts["myfission"]):
+
+            counts_reactions = counts["reactions"]
+
+            np.testing.assert_equal(len(counts_reactions.keys()), 3)
+            for t, rr, counts_1, counts_2, counts_3 in zip(time, records, counts_reactions["myconversion"],
+                                                           counts_reactions["myfusion"], counts_reactions["myfission"]):
                 convrecords = [r for r in rr if r.reaction_label == "myconversion"]
                 fusrecords = [r for r in rr if r.reaction_label == "myfusion"]
                 fissrecords = [r for r in rr if r.reaction_label == "myfission"]
@@ -701,3 +705,7 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
 
     def test_topologies_integration_scpu(self):
         self._run_topology_observable_integration_test_for("SingleCPU")
+
+
+if __name__ == '__main__':
+    unittest.main()

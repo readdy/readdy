@@ -59,7 +59,7 @@ struct HistogramAlongAxis::Impl {
     std::unique_ptr<util::TimeSeriesWriter> time;
 };
 
-HistogramAlongAxis::HistogramAlongAxis(readdy::model::Kernel *const kernel, stride_type stride,
+HistogramAlongAxis::HistogramAlongAxis(readdy::model::Kernel *const kernel, Stride stride,
                                        std::vector<scalar> binBorders, std::set<ParticleTypeId> typesToCount,
                                        unsigned int axis)
         : Observable(kernel, stride), binBorders(binBorders), typesToCount(std::move(typesToCount)), axis(axis),
@@ -69,7 +69,7 @@ HistogramAlongAxis::HistogramAlongAxis(readdy::model::Kernel *const kernel, stri
 }
 
 
-HistogramAlongAxis::HistogramAlongAxis(Kernel *const kernel, stride_type stride,
+HistogramAlongAxis::HistogramAlongAxis(Kernel *const kernel, Stride stride,
                                        std::vector<scalar> binBorders,
                                        std::vector<std::string> typesToCount,
                                        unsigned int axis)
@@ -79,7 +79,7 @@ HistogramAlongAxis::HistogramAlongAxis(Kernel *const kernel, stride_type stride,
 
 }
 
-void HistogramAlongAxis::initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) {
+void HistogramAlongAxis::initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) {
     const auto size = result.size();
     h5rd::dimensions fs = {flushStride, size};
     h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS, size};
@@ -99,8 +99,10 @@ void HistogramAlongAxis::flush() {
     if (pimpl->time) pimpl->time->flush();
 }
 
-std::string HistogramAlongAxis::type() const {
-    return "HistogramAlongAxis";
+constexpr static auto& t = "HistogramAlongAxis";
+
+std::string_view HistogramAlongAxis::type() const {
+    return t;
 }
 
 HistogramAlongAxis::~HistogramAlongAxis() = default;

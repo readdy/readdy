@@ -48,16 +48,18 @@
 #include <array>
 #include "macros.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(util)
+namespace readdy::util {
 
 template<typename T>
-struct is_std_array : public std::false_type {};
+struct is_std_array : public std::false_type {
+};
 
 template<typename T, std::size_t N>
-struct is_std_array<std::array<T, N>> : public std::true_type {};
+struct is_std_array<std::array<T, N>> : public std::true_type {
+};
 
-template<typename... Ts> struct make_void {
+template<typename... Ts>
+struct make_void {
     /**
      * the type.
      */
@@ -65,5 +67,4 @@ template<typename... Ts> struct make_void {
 };
 template<typename... Ts> using void_t = typename make_void<Ts...>::type;
 
-NAMESPACE_END(util)
-NAMESPACE_END(readdy)
+}

@@ -52,9 +52,7 @@
 #include <readdy/model/actions/Action.h>
 #include <readdy/model/actions/Actions.h>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(actions)
+namespace readdy::model::actions {
 
 class ActionFactory {
 public:
@@ -125,7 +123,4 @@ public:
 
 };
 
-
-NAMESPACE_END(actions)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

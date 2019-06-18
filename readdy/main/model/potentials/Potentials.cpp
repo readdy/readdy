@@ -224,7 +224,7 @@ LennardJones::LennardJones(particle_type_type type1, particle_type_type type2,
     }
     auto dm = static_cast<scalar >(m);
     auto dn = static_cast<scalar >(n);
-    scalar  r_min = sigma * std::pow(dn / dm, c_::one / (dn - dm));
+    scalar  r_min = sigma * std::pow(dn / dm, 1. / (dn - dm));
     k = -epsilon / (std::pow(sigma / r_min, dm) - std::pow(sigma / r_min, dn));
 }
 

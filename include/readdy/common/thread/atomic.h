@@ -49,9 +49,7 @@
 #include <atomic>
 #include "../macros.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(util)
-NAMESPACE_BEGIN(thread)
+namespace readdy::util::thread {
 
 template<typename T>
 class copyable_atomic {
@@ -122,7 +120,4 @@ public:
     }
 };
 
-
-NAMESPACE_END(thread)
-NAMESPACE_END(util)
-NAMESPACE_END(readdy)
+}

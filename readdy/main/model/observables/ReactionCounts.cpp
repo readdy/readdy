@@ -49,26 +49,27 @@
 #include <readdy/model/observables/io/Types.h>
 #include <readdy/model/observables/io/TimeSeriesWriter.h>
 
-namespace readdy {
-namespace model {
-namespace observables {
+namespace readdy::model::observables {
 
-using data_set = h5rd::DataSet;
-using data_set_map = std::unordered_map<reactions::Reaction::ReactionId, std::unique_ptr<data_set>>;
+using ReactionsDataSets = std::unordered_map<ReactionId, std::unique_ptr<h5rd::DataSet>>;
+using SpatialReactionsDataSets = std::unordered_map<ReactionId, std::unique_ptr<h5rd::DataSet>>;
+using StructuralReactionsDataSets = std::unordered_map<ReactionId, std::unique_ptr<h5rd::DataSet>>;
 
 struct ReactionCounts::Impl {
     std::unique_ptr<h5rd::Group> group;
-    data_set_map dataSets;
+    ReactionsDataSets dataSets;
+    SpatialReactionsDataSets spatialReactionsDataSets;
+    StructuralReactionsDataSets structuralReactionsDataSets;
     std::unique_ptr<util::TimeSeriesWriter> time;
     unsigned int flushStride = 0;
     bool firstWrite = true;
-    std::function<void(std::unique_ptr<data_set> &)> flushFun = [](std::unique_ptr<data_set> &value) {
+    std::function<void(std::unique_ptr<h5rd::DataSet> &)> flushFun = [](std::unique_ptr<h5rd::DataSet> &value) {
         if(value) value->flush();
     };
     io::BloscFilter bloscFilter {};
 };
 
-ReactionCounts::ReactionCounts(Kernel *const kernel, stride_type stride)
+ReactionCounts::ReactionCounts(Kernel *const kernel, Stride stride)
         : Observable(kernel, stride), pimpl(std::make_unique<Impl>()) {
 }
 
@@ -78,15 +79,10 @@ void ReactionCounts::flush() {
 }
 
 void ReactionCounts::initialize(Kernel *const kernel) {
-    // fixme why is this warning here? e.g. virial silently sets its corresponding flag in context
-    if (!kernel->context().recordReactionCounts()) {
-        log::warn("The \"ReactionCounts\"-observable set context.recordReactionCounts() to true. "
-                          "If this is undesired, the observable should not be registered.");
-        kernel->context().recordReactionCounts() = true;
-    }
+    kernel->context().recordReactionCounts() = true;
 }
 
-void ReactionCounts::initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) {
+void ReactionCounts::initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) {
     pimpl->firstWrite = true;
     pimpl->group = std::make_unique<h5rd::Group>(
             file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName));
@@ -95,38 +91,74 @@ void ReactionCounts::initializeDataSet(File &file, const std::string &dataSetNam
 }
 
 void ReactionCounts::append() {
+    const auto &[reactionCounts, spatialReactionCounts, structuralReactionCounts] = result;
+
     if (pimpl->firstWrite) {
         pimpl->firstWrite = false;
-        const auto &reactionRegistry = kernel->context().reactions();
-        auto subgroup = pimpl->group->createGroup("counts");
-        for (const auto &reaction : reactionRegistry.order1Flat()) {
-            h5rd::dimensions chunkSize = {pimpl->flushStride};
-            h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
-            auto dset = subgroup.createDataSet<std::size_t>(std::to_string(reaction->id()), chunkSize, dims,
-                                                                 {&pimpl->bloscFilter});
-            pimpl->dataSets[reaction->id()] = std::move(dset);
+
+        {
+            const auto &reactionRegistry = kernel->context().reactions();
+            auto subgroup = pimpl->group->createGroup("counts");
+            for (const auto &reaction : reactionRegistry.order1Flat()) {
+                h5rd::dimensions chunkSize = {pimpl->flushStride};
+                h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
+                auto dset = subgroup.createDataSet<std::size_t>(std::to_string(reaction->id()), chunkSize, dims,
+                                                                {&pimpl->bloscFilter});
+                pimpl->dataSets[reaction->id()] = std::move(dset);
+            }
+            for (const auto &reaction : reactionRegistry.order2Flat()) {
+                h5rd::dimensions chunkSize = {pimpl->flushStride};
+                h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
+                auto dset = subgroup.createDataSet<std::size_t>(std::to_string(reaction->id()), chunkSize, dims,
+                                                                {&pimpl->bloscFilter});
+                pimpl->dataSets[reaction->id()] = std::move(dset);
+            }
         }
-        for (const auto &reaction : reactionRegistry.order2Flat()) {
-            h5rd::dimensions chunkSize = {pimpl->flushStride};
-            h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
-            auto dset = subgroup.createDataSet<std::size_t>(std::to_string(reaction->id()), chunkSize, dims,
-                                                            {&pimpl->bloscFilter});
-            pimpl->dataSets[reaction->id()] = std::move(dset);
+        {
+            const auto &topologyRegistry = kernel->context().topologyRegistry();
+            auto spatialSubgroup = pimpl->group->createGroup("spatialCounts");
+            for (const auto &entry : topologyRegistry.spatialReactionRegistry()) {
+                for (const auto &spatialReaction : entry.second) {
+                    h5rd::dimensions chunkSize = {pimpl->flushStride};
+                    h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
+                    auto dset = spatialSubgroup.createDataSet<std::size_t>(std::to_string(spatialReaction.id()),
+                            chunkSize, dims, {&pimpl->bloscFilter});
+                    pimpl->spatialReactionsDataSets[spatialReaction.id()] = std::move(dset);
+                }
+            }
+        }
+        {
+            const auto &topologyRegistry = kernel->context().topologyRegistry();
+            auto structuralSubgroup = pimpl->group->createGroup("structuralCounts");
+            for (const auto &entry : topologyRegistry.types()) {
+                for (const auto &structuralReaction : entry.structuralReactions) {
+                    h5rd::dimensions chunkSize = {pimpl->flushStride};
+                    h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
+                    auto dset = structuralSubgroup.createDataSet<std::size_t>(std::to_string(structuralReaction.id()),
+                                                                           chunkSize, dims, {&pimpl->bloscFilter});
+                    pimpl->structuralReactionsDataSets[structuralReaction.id()] = std::move(dset);
+                }
+            }
         }
     }
-    for (const auto &reactionEntry : result) {
-        auto copy = reactionEntry.second;
-        pimpl->dataSets.at(reactionEntry.first)->append({1}, &copy);
+    for (const auto [id, count] : reactionCounts) {
+        pimpl->dataSets.at(id)->append({1}, &count);
+    }
+    for(const auto [id, count] : spatialReactionCounts) {
+        pimpl->spatialReactionsDataSets.at(id)->append({1}, &count);
+    }
+    for(const auto [id, count] : structuralReactionCounts) {
+        pimpl->structuralReactionsDataSets.at(id)->append({1}, &count);
     }
     pimpl->time->append(t_current);
 }
 
-std::string ReactionCounts::type() const {
-    return "ReactionCounts";
+constexpr static auto& t = "ReactionCounts";
+
+std::string_view ReactionCounts::type() const {
+    return t;
 }
 
 ReactionCounts::~ReactionCounts() = default;
 
-}
-}
 }

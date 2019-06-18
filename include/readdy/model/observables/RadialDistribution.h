@@ -50,17 +50,15 @@
 #include <readdy/io/BloscFilter.h>
 #include "Observable.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(observables)
+namespace readdy::model::observables {
 
 class RadialDistribution : public Observable<std::pair<std::vector<scalar>, std::vector<scalar>>> {
 public:
-    RadialDistribution(Kernel *kernel, stride_type stride, std::vector<scalar> binBorders,
+    RadialDistribution(Kernel *kernel, Stride stride, std::vector<scalar> binBorders,
                        std::vector<ParticleTypeId> typeCountFrom, std::vector<ParticleTypeId> typeCountTo,
                        scalar particleToDensity);
 
-    RadialDistribution(Kernel *kernel, stride_type stride, const std::vector<scalar> &binBorders,
+    RadialDistribution(Kernel *kernel, Stride stride, const std::vector<scalar> &binBorders,
                        const std::vector<std::string> &typeCountFrom, const std::vector<std::string> &typeCountTo,
                        scalar particleToDensity);
 
@@ -68,7 +66,7 @@ public:
 
     const std::vector<scalar> &getBinBorders() const;
 
-    std::string type() const override;
+    std::string_view type() const override;
 
     void evaluate() override;
 
@@ -78,7 +76,7 @@ protected:
 
     void setBinBorders(const std::vector<scalar> &binBorders);
 
-    void initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) override;
+    void initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) override;
 
     void append() override;
 
@@ -88,9 +86,7 @@ protected:
     std::vector<scalar> counts;
     std::vector<ParticleTypeId> typeCountFrom, typeCountTo;
     scalar particleToDensity;
-    readdy::io::BloscFilter bloscFilter;
+    io::BloscFilter bloscFilter;
 };
 
-NAMESPACE_END(observables)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

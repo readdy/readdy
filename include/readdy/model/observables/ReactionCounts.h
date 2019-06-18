@@ -52,15 +52,15 @@
 #include <readdy/model/reactions/Reaction.h>
 #include <readdy/model/reactions/ReactionRecord.h>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(observables)
+namespace readdy::model::observables {
 
-class ReactionCounts : public Observable<reactions::reaction_counts_map> {
+class ReactionCounts : public Observable<std::tuple<reactions::ReactionCounts, 
+                                                    reactions::SpatialTopologyReactionCounts, 
+                                                    reactions::StructuralTopologyReactionCounts>> {
 public:
     using reaction_counts_map = result_type;
 
-    ReactionCounts(Kernel *kernel, stride_type stride);
+    ReactionCounts(Kernel *kernel, Stride stride);
 
     ReactionCounts(const ReactionCounts &) = delete;
 
@@ -74,13 +74,13 @@ public:
 
     void flush() override;
 
-    std::string type() const override;
+    std::string_view type() const override;
 
 
 protected:
     void initialize(Kernel *kernel) override;
 
-    void initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) override;
+    void initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) override;
 
     void append() override;
 
@@ -88,6 +88,4 @@ protected:
     std::unique_ptr<Impl> pimpl;
 };
 
-NAMESPACE_END(observables)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

@@ -70,13 +70,13 @@ TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU
     ctx.boxSize() = {{10, 10, 10}};
 
     SECTION("Enzymatic reaction") {
-        model::TopologyParticle x_0{c_::zero, c_::zero, c_::zero, ctx.particleTypes().idOf("Topology A")};
+        model::TopologyParticle x_0{0., 0., 0., ctx.particleTypes().idOf("Topology A")};
         {
             auto tid = ctx.topologyRegistry().addType("MyType");
             simulation.stateModel().addTopology(tid, {x_0});
         }
         simulation.stateModel().addParticle(
-                model::Particle(c_::zero, c_::zero, c_::zero, ctx.particleTypes().idOf("A"))
+                model::Particle(0., 0., 0., ctx.particleTypes().idOf("A"))
         );
         ctx.reactions().addEnzymatic("TopologyEnzymatic", "Topology A", "A", "B", 1e16, 1.0);
 
@@ -115,7 +115,7 @@ TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU
     }
 
     SECTION("Get topology for particle") {
-        model::TopologyParticle x_0{c_::zero, c_::zero, c_::zero, ctx.particleTypes().idOf("Topology A")};
+        model::TopologyParticle x_0{0., 0., 0., ctx.particleTypes().idOf("Topology A")};
         auto toplogy = simulation.addTopology("T", {x_0});
         simulation.addParticle("A", 0, 0, 0);
 
@@ -142,7 +142,7 @@ TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU
         {
             topologyParticles.reserve(90);
             for (int i = 0; i < 90; ++i) {
-                topologyParticles.emplace_back(-49. + i, c_::zero, c_::zero, topAId);
+                topologyParticles.emplace_back(-49. + i, 0., 0., topAId);
             }
         }
         auto toplogy = simulation.addTopology("TA", topologyParticles);
@@ -157,7 +157,7 @@ TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU
             }
         }
 
-        model::top::reactions::StructuralTopologyReaction r {[aId](model::top::GraphTopology& top) {
+        model::top::reactions::StructuralTopologyReaction r {"r", [aId](model::top::GraphTopology& top) {
             model::top::reactions::Recipe recipe (top);
             if(top.getNParticles() > 1) {
                 auto rnd = model::rnd::uniform_int(0, static_cast<const int>(top.getNParticles() - 2));
@@ -286,16 +286,16 @@ TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU
         simulation.context().periodicBoundaryConditions() = {{true, true, true}};
         simulation.context().topologyRegistry().addType("TA");
         simulation.context().boxSize() = {{15, 15, 15}};
-        simulation.context().particleTypes().add("middle", c_::zero, model::particleflavor::TOPOLOGY);
-        simulation.context().particleTypes().add("end", c_::zero, model::particleflavor::TOPOLOGY);
+        simulation.context().particleTypes().add("middle", 0., model::particleflavor::TOPOLOGY);
+        simulation.context().particleTypes().add("end", 0., model::particleflavor::TOPOLOGY);
         simulation.context().topologyRegistry().configureBondPotential("middle", "middle", {.00000001, 1});
         simulation.context().topologyRegistry().configureBondPotential("middle", "end", {.00000001, 1});
         simulation.context().topologyRegistry().configureBondPotential("end", "end", {.00000001, 1});
 
         for(int i = 0; i < 3; ++i) {
-            auto top = simulation.addTopology("TA", {simulation.createTopologyParticle("end", {c_::zero - c_::four + 3*i, c_::zero, c_::zero}),
-                                                     simulation.createTopologyParticle("middle", {c_::zero - c_::three + 3*i, c_::zero, c_::zero}),
-                                                     simulation.createTopologyParticle("end", {c_::zero - c_::two + 3*i, c_::zero, c_::zero})});
+            auto top = simulation.addTopology("TA", {simulation.createTopologyParticle("end", {0. - 4. + 3*i, 0., 0.}),
+                                                     simulation.createTopologyParticle("middle", {0. - 3. + 3*i, 0., 0.}),
+                                                     simulation.createTopologyParticle("end", {0. - 2. + 3*i, 0., 0.})});
             {
                 auto it = top->graph().vertices().begin();
                 auto it2 = std::next(top->graph().vertices().begin());
@@ -341,11 +341,11 @@ TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU
                 flouble y_end (top_particles.at(idx).pos().y);
                 flouble z_end (top_particles.at(idx).pos().z);
                 // the end particle of our topology sausage should be either at x=4 or x=-4
-                REQUIRE((x_end.AlmostEquals(flouble{c_::four}) || x_end.AlmostEquals(flouble{-c_::four})));
-                REQUIRE(y_end.AlmostEquals(flouble{c_::zero})); // no diffusion going on
-                REQUIRE(z_end.AlmostEquals(flouble{c_::zero})); // no diffusion going on
+                REQUIRE((x_end.AlmostEquals(flouble{4.}) || x_end.AlmostEquals(flouble{-4.})));
+                REQUIRE(y_end.AlmostEquals(flouble{0.})); // no diffusion going on
+                REQUIRE(z_end.AlmostEquals(flouble{0.})); // no diffusion going on
 
-                auto factor = x_end.AlmostEquals(flouble{c_::four}) ? c_::one : -c_::one;
+                auto factor = x_end.AlmostEquals(flouble{4.}) ? 1. : -1.;
 
                 // walk along topology sausage, check end particles are always at +-4, the other ones are of type middle
                 auto next_neighbor = v_end.neighbors().at(0);
@@ -353,11 +353,11 @@ TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU
                 while(next_neighbor->particleType() != type_registry.idOf("end") && i < 20 /*no endless loop*/) {
                     auto next_idx = std::distance(chainTop->graph().vertices().begin(), next_neighbor);
                     const auto& next_particle = top_particles.at(static_cast<std::size_t>(next_idx));
-                    auto predicted_pos = factor*c_::four - factor*(i+1)*c_::one;
+                    auto predicted_pos = factor*4. - factor*(i+1)*1.;
                     auto actual_pos = next_particle.pos().x;
                     REQUIRE((flouble(actual_pos).AlmostEquals(flouble(predicted_pos))));
-                    REQUIRE((flouble(next_particle.pos().y)).AlmostEquals(flouble(c_::zero)));
-                    REQUIRE((flouble(next_particle.pos().z)).AlmostEquals(flouble(c_::zero)));
+                    REQUIRE((flouble(next_particle.pos().y)).AlmostEquals(flouble(0.)));
+                    REQUIRE((flouble(next_particle.pos().z)).AlmostEquals(flouble(0.)));
                     if(next_neighbor->particleType() == type_registry.idOf("middle")) {
                         REQUIRE(next_neighbor->neighbors().size() == 2);
                         if(next_neighbor->neighbors().at(0) == prev_neighbor) {
@@ -380,108 +380,4 @@ TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU
         }
         REQUIRE(foundEndVertex);
     }
-}
-
-TEMPLATE_TEST_CASE("Test topology reactions attach particle integration", "[topologies][integration]", SingleCPU, CPU) {
-    Simulation simulation(create<TestType>());
-    simulation.context().periodicBoundaryConditions() = {{true, true, true}};
-    simulation.context().topologyRegistry().addType("TA");
-    simulation.context().boxSize() = {{15, 15, 15}};
-    simulation.context().particleTypes().add("middle", c_::zero, model::particleflavor::TOPOLOGY);
-    simulation.context().particleTypes().add("end", c_::zero, model::particleflavor::TOPOLOGY);
-    simulation.context().particleTypes().add("A", c_::zero);
-    simulation.context().topologyRegistry().configureBondPotential("middle", "middle", {.00000001, 1});
-    simulation.context().topologyRegistry().configureBondPotential("middle", "end", {.00000001, 1});
-    simulation.context().topologyRegistry().configureBondPotential("end", "end", {.00000001, 1});
-
-    auto top = simulation.addTopology("TA", {simulation.createTopologyParticle("end", {c_::zero-c_::one, c_::zero, c_::zero}),
-                                             simulation.createTopologyParticle("middle", {c_::zero, c_::zero, c_::zero}),
-                                             simulation.createTopologyParticle("end", {c_::zero+c_::one, c_::zero, c_::zero})});
-    {
-        auto it = top->graph().vertices().begin();
-        auto it2 = std::next(top->graph().vertices().begin());
-        top->graph().addEdge(it, it2);
-        ++it; ++it2;
-        top->graph().addEdge(it, it2);
-    }
-
-    // register attach reaction that transforms (end, A) -> (middle, end)
-    simulation.context().topologyRegistry().addSpatialReaction("attach: TA (end) + (A) -> TA (middle--end)",
-                                                               1e10, c_::one + c_::half);
-    simulation.addParticle("A", c_::zero - c_::two, c_::zero, c_::zero);
-    simulation.addParticle("A", c_::zero - c_::three, c_::zero, c_::zero);
-    simulation.addParticle("A", c_::zero - c_::four, c_::zero, c_::zero);
-    simulation.addParticle("A", c_::zero + c_::two, c_::zero, c_::zero);
-    simulation.addParticle("A", c_::zero + c_::three, c_::zero, c_::zero);
-    simulation.addParticle("A", c_::zero + c_::four, c_::zero, c_::zero);
-
-    simulation.run(6, 1.);
-
-    const auto& type_registry = simulation.context().particleTypes();
-
-    REQUIRE(simulation.context().topologyRegistry().isSpatialReactionType("A"));
-    REQUIRE(simulation.context().topologyRegistry().isSpatialReactionType("end"));
-    REQUIRE_FALSE(simulation.context().topologyRegistry().isSpatialReactionType("middle"));
-    REQUIRE(simulation.context().calculateMaxCutoff() == 1.5);
-
-    REQUIRE(simulation.currentTopologies().size() == 1);
-    auto chainTop = simulation.currentTopologies().at(0);
-    REQUIRE(chainTop->getNParticles() == 3 /*original topology particles*/ + 6 /*attached particles*/);
-
-    auto top_particles = simulation.stateModel().getParticlesForTopology(*chainTop);
-
-    bool foundEndVertex {false};
-    // check that graph is indeed linear
-    for(std::size_t idx = 0; idx < chainTop->graph().vertices().size() && !foundEndVertex; ++idx) {
-        auto prev_neighbor = std::next(chainTop->graph().vertices().begin(), idx);
-        const auto& v_end = *prev_neighbor;
-        if(v_end.particleType() == type_registry.idOf("end")) {
-            foundEndVertex = true;
-
-            REQUIRE(v_end.neighbors().size() == 1);
-            REQUIRE(top_particles.at(idx).type() == type_registry.idOf("end"));
-
-            using flouble = fp::FloatingPoint<scalar>;
-            flouble x_end (top_particles.at(idx).pos().x);
-            flouble y_end (top_particles.at(idx).pos().y);
-            flouble z_end (top_particles.at(idx).pos().z);
-            // the end particle of our topology sausage should be either at x=4 or x=-4
-            REQUIRE((x_end.AlmostEquals(flouble{c_::four}) || x_end.AlmostEquals(flouble{-c_::four})));
-            REQUIRE(y_end.AlmostEquals(flouble{c_::zero})); // no diffusion going on
-            REQUIRE(z_end.AlmostEquals(flouble{c_::zero})); // no diffusion going on
-
-            auto factor = x_end.AlmostEquals(flouble{c_::four}) ? c_::one : -c_::one;
-
-            // walk along topology sausage, check end particles are always at +-4, the other ones are of type middle
-            auto next_neighbor = v_end.neighbors().at(0);
-            std::size_t i = 0;
-            while(next_neighbor->particleType() != type_registry.idOf("end") && i < 20 /*no endless loop*/) {
-                auto next_idx = std::distance(chainTop->graph().vertices().begin(), next_neighbor);
-                const auto& next_particle = top_particles.at(static_cast<std::size_t>(next_idx));
-                auto predicted_pos = factor*c_::four - factor*(i+1)*c_::one;
-                auto actual_pos = next_particle.pos().x;
-                REQUIRE((flouble(actual_pos).AlmostEquals(flouble(predicted_pos))));
-                REQUIRE((flouble(next_particle.pos().y)).AlmostEquals(flouble(c_::zero)));
-                REQUIRE((flouble(next_particle.pos().z)).AlmostEquals(flouble(c_::zero)));
-                if(next_neighbor->particleType() == type_registry.idOf("middle")) {
-                    REQUIRE(next_neighbor->neighbors().size() == 2);
-                    if(next_neighbor->neighbors().at(0) == prev_neighbor) {
-                        prev_neighbor = next_neighbor;
-                        next_neighbor = next_neighbor->neighbors().at(1);
-                    } else {
-                        prev_neighbor = next_neighbor;
-                        next_neighbor = next_neighbor->neighbors().at(0);
-                    }
-
-                } else {
-                    REQUIRE(next_neighbor->neighbors().size() == 1);
-                }
-
-                ++i;
-            }
-
-            REQUIRE(i == 3+6-1-1);
-        }
-    }
-    REQUIRE(foundEndVertex);
 }

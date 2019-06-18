@@ -55,18 +55,17 @@
 
 #include "TrajectoryEntry.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
+namespace readdy::model {
 class Kernel;
-NAMESPACE_BEGIN(observables)
+namespace observables {
 
 class Trajectory : public Observable<std::vector<TrajectoryEntry>> {
     using super = Observable<std::vector<TrajectoryEntry>>;
 public:
 
-    const static std::string TRAJECTORY_GROUP_PATH;
+    constexpr static auto &TRAJECTORY_GROUP_PATH = "/readdy/trajectory";
 
-    Trajectory(model::Kernel * kernel, unsigned int stride);
+    Trajectory(model::Kernel *kernel, unsigned int stride);
 
     ~Trajectory() override;
 
@@ -74,7 +73,7 @@ public:
 
     void flush() override;
 
-    std::string type() const override;
+    std::string_view type() const override;
 
 protected:
     void initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) override;
@@ -89,17 +88,17 @@ class FlatTrajectory : public Observable<std::vector<TrajectoryEntry>> {
     using super = Observable<std::vector<TrajectoryEntry>>;
 public:
 
-    FlatTrajectory(Kernel* kernel, unsigned int stride, bool useBlosc = true);
+    FlatTrajectory(Kernel *kernel, unsigned int stride, bool useBlosc = true);
 
     ~FlatTrajectory() override;
 
-    FlatTrajectory(FlatTrajectory&&);
+    FlatTrajectory(FlatTrajectory &&) noexcept;
 
     void evaluate() override;
 
     void flush() override;
 
-    std::string type() const override;
+    std::string_view type() const override;
 
 protected:
     void initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) override;
@@ -109,9 +108,8 @@ protected:
     struct Impl;
     std::unique_ptr<Impl> pimpl;
 
-    bool useBlosc;
+    bool useBlosc{true};
 };
 
-NAMESPACE_END(observables)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}
+}

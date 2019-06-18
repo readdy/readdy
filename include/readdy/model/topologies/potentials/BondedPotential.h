@@ -50,10 +50,7 @@
 #include <string>
 #include "TopologyPotential.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(top)
-NAMESPACE_BEGIN(pot)
+namespace readdy::model::top::pot {
 
 struct BondConfiguration {
     BondConfiguration(std::size_t idx1, std::size_t idx2, scalar forceConstant, scalar length)
@@ -71,15 +68,20 @@ public:
 
     explicit BondedPotential(bond_configurations bonds) : TopologyPotential(), bonds(std::move(bonds)) {}
 
-    BondedPotential(const BondedPotential&) = default;
-    BondedPotential& operator=(const BondedPotential&) = delete;
-    BondedPotential(BondedPotential&&) = default;
-    BondedPotential& operator=(BondedPotential&&) = delete;
+    BondedPotential(const BondedPotential &) = default;
+
+    BondedPotential &operator=(const BondedPotential &) = delete;
+
+    BondedPotential(BondedPotential &&) = default;
+
+    BondedPotential &operator=(BondedPotential &&) = delete;
+
     ~BondedPotential() override = default;
 
     const bond_configurations &getBonds() const {
         return bonds;
     }
+
 protected:
     bond_configurations bonds;
 };
@@ -89,10 +91,14 @@ class HarmonicBondPotential : public BondedPotential {
 public:
 
     explicit HarmonicBondPotential(const bond_configurations &bonds) : BondedPotential(bonds) {};
-    HarmonicBondPotential(const HarmonicBondPotential&) = default;
-    HarmonicBondPotential& operator=(const HarmonicBondPotential&) = delete;
-    HarmonicBondPotential(HarmonicBondPotential&&) = default;
-    HarmonicBondPotential& operator=(HarmonicBondPotential&&) = delete;
+
+    HarmonicBondPotential(const HarmonicBondPotential &) = default;
+
+    HarmonicBondPotential &operator=(const HarmonicBondPotential &) = delete;
+
+    HarmonicBondPotential(HarmonicBondPotential &&) = default;
+
+    HarmonicBondPotential &operator=(HarmonicBondPotential &&) = delete;
 
     ~HarmonicBondPotential() override = default;
 
@@ -110,7 +116,4 @@ public:
 
 };
 
-NAMESPACE_END(pot)
-NAMESPACE_END(top)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

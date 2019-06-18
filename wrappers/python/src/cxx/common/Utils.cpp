@@ -355,8 +355,7 @@ read_reactions_obs(const std::string &filename, const std::string &name) {
     auto reactionInfoH5Type = readdy::model::ioutils::getReactionInfoMemoryType(f->ref());
 
     // get reaction info from config
-    std::unordered_map<readdy::model::reactions::Reaction::ReactionId, readdy::model::ioutils::ReactionInfo>
-            reactionsMap;
+    std::unordered_map<readdy::ReactionId, readdy::model::ioutils::ReactionInfo> reactionsMap;
     {
         std::vector<readdy::model::ioutils::ReactionInfo> reactionInfo;
         auto config = f->getSubgroup("readdy/config/");

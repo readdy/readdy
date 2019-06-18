@@ -54,8 +54,7 @@
 #include "Index.h"
 #include "FloatingPoints.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(_internal)
+namespace readdy::_internal {
 
 namespace detail {
 template<typename T>
@@ -120,7 +119,7 @@ public:
 
     template<typename arithmetic, typename detail::is_arithmetic_type<arithmetic> = 0>
     ReaDDyMatrix &operator*=(const arithmetic a) {
-        std::transform(_data.begin(), _data.end(), _data.begin(), [a](auto b) { return a*b; });
+        std::transform(_data.begin(), _data.end(), _data.begin(), [a](auto b) { return a * b; });
         return *this;
     }
 
@@ -147,8 +146,8 @@ public:
     friend std::ostream &operator<<(std::ostream &os, const ReaDDyMatrix &matrix) {
         std::stringstream ss;
         ss << "Matrix " << ReaDDyMatrix::n() << " x " << ReaDDyMatrix::m() << ": " << std::endl;
-        for(index_type i = 0; i < ReaDDyMatrix::n(); ++i) {
-            for(index_type j = 0; j < ReaDDyMatrix::m(); ++j) {
+        for (index_type i = 0; i < ReaDDyMatrix::n(); ++i) {
+            for (index_type j = 0; j < ReaDDyMatrix::m(); ++j) {
                 ss << matrix.at(i, j) << " ";
             }
             ss << std::endl;
@@ -196,25 +195,25 @@ public:
 
     template<typename arithmetic, typename detail::is_arithmetic_type<arithmetic> = 0>
     ReaDDyVec3 &operator+=(arithmetic a) {
-        std::transform(data.begin(), data.end(), data.begin(), [a](auto b) { return a+b; });
+        std::transform(data.begin(), data.end(), data.begin(), [a](auto b) { return a + b; });
         return *this;
     }
 
     template<typename arithmetic, typename detail::is_arithmetic_type<arithmetic> = 0>
     ReaDDyVec3 &operator-=(arithmetic a) {
-        std::transform(data.begin(), data.end(), data.begin(), [a](auto b) { return b-a; });
+        std::transform(data.begin(), data.end(), data.begin(), [a](auto b) { return b - a; });
         return *this;
     }
 
     template<typename arithmetic, typename detail::is_arithmetic_type<arithmetic> = 0>
     ReaDDyVec3 &operator*=(arithmetic a) {
-        std::transform(data.begin(), data.end(), data.begin(), [a](auto b) { return a*b; });
+        std::transform(data.begin(), data.end(), data.begin(), [a](auto b) { return a * b; });
         return *this;
     };
 
     template<typename arithmetic, typename detail::is_arithmetic_type<arithmetic> = 0>
     ReaDDyVec3 &operator/=(arithmetic a) {
-        std::transform(data.begin(), data.end(), data.begin(), [a](auto b) { return b/a; });
+        std::transform(data.begin(), data.end(), data.begin(), [a](auto b) { return b / a; });
         return *this;
     };
 
@@ -258,8 +257,8 @@ public:
     };
 
     bool almostEquals(const ReaDDyVec3 &rhs) const {
-        bool result {true};
-        for(std::uint8_t i = 0; i < 3; ++i) {
+        bool result{true};
+        for (std::uint8_t i = 0; i < 3; ++i) {
             const auto fp1 = fp::FloatingPoint<float>(data[i]);
             const auto fp2 = fp::FloatingPoint<float>(rhs.data[i]);
             auto x = fp::FloatingPoint<float>::DistanceBetweenSignAndMagnitudeNumbers(fp1.bits(), fp2.bits());
@@ -339,5 +338,4 @@ public:
 
 };
 
-NAMESPACE_END(_internal)
-NAMESPACE_END(readdy)
+}

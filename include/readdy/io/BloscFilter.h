@@ -51,8 +51,7 @@
 
 #include <readdy/common/common.h>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(io)
+namespace readdy::io {
 
 class BloscFilter : public h5rd::Filter {
 public:
@@ -108,7 +107,7 @@ private:
      * 0 - no compression; 9 - maximal compression
      */
     unsigned int compressionLevel;
+
 };
 
-NAMESPACE_END(io)
-NAMESPACE_END(readdy)
+}

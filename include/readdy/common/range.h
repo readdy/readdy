@@ -43,8 +43,7 @@
  */
 
 #pragma once
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(util)
+namespace readdy::util {
 /**
  * the range class, which can be used to create ranges
  * @tparam T the type of the range
@@ -133,5 +132,5 @@ private:
     const_iterator begin_it;
     const_iterator end_it;
 };
-NAMESPACE_END(util)
-NAMESPACE_END(readdy)
+
+}

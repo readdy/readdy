@@ -51,21 +51,20 @@
 #include <readdy/common/common.h>
 #include <readdy/io/BloscFilter.h>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(observables)
-NAMESPACE_BEGIN(util)
+namespace readdy::model::observables::util {
 
 class TimeSeriesWriter {
     auto getFilterConfig(bool blosc) {
         h5rd::File::FilterConfiguration result;
-        if(blosc) result.push_back(&bloscFilter);
+        if (blosc) result.push_back(&bloscFilter);
         return result;
     }
+
 public:
-    TimeSeriesWriter(h5rd::Group &group, unsigned int chunkSize, const std::string &dsName = "time", bool useBlosc=true)
+    TimeSeriesWriter(h5rd::Group &group, unsigned int chunkSize, const std::string &dsName = "time",
+                     bool useBlosc = true)
             : dataSet(group.createDataSet<time_step_type>(dsName, {chunkSize}, {h5rd::UNLIMITED_DIMS},
-                    getFilterConfig(useBlosc))) {}
+                                                          getFilterConfig(useBlosc))) {}
 
     ~TimeSeriesWriter() = default;
 
@@ -86,11 +85,8 @@ public:
     }
 
 private:
-    io::BloscFilter bloscFilter {};
+    io::BloscFilter bloscFilter{};
     std::unique_ptr<h5rd::DataSet> dataSet;
 };
 
-NAMESPACE_END(util)
-NAMESPACE_END(observables)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

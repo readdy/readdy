@@ -51,11 +51,9 @@
 #include <readdy/model/topologies/TopologyParticleTypeMap.h>
 #include <readdy/common/string.h>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(top)
+namespace readdy::model::top {
 class TopologyRegistry;
-NAMESPACE_BEGIN(reactions)
+namespace reactions {
 
 /**
  * TT - Topology-Topology
@@ -69,6 +67,7 @@ class STRParser;
 
 class SpatialTopologyReaction {
 public:
+
     SpatialTopologyReaction(std::string name, util::particle_type_pair types, topology_type_pair top_types,
                             util::particle_type_pair types_to, topology_type_pair top_types_to, scalar rate,
                             scalar radius, STRMode mode)
@@ -85,7 +84,7 @@ public:
 
     SpatialTopologyReaction &operator=(SpatialTopologyReaction &&) = default;
 
-    const std::string &name() const {
+    std::string_view name() const {
         return _name;
     }
 
@@ -165,7 +164,14 @@ public:
         return _mode;
     }
 
+    ReactionId id() const {
+        return _id;
+    }
+
 private:
+
+    static ReactionId counter;
+    ReactionId _id {counter++};
 
     friend class STRParser;
 
@@ -210,7 +216,5 @@ private:
     std::reference_wrapper<const TopologyRegistry> _topology_registry;
 };
 
-NAMESPACE_END(reactions)
-NAMESPACE_END(top)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}
+}

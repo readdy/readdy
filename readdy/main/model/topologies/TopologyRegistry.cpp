@@ -46,20 +46,8 @@
 #include <readdy/model/topologies/TopologyRegistry.h>
 #include <readdy/model/Utils.h>
 
-namespace readdy {
-namespace model {
-namespace top {
+namespace readdy::model::top {
 TopologyTypeId TopologyRegistry::counter = 0;
-
-void TopologyRegistry::addStructuralReaction(TopologyTypeId id,
-                                             const reactions::StructuralTopologyReaction &reaction) {
-    typeById(id).structuralReactions.push_back(reaction);
-}
-
-void TopologyRegistry::addStructuralReaction(TopologyTypeId id,
-                                             reactions::StructuralTopologyReaction &&reaction) {
-    typeById(id).structuralReactions.push_back(std::move(reaction));
-}
 
 std::string TopologyRegistry::describe() const {
     namespace rus = readdy::util::str;
@@ -239,12 +227,12 @@ void TopologyRegistry::addSpatialReaction(const std::string &name, const std::st
 
 void TopologyRegistry::validateSpatialReaction(const SpatialReaction &reaction) const {
     if (reaction.rate() <= 0) {
-        throw std::invalid_argument("The rate of an structural topology reaction (" + reaction.name() +
-                                    ") should always be positive");
+        throw std::invalid_argument(fmt::format("The rate of an structural topology reaction ({}) "
+                                                "should always be positive", reaction.name()));
     }
     if (reaction.radius() <= 0) {
-        throw std::invalid_argument("The radius of an structural topology reaction("
-                                    + reaction.name() + ") should always be positive");
+        throw std::invalid_argument(fmt::format("The radius of an structural topology reaction({}) "
+                                                "should always be positive", reaction.name()));
     }
     auto info1 = _typeRegistry.get().infoOf(reaction.type1());
     auto info2 = _typeRegistry.get().infoOf(reaction.type2());
@@ -268,8 +256,8 @@ void TopologyRegistry::validateSpatialReaction(const SpatialReaction &reaction) 
                                                        }) != e.second.end();
                                });
         if (it != _spatialReactions.end()) {
-            throw std::invalid_argument("An structural topology reaction with the same name (" + reaction.name() +
-                                        ") was already registered!");
+            throw std::invalid_argument(fmt::format("An structural topology reaction with the same name ({}) "
+                                                    "was already registered!", reaction.name()));
         }
     }
 
@@ -366,6 +354,4 @@ std::string TopologyRegistry::generateSpatialReactionRepresentation(const Spatia
     return ss.str();
 }
 
-}
-}
 }

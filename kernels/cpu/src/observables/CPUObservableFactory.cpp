@@ -46,39 +46,35 @@
 #include <readdy/kernel/cpu/CPUKernel.h>
 #include <readdy/kernel/cpu/observables/CPUObservables.h>
 #include <readdy/kernel/singlecpu/observables/SCPUObservables.h>
-#include <readdy/kernel/singlecpu/observables/SCPUAggregators.h>
 
-namespace readdy {
-namespace kernel {
-namespace cpu {
-namespace observables {
+namespace readdy::kernel::cpu::observables {
 CPUObservableFactory::CPUObservableFactory(CPUKernel *const kernel) : readdy::model::observables::ObservableFactory(kernel),
                                                                 kernel(kernel) {
 }
 
 std::unique_ptr<model::observables::HistogramAlongAxis>
-CPUObservableFactory::histogramAlongAxis(stride_type stride, std::vector<scalar> binBorders,
+CPUObservableFactory::histogramAlongAxis(Stride stride, std::vector<scalar> binBorders,
                                          std::vector<std::string> typesToCount, unsigned int axis) const {
     return {std::make_unique<CPUHistogramAlongAxis>(kernel, stride, binBorders, typesToCount, axis)};
 }
 
 std::unique_ptr<model::observables::NParticles>
-CPUObservableFactory::nParticles(stride_type stride, std::vector<std::string> typesToCount) const {
+CPUObservableFactory::nParticles(Stride stride, std::vector<std::string> typesToCount) const {
     return {std::make_unique<CPUNParticles>(kernel, stride, typesToCount)};
 }
 
 std::unique_ptr<model::observables::Forces>
-CPUObservableFactory::forces(stride_type stride, std::vector<std::string> typesToCount) const {
+CPUObservableFactory::forces(Stride stride, std::vector<std::string> typesToCount) const {
     return {std::make_unique<CPUForces>(kernel, stride, typesToCount)};
 }
 
 std::unique_ptr<model::observables::Positions>
-CPUObservableFactory::positions(stride_type stride, std::vector<std::string> typesToCount) const {
+CPUObservableFactory::positions(Stride stride, std::vector<std::string> typesToCount) const {
     return {std::make_unique<CPUPositions>(kernel, stride, typesToCount)};
 }
 
 std::unique_ptr<model::observables::RadialDistribution>
-CPUObservableFactory::radialDistribution(stride_type stride, std::vector<scalar> binBorders,
+CPUObservableFactory::radialDistribution(Stride stride, std::vector<scalar> binBorders,
                                          std::vector<std::string> typeCountFrom, std::vector<std::string> typeCountTo,
                                          scalar particleDensity) const {
     return {std::make_unique<model::observables::RadialDistribution>(
@@ -86,32 +82,21 @@ CPUObservableFactory::radialDistribution(stride_type stride, std::vector<scalar>
     )};
 }
 
-std::unique_ptr<model::observables::Particles> CPUObservableFactory::particles(stride_type stride) const {
+std::unique_ptr<model::observables::Particles> CPUObservableFactory::particles(Stride stride) const {
     return {std::make_unique<CPUParticles>(kernel, stride)};
 }
 
-std::unique_ptr<model::observables::MeanSquaredDisplacement>
-CPUObservableFactory::msd(stride_type stride, std::vector<std::string> typesToCount,
-                          model::observables::Particles *particlesObservable) const {
-    return {std::make_unique<readdy::kernel::scpu::observables::SCPUMeanSquaredDisplacement<CPUKernel>>(
-            kernel, stride, typesToCount, particlesObservable
-    )};
-}
-
-std::unique_ptr<model::observables::Reactions> CPUObservableFactory::reactions(stride_type stride) const {
+std::unique_ptr<model::observables::Reactions> CPUObservableFactory::reactions(Stride stride) const {
     return {std::make_unique<CPUReactions>(kernel, stride)};
 }
 
-std::unique_ptr<model::observables::ReactionCounts> CPUObservableFactory::reactionCounts(stride_type stride) const {
+std::unique_ptr<model::observables::ReactionCounts> CPUObservableFactory::reactionCounts(Stride stride) const {
     return {std::make_unique<CPUReactionCounts>(kernel, stride)};
 }
 
 std::unique_ptr<model::observables::Virial>
-CPUObservableFactory::virial(stride_type stride) const {
+CPUObservableFactory::virial(Stride stride) const {
     return {std::make_unique<CPUVirial>(kernel, stride)};
 }
 
-}
-}
-}
 }

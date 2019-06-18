@@ -54,8 +54,7 @@
 #include "hash.h"
 #include "tuple_utils.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(util)
+namespace readdy::util {
 
 template<typename T, std::size_t N = std::tuple_size<typename std::remove_reference<T>::type>::value>
 class ForwardBackwardTupleHasher {
@@ -80,8 +79,8 @@ public:
 template<typename T>
 class ForwardTupleHasher {
 public:
-    std::size_t operator()(const T& tuple) const {
-        std::size_t seed {0};
+    std::size_t operator()(const T &tuple) const {
+        std::size_t seed{0};
         for_each_in_tuple(tuple, [&seed](ParticleTypeId ptt) { hash::combine(seed, ptt); });
         return seed;
     }
@@ -175,5 +174,4 @@ sortTypeQuadruple(ParticleTypeId t1, ParticleTypeId t2, ParticleTypeId t3, Parti
     }
 }
 
-NAMESPACE_END(util)
-NAMESPACE_END(readdy)
+}

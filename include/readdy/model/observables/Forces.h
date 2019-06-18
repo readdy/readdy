@@ -48,32 +48,33 @@
 #include <readdy/common/macros.h>
 #include "Observable.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(observables)
+namespace readdy::model::observables {
 
 class Forces : public Observable<std::vector<Vec3>> {
 
 public:
-    Forces(Kernel* kernel, stride_type stride);
+    Forces(Kernel *kernel, Stride stride);
 
-    Forces(Kernel* kernel, stride_type stride, std::vector<std::string> typesToCount);
+    Forces(Kernel *kernel, Stride stride, std::vector<std::string> typesToCount);
 
-    Forces(Kernel* kernel, stride_type stride, const std::vector<ParticleTypeId> &typesToCount);
+    Forces(Kernel *kernel, Stride stride, const std::vector<ParticleTypeId> &typesToCount);
 
-    Forces(const Forces&) = delete;
-    Forces& operator=(const Forces&) = delete;
-    Forces(Forces&&) = default;
-    Forces& operator=(Forces&&) = delete;
+    Forces(const Forces &) = delete;
+
+    Forces &operator=(const Forces &) = delete;
+
+    Forces(Forces &&) = default;
+
+    Forces &operator=(Forces &&) = delete;
 
     ~Forces() override;
 
-    std::string type() const override;
+    std::string_view type() const override;
 
     void flush() override;
 
 protected:
-    void initializeDataSet(File &file, const std::string &dataSetName, stride_type flushStride) override;
+    void initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) override;
 
     void append() override;
 
@@ -82,6 +83,5 @@ protected:
 
     std::vector<ParticleTypeId> typesToCount;
 };
-NAMESPACE_END(observables)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+
+}
