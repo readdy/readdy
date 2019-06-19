@@ -466,6 +466,7 @@ class Trajectory(object):
                 spatial_group = f[group_path]["spatialCounts"]
                 for reaction_id in self._spatial_topology_reaction_mapping.keys():
                     name = self._spatial_topology_reaction_mapping[reaction_id]
+                    name = (name.split(':')[0]).strip()
                     counts_spatial[name] = spatial_group[str(reaction_id)][:]
 
             if "structuralCounts" in f[group_path]:
