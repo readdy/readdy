@@ -69,7 +69,7 @@ TEMPLATE_TEST_CASE("Test observables", "[observables]", SingleCPU, CPU) {
         kernel->initialize();
 
         auto &&integrator = kernel->actions().createIntegrator("EulerBDIntegrator", timeStep);
-        for (readdy::time_step_type t = 0; t < 100; t++) {
+        for (readdy::TimeStep t = 0; t < 100; t++) {
             integrator->perform();
             kernel->evaluateObservables(t);
         }

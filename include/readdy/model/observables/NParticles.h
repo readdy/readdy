@@ -45,7 +45,6 @@
 
 #pragma once
 
-#include <readdy/common/macros.h>
 #include <vector>
 #include "Observable.h"
 

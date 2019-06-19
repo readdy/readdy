@@ -49,7 +49,6 @@
 #include <stdexcept>
 #include <list>
 #include <unordered_map>
-#include <readdy/common/macros.h>
 #include "Vertex.h"
 
 namespace readdy::model::top::graph {

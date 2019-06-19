@@ -43,7 +43,6 @@
 
 #pragma once
 
-#include <readdy/common/macros.h>
 #include <stdexcept>
 
 namespace readdy::model::top::reactions {

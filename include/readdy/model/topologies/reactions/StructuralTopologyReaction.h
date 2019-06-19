@@ -51,8 +51,6 @@
 #include <functional>
 #include <bitset>
 
-#include <readdy/common/macros.h>
-
 #include "TopologyReactionAction.h"
 #include "Operations.h"
 #include "Recipe.h"

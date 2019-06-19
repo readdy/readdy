@@ -85,7 +85,7 @@ public:
     /**
      * the type of function that is responsible for deciding whether the simulation should continue
      */
-    using continue_fun = std::function<bool(time_step_type)>;
+    using continue_fun = std::function<bool(TimeStep)>;
 
     using TimeStepActionPtr = std::shared_ptr<readdy::model::actions::TimeStepDependentAction>;
     using ActionPtr = std::shared_ptr<readdy::model::actions::Action>;
@@ -111,11 +111,11 @@ public:
      * running the simulation for a fixed number of time steps.
      * @return the callback function
      */
-    std::function<void(time_step_type)> &progressCallback() {
+    std::function<void(TimeStep)> &progressCallback() {
         return _progressCallback;
     }
 
-    const std::function<void(time_step_type)> &progressCallback() const {
+    const std::function<void(TimeStep)> &progressCallback() const {
         return _progressCallback;
     }
 
@@ -158,7 +158,7 @@ public:
         if (_forces) _forces->perform();
     }
 
-    void runEvaluateObservables(time_step_type t) {
+    void runEvaluateObservables(TimeStep t) {
         if (_evaluateObservables) _kernel->evaluateObservables(t);
     }
 
@@ -223,14 +223,14 @@ public:
      * This method runs a simulation for a fixed number of time steps by providing an appropriate continue function.
      * @param steps the number of steps
      */
-    virtual void run(time_step_type steps) {
+    virtual void run(TimeStep steps) {
         // show every 100 time steps
         if (!_progressCallback) {
-            _progressCallback = [this, steps](time_step_type current) {
+            _progressCallback = [this, steps](TimeStep current) {
                 log::info("Simulation progress: {} / {} steps", (current - _start), steps);
             };
         }
-        auto defaultContinueCriterion = [this, steps](const time_step_type current) {
+        auto defaultContinueCriterion = [this, steps](const TimeStep current) {
             if (current != _start && _progressOutputStride > 0 && (current - _start) % _progressOutputStride == 0) {
                 _progressCallback(current);
             }
@@ -257,7 +257,7 @@ public:
             runInitialize();
             if (requiresNeighborList) runInitializeNeighborList();
             runForces();
-            time_step_type t = _start;
+            TimeStep t = _start;
             if(_saver) {
                 // this needs to happen before observables because observables can in principle influence the state
                 _saver->makeCheckpoint(_kernel, t);
@@ -326,7 +326,7 @@ public:
         return _kernel;
     }
 
-    void addCallback(std::function<void(time_step_type)> f) {
+    void addCallback(std::function<void(TimeStep)> f) {
         _callbacks.emplace_back(std::move(f));
     }
 
@@ -379,13 +379,13 @@ protected:
     std::shared_ptr<h5rd::Group> configGroup{nullptr};
 
     bool _evaluateObservables = true;
-    time_step_type _start = 0;
+    TimeStep _start = 0;
     std::size_t _progressOutputStride = 100;
     std::size_t _checkpointingStride = 10000;
-    std::function<void(time_step_type)> _progressCallback;
+    std::function<void(TimeStep)> _progressCallback;
     scalar _timeStep;
 
-    std::vector<std::function<void(time_step_type)>> _callbacks;
+    std::vector<std::function<void(TimeStep)>> _callbacks;
 };
 
 }

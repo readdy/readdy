@@ -75,7 +75,6 @@ class TestTopologyReactionCount(unittest.TestCase):
         assert not counts["reactions"]
         spatials = counts["spatial_topology_reactions"]
 
-        reaction_name = "attach: T1(B) + (A) -> T1(B--B)"
         n_spatial = 0
 
         cA_prev = None
@@ -87,7 +86,7 @@ class TestTopologyReactionCount(unittest.TestCase):
             cc_spatial = cc[1]
             cc_structural = cc[2]
 
-            n_spatial += spatials[reaction_name][t]
+            n_spatial += spatials["attach"][t]
             assert cA == 1000 - n_spatial, f"Got {cA} A particles, expected {1000 - n_spatial}, at time t {t}"
 
             for sp in cc_spatial.keys():

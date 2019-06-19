@@ -45,7 +45,6 @@
 
 #pragma once
 
-#include <readdy/common/macros.h>
 #include <readdy/model/topologies/Topology.h>
 #include <readdy/model/topologies/potentials/TopologyPotentialActions.h>
 #include <readdy/kernel/cpu/CPUStateModel.h>

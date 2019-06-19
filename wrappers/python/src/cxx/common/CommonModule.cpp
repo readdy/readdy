@@ -53,7 +53,7 @@ using rvp = py::return_value_policy;
 
 /**
  * Notice: Exporting classes here that are to be shared between prototyping and api module require the base
- * class to use be exported (preferably by the READDY_READDY_API macro defined in common/macros.h).
+ * class to use be exported.
  */
 
 void exportIO(py::module &);

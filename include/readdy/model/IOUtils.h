@@ -52,7 +52,6 @@
 
 #include <h5rd/h5rd.h>
 
-#include "../common/macros.h"
 #include "Context.h"
 
 namespace readdy::model::ioutils {

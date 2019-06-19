@@ -66,18 +66,18 @@ void exportLoopApi(pybind11::module &module) {
 
     py::class_<Loop>(module, "SimulationLoop")
             .def_property("progress_callback", [](const Loop& self) { return self.progressCallback(); },
-                          [](Loop &self, const std::function<void(readdy::time_step_type)> &fun) {
+                          [](Loop &self, const std::function<void(readdy::TimeStep)> &fun) {
                 self.progressCallback() = fun;
             })
             .def_property("progress_output_stride", [](const Loop& self) { return self.progressOutputStride(); },
                           [](Loop &self, std::size_t stride) { self.progressOutputStride() = stride; })
-            .def("run", [](Loop& self, const readdy::time_step_type steps) {
+            .def("run", [](Loop& self, const readdy::TimeStep steps) {
                 py::gil_scoped_release release;
                 self.run(steps);
             }, "n_steps"_a)
             .def("run_with_criterion", [](Loop& self, pybind11::object continuingCriterion) {
                 py::gil_scoped_release release;
-                auto pyFun = readdy::rpy::PyFunction<bool(const readdy::time_step_type current)>(continuingCriterion);
+                auto pyFun = readdy::rpy::PyFunction<bool(const readdy::TimeStep current)>(continuingCriterion);
                 self.run(pyFun);
             }, "continuing_criterion"_a, py::keep_alive<0, 1>())
             .def("run_initialize", &Loop::runInitialize)

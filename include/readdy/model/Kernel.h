@@ -101,7 +101,7 @@ public:
      */
     virtual readdy::signals::scoped_connection connectObservable(observables::ObservableBase *observable) {
         observable->initialize(this);
-        return _signal.connect_scoped([observable](const time_step_type t) {
+        return _signal.connect_scoped([observable](const TimeStep t) {
             observable->callback(t);
         });
     };
@@ -109,7 +109,7 @@ public:
     /**
      * Evaluates all observables.
      */
-    virtual void evaluateObservables(time_step_type t) {
+    virtual void evaluateObservables(TimeStep t) {
         _signal(t);
     };
 

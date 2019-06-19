@@ -64,7 +64,7 @@ void run(readdy::model::Kernel &kernel, readdy::scalar timeStep) {
         initNeighborList->perform();
         nl->perform();
     }
-    for (readdy::time_step_type &&t = 0; t < nSteps; ++t) {
+    for (readdy::TimeStep &&t = 0; t < nSteps; ++t) {
         forces->perform();
         integrator->perform();
         if (requiresNeighborList) nl->perform();

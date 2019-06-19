@@ -48,8 +48,6 @@
 #include <json.hpp>
 #include <readdy/common/thread/Config.h>
 
-#include "readdy/common/macros.h"
-
 namespace readdy::conf {
 using json = nlohmann::json;
 

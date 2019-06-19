@@ -46,7 +46,6 @@
 #pragma once
 
 #include <vector>
-#include <readdy/common/macros.h>
 #include "Observable.h"
 
 namespace readdy::model::observables {

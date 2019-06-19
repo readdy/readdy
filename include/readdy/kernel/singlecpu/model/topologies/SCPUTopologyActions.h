@@ -47,7 +47,6 @@
 
 #include <utility>
 
-#include <readdy/common/macros.h>
 #include <readdy/model/topologies/potentials/TopologyPotentialActions.h>
 #include <readdy/kernel/singlecpu/SCPUStateModel.h>
 #include <readdy/model/topologies/Topology.h>

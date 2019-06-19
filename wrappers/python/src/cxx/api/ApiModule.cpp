@@ -39,7 +39,6 @@
 #include <json.hpp>
 
 #include <readdy/api/Simulation.h>
-#include <readdy/common/nodelete.h>
 #include <readdy/model/actions/UserDefinedAction.h>
 #include "ExportObservables.h"
 #include "../common/ReadableParticle.h"
@@ -140,13 +139,18 @@ void exportApi(py::module &api) {
                 self.context() = context;
             })
             .def("create_loop", &sim::createLoop, py::keep_alive<0, 1>(), py::return_value_policy::reference_internal)
-            .def("run", [](sim &self, const readdy::time_step_type steps, const readdy::scalar timeStep) {
+            .def("run", [](sim &self, const readdy::TimeStep steps, const readdy::scalar timeStep) {
                 py::gil_scoped_release release;
                 self.run(steps, timeStep);
             }, "n_steps"_a, "time_step"_a);
     exportObservables(api, simulation);
 
-    py::class_<kp, std::unique_ptr<kp, readdy::util::nodelete>>(api, "KernelProvider")
+
+    struct nodelete {
+        void operator()(kp* ptr) const {}
+    };
+
+    py::class_<kp, std::unique_ptr<kp, nodelete>>(api, "KernelProvider")
             .def_static("get", &kp::getInstance, rvp::reference)
             .def("load_from_dir", &kp::loadKernelsFromDirectory, "directory"_a)
             .def("available_kernels", &kp::availableKernels);

@@ -44,7 +44,6 @@
 
 #include <mutex>
 #include <condition_variable>
-#include <readdy/common/macros.h>
 
 namespace readdy::util::thread {
 

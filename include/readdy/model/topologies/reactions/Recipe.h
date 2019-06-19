@@ -46,8 +46,6 @@
 
 #include <vector>
 
-#include <readdy/common/macros.h>
-
 #include "Operations.h"
 #include "TopologyReactionAction.h"
 

@@ -45,7 +45,6 @@
 
 #pragma once
 
-#include <readdy/common/macros.h>
 #include <readdy/model/topologies/graph/Graph.h>
 
 namespace readdy::model::top::util {

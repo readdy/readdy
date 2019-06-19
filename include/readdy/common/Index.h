@@ -51,7 +51,6 @@
 #include <numeric>
 #include <tuple>
 #include <cmath>
-#include "macros.h"
 #include "tuple_utils.h"
 
 namespace readdy::util {

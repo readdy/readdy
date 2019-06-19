@@ -86,7 +86,7 @@ TEMPLATE_TEST_CASE("Reaction handlers integration.", "[!hide][integration]", Sin
                 neighborList->perform();
                 kernel->evaluateObservables(0);
                 auto t1 = std::chrono::high_resolution_clock::now();
-                for (readdy::time_step_type t = 1; t < nSteps+1; t++) {
+                for (readdy::TimeStep t = 1; t < nSteps+1; t++) {
                     if (t == (nSteps+1)/100) {
                         auto t2 = std::chrono::high_resolution_clock::now();
                         auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();

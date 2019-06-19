@@ -44,11 +44,8 @@
 #include <mutex>
 #include <condition_variable>
 #include <atomic>
-#include "../macros.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(util)
-NAMESPACE_BEGIN(thread)
+namespace readdy::util::thread {
 
 /**
  * A notification barrier that lets all threads wait until another thread called ready().
@@ -65,7 +62,7 @@ public:
      */
     void wait() const {
         std::unique_lock<std::mutex> lock(mutex);
-        while(!done.load()) {
+        while (!done.load()) {
             cv.wait(lock, [this] { return done.load(); });
         }
     }
@@ -81,9 +78,7 @@ public:
 private:
     mutable std::mutex mutex;
     mutable std::condition_variable cv;
-    mutable std::atomic<bool> done {false};
+    mutable std::atomic<bool> done{false};
 };
 
-NAMESPACE_END(thread)
-NAMESPACE_END(util)
-NAMESPACE_END(readdy)
+}

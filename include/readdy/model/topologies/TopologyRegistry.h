@@ -173,15 +173,20 @@ public:
         throw std::invalid_argument(fmt::format("The requested type \"{}\" did not exist.", name));
     }
 
-    std::string spatialDescriptorById(ReactionId id) const {
+    reactions::SpatialTopologyReaction spatialTopologyReactionById(ReactionId id) const {
         for (const auto &[_, reactions] : _spatialReactions) {
             for (const auto &reaction : reactions) {
                 if (reaction.id() == id) {
-                    return generateSpatialReactionRepresentation(reaction);
+                    return reaction;
                 }
             }
         }
         throw std::invalid_argument(fmt::format("Could not find spatial reaction with id {}.", id));
+    }
+
+    std::string spatialDescriptorById(ReactionId id) const {
+        auto reaction = spatialTopologyReactionById(id);
+        return generateSpatialReactionRepresentation(reaction);
     }
 
     std::string_view structuralNameById(ReactionId id) const {

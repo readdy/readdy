@@ -46,7 +46,6 @@
 #pragma once
 
 #include <array>
-#include "macros.h"
 
 namespace readdy::util {
 

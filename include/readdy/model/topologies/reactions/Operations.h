@@ -50,7 +50,6 @@
 #pragma once
 
 #include <memory>
-#include <readdy/common/macros.h>
 #include "TopologyReactionAction.h"
 #include "TopologyReactionActionFactory.h"
 

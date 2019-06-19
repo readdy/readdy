@@ -256,7 +256,7 @@ public:
      * @param timeStep the time step
      * @see runScheme()
      */
-    virtual void run(time_step_type steps, scalar timeStep) {
+    virtual void run(TimeStep steps, scalar timeStep) {
         createLoop(timeStep).run(steps);
     }
 

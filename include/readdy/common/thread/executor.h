@@ -50,8 +50,6 @@
 #include <vector>
 #include <functional>
 
-#include <readdy/common/macros.h>
-
 #include "joining_future.h"
 #include "scoped_thread.h"
 #include "scoped_async.h"

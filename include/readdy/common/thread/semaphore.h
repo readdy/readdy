@@ -44,11 +44,8 @@
 
 #include <mutex>
 #include <condition_variable>
-#include "../macros.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(util)
-NAMESPACE_BEGIN(thread)
+namespace readdy::util::thread {
 
 /**
  * counting semaphore implementation
@@ -87,10 +84,13 @@ public:
         cv.wait(lock, [this]() { return count > 0; });
     }
 
-    semaphore(const semaphore&) = delete;
-    semaphore(semaphore&&) = delete;
-    semaphore& operator=(const semaphore&) = delete;
-    semaphore& operator=(semaphore&&) = delete;
+    semaphore(const semaphore &) = delete;
+
+    semaphore(semaphore &&) = delete;
+
+    semaphore &operator=(const semaphore &) = delete;
+
+    semaphore &operator=(semaphore &&) = delete;
 
 private:
     mutable std::mutex mutex;
@@ -98,6 +98,4 @@ private:
     mutable int count;
 };
 
-NAMESPACE_END(thread)
-NAMESPACE_END(util)
-NAMESPACE_END(readdy)
+}

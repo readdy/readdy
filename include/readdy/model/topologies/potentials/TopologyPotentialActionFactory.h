@@ -45,7 +45,6 @@
 
 #pragma once
 
-#include <readdy/common/macros.h>
 #include "TopologyPotentialActions.h"
 #include "BondedPotential.h"
 #include "AnglePotential.h"

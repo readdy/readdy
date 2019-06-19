@@ -165,7 +165,7 @@ template<typename scalar>
 using ReaDDyMatrix33 = ReaDDyMatrix<3, 3, scalar, std::size_t>;
 
 template<typename scalar=double>
-class READDY_API ReaDDyVec3 {
+class ReaDDyVec3 {
     static_assert(std::is_arithmetic<scalar>::value, "scalar needs to be an arithmetic type");
 public:
     using data_arr = std::array<scalar, 3>;

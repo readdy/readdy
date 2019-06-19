@@ -45,8 +45,6 @@
 
 #pragma once
 
-
-#include <readdy/common/macros.h>
 #include <readdy/model/topologies/TopologyRecord.h>
 #include "Observable.h"
 

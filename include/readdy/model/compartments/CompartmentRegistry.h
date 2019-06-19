@@ -45,7 +45,6 @@
 
 #pragma once
 
-#include <readdy/common/macros.h>
 #include <readdy/model/ParticleTypeRegistry.h>
 #include <readdy/model/_internal/Util.h>
 #include "Compartment.h"

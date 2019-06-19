@@ -47,7 +47,6 @@
 #pragma once
 
 #include <atomic>
-#include "../macros.h"
 
 namespace readdy::util::thread {
 

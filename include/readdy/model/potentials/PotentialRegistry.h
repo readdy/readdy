@@ -45,7 +45,6 @@
 
 #pragma once
 
-#include <readdy/common/macros.h>
 #include <unordered_set>
 
 #include <readdy/common/ParticleTypeTuple.h>

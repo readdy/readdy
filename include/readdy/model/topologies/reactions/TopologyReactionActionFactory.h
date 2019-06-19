@@ -44,7 +44,6 @@
  */
 #pragma once
 
-#include <readdy/common/macros.h>
 #include "TopologyReactionAction.h"
 
 namespace readdy::model::top::reactions::actions {

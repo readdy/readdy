@@ -72,7 +72,7 @@ TEMPLATE_TEST_CASE("Test simulation loop", "[loop]", SingleCPU, CPU) {
             counter++;
         };
         auto obsHandle = simulation.registerObservable(simulation.observe().nParticles(1), increment);
-        auto shallContinue = [](readdy::time_step_type currentStep) {
+        auto shallContinue = [](readdy::TimeStep currentStep) {
             return currentStep < 5;
         };
         auto loop = simulation.createLoop(.1);
@@ -94,7 +94,7 @@ TEMPLATE_TEST_CASE("Test simulation loop", "[loop]", SingleCPU, CPU) {
             }
         };
         auto obsHandle = simulation.registerObservable(simulation.observe().nParticles(1), increment);
-        auto shallContinue = [&doStop](readdy::time_step_type currentStep) {
+        auto shallContinue = [&doStop](readdy::TimeStep currentStep) {
             return !doStop;
         };
         simulation.createLoop(1.).run(shallContinue);

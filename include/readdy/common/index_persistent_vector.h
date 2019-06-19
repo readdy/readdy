@@ -50,7 +50,7 @@
 #include <vector>
 #include <stack>
 #include <algorithm>
-#include "macros.h"
+
 #include "traits.h"
 
 namespace readdy::util {

@@ -118,7 +118,8 @@ inline obs_handle_t registerObservable_ReactionCounts(sim &self, readdy::Stride 
 
             const auto &topologyRegistry = self.context().topologyRegistry();
             for(const auto &[id, count] : countsSpatial) {
-                convertedSpatial[topologyRegistry.spatialDescriptorById(id)] = count;
+                auto reaction = topologyRegistry.spatialTopologyReactionById(id);
+                convertedSpatial[std::string(reaction.name())] = count;
             }
             for(const auto &[id, count] : countsStructural) {
                 convertedStructural[std::string(topologyRegistry.structuralNameById(id))] = count;

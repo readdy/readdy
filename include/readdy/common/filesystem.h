@@ -47,16 +47,10 @@
 
 #include <string>
 #include <memory>
-#include "macros.h"
 
 namespace readdy::util::fs {
 
-constexpr char separator =
-#if READDY_WINDOWS
-        '\\';
-#else
-        '/';
-#endif
+constexpr char separator = '/';
 
 /**
  * Directory iterator class

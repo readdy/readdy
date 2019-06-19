@@ -63,7 +63,7 @@ class TimeSeriesWriter {
 public:
     TimeSeriesWriter(h5rd::Group &group, unsigned int chunkSize, const std::string &dsName = "time",
                      bool useBlosc = true)
-            : dataSet(group.createDataSet<time_step_type>(dsName, {chunkSize}, {h5rd::UNLIMITED_DIMS},
+            : dataSet(group.createDataSet<TimeStep>(dsName, {chunkSize}, {h5rd::UNLIMITED_DIMS},
                                                           getFilterConfig(useBlosc))) {}
 
     ~TimeSeriesWriter() = default;
@@ -76,7 +76,7 @@ public:
 
     TimeSeriesWriter &operator=(TimeSeriesWriter &&) = default;
 
-    void append(const time_step_type t) {
+    void append(const TimeStep t) {
         dataSet->append({1}, &t);
     }
 

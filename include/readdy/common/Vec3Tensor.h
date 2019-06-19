@@ -46,7 +46,7 @@
 #pragma once
 
 #include <cassert>
-#include "readdy/common/macros.h"
+
 #include "ReaDDyVec3.h"
 #include "common.h"
 

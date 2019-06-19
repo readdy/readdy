@@ -46,7 +46,6 @@
 #pragma once
 
 #include <future>
-#include <readdy/common/macros.h>
 #include <readdy/common/logging.h>
 
 namespace readdy::util::thread {

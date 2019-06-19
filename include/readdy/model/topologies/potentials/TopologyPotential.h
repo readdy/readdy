@@ -44,8 +44,8 @@
  */
 
 #pragma once
-#include <readdy/common/macros.h>
-#include <readdy/model/topologies/potentials/TopologyPotentialAction.h>
+
+#include "TopologyPotentialAction.h"
 
 namespace readdy::model::top {
 class Topology;

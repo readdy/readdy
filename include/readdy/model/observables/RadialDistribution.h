@@ -46,7 +46,6 @@
 #pragma once
 
 #include <vector>
-#include <readdy/common/macros.h>
 #include <readdy/io/BloscFilter.h>
 #include "Observable.h"
 

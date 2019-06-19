@@ -45,7 +45,6 @@
 
 #pragma once
 
-#include <readdy/common/macros.h>
 #include <readdy/common/common.h>
 #include <readdy/common/ParticleTypeTuple.h>
 #include <readdy/model/topologies/TopologyParticleTypeMap.h>

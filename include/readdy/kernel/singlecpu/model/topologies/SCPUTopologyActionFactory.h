@@ -44,7 +44,7 @@
  */
 
 #pragma once
-#include <readdy/common/macros.h>
+
 #include <readdy/model/topologies/TopologyActionFactory.h>
 #include <readdy/model/topologies/reactions/TopologyReactionActionFactory.h>
 

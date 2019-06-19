@@ -43,7 +43,6 @@
 #pragma once
 
 #include <thread>
-#include <readdy/common/macros.h>
 
 namespace readdy::util::thread {
 

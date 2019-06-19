@@ -48,8 +48,6 @@
 #include <functional>
 #include <utility>
 
-#include "macros.h"
-
 namespace readdy::util {
 
 namespace detail {

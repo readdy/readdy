@@ -46,7 +46,6 @@
 #pragma once
 
 #include <string>
-#if READDY_OSX || READDY_LINUX
 #include <dlfcn.h>
 
 namespace readdy::util::dll {
@@ -93,5 +92,3 @@ struct shared_library {
 };
 
 }
-
-#endif

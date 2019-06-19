@@ -73,7 +73,7 @@ namespace observables {
 /**
  * The signal type for the observable-evaluation callback.
  */
-using signal_type = readdy::signals::signal<void(time_step_type)>;
+using signal_type = readdy::signals::signal<void(TimeStep)>;
 /**
  * Most general type of observable: A function pointer of type signal_type::slot_type.
  */
@@ -104,11 +104,11 @@ public:
      * The observable's current time step, i.e., the time step when it was last evaluated.
      * @return the observable's current time step
      */
-    time_step_type currentTimeStep() const {
+    TimeStep currentTimeStep() const {
         return t_current;
     }
 
-    void setCurrentTimeStep(time_step_type t) {
+    void setCurrentTimeStep(TimeStep t) {
         t_current = t;
     }
 
@@ -129,7 +129,7 @@ public:
      * Method that will trigger a callback with the current results if shouldExecuteCallback() is true.
      * @param t
      */
-    virtual void callback(time_step_type t) {
+    virtual void callback(TimeStep t) {
         if (shouldExecuteCallback(t)) {
             firstCall = false;
             t_current = t;
@@ -143,7 +143,7 @@ public:
      * @param t the time step
      * @return true, if we haven't been evaluated in the current time step yet and stride is 0 or a divisor of t
      */
-    virtual bool shouldExecuteCallback(time_step_type t) const {
+    virtual bool shouldExecuteCallback(TimeStep t) const {
         return (t_current != t || firstCall) && (_stride == 0 || t % _stride == 0);
     }
 
@@ -214,7 +214,7 @@ protected:
     /**
      * The current time step of the observable
      */
-    time_step_type t_current = 0;
+    TimeStep t_current = 0;
     /**
      * true if we should write to file, otherwise false
      */
@@ -274,7 +274,7 @@ public:
      * is true.
      * @param t the time step
      */
-    void callback(time_step_type t) override {
+    void callback(TimeStep t) override {
         if (shouldExecuteCallback(t)) {
             ObservableBase::callback(t);
             externalCallback(result);
@@ -323,7 +323,7 @@ public:
      * for each of its parents.
      * @param t the current time
      */
-    void callback(time_step_type t) override {
+    void callback(TimeStep t) override {
         if (ObservableBase::shouldExecuteCallback(t)) {
             readdy::util::for_each_in_tuple(parentObservables, CallbackFunctor(ObservableBase::t_current));
             ObservableBase::callback(t);
@@ -368,13 +368,13 @@ private:
         /**
          * its current time step
          */
-        time_step_type currentTimeStep;
+        TimeStep currentTimeStep;
 
         /**
          * The current time step
          * @param currentTimeStep current time
          */
-        explicit CallbackFunctor(time_step_type currentTimeStep) : currentTimeStep(currentTimeStep) {}
+        explicit CallbackFunctor(TimeStep currentTimeStep) : currentTimeStep(currentTimeStep) {}
 
         /**
          * Calling the parent observable's callback function with #currentTimeStep.

@@ -52,7 +52,7 @@ public:
         }
     }
 
-    void makeCheckpoint(model::Kernel *const kernel, time_step_type t) {
+    void makeCheckpoint(model::Kernel *const kernel, TimeStep t) {
         auto fileName = fmt::format(_checkpointTemplate, t);
         auto filePath = _basePath + "/" + fileName;
 

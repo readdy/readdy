@@ -45,8 +45,6 @@
 
 #pragma once
 
-#include <readdy/common/macros.h>
-
 #include "Topology.h"
 #include "graph/Graph.h"
 #include "reactions/reactions.h"

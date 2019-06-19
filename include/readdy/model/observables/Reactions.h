@@ -45,7 +45,6 @@
 
 #pragma once
 
-#include <readdy/common/macros.h>
 #include <readdy/model/reactions/ReactionRecord.h>
 #include "Observable.h"
 

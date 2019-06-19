@@ -44,7 +44,6 @@
 
 #pragma once
 
-#include <readdy/common/macros.h>
 #include "Topology.h"
 
 namespace readdy::model::top {

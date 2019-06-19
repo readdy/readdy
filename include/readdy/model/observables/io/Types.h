@@ -45,7 +45,6 @@
 #pragma once
 
 #include <h5rd/h5rd.h>
-#include <readdy/common/macros.h>
 
 namespace readdy::model::observables::util {
 

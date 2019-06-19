@@ -391,14 +391,14 @@ read_reactions_obs(const std::string &filename, const std::string &name) {
 
 struct TrajectoryParticle {
     TrajectoryParticle(std::string type, std::string flavor, const std::array<readdy::scalar, 3> &pos,
-                       readdy::model::Particle::id_type id, readdy::time_step_type t)
+                       readdy::model::Particle::id_type id, readdy::TimeStep t)
             : type(std::move(type)), flavor(std::move(flavor)), position(pos), id(id), t(t) {}
 
     std::string type;
     std::string flavor;
     std::array<readdy::scalar, 3> position;
     readdy::model::Particle::id_type id;
-    readdy::time_step_type t;
+    readdy::TimeStep t;
 };
 
 std::string repr(const TrajectoryParticle &p) {
@@ -412,13 +412,13 @@ std::string repr(const TrajectoryParticle &p) {
 
 using TopologyRecord = readdy::model::top::TopologyRecord;
 
-std::tuple<std::vector<readdy::time_step_type>, std::vector<std::vector<TopologyRecord>>>
+std::tuple<std::vector<readdy::TimeStep>, std::vector<std::vector<TopologyRecord>>>
 readTopologies(const std::string &filename, const std::string &groupName, std::size_t from,
                std::size_t to, std::size_t stride) {
     readdy::io::BloscFilter bloscFilter;
     bloscFilter.registerFilter();
 
-    std::vector<readdy::time_step_type> time;
+    std::vector<readdy::TimeStep> time;
     std::vector<std::vector<TopologyRecord>> result;
 
     auto f = h5rd::File::open(filename, h5rd::File::Flag::READ_ONLY);
@@ -582,7 +582,7 @@ std::vector<std::vector<TrajectoryParticle>> read_trajectory(const std::string &
     traj.read("limits", limits);
 
     // time
-    std::vector<readdy::time_step_type> time;
+    std::vector<readdy::TimeStep> time;
     traj.read("time", time);
 
     // records

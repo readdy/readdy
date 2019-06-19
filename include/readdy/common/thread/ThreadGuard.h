@@ -46,11 +46,8 @@
 #pragma once
 
 #include <thread>
-#include "../macros.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(util)
-NAMESPACE_BEGIN(thread)
+namespace readdy::util::thread {
 
 /**
  * Thread guard class that will, given a pointer to a thread, join that thread upon destruction.
@@ -101,6 +98,4 @@ public:
     }
 };
 
-NAMESPACE_END(thread)
-NAMESPACE_END(util)
-NAMESPACE_END(readdy)
+}

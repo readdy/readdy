@@ -61,7 +61,7 @@ using scalar = double;
 using Stride = std::uint32_t;
 using Vec3 = _internal::ReaDDyVec3<scalar>;
 using Matrix33 = _internal::ReaDDyMatrix33<scalar>;
-using time_step_type = unsigned long;
+using TimeStep = unsigned long;
 using ParticleTypeId = unsigned short;
 using ReactionId = std::size_t;
 // signed short as sometimes it is needed to have a "blank" topology type (corresponding to -1)
