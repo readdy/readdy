@@ -48,31 +48,8 @@
 
 namespace readdy::kernel::mpi::model {
 
-struct MPIDomain {
-    int rank;
-    int worldSize;
-    // origin and extent define the core region of the domain
-    Vec3 origin; // lower-left corner
-    Vec3 extent;
-    // these define the extended region core+halo
-    scalar haloThickness;
-    Vec3 originWithHalo;
-    Vec3 extentWithHalo;
-    std::array<std::size_t, 3> nDomains{};
-    std::array<std::size_t, 3> myIdx{}; // (ijk) indices of this domain
-    util::Index3D domainIndex; // rank of (ijk) is domainIndex(i,j,k)+1
-
-    std::size_t three{3};
-    // map from ([0-2], [0-2], [0-2]) to the index of the 27 neighbors (including self)
-    util::Index3D neighbors = util::Index3D(three, three, three);
-
-    enum NeighborType {
-        self, // is a valid neighbor, but due to periodicity it is this domain
-        nan, // not a neighbor (i.e. end of simulation box and no periodic bound.)
-        regular // neighbor is another domain ()
-    };
-    std::array<NeighborType, 27> neighborTypes{};
-    std::array<int, 27> neighborRanks{};
+class MPIDomain {
+public:
 
     MPIDomain(int rank, int worldSize, std::array<scalar, 3> minDomainWidths, const readdy::model::Context &ctx)
             : rank(rank), worldSize(worldSize), _context(std::cref(ctx)), haloThickness(ctx.calculateMaxCutoff()) {
@@ -116,21 +93,21 @@ struct MPIDomain {
         // the rest is only for workers
         if (rank != 0) {
             // find out which this ranks' ijk coordinates are, consider -1 because of master rank 0
-            myIdx = domainIndex.inverse(rank - 1);
+            _myIdx = domainIndex.inverse(rank - 1);
             for (std::size_t i = 0; i < 3; ++i) {
-                extent[i] = boxSize[i] / static_cast<scalar>(nDomains[i]);
-                origin[i] = -0.5 * boxSize[i] + myIdx[i] * extent[i];
-                originWithHalo[i] = origin[i] - haloThickness;
-                extentWithHalo[i] = extent[i] + 2 * haloThickness;
+                _extent[i] = boxSize[i] / static_cast<scalar>(nDomains[i]);
+                _origin[i] = -0.5 * boxSize[i] + _myIdx[i] * _extent[i];
+                _originWithHalo[i] = _origin[i] - haloThickness;
+                _extentWithHalo[i] = _extent[i] + 2 * haloThickness;
             }
 
             // set up neighbors, i.e. the adjacency between domains
             for (int di = -1; di < 2; ++di) {
                 for (int dj = -1; dj < 2; ++dj) {
                     for (int dk = -1; dk < 2; ++dk) {
-                        int i = myIdx[0] + di;
-                        int j = myIdx[1] + dj;
-                        int k = myIdx[2] + dk;
+                        int i = _myIdx[0] + di;
+                        int j = _myIdx[1] + dj;
+                        int k = _myIdx[2] + dk;
 
                         i = wrapDomainIdx(i, 0);
                         j = wrapDomainIdx(j, 1);
@@ -152,19 +129,19 @@ struct MPIDomain {
                             }
                         }
 
-                        auto dijk = neighbors(di + 1, dj + 1, dk + 1);
-                        neighborRanks.at(dijk) = otherRank;
-                        neighborTypes.at(dijk) = neighborType;
+                        auto dijk = _neighborIndex(di + 1, dj + 1, dk + 1);
+                        _neighborRanks.at(dijk) = otherRank;
+                        _neighborTypes.at(dijk) = neighborType;
                     }
                 }
             }
 
-            assert(neighborRanks.at(neighbors(1, 1, 1)) == rank);
+            assert(_neighborRanks.at(_neighborIndex(1, 1, 1)) == rank);
 
         } else {
             // master rank 0 must at least know how big domains are
             for (std::size_t i = 0; i < 3; ++i) {
-                extent[i] = boxSize[i] / static_cast<scalar>(nDomains[i]);
+                _extent[i] = boxSize[i] / static_cast<scalar>(nDomains[i]);
             }
         }
     }
@@ -176,17 +153,17 @@ struct MPIDomain {
               && -.5 * boxSize[2] <= pos.z && .5 * boxSize[2] > pos.z)) {
             throw std::logic_error("rankOfPosition: position was out of bounds.");
         }
-        const auto i = static_cast<std::size_t>(std::floor((pos.x + .5 * boxSize[0]) / extent.x));
-        const auto j = static_cast<std::size_t>(std::floor((pos.y + .5 * boxSize[1]) / extent.y));
-        const auto k = static_cast<std::size_t>(std::floor((pos.z + .5 * boxSize[2]) / extent.z));
+        const auto i = static_cast<std::size_t>(std::floor((pos.x + .5 * boxSize[0]) / _extent.x));
+        const auto j = static_cast<std::size_t>(std::floor((pos.y + .5 * boxSize[1]) / _extent.y));
+        const auto k = static_cast<std::size_t>(std::floor((pos.z + .5 * boxSize[2]) / _extent.z));
         return domainIndex(i, j, k);
     };
 
     bool isInDomainCore(const Vec3 &pos) const {
         if (rank != 0) {
-                return (origin.x <= pos.x and pos.x < origin.x + extent.x and
-                        origin.y <= pos.y and pos.y < origin.y + extent.y and
-                        origin.z <= pos.z and pos.z < origin.z + extent.z);
+            return (_origin.x <= pos.x and pos.x < _origin.x + _extent.x and
+                    _origin.y <= pos.y and pos.y < _origin.y + _extent.y and
+                    _origin.z <= pos.z and pos.z < _origin.z + _extent.z);
         } else {
             throw std::logic_error("Master rank 0 cannot know which domain you're referring to.");
         }
@@ -194,9 +171,9 @@ struct MPIDomain {
 
     bool isInDomainCoreOrHalo(const Vec3 &pos) const {
         if (rank != 0) {
-            return (originWithHalo.x <= pos.x and pos.x < originWithHalo.x + extentWithHalo.x and
-                    originWithHalo.y <= pos.y and pos.y < originWithHalo.y + extentWithHalo.y and
-                    originWithHalo.z <= pos.z and pos.z < originWithHalo.z + extentWithHalo.z);
+            return (_originWithHalo.x <= pos.x and pos.x < _originWithHalo.x + _extentWithHalo.x and
+                    _originWithHalo.y <= pos.y and pos.y < _originWithHalo.y + _extentWithHalo.y and
+                    _originWithHalo.z <= pos.z and pos.z < _originWithHalo.z + _extentWithHalo.z);
         } else {
             throw std::logic_error("Master rank 0 cannot know which domain you're referring to.");
         }
@@ -205,6 +182,12 @@ struct MPIDomain {
     bool isInDomainHalo(const Vec3 &pos) {
         return isInDomainCoreOrHalo(pos) and not isInDomainCore(pos);
     }
+
+    const int rank;
+    const int worldSize;
+    const scalar haloThickness;
+    std::array<std::size_t, 3> nDomains{};
+    util::Index3D domainIndex; // rank of (ijk) is domainIndex(i,j,k)+1
 
 private:
     int wrapDomainIdx(int posIdx, std::uint8_t axis) const {
@@ -237,6 +220,26 @@ private:
         return true;
     }
 
+    /** The following will only be defined for rank != 0 */
+    // origin and extent define the core region of the domain
+    Vec3 _origin; // lower-left corner
+    Vec3 _extent;
+    // these define the extended region core+halo
+    Vec3 _originWithHalo;
+    Vec3 _extentWithHalo;
+
+    std::array<std::size_t, 3> _myIdx{}; // (ijk) indices of this domain
+    const std::size_t _three{3};
+
+    // map from ([0-2], [0-2], [0-2]) to the index of the 27 neighbors (including self)
+    const util::Index3D _neighborIndex = util::Index3D(_three, _three, _three);
+    enum NeighborType {
+        self, // is a valid neighbor, but due to periodicity it is this domain
+        nan, // not a neighbor (i.e. end of simulation box and no periodic bound.)
+        regular // neighbor is another domain ()
+    };
+    std::array<NeighborType, 27> _neighborTypes{};
+    std::array<int, 27> _neighborRanks{};
     std::reference_wrapper<const readdy::model::Context> _context;
 };
 

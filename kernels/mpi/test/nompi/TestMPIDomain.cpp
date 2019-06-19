@@ -45,20 +45,22 @@
 #include <readdy/kernel/mpi/model/MPIDomain.h>
 
 TEST_CASE("Test domain decomposition", "[mpi]") {
-    // todo loop over ranks to test individual components
-    int worldSize{8};
-    int rank{0};
+    int worldSize{-1};
 
     readdy::model::Context context;
     context.particleTypes().add("A", 1.0);
+
     context.potentials().addHarmonicRepulsion("A", "A", 1.0, 2.3); // cutoff 2.3
 
-    std::array<readdy::scalar, 3> userMinDomainWidths{{2.3, 2.3, 2.3}};
-    readdy::kernel::mpi::model::MPIDomain domain(rank, worldSize, userMinDomainWidths, context);
 
-    SECTION("Test various things and stuff") {
+    SECTION("1D chain of domains, 2 workers") {
         // todo decompositions that only have one domain along one or two axes
-
+        context.boxSize() = {{}};
+        std::array<readdy::scalar, 3> userMinDomainWidths{{2.3, 2.3, 2.3}};
+        // test each rank constructing its own proper domain
+        for (int rank = 0; rank < worldSize; ++rank) {
+            readdy::kernel::mpi::model::MPIDomain domain(rank, worldSize, userMinDomainWidths, context);
+        }
     }
 
 }
