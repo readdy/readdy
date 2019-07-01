@@ -182,7 +182,7 @@ class PotentialRegistry(object):
         origin = self._units.convert(origin, self._units.length_unit)
         radius = self._units.convert(radius, self._units.length_unit)
         assert radius > 0, "radius has to be positive"
-        assert height > 0, "height has to be positive"
+        assert _np.abs(height) > 0, "magnitude of height has to be positive"
         assert width > 0, "width has to be positive"
         self._registry.add_spherical_barrier(particle_type, height, width, _v3_of(origin), radius)
 
