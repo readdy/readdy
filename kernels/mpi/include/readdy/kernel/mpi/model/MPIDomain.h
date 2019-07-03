@@ -221,6 +221,7 @@ private:
     }
 
     /** The following will only be defined for rank != 0 */
+    // todo accessors checking for rank != 0
     // origin and extent define the core region of the domain
     Vec3 _origin; // lower-left corner
     Vec3 _extent;
