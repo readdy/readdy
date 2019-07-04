@@ -170,8 +170,9 @@ py::tuple convert_readdy_viewer(const std::string &h5name, const std::string &tr
 
 void
 convert_xyz(const std::string &h5name, const std::string &trajName, const std::string &out, bool generateTcl = true,
-            bool tclRuler = false,
-            const radiusmap &radii = {}, const std::unordered_map<std::string, unsigned int> &colorIds = {}) {
+            bool tclRuler = false, const radiusmap &radii = {},
+            const std::unordered_map<std::string, unsigned int> &colorIds = {},
+            const std::array<readdy::scalar, 3> boxSize = std::array<readdy::scalar, 3>{{0.,0.,0.}}) {
     readdy::log::debug(R"(converting "{}" to "{}")", h5name, out);
 
     readdy::io::BloscFilter bloscFilter;
@@ -340,6 +341,36 @@ convert_xyz(const std::string &h5name, const std::string &trajName, const std::s
         fs << "animate goto 0" << std::endl;
         fs << "color Display Background white" << std::endl;
         fs << "molinfo top set {center_matrix} {{{1 0 0 0}{0 1 0 0}{0 0 1 0}{0 0 0 1}}}" << std::endl;
+
+        if (not (boxSize.at(0) == 0. and boxSize.at(1) == 0. and boxSize.at(2) == 0.)) {
+            readdy::log::debug("drawing simulation box of size [{} {} {}]", boxSize.at(0), boxSize.at(1), boxSize.at(2));
+
+            fs << "set x " << - boxSize.at(0) / 2. << std::endl;
+            fs << "set y " << - boxSize.at(1) / 2. << std::endl;
+            fs << "set z " << - boxSize.at(2) / 2. << std::endl;
+            fs << "set dx " << boxSize.at(0) << std::endl;
+            fs << "set dy " << boxSize.at(1) << std::endl;
+            fs << "set dz " << boxSize.at(2) << std::endl;
+            fs << "set xup [expr $x + $dx]" << std::endl;
+            fs << "set yup [expr $y + $dy]" << std::endl;
+            fs << "set zup [expr $z + $dz]" << std::endl;
+            fs << "set s solid" << std::endl;
+            fs << "set w 2" << std::endl;
+            fs << "set c 16" << std::endl;
+            fs << "graphics top color $c" << std::endl;
+            fs << R"(graphics top line "$x $y $z" "$x $y $zup" width $w style $s)" << std::endl;
+            fs << R"(graphics top line "$x $y $z" "$x $yup $z" width $w style $s)" << std::endl;
+            fs << R"(graphics top line "$x $y $z" "$xup $y $z" width $w style $s)" << std::endl;
+            fs << R"(graphics top line "$xup $y $zup" "$x $y $zup" width $w style $s)" << std::endl;
+            fs << R"(graphics top line "$xup $y $zup" "$xup $y $z" width $w style $s)" << std::endl;
+            fs << R"(graphics top line "$xup $y $zup" "$xup $yup $zup" width $w style $s)" << std::endl;
+            fs << R"(graphics top line "$x  $yup  $zup" "$x $y $zup" width $w style $s)" << std::endl;
+            fs << R"(graphics top line "$x  $yup  $zup" " $xup  $yup  $zup" width $w style $s)" << std::endl;
+            fs << R"(graphics top line "$x  $yup  $zup" "$x  $yup $z" width $w style $s)" << std::endl;
+            fs << R"(graphics top line "$xup  $yup $z" "$x  $yup $z" width $w style $s)" << std::endl;
+            fs << R"(graphics top line "$xup  $yup $z" " $xup  $yup  $zup" width $w style $s)" << std::endl;
+            fs << R"(graphics top line "$xup  $yup $z" " $xup $y $z" width $w style $s)" << std::endl;
+        }
     }
 
     readdy::log::debug("converting finished");
@@ -691,7 +722,8 @@ void exportUtils(py::module &m) {
             });
     m.def("convert_xyz", &convert_xyz, "h5_file_name"_a, "traj_data_set_name"_a, "xyz_out_file_name"_a,
           "generate_tcl"_a = true, "tcl_with_grid"_a = false, "radii"_a = radiusmap{},
-          "color_ids"_a = std::unordered_map<std::string, unsigned int>{});
+          "color_ids"_a = std::unordered_map<std::string, unsigned int>{},
+          "box_size"_a = std::array<readdy::scalar, 3>{{0.,0.,0.}});
     m.def("convert_readdyviewer", &convert_readdy_viewer, "h5_file_name"_a, "traj_data_set_name"_a,
           "begin"_a = 0, "end"_a = std::numeric_limits<int>::max(), "stride"_a = 1);
     m.def("read_trajectory", &read_trajectory, "filename"_a, "name"_a);
