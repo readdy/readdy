@@ -83,7 +83,7 @@ def convert_trajectory_to_xyz(filename, name="", xyz_filename=None, generate_tcl
     :param particle_radii: map particle radii for visualization purposes, e.g., `{"A": 10., "B": .1}`
     :param color_ids: map particle type names to tcl/vmd color ids, e.g., `{"A": 0, "B": 5}`, default uses
                       consecutive numbering
-    :param box_size: list, that determines dimensions of box to be drawn, if (0,0,0) no box is drawn
+    :param box_size: 3-tuple that determines dimensions of box to be drawn, if (0,0,0) no box is drawn
     """
     if xyz_filename is None:
         xyz_filename = filename + ".xyz"
@@ -92,7 +92,7 @@ def convert_trajectory_to_xyz(filename, name="", xyz_filename=None, generate_tcl
     if color_ids is None:
         color_ids = {}
     if box_size is None:
-        box_size = [0., 0., 0.]
+        box_size = (0., 0., 0.)
     else:
         assert len(box_size) == 3
     _convert_xyz(filename, name, xyz_filename, generate_tcl, tcl_with_grid, particle_radii, color_ids, box_size)

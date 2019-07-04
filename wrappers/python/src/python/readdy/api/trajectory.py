@@ -342,7 +342,7 @@ class Trajectory(object):
         """
         from readdy.api.utils import convert_trajectory_to_xyz as to_xyz
         if draw_box:
-            bs = self._general.box_size.tolist()
+            bs = tuple(self._general.box_size)
         else:
             bs = None
 

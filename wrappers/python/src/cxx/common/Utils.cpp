@@ -172,7 +172,7 @@ void
 convert_xyz(const std::string &h5name, const std::string &trajName, const std::string &out, bool generateTcl = true,
             bool tclRuler = false, const radiusmap &radii = {},
             const std::unordered_map<std::string, unsigned int> &colorIds = {},
-            const std::vector<readdy::scalar> boxSize = std::vector<readdy::scalar>{{0.,0.,0.}}) {
+            const std::array<readdy::scalar, 3> boxSize = std::array<readdy::scalar, 3>{{0.,0.,0.}}) {
     readdy::log::debug(R"(converting "{}" to "{}")", h5name, out);
 
     readdy::io::BloscFilter bloscFilter;
@@ -723,7 +723,7 @@ void exportUtils(py::module &m) {
     m.def("convert_xyz", &convert_xyz, "h5_file_name"_a, "traj_data_set_name"_a, "xyz_out_file_name"_a,
           "generate_tcl"_a = true, "tcl_with_grid"_a = false, "radii"_a = radiusmap{},
           "color_ids"_a = std::unordered_map<std::string, unsigned int>{},
-          "box_size"_a = std::vector<readdy::scalar>{{0.,0.,0.}});
+          "box_size"_a = std::array<readdy::scalar, 3>{{0.,0.,0.}});
     m.def("convert_readdyviewer", &convert_readdy_viewer, "h5_file_name"_a, "traj_data_set_name"_a,
           "begin"_a = 0, "end"_a = std::numeric_limits<int>::max(), "stride"_a = 1);
     m.def("read_trajectory", &read_trajectory, "filename"_a, "name"_a);
