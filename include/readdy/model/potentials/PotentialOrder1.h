@@ -57,10 +57,8 @@ namespace potentials {
 class PotentialRegistry;
 
 class PotentialOrder1 : public Potential {
-protected:
-    using particle_type_type = readdy::model::Particle::TypeId;
 public:
-    explicit PotentialOrder1(particle_type_type ptype) : _particleType(ptype) {}
+    explicit PotentialOrder1(ParticleTypeId ptype) : _particleType(ptype) {}
 
     virtual scalar calculateEnergy(const Vec3 &position) const = 0;
 
@@ -76,12 +74,12 @@ public:
         return os;
     }
 
-    particle_type_type particleType() const {
+    ParticleTypeId particleType() const {
         return _particleType;
     }
 
 protected:
-    particle_type_type _particleType;
+    ParticleTypeId _particleType;
 };
 
 }

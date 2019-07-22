@@ -36,18 +36,14 @@
 #include <readdy/model/Particle.h>
 
 /**
- * << detailed description >>
- *
  * @file Particle.cpp
- * @brief << brief description >>
+ * @brief Compilation unit of particle
  * @author clonker
  * @date 19.04.16
  */
 
-namespace readdy {
-namespace model {
+namespace readdy::model {
 
-std::atomic<Particle::Id> Particle::id_counter{0};
+std::atomic<ParticleId> Particle::idCounter{0};
 
-}
 }

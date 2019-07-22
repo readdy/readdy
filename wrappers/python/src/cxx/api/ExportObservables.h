@@ -151,8 +151,7 @@ inline obs_handle_t registerObservable_Particles(sim &self, readdy::Stride strid
     } else {
         auto internalCallback = [&self, callbackFun](const readdy::model::observables::Particles::result_type &r) mutable {
             using particle_type = std::string;
-            using particle_id_type = readdy::model::Particle::Id;
-            using result_type = std::tuple<std::vector<particle_type>, std::vector<particle_id_type>, std::vector<readdy::Vec3>>;
+            using result_type = std::tuple<std::vector<particle_type>, std::vector<readdy::ParticleId>, std::vector<readdy::Vec3>>;
             py::gil_scoped_acquire gil;
             result_type result;
             std::get<0>(result).reserve(std::get<0>(r).size());

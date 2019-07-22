@@ -54,7 +54,7 @@ namespace readdy::model::potentials {
 class HarmonicRepulsion : public PotentialOrder2 {
     using super = PotentialOrder2;
 public:
-    HarmonicRepulsion(particle_type_type type1, particle_type_type type2,
+    HarmonicRepulsion(ParticleTypeId type1, ParticleTypeId type2,
                       scalar forceConstant, scalar interactionDistance)
             : super(type1, type2), _forceConstant(forceConstant), _interactionDistance(interactionDistance),
               _interactionDistanceSquared(interactionDistance * interactionDistance) {}
@@ -117,7 +117,7 @@ public:
         const scalar desiredParticleDistance, depthAtDesiredDistance, noInteractionDistance, noInteractionDistanceSquared;
     };
 
-    WeakInteractionPiecewiseHarmonic(particle_type_type type1, particle_type_type type2,
+    WeakInteractionPiecewiseHarmonic(ParticleTypeId type1, ParticleTypeId type2,
                                      scalar forceConstant, const Configuration &config)
             : super(type1, type2), forceConstant(forceConstant), conf(config) {};
 
@@ -221,7 +221,7 @@ public:
      * @param epsilon the well depth
      * @param sigma the distance at which the inter-particle potential is zero
      */
-    LennardJones(particle_type_type type1, particle_type_type type2,
+    LennardJones(ParticleTypeId type1, ParticleTypeId type2,
                  unsigned int m, unsigned int n, scalar cutoffDistance,
                  bool shift, scalar epsilon, scalar sigma);
 
@@ -274,7 +274,7 @@ protected:
 class ScreenedElectrostatics : public PotentialOrder2 {
     using super = PotentialOrder2;
 public:
-    ScreenedElectrostatics(particle_type_type type1, particle_type_type type2, scalar electrostaticStrength,
+    ScreenedElectrostatics(ParticleTypeId type1, ParticleTypeId type2, scalar electrostaticStrength,
                            scalar inverseScreeningDepth, scalar repulsionStrength, scalar repulsionDistance,
                            unsigned int exponent, scalar cutoff);
 

@@ -52,7 +52,7 @@ namespace readdy::kernel::mpi {
  */
 struct MPIEntry {
     using Particle = readdy::model::Particle;
-    using Force = Particle::Position;
+    using Force = Vec3;
 
     explicit MPIEntry(const Particle &particle, int rank = -1)
             : pos(particle.pos()), force(Force()), type(particle.type()), deactivated(false),
@@ -68,8 +68,8 @@ struct MPIEntry {
 
     Force force;
     Particle::Position pos;
-    Particle::Id id;
-    Particle::TypeId type;
+    ParticleId id;
+    ParticleTypeId type;
     bool deactivated;
     int rank;
 };

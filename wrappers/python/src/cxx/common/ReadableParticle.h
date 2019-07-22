@@ -32,9 +32,11 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                       *
  ********************************************************************/
 
-//
-// Created by mho on 5/29/18.
-//
+/**
+ * @file ReadableParticle.h
+ * @author clonker
+ * @date 29.05.18
+ */
 
 #pragma once
 
@@ -68,7 +70,7 @@ public:
 private:
     np_array<readdy::scalar> _pos;
     std::string _type;
-    readdy::model::Particle::Id _id;
+    readdy::ParticleId _id;
 };
 
 }

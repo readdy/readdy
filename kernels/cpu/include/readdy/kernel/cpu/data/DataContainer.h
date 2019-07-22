@@ -50,10 +50,7 @@
 #include <readdy/common/signals.h>
 #include <readdy/common/Utils.h>
 
-namespace readdy {
-namespace kernel {
-namespace cpu {
-namespace data {
+namespace readdy::kernel::cpu::data {
 
 template<typename T>
 class DataContainer {
@@ -161,7 +158,7 @@ public:
         }
     };
 
-    size_type getIndexForId(Particle::Id id) const {
+    size_type getIndexForId(ParticleId id) const {
         auto find_it = std::find_if(_entries.begin(), _entries.end(), [id](const T& e) {
             return !e.deactivated && e.id == id;
         });
@@ -264,7 +261,7 @@ struct Entry {
     explicit Entry(const Particle &particle)
             : pos(particle.pos()), force(), type(particle.type()), deactivated(false), id(particle.id()) {}
 
-    Entry(Particle::Position pos, ParticleTypeId type, Particle::Id id)
+    Entry(Particle::Position pos, ParticleTypeId type, ParticleId id)
             : pos(pos), type(type), id(id), deactivated(false) {}
 
     Entry(const Entry &) = default;
@@ -280,14 +277,11 @@ struct Entry {
     Vec3 force;
     Vec3 pos;
     std::ptrdiff_t topology_index{-1};
-    Particle::Id id;
-    Particle::TypeId type;
+    ParticleId id;
+    ParticleTypeId type;
     bool deactivated;
 };
 
 using EntryDataContainer = DataContainer<Entry>;
 
-}
-}
-}
 }

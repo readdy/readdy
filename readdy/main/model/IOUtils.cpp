@@ -100,7 +100,7 @@ void writeParticleTypeInformation(h5rd::Group &group, const Context &context) {
                 .name = info.name.c_str(),
                 .type_id = info.typeId,
                 .diffusion_constant = info.diffusionConstant,
-                .flavor = [](particle_flavor v) -> const char * {
+                .flavor = [](ParticleFlavor v) -> const char * {
                     if (v == particleflavor::NORMAL) return "NORMAL";
                     if (v == particleflavor::TOPOLOGY) return "TOPOLOGY";
                     if (v == particleflavor::MEMBRANE) return "MEMBRANE";

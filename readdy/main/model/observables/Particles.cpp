@@ -47,9 +47,7 @@
 #include <readdy/model/observables/io/Types.h>
 #include <readdy/model/observables/io/TimeSeriesWriter.h>
 
-namespace readdy {
-namespace model {
-namespace observables {
+namespace readdy::model::observables {
 
 
 struct Particles::Impl {
@@ -63,12 +61,11 @@ Particles::Particles(Kernel *const kernel, Stride stride) : Observable(kernel, s
                                                                   pimpl(std::make_unique<Impl>()) {}
 
 void Particles::initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) {
-    using particle_t = readdy::model::Particle;
     h5rd::dimensions fs = {flushStride};
     h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
     auto group = file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName);
     pimpl->dataSetTypes = group.createVLENDataSet<ParticleTypeId>("types", fs, dims);
-    pimpl->dataSetIds = group.createVLENDataSet<particle_t::Id>("ids", fs, dims);
+    pimpl->dataSetIds = group.createVLENDataSet<ParticleId>("ids", fs, dims);
     pimpl->dataSetPositions = group.createVLENDataSet("positions", fs, dims,
                                                       h5rd::NativeArrayDataSetType<scalar, 3>(group.parentFile()),
                                                       h5rd::STDArrayDataSetType<scalar, 3>(group.parentFile()));
@@ -109,7 +106,4 @@ std::string_view Particles::type() const {
 
 Particles::~Particles() = default;
 
-
-}
-}
 }

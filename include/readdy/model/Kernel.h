@@ -125,7 +125,7 @@ public:
     /**
      * Adds a particle of the type "type" at position "pos".
      */
-    readdy::model::Particle::Id addParticle(const std::string &type, const Vec3 &pos) {
+    ParticleId addParticle(const std::string &type, const Vec3 &pos) {
         readdy::model::Particle particle{pos[0], pos[1], pos[2], context().particleTypes().idOf(type)};
         stateModel().addParticle(particle);
         return particle.id();

@@ -50,7 +50,7 @@
 namespace readdy::testing {
 
 struct NOOPPotentialOrder2 : public readdy::model::potentials::PotentialOrder2 {
-    NOOPPotentialOrder2(particle_type_type particleType1, particle_type_type particleType2,
+    NOOPPotentialOrder2(ParticleTypeId particleType1, ParticleTypeId particleType2,
                         readdy::scalar cutoff = 0, readdy::scalar force = 0, readdy::scalar energy = 0)
             : PotentialOrder2(particleType1, particleType2), cutoff(cutoff), force(force), energy(energy) {}
 

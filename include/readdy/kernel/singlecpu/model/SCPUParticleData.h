@@ -50,7 +50,7 @@ namespace readdy::kernel::scpu::model {
 
 struct Entry {
     using Particle = readdy::model::Particle;
-    using Force = Particle::Position;
+    using Force = Vec3;
     using Displacement = scalar;
     using TopologyIndex = std::ptrdiff_t;
 
@@ -80,8 +80,8 @@ struct Entry {
     Displacement displacement;
     Particle::Position pos;
     TopologyIndex topology_index {-1};
-    Particle::Id id;
-    Particle::TypeId type;
+    ParticleId id;
+    ParticleTypeId type;
     bool deactivated;
 };
 
@@ -97,8 +97,8 @@ public:
     using TopParticle = readdy::model::TopologyParticle;
     using Force = Particle::Position;
     using Displacement = scalar;
-    using Iterator = typename Entries::iterator;
-    using ConstIterator = typename Entries::const_iterator;
+    using iterator = typename Entries::iterator;
+    using const_iterator = typename Entries::const_iterator;
     using EntriesUpdate = std::pair<NewEntries, std::vector<EntryIndex>>;
 
     SCPUParticleData() = default;
@@ -177,27 +177,27 @@ public:
         }
     }
 
-    Iterator begin() {
+    iterator begin() {
         return entries.begin();
     }
 
-    Iterator end() {
+    iterator end() {
         return entries.end();
     }
 
-    ConstIterator cbegin() const {
+    const_iterator cbegin() const {
         return entries.cbegin();
     }
 
-    ConstIterator cend() const {
+    const_iterator cend() const {
         return entries.cend();
     }
 
-    ConstIterator begin() const {
+    const_iterator begin() const {
         return entries.begin();
     }
 
-    ConstIterator end() const {
+    const_iterator end() const {
         return entries.end();
     }
 

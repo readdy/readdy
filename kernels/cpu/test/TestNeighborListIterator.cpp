@@ -72,7 +72,7 @@ TEST_CASE("Test cpu neighbor list iterators", "[cpu]") {
             data.addParticles(particles);
         }
 
-        std::vector<model::Particle::Id> ids;
+        std::vector<ParticleId> ids;
         for(std::size_t i=0; i < n; ++i){
             ids.push_back(data.getParticle(i).id());
         }

@@ -53,9 +53,9 @@ namespace readdy::model::reactions {
 
 struct ReactionRecord {
     int type{0}; // int corresponding to the enum readdy::model::reactions::ReactionType
-    std::array<Particle::Id, 2> educts{{0, 0}};
-    std::array<Particle::Id, 2> products{{0, 0}};
-    std::array<Particle::TypeId, 2> types_from{{0, 0}};
+    std::array<ParticleId, 2> educts{{0, 0}};
+    std::array<ParticleId, 2> products{{0, 0}};
+    std::array<ParticleTypeId, 2> types_from{{0, 0}};
     Vec3 where{0, 0, 0};
     /**
      * unique reaction id

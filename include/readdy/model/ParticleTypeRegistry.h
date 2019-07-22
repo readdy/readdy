@@ -55,13 +55,13 @@
 
 namespace readdy::model {
 
-using particle_flavor = std::uint8_t;
+using ParticleFlavor = std::uint8_t;
 namespace particleflavor {
-static constexpr particle_flavor NORMAL = 0;
-static constexpr particle_flavor TOPOLOGY = 1;
-static constexpr particle_flavor MEMBRANE = 2;
+static constexpr ParticleFlavor NORMAL = 0;
+static constexpr ParticleFlavor TOPOLOGY = 1;
+static constexpr ParticleFlavor MEMBRANE = 2;
 
-inline static std::string particleFlavorToString(particle_flavor flavor) {
+inline static std::string particleFlavorToString(ParticleFlavor flavor) {
     switch (flavor) {
         case model::particleflavor::NORMAL:
             return "NORMAL";
@@ -78,11 +78,11 @@ inline static std::string particleFlavorToString(particle_flavor flavor) {
 struct ParticleTypeInfo {
     std::string name;
     scalar diffusionConstant;
-    particle_flavor flavor;
+    ParticleFlavor flavor;
     ParticleTypeId typeId;
 
     ParticleTypeInfo(const std::string &name, scalar diffusionConstant,
-                     particle_flavor flavor, Particle::TypeId typeId);
+                     ParticleFlavor flavor, ParticleTypeId typeId);
 };
 
 class ParticleTypeRegistry {
@@ -110,7 +110,7 @@ public:
         return idOf(name);
     }
 
-    void add(const std::string &name, scalar diffusionConst, particle_flavor flavor = particleflavor::NORMAL);
+    void add(const std::string &name, scalar diffusionConst, ParticleFlavor flavor = particleflavor::NORMAL);
 
     void addTopologyType(const std::string &name, scalar diffusionConst) {
         add(name, diffusionConst, particleflavor::TOPOLOGY);
@@ -120,7 +120,7 @@ public:
         return infoOf(_idOf(name));
     }
 
-    const ParticleTypeInfo &infoOf(Particle::TypeId type) const {
+    const ParticleTypeInfo &infoOf(ParticleTypeId type) const {
         return particle_info_.at(type);
     }
 

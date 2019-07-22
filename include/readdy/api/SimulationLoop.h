@@ -104,10 +104,8 @@ public:
               _initNeighborList(kernel->actions().createNeighborList(kernel->context().calculateMaxCutoff()).release()),
               _updateNeighborList(kernel->actions().updateNeighborList().release()),
               _clearNeighborList(kernel->actions().clearNeighborList().release()),
-              // todo this is ugly, but also don't want to delay construction of objects
-              _topologyReactions(
-                      kernel->name() != "MPI" ? kernel->actions().evaluateTopologyReactions(timeStep).release()
-                                              : nullptr) {}
+              _topologyReactions(kernel->supportsTopologies() ?
+              kernel->actions().evaluateTopologyReactions(timeStep).release() : nullptr) {}
 
     /**
      * This function gives access to an progressCallback function that gets called every 100 time steps if one is

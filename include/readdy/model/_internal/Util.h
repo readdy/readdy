@@ -70,9 +70,9 @@ transformTypes2(const std::vector<std::string> &types, const Context &ctx) {
     return result;
 }
 
-inline std::unordered_map<Particle::TypeId, Particle::TypeId>
+inline std::unordered_map<ParticleTypeId, ParticleTypeId>
 transformTypesMap(const std::unordered_map<std::string, std::string> &stringMap, const ParticleTypeRegistry &types) {
-    std::unordered_map<Particle::TypeId, Particle::TypeId> result;
+    std::unordered_map<ParticleTypeId, ParticleTypeId> result;
     for (const auto &pair : stringMap) {
         result.emplace(types(pair.first), types(pair.second));
     }

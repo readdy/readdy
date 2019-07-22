@@ -59,9 +59,9 @@ struct TrajectoryEntry {
     explicit TrajectoryEntry(const readdy::model::Particle &p, const readdy::model::ParticleTypeRegistry &ptr)
             : typeId(p.type()), id(p.id()), pos(p.pos()), flavor(ptr.infoOf(p.type()).flavor) {}
 
-    readdy::model::Particle::TypeId typeId{0};
-    readdy::model::Particle::Id id{0};
-    readdy::model::particle_flavor flavor{0};
+    ParticleTypeId typeId{0};
+    ParticleId id{0};
+    readdy::model::ParticleFlavor flavor{0};
     readdy::model::Particle::Position pos;
 
     friend std::ostream &operator<<(std::ostream & /*os*/, const TrajectoryEntry & /*p*/);

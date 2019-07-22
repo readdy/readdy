@@ -113,7 +113,7 @@ Vec3 getMaxExtent(const Vec3 &origin, const Vec3 &extent) {
     return result;
 }
 
-Box::Box(particle_type_type particleType, scalar forceConstant, const Vec3 &origin,
+Box::Box(ParticleTypeId particleType, scalar forceConstant, const Vec3 &origin,
                              const Vec3 &extent)
         : super(particleType), origin(origin), extent(extent), forceConstant(forceConstant),
           min(getMinExtent(origin, extent)), max(getMaxExtent(origin, extent)) {}
@@ -141,7 +141,7 @@ std::string Sphere<false>::type() const {
     return getPotentialName<Sphere<false>>();
 }
 
-SphericalBarrier::SphericalBarrier(particle_type_type particleType, scalar height, scalar width, const Vec3 &origin, scalar radius)
+SphericalBarrier::SphericalBarrier(ParticleTypeId particleType, scalar height, scalar width, const Vec3 &origin, scalar radius)
         : super(particleType), origin(origin), radius(radius), height(height), width(width), r1(radius - width), r2(radius - width / static_cast<scalar>(2.)),
           r3(radius + width / static_cast<scalar>(2.)), r4(radius + width), effectiveForceConstant(static_cast<scalar>(4.) * height / width / width) {
     if (width > radius) {
@@ -212,7 +212,7 @@ WeakInteractionPiecewiseHarmonic::Configuration::Configuration(const scalar  des
           noInteractionDistance(noInteractionDistance),
           noInteractionDistanceSquared(noInteractionDistance * noInteractionDistance) {}
 
-LennardJones::LennardJones(particle_type_type type1, particle_type_type type2,
+LennardJones::LennardJones(ParticleTypeId type1, ParticleTypeId type2,
                            unsigned int m, unsigned int n, scalar  cutoffDistance,
                            bool shift, scalar  epsilon, scalar  sigma)
         : super(type1, type2), m(m), n(n),
@@ -238,7 +238,7 @@ std::string LennardJones::type() const {
     return getPotentialName<LennardJones>();
 }
 
-ScreenedElectrostatics::ScreenedElectrostatics(particle_type_type type1, particle_type_type type2,
+ScreenedElectrostatics::ScreenedElectrostatics(ParticleTypeId type1, ParticleTypeId type2,
                                                scalar  electrostaticStrength, scalar  inverseScreeningDepth,
                                                scalar  repulsionStrength, scalar  repulsionDistance, unsigned int exponent,
                                                scalar  cutoff)
