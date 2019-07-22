@@ -99,12 +99,12 @@ public:
     explicit SimulationLoop(model::Kernel *const kernel, scalar timeStep)
             : _kernel(kernel), _timeStep(timeStep),
               _integrator(kernel->actions().eulerBDIntegrator(timeStep).release()),
-              _reactions(kernel->actions().uncontrolledApproximation(timeStep).release()),
+              _reactions(kernel->actions().gillespie(timeStep).release()),
               _forces(kernel->actions().calculateForces().release()),
               _initNeighborList(kernel->actions().createNeighborList(kernel->context().calculateMaxCutoff()).release()),
               _updateNeighborList(kernel->actions().updateNeighborList().release()),
               _clearNeighborList(kernel->actions().clearNeighborList().release()),
-              // todo this is ugly
+              // todo this is ugly, but also don't want to delay construction of objects
               _topologyReactions(
                       kernel->name() != "MPI" ? kernel->actions().evaluateTopologyReactions(timeStep).release()
                                               : nullptr) {}

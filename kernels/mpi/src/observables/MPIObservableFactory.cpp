@@ -51,28 +51,28 @@ MPIObservableFactory::MPIObservableFactory(MPIKernel *kernel) : readdy::model::o
                                                                 kernel(kernel) {}
 
 std::unique_ptr<readdy::model::observables::HistogramAlongAxis>
-MPIObservableFactory::histogramAlongAxis(stride_type stride, std::vector<scalar> binBorders,
+MPIObservableFactory::histogramAlongAxis(Stride stride, std::vector<scalar> binBorders,
                                          std::vector<std::string> typesToCount, unsigned int axis) const {
     return {std::make_unique<MPIHistogramAlongAxis>(kernel, stride, binBorders, typesToCount, axis)};
 }
 
 std::unique_ptr<readdy::model::observables::NParticles>
-MPIObservableFactory::nParticles(stride_type stride, std::vector<std::string> typesToCount) const {
+MPIObservableFactory::nParticles(Stride stride, std::vector<std::string> typesToCount) const {
     return {std::make_unique<MPINParticles>(kernel, stride, typesToCount)};
 }
 
 std::unique_ptr<readdy::model::observables::Forces>
-MPIObservableFactory::forces(stride_type stride, std::vector<std::string> typesToCount) const {
+MPIObservableFactory::forces(Stride stride, std::vector<std::string> typesToCount) const {
     return {std::make_unique<MPIForces>(kernel, stride, typesToCount)};
 }
 
 std::unique_ptr<readdy::model::observables::Positions>
-MPIObservableFactory::positions(stride_type stride, std::vector<std::string> typesToCount) const {
+MPIObservableFactory::positions(Stride stride, std::vector<std::string> typesToCount) const {
     return {std::make_unique<MPIPositions>(kernel, stride, typesToCount)};
 }
 
 std::unique_ptr<readdy::model::observables::RadialDistribution>
-MPIObservableFactory::radialDistribution(stride_type stride, std::vector<scalar> binBorders,
+MPIObservableFactory::radialDistribution(Stride stride, std::vector<scalar> binBorders,
                                          std::vector<std::string> typeCountFrom, std::vector<std::string> typeCountTo,
                                          scalar particleDensity) const {
     return {std::make_unique<readdy::model::observables::RadialDistribution>(
@@ -80,27 +80,21 @@ MPIObservableFactory::radialDistribution(stride_type stride, std::vector<scalar>
     )};
 }
 
-std::unique_ptr<readdy::model::observables::Particles> MPIObservableFactory::particles(stride_type stride) const {
+std::unique_ptr<readdy::model::observables::Particles> MPIObservableFactory::particles(Stride stride) const {
     return {std::make_unique<MPIParticles>(kernel, stride)};
 }
 
-std::unique_ptr<readdy::model::observables::Reactions> MPIObservableFactory::reactions(stride_type stride) const {
+std::unique_ptr<readdy::model::observables::Reactions> MPIObservableFactory::reactions(Stride stride) const {
     return {std::make_unique<MPIReactions>(kernel, stride)};
 }
 
-std::unique_ptr<readdy::model::observables::ReactionCounts> MPIObservableFactory::reactionCounts(stride_type stride) const {
+std::unique_ptr<readdy::model::observables::ReactionCounts> MPIObservableFactory::reactionCounts(Stride stride) const {
     return {std::make_unique<MPIReactionCounts>(kernel, stride)};
 }
 
 std::unique_ptr<readdy::model::observables::Virial>
-MPIObservableFactory::virial(stride_type stride) const {
+MPIObservableFactory::virial(Stride stride) const {
     return {std::make_unique<MPIVirial>(kernel, stride)};
-}
-
-std::unique_ptr<readdy::model::observables::MeanSquaredDisplacement>
-MPIObservableFactory::msd(stride_type stride, std::vector<std::string> typesToCount,
-                          readdy::model::observables::Particles *particlesObservable) const {
-    throw std::runtime_error("MeanSquaredDisplacement observable not available for MPI kernel");
 }
 
 }

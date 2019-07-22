@@ -46,7 +46,7 @@
 
 namespace readdy::kernel::mpi::observables {
 
-MPIVirial::MPIVirial(MPIKernel *kernel, stride_type stride) : Virial(kernel, stride), kernel(kernel) {
+MPIVirial::MPIVirial(MPIKernel *kernel, Stride stride) : Virial(kernel, stride), kernel(kernel) {
 }
 
 void MPIVirial::evaluate() {
@@ -207,7 +207,11 @@ MPIReactionCounts::MPIReactionCounts(MPIKernel *kernel, unsigned int stride) : R
 
 void MPIReactionCounts::evaluate() {
     // @todo MPI gather results, only save on master rank
-    result = kernel->getMPIKernelStateModel().reactionCounts();
+    std::get<0>(result) = kernel->getMPIKernelStateModel().reactionCounts();
+
+    // no topologies currently on MPI
+    //std::get<1>(result) = kernel->getMPIKernelStateModel().spatialReactionCounts();
+    //std::get<2>(result) = kernel->getMPIKernelStateModel().structuralReactionCounts();
 }
 
 

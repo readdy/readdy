@@ -58,7 +58,7 @@ public:
 
     using Data = MPIDataContainer;
     using Particle = readdy::model::Particle;
-    using ReactionCountsMap = readdy::model::reactions::reaction_counts_map;
+    using ReactionCountsMap = readdy::model::reactions::ReactionCounts;
     using NeighborList = model::CellLinkedList;
 
     MPIStateModel(Data &data, const readdy::model::Context &context);

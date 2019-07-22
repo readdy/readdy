@@ -54,7 +54,7 @@ namespace observables {
 
 class MPIVirial : public readdy::model::observables::Virial {
 public:
-    MPIVirial(MPIKernel *kernel, stride_type stride);
+    MPIVirial(MPIKernel *kernel, Stride stride);
 
     void evaluate() override;
 
