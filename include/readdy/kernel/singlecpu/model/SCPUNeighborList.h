@@ -58,11 +58,11 @@ class BoxIterator;
 
 class CellLinkedList {
 public:
-    using data_type = readdy::kernel::scpu::model::SCPUParticleData;
+    using data_type = readdy::kernel::scpu::model::SCPUParticleData<Entry>;
     using cell_radius_type = std::uint8_t;
     using HEAD = std::vector<std::size_t>;
     using LIST = std::vector<std::size_t>;
-    using entry_cref = const data_type::entry_type &;
+    using entry_cref = const data_type::EntryType &;
     using pair_callback = std::function<void(entry_cref, entry_cref)>;
 
     using iterator_bounds = std::tuple<std::size_t, std::size_t>;

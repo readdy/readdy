@@ -35,7 +35,7 @@
 
 /**
  * @file Compartments.h
- * @brief Header file of CPU program Compartments
+ * @brief Header file of CPU Action Compartments
  * @author chrisfroe
  * @date 18.10.16
  */

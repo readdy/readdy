@@ -40,7 +40,7 @@
  * @brief << brief description >>
  * @author clonker
  * @date 04.10.17
- * @copyright GPL-3
+ * @copyright BSD-3
  */
 
 #pragma once
@@ -65,8 +65,8 @@ struct ReadableReactionRecord {
 
     std::string type;
     std::string reaction_label;
-    std::vector<readdy::model::Particle::id_type> educts;
-    std::vector<readdy::model::Particle::id_type> products;
+    std::vector<readdy::ParticleId> educts;
+    std::vector<readdy::ParticleId> products;
     readdy::Vec3::data_arr where;
 
     friend std::ostream &operator<<(std::ostream &os, const ReadableReactionRecord &rrr);

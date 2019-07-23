@@ -40,7 +40,7 @@
  * @brief << brief description >>
  * @author clonker
  * @date 14.09.17
- * @copyright GPL-3
+ * @copyright BSD-3
  */
 
 #pragma once
@@ -138,7 +138,7 @@ public:
         return {};
     }
 
-    void displace(size_type index, const Particle::pos_type &delta) override {
+    void displace(size_type index, const Particle::Position &delta) override {
         auto &entry = _entries.at(index);
         entry.pos += delta;
         bcs::fixPosition(entry.pos, _context.get().boxSize().data(),

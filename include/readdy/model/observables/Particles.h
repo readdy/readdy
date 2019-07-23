@@ -51,7 +51,7 @@
 namespace readdy::model::observables {
 
 class Particles
-        : public Observable<std::tuple<std::vector<readdy::model::Particle::type_type>, std::vector<readdy::model::Particle::id_type>, std::vector<Vec3>>> {
+        : public Observable<std::tuple<std::vector<ParticleTypeId>, std::vector<ParticleId>, std::vector<Vec3>>> {
 public:
     explicit Particles(Kernel *kernel, Stride stride = 1);
 

@@ -84,7 +84,7 @@ import matplotlib.pyplot as plt
 import readdy._internal as api
 
 __author__ = "chrisfroe"
-__license__ = "LGPL"
+__license__ = "BSD-3"
 
 # these are varied by the user
 factor_keys = ["n_particles", "box_length", "diff", "skin", "reaction_rate"]

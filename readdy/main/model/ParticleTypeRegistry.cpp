@@ -51,11 +51,11 @@ namespace model {
 
 
 ParticleTypeInfo::ParticleTypeInfo(const std::string &name, const scalar diffusionConstant,
-                                   const particle_flavor flavor, const Particle::type_type typeId)
+                                   const ParticleFlavor flavor, const ParticleTypeId typeId)
         : name(name), diffusionConstant(diffusionConstant), flavor(flavor), typeId(typeId) {}
 
 
-void ParticleTypeRegistry::add(const std::string &name, const scalar diffusionConst, const particle_flavor flavor) {
+void ParticleTypeRegistry::add(const std::string &name, const scalar diffusionConst, const ParticleFlavor flavor) {
     util::validateTypeName(name);
     {
         if(diffusionConst < 0) {

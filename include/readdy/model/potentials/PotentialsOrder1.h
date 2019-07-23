@@ -56,7 +56,7 @@ namespace readdy::model::potentials {
 class Box : public PotentialOrder1 {
     using super = PotentialOrder1;
 public:
-    Box(particle_type_type particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &extent);
+    Box(ParticleTypeId particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &extent);
 
     const Vec3 &getOrigin() const {
         return origin;
@@ -111,7 +111,7 @@ template<bool inclusion>
 class Sphere : public PotentialOrder1 {
     using super = PotentialOrder1;
 public:
-    Sphere(particle_type_type particleType, scalar forceConstant, const Vec3 &origin, scalar radius)
+    Sphere(ParticleTypeId particleType, scalar forceConstant, const Vec3 &origin, scalar radius)
             : super(particleType), origin(origin), radius(radius), forceConstant(forceConstant) {}
 
     scalar calculateEnergy(const Vec3 &position) const override {
@@ -147,7 +147,7 @@ public:
 
     std::string describe() const override {
         std::string inOrOut = inclusion ? "inclusion" : "exclusion";
-        return fmt::format("Spherical {} potential with origin={}, radius={}, and force constant k={}",
+        return fmt::format("Spherical {} potential with origin={}, radius={}, and Force constant k={}",
                            inOrOut, origin, radius, forceConstant);
     }
 
@@ -166,7 +166,7 @@ protected:
 class SphericalBarrier : public PotentialOrder1 {
     using super = PotentialOrder1;
 public:
-    SphericalBarrier(particle_type_type particleType, scalar height, scalar width, const Vec3 &origin, scalar radius);
+    SphericalBarrier(ParticleTypeId particleType, scalar height, scalar width, const Vec3 &origin, scalar radius);
 
     readdy::scalar calculateEnergy(const Vec3 &position) const override {
         const auto difference = position - origin;
@@ -223,7 +223,7 @@ template<bool inclusion>
 class Cylinder : public PotentialOrder1 {
     using super = PotentialOrder1;
 public:
-    Cylinder(particle_type_type particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &normal,
+    Cylinder(ParticleTypeId particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &normal,
              scalar radius) : super(particleType), forceConstant(forceConstant),
                               origin(origin), normal(normal / normal.norm()), radius(radius) {};
 
@@ -262,7 +262,7 @@ public:
 
     std::string describe() const override {
         std::string inOrOut = inclusion ? "inclusion" : "exclusion";
-        return fmt::format("Cylindrical {} potential with force constant={}, origin={}, normal={}, and radius={}",
+        return fmt::format("Cylindrical {} potential with Force constant={}, origin={}, normal={}, and radius={}",
                            inOrOut, forceConstant, origin, normal, radius);
     }
 

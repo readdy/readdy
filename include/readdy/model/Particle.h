@@ -57,16 +57,14 @@ namespace readdy::model {
 class Particle {
 public:
 
-    using id_type = unsigned long;
-    using pos_type = Vec3;
-    using type_type = ParticleTypeId;
+    using Position = Vec3;
 
-    Particle(scalar x, scalar y, scalar z, type_type type)
-            : _id(std::atomic_fetch_add<unsigned long>(&id_counter, 1L)), _pos(x, y, z), _type(type) {};
+    Particle(scalar x, scalar y, scalar z, ParticleTypeId type)
+            : _id(std::atomic_fetch_add<unsigned long>(&idCounter, 1L)), _pos(x, y, z), _type(type) {};
 
-    Particle(Vec3 pos, type_type type) : _pos(pos), _type(type), _id(std::atomic_fetch_add<id_type>(&id_counter, 1)) {}
+    Particle(Vec3 pos, ParticleTypeId type) : _pos(pos), _type(type), _id(std::atomic_fetch_add<ParticleId>(&idCounter, 1)) {}
 
-    Particle(Vec3 pos, type_type type, id_type id) : _pos(pos), _type(type), _id(id) {}
+    Particle(Vec3 pos, ParticleTypeId type, ParticleId id) : _pos(pos), _type(type), _id(id) {}
 
     Particle(const Particle &) = default;
 
@@ -86,11 +84,11 @@ public:
         return _pos;
     }
 
-    const type_type &type() const {
+    const ParticleTypeId &type() const {
         return _type;
     }
 
-    const id_type id() const {
+    const ParticleId id() const {
         return _id;
     }
 
@@ -107,16 +105,16 @@ public:
         return os;
     }
 
-    static id_type nextId() {
-        return std::atomic_fetch_add<id_type>(&id_counter, 1);
+    static ParticleId nextId() {
+        return std::atomic_fetch_add<ParticleId>(&idCounter, 1);
     }
 
 protected:
     Vec3 _pos;
-    type_type _type;
-    id_type _id;
+    ParticleTypeId _type;
+    ParticleId _id;
 
-    static std::atomic<id_type> id_counter;
+    static std::atomic<ParticleId> idCounter;
 };
 
 class TopologyParticle : public Particle {

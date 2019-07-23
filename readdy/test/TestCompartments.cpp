@@ -35,7 +35,7 @@
 
 /**
  * @file TestCompartments.cpp
- * @brief Test implementation-independent execution of program 'Compartments'
+ * @brief Test implementation-independent execution of Action 'Compartments'
  * @author chrisfroe
  * @date 18.10.16
  */
@@ -66,7 +66,7 @@ TEMPLATE_TEST_CASE("Test compartments.", "[compartments]", SingleCPU, CPU) {
         auto &&obs = kernel->observe().nParticles(1, typesToCount);
         obs->evaluate();
         const auto &resultBefore = obs->getResult();
-        INFO("Expect one A particle before program execution");
+        INFO("Expect one A particle before action execution");
         REQUIRE(resultBefore[0] == 1);
         REQUIRE(resultBefore[1] == 0);
 
@@ -75,7 +75,7 @@ TEMPLATE_TEST_CASE("Test compartments.", "[compartments]", SingleCPU, CPU) {
 
         obs->evaluate();
         const auto &resultAfter = obs->getResult();
-        INFO("Expect zero A particle after program execution");
+        INFO("Expect zero A particle after action execution");
         REQUIRE(resultAfter[0] == 0);
         REQUIRE(resultAfter[1] == 1);
     }

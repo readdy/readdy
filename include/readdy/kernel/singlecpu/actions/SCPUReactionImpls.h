@@ -66,7 +66,7 @@ protected:
 };
 
 struct Event {
-    using index_type = model::SCPUParticleData::entry_index;
+    using index_type = model::SCPUParticleData<model::Entry>::EntryIndex;
     using reaction_index_type = std::size_t;
     std::uint8_t nEducts;
     std::uint8_t nProducts;
@@ -98,7 +98,7 @@ protected:
 
 struct ParticleBackup {
     std::uint8_t nParticles; // either 1 or 2
-    using index_type = model::SCPUParticleData::entry_index;
+    using index_type = model::SCPUParticleData<model::Entry>::EntryIndex;
     index_type idx1, idx2;
     ParticleTypeId t1, t2;
     Vec3 pos1, pos2;
@@ -108,7 +108,7 @@ struct ParticleBackup {
 };
 
 class SCPUDetailedBalance : public readdy::model::actions::reactions::DetailedBalance {
-    using scpu_data = readdy::kernel::scpu::model::SCPUParticleData;
+    using scpu_data = readdy::kernel::scpu::model::SCPUParticleData<model::Entry>;
     using fix_pos = readdy::model::Context::fix_pos_fun;
     using reaction_type = readdy::model::reactions::ReactionType;
 public:
@@ -125,14 +125,14 @@ protected:
     // calculate first-order interactions and second-order non-bonded interactions
     void calculateEnergies();
 
-    std::pair<model::SCPUParticleData::entries_update, scalar>
+    std::pair<model::SCPUParticleData<model::Entry>::EntriesUpdate, scalar>
     performReversibleReactionEvent(const Event &event,
                                    const readdy::model::actions::reactions::ReversibleReactionConfig *reversibleReaction,
                                    const readdy::model::reactions::Reaction *reaction, reaction_record *record);
 
-    model::SCPUParticleData::entries_update
+    model::SCPUParticleData<model::Entry>::EntriesUpdate
     generateBackwardUpdate(const ParticleBackup &particleBackup,
-                           const std::vector<model::SCPUParticleData::entry_index> &updateRecord) const;
+                           const std::vector<model::SCPUParticleData<model::Entry>::EntryIndex> &updateRecord) const;
 
     std::pair<const readdy::model::actions::reactions::ReversibleReactionConfig *, const readdy::model::reactions::Reaction *>
     findReversibleReaction(const Event &event);

@@ -44,7 +44,7 @@ PROJECT(readdy_main C CXX)
 SET(READDY_CREATE_TEST_TARGET ON CACHE BOOL "Determines if the test target should be added.")
 SET(READDY_CREATE_MEMORY_CHECK_TEST_TARGET OFF CACHE BOOL "Determines if valgrind test targets should be added. Requires the cache variable READDY_CREATE_TEST_TARGET to be ON.")
 SET(READDY_INSTALL_UNIT_TEST_EXECUTABLE OFF CACHE BOOL "Determines if the unit test executable should be installed. Requires the cache variable READDY_CREATE_TEST_TARGET to be ON.")
-SET(READDY_KERNELS_TO_TEST "SingleCPU,CPU" CACHE STRING "Variable holding which kernels should be tested in the core library.")
+SET(READDY_KERNELS_TO_TEST "SingleCPU,CPU,MPI" CACHE STRING "Variable holding which kernels should be tested in the core library.")
 
 # build single libraries or as a single shared library holding the whole thing
 SET(READDY_BUILD_SHARED_COMBINED OFF CACHE BOOL "Determines if one single shared library or shared libraries with respect to the components should be built")
@@ -60,6 +60,9 @@ SET(READDY_GENERATE_DOCUMENTATION_TARGET_ONLY OFF CACHE BOOL "If set to true, th
 
 # log configuration variables of interest
 SET(READDY_LOG_CMAKE_CONFIGURATION OFF CACHE BOOL "If turned on, the status of relevant cmake variables is logged at configuration time.")
+
+# build the mpi kernel
+set(READDY_BUILD_MPI_KERNEL OFF CACHE BOOL "Whether to build the MPI kernel or not")
 
 #####################################
 #                                   #

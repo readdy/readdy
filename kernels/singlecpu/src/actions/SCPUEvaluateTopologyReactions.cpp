@@ -40,7 +40,7 @@
  * @brief << brief description >>
  * @author clonker
  * @date 12.06.17
- * @copyright GPL-3
+ * @copyright BSD-3
  */
 
 #include <readdy/kernel/singlecpu/actions/SCPUEvaluateTopologyReactions.h>

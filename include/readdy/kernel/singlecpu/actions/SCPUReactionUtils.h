@@ -54,7 +54,7 @@ namespace actions {
 namespace reactions {
 
 using scpu_model = readdy::kernel::scpu::SCPUStateModel;
-using scpu_data = readdy::kernel::scpu::model::SCPUParticleData;
+using scpu_data = readdy::kernel::scpu::model::SCPUParticleData<model::Entry>;
 using reaction_type = readdy::model::reactions::ReactionType;
 using context = readdy::model::Context;
 using fix_pos = context::fix_pos_fun;
@@ -62,8 +62,8 @@ using reaction_record = readdy::model::reactions::ReactionRecord;
 
 template<typename Reaction>
 void performReaction(
-        scpu_data &data, scpu_data::entry_index idx1, scpu_data::entry_index idx2, scpu_data::new_entries &newEntries,
-        std::vector<scpu_data::entry_index> &decayedEntries, Reaction *reaction, const readdy::model::Context& context, reaction_record* record) {
+        scpu_data &data, scpu_data::EntryIndex idx1, scpu_data::EntryIndex idx2, scpu_data::NewEntries &newEntries,
+        std::vector<scpu_data::EntryIndex> &decayedEntries, Reaction *reaction, const readdy::model::Context& context, reaction_record* record) {
     //const auto& fixPos = context.fixPositionFun();
     //const auto& shortestDifferenceFun = context.shortestDifferenceFun();
     const auto &box = context.boxSize().data();

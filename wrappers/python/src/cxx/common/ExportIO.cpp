@@ -38,7 +38,7 @@
  * @brief File containing binding points to the readdy.io module
  * @author clonker
  * @date 13.12.16
- * @copyright GPL-3
+ * @copyright BSD-3
  */
 
 

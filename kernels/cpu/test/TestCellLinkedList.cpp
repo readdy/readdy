@@ -85,7 +85,7 @@ TEMPLATE_TEST_CASE("Test cpu cell linked list", "[cpu]", CompactCLL, ContiguousC
 
     SECTION("Insertion") {
 
-        std::vector<model::Particle::id_type> particleIds;
+        std::vector<ParticleId> particleIds;
         std::for_each(data.begin(), data.end(), [&] (const auto &entry){ particleIds.push_back(entry.id); });
 
         std::unique_ptr<TestType> cll = std::make_unique<TestType>(data, context, pool);

@@ -114,10 +114,9 @@ public:
     };
 
     /**
-     * Returns a vector containing all available program names for this specific kernel instance.
+     * Returns a vector containing all available action names for this specific kernel instance.
      *
-     * @see createProgram(name)
-     * @return The program names.
+     * @return The action names.
      */
     virtual std::vector<std::string> getAvailableActions() const {
         return actions().getAvailableActions();
@@ -126,7 +125,7 @@ public:
     /**
      * Adds a particle of the type "type" at position "pos".
      */
-    readdy::model::Particle::id_type addParticle(const std::string &type, const Vec3 &pos) {
+    ParticleId addParticle(const std::string &type, const Vec3 &pos) {
         readdy::model::Particle particle{pos[0], pos[1], pos[2], context().particleTypes().idOf(type)};
         stateModel().addParticle(particle);
         return particle.id();

@@ -47,11 +47,7 @@
 #include <readdy/model/Particle.h>
 #include <readdy/model/reactions/Reaction.h>
 
-namespace readdy {
-namespace kernel {
-namespace cpu {
-namespace actions {
-namespace reactions {
+namespace readdy::kernel::cpu::actions::reactions {
 struct Event {
     using index_type = std::size_t;
     using reaction_index_type = std::size_t;
@@ -59,7 +55,7 @@ struct Event {
     std::uint8_t nProducts;
     index_type idx1, idx2;
     reaction_index_type reactionIndex;
-    readdy::model::Particle::type_type t1, t2;
+    ParticleTypeId t1, t2;
     readdy::scalar rate;
     readdy::scalar cumulativeRate;
 
@@ -69,8 +65,4 @@ struct Event {
     friend std::ostream &operator<<(std::ostream &, const Event &);
 
 };
-}
-}
-}
-}
 }

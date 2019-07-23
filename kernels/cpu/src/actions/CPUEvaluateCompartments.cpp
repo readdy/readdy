@@ -35,7 +35,7 @@
 
 /**
  * @file Compartments.cpp
- * @brief Implementation of CPU program Compartments
+ * @brief Implementation of CPU Action Compartments
  * @author chrisfroe
  * @date 18.10.16
  */

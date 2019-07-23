@@ -126,7 +126,7 @@ TEMPLATE_TEST_CASE("Test state model", "[state-model]", SingleCPU, CPU) {
         auto particlesB = std::vector<m::Particle> {
                 m::Particle(0, 0, 0.1, typeIdB), m::Particle(-1.8, -4.0, 1.8, typeIdB), m::Particle(0.5, 0, 0, typeIdB)
         };
-        std::vector<m::Particle::id_type> ids;
+        std::vector<readdy::ParticleId> ids;
         {
             std::for_each(particlesA.begin(), particlesA.end(), [&ids](const m::Particle& p) { ids.push_back(p.id());});
             std::for_each(particlesB.begin(), particlesB.end(), [&ids](const m::Particle& p) { ids.push_back(p.id());});

@@ -40,7 +40,7 @@
  * @brief << brief description >>
  * @author clonker
  * @date 20.07.17
- * @copyright GPL-3
+ * @copyright BSD-3
  */
 
 #include <pybind11/pybind11.h>
@@ -422,13 +422,13 @@ read_reactions_obs(const std::string &filename, const std::string &name) {
 
 struct TrajectoryParticle {
     TrajectoryParticle(std::string type, std::string flavor, const std::array<readdy::scalar, 3> &pos,
-                       readdy::model::Particle::id_type id, readdy::TimeStep t)
+                       readdy::ParticleId id, readdy::TimeStep t)
             : type(std::move(type)), flavor(std::move(flavor)), position(pos), id(id), t(t) {}
 
     std::string type;
     std::string flavor;
     std::array<readdy::scalar, 3> position;
-    readdy::model::Particle::id_type id;
+    readdy::ParticleId id;
     readdy::TimeStep t;
 };
 

@@ -180,7 +180,7 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
             context.potentials().addSphere("A", forceConstant, origin, radius, true);
             // record ids to get data-structure-indexes of the two particles later on
             auto pObs = kernel->observe().particles(1);
-            std::vector<readdy::model::Particle::id_type> ids;
+            std::vector<readdy::ParticleId> ids;
             pObs->callback() = [&ids](const readdy::model::observables::Particles::result_type &result) {
                 const auto &recordedIds = std::get<1>(result);
                 ids.insert(ids.end(), recordedIds.begin(), recordedIds.end());
@@ -227,7 +227,7 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
             context.potentials().addSphericalBarrier("A", height, width, origin, radius);
             // record ids to get data-structure-indexes of the two particles later on
             auto pObs = kernel->observe().particles(1);
-            std::vector<readdy::model::Particle::id_type> ids;
+            std::vector<readdy::ParticleId> ids;
             pObs->callback() = [&ids](const readdy::model::observables::Particles::result_type &result) {
                 const auto &recordedIds = std::get<1>(result);
                 ids.insert(ids.end(), recordedIds.begin(), recordedIds.end());
@@ -274,7 +274,7 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
             context.potentials().addCylinder("A", forceConstant, origin, normal, radius, true);
             // record ids to get data-structure-indexes of the two particles later on
             auto pObs = kernel->observe().particles(1);
-            std::vector<readdy::model::Particle::id_type> ids;
+            std::vector<readdy::ParticleId> ids;
             pObs->callback() = [&ids](const readdy::model::observables::Particles::result_type &result) {
                 const auto &recordedIds = std::get<1>(result);
                 ids.insert(ids.end(), recordedIds.begin(), recordedIds.end());
@@ -332,7 +332,7 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
             context.potentials().addCylinder("A", forceConstant, origin, normal, radius, false);
             // record ids to get data-structure-indexes of the two particles later on
             auto pObs = kernel->observe().particles(1);
-            std::vector<readdy::model::Particle::id_type> ids;
+            std::vector<readdy::ParticleId> ids;
             pObs->callback() = [&ids](const readdy::model::observables::Particles::result_type &result) {
                 const auto &recordedIds = std::get<1>(result);
                 ids.insert(ids.end(), recordedIds.begin(), recordedIds.end());
@@ -397,7 +397,7 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
 
             // record ids
             auto pObs = kernel->observe().particles(1);
-            std::vector<readdy::model::Particle::id_type> ids;
+            std::vector<readdy::ParticleId> ids;
             pObs->callback() = [&ids](const readdy::model::observables::Particles::result_type& result) {
                 const auto& recordedIds = std::get<1>(result);
                 ids.insert(ids.end(), recordedIds.begin(), recordedIds.end());
@@ -464,7 +464,7 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
                                                            repulsionStrength, sigma, exponent, cutoff);
             // record ids to get data-structure-indexes of the two particles later on
             auto pObs = kernel->observe().particles(1);
-            std::vector<readdy::model::Particle::id_type> ids;
+            std::vector<readdy::ParticleId> ids;
             pObs->callback() = [&ids](const readdy::model::observables::Particles::result_type &result) {
                 const auto &recordedIds = std::get<1>(result);
                 ids.insert(ids.end(), recordedIds.begin(), recordedIds.end());

@@ -40,7 +40,7 @@
  * @brief << brief description >>
  * @author clonker
  * @date 15.09.17
- * @copyright GPL-3
+ * @copyright BSD-3
  */
 
 #include <catch2/catch.hpp>
@@ -72,7 +72,7 @@ TEST_CASE("Test cpu neighbor list iterators", "[cpu]") {
             data.addParticles(particles);
         }
 
-        std::vector<model::Particle::id_type> ids;
+        std::vector<ParticleId> ids;
         for(std::size_t i=0; i < n; ++i){
             ids.push_back(data.getParticle(i).id());
         }

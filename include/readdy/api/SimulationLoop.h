@@ -34,7 +34,7 @@
 
 
 /**
- * Vital parts of the scheme api are defined in this header. First of all, there is the SimulationScheme. Its task is
+ * Vital parts of the loop api are defined in this header. First of all, there is the SimulationScheme. Its task is
  * to execute an integrator(action), a force(action), a reaction scheduler(action) and a neighborList (action)
  * in a certain way. One example would be the ReaDDyScheme, which will configure the context, then:
  *
@@ -54,8 +54,8 @@
  *  The configurator makes use of the builder pattern and either sets default values or not, depending on
  *  its constructor argument.
  *
- * @file SimulationScheme.h
- * @brief Header file containing the SchemeConfigurator<T> and a corresponding SimulationScheme superclass definition.
+ * @file SimulationLoop.h
+ * @brief Header file containing the SchemeConfigurator<T> and a corresponding SimulationLoop superclass definition.
  * @author clonker
  * @author chrisfroe
  * @date 23.08.16
@@ -78,7 +78,7 @@
 namespace readdy::api {
 
 /**
- * superclass for all simulation schemes
+ * superclass for all simulation loops
  */
 class SimulationLoop {
 public:
@@ -104,7 +104,8 @@ public:
               _initNeighborList(kernel->actions().createNeighborList(kernel->context().calculateMaxCutoff()).release()),
               _updateNeighborList(kernel->actions().updateNeighborList().release()),
               _clearNeighborList(kernel->actions().clearNeighborList().release()),
-              _topologyReactions(kernel->actions().evaluateTopologyReactions(timeStep).release()) {}
+              _topologyReactions(kernel->supportsTopologies() ?
+              kernel->actions().evaluateTopologyReactions(timeStep).release() : nullptr) {}
 
     /**
      * This function gives access to an progressCallback function that gets called every 100 time steps if one is

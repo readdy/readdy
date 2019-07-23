@@ -44,8 +44,7 @@
 
 #include <readdy/api/KernelConfiguration.h>
 
-namespace readdy {
-namespace conf {
+namespace readdy::conf {
 
 namespace cpu {
 void to_json(json &j, const NeighborList &nl) {
@@ -88,13 +87,42 @@ void from_json(const json &j, Configuration &conf) {
 }
 
 void to_json(json &j, const Configuration &conf) {
-    j = json {{"CPU", conf.cpu}};
+    j = json{{"CPU", conf.cpu},
+             {"MPI", conf.mpi}};
 }
 void from_json(const json &j, Configuration &conf) {
     if(j.find("CPU") != j.end()) {
         conf.cpu = j.at("CPU").get<cpu::Configuration>();
     }
+    if(j.find("MPI") != j.end()) {
+        conf.mpi = j.at("MPI").get<mpi::Configuration>();
+    }
 }
 
+namespace mpi {
+void to_json(json &j, const Configuration &conf) {
+    j = json{{"dx", conf.dx},
+             {"dy", conf.dy},
+             {"dz", conf.dz}};
 }
+
+void from_json(const json &j, Configuration &conf) {
+    if (j.find("dx") != j.end()) {
+        conf.dx = j.at("dx").get<scalar>();
+    } else {
+        conf.dx = {};
+    }
+    if (j.find("dy") != j.end()) {
+        conf.dy = j.at("dy").get<scalar>();
+    } else {
+        conf.dy = {};
+    }
+    if (j.find("dz") != j.end()) {
+        conf.dz = j.at("dz").get<scalar>();
+    } else {
+        conf.dz = {};
+    }
+}
+}
+
 }

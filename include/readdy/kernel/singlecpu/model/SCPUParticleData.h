@@ -34,9 +34,7 @@
 
 
 /**
- * << detailed description >>
- *
- * @file SingleCPUParticleData.h
+ * @file SCPUParticleData.h
  * @brief << brief description >>
  * @author clonker
  * @date 03.06.16
@@ -48,22 +46,16 @@
 #include <vector>
 #include <readdy/model/Particle.h>
 
-namespace readdy {
-namespace kernel {
-namespace scpu {
-namespace model {
-
-class SCPUParticleData;
+namespace readdy::kernel::scpu::model {
 
 struct Entry {
-    using entries_vector = std::vector<Entry>;
-    using particle_type = readdy::model::Particle;
-    using force_type = particle_type::pos_type;
-    using displacement_type = scalar;
-    using topology_index_type = std::ptrdiff_t;
+    using Particle = readdy::model::Particle;
+    using Force = Vec3;
+    using Displacement = scalar;
+    using TopologyIndex = std::ptrdiff_t;
 
-    explicit Entry(const particle_type &particle)
-            : pos(particle.pos()), force(force_type()), type(particle.type()), deactivated(false),
+    explicit Entry(const Particle &particle)
+            : pos(particle.pos()), force(Force()), type(particle.type()), deactivated(false),
               displacement(0), id(particle.id()) {}
 
     Entry(const Entry &) = default;
@@ -80,33 +72,34 @@ struct Entry {
         return deactivated;
     }
 
-    const particle_type::pos_type &position() const {
+    const Particle::Position &position() const {
         return pos;
     }
 
-    force_type force;
-    displacement_type displacement;
-    particle_type::pos_type pos;
-    topology_index_type topology_index {-1};
-    particle_type::id_type id;
-    particle_type::type_type type;
+    Force force;
+    Displacement displacement;
+    Particle::Position pos;
+    TopologyIndex topology_index {-1};
+    ParticleId id;
+    ParticleTypeId type;
     bool deactivated;
 };
 
+template<typename Entry>
 class SCPUParticleData {
 public:
 
-    using entry_type = Entry;
-    using entries_vec = std::vector<Entry>;
-    using entry_index = entries_vec::size_type;
-    using new_entries = std::vector<Entry>;
-    using particle_type = readdy::model::Particle;
-    using top_particle_type = readdy::model::TopologyParticle;
-    using force = particle_type::pos_type;
-    using displacement = scalar;
-    using iterator = entries_vec::iterator;
-    using const_iterator = entries_vec::const_iterator;
-    using entries_update = std::pair<new_entries, std::vector<entry_index>>;
+    using EntryType = Entry;
+    using Entries = std::vector<Entry>;
+    using EntryIndex = typename Entries::size_type;
+    using NewEntries = std::vector<Entry>;
+    using Particle = readdy::model::Particle;
+    using TopParticle = readdy::model::TopologyParticle;
+    using Force = Particle::Position;
+    using Displacement = scalar;
+    using iterator = typename Entries::iterator;
+    using const_iterator = typename Entries::const_iterator;
+    using EntriesUpdate = std::pair<NewEntries, std::vector<EntryIndex>>;
 
     SCPUParticleData() = default;
     SCPUParticleData(const SCPUParticleData&) = delete;
@@ -115,17 +108,23 @@ public:
     SCPUParticleData& operator=(SCPUParticleData&&) = default;
     ~SCPUParticleData() = default;
 
-    readdy::model::Particle getParticle(entry_index index) const;
+    readdy::model::Particle getParticle(EntryIndex index) const {
+        const auto& entry = *(entries.begin() + index);
+        if(entry.deactivated) {
+            log::error("Requested deactivated particle at index {}!", index);
+        }
+        return toParticle(entry);
+    };
 
     readdy::model::Particle toParticle(const Entry &e) const {
         return readdy::model::Particle(e.pos, e.type, e.id);
     }
 
-    void addParticle(const particle_type &particle) {
+    void addParticle(const Particle &particle) {
         addParticles({particle});
     }
 
-    void addParticles(const std::vector<particle_type> &particles) {
+    void addParticles(const std::vector<Particle> &particles) {
         for(const auto& p : particles) {
             if(!_blanks.empty()) {
                 const auto idx = _blanks.back();
@@ -137,9 +136,35 @@ public:
         }
     }
 
-    std::vector<entries_vec::size_type> addTopologyParticles(const std::vector<top_particle_type> &particles);
+    std::vector<typename Entries::size_type> addTopologyParticles(const std::vector<TopParticle> &particles) {
+        std::vector<typename Entries::size_type> indices;
+        indices.reserve(particles.size());
+        for(const auto& p : particles) {
+            if(!_blanks.empty()) {
+                const auto idx = _blanks.back();
+                _blanks.pop_back();
+                entries.at(idx) = Entry{p};
+                indices.push_back(idx);
+            } else {
+                indices.push_back(entries.size());
+                entries.emplace_back(p);
+            }
+        }
+        return indices;
+    };
 
-    void removeParticle(const particle_type &particle);
+    void removeParticle(const Particle &particle) {
+        auto it_entries = begin();
+        std::size_t idx = 0;
+        for(; it_entries != end(); ++it_entries, ++idx) {
+            if(!it_entries->is_deactivated() && it_entries->id == particle.id()) {
+                _blanks.push_back(idx);
+                it_entries->deactivated = true;
+                return;
+            }
+        }
+        log::error("Tried to remove particle ({}) which did not exist or was already deactivated!", particle);
+    };
 
     void removeParticle(size_t index) {
         auto& p = *(entries.begin() + index);
@@ -176,15 +201,15 @@ public:
         return entries.end();
     }
 
-    Entry &entry_at(entry_index idx) {
+    Entry &entry_at(EntryIndex idx) {
         return entries.at(idx);
     }
 
-    entry_index size() const {
+    EntryIndex size() const {
         return entries.size();
     }
 
-    entry_index n_deactivated() const {
+    EntryIndex n_deactivated() const {
         return _blanks.size();
     }
 
@@ -197,15 +222,15 @@ public:
         _blanks.clear();
     }
 
-    const Entry &entry_at(entry_index idx) const {
+    const Entry &entry_at(EntryIndex idx) const {
         return entries.at(idx);
     }
 
-    const Entry &centry_at(entry_index idx) const {
+    const Entry &centry_at(EntryIndex idx) const {
         return entries.at(idx);
     }
 
-    entry_index addEntry(Entry entry) {
+    EntryIndex addEntry(Entry entry) {
         if(!_blanks.empty()) {
             const auto idx = _blanks.back();
             _blanks.pop_back();
@@ -216,23 +241,49 @@ public:
         return entries.size()-1;
     }
 
-    void removeEntry(entry_index entry);
+    void removeEntry(EntryIndex idx) {
+        auto &entry = entries.at(idx);
+        if(!entry.is_deactivated()) {
+            entry.deactivated = true;
+            _blanks.push_back(idx);
+        }
+    };
 
-    std::vector<entry_index> update(entries_update&&);
+    std::vector<EntryIndex> update(EntriesUpdate&& update_data) {
+        std::vector<EntryIndex> result;
+
+        auto &&newEntries = std::move(std::get<0>(update_data));
+        auto &&removedEntries = std::move(std::get<1>(update_data));
+        result.reserve(newEntries.size());
+
+        auto it_del = removedEntries.begin();
+        for(const auto& newEntry : newEntries) {
+            if(it_del != removedEntries.end()) {
+                entries.at(*it_del) = newEntry;
+                result.push_back(*it_del);
+                ++it_del;
+            } else {
+                result.push_back(addEntry(newEntry));
+            }
+        }
+        while(it_del != removedEntries.end()) {
+            removeEntry(*it_del);
+            ++it_del;
+        }
+
+        return result;
+    };
     
-    const std::vector<entry_index> &blanks() const {
+    const std::vector<EntryIndex> &blanks() const {
         return _blanks;
     }
 
 protected:
 
-    entries_vec entries;
-    std::vector<entry_index> _blanks;
+    Entries entries;
+    std::vector<EntryIndex> _blanks;
 
 };
 
 
-}
-}
-}
 }

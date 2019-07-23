@@ -39,7 +39,7 @@
  * @brief << brief description >>
  * @author clonker
  * @date 14.09.17
- * @copyright GPL-3
+ * @copyright BSD-3
  */
 
 #pragma once
@@ -50,10 +50,7 @@
 #include <readdy/common/signals.h>
 #include <readdy/common/Utils.h>
 
-namespace readdy {
-namespace kernel {
-namespace cpu {
-namespace data {
+namespace readdy::kernel::cpu::data {
 
 template<typename T>
 class DataContainer {
@@ -161,7 +158,7 @@ public:
         }
     };
 
-    size_type getIndexForId(Particle::id_type id) const {
+    size_type getIndexForId(ParticleId id) const {
         auto find_it = std::find_if(_entries.begin(), _entries.end(), [id](const T& e) {
             return !e.deactivated && e.id == id;
         });
@@ -207,7 +204,7 @@ public:
         return _entries.at(index);
     }
 
-    const Particle::pos_type &pos(size_type index) const {
+    const Particle::Position &pos(size_type index) const {
         return _entries.at(index).pos;
     };
 
@@ -221,7 +218,7 @@ public:
 
     virtual std::vector<size_type> update(DataUpdate &&) = 0;
 
-    virtual void displace(size_type entry, const Particle::pos_type &delta) = 0;
+    virtual void displace(size_type entry, const Particle::Position &delta) = 0;
 
     void blanks_moved_to_end() {
         auto n_blanks = _blanks.size();
@@ -264,7 +261,7 @@ struct Entry {
     explicit Entry(const Particle &particle)
             : pos(particle.pos()), force(), type(particle.type()), deactivated(false), id(particle.id()) {}
 
-    Entry(Particle::pos_type pos, ParticleTypeId type, Particle::id_type id)
+    Entry(Particle::Position pos, ParticleTypeId type, ParticleId id)
             : pos(pos), type(type), id(id), deactivated(false) {}
 
     Entry(const Entry &) = default;
@@ -280,14 +277,11 @@ struct Entry {
     Vec3 force;
     Vec3 pos;
     std::ptrdiff_t topology_index{-1};
-    Particle::id_type id;
-    Particle::type_type type;
+    ParticleId id;
+    ParticleTypeId type;
     bool deactivated;
 };
 
 using EntryDataContainer = DataContainer<Entry>;
 
-}
-}
-}
 }
