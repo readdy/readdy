@@ -134,11 +134,14 @@ TEST_CASE("Test domain decomposition", "[mpi]") {
         }
     }
 
-    SECTION("1D chain of domain dimers, periodic in xy") {
+    SECTION("Check one position in (4 by 2 by 1) domains, periodic in xy") {
         context.boxSize() = {{20., 10., 1.}};
         context.periodicBoundaryConditions() = {{true, true, false}};
         std::array<readdy::scalar, 3> userMinDomainWidths{{4.6, 4.6, 4.6}};
         int worldSize = 1 + (4 * 2 * 1);
+        std::size_t posCount {0};
+        readdy::Vec3 pos {{-8., -4., 0.49}};
+        int south, north, west, east, northwest, southwest;
         for (int rank = 0; rank < worldSize; ++rank) {
             readdy::kernel::mpi::model::MPIDomain domain(rank, worldSize, userMinDomainWidths, context);
             REQUIRE(domain.worldSize == 9);
@@ -146,7 +149,36 @@ TEST_CASE("Test domain decomposition", "[mpi]") {
             REQUIRE(domain.domainIndex()(0, 0, 0) == 0);
             REQUIRE(domain.rank == rank);
             REQUIRE(domain.haloThickness == context.calculateMaxCutoff());
+            if (rank != 0) {
+                if (domain.isInDomainCore(pos)) {
+                    posCount++;
+
+                    south = domain.neighborRanks()[domain.neighborIndex(1,0,1)];
+                    north = domain.neighborRanks()[domain.neighborIndex(1,2,1)];
+                    west =  domain.neighborRanks()[domain.neighborIndex(0,1,1)];
+                    east =  domain.neighborRanks()[domain.neighborIndex(2,1,1)];
+                    northwest =  domain.neighborRanks()[domain.neighborIndex(0,2,1)];
+                    southwest =  domain.neighborRanks()[domain.neighborIndex(0,0,1)];
+
+                    REQUIRE(northwest == southwest); // due to periodicity
+                    REQUIRE(north == south); // due to periodicity
+                }
+            }
         }
+        REQUIRE(posCount == 1); // can only be in one domain core
+        
+        // todo specify if global or local position
+
+        readdy::kernel::mpi::model::MPIDomain southDomain(south, worldSize, userMinDomainWidths, context);
+        REQUIRE(southDomain.isInDomainHalo(pos));
+        readdy::kernel::mpi::model::MPIDomain northDomain(north, worldSize, userMinDomainWidths, context);
+        REQUIRE(northDomain.isInDomainHalo(pos));
+        readdy::kernel::mpi::model::MPIDomain westDomain(west, worldSize, userMinDomainWidths, context);
+        REQUIRE(westDomain.isInDomainHalo(pos));
+        readdy::kernel::mpi::model::MPIDomain eastDomain(east, worldSize, userMinDomainWidths, context);
+        REQUIRE_FALSE(eastDomain.isInDomainHalo(pos));
+        readdy::kernel::mpi::model::MPIDomain nwDomain(northwest, worldSize, userMinDomainWidths, context);
+        REQUIRE(nwDomain.isInDomainHalo(pos));
     }
 
     SECTION("Periodic in a direction (here y) which has only one domain") {

@@ -185,22 +185,22 @@ public:
         }
     }
 
-    int rankOfGlobalPosition(const Vec3 &pos) const {
+    int rankOfGlobalPosition(const Vec3 &globalPos) const {
         const auto &boxSize = _context.get().boxSize();
-        if (!(-.5 * boxSize[0] <= pos.x && .5 * boxSize[0] > pos.x
-              && -.5 * boxSize[1] <= pos.y && .5 * boxSize[1] > pos.y
-              && -.5 * boxSize[2] <= pos.z && .5 * boxSize[2] > pos.z)) {
-            throw std::logic_error(fmt::format("rankOfGlobalPosition: position {} was out of bounds.", pos));
+        if (!(-.5 * boxSize[0] <= globalPos.x && .5 * boxSize[0] > globalPos.x
+              && -.5 * boxSize[1] <= globalPos.y && .5 * boxSize[1] > globalPos.y
+              && -.5 * boxSize[2] <= globalPos.z && .5 * boxSize[2] > globalPos.z)) {
+            throw std::logic_error(fmt::format("rankOfGlobalPosition: position {} was out of bounds.", globalPos));
         }
-        const auto i = static_cast<std::size_t>(std::floor((pos.x + .5 * boxSize[0]) / _extent.x));
-        const auto j = static_cast<std::size_t>(std::floor((pos.y + .5 * boxSize[1]) / _extent.y));
-        const auto k = static_cast<std::size_t>(std::floor((pos.z + .5 * boxSize[2]) / _extent.z));
+        const auto i = static_cast<std::size_t>(std::floor((globalPos.x + .5 * boxSize[0]) / _extent.x));
+        const auto j = static_cast<std::size_t>(std::floor((globalPos.y + .5 * boxSize[1]) / _extent.y));
+        const auto k = static_cast<std::size_t>(std::floor((globalPos.z + .5 * boxSize[2]) / _extent.z));
         return _domainIndex(i, j, k) + 1;
     };
 
     /** periodicity aware version of rankOfGlobalPosition,
      * which accounts for halo region, i.e. the position can be in extended space boxSize+haloThickness*/
-    int rankOfPosition(const Vec3 &pos) const {
+    int rankOfPosition(const Vec3 &localPos) const {
         validateRankNotMaster();
         const auto &boxSize = _context.get().boxSize();
         const auto &pbc = _context.get().periodicBoundaryConditions();
@@ -211,16 +211,16 @@ public:
         const auto yUpper = pbc[1] ? .5 * boxSize[1] + haloThickness : .5 * boxSize[1];
         const auto zLower = pbc[2] ? -.5 * boxSize[2] - haloThickness : -.5 * boxSize[2];
         const auto zUpper = pbc[2] ? .5 * boxSize[2] + haloThickness : .5 * boxSize[2];
-        if (!(xLower <= pos.x && xUpper > pos.x
-              && yLower <= pos.y && yUpper > pos.y
-              && zLower <= pos.z && zUpper > pos.z)) {
+        if (!(xLower <= localPos.x && xUpper > localPos.x
+              && yLower <= localPos.y && yUpper > localPos.y
+              && zLower <= localPos.z && zUpper > localPos.z)) {
             throw std::logic_error(
                     fmt::format("rankOfPosition: position {} was out of extended bounds (boxSize + haloThickness).",
-                                pos));
+                                localPos));
         }
-        int i = static_cast<std::size_t>(std::floor((pos.x + .5 * boxSize[0]) / _extent.x));
-        int j = static_cast<std::size_t>(std::floor((pos.y + .5 * boxSize[1]) / _extent.y));
-        int k = static_cast<std::size_t>(std::floor((pos.z + .5 * boxSize[2]) / _extent.z));
+        int i = static_cast<std::size_t>(std::floor((localPos.x + .5 * boxSize[0]) / _extent.x));
+        int j = static_cast<std::size_t>(std::floor((localPos.y + .5 * boxSize[1]) / _extent.y));
+        int k = static_cast<std::size_t>(std::floor((localPos.z + .5 * boxSize[2]) / _extent.z));
         i = wrapDomainIdx(i, 0);
         j = wrapDomainIdx(j, 1);
         k = wrapDomainIdx(k, 2);
@@ -234,15 +234,33 @@ public:
                 _origin.z <= pos.z and pos.z < _origin.z + _extent.z);
     }
 
+    // here pos is
     bool isInDomainCoreOrHalo(const Vec3 &pos) const {
         validateRankNotMaster();
+        // need to consider wrapped position if it is at the edge of the box
+        // (i.e. in the outer shell with haloThickness of the box)
+        
         return (_originWithHalo.x <= pos.x and pos.x < _originWithHalo.x + _extentWithHalo.x and
                 _originWithHalo.y <= pos.y and pos.y < _originWithHalo.y + _extentWithHalo.y and
                 _originWithHalo.z <= pos.z and pos.z < _originWithHalo.z + _extentWithHalo.z);
     }
+    
+    bool isInOuterGlobalHalo(const Vec3 &pos) const {
+        // todo
+        
+    }
 
     bool isInDomainHalo(const Vec3 &pos) const {
         return isInDomainCoreOrHalo(pos) and not isInDomainCore(pos);
+    }
+    
+    /** Convert global position (contained in box) into local frame, which may exceed the box.
+     *  This only takes care of periodicity on the edge of the whole simulation box. Without periodicity
+     *  this operation is the identity. */
+    Vec3 globalToLocal(const Vec3 &globalPos) const {
+        readdy::Vec3 localPos(globalPos);
+        
+        return localPos;
     }
 
     const Vec3 &origin() const {

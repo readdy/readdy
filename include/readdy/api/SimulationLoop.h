@@ -99,13 +99,18 @@ public:
     explicit SimulationLoop(model::Kernel *const kernel, scalar timeStep)
             : _kernel(kernel), _timeStep(timeStep),
               _integrator(kernel->actions().eulerBDIntegrator(timeStep).release()),
-              _reactions(kernel->actions().gillespie(timeStep).release()),
+              _reactions(
+                      kernel->supportsGillespie() ?
+                      static_cast<readdy::model::actions::TimeStepDependentAction *>(
+                              kernel->actions().gillespie(timeStep).release()) :
+                      static_cast<readdy::model::actions::TimeStepDependentAction *>(
+                              kernel->actions().uncontrolledApproximation(timeStep).release())),
               _forces(kernel->actions().calculateForces().release()),
               _initNeighborList(kernel->actions().createNeighborList(kernel->context().calculateMaxCutoff()).release()),
               _updateNeighborList(kernel->actions().updateNeighborList().release()),
               _clearNeighborList(kernel->actions().clearNeighborList().release()),
               _topologyReactions(kernel->supportsTopologies() ?
-              kernel->actions().evaluateTopologyReactions(timeStep).release() : nullptr) {}
+                                 kernel->actions().evaluateTopologyReactions(timeStep).release() : nullptr) {}
 
     /**
      * This function gives access to an progressCallback function that gets called every 100 time steps if one is

@@ -118,6 +118,10 @@ public:
     readdy::model::top::TopologyActionFactory *const getTopologyActionFactory() override {
         return nullptr;
     };
+    
+    bool supportsGillespie() const override {
+        return false;
+    }
 
 protected:
     int rank;
