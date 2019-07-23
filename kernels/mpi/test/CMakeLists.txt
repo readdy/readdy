@@ -42,7 +42,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC readdy readdy_kernel_mpi Catch2::Ca
 set_target_properties(${PROJECT_NAME} PROPERTIES
         LINK_FLAGS "${EXTRA_LINK_FLAGS}"
         COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}")
-catch_discover_tests(${PROJECT_NAME})
+#catch_discover_tests(${PROJECT_NAME})
 
 if (READDY_INSTALL_UNIT_TEST_EXECUTABLE)
     install(TARGETS ${PROJECT_NAME}
