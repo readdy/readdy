@@ -48,53 +48,49 @@ TEST_CASE("Test domain decomposition", "[mpi]") {
     readdy::model::Context context;
     context.particleTypes().add("A", 1.0);
     context.potentials().addHarmonicRepulsion("A", "A", 1.0, 2.3); // cutoff 2.3
-    
-    SECTION("Test wrapIntoThisHalo") {
-        // todo
-    }
 
     SECTION("1D chain of domains") {
-        context.boxSize() = {{10., 1., 1.}};
-        context.periodicBoundaryConditions() = {{true, false, false}};
+        context.boxSize() = {10., 1., 1.};
+        context.periodicBoundaryConditions() = {true, false, false};
         // user given values should be at least twice the cutoff
-        std::array<readdy::scalar, 3> userMinDomainWidths{{4.6, 4.6, 4.6}};
+        std::array<readdy::scalar, 3> userMinDomainWidths{4.6, 4.6, 4.6};
         // expecting two workers, boxsize will be split in half, and one master rank -> 3
         int worldSize = 3;
 
         for (int rank = 0; rank < worldSize; ++rank) {
             readdy::kernel::mpi::model::MPIDomain domain(rank, worldSize, userMinDomainWidths, context);
-            REQUIRE(domain.worldSize == 3);
-            REQUIRE(domain.nDomains() == std::array<std::size_t, 3>({{2, 1, 1}}));
-            REQUIRE(domain.domainIndex()(0, 0, 0) == 0);
-            REQUIRE(domain.rank == rank);
-            REQUIRE(domain.haloThickness == context.calculateMaxCutoff());
+            CHECK(domain.worldSize == 3);
+            CHECK(domain.nDomains() == std::array<std::size_t, 3>({2, 1, 1}));
+            CHECK(domain.domainIndex()(0, 0, 0) == 0);
+            CHECK(domain.rank == rank);
+            CHECK(domain.haloThickness == context.calculateMaxCutoff());
             if (rank != 0) {
-                readdy::Vec3 five{{4.99 - 5., 0., 0.}};
-                readdy::Vec3 twoandahalf{{2.5 - 5., 0., 0.}};
-                readdy::Vec3 six{{5.01 - 5., 0., 0.}};
-                readdy::Vec3 sevenandahalf{{7.5 - 5., 0., 0.}};
+                readdy::Vec3 five{4.99 - 5., 0., 0.};
+                readdy::Vec3 twoandahalf{2.5 - 5., 0., 0.};
+                readdy::Vec3 six{5.01 - 5., 0., 0.};
+                readdy::Vec3 sevenandahalf{7.5 - 5., 0., 0.};
 
                 if (domain.isInDomainCore(five) or domain.isInDomainCore(twoandahalf)) {
                     // if either of them is in domain, both must be in domain
-                    REQUIRE(domain.isInDomainCore(five));
-                    REQUIRE(domain.isInDomainCore(twoandahalf));
+                    CHECK(domain.isInDomainCore(five));
+                    CHECK(domain.isInDomainCore(twoandahalf));
 
                     // six is not in this domain but very close
-                    REQUIRE(domain.isInDomainHalo(six));
+                    CHECK(domain.isInDomainHalo(six));
                     // sevenandahalf however is too far in the next domain, and thus not in this ones' halo, nor core
-                    REQUIRE_FALSE(domain.isInDomainHalo(sevenandahalf));
-                    REQUIRE_FALSE(domain.isInDomainCoreOrHalo(sevenandahalf));
-                    REQUIRE_FALSE(domain.isInDomainCore(sevenandahalf));
+                    CHECK_FALSE(domain.isInDomainHalo(sevenandahalf));
+                    CHECK_FALSE(domain.isInDomainCoreOrHalo(sevenandahalf));
+                    CHECK_FALSE(domain.isInDomainCore(sevenandahalf));
                 }
 
                 if (domain.isInDomainCore(six) or domain.isInDomainCore(sevenandahalf)) {
-                    REQUIRE(domain.isInDomainCore(six));
-                    REQUIRE(domain.isInDomainCore(sevenandahalf));
+                    CHECK(domain.isInDomainCore(six));
+                    CHECK(domain.isInDomainCore(sevenandahalf));
 
-                    REQUIRE(domain.isInDomainHalo(five));
-                    REQUIRE_FALSE(domain.isInDomainHalo(twoandahalf));
-                    REQUIRE_FALSE(domain.isInDomainCoreOrHalo(twoandahalf));
-                    REQUIRE_FALSE(domain.isInDomainCore(twoandahalf));
+                    CHECK(domain.isInDomainHalo(five));
+                    CHECK_FALSE(domain.isInDomainHalo(twoandahalf));
+                    CHECK_FALSE(domain.isInDomainCoreOrHalo(twoandahalf));
+                    CHECK_FALSE(domain.isInDomainCore(twoandahalf));
                 }
             }
             // check neighborhood
@@ -102,15 +98,15 @@ TEST_CASE("Test domain decomposition", "[mpi]") {
             if (rank != 0) {
                 auto otherRank = rank == 1 ? 2 : 1;
                 // neighborIndex (2,1,1) is the neighbor in the west (x+dx, y, z)
-                REQUIRE(domain.neighborRanks()[domain.neighborIndex(1 + 1, 1, 1)] == otherRank);
+                CHECK(domain.neighborRanks()[domain.neighborIndex(1 + 1, 1, 1)] == otherRank);
                 // (0, 1, 1) is the neighbor in the east
-                REQUIRE(domain.neighborRanks()[domain.neighborIndex(1 - 1, 1, 1)] == otherRank);
+                CHECK(domain.neighborRanks()[domain.neighborIndex(1 - 1, 1, 1)] == otherRank);
                 // "neighbor" (1,1,1) is this domain/rank
-                REQUIRE(domain.neighborRanks()[domain.neighborIndex(1, 1, 1)] == rank);
+                CHECK(domain.neighborRanks()[domain.neighborIndex(1, 1, 1)] == rank);
 
-                REQUIRE(domain.neighborTypes()[domain.neighborIndex(1 + 1, 1, 1)] == NeighborType::regular);
-                REQUIRE(domain.neighborTypes()[domain.neighborIndex(1 - 1, 1, 1)] == NeighborType::regular);
-                REQUIRE(domain.neighborTypes()[domain.neighborIndex(1, 1, 1)] == NeighborType::self);
+                CHECK(domain.neighborTypes()[domain.neighborIndex(1 + 1, 1, 1)] == NeighborType::regular);
+                CHECK(domain.neighborTypes()[domain.neighborIndex(1 - 1, 1, 1)] == NeighborType::regular);
+                CHECK(domain.neighborTypes()[domain.neighborIndex(1, 1, 1)] == NeighborType::self);
 
                 // all other neighbors do not exist -> ranks -1, types nan
                 for (int i = 0; i < 3; ++i) {
@@ -120,8 +116,8 @@ TEST_CASE("Test domain decomposition", "[mpi]") {
                             if ((not(i == 1 and j == 1 and k == 1))
                                 and (not(i == 0 and j == 1 and k == 1))
                                 and (not(i == 2 and j == 1 and k == 1))) {
-                                REQUIRE(domain.neighborRanks()[domain.neighborIndex(i, j, k)] == -1);
-                                REQUIRE(domain.neighborTypes()[domain.neighborIndex(i, j, k)] == NeighborType::nan);
+                                CHECK(domain.neighborRanks()[domain.neighborIndex(i, j, k)] == -1);
+                                CHECK(domain.neighborTypes()[domain.neighborIndex(i, j, k)] == NeighborType::nan);
                             }
                         }
                     }
@@ -130,101 +126,99 @@ TEST_CASE("Test domain decomposition", "[mpi]") {
         }
 
         SECTION("Rong user given domain widths") {
-            std::array<readdy::scalar, 3> incompatibleDomainWidths{{2.2, 4.6, 4.6}};
+            std::array<readdy::scalar, 3> incompatibleDomainWidths{2.2, 4.6, 4.6};
             auto ctor = [&]() {
                 readdy::kernel::mpi::model::MPIDomain domain(0, 4 + 1, incompatibleDomainWidths, context);
             };
-            REQUIRE_THROWS(ctor());
+            CHECK_THROWS(ctor());
         }
     }
 
     SECTION("Check one position in (4 by 2 by 1) domains, periodic in xy") {
-        context.boxSize() = {{20., 10., 1.}};
-        context.periodicBoundaryConditions() = {{true, true, false}};
-        std::array<readdy::scalar, 3> userMinDomainWidths{{4.6, 4.6, 4.6}};
+        context.boxSize() = {20., 10., 1.};
+        context.periodicBoundaryConditions() = {true, true, false};
+        std::array<readdy::scalar, 3> userMinDomainWidths{4.6, 4.6, 4.6};
         int worldSize = 1 + (4 * 2 * 1);
-        std::size_t posCount {0};
-        readdy::Vec3 pos {{-8., -4., 0.49}};
+        std::size_t posCount{0};
+        readdy::Vec3 pos{-8., -4., 0.49};
         int south, north, west, east, northwest, southwest;
         for (int rank = 0; rank < worldSize; ++rank) {
             readdy::kernel::mpi::model::MPIDomain domain(rank, worldSize, userMinDomainWidths, context);
-            REQUIRE(domain.worldSize == 9);
-            REQUIRE(domain.nDomains() == std::array<std::size_t, 3>({{4, 2, 1}}));
-            REQUIRE(domain.domainIndex()(0, 0, 0) == 0);
-            REQUIRE(domain.rank == rank);
-            REQUIRE(domain.haloThickness == context.calculateMaxCutoff());
+            CHECK(domain.worldSize == 9);
+            CHECK(domain.nDomains() == std::array<std::size_t, 3>({4, 2, 1}));
+            CHECK(domain.domainIndex()(0, 0, 0) == 0);
+            CHECK(domain.rank == rank);
+            CHECK(domain.haloThickness == context.calculateMaxCutoff());
             if (rank != 0) {
                 if (domain.isInDomainCore(pos)) {
                     posCount++;
 
-                    west =  domain.neighborRanks()[domain.neighborIndex(0,1,1)];
-                    east =  domain.neighborRanks()[domain.neighborIndex(2,1,1)];
-                    south = domain.neighborRanks()[domain.neighborIndex(1,0,1)];
-                    north = domain.neighborRanks()[domain.neighborIndex(1,2,1)];
-                    northwest =  domain.neighborRanks()[domain.neighborIndex(0,2,1)];
-                    southwest =  domain.neighborRanks()[domain.neighborIndex(0,0,1)];
+                    west = domain.neighborRanks()[domain.neighborIndex(0, 1, 1)];
+                    east = domain.neighborRanks()[domain.neighborIndex(2, 1, 1)];
+                    south = domain.neighborRanks()[domain.neighborIndex(1, 0, 1)];
+                    north = domain.neighborRanks()[domain.neighborIndex(1, 2, 1)];
+                    northwest = domain.neighborRanks()[domain.neighborIndex(0, 2, 1)];
+                    southwest = domain.neighborRanks()[domain.neighborIndex(0, 0, 1)];
 
-                    REQUIRE(northwest == southwest); // due to periodicity
-                    REQUIRE(north == south); // due to periodicity
+                    CHECK(northwest == southwest); // due to periodicity
+                    CHECK(north == south); // due to periodicity
                 }
             }
         }
-        REQUIRE(posCount == 1); // can only be in one domain core
-
-        // todo specify if global or local position
+        CHECK(posCount == 1); // can only be in one domain core
 
         readdy::kernel::mpi::model::MPIDomain southDomain(south, worldSize, userMinDomainWidths, context);
-        REQUIRE(southDomain.isInDomainHalo(pos));
+        CHECK(southDomain.isInDomainHalo(pos));
         readdy::kernel::mpi::model::MPIDomain northDomain(north, worldSize, userMinDomainWidths, context);
-        REQUIRE(northDomain.isInDomainHalo(pos));
+        CHECK(northDomain.isInDomainHalo(pos));
         readdy::kernel::mpi::model::MPIDomain westDomain(west, worldSize, userMinDomainWidths, context);
-        REQUIRE(westDomain.isInDomainHalo(pos));
+        CHECK(westDomain.isInDomainHalo(pos));
         readdy::kernel::mpi::model::MPIDomain eastDomain(east, worldSize, userMinDomainWidths, context);
-        REQUIRE_FALSE(eastDomain.isInDomainHalo(pos));
+        CHECK_FALSE(eastDomain.isInDomainHalo(pos));
         readdy::kernel::mpi::model::MPIDomain nwDomain(northwest, worldSize, userMinDomainWidths, context);
-        REQUIRE(nwDomain.isInDomainHalo(pos));
+        CHECK(nwDomain.isInDomainHalo(pos));
     }
 
     SECTION("Periodic in a direction (here y) which has only one domain") {
-        context.boxSize() = {{10., 5., 1.}};
-        context.periodicBoundaryConditions() = {{true, true, false}};
+        context.boxSize() = {10., 5., 1.};
+        context.periodicBoundaryConditions() = {true, true, false};
         // user given values should be at least twice the cutoff
-        std::array<readdy::scalar, 3> userMinDomainWidths{{4.6, 4.6, 4.6}};
+        std::array<readdy::scalar, 3> userMinDomainWidths{4.6, 4.6, 4.6};
         int worldSize = 3;
         for (int rank = 0; rank < worldSize; ++rank) {
             readdy::kernel::mpi::model::MPIDomain domain(rank, worldSize, userMinDomainWidths, context);
-            REQUIRE(domain.worldSize == 3);
-            REQUIRE(domain.nDomains() == std::array<std::size_t, 3>({{2, 1, 1}}));
-            REQUIRE(domain.domainIndex()(0, 0, 0) == 0);
-            REQUIRE(domain.rank == rank);
-            REQUIRE(domain.haloThickness == context.calculateMaxCutoff());
+            CHECK(domain.worldSize == 3);
+            CHECK(domain.nDomains() == std::array<std::size_t, 3>({2, 1, 1}));
+            CHECK(domain.domainIndex()(0, 0, 0) == 0);
+            CHECK(domain.rank == rank);
+            CHECK(domain.haloThickness == context.calculateMaxCutoff());
             if (rank != 0) {
-                readdy::Vec3 five{{4.99 - 5., -0.1, 0.}};
-                readdy::Vec3 twoandahalf{{2.5 - 5., -0.1, 0.}};
-                readdy::Vec3 six{{5.01 - 5., -0.1, 0.}};
-                readdy::Vec3 sevenandahalf{{7.5 - 5., -0.1, 0.}};
+                readdy::Vec3 five{4.99 - 5., -0.1, 0.};
+                readdy::Vec3 twoandahalf{2.5 - 5., -0.1, 0.};
+                readdy::Vec3 six{5.01 - 5., -0.1, 0.};
+                readdy::Vec3 sevenandahalf{7.5 - 5., -0.1, 0.};
 
                 if (domain.isInDomainCore(five) or domain.isInDomainCore(twoandahalf)) {
                     // if either of them is in domain, both must be in domain
-                    REQUIRE(domain.isInDomainCore(five));
-                    REQUIRE(domain.isInDomainCore(twoandahalf));
+                    CHECK(domain.isInDomainCore(five));
+                    CHECK(domain.isInDomainCore(twoandahalf));
 
                     // six is not in this domain but very close
-                    REQUIRE(domain.isInDomainHalo(six));
+                    CHECK(domain.isInDomainHalo(six));
                     // sevenandahalf however is too far in the next domain, and thus not in this ones' halo, nor core
-                    REQUIRE_FALSE(domain.isInDomainHalo(sevenandahalf));
-                    REQUIRE_FALSE(domain.isInDomainCoreOrHalo(sevenandahalf));
-                    REQUIRE_FALSE(domain.isInDomainCore(sevenandahalf));
+                    CHECK_FALSE(domain.isInDomainHalo(sevenandahalf));
+                    CHECK_FALSE(domain.isInDomainCoreOrHalo(sevenandahalf));
+                    CHECK_FALSE(domain.isInDomainCore(sevenandahalf));
                 }
 
                 if (domain.isInDomainCore(six) or domain.isInDomainCore(sevenandahalf)) {
-                    REQUIRE(domain.isInDomainCore(six));
-                    REQUIRE(domain.isInDomainCore(sevenandahalf));
+                    CHECK(domain.isInDomainCore(six));
+                    CHECK(domain.isInDomainCore(sevenandahalf));
 
-                    REQUIRE(domain.isInDomainHalo(five));
-                    REQUIRE_FALSE(domain.isInDomainHalo(twoandahalf));
-                    REQUIRE_FALSE(domain.isInDomainCoreOrHalo(twoandahalf));
-                    REQUIRE_FALSE(domain.isInDomainCore(twoandahalf));
+                    CHECK(domain.isInDomainHalo(five));
+                    CHECK_FALSE(domain.isInDomainHalo(twoandahalf));
+                    CHECK_FALSE(domain.isInDomainCoreOrHalo(twoandahalf));
+                    CHECK_FALSE(domain.isInDomainCore(twoandahalf));
                 }
             }
             // check neighborhood
@@ -236,41 +230,89 @@ TEST_CASE("Test domain decomposition", "[mpi]") {
                 auto south = rank; // only one box and periodic in SN direction
                 auto north = rank;
 
-                REQUIRE(domain.neighborRanks()[domain.neighborIndex(1 - 1, 1, 1)] == west);
-                REQUIRE(domain.neighborRanks()[domain.neighborIndex(1 + 1, 1, 1)] == east);
-                REQUIRE(domain.neighborRanks()[domain.neighborIndex(1, 1 - 1, 1)] == south);
-                REQUIRE(domain.neighborRanks()[domain.neighborIndex(1, 1 + 1, 1)] == north);
+                CHECK(domain.neighborRanks()[domain.neighborIndex(1 - 1, 1, 1)] == west);
+                CHECK(domain.neighborRanks()[domain.neighborIndex(1 + 1, 1, 1)] == east);
+                CHECK(domain.neighborRanks()[domain.neighborIndex(1, 1 - 1, 1)] == south);
+                CHECK(domain.neighborRanks()[domain.neighborIndex(1, 1 + 1, 1)] == north);
 
                 // up and down are not periodic and very thin -> only one domain on this axis
-                REQUIRE(domain.neighborRanks()[domain.neighborIndex(1, 1, 1 - 1)] == -1);
-                REQUIRE(domain.neighborRanks()[domain.neighborIndex(1, 1, 1 + 1)] == -1);
+                CHECK(domain.neighborRanks()[domain.neighborIndex(1, 1, 1 - 1)] == -1);
+                CHECK(domain.neighborRanks()[domain.neighborIndex(1, 1, 1 + 1)] == -1);
 
 
-                REQUIRE(domain.neighborRanks()[domain.neighborIndex(1, 1, 1)] == rank);
+                CHECK(domain.neighborRanks()[domain.neighborIndex(1, 1, 1)] == rank);
 
-                REQUIRE(domain.neighborTypes()[domain.neighborIndex(1 + 1, 1, 1)] == NeighborType::regular);
-                REQUIRE(domain.neighborTypes()[domain.neighborIndex(1 - 1, 1, 1)] == NeighborType::regular);
-                REQUIRE(domain.neighborTypes()[domain.neighborIndex(1, 1 - 1, 1)] == NeighborType::self);
-                REQUIRE(domain.neighborTypes()[domain.neighborIndex(1, 1 + 1, 1)] == NeighborType::self);
-                REQUIRE(domain.neighborTypes()[domain.neighborIndex(1, 1, 1 - 1)] == NeighborType::nan);
-                REQUIRE(domain.neighborTypes()[domain.neighborIndex(1, 1, 1 + 1)] == NeighborType::nan);
-                REQUIRE(domain.neighborTypes()[domain.neighborIndex(1, 1, 1)] == NeighborType::self);
+                CHECK(domain.neighborTypes()[domain.neighborIndex(1 + 1, 1, 1)] == NeighborType::regular);
+                CHECK(domain.neighborTypes()[domain.neighborIndex(1 - 1, 1, 1)] == NeighborType::regular);
+                CHECK(domain.neighborTypes()[domain.neighborIndex(1, 1 - 1, 1)] == NeighborType::self);
+                CHECK(domain.neighborTypes()[domain.neighborIndex(1, 1 + 1, 1)] == NeighborType::self);
+                CHECK(domain.neighborTypes()[domain.neighborIndex(1, 1, 1 - 1)] == NeighborType::nan);
+                CHECK(domain.neighborTypes()[domain.neighborIndex(1, 1, 1 + 1)] == NeighborType::nan);
+                CHECK(domain.neighborTypes()[domain.neighborIndex(1, 1, 1)] == NeighborType::self);
 
                 // requesting a position outside the box makes no sense, except either along west or east
                 auto center = domain.origin() + 0.5 * domain.extent();
-                readdy::Vec3 dEW{{3., 0., 0.}};
-                readdy::Vec3 dNS{{0., 3., 0.}};
-                readdy::Vec3 dUD{{0., 0., 3.}};
-                REQUIRE_THROWS(domain.rankOfPosition(center - dUD));
-                REQUIRE_THROWS(domain.rankOfPosition(center + dUD));
-                REQUIRE_THROWS(domain.rankOfPosition(center - dNS));
-                REQUIRE_THROWS(domain.rankOfPosition(center + dNS));
+                readdy::Vec3 dEW{3., 0., 0.};
+                readdy::Vec3 dNS{0., 3., 0.};
+                readdy::Vec3 dUD{0., 0., 3.};
+                CHECK_THROWS(domain.rankOfPosition(center - dUD));
+                CHECK_THROWS(domain.rankOfPosition(center + dUD));
+                CHECK_THROWS(domain.rankOfPosition(center - dNS));
+                CHECK_THROWS(domain.rankOfPosition(center + dNS));
                 if (center[0] < 0.) {
-                    REQUIRE_THROWS(domain.rankOfPosition(center - dEW));
-                    REQUIRE(domain.rankOfPosition(center + dEW) == otherRank);
+                    CHECK_THROWS(domain.rankOfPosition(center - dEW));
+                    CHECK(domain.rankOfPosition(center + dEW) == otherRank);
                 } else {
-                    REQUIRE_THROWS(domain.rankOfPosition(center + dEW));
-                    REQUIRE(domain.rankOfPosition(center - dEW) == otherRank);
+                    CHECK_THROWS(domain.rankOfPosition(center + dEW));
+                    CHECK(domain.rankOfPosition(center - dEW) == otherRank);
+                }
+            }
+        }
+    }
+
+    SECTION("Test wrapIntoThisHalo") {
+        std::vector<std::array<bool, 3>> pbcs{
+                {false, false, false},
+                {false, false, true},
+                {false, true,  true},
+                {true,  true,  true}};
+        std::vector<std::pair<int, std::array<readdy::scalar, 3>>> boxes{
+                {1 + 1,  {5.,  5.,  5.}},
+                {2 + 1,  {10., 5.,  5.}},
+                {4 + 1,  {10., 10., 5.}},
+                {8 + 1,  {10., 10., 10.}},
+                {16 + 1, {20., 10., 10.}},
+                {32 + 1, {20., 20., 10.}},
+                {12 + 1, {10., 15., 10.}}};
+
+        std::array<readdy::scalar, 3> userMinDomainWidths{4.6, 4.6, 4.6};
+        readdy::util::Index2D index2D(pbcs.size(), boxes.size());
+        for (int i = 0; i < pbcs.size(); ++i) {
+            const auto &pbc = pbcs[i];
+            for (int j = 0; j < boxes.size(); ++j) {
+                const auto &worldSize = boxes[j].first;
+                const auto &box = boxes[j].second;
+                DYNAMIC_SECTION("different pbcs and boxes " << index2D(i, j)) {
+                    context.boxSize() = box;
+                    context.periodicBoundaryConditions() = pbc;
+                    // position is always at the positive "end" of the box
+                    readdy::Vec3 pos{0.45 * box[0], 0.45 * box[1], 0.45 * box[2]};
+                    for (int rank = 1; rank < worldSize; ++rank) {
+                        readdy::kernel::mpi::model::MPIDomain domain(rank, worldSize, userMinDomainWidths, context);
+                        auto wrapped = domain.wrapIntoThisHalo(pos);
+                        if (domain.isInDomainCore(pos)) {
+                            CHECK(pos == wrapped);
+                        }
+                        auto myIdx = domain.myIdx();
+                        auto idx = domain.ijkOfPosition(pos);
+                        for (int d = 0; d < 3; ++d) {
+                            if (pbc[d]) {
+                                if (idx[d] != myIdx[d]) {
+                                    CHECK(pos[d] - wrapped[d] > 4.);
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

@@ -217,6 +217,7 @@ public:
     }
 
     Vec3 wrapIntoThisHalo(const Vec3 &pos) const {
+        validateRankNotMaster();
         Vec3 wrappedPos(pos);
         const auto &box = _context.get().boxSize();
         const auto &periodic = _context.get().periodicBoundaryConditions();
@@ -224,7 +225,7 @@ public:
         for (int d = 0; d < 3; ++d) {
             if (ijk[d] != _myIdx[d]) { // only attempt wrap in axes, which are not identical
                 if (periodic[d]) {
-                    if (pos[d] < 0.5 * box[d] + haloThickness) {
+                    if (pos[d] < - 0.5 * box[d] + haloThickness) { // account for halo region in target direction
                         wrappedPos[d] += box[d];
                     } else if (pos[d] > 0.5 * box[d] - haloThickness) {
                         wrappedPos[d] -= box[d];
@@ -292,11 +293,11 @@ public:
               && -.5 * boxSize[2] <= pos.z && .5 * boxSize[2] > pos.z)) {
             throw std::logic_error(fmt::format("ijkOfPosition: position {} was out of bounds.", pos));
         }
-        return {{
+        return {
                         static_cast<std::size_t>(std::floor((pos.x + .5 * boxSize[0]) / _extent.x)),
                         static_cast<std::size_t>(std::floor((pos.y + .5 * boxSize[1]) / _extent.y)),
                         static_cast<std::size_t>(std::floor((pos.z + .5 * boxSize[2]) / _extent.z))
-                }};
+                };
     }
 
 private:
