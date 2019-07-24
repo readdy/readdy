@@ -48,6 +48,10 @@ TEST_CASE("Test domain decomposition", "[mpi]") {
     readdy::model::Context context;
     context.particleTypes().add("A", 1.0);
     context.potentials().addHarmonicRepulsion("A", "A", 1.0, 2.3); // cutoff 2.3
+    
+    SECTION("Test wrapIntoThisHalo") {
+        // todo
+    }
 
     SECTION("1D chain of domains") {
         context.boxSize() = {{10., 1., 1.}};
@@ -153,10 +157,10 @@ TEST_CASE("Test domain decomposition", "[mpi]") {
                 if (domain.isInDomainCore(pos)) {
                     posCount++;
 
-                    south = domain.neighborRanks()[domain.neighborIndex(1,0,1)];
-                    north = domain.neighborRanks()[domain.neighborIndex(1,2,1)];
                     west =  domain.neighborRanks()[domain.neighborIndex(0,1,1)];
                     east =  domain.neighborRanks()[domain.neighborIndex(2,1,1)];
+                    south = domain.neighborRanks()[domain.neighborIndex(1,0,1)];
+                    north = domain.neighborRanks()[domain.neighborIndex(1,2,1)];
                     northwest =  domain.neighborRanks()[domain.neighborIndex(0,2,1)];
                     southwest =  domain.neighborRanks()[domain.neighborIndex(0,0,1)];
 
@@ -166,7 +170,7 @@ TEST_CASE("Test domain decomposition", "[mpi]") {
             }
         }
         REQUIRE(posCount == 1); // can only be in one domain core
-        
+
         // todo specify if global or local position
 
         readdy::kernel::mpi::model::MPIDomain southDomain(south, worldSize, userMinDomainWidths, context);
@@ -225,15 +229,12 @@ TEST_CASE("Test domain decomposition", "[mpi]") {
             }
             // check neighborhood
             if (rank != 0) {
-                // check east, west, sourth, north, down, up
-                readdy::Vec3 threeEW{{3., 0., 0.}};
-                readdy::Vec3 threeNS{{0., 3., 0.}};
-                readdy::Vec3 threeUD{{0., 0., 3.}};
-                auto center = domain.origin() + 0.5 * domain.extent();
-                auto west = domain.rankOfPosition(center - threeEW);
-                auto east = domain.rankOfPosition(center + threeEW);
-                auto south = domain.rankOfPosition(center - threeNS);
-                auto north = domain.rankOfPosition(center + threeNS);
+                auto otherRank = rank == 1 ? 2 : 1;
+
+                auto west = otherRank; // two boxes and periodic in WE direction
+                auto east = otherRank;
+                auto south = rank; // only one box and periodic in SN direction
+                auto north = rank;
 
                 REQUIRE(domain.neighborRanks()[domain.neighborIndex(1 - 1, 1, 1)] == west);
                 REQUIRE(domain.neighborRanks()[domain.neighborIndex(1 + 1, 1, 1)] == east);
@@ -243,9 +244,7 @@ TEST_CASE("Test domain decomposition", "[mpi]") {
                 // up and down are not periodic and very thin -> only one domain on this axis
                 REQUIRE(domain.neighborRanks()[domain.neighborIndex(1, 1, 1 - 1)] == -1);
                 REQUIRE(domain.neighborRanks()[domain.neighborIndex(1, 1, 1 + 1)] == -1);
-                // requesting a position on this axis makes no sense
-                REQUIRE_THROWS(domain.rankOfPosition(center - threeUD));
-                REQUIRE_THROWS(domain.rankOfPosition(center + threeUD));
+
 
                 REQUIRE(domain.neighborRanks()[domain.neighborIndex(1, 1, 1)] == rank);
 
@@ -256,6 +255,23 @@ TEST_CASE("Test domain decomposition", "[mpi]") {
                 REQUIRE(domain.neighborTypes()[domain.neighborIndex(1, 1, 1 - 1)] == NeighborType::nan);
                 REQUIRE(domain.neighborTypes()[domain.neighborIndex(1, 1, 1 + 1)] == NeighborType::nan);
                 REQUIRE(domain.neighborTypes()[domain.neighborIndex(1, 1, 1)] == NeighborType::self);
+
+                // requesting a position outside the box makes no sense, except either along west or east
+                auto center = domain.origin() + 0.5 * domain.extent();
+                readdy::Vec3 dEW{{3., 0., 0.}};
+                readdy::Vec3 dNS{{0., 3., 0.}};
+                readdy::Vec3 dUD{{0., 0., 3.}};
+                REQUIRE_THROWS(domain.rankOfPosition(center - dUD));
+                REQUIRE_THROWS(domain.rankOfPosition(center + dUD));
+                REQUIRE_THROWS(domain.rankOfPosition(center - dNS));
+                REQUIRE_THROWS(domain.rankOfPosition(center + dNS));
+                if (center[0] < 0.) {
+                    REQUIRE_THROWS(domain.rankOfPosition(center - dEW));
+                    REQUIRE(domain.rankOfPosition(center + dEW) == otherRank);
+                } else {
+                    REQUIRE_THROWS(domain.rankOfPosition(center + dEW));
+                    REQUIRE(domain.rankOfPosition(center - dEW) == otherRank);
+                }
             }
         }
     }
