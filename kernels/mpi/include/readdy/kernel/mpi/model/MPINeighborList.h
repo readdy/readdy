@@ -1,3 +1,5 @@
+#include <utility>
+
 /********************************************************************
  * Copyright © 2019 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
@@ -44,6 +46,7 @@
 #pragma once
 
 #include <readdy/kernel/mpi/model/MPIParticleData.h>
+#include "MPIDomain.h"
 
 // todo Generic grid decomposition with variable adjacency
 // for force calculation the typical "see every pair once"
@@ -67,7 +70,7 @@ public:
     CellLinkedList(Data &data, const readdy::model::Context &context)
             : _data(data), _context(context), _head{}, _list{}, _radius{0} {};
 
-    void setUp(scalar cutoff, CellRadius radius) {
+    void setUp(scalar cutoff, CellRadius radius, std::shared_ptr<const model::MPIDomain> domain) {
         if (!_isSetUp || _cutoff != cutoff || _radius != radius) {
             if (cutoff <= 0) {
                 throw std::logic_error("The cutoff distance for setting up a neighbor list must be > 0");
@@ -79,8 +82,10 @@ public:
             }
             _radius = radius;
             _cutoff = cutoff;
+            _domain = std::move(domain);
 
-            auto size = _context.get().boxSize();
+            //auto size = _context.get().boxSize();
+            auto size = _domain->extentWithHalo();
             auto desiredWidth = static_cast<scalar>((_cutoff) / static_cast<scalar>(radius));
             std::array<std::size_t, 3> dims{};
             for (int i = 0; i < 3; ++i) {
@@ -100,14 +105,14 @@ public:
                 _cellNeighbors = util::Index2D(_cellIndex.size(), 1 + nAdjacentCells);
                 _cellNeighborsContent.resize(_cellNeighbors.size());
                 {
-                    auto pbc = _context.get().periodicBoundaryConditions();
-                    auto fixBoxIx = [&](auto boxIx, std::uint8_t axis) {
-                        auto nCells = static_cast<int>(_cellIndex[axis]);
-                        if (pbc[axis] && nCells > 2) {
-                            return (boxIx % nCells + nCells) % nCells;
-                        }
-                        return boxIx;
-                    };
+                    //auto pbc = _context.get().periodicBoundaryConditions();
+//                    auto fixBoxIx = [&](auto boxIx, std::uint8_t axis) {
+//                        auto nCells = static_cast<int>(_cellIndex[axis]);
+//                        if (pbc[axis] && nCells > 2) {
+//                            return (boxIx % nCells + nCells) % nCells;
+//                        }
+//                        return boxIx;
+//                    };
 
                     int r = _radius;
                     // local adjacency
@@ -142,14 +147,14 @@ public:
                                             {{i + 1, j + 1, k + 1}},
                                     };
 
-                                    std::transform(boxCoords.begin(), boxCoords.end(), boxCoords.begin(),
-                                                   [&](auto arr) {
-                                                       for (std::uint8_t d = 0; d < 3; ++d) {
-                                                           arr.at(d) = fixBoxIx(arr.at(d), d);
-                                                       }
-                                                       return arr;
-                                                   }
-                                    );
+//                                    std::transform(boxCoords.begin(), boxCoords.end(), boxCoords.begin(),
+//                                                   [&](auto arr) {
+//                                                       for (std::uint8_t d = 0; d < 3; ++d) {
+//                                                           arr.at(d) = fixBoxIx(arr.at(d), d);
+//                                                       }
+//                                                       return arr;
+//                                                   }
+//                                    );
 
                                     for (auto boxCoord : boxCoords) {
                                         if (boxCoord[0] >= 0 && boxCoord[1] >= 0 && boxCoord[2] >= 0
@@ -302,19 +307,16 @@ protected:
 
     void fillBins() {
         const auto &boxSize = _context.get().boxSize();
-
-        auto particleInBox = [boxSize](const Vec3 &pos) {
-            return -.5*boxSize[0] <= pos.x && .5*boxSize[0] > pos.x
-                   && -.5*boxSize[1] <= pos.y && .5*boxSize[1] > pos.y
-                   && -.5*boxSize[2] <= pos.z && .5*boxSize[2] > pos.z;
-        };
-
+        const auto &domainOrigin = _domain->originWithHalo();
         std::size_t pidx = 1;
         for (const auto &entry : _data.get()) {
-            if (!entry.deactivated && particleInBox(entry.pos)) {
-                const auto i = static_cast<std::size_t>(std::floor((entry.pos.x + .5 * boxSize[0]) / _cellSize.x));
-                const auto j = static_cast<std::size_t>(std::floor((entry.pos.y + .5 * boxSize[1]) / _cellSize.y));
-                const auto k = static_cast<std::size_t>(std::floor((entry.pos.z + .5 * boxSize[2]) / _cellSize.z));
+            if (not entry.deactivated) {
+                if (not _domain->isInDomainCoreOrHalo(entry.pos)) {
+                    throw std::runtime_error("MPI NeighborList fillBins(), particle not in (Domain+Halo)");
+                }
+                const auto i = static_cast<std::size_t>(std::floor((entry.pos.x - domainOrigin[0]) / _cellSize.x));
+                const auto j = static_cast<std::size_t>(std::floor((entry.pos.y - domainOrigin[1]) / _cellSize.y));
+                const auto k = static_cast<std::size_t>(std::floor((entry.pos.z - domainOrigin[2] ) / _cellSize.z));
                 const auto cellIndex = _cellIndex(i, j, k);
                 _list[pidx] = _head.at(cellIndex);
                 _head[cellIndex] = pidx;
@@ -343,6 +345,7 @@ protected:
 
     std::reference_wrapper<Data> _data;
     std::reference_wrapper<const readdy::model::Context> _context;
+    std::shared_ptr<const model::MPIDomain> _domain{nullptr};
 };
 
 class BoxIterator {

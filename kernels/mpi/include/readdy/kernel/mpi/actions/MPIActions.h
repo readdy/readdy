@@ -84,7 +84,7 @@ public:
                                                                       kernel(kernel) {}
 
     void perform() override {
-        kernel->getMPIKernelStateModel().initializeNeighborList(cutoffDistance());
+        kernel->getMPIKernelStateModel().initializeMPINeighborList(cutoffDistance(), kernel->domain());
     }
 
 private:

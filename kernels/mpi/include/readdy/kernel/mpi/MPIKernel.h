@@ -118,9 +118,13 @@ public:
     readdy::model::top::TopologyActionFactory *const getTopologyActionFactory() override {
         return nullptr;
     };
-    
+
     bool supportsGillespie() const override {
         return false;
+    }
+
+    std::shared_ptr<const model::MPIDomain> domain() const {
+        return _domain;
     }
 
 protected:
@@ -132,7 +136,7 @@ protected:
     actions::MPIActionFactory _actions;
     observables::MPIObservableFactory _observables;
     MPIStateModel _stateModel;
-    std::unique_ptr<model::MPIDomain> domain{nullptr}; // construction is delayed until initialize()
+    std::shared_ptr<model::MPIDomain> _domain; // construction is delayed until initialize()
 };
 
 }

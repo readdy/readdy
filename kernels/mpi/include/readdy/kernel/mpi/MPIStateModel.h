@@ -1,3 +1,5 @@
+#include <utility>
+
 /********************************************************************
  * Copyright © 2019 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
@@ -49,6 +51,7 @@
 #include <readdy/model/reactions/ReactionRecord.h>
 #include <readdy/common/signals.h>
 #include <readdy/kernel/mpi/model/MPIParticleData.h>
+#include <readdy/kernel/mpi/model/MPIUtils.h>
 
 namespace readdy::kernel::mpi {
 
@@ -65,34 +68,38 @@ public:
 
     ~MPIStateModel() override = default;
 
-    MPIStateModel(const MPIStateModel&) = delete;
-    MPIStateModel& operator=(const MPIStateModel&) = delete;
-    MPIStateModel(MPIStateModel&&) = delete;
-    MPIStateModel& operator=(MPIStateModel&&) = delete;
+    MPIStateModel(const MPIStateModel &) = delete;
+
+    MPIStateModel &operator=(const MPIStateModel &) = delete;
+
+    MPIStateModel(MPIStateModel &&) = delete;
+
+    MPIStateModel &operator=(MPIStateModel &&) = delete;
 
     const std::vector<Vec3> getParticlePositions() const override;
 
     const std::vector<Particle> getParticles() const override;
 
     void initializeNeighborList(scalar interactionDistance) override {
-        _neighborList->setUp(interactionDistance, _neighborListCellRadius);
-        _neighborList->update();
+        throw std::runtime_error("not implemented on MPI use initializeMPINeighborList() instead");
     };
+
+    void initializeMPINeighborList(scalar interactionDistance, std::shared_ptr<const model::MPIDomain> domain) {
+        _neighborList->setUp(interactionDistance, 1, std::move(domain));
+        _neighborList->update();
+    }
 
     void updateNeighborList() override {
         _neighborList->update();
     };
 
-    void addParticle(const Particle &p) override {
-        getParticleData()->addParticle(p);
-    };
+    void addParticle(const Particle &p) override;
 
-    void addParticles(const std::vector<Particle> &p) override {
-        getParticleData()->addParticles(p);
-    };
+    void addParticles(const std::vector<Particle> &p) override;
 
     void removeParticle(const Particle &p) override {
-        getParticleData()->removeParticle(p);
+        throw std::runtime_error("Not yet implemented on MPI");
+        //getParticleData()->removeParticle(p);
     };
 
     void removeAllParticles() override {
@@ -160,7 +167,7 @@ public:
         return _observableData.reactionRecords;
     };
 
-    const ReactionCountsMap & reactionCounts() const {
+    const ReactionCountsMap &reactionCounts() const {
         return _observableData.reactionCounts;
     };
 
@@ -192,12 +199,18 @@ public:
         throw std::logic_error("no topologies on MPI kernel");
     }
 
-    const readdy::model::top::GraphTopology *getTopologyForParticle(readdy::model::top::Topology::particle_index particle) const override {
+    const readdy::model::top::GraphTopology *
+    getTopologyForParticle(readdy::model::top::Topology::particle_index particle) const override {
         throw std::logic_error("no topologies on MPI kernel");
     }
 
-    readdy::model::top::GraphTopology *getTopologyForParticle(readdy::model::top::Topology::particle_index particle) override {
+    readdy::model::top::GraphTopology *
+    getTopologyForParticle(readdy::model::top::Topology::particle_index particle) override {
         throw std::logic_error("no topologies on MPI kernel");
+    }
+
+    std::shared_ptr<const model::MPIDomain> &domain() {
+        return _domain;
     }
 
 private:
@@ -205,8 +218,9 @@ private:
     std::reference_wrapper<const readdy::model::Context> _context;
     std::reference_wrapper<Data> _data;
     std::unique_ptr<NeighborList> _neighborList;
-    NeighborList::CellRadius _neighborListCellRadius {1};
+    NeighborList::CellRadius _neighborListCellRadius{1};
     std::unique_ptr<readdy::signals::scoped_connection> _reorderConnection;
+    std::shared_ptr<const model::MPIDomain> _domain{nullptr};
 };
 
 }

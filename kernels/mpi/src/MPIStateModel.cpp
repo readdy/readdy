@@ -54,6 +54,7 @@ const std::vector<readdy::Vec3> MPIStateModel::getParticlePositions() const {
 const std::vector<MPIStateModel::Particle>
 MPIStateModel::getParticles() const {
     throw std::runtime_error("impl");
+
 }
 
 void MPIStateModel::resetReactionCounts() {
@@ -99,5 +100,76 @@ void MPIStateModel::clear() {
     virial() = {};
     energy() = 0;
 }
+
+void MPIStateModel::addParticle(const Particle &p) {
+    if (_domain->rank == 0) {
+        int targetRank = _domain->rankOfPosition(p.pos());
+        // broadcast target
+        MPI_Bcast(&targetRank, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        // send
+        std::vector<mpiutil::ThinParticle> thinParticles{{p.pos(), p.type()}};
+        MPI_Send((void *) thinParticles.data(),
+                 static_cast<int>(thinParticles.size() * sizeof(mpiutil::ThinParticle)), MPI_BYTE,
+                 targetRank, mpiutil::tags::sendParticles, MPI_COMM_WORLD);
+    } else {
+        // am i the target?
+        int targetRank;
+        MPI_Bcast(&targetRank, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        if (_domain->rank == targetRank) {
+            // receive, ignore argument p here
+            const auto thinParticles = mpiutil::receiveParticlesFrom(0);
+            std::vector<Particle> particles;
+            std::for_each(thinParticles.begin(), thinParticles.end(),
+                          [&particles](const mpiutil::ThinParticle &tp) {
+                              particles.emplace_back(tp.position, tp.typeId);
+                          });
+            getParticleData()->addParticles(particles);
+        }
+    }
+};
+
+void MPIStateModel::addParticles(const std::vector<Particle> &p) {
+    if (_domain->rank == 0) {
+        std::unordered_map<int, std::vector<mpiutil::ThinParticle>> targetParticleMap;
+        for (const auto &particle : p) {
+            int target = _domain->rankOfPosition(particle.pos());
+            const auto &find = targetParticleMap.find(target);
+            if (find != targetParticleMap.end()) {
+                find->second.emplace_back(particle.pos(), particle.type());
+            } else {
+                targetParticleMap.emplace(std::make_pair(
+                        target, std::vector<mpiutil::ThinParticle>{{particle.pos(), particle.type()}}
+                ));
+            }
+
+        }
+        std::vector<char> isTarget(_domain->worldSize, false);
+        for (auto&&[target, vec] : targetParticleMap) {
+            isTarget[target] = true;
+        }
+        // broadcast target
+        MPI_Bcast(&isTarget, isTarget.size(), MPI_CHAR, 0, MPI_COMM_WORLD);
+        // send
+        for (auto&&[target, thinParticles] : targetParticleMap) {
+            MPI_Send((void *) thinParticles.data(),
+                     static_cast<int>(thinParticles.size() * sizeof(mpiutil::ThinParticle)), MPI_BYTE,
+                     target, mpiutil::tags::sendParticles, MPI_COMM_WORLD);
+        }
+    } else {
+        std::vector<char> isTarget(_domain->worldSize, false);
+        // am i one of the targets?
+        MPI_Bcast(&isTarget, isTarget.size(), MPI_CHAR, 0, MPI_COMM_WORLD);
+        if (isTarget[_domain->rank]) {
+            // receive, ignore argument p here
+            const auto thinParticles = mpiutil::receiveParticlesFrom(0);
+            std::vector<Particle> particles;
+            std::for_each(thinParticles.begin(), thinParticles.end(),
+                          [&particles](const mpiutil::ThinParticle &tp) {
+                              particles.emplace_back(tp.position, tp.typeId);
+                          });
+            getParticleData()->addParticles(particles);
+        }
+    }
+};
 
 }

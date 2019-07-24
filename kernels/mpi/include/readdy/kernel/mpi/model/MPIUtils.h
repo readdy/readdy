@@ -35,68 +35,44 @@
 /**
  * « detailed description »
  *
- * @file MPIKernel.cpp
+ * @file MPIUtils.h
  * @brief « brief description »
  * @author chrisfroe
- * @date 28.05.19
+ * @date 24.07.19
  */
 
-#include <readdy/kernel/mpi/MPIKernel.h>
+#pragma once
+
+#include <string>
 #include <mpi.h>
+#include <vector>
 
-namespace readdy::kernel::mpi {
+namespace readdy::kernel::mpi::mpiutil {
 
-const std::string MPIKernel::name = "MPI";
+struct ThinParticle {
+    ThinParticle(const Vec3 &position, ParticleTypeId typeId) : position(position), typeId(typeId) {};
+    Vec3 position;
+    ParticleTypeId typeId;
+};
 
-readdy::model::Kernel *MPIKernel::create() {
-    return new MPIKernel();
-}
+enum tags {
+    sendParticles
+};
 
-MPIKernel::MPIKernel() : Kernel(name), _stateModel(_data, _context), _actions(this), _observables(this) {
-    // Since this kernel should be a drop-in replacement, we need to MPI_Init here
-    // given the option that it is already initialized?
-    int myWorldSize;
-    int myRank;
-    int nameLen;
-    char myProcessorName[MPI_MAX_PROCESSOR_NAME];
-
-    MPI_Comm_size(MPI_COMM_WORLD, &myWorldSize);
-    MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
-    MPI_Get_processor_name(myProcessorName, &nameLen);
-
-    rank = myRank;
-    worldSize = myWorldSize;
-    processorName = myProcessorName;
-
-    readdy::log::console()->info("pid {} Rank {} / {} is on {}", static_cast<long>(getpid()), rank, worldSize,
-                                 processorName);
-
-}
-
-
-
-void MPIKernel::initialize() {
-    readdy::model::Kernel::initialize();
-
-    // Spatial decomposition
-    {
-        const auto conf = _context.kernelConfiguration();
-        std::array<scalar, 3> minDomainWidths {conf.mpi.dx, conf.mpi.dy, conf.mpi.dz};
-        _domain = std::make_shared<model::MPIDomain>(rank, worldSize, minDomainWidths, _context);
-        _stateModel.domain() = _domain;
+inline std::vector<ThinParticle> receiveParticlesFrom(int sender) {
+    MPI_Status status;
+    MPI_Probe(sender, tags::sendParticles, MPI_COMM_WORLD, &status);
+    int byteCount;
+    MPI_Get_count(&status, MPI_BYTE, &byteCount);
+    const int nParticles = byteCount / sizeof(ThinParticle);
+    std::vector<ThinParticle> particles(nParticles, {{0.,0.,0.}, 0});
+    MPI_Recv((void *) particles.data(), byteCount, MPI_BYTE, sender, tags::sendParticles, MPI_COMM_WORLD,
+             MPI_STATUS_IGNORE);
+    if (nParticles > 0) {
+        return particles;
+    } else {
+        throw std::runtime_error("y u no send particles?");
     }
-
-    _stateModel.reactionRecords().clear();
-    _stateModel.resetReactionCounts();
-    _stateModel.virial() = Matrix33{{{0, 0, 0, 0, 0, 0, 0, 0, 0}}};
 }
 
-}
-
-const char *name() {
-    return readdy::kernel::mpi::MPIKernel::name.c_str();
-}
-
-readdy::model::Kernel *createKernel() {
-    return readdy::kernel::mpi::MPIKernel::create();
 }
