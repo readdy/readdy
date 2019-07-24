@@ -51,10 +51,48 @@ const std::vector<readdy::Vec3> MPIStateModel::getParticlePositions() const {
     throw std::runtime_error("impl");
 }
 
+// todo procedure to send variable type objects?
 const std::vector<MPIStateModel::Particle>
 MPIStateModel::getParticles() const {
-    throw std::runtime_error("impl");
+    // todo test this
+    // todo time this
+    // find out how many particles (and bytes) each worker sends
+    int nParticles = 0;
+    if (_domain->rank != 0) {
+        nParticles = _data.get().size();
+    }
+    std::vector<int> numberBytes(_domain->worldSize, 0);
+    MPI_Gather(&nParticles, 1, MPI_INT, &numberBytes, numberBytes.size(), MPI_INT, 0, MPI_COMM_WORLD);
+    // convert number of particles to number of bytes from each rank
+    for (auto &n : numberBytes) {
+        n = static_cast<int>(n * sizeof(mpiutil::ThinParticle));
+    }
 
+    // now send and receive thin particles
+    if (_domain->rank == 0) {
+        std::vector<mpiutil::ThinParticle> thinParticles; // receive buffer
+        std::vector<int> displacements(_domain->worldSize, 0);
+        displacements[0] = 0;
+        for (int i = 1; i<displacements.size(); ++i) {
+            displacements[i] = displacements[i-1] + numberBytes[i-1];
+        }
+        MPI_Gatherv(nullptr, 0, MPI_BYTE, thinParticles.data(), numberBytes.data(), displacements.data(), MPI_BYTE, 0, MPI_COMM_WORLD);
+        // convert to particles
+        std::vector<Particle> particles;
+        std::for_each(thinParticles.begin(), thinParticles.end(),
+                      [&particles](const mpiutil::ThinParticle &tp) {
+                          particles.emplace_back(tp.position, tp.typeId);
+                      });
+        return particles;
+    } else {
+        // prepare send data
+        std::vector<mpiutil::ThinParticle> thinParticles;
+        for (const auto &entry : _data.get()) {
+            thinParticles.emplace_back(entry.position(), entry.type);
+        }
+        MPI_Gatherv((void *) thinParticles.data(), static_cast<int>(thinParticles.size() * sizeof(mpiutil::ThinParticle)), MPI_BYTE, nullptr, nullptr, nullptr, nullptr, 0, MPI_COMM_WORLD);
+        return {};
+    }
 }
 
 void MPIStateModel::resetReactionCounts() {
@@ -129,6 +167,7 @@ void MPIStateModel::addParticle(const Particle &p) {
 };
 
 void MPIStateModel::addParticles(const std::vector<Particle> &p) {
+    // todo use MPI_Scatter
     if (_domain->rank == 0) {
         std::unordered_map<int, std::vector<mpiutil::ThinParticle>> targetParticleMap;
         for (const auto &particle : p) {

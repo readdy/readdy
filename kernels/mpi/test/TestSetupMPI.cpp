@@ -58,18 +58,18 @@ TEST_CASE("Test mpi kernel running in parallel", "[mpi]") {
     REQUIRE(simulation.selectedKernelType() == "MPI");
 
     SECTION("In and out types and positions") {
-        ctx.boxSize() = {{50.,50.,50.}};
+        ctx.boxSize() = {{10.,10.,10.}};
         ctx.particleTypes().add("A", 1.);
         ctx.particleTypes().add("B", 1.);
         //ctx.reactions().add("fusili: A +(1.) A -> B", 0.1);
-        ctx.potentials().addHarmonicRepulsion("A", "A", 10., 1.);
-        json conf{{"MPI", {"dx", 2.}, {"dy", 2.}, {"dz", 2.}}};
+        ctx.potentials().addHarmonicRepulsion("A", "A", 10., 2.3);
+        json conf{{"MPI", {"dx", 4.9}, {"dy", 4.9}, {"dz", 4.9}}};
         ctx.kernelConfiguration() = conf.get<readdy::conf::Configuration>();
-        const std::size_t nParticles = 10000;
+        const std::size_t nParticles = 100;
         for (std::size_t i = 0; i < nParticles; ++i) {
-            auto x = readdy::model::rnd::uniform_real()*50. - 25.;
-            auto y = readdy::model::rnd::uniform_real()*50. - 25.;
-            auto z = readdy::model::rnd::uniform_real()*50. - 25.;
+            auto x = readdy::model::rnd::uniform_real()*10. - 5.;
+            auto y = readdy::model::rnd::uniform_real()*10. - 5.;
+            auto z = readdy::model::rnd::uniform_real()*10. - 5.;
             simulation.addParticle("A", x, y, z);
         }
         if (false) {
@@ -84,7 +84,7 @@ TEST_CASE("Test mpi kernel running in parallel", "[mpi]") {
             simulation.run(100, 0.01);
         }
 
-        const auto currentParticles = simulation.currentParticles();
+        //const auto currentParticles = simulation.currentParticles();
 
 
     }
