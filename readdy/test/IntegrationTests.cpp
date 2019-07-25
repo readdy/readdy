@@ -238,16 +238,22 @@ TEMPLATE_TEST_CASE("Chain-decay integration test", "[!hide][integration]", Singl
 }
 
 TEMPLATE_TEST_CASE("Attach particle to topology", "[!hide][integration]", SingleCPU, CPU) {
-    readdy::Simulation simulation(create<TestType>());
-    simulation.context().periodicBoundaryConditions() = {{true, true, true}};
-    simulation.context().topologyRegistry().addType("TA");
-    simulation.context().boxSize() = {{15, 15, 15}};
-    simulation.context().particleTypes().add("middle", 0., readdy::model::particleflavor::TOPOLOGY);
-    simulation.context().particleTypes().add("end", 0., readdy::model::particleflavor::TOPOLOGY);
-    simulation.context().particleTypes().add("A", 0.);
-    simulation.context().topologyRegistry().configureBondPotential("middle", "middle", {.00000001, 1});
-    simulation.context().topologyRegistry().configureBondPotential("middle", "end", {.00000001, 1});
-    simulation.context().topologyRegistry().configureBondPotential("end", "end", {.00000001, 1});
+    readdy::model::Context ctx;
+
+    ctx.periodicBoundaryConditions() = {{true, true, true}};
+    ctx.topologyRegistry().addType("TA");
+    ctx.boxSize() = {{15, 15, 15}};
+    ctx.particleTypes().add("middle", 0., readdy::model::particleflavor::TOPOLOGY);
+    ctx.particleTypes().add("end", 0., readdy::model::particleflavor::TOPOLOGY);
+    ctx.particleTypes().add("A", 0.);
+    ctx.topologyRegistry().configureBondPotential("middle", "middle", {.00000001, 1});
+    ctx.topologyRegistry().configureBondPotential("middle", "end", {.00000001, 1});
+    ctx.topologyRegistry().configureBondPotential("end", "end", {.00000001, 1});
+    // register attach reaction that transforms (end, A) -> (middle, end)
+    ctx.topologyRegistry().addSpatialReaction("attach: TA (end) + (A) -> TA (middle--end)",
+                                                               1e10, 1.5);
+
+    readdy::Simulation simulation(create<TestType>(), ctx);
 
     auto top = simulation.addTopology("TA", {simulation.createTopologyParticle("end", {-1., 0., 0.}),
                                              simulation.createTopologyParticle("middle", {0., 0., 0.}),
@@ -260,9 +266,6 @@ TEMPLATE_TEST_CASE("Attach particle to topology", "[!hide][integration]", Single
         top->graph().addEdge(it, it2);
     }
 
-    // register attach reaction that transforms (end, A) -> (middle, end)
-    simulation.context().topologyRegistry().addSpatialReaction("attach: TA (end) + (A) -> TA (middle--end)",
-                                                               1e10, 1.5);
     simulation.addParticle("A", -2., 0, 0);
     simulation.addParticle("A", -3., 0, 0);
     simulation.addParticle("A", -4., 0, 0);

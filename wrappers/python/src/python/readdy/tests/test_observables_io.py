@@ -47,6 +47,7 @@ import h5py
 import readdy._internal.readdybinding.common as common
 import readdy._internal.readdybinding.common.io as io
 from readdy._internal.readdybinding.api import Simulation
+from readdy._internal.readdybinding.api import Context
 from readdy._internal.readdybinding.api import KernelProvider
 from readdy.util import platform_utils
 import readdy.util.io_utils as ioutils
@@ -70,9 +71,10 @@ class TestObservablesIO(ReaDDyTestCase):
 
     def test_particle_positions_observable(self):
         fname = os.path.join(self.dir, "test_observables_particle_positions.h5")
-        sim = Simulation("SingleCPU")
-        sim.context.box_size = [13., 13., 13.]
-        sim.context.particle_types.add("A", .1)
+        context = Context()
+        context.box_size = [13., 13., 13.]
+        context.particle_types.add("A", .1)
+        sim = Simulation("SingleCPU", context)
         sim.add_particle("A", common.Vec(0, 0, 0))
         # every time step, add one particle
         sim.register_observable_n_particles(1, ["A"], lambda n: sim.add_particle("A", common.Vec(1.5, 2.5, 3.5)))
@@ -99,11 +101,11 @@ class TestObservablesIO(ReaDDyTestCase):
 
     def test_virial_observable_CPU(self):
         fname = os.path.join(self.dir, "test_observables_virial.h5")
-
-        sim = Simulation("CPU")
-        sim.context.box_size = [13., 13., 13.]
-        sim.context.particle_types.add("A", .1)
-        sim.context.potentials.add_harmonic_repulsion("A", "A", 10., .5)
+        context = Context()
+        context.box_size = [13., 13., 13.]
+        context.particle_types.add("A", .1)
+        context.potentials.add_harmonic_repulsion("A", "A", 10., .5)
+        sim = Simulation("CPU", context)
         for _ in range(10000):
             pos = common.Vec(*(13*np.random.random(size=3)-.5*13))
             sim.add_particle("A", pos)
@@ -125,11 +127,11 @@ class TestObservablesIO(ReaDDyTestCase):
 
     def test_virial_observable_SCPU(self):
         fname = os.path.join(self.dir, "test_observables_virial_scpu.h5")
-
-        sim = Simulation("SingleCPU")
-        sim.context.box_size = [13., 13., 13.]
-        sim.context.particle_types.add("A", .1)
-        sim.context.potentials.add_harmonic_repulsion("A", "A", 10., .5)
+        context = Context()
+        context.box_size = [13., 13., 13.]
+        context.particle_types.add("A", .1)
+        context.potentials.add_harmonic_repulsion("A", "A", 10., .5)
+        sim = Simulation("SingleCPU", context)
         for _ in range(10000):
             pos = common.Vec(*(13*np.random.random(size=3)-.5*13))
             sim.add_particle("A", pos)
@@ -151,10 +153,11 @@ class TestObservablesIO(ReaDDyTestCase):
 
     def test_particles_observable(self):
         fname = os.path.join(self.dir, "test_observables_particles.h5")
-        sim = Simulation("SingleCPU")
-        sim.context.box_size = [13.,13.,13.]
-        sim.context.particle_types.add("A", .1)
-        sim.context.particle_types.add("B", .1)
+        context = Context()
+        context.box_size = [13.,13.,13.]
+        context.particle_types.add("A", .1)
+        context.particle_types.add("B", .1)
+        sim = Simulation("SingleCPU", context)
         sim.add_particle("A", common.Vec(0, 0, 0))
         sim.add_particle("B", common.Vec(0, 0, 0))
         # every time step, add one particle
@@ -198,15 +201,17 @@ class TestObservablesIO(ReaDDyTestCase):
     def test_radial_distribution_observable(self):
         fname = os.path.join(self.dir, "test_observables_radial_distribution.h5")
 
-        simulation = Simulation("SingleCPU")
-
+        context = Context()
+        context.kbt = 2
+        context.pbc = [True, True, True]
         box_size = [10.,10.,10.]
-        simulation.context.kbt = 2
-        simulation.context.pbc = [True, True, True]
-        simulation.context.box_size = box_size
-        simulation.context.particle_types.add("A", .2)
-        simulation.context.particle_types.add("B", .2)
-        simulation.context.potentials.add_harmonic_repulsion("A", "B", 10, 2.)
+        context.box_size = box_size
+        context.particle_types.add("A", .2)
+        context.particle_types.add("B", .2)
+        context.potentials.add_harmonic_repulsion("A", "B", 10, 2.)
+
+        simulation = Simulation("SingleCPU", context)
+
         simulation.add_particle("A", common.Vec(-2.5, 0, 0))
         simulation.add_particle("B", common.Vec(0, 0, 0))
         bin_borders = np.arange(0, 5, .01)
@@ -235,15 +240,16 @@ class TestObservablesIO(ReaDDyTestCase):
     def test_histogram_along_axis_observable(self):
         fname = os.path.join(self.dir, "test_observables_hist_along_axis.h5")
 
-        simulation = Simulation("SingleCPU")
-
+        context = Context()
+        context.kbt = 2
+        context.pbc = [True, True, True]
         box_size = [10.,10.,10.]
-        simulation.context.kbt = 2
-        simulation.context.pbc = [True, True, True]
-        simulation.context.box_size = box_size
-        simulation.context.particle_types.add("A", .2)
-        simulation.context.particle_types.add("B", .2)
-        simulation.context.potentials.add_harmonic_repulsion("A", "B", 10, 2.)
+        context.box_size = box_size
+        context.particle_types.add("A", .2)
+        context.particle_types.add("B", .2)
+        context.potentials.add_harmonic_repulsion("A", "B", 10, 2.)
+        simulation = Simulation("SingleCPU", context)
+
         simulation.add_particle("A", common.Vec(-2.5, 0, 0))
         simulation.add_particle("B", common.Vec(0, 0, 0))
         bin_borders = np.arange(0, 5, .01)
@@ -269,14 +275,15 @@ class TestObservablesIO(ReaDDyTestCase):
     def test_n_particles_observable(self):
         fname = os.path.join(self.dir, "test_observables_n_particles.h5")
 
-        simulation = Simulation("SingleCPU")
-
+        context = Context()
         box_size = [10.,10.,10.]
-        simulation.context.kbt = 2
-        simulation.context.pbc = [True, True, True]
-        simulation.context.box_size = box_size
-        simulation.context.particle_types.add("A", .2)
-        simulation.context.particle_types.add("B", .2)
+        context.kbt = 2
+        context.pbc = [True, True, True]
+        context.box_size = box_size
+        context.particle_types.add("A", .2)
+        context.particle_types.add("B", .2)
+        simulation = Simulation("SingleCPU", context)
+
         simulation.add_particle("A", common.Vec(-2.5, 0, 0))
         simulation.add_particle("B", common.Vec(0, 0, 0))
         n_time_steps = 50
@@ -313,14 +320,15 @@ class TestObservablesIO(ReaDDyTestCase):
 
     def test_reactions_observable(self):
         fname = os.path.join(self.dir, "test_observables_particle_reactions.h5")
-        sim = Simulation("CPU")
-        sim.context.box_size = [10.,10.,10.]
-        sim.context.particle_types.add("A", .0)
-        sim.context.particle_types.add("B", .0)
-        sim.context.particle_types.add("C", .0)
-        sim.context.reactions.add_conversion("mylabel", "A", "B", .00001)
-        sim.context.reactions.add_conversion("A->B", "A", "B", 1.)
-        sim.context.reactions.add_fusion("B+C->A", "B", "C", "A", 1.0, 1.0, .5, .5)
+        context = Context()
+        context.box_size = [10.,10.,10.]
+        context.particle_types.add("A", .0)
+        context.particle_types.add("B", .0)
+        context.particle_types.add("C", .0)
+        context.reactions.add_conversion("mylabel", "A", "B", .00001)
+        context.reactions.add_conversion("A->B", "A", "B", 1.)
+        context.reactions.add_fusion("B+C->A", "B", "C", "A", 1.0, 1.0, .5, .5)
+        sim = Simulation("CPU", context)
         sim.add_particle("A", common.Vec(0, 0, 0))
         sim.add_particle("B", common.Vec(1.0, 1.0, 1.0))
         sim.add_particle("C", common.Vec(1.1, 1.0, 1.0))
@@ -383,14 +391,15 @@ class TestObservablesIO(ReaDDyTestCase):
 
     def test_reaction_counts_observable(self):
         fname = os.path.join(self.dir, "test_observables_particle_reaction_counts.h5")
-        sim = Simulation("CPU")
-        sim.context.box_size = [10., 10., 10.]
-        sim.context.particle_types.add("A", .0)
-        sim.context.particle_types.add("B", .0)
-        sim.context.particle_types.add("C", .0)
-        sim.context.reactions.add_conversion("mylabel", "A", "B", .00001)
-        sim.context.reactions.add_conversion("A->B", "A", "B", 1e16)
-        sim.context.reactions.add_fusion("B+C->A", "B", "C", "A", 1e16, 1.0, .5, .5)
+        context = Context()
+        context.box_size = [10., 10., 10.]
+        context.particle_types.add("A", .0)
+        context.particle_types.add("B", .0)
+        context.particle_types.add("C", .0)
+        context.reactions.add_conversion("mylabel", "A", "B", .00001)
+        context.reactions.add_conversion("A->B", "A", "B", 1e16)
+        context.reactions.add_fusion("B+C->A", "B", "C", "A", 1e16, 1.0, .5, .5)
+        sim = Simulation("CPU", context)
         sim.add_particle("A", common.Vec(0, 0, 0))
         sim.add_particle("B", common.Vec(1.0, 1.0, 1.0))
         sim.add_particle("C", common.Vec(1.1, 1.0, 1.0))
@@ -430,9 +439,10 @@ class TestObservablesIO(ReaDDyTestCase):
 
     def test_forces_observable(self):
         fname = os.path.join(self.dir, "test_observables_particle_forces.h5")
-        sim = Simulation("CPU")
-        sim.context.box_size = [13.,13.,13.]
-        sim.context.particle_types.add("A", .1)
+        context = Context()
+        context.box_size = [13.,13.,13.]
+        context.particle_types.add("A", .1)
+        sim = Simulation("CPU", context)
         sim.add_particle("A", common.Vec(0, 0, 0))
         # every time step, add one particle
         sim.register_observable_n_particles(1, ["A"], lambda n: sim.add_particle("A", common.Vec(1.5, 2.5, 3.5)))

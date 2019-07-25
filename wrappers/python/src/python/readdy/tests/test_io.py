@@ -45,6 +45,7 @@ import numpy as np
 import readdy._internal.readdybinding.common as common
 import readdy._internal.readdybinding.common.io as io
 from readdy._internal.readdybinding.api import Simulation
+from readdy._internal.readdybinding.api import Context
 
 from readdy.util.testing_utils import ReaDDyTestCase
 from readdy.util.trajectory_utils import TrajectoryReader
@@ -62,10 +63,11 @@ class TestSchemeApi(ReaDDyTestCase):
 
     def test_write_trajectory(self):
         traj_fname = os.path.join(self.dir, "traj.h5")
-        simulation = Simulation("SingleCPU")
-        simulation.context.box_size = [5., 5., 5.]
-        simulation.context.particle_types.add("A", 0.0)
-        simulation.context.reactions.add_conversion("A->A", "A", "A", 1.)
+        context = Context()
+        context.box_size = [5., 5., 5.]
+        context.particle_types.add("A", 0.0)
+        context.reactions.add_conversion("A->A", "A", "A", 1.)
+        simulation = Simulation("SingleCPU", context)
 
         def callback(_):
             simulation.add_particle("A", common.Vec(0, 0, 0))
@@ -112,9 +114,10 @@ class TestSchemeApi(ReaDDyTestCase):
 
     def test_write_trajectory_as_observable(self):
         traj_fname = os.path.join(self.dir, "traj_as_obs.h5")
-        simulation = Simulation("SingleCPU")
-        simulation.context.box_size = [5., 5., 5.]
-        simulation.context.particle_types.add("A", 0.0)
+        context = Context()
+        context.box_size = [5., 5., 5.]
+        context.particle_types.add("A", 0.0)
+        simulation = Simulation("SingleCPU", context)
 
         def callback(_):
             simulation.add_particle("A", common.Vec(0, 0, 0))

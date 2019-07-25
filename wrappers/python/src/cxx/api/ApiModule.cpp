@@ -84,7 +84,7 @@ void exportApi(py::module &api) {
     py::enum_<readdy::api::TorsionType>(api, "TorsionType").value("COS_DIHEDRAL", readdy::api::TorsionType::COS_DIHEDRAL);
 
     py::class_<sim> simulation(api, "Simulation");
-    simulation.def(py::init<std::string>())
+    simulation.def(py::init<std::string, ctx>())
             .def_property_readonly("single_precision", &sim::singlePrecision)
             .def_property_readonly("double_precision", &sim::doublePrecision)
             .def("add_particle", [](sim &self, const std::string &type, const vec &pos) {

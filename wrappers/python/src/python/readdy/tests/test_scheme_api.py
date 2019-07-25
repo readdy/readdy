@@ -37,6 +37,7 @@ import unittest
 import numpy as np
 
 from readdy._internal.readdybinding.api import Simulation
+from readdy._internal.readdybinding.api import Context
 from readdy._internal.readdybinding.common import Vec
 
 from readdy.util.testing_utils import ReaDDyTestCase
@@ -44,7 +45,7 @@ from readdy.util.testing_utils import ReaDDyTestCase
 
 class TestSchemeApi(ReaDDyTestCase):
     def test_sanity(self):
-        simulation = Simulation("SingleCPU")
+        simulation = Simulation("SingleCPU", Context())
         loop = simulation.create_loop(1.)
         loop.use_integrator("EulerBDIntegrator")
         loop.evaluate_forces(False)
@@ -53,8 +54,9 @@ class TestSchemeApi(ReaDDyTestCase):
         loop.run(10)
 
     def test_interrupt_simple(self):
-        sim = Simulation("SingleCPU")
-        sim.context.particle_types.add("A", 0.1)
+        context = Context()
+        context.particle_types.add("A", 0.1)
+        sim = Simulation("SingleCPU", context)
         # Define counter as list. This is a workaround because nosetest will complain otherwise.
         counter = [0]
 
@@ -67,10 +69,11 @@ class TestSchemeApi(ReaDDyTestCase):
         np.testing.assert_equal(counter[0], 6)
 
     def test_interrupt_maxparticles(self):
-        sim = Simulation("SingleCPU")
-        sim.context.particle_types.add("A", 0.1)
+        context = Context()
+        context.particle_types.add("A", 0.1)
+        context.reactions.add_fission("bla", "A", "A", "A", 1000., 0., 0.5, 0.5)
+        sim = Simulation("SingleCPU", context)
         sim.add_particle("A", Vec(0, 0, 0))
-        sim.context.reactions.add_fission("bla", "A", "A", "A", 1000., 0., 0.5, 0.5)
         counter = [0]
         shall_stop = [False]
 
