@@ -52,9 +52,7 @@ using namespace readdy;
 using namespace readdytesting::kernel;
 
 TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU, CPU) {
-    Simulation simulation {create<TestType>()};
-
-    auto &ctx = simulation.context();
+    readdy::model::Context ctx;
 
     ctx.topologyRegistry().addType("T");
     ctx.particleTypes().add("Topology A", 1.0, readdy::model::particleflavor::TOPOLOGY);
@@ -70,6 +68,7 @@ TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU
     ctx.boxSize() = {{10, 10, 10}};
 
     SECTION("Enzymatic reaction") {
+        Simulation simulation {create<TestType>(), ctx};
         model::TopologyParticle x_0{0., 0., 0., ctx.particleTypes().idOf("Topology A")};
         {
             auto tid = ctx.topologyRegistry().addType("MyType");

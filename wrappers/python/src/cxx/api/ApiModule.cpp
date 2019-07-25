@@ -133,10 +133,8 @@ void exportApi(py::module &api) {
                 }
                 return particles;
             })
-            .def_property("context", [](sim &self) -> readdy::model::Context & {
+            .def_property_readonly("context", [](sim &self) -> const readdy::model::Context& {
                 return self.context();
-            }, [](sim &self, const readdy::model::Context &context) {
-                self.context() = context;
             })
             .def("create_loop", &sim::createLoop, py::keep_alive<0, 1>(), py::return_value_policy::reference_internal)
             .def("run", [](sim &self, const readdy::TimeStep steps, const readdy::scalar timeStep) {
