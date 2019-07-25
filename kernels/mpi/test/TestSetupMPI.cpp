@@ -58,12 +58,12 @@ TEST_CASE("Test mpi kernel running in parallel", "[mpi]") {
     REQUIRE(simulation.selectedKernelType() == "MPI");
 
     SECTION("In and out types and positions") {
-        ctx.boxSize() = {{10.,10.,10.}};
+        ctx.boxSize() = {10.,10.,10.};
         ctx.particleTypes().add("A", 1.);
         ctx.particleTypes().add("B", 1.);
         //ctx.reactions().add("fusili: A +(1.) A -> B", 0.1);
         ctx.potentials().addHarmonicRepulsion("A", "A", 10., 2.3);
-        json conf{{"MPI", {"dx", 4.9}, {"dy", 4.9}, {"dz", 4.9}}};
+        json conf{"MPI", {"dx", 4.9}, {"dy", 4.9}, {"dz", 4.9}};
         ctx.kernelConfiguration() = conf.get<readdy::conf::Configuration>();
         const std::size_t nParticles = 100;
         for (std::size_t i = 0; i < nParticles; ++i) {

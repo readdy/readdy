@@ -68,8 +68,7 @@ MPIKernel::MPIKernel() : Kernel(name), _stateModel(_data, _context), _actions(th
     worldSize = myWorldSize;
     processorName = myProcessorName;
 
-    readdy::log::console()->info("pid {} Rank {} / {} is on {}", static_cast<long>(getpid()), rank, worldSize,
-                                 processorName);
+    readdy::log::info("pid {} Rank {} / {} is on {}", static_cast<long>(getpid()), rank, worldSize, processorName);
 
 }
 
@@ -77,7 +76,8 @@ MPIKernel::MPIKernel() : Kernel(name), _stateModel(_data, _context), _actions(th
 
 void MPIKernel::initialize() {
     readdy::model::Kernel::initialize();
-
+    readdy::log::trace("MPIKernel::initialize");
+    MPI_Barrier(MPI_COMM_WORLD);
     // Spatial decomposition
     {
         const auto conf = _context.kernelConfiguration();

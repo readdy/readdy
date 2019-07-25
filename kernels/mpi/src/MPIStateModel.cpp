@@ -140,6 +140,8 @@ void MPIStateModel::clear() {
 }
 
 void MPIStateModel::addParticle(const Particle &p) {
+    readdy::log::trace("MPIStateModel::addParticle");
+    MPI_Barrier(MPI_COMM_WORLD);
     if (_domain->rank == 0) {
         int targetRank = _domain->rankOfPosition(p.pos());
         // broadcast target

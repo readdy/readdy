@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
 
     waitForDebugger();
 
-    readdy::log::console()->set_level(spdlog::level::warn);
+    readdy::log::console()->set_level(spdlog::level::trace);
     Catch::Session session;
     int returnCode = session.applyCommandLine(argc, argv);
     if (returnCode != 0) return returnCode;
