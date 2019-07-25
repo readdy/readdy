@@ -1,5 +1,3 @@
-#include <utility>
-
 /********************************************************************
  * Copyright © 2019 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
@@ -84,7 +82,6 @@ public:
             _cutoff = cutoff;
             _domain = std::move(domain);
 
-            //auto size = _context.get().boxSize();
             auto size = _domain->extentWithHalo();
             auto desiredWidth = static_cast<scalar>((_cutoff) / static_cast<scalar>(radius));
             std::array<std::size_t, 3> dims{};
@@ -105,15 +102,6 @@ public:
                 _cellNeighbors = util::Index2D(_cellIndex.size(), 1 + nAdjacentCells);
                 _cellNeighborsContent.resize(_cellNeighbors.size());
                 {
-                    //auto pbc = _context.get().periodicBoundaryConditions();
-//                    auto fixBoxIx = [&](auto boxIx, std::uint8_t axis) {
-//                        auto nCells = static_cast<int>(_cellIndex[axis]);
-//                        if (pbc[axis] && nCells > 2) {
-//                            return (boxIx % nCells + nCells) % nCells;
-//                        }
-//                        return boxIx;
-//                    };
-
                     int r = _radius;
                     // local adjacency
                     std::vector<std::size_t> adj;
@@ -147,15 +135,6 @@ public:
                                             {{i + 1, j + 1, k + 1}},
                                     };
 
-//                                    std::transform(boxCoords.begin(), boxCoords.end(), boxCoords.begin(),
-//                                                   [&](auto arr) {
-//                                                       for (std::uint8_t d = 0; d < 3; ++d) {
-//                                                           arr.at(d) = fixBoxIx(arr.at(d), d);
-//                                                       }
-//                                                       return arr;
-//                                                   }
-//                                    );
-
                                     for (auto boxCoord : boxCoords) {
                                         if (boxCoord[0] >= 0 && boxCoord[1] >= 0 && boxCoord[2] >= 0
                                             && boxCoord[0] < _cellIndex[0] && boxCoord[1] < _cellIndex[1] &&
@@ -170,7 +149,6 @@ public:
                                 adj.erase(std::remove(std::begin(adj), std::end(adj), _cellIndex(i, j, k)),
                                           std::end(adj));
 
-                                //log::critical("cell {} with n neighbors: {}" ,cellIdx, adj.size());
                                 auto begin = _cellNeighbors(cellIdx, 0_z);
                                 _cellNeighborsContent[begin] = adj.size();
                                 std::copy(adj.begin(), adj.end(), &_cellNeighborsContent.at(begin + 1));

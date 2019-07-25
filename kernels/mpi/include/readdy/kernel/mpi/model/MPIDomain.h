@@ -281,7 +281,7 @@ public:
     const int nUsedRanks() const {
         return _nUsedRanks;
     }
-    
+
     const bool amINeeded() const {
         return _amINeeded;
     }
@@ -329,30 +329,6 @@ private:
         }
         _nUsedRanks = _nDomains[0] * _nDomains[1] * _nDomains[2] + 1;
         return domainWidths;
-
-//        if (rank == 0) {
-//            readdy::log::info("MPI spatial domain decomposition:");
-//            readdy::log::info("The user given minimal domain widths were ({}, {}, {})",
-//                              minDomainWidths[0],
-//                              minDomainWidths[1],
-//                              minDomainWidths[2]);
-//            readdy::log::info("there will be {} * {} * {} = {} number of domains", _nDomains[0], _nDomains[1],
-//                              _nDomains[2], _nDomains[0] * _nDomains[1] * _nDomains[2]);
-//            readdy::log::info("with actual widths dx {} dy {} dz {}", domainWidths[0], domainWidths[1],
-//                              domainWidths[2]);
-//        }
-
-        //if (not isValidDecomposition(_nDomains)) {
-        //    throw std::logic_error("Spatial decomposition is not valid.");
-        //}
-
-        //const auto numberDomains = _nDomains[0] * _nDomains[1] * _nDomains[2];
-        //if (numberDomains + 1 != worldSize) {// add one for master rank 0
-        //    throw std::logic_error(
-        //            fmt::format("There are {} + 1 worker positions to be filled, but there are {} workers",
-        //                        numberDomains, worldSize));
-        //}
-
     }
 
     void validateRankNotMaster() const {
