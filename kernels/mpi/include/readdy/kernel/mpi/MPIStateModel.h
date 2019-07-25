@@ -213,6 +213,10 @@ public:
         return _domain;
     }
 
+    std::shared_ptr<const MPI_Comm> &commUsedRanks() {
+        return _commUsedRanks;
+    }
+
 private:
     readdy::kernel::scpu::model::ObservableData _observableData;
     std::reference_wrapper<const readdy::model::Context> _context;
@@ -221,6 +225,7 @@ private:
     NeighborList::CellRadius _neighborListCellRadius{1};
     std::unique_ptr<readdy::signals::scoped_connection> _reorderConnection;
     std::shared_ptr<const model::MPIDomain> _domain{nullptr};
+    std::shared_ptr<const MPI_Comm> _commUsedRanks{nullptr};
 };
 
 }

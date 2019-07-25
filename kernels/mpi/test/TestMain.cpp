@@ -50,60 +50,67 @@
 #include <readdy/testing/Utils.h>
 #include <readdy/plugin/KernelProvider.h>
 
-/**
- * Forces a certain processor with given rank to halt in a while loop and all others to wait at a barrier.
- * This allows gdb to attach to this pid and change `i`, which will continue the program.
- *
- * E.g. do the following on the commandline $ gdb -ex "attach $pid" -ex "set variable i=1" -ex "finish"
- *
- * To enable debugging set the environment variable READDY_MPI_DEBUG,
- * which can be exported to processes via `mpirun`.
- *
- * @param rank of the process calling this function
- * @param processorName name of the process calling this function
- */
-static void waitForDebugger() {
-    if (getenv("READDY_MPI_DEBUG") != nullptr) {
-        int rank;
-        char processorName[MPI_MAX_PROCESSOR_NAME];
-        int nameLen;
-        MPI_Get_processor_name(processorName, &nameLen);
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-        static int rankToDebug = 0;
-        if (rank == rankToDebug) {
-            volatile int i = 0;
-            readdy::log::console()->warn("pid {} w/ rank {} on processor {} waiting for debugger",
-                                         static_cast<unsigned long>(getpid()), rank, processorName);
-            while (i == 0) { /* change ’i’ in the debugger */ }
-        }
+/** Tiny RAII wrapper for MPI Init and Finalize, and a debugging lock */
+class MPISession {
+public:
+    MPISession(int argc, char **argv) {
+        MPI_Init(&argc, &argv);
+
+        int worldSize;
+        int rank;
+        int nameLen;
+        char processorName[MPI_MAX_PROCESSOR_NAME];
+
+        MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        MPI_Get_processor_name(processorName, &nameLen);
+
+        readdy::log::console()->set_level(spdlog::level::info);
+        readdy::log::info("pid {} Rank {} / {} is on {}", static_cast<long>(getpid()), rank, worldSize, processorName);
+        waitForDebugger();
+        readdy::log::console()->set_level(spdlog::level::warn);
     }
-    MPI_Barrier(MPI_COMM_WORLD);
-}
+
+    ~MPISession() {
+        MPI_Finalize();
+    }
+
+    /**
+     * Forces a certain processor with given rank to halt in a while loop and all others to wait at a barrier.
+     * This allows gdb to attach to this pid and change `i`, which will continue the program.
+     *
+     * E.g. do the following on the commandline $ gdb -ex "attach $pid" -ex "set variable i=1" -ex "finish"
+     *
+     * To enable debugging set the environment variable READDY_MPI_DEBUG,
+     * which can be exported to processes via `mpirun`.
+     *
+     * @param rank of the process calling this function
+     * @param processorName name of the process calling this function
+     */
+    static void waitForDebugger() {
+        if (getenv("READDY_MPI_DEBUG") != nullptr) {
+            int rank;
+            char processorName[MPI_MAX_PROCESSOR_NAME];
+            int nameLen;
+            MPI_Get_processor_name(processorName, &nameLen);
+            MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+            static int rankToDebug = 0;
+            if (rank == rankToDebug) {
+                volatile int i = 0;
+                readdy::log::console()->warn("pid {} w/ rank {} on processor {} waiting for debugger",
+                                             static_cast<unsigned long>(getpid()), rank, processorName);
+                while (i == 0) { /* change ’i’ in the debugger */ }
+            }
+        }
+        MPI_Barrier(MPI_COMM_WORLD);
+    }
+};
 
 int main(int argc, char **argv) {
-    // @todo in the long run use dynamic process management, i.e. MPI_Comm_spawn and MPI_Intercomm_merge, but then the
-    // children processes need to get the data: i.e. at least the whole context
-    // there needs to be a common entry point for all workers.
-    // Two options:
-    // - [this] spawn processes and distribute data when run() is called (i.e. all particles are present on master -> memory)
-    // - spawn processes when kernel is created, addParticles() then distributes particles, workers wait for run()
-    int worldSize;
-    int myRank;
-    int nameLen;
-    char processorName[MPI_MAX_PROCESSOR_NAME];
+    MPISession mpisession(argc, argv);
 
-    MPI_Init(&argc, &argv);
-
-    MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
-    MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
-    MPI_Get_processor_name(processorName, &nameLen);
-
-    readdy::log::console()->set_level(spdlog::level::info);
-
-    waitForDebugger();
-
-    readdy::log::console()->set_level(spdlog::level::trace);
     Catch::Session session;
     int returnCode = session.applyCommandLine(argc, argv);
     if (returnCode != 0) return returnCode;

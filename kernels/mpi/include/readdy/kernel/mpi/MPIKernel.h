@@ -61,6 +61,8 @@ public:
 
     ~MPIKernel() override = default;
 
+    explicit MPIKernel(readdy::model::Context ctx);
+
     MPIKernel(const MPIKernel &) = delete;
 
     MPIKernel &operator=(const MPIKernel &) = delete;
@@ -136,7 +138,8 @@ protected:
     actions::MPIActionFactory _actions;
     observables::MPIObservableFactory _observables;
     MPIStateModel _stateModel;
-    std::shared_ptr<model::MPIDomain> _domain; // construction is delayed until initialize()
+    std::shared_ptr<model::MPIDomain> _domain{nullptr}; // construction is delayed until initialize()
+    std::shared_ptr<MPI_Comm> commUsedRanks{}; // The communicator for the subgroup of actually used workers, if there were too many
 };
 
 }

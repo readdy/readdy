@@ -54,6 +54,9 @@ const std::vector<readdy::Vec3> MPIStateModel::getParticlePositions() const {
 // todo procedure to send variable type objects?
 const std::vector<MPIStateModel::Particle>
 MPIStateModel::getParticles() const {
+    if (not mpiutil::isRequiredRank(*_domain)) {
+        return {};
+    }
     // todo test this
     // todo time this
     // find out how many particles (and bytes) each worker sends
@@ -140,24 +143,27 @@ void MPIStateModel::clear() {
 }
 
 void MPIStateModel::addParticle(const Particle &p) {
+    if (not mpiutil::isRequiredRank(*_domain)) {
+        return;
+    }
     readdy::log::trace("MPIStateModel::addParticle");
-    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Barrier(*_commUsedRanks);
     if (_domain->rank == 0) {
         int targetRank = _domain->rankOfPosition(p.pos());
         // broadcast target
-        MPI_Bcast(&targetRank, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Bcast(&targetRank, 1, MPI_INT, 0, *_commUsedRanks);
         // send
         std::vector<mpiutil::ThinParticle> thinParticles{{p.pos(), p.type()}};
         MPI_Send((void *) thinParticles.data(),
                  static_cast<int>(thinParticles.size() * sizeof(mpiutil::ThinParticle)), MPI_BYTE,
-                 targetRank, mpiutil::tags::sendParticles, MPI_COMM_WORLD);
+                 targetRank, mpiutil::tags::sendParticles, *_commUsedRanks);
     } else {
         // am i the target?
         int targetRank;
-        MPI_Bcast(&targetRank, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Bcast(&targetRank, 1, MPI_INT, 0, *_commUsedRanks);
         if (_domain->rank == targetRank) {
             // receive, ignore argument p here
-            const auto thinParticles = mpiutil::receiveParticlesFrom(0);
+            const auto thinParticles = mpiutil::receiveParticlesFrom(0, *_commUsedRanks);
             std::vector<Particle> particles;
             std::for_each(thinParticles.begin(), thinParticles.end(),
                           [&particles](const mpiutil::ThinParticle &tp) {
@@ -169,6 +175,9 @@ void MPIStateModel::addParticle(const Particle &p) {
 };
 
 void MPIStateModel::addParticles(const std::vector<Particle> &p) {
+    if (not mpiutil::isRequiredRank(*_domain)) {
+        return;
+    }
     // todo use MPI_Scatter
     if (_domain->rank == 0) {
         std::unordered_map<int, std::vector<mpiutil::ThinParticle>> targetParticleMap;
@@ -189,20 +198,20 @@ void MPIStateModel::addParticles(const std::vector<Particle> &p) {
             isTarget[target] = true;
         }
         // broadcast target
-        MPI_Bcast(&isTarget, isTarget.size(), MPI_CHAR, 0, MPI_COMM_WORLD);
+        MPI_Bcast(&isTarget, isTarget.size(), MPI_CHAR, 0, *_commUsedRanks);
         // send
         for (auto&&[target, thinParticles] : targetParticleMap) {
             MPI_Send((void *) thinParticles.data(),
                      static_cast<int>(thinParticles.size() * sizeof(mpiutil::ThinParticle)), MPI_BYTE,
-                     target, mpiutil::tags::sendParticles, MPI_COMM_WORLD);
+                     target, mpiutil::tags::sendParticles, *_commUsedRanks);
         }
     } else {
         std::vector<char> isTarget(_domain->worldSize, false);
         // am i one of the targets?
-        MPI_Bcast(&isTarget, isTarget.size(), MPI_CHAR, 0, MPI_COMM_WORLD);
+        MPI_Bcast(&isTarget, isTarget.size(), MPI_CHAR, 0, *_commUsedRanks);
         if (isTarget[_domain->rank]) {
             // receive, ignore argument p here
-            const auto thinParticles = mpiutil::receiveParticlesFrom(0);
+            const auto thinParticles = mpiutil::receiveParticlesFrom(0, *_commUsedRanks);
             std::vector<Particle> particles;
             std::for_each(thinParticles.begin(), thinParticles.end(),
                           [&particles](const mpiutil::ThinParticle &tp) {

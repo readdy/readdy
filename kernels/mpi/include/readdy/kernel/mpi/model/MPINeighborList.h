@@ -314,9 +314,13 @@ protected:
                 if (not _domain->isInDomainCoreOrHalo(entry.pos)) {
                     throw std::runtime_error("MPI NeighborList fillBins(), particle not in (Domain+Halo)");
                 }
-                const auto i = static_cast<std::size_t>(std::floor((entry.pos.x - domainOrigin[0]) / _cellSize.x));
-                const auto j = static_cast<std::size_t>(std::floor((entry.pos.y - domainOrigin[1]) / _cellSize.y));
-                const auto k = static_cast<std::size_t>(std::floor((entry.pos.z - domainOrigin[2] ) / _cellSize.z));
+                // since bins i.e. the boxes can extend out of the boxSize,
+                // due to extent of halo region, wrap particles into
+                // this domains halo region
+                const auto wrapped = _domain->wrapIntoThisHalo(entry.pos);
+                const auto i = static_cast<std::size_t>(std::floor((wrapped.x - domainOrigin[0]) / _cellSize.x));
+                const auto j = static_cast<std::size_t>(std::floor((wrapped.y - domainOrigin[1]) / _cellSize.y));
+                const auto k = static_cast<std::size_t>(std::floor((wrapped.z - domainOrigin[2] ) / _cellSize.z));
                 const auto cellIndex = _cellIndex(i, j, k);
                 _list[pidx] = _head.at(cellIndex);
                 _head[cellIndex] = pidx;

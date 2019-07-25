@@ -52,41 +52,87 @@
 using json = nlohmann::json;
 
 TEST_CASE("Test mpi kernel running in parallel", "[mpi]") {
-    readdy::Simulation simulation("MPI");
-    auto &ctx = simulation.context();
+    // todo currently simulation cannot be used because context needs to be known when kernel is created
+    // (or latest when kernel->initialize() is called)
+    if (false) {
+        readdy::Simulation simulation("MPI");
+        auto &ctx = simulation.context();
 
-    REQUIRE(simulation.selectedKernelType() == "MPI");
+        REQUIRE(simulation.selectedKernelType() == "MPI");
 
-    SECTION("In and out types and positions") {
-        ctx.boxSize() = {10.,10.,10.};
-        ctx.particleTypes().add("A", 1.);
-        ctx.particleTypes().add("B", 1.);
-        //ctx.reactions().add("fusili: A +(1.) A -> B", 0.1);
-        ctx.potentials().addHarmonicRepulsion("A", "A", 10., 2.3);
-        json conf{"MPI", {"dx", 4.9}, {"dy", 4.9}, {"dz", 4.9}};
-        ctx.kernelConfiguration() = conf.get<readdy::conf::Configuration>();
-        const std::size_t nParticles = 100;
-        for (std::size_t i = 0; i < nParticles; ++i) {
-            auto x = readdy::model::rnd::uniform_real()*10. - 5.;
-            auto y = readdy::model::rnd::uniform_real()*10. - 5.;
-            auto z = readdy::model::rnd::uniform_real()*10. - 5.;
-            simulation.addParticle("A", x, y, z);
+        SECTION("In and out types and positions") {
+            ctx.boxSize() = {10., 10., 10.};
+            ctx.particleTypes().add("A", 1.);
+            ctx.particleTypes().add("B", 1.);
+            //ctx.reactions().add("fusili: A +(1.) A -> B", 0.1);
+            ctx.potentials().addHarmonicRepulsion("A", "A", 10., 2.3);
+            json conf = {{"MPI", {{"dx", 4.9}, {"dy", 4.9}, {"dz", 4.9}}}};
+            ctx.kernelConfiguration() = conf.get<readdy::conf::Configuration>();
+            const std::size_t nParticles = 100;
+            for (std::size_t i = 0; i < nParticles; ++i) {
+                auto x = readdy::model::rnd::uniform_real() * 10. - 5.;
+                auto y = readdy::model::rnd::uniform_real() * 10. - 5.;
+                auto z = readdy::model::rnd::uniform_real() * 10. - 5.;
+                simulation.addParticle("A", x, y, z);
+            }
+            if (false) {
+                const auto idA = ctx.particleTypes().idOf("A");
+                auto check = [&nParticles, &idA](readdy::model::observables::Particles::result_type result) {
+                    const auto &types = std::get<0>(result);
+                    const auto &ids = std::get<1>(result);
+                    const auto &positions = std::get<2>(result);
+                    CHECK(std::count(types.begin(), types.end(), idA));
+                };
+                auto obsHandle = simulation.registerObservable(simulation.observe().particles(1), check);
+                simulation.run(100, 0.01);
+            }
+
+            //const auto currentParticles = simulation.currentParticles();
+
+
         }
-        if (false) {
-            const auto idA = ctx.particleTypes().idOf("A");
-            auto check = [&nParticles, &idA](readdy::model::observables::Particles::result_type result) {
-                const auto &types = std::get<0>(result);
-                const auto &ids = std::get<1>(result);
-                const auto &positions = std::get<2>(result);
-                CHECK(std::count(types.begin(), types.end(), idA));
-            };
-            auto obsHandle = simulation.registerObservable(simulation.observe().particles(1), check);
-            simulation.run(100, 0.01);
-        }
-
-        //const auto currentParticles = simulation.currentParticles();
-
-
     }
+}
 
+TEST_CASE("Test kernel configuration from context", "[mpi]") {
+    readdy::model::Context ctx;
+    ctx.boxSize() = {10.,10.,10.};
+    ctx.particleTypes().add("A", 0.1);
+    ctx.particleTypes().add("B", 0.1);
+    ctx.potentials().addHarmonicRepulsion("B", "B", 1.0, 2.);
+    json conf = {{"MPI", {{"dx", 4.9}, {"dy", 4.9}, {"dz", 4.9}}}};
+    ctx.kernelConfiguration() = conf.get<readdy::conf::Configuration>();
+    MPI_Barrier(MPI_COMM_WORLD);
+    CHECK(ctx.kernelConfiguration().mpi.dx == Approx(4.9));
+    CHECK(ctx.kernelConfiguration().mpi.dy == Approx(4.9));
+    CHECK(ctx.kernelConfiguration().mpi.dz == Approx(4.9));
+    readdy::kernel::mpi::MPIKernel kernel(ctx); // this also initializes domains
+
+    CHECK(kernel.context().kernelConfiguration().mpi.dx == Approx(4.9));
+    CHECK(kernel.context().kernelConfiguration().mpi.dy == Approx(4.9));
+    CHECK(kernel.context().kernelConfiguration().mpi.dz == Approx(4.9));
+}
+
+TEST_CASE("Test distribute particles and gather them again", "[mpi]") {
+    readdy::model::Context ctx;
+
+    ctx.boxSize() = {10., 10., 10.};
+    ctx.particleTypes().add("A", 1.);
+    ctx.particleTypes().add("B", 1.);
+    //ctx.reactions().add("fusili: A +(1.) A -> B", 0.1);
+    ctx.potentials().addHarmonicRepulsion("A", "A", 10., 2.3);
+    json conf = {{"MPI", {{"dx", 4.9}, {"dy", 4.9}, {"dz", 4.9}}}};
+    ctx.kernelConfiguration() = conf.get<readdy::conf::Configuration>();
+
+    readdy::kernel::mpi::MPIKernel kernel(ctx); // this also initializes domains
+
+    auto idA = kernel.context().particleTypes().idOf("A");
+    const std::size_t nParticles = 100;
+    for (std::size_t i = 0; i < nParticles; ++i) {
+        auto x = readdy::model::rnd::uniform_real() * 10. - 5.;
+        auto y = readdy::model::rnd::uniform_real() * 10. - 5.;
+        auto z = readdy::model::rnd::uniform_real() * 10. - 5.;
+        readdy::model::Particle p(x, y, z, idA);
+        kernel.getMPIKernelStateModel().addParticle(p);
+    }
 }

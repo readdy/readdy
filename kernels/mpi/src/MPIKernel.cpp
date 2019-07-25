@@ -67,23 +67,67 @@ MPIKernel::MPIKernel() : Kernel(name), _stateModel(_data, _context), _actions(th
     rank = myRank;
     worldSize = myWorldSize;
     processorName = myProcessorName;
-
-    readdy::log::info("pid {} Rank {} / {} is on {}", static_cast<long>(getpid()), rank, worldSize, processorName);
-
 }
 
+MPIKernel::MPIKernel(readdy::model::Context ctx) : MPIKernel() {
+    _context = std::move(ctx);
+    initialize();
+}
 
 
 void MPIKernel::initialize() {
     readdy::model::Kernel::initialize();
     readdy::log::trace("MPIKernel::initialize");
-    MPI_Barrier(MPI_COMM_WORLD);
     // Spatial decomposition
     {
         const auto conf = _context.kernelConfiguration();
-        std::array<scalar, 3> minDomainWidths {conf.mpi.dx, conf.mpi.dy, conf.mpi.dz};
+        std::array<scalar, 3> minDomainWidths{conf.mpi.dx, conf.mpi.dy, conf.mpi.dz};
         _domain = std::make_shared<model::MPIDomain>(rank, worldSize, minDomainWidths, _context);
         _stateModel.domain() = _domain;
+    }
+
+    // Description of decomposition
+    if (rank == 0) {
+        std::string description;
+        description += fmt::format("MPI Kernel uses domain decomposition:\n");
+        description += fmt::format("--------------------------------\n");
+        description += fmt::format(" - Number of domains on axes (x,y,z) ({},{},{})\n",
+                                   _domain->nDomains()[0], _domain->nDomains()[1], _domain->nDomains()[2]);
+        description += fmt::format(" - Domain widths on axes (x,y,z) ({},{},{})\n",
+                                   _context.boxSize()[0] / _domain->nDomains()[0],
+                                   _context.boxSize()[1] / _domain->nDomains()[1],
+                                   _context.boxSize()[2] / _domain->nDomains()[2]);
+        description += fmt::format(" - Used {} ranks of available worldSize {}\n", _domain->nUsedRanks(),
+                                   _domain->worldSize);
+        readdy::log::info(description);
+        if (_domain->nUsedRanks() != _domain->worldSize) {
+            readdy::log::warn("! Number of used workers {} is not equal to what was allocated {} !",
+                              _domain->nUsedRanks(), _domain->worldSize);
+            readdy::log::warn("You should adapt your number of workers or tune the minimum domain widths");
+        }
+    }
+
+    // Make a new communicator for only used processes
+    if (_domain->nUsedRanks() != _domain->worldSize) {
+        // Create group of all in world
+        MPI_Group worldGroup;
+        MPI_Comm_group(MPI_COMM_WORLD, &worldGroup);
+
+        // Remove all unnecessary ranks
+        MPI_Group usedGroup;
+        int removeRanges[1][3];
+        removeRanges[0][0] = _domain->nUsedRanks();
+        removeRanges[0][1] = _domain->worldSize - 1;
+        removeRanges[0][2] = 1;
+        MPI_Group_range_excl(worldGroup, 1, removeRanges, &usedGroup);
+
+        // the new communicator of used ranks -> use this in barriers and stuff
+        MPI_Comm newstuff;
+        MPI_Comm_create(MPI_COMM_WORLD, usedGroup, &newstuff);
+        commUsedRanks = std::make_shared<MPI_Comm>(newstuff);
+
+        // propagate to other classes that need communicator
+        _stateModel.commUsedRanks() = commUsedRanks;
     }
 
     _stateModel.reactionRecords().clear();

@@ -57,6 +57,8 @@ public:
     const scalar haloThickness;
 
 private:
+    int _nUsedRanks;
+    bool _amINeeded{true};
     std::array<std::size_t, 3> _nDomains{};
     util::Index3D _domainIndex; // rank of (ijk) is domainIndex(i,j,k)+1
 
@@ -91,46 +93,51 @@ private:
 
 public:
     MPIDomain(int rank, int worldSize, std::array<scalar, 3> minDomainWidths, const readdy::model::Context &ctx)
-            : rank(rank), worldSize(worldSize), _context(std::cref(ctx)), haloThickness(ctx.calculateMaxCutoff()) {
+            : rank(rank), worldSize(worldSize), _context(std::cref(ctx)), haloThickness(ctx.calculateMaxCutoff()),
+            _nUsedRanks(0) {
         const auto &boxSize = _context.get().boxSize();
         const auto &periodic = _context.get().periodicBoundaryConditions();
 
-        // Find out nDomains per axis from user given widths
-        {
-            std::array<scalar, 3> domainWidths{};
-            for (std::size_t i = 0; i < 3; ++i) {
-                _nDomains[i] = static_cast<unsigned int>(std::max(1., std::floor(boxSize[i] / minDomainWidths[i])));
-                domainWidths[i] = boxSize[i] / static_cast<scalar>(_nDomains[i]);
-            }
-
-            if (rank == 0) {
-                readdy::log::info("MPI spatial domain decomposition:");
-                readdy::log::info("The user given minimal domain widths were ({}, {}, {})",
-                                  minDomainWidths[0],
-                                  minDomainWidths[1],
-                                  minDomainWidths[2]);
-                readdy::log::info("there will be {} * {} * {} = {} number of domains", _nDomains[0], _nDomains[1],
-                                  _nDomains[2], _nDomains[0] * _nDomains[1] * _nDomains[2]);
-                readdy::log::info("with actual widths dx {} dy {} dz {}", domainWidths[0], domainWidths[1],
-                                  domainWidths[2]);
-            }
-
-            if (not isValidDecomposition(_nDomains)) {
-                throw std::logic_error("Spatial decomposition is not valid.");
-            }
-
-            const auto numberDomains = _nDomains[0] * _nDomains[1] * _nDomains[2];
-            if (numberDomains + 1 != worldSize) {// add one for master rank 0
-                throw std::logic_error(
-                        fmt::format("There are {} + 1 worker positions to be filled, but there are {} workers",
-                                    numberDomains, worldSize));
+        for (int i = 0; i < 3; ++i) {
+            if (minDomainWidths[i] <= 0.) {
+                minDomainWidths[i] = 2. * haloThickness;
+                readdy::log::info("Setting minDomainWidths[{}] to 2 * haloThickness", i);
             }
         }
+
+        readdy::log::info("minDomainWidths are now {} {} {}",
+                minDomainWidths[0], minDomainWidths[1], minDomainWidths[2]);
+
+        if (worldSize >= 2) {
+            int coord = 0;
+
+            for (std::size_t i = 0; i < 3; ++i) {
+                _nDomains[i] = static_cast<unsigned int>(std::max(1., std::floor(boxSize[i] / minDomainWidths[i])));
+            }
+            _nUsedRanks = _nDomains[0] * _nDomains[1] * _nDomains[2] + 1;
+
+            while (_nUsedRanks > worldSize) {
+                // try to increase size of domains (round robbing), to decrease usedRanks
+                minDomainWidths[coord] = 1.5 * minDomainWidths[coord];
+                coord = (coord + 1) % 3;
+                for (std::size_t i = 0; i < 3; ++i) {
+                    _nDomains[i] = static_cast<unsigned int>(std::max(1., std::floor(boxSize[i] / minDomainWidths[i])));
+                }
+                _nUsedRanks = _nDomains[0] * _nDomains[1] * _nDomains[2] + 1;
+            }
+            if (not isValidDecomposition(_nDomains)) {
+                throw std::runtime_error("Could not determine a valid domain decomposition");
+            }
+
+        } else {
+            throw std::logic_error("worldSize must be at least 2 (one master, one worker)");
+        }
+
 
         _domainIndex = util::Index3D(_nDomains[0], _nDomains[1], _nDomains[2]);
 
         // the rest is only for workers
-        if (rank != 0) {
+        if (rank != 0 and rank < _nUsedRanks) {
             // find out which this ranks' ijk coordinates are, consider -1 because of master rank 0
             _myIdx = _domainIndex.inverse(rank - 1);
             for (std::size_t i = 0; i < 3; ++i) {
@@ -177,11 +184,14 @@ public:
 
             assert(_neighborRanks.at(neighborIndex(1, 1, 1)) == rank);
 
-        } else {
+        } else if (rank == 0) {
             // master rank 0 must at least know how big domains are
             for (std::size_t i = 0; i < 3; ++i) {
                 _extent[i] = boxSize[i] / static_cast<scalar>(_nDomains[i]);
             }
+        } else {
+            // allocated but unneeded workers
+            _amINeeded = false;
         }
     }
 
@@ -268,6 +278,14 @@ public:
         return _nDomains;
     }
 
+    const int nUsedRanks() const {
+        return _nUsedRanks;
+    }
+    
+    const bool amINeeded() const {
+        return _amINeeded;
+    }
+
     /**
      * @return This domains' (ijk) array
      */
@@ -301,6 +319,42 @@ public:
     }
 
 private:
+    std::array<scalar, 3> determineDomainWidths(const std::array<scalar, 3> &minDomainWidths) {
+        const auto &boxSize = _context.get().boxSize();
+        // Find out nDomains per axis from minDomainWidths
+        std::array<scalar, 3> domainWidths{};
+        for (std::size_t i = 0; i < 3; ++i) {
+            _nDomains[i] = static_cast<unsigned int>(std::max(1., std::floor(boxSize[i] / minDomainWidths[i])));
+            domainWidths[i] = boxSize[i] / static_cast<scalar>(_nDomains[i]);
+        }
+        _nUsedRanks = _nDomains[0] * _nDomains[1] * _nDomains[2] + 1;
+        return domainWidths;
+
+//        if (rank == 0) {
+//            readdy::log::info("MPI spatial domain decomposition:");
+//            readdy::log::info("The user given minimal domain widths were ({}, {}, {})",
+//                              minDomainWidths[0],
+//                              minDomainWidths[1],
+//                              minDomainWidths[2]);
+//            readdy::log::info("there will be {} * {} * {} = {} number of domains", _nDomains[0], _nDomains[1],
+//                              _nDomains[2], _nDomains[0] * _nDomains[1] * _nDomains[2]);
+//            readdy::log::info("with actual widths dx {} dy {} dz {}", domainWidths[0], domainWidths[1],
+//                              domainWidths[2]);
+//        }
+
+        //if (not isValidDecomposition(_nDomains)) {
+        //    throw std::logic_error("Spatial decomposition is not valid.");
+        //}
+
+        //const auto numberDomains = _nDomains[0] * _nDomains[1] * _nDomains[2];
+        //if (numberDomains + 1 != worldSize) {// add one for master rank 0
+        //    throw std::logic_error(
+        //            fmt::format("There are {} + 1 worker positions to be filled, but there are {} workers",
+        //                        numberDomains, worldSize));
+        //}
+
+    }
+
     void validateRankNotMaster() const {
         if (rank != 0) {
             return;
@@ -321,15 +375,15 @@ private:
         }
     }
 
-    bool isValidDecomposition(const std::array<std::size_t, 3> dims) const {
+    bool isValidDecomposition(const std::array<std::size_t, 3> nDomains) const {
         const auto cutoff = _context.get().calculateMaxCutoff();
         const auto periodic = _context.get().periodicBoundaryConditions();
         const auto boxSize = _context.get().boxSize();
         std::array<scalar, 3> domainWidths{};
         for (std::size_t i = 0; i < 3; ++i) {
-            domainWidths[i] = boxSize[i] / static_cast<scalar>(dims[i]);
+            domainWidths[i] = boxSize[i] / static_cast<scalar>(nDomains[i]);
             if (domainWidths[i] < 2. * cutoff) { // for halo regions to make sense and not overlap
-                if (dims[i] == 1 and not periodic[i]) {
+                if (nDomains[i] == 1 and not periodic[i]) {
                     /* smaller than cutoff is ok, when there are no neighbors to be considered */
                 } else {
                     return false;
