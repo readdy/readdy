@@ -52,9 +52,7 @@ using namespace readdy;
 using namespace readdytesting::kernel;
 
 TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU, CPU) {
-    Simulation simulation {create<TestType>()};
-
-    auto &ctx = simulation.context();
+    readdy::model::Context ctx;
 
     ctx.topologyRegistry().addType("T");
     ctx.particleTypes().add("Topology A", 1.0, readdy::model::particleflavor::TOPOLOGY);
@@ -70,16 +68,19 @@ TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU
     ctx.boxSize() = {{10, 10, 10}};
 
     SECTION("Enzymatic reaction") {
-        model::TopologyParticle x_0{0., 0., 0., ctx.particleTypes().idOf("Topology A")};
+        ctx.reactions().addEnzymatic("TopologyEnzymatic", "Topology A", "A", "B", 1e16, 1.0);
+
+        Simulation simulation {create<TestType>(), ctx};
+
+        model::TopologyParticle x_0{0., 0., 0., simulation.context().particleTypes().idOf("Topology A")};
         {
             auto tid = ctx.topologyRegistry().addType("MyType");
             simulation.stateModel().addTopology(tid, {x_0});
         }
+
         simulation.stateModel().addParticle(
                 model::Particle(0., 0., 0., ctx.particleTypes().idOf("A"))
         );
-        ctx.reactions().addEnzymatic("TopologyEnzymatic", "Topology A", "A", "B", 1e16, 1.0);
-
         auto particles_beforehand = simulation.stateModel().getParticles();
 
         {
@@ -115,6 +116,7 @@ TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU
     }
 
     SECTION("Get topology for particle") {
+        Simulation simulation {create<TestType>(), ctx};
         model::TopologyParticle x_0{0., 0., 0., ctx.particleTypes().idOf("Topology A")};
         auto toplogy = simulation.addTopology("T", {x_0});
         simulation.addParticle("A", 0, 0, 0);
@@ -129,15 +131,36 @@ TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU
         // check that the particles that are contained in (active) topologies point to their respective topologies, also
         // and especially after topology split reactions
         using namespace readdy;
-        simulation.context().periodicBoundaryConditions() = {{true, true, true}};
-        simulation.context().boxSize() = {{100, 100, 100}};
-        simulation.context().topologyRegistry().addType("TA");
+        
+        ctx.periodicBoundaryConditions() = {{true, true, true}};
+        ctx.boxSize() = {{100, 100, 100}};
+        ctx.topologyRegistry().addType("TA");
         //auto topAId = sim.registerParticleType("Topology A", 10., model::particleflavor::TOPOLOGY);
         //auto aId = sim.registerParticleType("A", 10.);
-        auto topAId = simulation.context().particleTypes().idOf("Topology A");
-        auto aId = simulation.context().particleTypes().idOf("A");
-        simulation.context().topologyRegistry().configureBondPotential("Topology A", "Topology A", {10, 1});
+        auto topAId = ctx.particleTypes().idOf("Topology A");
+        auto aId = ctx.particleTypes().idOf("A");
+        ctx.topologyRegistry().configureBondPotential("Topology A", "Topology A", {10, 1});
 
+        model::top::reactions::StructuralTopologyReaction r {"r", [aId](model::top::GraphTopology& top) {
+            model::top::reactions::Recipe recipe (top);
+            if(top.getNParticles() > 1) {
+                auto rnd = model::rnd::uniform_int(0, static_cast<const int>(top.getNParticles() - 2));
+                auto it1 = top.graph().vertices().begin();
+                auto it2 = std::next(it1, 1);
+                if(rnd > 0) {
+                    std::advance(it1, rnd);
+                    std::advance(it2, rnd);
+                }
+                recipe.removeEdge(it1, it2);
+            } else {
+                recipe.changeParticleType(top.graph().vertices().begin(), aId);
+            }
+            return recipe;
+        }, .7};
+        ctx.topologyRegistry().addStructuralReaction("TA", r);
+
+        Simulation simulation {create<TestType>(), ctx};
+        
         std::vector<model::TopologyParticle> topologyParticles;
         {
             topologyParticles.reserve(90);
@@ -157,25 +180,6 @@ TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU
             }
         }
 
-        model::top::reactions::StructuralTopologyReaction r {"r", [aId](model::top::GraphTopology& top) {
-            model::top::reactions::Recipe recipe (top);
-            if(top.getNParticles() > 1) {
-                auto rnd = model::rnd::uniform_int(0, static_cast<const int>(top.getNParticles() - 2));
-                auto it1 = top.graph().vertices().begin();
-                auto it2 = std::next(it1, 1);
-                if(rnd > 0) {
-                    std::advance(it1, rnd);
-                    std::advance(it2, rnd);
-                }
-                recipe.removeEdge(it1, it2);
-            } else {
-                recipe.changeParticleType(top.graph().vertices().begin(), aId);
-            }
-            return recipe;
-        }, .7};
-
-        simulation.context().topologyRegistry().addStructuralReaction("TA", r);
-
         simulation.run(35, 1.);
 
         log::trace("got n topologies: {}", simulation.currentTopologies().size());
@@ -187,35 +191,35 @@ TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU
     }
 
     SECTION("The parser") {
-        auto &context = simulation.context();
-        context.topologyRegistry().addType("1");
-        context.topologyRegistry().addType("2");
-        context.topologyRegistry().addType("3");
-        context.topologyRegistry().addType("4");
-        context.topologyRegistry().addType("5");
-        context.topologyRegistry().addType("6");
-        context.topologyRegistry().addType("T1");
-        context.topologyRegistry().addType("T2");
-        context.topologyRegistry().addType("T3");
-        context.topologyRegistry().addType("T4");
-        context.particleTypes().add("p1", 1.);
-        context.particleTypes().add("p2", 1.);
-        context.particleTypes().add("p3", 1.);
-        context.particleTypes().add("p4", 1.);
+        
+        ctx.topologyRegistry().addType("1");
+        ctx.topologyRegistry().addType("2");
+        ctx.topologyRegistry().addType("3");
+        ctx.topologyRegistry().addType("4");
+        ctx.topologyRegistry().addType("5");
+        ctx.topologyRegistry().addType("6");
+        ctx.topologyRegistry().addType("T1");
+        ctx.topologyRegistry().addType("T2");
+        ctx.topologyRegistry().addType("T3");
+        ctx.topologyRegistry().addType("T4");
+        ctx.particleTypes().add("p1", 1.);
+        ctx.particleTypes().add("p2", 1.);
+        ctx.particleTypes().add("p3", 1.);
+        ctx.particleTypes().add("p4", 1.);
 
-        readdy::model::top::reactions::STRParser parser (context.topologyRegistry());
+        readdy::model::top::reactions::STRParser parser (ctx.topologyRegistry());
 
         {
             auto r = parser.parse("topology-topology fusion type1: T1 (p1) + T2 (p2) -> T3 (p3--p4) [self=true]", 10., 11.);
             REQUIRE(r.mode() == readdy::model::top::reactions::STRMode::TT_FUSION_ALLOW_SELF);
-            REQUIRE(r.top_type1() == context.topologyRegistry().idOf("T1"));
-            REQUIRE(r.top_type2() == context.topologyRegistry().idOf("T2"));
-            REQUIRE(r.type1() == context.particleTypes().idOf("p1"));
-            REQUIRE(r.type2() == context.particleTypes().idOf("p2"));
-            REQUIRE(r.top_type_to1() == context.topologyRegistry().idOf("T3"));
+            REQUIRE(r.top_type1() == ctx.topologyRegistry().idOf("T1"));
+            REQUIRE(r.top_type2() == ctx.topologyRegistry().idOf("T2"));
+            REQUIRE(r.type1() == ctx.particleTypes().idOf("p1"));
+            REQUIRE(r.type2() == ctx.particleTypes().idOf("p2"));
+            REQUIRE(r.top_type_to1() == ctx.topologyRegistry().idOf("T3"));
             REQUIRE(r.top_type_to2() == readdy::EmptyTopologyId);
-            REQUIRE(r.type_to1() == context.particleTypes().idOf("p3"));
-            REQUIRE(r.type_to2() == context.particleTypes().idOf("p4"));
+            REQUIRE(r.type_to1() == ctx.particleTypes().idOf("p3"));
+            REQUIRE(r.type_to2() == ctx.particleTypes().idOf("p4"));
             REQUIRE(r.name() == "topology-topology fusion type1");
             REQUIRE(r.rate() == 10.);
             REQUIRE(r.radius() == 11.);
@@ -223,14 +227,14 @@ TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU
         {
             auto r = parser.parse("topology-topology fusion type2: T1 (p1) + T2 (p2) -> T3 (p3--p4)", 10., 11.);
             REQUIRE(r.mode() == readdy::model::top::reactions::STRMode::TT_FUSION);
-            REQUIRE(r.top_type1() == context.topologyRegistry().idOf("T1"));
-            REQUIRE(r.top_type2() == context.topologyRegistry().idOf("T2"));
-            REQUIRE(r.type1() == context.particleTypes().idOf("p1"));
-            REQUIRE(r.type2() == context.particleTypes().idOf("p2"));
-            REQUIRE(r.top_type_to1() == context.topologyRegistry().idOf("T3"));
+            REQUIRE(r.top_type1() == ctx.topologyRegistry().idOf("T1"));
+            REQUIRE(r.top_type2() == ctx.topologyRegistry().idOf("T2"));
+            REQUIRE(r.type1() == ctx.particleTypes().idOf("p1"));
+            REQUIRE(r.type2() == ctx.particleTypes().idOf("p2"));
+            REQUIRE(r.top_type_to1() == ctx.topologyRegistry().idOf("T3"));
             REQUIRE(r.top_type_to2() == readdy::EmptyTopologyId);
-            REQUIRE(r.type_to1() == context.particleTypes().idOf("p3"));
-            REQUIRE(r.type_to2() == context.particleTypes().idOf("p4"));
+            REQUIRE(r.type_to1() == ctx.particleTypes().idOf("p3"));
+            REQUIRE(r.type_to2() == ctx.particleTypes().idOf("p4"));
             REQUIRE(r.name() == "topology-topology fusion type2");
             REQUIRE(r.rate() == 10.);
             REQUIRE(r.radius() == 11.);
@@ -238,14 +242,14 @@ TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU
         {
             auto r = parser.parse("topology-topology enzymatic type: T1 (p1) + T2 (p2) -> T3 (p3) + T4 (p4)", 10., 11.);
             REQUIRE(r.mode() == readdy::model::top::reactions::STRMode::TT_ENZYMATIC);
-            REQUIRE(r.top_type1() == context.topologyRegistry().idOf("T1"));
-            REQUIRE(r.top_type2() == context.topologyRegistry().idOf("T2"));
-            REQUIRE(r.type1() == context.particleTypes().idOf("p1"));
-            REQUIRE(r.type2() == context.particleTypes().idOf("p2"));
-            REQUIRE(r.top_type_to1() == context.topologyRegistry().idOf("T3"));
-            REQUIRE(r.top_type_to2() == context.topologyRegistry().idOf("T4"));
-            REQUIRE(r.type_to1() == context.particleTypes().idOf("p3"));
-            REQUIRE(r.type_to2() == context.particleTypes().idOf("p4"));
+            REQUIRE(r.top_type1() == ctx.topologyRegistry().idOf("T1"));
+            REQUIRE(r.top_type2() == ctx.topologyRegistry().idOf("T2"));
+            REQUIRE(r.type1() == ctx.particleTypes().idOf("p1"));
+            REQUIRE(r.type2() == ctx.particleTypes().idOf("p2"));
+            REQUIRE(r.top_type_to1() == ctx.topologyRegistry().idOf("T3"));
+            REQUIRE(r.top_type_to2() == ctx.topologyRegistry().idOf("T4"));
+            REQUIRE(r.type_to1() == ctx.particleTypes().idOf("p3"));
+            REQUIRE(r.type_to2() == ctx.particleTypes().idOf("p4"));
             REQUIRE(r.name() == "topology-topology enzymatic type");
             REQUIRE(r.rate() == 10.);
             REQUIRE(r.radius() == 11.);
@@ -253,14 +257,14 @@ TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU
         {
             auto r = parser.parse("topology-particle fusion type: T1 (p1) + (p2) -> T2 (p3--p4)", 10., 11.);
             REQUIRE(r.mode() == readdy::model::top::reactions::STRMode::TP_FUSION);
-            REQUIRE(r.top_type1() == context.topologyRegistry().idOf("T1"));
+            REQUIRE(r.top_type1() == ctx.topologyRegistry().idOf("T1"));
             REQUIRE(r.top_type2() == readdy::EmptyTopologyId);
-            REQUIRE(r.type1() == context.particleTypes().idOf("p1"));
-            REQUIRE(r.type2() == context.particleTypes().idOf("p2"));
-            REQUIRE(r.top_type_to1() == context.topologyRegistry().idOf("T2"));
+            REQUIRE(r.type1() == ctx.particleTypes().idOf("p1"));
+            REQUIRE(r.type2() == ctx.particleTypes().idOf("p2"));
+            REQUIRE(r.top_type_to1() == ctx.topologyRegistry().idOf("T2"));
             REQUIRE(r.top_type_to2() == readdy::EmptyTopologyId);
-            REQUIRE(r.type_to1() == context.particleTypes().idOf("p3"));
-            REQUIRE(r.type_to2() == context.particleTypes().idOf("p4"));
+            REQUIRE(r.type_to1() == ctx.particleTypes().idOf("p3"));
+            REQUIRE(r.type_to2() == ctx.particleTypes().idOf("p4"));
             REQUIRE(r.name() == "topology-particle fusion type");
             REQUIRE(r.rate() == 10.);
             REQUIRE(r.radius() == 11.);
@@ -268,14 +272,14 @@ TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU
         {
             auto r = parser.parse("topology-particle enzymatic type: T1 (p1) + (p2) -> T2 (p3) + (p4)", 10., 11.);
             REQUIRE(r.mode() == readdy::model::top::reactions::STRMode::TP_ENZYMATIC);
-            REQUIRE(r.top_type1() == context.topologyRegistry().idOf("T1"));
+            REQUIRE(r.top_type1() == ctx.topologyRegistry().idOf("T1"));
             REQUIRE(r.top_type2() == readdy::EmptyTopologyId);
-            REQUIRE(r.type1() == context.particleTypes().idOf("p1"));
-            REQUIRE(r.type2() == context.particleTypes().idOf("p2"));
-            REQUIRE(r.top_type_to1() == context.topologyRegistry().idOf("T2"));
+            REQUIRE(r.type1() == ctx.particleTypes().idOf("p1"));
+            REQUIRE(r.type2() == ctx.particleTypes().idOf("p2"));
+            REQUIRE(r.top_type_to1() == ctx.topologyRegistry().idOf("T2"));
             REQUIRE(r.top_type_to2() == readdy::EmptyTopologyId);
-            REQUIRE(r.type_to1() == context.particleTypes().idOf("p3"));
-            REQUIRE(r.type_to2() == context.particleTypes().idOf("p4"));
+            REQUIRE(r.type_to1() == ctx.particleTypes().idOf("p3"));
+            REQUIRE(r.type_to2() == ctx.particleTypes().idOf("p4"));
             REQUIRE(r.name() == "topology-particle enzymatic type");
             REQUIRE(r.rate() == 10.);
             REQUIRE(r.radius() == 11.);
@@ -283,14 +287,18 @@ TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU
     }
 
     SECTION("Attach topologies") {
-        simulation.context().periodicBoundaryConditions() = {{true, true, true}};
-        simulation.context().topologyRegistry().addType("TA");
-        simulation.context().boxSize() = {{15, 15, 15}};
-        simulation.context().particleTypes().add("middle", 0., model::particleflavor::TOPOLOGY);
-        simulation.context().particleTypes().add("end", 0., model::particleflavor::TOPOLOGY);
-        simulation.context().topologyRegistry().configureBondPotential("middle", "middle", {.00000001, 1});
-        simulation.context().topologyRegistry().configureBondPotential("middle", "end", {.00000001, 1});
-        simulation.context().topologyRegistry().configureBondPotential("end", "end", {.00000001, 1});
+        ctx.periodicBoundaryConditions() = {{true, true, true}};
+        ctx.topologyRegistry().addType("TA");
+        ctx.boxSize() = {{15, 15, 15}};
+        ctx.particleTypes().add("middle", 0., model::particleflavor::TOPOLOGY);
+        ctx.particleTypes().add("end", 0., model::particleflavor::TOPOLOGY);
+        ctx.topologyRegistry().configureBondPotential("middle", "middle", {.00000001, 1});
+        ctx.topologyRegistry().configureBondPotential("middle", "end", {.00000001, 1});
+        ctx.topologyRegistry().configureBondPotential("end", "end", {.00000001, 1});
+        // register attach reaction that transforms (end, A) -> (middle, end)
+        ctx.topologyRegistry().addSpatialReaction("merge: TA (end) + TA (end) -> TA (middle--middle)", 1e3, 1.5);
+
+        Simulation simulation {create<TestType>(), ctx};
 
         for(int i = 0; i < 3; ++i) {
             auto top = simulation.addTopology("TA", {simulation.createTopologyParticle("end", {0. - 4. + 3*i, 0., 0.}),
@@ -306,8 +314,7 @@ TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU
             }
         }
 
-        // register attach reaction that transforms (end, A) -> (middle, end)
-        simulation.context().topologyRegistry().addSpatialReaction("merge: TA (end) + TA (end) -> TA (middle--middle)", 1e3, 1.5);
+        
 
         REQUIRE(simulation.currentTopologies().size() == 3);
         simulation.run(6, 1.);

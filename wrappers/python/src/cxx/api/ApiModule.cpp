@@ -84,7 +84,7 @@ void exportApi(py::module &api) {
     py::enum_<readdy::api::TorsionType>(api, "TorsionType").value("COS_DIHEDRAL", readdy::api::TorsionType::COS_DIHEDRAL);
 
     py::class_<sim> simulation(api, "Simulation");
-    simulation.def(py::init<std::string>())
+    simulation.def(py::init<std::string, ctx>())
             .def_property_readonly("single_precision", &sim::singlePrecision)
             .def_property_readonly("double_precision", &sim::doublePrecision)
             .def("add_particle", [](sim &self, const std::string &type, const vec &pos) {
@@ -133,10 +133,8 @@ void exportApi(py::module &api) {
                 }
                 return particles;
             })
-            .def_property("context", [](sim &self) -> readdy::model::Context & {
+            .def_property_readonly("context", [](sim &self) -> const readdy::model::Context& {
                 return self.context();
-            }, [](sim &self, const readdy::model::Context &context) {
-                self.context() = context;
             })
             .def("create_loop", &sim::createLoop, py::keep_alive<0, 1>(), py::return_value_policy::reference_internal)
             .def("run", [](sim &self, const readdy::TimeStep steps, const readdy::scalar timeStep) {

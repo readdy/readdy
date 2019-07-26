@@ -55,9 +55,9 @@ using namespace readdytesting::kernel;
 
 
 TEMPLATE_TEST_CASE("Test simulation loop", "[loop]", SingleCPU, CPU) {
-    readdy::Simulation simulation {create<TestType>()};
-
     SECTION("Correct number of timesteps") {
+        readdy::model::Context ctx;
+        readdy::Simulation simulation {create<TestType>(), ctx};
         unsigned int counter = 0;
         auto increment = [&counter](readdy::model::observables::NParticles::result_type result) {
             counter++;
@@ -67,6 +67,8 @@ TEMPLATE_TEST_CASE("Test simulation loop", "[loop]", SingleCPU, CPU) {
         REQUIRE(counter == 4);
     }
     SECTION("Simple stopping criterion") {
+        readdy::model::Context ctx;
+        readdy::Simulation simulation {create<TestType>(), ctx};
         unsigned int counter = 0;
         auto increment = [&counter](readdy::model::observables::NParticles::result_type result) {
             counter++;
@@ -80,10 +82,12 @@ TEMPLATE_TEST_CASE("Test simulation loop", "[loop]", SingleCPU, CPU) {
         REQUIRE(counter == 6);
     }
     SECTION("Complex stopping criterion") {
-        simulation.context().particleTypes().add("A", 0.);
+        readdy::model::Context ctx;
+        ctx.particleTypes().add("A", 0.);
         // A -> A + A, with probability = 1 each timestep. After 3 timesteps there will be 8 particles.
         // The counter will be 4 by then.
-        simulation.context().reactions().addFission("bla", "A", "A", "A", 1e8, 0.);
+        ctx.reactions().addFission("bla", "A", "A", "A", 1e8, 0.);
+        readdy::Simulation simulation {create<TestType>(), ctx};
         simulation.addParticle("A", 0, 0, 0);
         unsigned int counter = 0;
         bool doStop = false;
@@ -101,10 +105,12 @@ TEMPLATE_TEST_CASE("Test simulation loop", "[loop]", SingleCPU, CPU) {
         REQUIRE(counter == 4);
     }
     SECTION("Skin size sanity check") {
-        simulation.context().particleTypes().add("A", 1.);
-        simulation.context().boxSize() = {{10., 10., 10.}};
-        simulation.context().periodicBoundaryConditions() = {{true, true, true}};
-        simulation.context().potentials().addHarmonicRepulsion("A", "A", 1., 2.);
+        readdy::model::Context ctx;
+        ctx.particleTypes().add("A", 1.);
+        ctx.boxSize() = {{10., 10., 10.}};
+        ctx.periodicBoundaryConditions() = {{true, true, true}};
+        ctx.potentials().addHarmonicRepulsion("A", "A", 1., 2.);
+        readdy::Simulation simulation {create<TestType>(), ctx};
         simulation.addParticle("A", 0., 0., 0.);
         simulation.addParticle("A", 1.5, 0., 0.);
         auto loop = simulation.createLoop(.001);

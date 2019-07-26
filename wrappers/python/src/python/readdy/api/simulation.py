@@ -35,7 +35,7 @@
 """
 Created on 08.09.17
 
-@author: clonker
+@author: clonker, chrisfroe
 """
 from readdy.api.conf.KernelConfiguration import CPUKernelConfiguration as _CPUKernelConfiguration
 from readdy.api.conf.KernelConfiguration import NOOPKernelConfiguration as _NOOPKernelConfiguration
@@ -72,8 +72,7 @@ class Simulation(object):
                              "are available.".format(kernel, ", ".join(['"{}"'.format(x) for x in available_kernels])))
         self._unit_conf = unit_config
         self._kernel = kernel
-        self._simulation = _Simulation(kernel)
-        self._simulation.context = context
+        self._simulation = _Simulation(kernel, context)
 
         self._evaluate_topology_reactions = True
         self._evaluate_forces = True

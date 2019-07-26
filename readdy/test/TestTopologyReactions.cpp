@@ -473,18 +473,20 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
 
     SECTION("Reaction types") {
         SECTION("TTFusion") {
-            Simulation sim (std::move(kernel));
+            model::Context ctx;
 
-            sim.context().particleTypes().addTopologyType("X1", 0);
-            sim.context().particleTypes().addTopologyType("X2", 0);
-            sim.context().particleTypes().addTopologyType("Y", 0);
-            sim.context().particleTypes().addTopologyType("Z", 0);
-            sim.context().topologyRegistry().addType("T");
-            sim.context().topologyRegistry().addType("T2");
+            ctx.particleTypes().addTopologyType("X1", 0);
+            ctx.particleTypes().addTopologyType("X2", 0);
+            ctx.particleTypes().addTopologyType("Y", 0);
+            ctx.particleTypes().addTopologyType("Z", 0);
+            ctx.topologyRegistry().addType("T");
+            ctx.topologyRegistry().addType("T2");
 
-            sim.context().topologyRegistry().configureBondPotential("Y", "Z", {0., .1});
-            sim.context().topologyRegistry().addSpatialReaction("connect: T(X1) + T(X2) -> T2(Y--Z)", 1e10, 1.);
-            
+            ctx.topologyRegistry().configureBondPotential("Y", "Z", {0., .1});
+            ctx.topologyRegistry().addSpatialReaction("connect: T(X1) + T(X2) -> T2(Y--Z)", 1e10, 1.);
+
+            Simulation sim (std::move(kernel), ctx);
+
             std::string x1type = "X1"; 
             std::string x2type = "X2"; 
             std::string ttype = "T";
@@ -519,19 +521,21 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
         }
 
         SECTION("TTSelfFusion") {
-            Simulation sim (kernel->name());
+            model::Context ctx;
 
-            sim.context().particleTypes().addTopologyType("X", 0);
-            sim.context().particleTypes().addTopologyType("Y", 0);
-            sim.context().particleTypes().addTopologyType("Z", 0);
-            sim.context().topologyRegistry().addType("T");
-            sim.context().topologyRegistry().addType("T2");
+            ctx.particleTypes().addTopologyType("X", 0);
+            ctx.particleTypes().addTopologyType("Y", 0);
+            ctx.particleTypes().addTopologyType("Z", 0);
+            ctx.topologyRegistry().addType("T");
+            ctx.topologyRegistry().addType("T2");
 
-            sim.context().topologyRegistry().configureBondPotential("Y", "Z", {.0, .01});
-            sim.context().topologyRegistry().configureBondPotential("X", "X", {.0, .01});
-            sim.context().topologyRegistry().configureBondPotential("X", "Y", {.0, .01});
-            sim.context().topologyRegistry().configureBondPotential("X", "Z", {.0, .01});
-            sim.context().topologyRegistry().addSpatialReaction("connect: T(X) + T(X) -> T2(Y--Z) [self=true]", 1e10, 1.);
+            ctx.topologyRegistry().configureBondPotential("Y", "Z", {.0, .01});
+            ctx.topologyRegistry().configureBondPotential("X", "X", {.0, .01});
+            ctx.topologyRegistry().configureBondPotential("X", "Y", {.0, .01});
+            ctx.topologyRegistry().configureBondPotential("X", "Z", {.0, .01});
+            ctx.topologyRegistry().addSpatialReaction("connect: T(X) + T(X) -> T2(Y--Z) [self=true]", 1e10, 1.);
+
+            Simulation sim (kernel->name(), ctx);
 
             auto p1 = sim.createTopologyParticle("X", {0, 0, -.01});
             auto p2 = sim.createTopologyParticle("X", {0, 0, 0});
