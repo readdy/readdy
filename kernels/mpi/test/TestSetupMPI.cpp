@@ -84,23 +84,19 @@ TEST_CASE("Test mpi kernel observe particle number", "[mpi]") {
                 auto obsHandle = simulation.registerObservable(simulation.observe().particles(1), check);
                 simulation.run(100, 0.01);
             }
-
-            //const auto currentParticles = simulation.currentParticles();
-
-
         }
     }
 }
 
 TEST_CASE("Test kernel configuration from context", "[mpi]") {
     readdy::model::Context ctx;
-    ctx.boxSize() = {10.,10.,10.};
+    ctx.boxSize() = {10., 10., 10.};
     ctx.particleTypes().add("A", 0.1);
     ctx.particleTypes().add("B", 0.1);
     ctx.potentials().addHarmonicRepulsion("B", "B", 1.0, 2.);
     json conf = {{"MPI", {{"dx", 4.9}, {"dy", 4.9}, {"dz", 4.9}}}};
     ctx.kernelConfiguration() = conf.get<readdy::conf::Configuration>();
-    MPI_Barrier(MPI_COMM_WORLD);
+
     CHECK(ctx.kernelConfiguration().mpi.dx == Approx(4.9));
     CHECK(ctx.kernelConfiguration().mpi.dy == Approx(4.9));
     CHECK(ctx.kernelConfiguration().mpi.dz == Approx(4.9));
@@ -117,7 +113,6 @@ TEST_CASE("Test distribute particles and gather them again", "[mpi]") {
     ctx.boxSize() = {10., 10., 10.};
     ctx.particleTypes().add("A", 1.);
     ctx.particleTypes().add("B", 1.);
-    //ctx.reactions().add("fusili: A +(1.) A -> B", 0.1);
     ctx.potentials().addHarmonicRepulsion("A", "A", 10., 2.3);
     json conf = {{"MPI", {{"dx", 4.9}, {"dy", 4.9}, {"dz", 4.9}}}};
     ctx.kernelConfiguration() = conf.get<readdy::conf::Configuration>();
@@ -146,4 +141,18 @@ TEST_CASE("Test distribute particles and gather them again", "[mpi]") {
 
     const auto currentParticles = kernel.stateModel().getParticles();
 
+    if (kernel.domain()->isMasterRank()) {
+        CHECK(currentParticles.size() == nParticles);
+        for (const auto &rank : kernel.domain()->workerRanks()) {
+            readdy::Vec3 origin, extent;
+            std::tie(origin, extent) = kernel.domain()->coreOfDomain(rank);
+            auto center = origin + 0.5 * extent;
+            readdy::model::Particle p(center, idA);
+            auto found = std::find_if(currentParticles.begin(), currentParticles.end(),
+                                      [&p](const readdy::model::Particle &p2) -> bool {
+                                          return p.type() == p2.type() and (p.pos() - p2.pos()).normSquared() < 0.01;
+                                      });
+            CHECK(found != currentParticles.end());
+        }
+    }
 }

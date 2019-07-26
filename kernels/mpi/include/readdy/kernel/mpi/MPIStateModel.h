@@ -223,8 +223,7 @@ private:
     NeighborList::CellRadius _neighborListCellRadius{1};
     std::unique_ptr<readdy::signals::scoped_connection> _reorderConnection;
     std::shared_ptr<const model::MPIDomain> _domain{nullptr};
-    MPI_Comm _commIfNotWorld = MPI_COMM_WORLD;
-    MPI_Comm &_commUsedRanks = _commIfNotWorld;
+    MPI_Comm _commUsedRanks = MPI_COMM_WORLD;
 };
 
 }

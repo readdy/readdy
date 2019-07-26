@@ -35,48 +35,19 @@
 /**
  * « detailed description »
  *
- * @file MPIUtils.h
+ * @file Timer.cpp
  * @brief « brief description »
  * @author chrisfroe
- * @date 24.07.19
+ * @date 26.07.19
  */
 
-#pragma once
-
-#include <string>
-#include <mpi.h>
-#include <vector>
+#include <readdy/kernel/mpi/Timer.h>
 
 namespace readdy::kernel::mpi::util {
 
-struct ThinParticle {
-    ThinParticle(const Vec3 &position, ParticleTypeId typeId) : position(position), typeId(typeId) {};
-    Vec3 position;
-    ParticleTypeId typeId;
-};
-
-enum tags {
-    sendParticles
-};
-
-inline std::vector<ThinParticle> receiveParticlesFrom(int sender, const MPI_Comm &comm) {
-    MPI_Status status;
-    MPI_Probe(sender, tags::sendParticles, comm, &status);
-    int byteCount;
-    MPI_Get_count(&status, MPI_BYTE, &byteCount);
-    const int nParticles = byteCount / sizeof(ThinParticle);
-    std::vector<ThinParticle> particles(nParticles, {{0.,0.,0.}, 0});
-    MPI_Recv((void *) particles.data(), byteCount, MPI_BYTE, sender, tags::sendParticles, comm,
-             MPI_STATUS_IGNORE);
-    if (nParticles > 0) {
-        return particles;
-    } else {
-        throw std::runtime_error("y u no send particles?");
-    }
-}
-
-inline bool isRequiredRank(const model::MPIDomain &domain) {
-    return domain.amINeeded();
+void to_json(nlohmann::json &j, const PerformanceData &pd) {
+    j = nlohmann::json{{"time",  pd.cumulativeTime()},
+                       {"count", pd.count()}};
 }
 
 }

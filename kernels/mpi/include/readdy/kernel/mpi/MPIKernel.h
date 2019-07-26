@@ -50,6 +50,7 @@
 #include <readdy/kernel/mpi/actions/MPIActionFactory.h>
 #include <readdy/kernel/mpi/observables/MPIObservableFactory.h>
 #include <readdy/kernel/mpi/model/MPIDomain.h>
+#include <readdy/kernel/mpi/Timer.h>
 
 namespace readdy::kernel::mpi {
 
@@ -140,10 +141,8 @@ protected:
     MPIStateModel _stateModel;
     std::shared_ptr<model::MPIDomain> _domain{nullptr}; // construction is delayed until initialize()
 
-    // a communicator for all used ranks if there are idle ranks
-    MPI_Comm _commIfNotWorld = MPI_COMM_WORLD;
     // The communicator for the subgroup of actually used workers, can point to _commIfNotWorld or MPI_COMM_WORLD
-    MPI_Comm& commUsedRanks = _commIfNotWorld;
+    MPI_Comm commUsedRanks = MPI_COMM_WORLD;
 };
 
 }
