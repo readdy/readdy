@@ -211,7 +211,7 @@ public:
         return _domain;
     }
 
-    std::shared_ptr<const MPI_Comm> &commUsedRanks() {
+    MPI_Comm &commUsedRanks() {
         return _commUsedRanks;
     }
 
@@ -223,7 +223,8 @@ private:
     NeighborList::CellRadius _neighborListCellRadius{1};
     std::unique_ptr<readdy::signals::scoped_connection> _reorderConnection;
     std::shared_ptr<const model::MPIDomain> _domain{nullptr};
-    std::shared_ptr<const MPI_Comm> _commUsedRanks{nullptr};
+    MPI_Comm _commIfNotWorld = MPI_COMM_WORLD;
+    MPI_Comm &_commUsedRanks = _commIfNotWorld;
 };
 
 }

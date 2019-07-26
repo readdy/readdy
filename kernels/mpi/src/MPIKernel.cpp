@@ -92,11 +92,11 @@ void MPIKernel::initialize() {
         description += fmt::format("MPI Kernel uses domain decomposition:\n");
         description += fmt::format("--------------------------------\n");
         description += fmt::format(" - Number of domains on axes (x,y,z) ({},{},{})\n",
-                                   _domain->nDomains()[0], _domain->nDomains()[1], _domain->nDomains()[2]);
+                                   _domain->nDomainsPerAxis()[0], _domain->nDomainsPerAxis()[1], _domain->nDomainsPerAxis()[2]);
         description += fmt::format(" - Domain widths on axes (x,y,z) ({},{},{})\n",
-                                   _context.boxSize()[0] / _domain->nDomains()[0],
-                                   _context.boxSize()[1] / _domain->nDomains()[1],
-                                   _context.boxSize()[2] / _domain->nDomains()[2]);
+                                   _context.boxSize()[0] / _domain->nDomainsPerAxis()[0],
+                                   _context.boxSize()[1] / _domain->nDomainsPerAxis()[1],
+                                   _context.boxSize()[2] / _domain->nDomainsPerAxis()[2]);
         description += fmt::format(" - Used {} ranks of available worldSize {}\n", _domain->nUsedRanks(),
                                    _domain->worldSize);
         readdy::log::info(description);
@@ -122,13 +122,16 @@ void MPIKernel::initialize() {
         MPI_Group_range_excl(worldGroup, 1, removeRanges, &usedGroup);
 
         // the new communicator of used ranks -> use this in barriers and stuff
-        MPI_Comm newstuff;
-        MPI_Comm_create(MPI_COMM_WORLD, usedGroup, &newstuff);
-        commUsedRanks = std::make_shared<MPI_Comm>(newstuff);
-
-        // propagate to other classes that need communicator
-        _stateModel.commUsedRanks() = commUsedRanks;
+        
+        MPI_Comm_create(MPI_COMM_WORLD, usedGroup, &_commIfNotWorld);
+        commUsedRanks = _commIfNotWorld;
+        
+    } else {
+        commUsedRanks = MPI_COMM_WORLD;
     }
+    
+    // propagate to other classes that need communicator
+    _stateModel.commUsedRanks() = commUsedRanks;
 
     _stateModel.reactionRecords().clear();
     _stateModel.resetReactionCounts();

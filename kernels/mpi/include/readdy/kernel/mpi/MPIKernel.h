@@ -139,7 +139,11 @@ protected:
     observables::MPIObservableFactory _observables;
     MPIStateModel _stateModel;
     std::shared_ptr<model::MPIDomain> _domain{nullptr}; // construction is delayed until initialize()
-    std::shared_ptr<MPI_Comm> commUsedRanks{}; // The communicator for the subgroup of actually used workers, if there were too many
+
+    // a communicator for all used ranks if there are idle ranks
+    MPI_Comm _commIfNotWorld = MPI_COMM_WORLD;
+    // The communicator for the subgroup of actually used workers, can point to _commIfNotWorld or MPI_COMM_WORLD
+    MPI_Comm& commUsedRanks = _commIfNotWorld;
 };
 
 }

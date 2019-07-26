@@ -60,10 +60,20 @@ TEST_CASE("Test domain decomposition", "[mpi]") {
         for (int rank = 0; rank < worldSize; ++rank) {
             readdy::kernel::mpi::model::MPIDomain domain(rank, worldSize, userMinDomainWidths, context);
             CHECK(domain.worldSize == 3);
-            CHECK(domain.nDomains() == std::array<std::size_t, 3>({2, 1, 1}));
+            CHECK(domain.nDomainsPerAxis() == std::array<std::size_t, 3>({2, 1, 1}));
             CHECK(domain.domainIndex()(0, 0, 0) == 0);
             CHECK(domain.rank == rank);
             CHECK(domain.haloThickness == context.calculateMaxCutoff());
+            CHECK(domain.nUsedRanks() == 3);
+            CHECK(domain.nWorkerRanks() == 2);
+            CHECK(domain.worldSize == domain.nUsedRanks() + domain.nIdleRanks());
+            CHECK(domain.worldSize == domain.nWorkerRanks() + 1 + domain.nIdleRanks());
+            for (const auto otherRank : domain.workerRanks()) {
+                readdy::Vec3 origin, extent;
+                std::tie(origin, extent) = domain.coreOfDomain(otherRank);
+                auto center = origin + 0.5 * extent;
+                CHECK(domain.rankOfPosition(center) == otherRank);
+            }
             if (rank != 0) {
                 readdy::Vec3 five{4.99 - 5., 0., 0.};
                 readdy::Vec3 twoandahalf{2.5 - 5., 0., 0.};
@@ -145,10 +155,18 @@ TEST_CASE("Test domain decomposition", "[mpi]") {
         for (int rank = 0; rank < worldSize; ++rank) {
             readdy::kernel::mpi::model::MPIDomain domain(rank, worldSize, userMinDomainWidths, context);
             CHECK(domain.worldSize == 9);
-            CHECK(domain.nDomains() == std::array<std::size_t, 3>({4, 2, 1}));
+            CHECK(domain.nDomainsPerAxis() == std::array<std::size_t, 3>({4, 2, 1}));
             CHECK(domain.domainIndex()(0, 0, 0) == 0);
             CHECK(domain.rank == rank);
             CHECK(domain.haloThickness == context.calculateMaxCutoff());
+
+            for (const auto otherRank : domain.workerRanks()) {
+                readdy::Vec3 origin, extent;
+                std::tie(origin, extent) = domain.coreOfDomain(otherRank);
+                auto center = origin + 0.5 * extent;
+                CHECK(domain.rankOfPosition(center) == otherRank);
+            }
+
             if (rank != 0) {
                 if (domain.isInDomainCore(pos)) {
                     posCount++;
@@ -188,10 +206,18 @@ TEST_CASE("Test domain decomposition", "[mpi]") {
         for (int rank = 0; rank < worldSize; ++rank) {
             readdy::kernel::mpi::model::MPIDomain domain(rank, worldSize, userMinDomainWidths, context);
             CHECK(domain.worldSize == 3);
-            CHECK(domain.nDomains() == std::array<std::size_t, 3>({2, 1, 1}));
+            CHECK(domain.nDomainsPerAxis() == std::array<std::size_t, 3>({2, 1, 1}));
             CHECK(domain.domainIndex()(0, 0, 0) == 0);
             CHECK(domain.rank == rank);
             CHECK(domain.haloThickness == context.calculateMaxCutoff());
+
+            for (const auto otherRank : domain.workerRanks()) {
+                readdy::Vec3 origin, extent;
+                std::tie(origin, extent) = domain.coreOfDomain(otherRank);
+                auto center = origin + 0.5 * extent;
+                CHECK(domain.rankOfPosition(center) == otherRank);
+            }
+
             if (rank != 0) {
                 readdy::Vec3 five{4.99 - 5., -0.1, 0.};
                 readdy::Vec3 twoandahalf{2.5 - 5., -0.1, 0.};
@@ -312,6 +338,14 @@ TEST_CASE("Test domain decomposition", "[mpi]") {
                                 }
                             }
                         }
+
+                        for (const auto otherRank : domain.workerRanks()) {
+                            readdy::Vec3 origin, extent;
+                            std::tie(origin, extent) = domain.coreOfDomain(otherRank);
+                            auto center = origin + 0.5 * extent;
+                            CHECK(domain.rankOfPosition(center) == otherRank);
+                        }
+
                     }
                 }
             }

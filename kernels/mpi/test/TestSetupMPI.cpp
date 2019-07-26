@@ -51,9 +51,7 @@
 
 using json = nlohmann::json;
 
-TEST_CASE("Test mpi kernel running in parallel", "[mpi]") {
-    // todo currently simulation cannot be used because context needs to be known when kernel is created
-    // (or latest when kernel->initialize() is called)
+TEST_CASE("Test mpi kernel observe particle number", "[mpi]") {
     if (false) {
         readdy::Simulation simulation("MPI");
         auto &ctx = simulation.context();
@@ -127,12 +125,25 @@ TEST_CASE("Test distribute particles and gather them again", "[mpi]") {
     readdy::kernel::mpi::MPIKernel kernel(ctx); // this also initializes domains
 
     auto idA = kernel.context().particleTypes().idOf("A");
-    const std::size_t nParticles = 100;
-    for (std::size_t i = 0; i < nParticles; ++i) {
-        auto x = readdy::model::rnd::uniform_real() * 10. - 5.;
-        auto y = readdy::model::rnd::uniform_real() * 10. - 5.;
-        auto z = readdy::model::rnd::uniform_real() * 10. - 5.;
-        readdy::model::Particle p(x, y, z, idA);
+    const std::size_t nParticles = kernel.domain()->nDomains(); // one particle per domain
+    for (const auto &rank : kernel.domain()->workerRanks()) {
+        readdy::Vec3 origin, extent;
+        std::tie(origin, extent) = kernel.domain()->coreOfDomain(rank);
+        auto center = origin + 0.5 * extent;
+        readdy::model::Particle p(center, idA);
         kernel.getMPIKernelStateModel().addParticle(p);
     }
+
+    if (kernel.domain()->isMasterRank()) {
+        CHECK(kernel.getMPIKernelStateModel().getParticleData()->size() == 0); // master data is emtpy
+    } else if (kernel.domain()->isWorkerRank()) {
+        CHECK(kernel.getMPIKernelStateModel().getParticleData()->size() == 1); // worker should have gotten one particle
+    } else if (kernel.domain()->isIdleRank()) {
+        CHECK(kernel.getMPIKernelStateModel().getParticleData()->size() == 0); // idle workers are idle
+    } else {
+        throw std::runtime_error("Must be one of those above");
+    }
+
+    const auto currentParticles = kernel.stateModel().getParticles();
+
 }

@@ -57,9 +57,12 @@ public:
     const scalar haloThickness;
 
 private:
-    int _nUsedRanks;
+    int _nUsedRanks; // counts master rank and all workers
+    int _nWorkerRanks; // counts all workers, which is a subset of used ranks
+    int _nIdleRanks; // counts all idle
+    std::vector<int> _workerRanks; // can be returned as const ref to conveniently iterate over ranks
     bool _amINeeded{true};
-    std::array<std::size_t, 3> _nDomains{};
+    std::array<std::size_t, 3> _nDomainsPerAxis{};
     util::Index3D _domainIndex; // rank of (ijk) is domainIndex(i,j,k)+1
 
     /** The following members will only be defined for rank != 0 */
@@ -112,20 +115,20 @@ public:
             int coord = 0;
 
             for (std::size_t i = 0; i < 3; ++i) {
-                _nDomains[i] = static_cast<unsigned int>(std::max(1., std::floor(boxSize[i] / minDomainWidths[i])));
+                _nDomainsPerAxis[i] = static_cast<unsigned int>(std::max(1., std::floor(boxSize[i] / minDomainWidths[i])));
             }
-            _nUsedRanks = _nDomains[0] * _nDomains[1] * _nDomains[2] + 1;
+            _nUsedRanks = _nDomainsPerAxis[0] * _nDomainsPerAxis[1] * _nDomainsPerAxis[2] + 1;
 
             while (_nUsedRanks > worldSize) {
                 // try to increase size of domains (round robbing), to decrease usedRanks
                 minDomainWidths[coord] = 1.5 * minDomainWidths[coord];
                 coord = (coord + 1) % 3;
                 for (std::size_t i = 0; i < 3; ++i) {
-                    _nDomains[i] = static_cast<unsigned int>(std::max(1., std::floor(boxSize[i] / minDomainWidths[i])));
+                    _nDomainsPerAxis[i] = static_cast<unsigned int>(std::max(1., std::floor(boxSize[i] / minDomainWidths[i])));
                 }
-                _nUsedRanks = _nDomains[0] * _nDomains[1] * _nDomains[2] + 1;
+                _nUsedRanks = _nDomainsPerAxis[0] * _nDomainsPerAxis[1] * _nDomainsPerAxis[2] + 1;
             }
-            if (not isValidDecomposition(_nDomains)) {
+            if (not isValidDecomposition(_nDomainsPerAxis)) {
                 throw std::runtime_error("Could not determine a valid domain decomposition");
             }
 
@@ -133,15 +136,21 @@ public:
             throw std::logic_error("worldSize must be at least 2 (one master, one worker)");
         }
 
+        _nWorkerRanks = _nUsedRanks-1;
+        _workerRanks.resize(_nWorkerRanks); // master rank 0 is also used, but not a worker, thus subtract it here
+        std::iota(_workerRanks.begin(), _workerRanks.end(), 1);
+        assert(_workerRanks[0] == 1);
+        assert(_workerRanks.back() == _nUsedRanks-1);
+        _nIdleRanks = worldSize - _nUsedRanks;
 
-        _domainIndex = util::Index3D(_nDomains[0], _nDomains[1], _nDomains[2]);
+        _domainIndex = util::Index3D(_nDomainsPerAxis[0], _nDomainsPerAxis[1], _nDomainsPerAxis[2]);
 
         // the rest is only for workers
         if (rank != 0 and rank < _nUsedRanks) {
             // find out which this ranks' ijk coordinates are, consider -1 because of master rank 0
             _myIdx = _domainIndex.inverse(rank - 1);
             for (std::size_t i = 0; i < 3; ++i) {
-                _extent[i] = boxSize[i] / static_cast<scalar>(_nDomains[i]);
+                _extent[i] = boxSize[i] / static_cast<scalar>(_nDomainsPerAxis[i]);
                 _origin[i] = -0.5 * boxSize[i] + _myIdx[i] * _extent[i];
                 _originWithHalo[i] = _origin[i] - haloThickness;
                 _extentWithHalo[i] = _extent[i] + 2 * haloThickness;
@@ -187,7 +196,7 @@ public:
         } else if (rank == 0) {
             // master rank 0 must at least know how big domains are
             for (std::size_t i = 0; i < 3; ++i) {
-                _extent[i] = boxSize[i] / static_cast<scalar>(_nDomains[i]);
+                _extent[i] = boxSize[i] / static_cast<scalar>(_nDomainsPerAxis[i]);
             }
         } else {
             // allocated but unneeded workers
@@ -274,16 +283,63 @@ public:
         return _domainIndex;
     }
 
-    const std::array<std::size_t, 3> &nDomains() const {
-        return _nDomains;
+    const std::array<std::size_t, 3> &nDomainsPerAxis() const {
+        return _nDomainsPerAxis;
     }
 
-    const int nUsedRanks() const {
+    const std::size_t nDomains() const {
+        return std::accumulate(_nDomainsPerAxis.begin(), _nDomainsPerAxis.end(), 1, std::multiplies<>());
+    }
+
+    int nUsedRanks() const {
         return _nUsedRanks;
     }
 
-    const bool amINeeded() const {
+    int nWorkerRanks() const {
+        return _nWorkerRanks;
+    }
+
+    int nIdleRanks() const {
+        return _nIdleRanks;
+    }
+
+    bool amINeeded() const {
         return _amINeeded;
+    }
+
+    bool isMasterRank() const {
+        return (rank == 0);
+    }
+
+    bool isWorkerRank() const {
+        return (_amINeeded and not isMasterRank());
+    }
+
+    bool isIdleRank() const {
+        return (not _amINeeded);
+    }
+
+    const std::vector<int> &workerRanks() const {
+        return _workerRanks;
+    }
+
+    /** calculate the core region (given by origin and extent) of domain associated with otherRank */
+    std::pair<Vec3, Vec3> coreOfDomain(int otherRank) const {
+        if (otherRank != 0 and otherRank < _nUsedRanks) {
+            // find out which this ranks' ijk coordinates are, consider -1 because of master rank 0
+            const auto &boxSize = _context.get().boxSize();
+            auto ijkOfOtherRank = _domainIndex.inverse(otherRank - 1);
+            Vec3 origin, extent;
+            for (std::size_t i = 0; i < 3; ++i) {
+                extent[i] = boxSize[i] / static_cast<scalar>(_nDomainsPerAxis[i]);
+                origin[i] = -0.5 * boxSize[i] + ijkOfOtherRank[i] * extent[i];
+                //originWithHalo[i] = origin[i] - haloThickness;
+                //extentWithHalo[i] = extent[i] + 2 * haloThickness;
+            }
+            return std::make_pair(origin, extent);
+        } else {
+            throw std::runtime_error(fmt::format("Can only determine core region of a worker rank"));
+        }
     }
 
     /**
@@ -321,13 +377,13 @@ public:
 private:
     std::array<scalar, 3> determineDomainWidths(const std::array<scalar, 3> &minDomainWidths) {
         const auto &boxSize = _context.get().boxSize();
-        // Find out nDomains per axis from minDomainWidths
+        // Find out nDomainsPerAxis per axis from minDomainWidths
         std::array<scalar, 3> domainWidths{};
         for (std::size_t i = 0; i < 3; ++i) {
-            _nDomains[i] = static_cast<unsigned int>(std::max(1., std::floor(boxSize[i] / minDomainWidths[i])));
-            domainWidths[i] = boxSize[i] / static_cast<scalar>(_nDomains[i]);
+            _nDomainsPerAxis[i] = static_cast<unsigned int>(std::max(1., std::floor(boxSize[i] / minDomainWidths[i])));
+            domainWidths[i] = boxSize[i] / static_cast<scalar>(_nDomainsPerAxis[i]);
         }
-        _nUsedRanks = _nDomains[0] * _nDomains[1] * _nDomains[2] + 1;
+        _nUsedRanks = _nDomainsPerAxis[0] * _nDomainsPerAxis[1] * _nDomainsPerAxis[2] + 1;
         return domainWidths;
     }
 
