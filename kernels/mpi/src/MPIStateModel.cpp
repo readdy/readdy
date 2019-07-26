@@ -42,6 +42,7 @@
  */
 
 #include <readdy/kernel/mpi/MPIStateModel.h>
+#include <readdy/kernel/mpi/Timer.h>
 
 namespace readdy::kernel::mpi {
 
@@ -57,8 +58,8 @@ MPIStateModel::getParticles() const {
     if (_domain->isIdleRank()) {
         return {};
     }
-    // todo test this
-    // todo time this
+    util::Timer timer("MPIStateModel::getParticles");
+
     // find out how many particles (and bytes) each worker sends
     int nParticles = 0;
     if (_domain->isWorkerRank()) {
@@ -151,6 +152,7 @@ void MPIStateModel::addParticle(const Particle &p) {
     if (_domain->isIdleRank()) {
         return;
     }
+    util::Timer timer("MPIStateModel::addParticle");
     readdy::log::trace("MPIStateModel::addParticle");
     MPI_Barrier(_commUsedRanks);
     if (_domain->rank == 0) {
@@ -185,6 +187,8 @@ void MPIStateModel::addParticles(const std::vector<Particle> &p) {
     if (not util::isRequiredRank(*_domain)) {
         return;
     }
+    // todo test this
+    util::Timer timer("MPIStateModel::addParticles");
     // todo use MPI_Scatter
     if (_domain->rank == 0) {
         std::unordered_map<int, std::vector<util::ThinParticle>> targetParticleMap;

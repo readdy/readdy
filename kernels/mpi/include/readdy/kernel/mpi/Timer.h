@@ -115,6 +115,8 @@ public:
         }
     }
 
+    explicit Timer(const std::string &targetName, bool measure = true) : Timer(perf[targetName], measure) {};
+
     /**
      * Destructor of the timer, recording the elapsed lifetime of this object into the given performance datum.
      */
@@ -136,26 +138,15 @@ public:
 
     Timer &operator=(Timer &&) = delete;
 
+    static void writePerfToFile(const std::string &outFile);
+
 private:
     bool measure{true};
     const PerformanceData &target;
     std::chrono::high_resolution_clock::time_point begin;
+    static std::unordered_map<std::string, PerformanceData> perf;
 };
 
 void to_json(nlohmann::json &j, const PerformanceData &pd);
-
-std::unordered_map<std::string, PerformanceData> perf;
-
-inline void writePerfToFile(const std::string &path) {
-    nlohmann::json j;
-    for (const auto &entry : perf) {
-        nlohmann::json jEntry(entry.second);
-        j[entry.first] = jEntry;
-    }
-    std::ofstream stream(path);
-    stream << std::setw(4) << j << std::endl;
-}
-
-static std::unordered_map<std::string, util::PerformanceData> performanceData;
 
 }

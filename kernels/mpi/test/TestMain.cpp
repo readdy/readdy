@@ -49,18 +49,21 @@
 
 #include <readdy/testing/Utils.h>
 #include <readdy/plugin/KernelProvider.h>
+#include <readdy/kernel/mpi/Timer.h>
 
 
-/** Tiny RAII wrapper for MPI Init and Finalize, and a debugging lock */
+/** Tiny RAII wrapper for MPI Init and Finalize, a debugging lock, and writing performance data */
 class MPISession {
+    int worldSize;
+    int rank;
+    int nameLen;
+    char processorName[MPI_MAX_PROCESSOR_NAME];
+
 public:
     MPISession(int argc, char **argv) {
         MPI_Init(&argc, &argv);
 
-        int worldSize;
-        int rank;
-        int nameLen;
-        char processorName[MPI_MAX_PROCESSOR_NAME];
+
 
         MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
         MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -73,6 +76,9 @@ public:
     }
 
     ~MPISession() {
+        std::string dir {"/storage/mi/chrisfr/workspace/data/readdympi/"};
+        std::string filename {"rank_" + std::to_string(rank)};
+        readdy::kernel::mpi::util::Timer::writePerfToFile(dir + filename);
         MPI_Finalize();
     }
 
