@@ -35,7 +35,7 @@
 
 project(runUnitTests_mpi LANGUAGES C CXX)
 
-add_executable(${PROJECT_NAME} TestMain.cpp TestSetupMPI.cpp IntegrationTest.cpp ${TESTING_INCLUDE_DIR})
+add_executable(${PROJECT_NAME} TestMain.cpp TestSetupMPI.cpp IntegrationTest.cpp TestPerformance.cpp ${TESTING_INCLUDE_DIR})
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${READDY_INCLUDE_DIRS} ${TESTING_INCLUDE_DIR} ${MPI_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} PUBLIC readdy readdy_kernel_mpi Catch2::Catch2)

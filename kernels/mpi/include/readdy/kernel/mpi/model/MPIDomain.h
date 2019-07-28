@@ -53,7 +53,7 @@ class MPIDomain {
     /** Members which the master rank also knows */
 public:
     const int rank;
-    const int worldSize;
+    const int worldSize; // todo worldSize can actually be static
     const scalar haloThickness;
 
 private:

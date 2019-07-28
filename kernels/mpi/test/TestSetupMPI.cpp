@@ -44,7 +44,6 @@
 #include <catch2/catch.hpp>
 
 #include <readdy/model/Kernel.h>
-#include <readdy/plugin/KernelProvider.h>
 #include <readdy/kernel/mpi/MPIKernel.h>
 #include <readdy/api/Simulation.h>
 #include <readdy/api/KernelConfiguration.h>

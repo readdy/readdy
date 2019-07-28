@@ -209,17 +209,20 @@ void MPIStateModel::addParticles(const std::vector<Particle> &p) {
             isTarget[target] = true;
         }
         // broadcast target
-        MPI_Bcast(&isTarget, isTarget.size(), MPI_CHAR, 0, _commUsedRanks);
+        MPI_Bcast(isTarget.data(), isTarget.size(), MPI_CHAR, 0, _commUsedRanks);
         // send
         for (auto&&[target, thinParticles] : targetParticleMap) {
-            MPI_Send((void *) thinParticles.data(),
+            MPI_Request req;
+            MPI_Isend((void *) thinParticles.data(),
                      static_cast<int>(thinParticles.size() * sizeof(util::ThinParticle)), MPI_BYTE,
-                     target, util::tags::sendParticles, _commUsedRanks);
+                     target, util::tags::sendParticles, _commUsedRanks, &req);
+            MPI_Request_free(&req);
         }
+        MPI_Barrier(_commUsedRanks);
     } else {
         std::vector<char> isTarget(_domain->nUsedRanks(), false);
         // am i one of the targets?
-        MPI_Bcast(&isTarget, isTarget.size(), MPI_CHAR, 0, _commUsedRanks);
+        MPI_Bcast(isTarget.data(), isTarget.size(), MPI_CHAR, 0, _commUsedRanks);
         if (isTarget[_domain->rank]) {
             // receive, ignore argument p here
             const auto thinParticles = util::receiveParticlesFrom(0, _commUsedRanks);
@@ -230,6 +233,7 @@ void MPIStateModel::addParticles(const std::vector<Particle> &p) {
                           });
             getParticleData()->addParticles(particles);
         }
+        MPI_Barrier(_commUsedRanks);
     }
 }
 

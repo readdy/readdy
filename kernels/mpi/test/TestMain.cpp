@@ -76,9 +76,9 @@ public:
     }
 
     ~MPISession() {
-        std::string dir {"/storage/mi/chrisfr/workspace/data/readdympi/"};
-        std::string filename {"rank_" + std::to_string(rank)};
-        readdy::kernel::mpi::util::Timer::writePerfToFile(dir + filename);
+        //std::string dir {"/storage/mi/chrisfr/workspace/data/readdympi/nonblock/n1/"};
+        //std::string filename {"rank_" + std::to_string(rank)};
+        //readdy::kernel::mpi::util::Timer::writePerfToFile(dir + filename);
         MPI_Finalize();
     }
 
