@@ -56,9 +56,7 @@
 #include <regex>
 #include <utility>
 
-namespace readdy {
-namespace model {
-namespace reactions {
+namespace readdy::model::reactions {
 
 const ReactionRegistry::ReactionsCollection ReactionRegistry::DEFAULT_REACTIONS = {};
 
@@ -311,7 +309,7 @@ struct FindId {
         if (reaction->name() == name) {
             *found = true;
             id.get() = reaction->id();
-        };
+        }
     }
 };
 
@@ -417,6 +415,4 @@ const Reaction* ReactionRegistry::byId(ReactionId id) const {
     }
 }
 
-}
-}
 }

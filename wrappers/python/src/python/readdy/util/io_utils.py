@@ -89,7 +89,7 @@ def get_particle_types_list(fname, dset_path="readdy/config/particle_types"):
     """Construct a list of type strings for the particle types
     used in the simulation that created the output file.
 
-    :param filename: the readdy h5 file, containing context info
+    :param fname: the readdy h5 file, containing context info
     :param dset_path: path to dataset within h5 file containing particle type info
     :return: list of type strings
     """

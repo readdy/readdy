@@ -46,10 +46,7 @@
 #include <readdy/model/topologies/reactions/Recipe.h>
 #include <readdy/model/Kernel.h>
 
-namespace readdy {
-namespace model {
-namespace top {
-namespace reactions {
+namespace readdy::model::top::reactions {
 
 Recipe &Recipe::changeParticleType(const Recipe::vertex_ref &ref, const std::string &to) {
     return changeParticleType(ref, _topology.get().context().particleTypes().idOf(to));
@@ -97,7 +94,4 @@ Recipe &Recipe::appendNewParticle(const std::vector<vertex_ref> &neighbors, cons
     return *this;
 }
 
-}
-}
-}
 }

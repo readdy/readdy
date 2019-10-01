@@ -42,8 +42,7 @@
 
 #include <readdy/model/StateModel.h>
 
-namespace readdy {
-namespace model {
+namespace readdy::model {
 
 std::vector<Particle> StateModel::getParticlesForTopology(const top::GraphTopology &topology) const {
     std::vector<Particle> result;
@@ -54,5 +53,4 @@ std::vector<Particle> StateModel::getParticlesForTopology(const top::GraphTopolo
     return result;
 }
 
-}
 }

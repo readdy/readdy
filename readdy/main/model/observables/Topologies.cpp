@@ -164,6 +164,6 @@ void Topologies::append() {
 
 Topologies::~Topologies() {
     flush();
-};
+}
 
 }

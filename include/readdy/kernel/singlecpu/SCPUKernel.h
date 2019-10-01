@@ -46,9 +46,7 @@
 #include <readdy/kernel/singlecpu/model/topologies/SCPUTopologyActionFactory.h>
 #include <readdy/kernel/singlecpu/actions/SCPUActionFactory.h>
 
-namespace readdy {
-namespace kernel {
-namespace scpu {
+namespace readdy::kernel::scpu {
 
 class SCPUKernel : public readdy::model::Kernel {
 public:
@@ -111,6 +109,4 @@ private:
     observables::SCPUObservableFactory _observables;
 };
 
-}
-}
 }

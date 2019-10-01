@@ -74,7 +74,7 @@ namespace readdy::model::actions {
 class AddParticles : public Action {
 
 public:
-    AddParticles(Kernel *kernel, const std::vector<Particle> &particles);
+    AddParticles(Kernel *kernel, std::vector<Particle> particles);
 
     ~AddParticles() override = default;
 

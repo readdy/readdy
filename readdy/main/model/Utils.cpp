@@ -49,9 +49,7 @@
 #include <readdy/model/Utils.h>
 #include <sstream>
 
-namespace readdy {
-namespace model {
-namespace util {
+namespace readdy::model::util {
 
 /*scalar  getMaximumDisplacement(Context& context, const scalar  timeStep) {
     context.configure();
@@ -190,6 +188,4 @@ void validateTypeName(const std::string &typeName) {
     }
 }
 
-}
-}
 }

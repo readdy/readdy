@@ -65,7 +65,7 @@ class StructuralReactionRecipe(object):
         """
         Changes the particle position of the to vertex associated particle to the given position.
         :param vertex: the vertex or its index (obtainable from `topology.get_graph().get_vertices()`)
-        :param type_to: the target particle type
+        :param new_position: the target position
         :return: a reference to this recipe to enable a fluent interface
         """
         self._recipe.change_particle_position(vertex, _v3_of(new_position))
@@ -104,7 +104,7 @@ class StructuralReactionRecipe(object):
         type is no topology type. Then, no one-particle topology will be formed but the particle will simply
         be emitted and treated as normal particle.
 
-        :param index: vertex or the vertex' index with respect to `topology.get_graph().get_vertices()`
+        :param vertex: vertex or the vertex' index with respect to `topology.get_graph().get_vertices()`
         :return: a reference to this recipe to enable a fluent interface
         """
         self._recipe.separate_vertex(vertex)
