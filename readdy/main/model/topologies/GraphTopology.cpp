@@ -250,7 +250,6 @@ void GraphTopology::appendTopology(GraphTopology &other, Topology::particle_inde
 
     if(!otherGraph.vertices().empty()) {
 
-
         auto &thisGraph = graph();
 
         auto former_begin = otherGraph.vertices().begin();

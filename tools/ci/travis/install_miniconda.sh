@@ -19,5 +19,5 @@ install_miniconda
 export PATH=$TARGET/bin:$PATH
 
 conda config --set always_yes true
-#conda update --all
-conda install -q conda-build=3.16.1
+conda update --all
+conda install -q conda-build=3.18.9
