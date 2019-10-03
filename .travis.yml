@@ -21,7 +21,7 @@ env:
   global:
   - PATH=$HOME/_cmake/bin:$HOME/miniconda/bin:$PATH
   - MACOSX_DEPLOYMENT_TARGET=10.7
-  - MAKEFLAGS="-j1 ${MAKEFLAGS}"
+  - MAKEFLAGS="-j2 ${MAKEFLAGS}"
 
   matrix:
   - python=3.6 CONDA_PY=36
