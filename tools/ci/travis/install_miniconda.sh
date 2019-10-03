@@ -11,7 +11,7 @@ function install_miniconda {
         elif [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
              platform="MacOSX"
         fi
-	wget http://repo.continuum.io/miniconda/Miniconda3-latest-$platform-x86_64.sh -O mc.sh -o /dev/null
+	wget http://repo.continuum.io/miniconda/Miniconda3-4.6.14-$platform-x86_64.sh -O mc.sh -o /dev/null
 	bash mc.sh -b -f -p $TARGET
 }
 
