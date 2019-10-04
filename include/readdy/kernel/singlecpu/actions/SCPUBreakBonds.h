@@ -32,49 +32,26 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                       *
  ********************************************************************/
 
-
 /**
- * @file TestBreakingBonds.cpp
- * @brief Test implementation-independent execution of action that breaks bonds
+ * « detailed description »
+ *
+ * @file SCPUBreakBonds.h
+ * @brief « brief description »
  * @author chrisfroe
- * @date 27.05.19
+ * @date 04.10.19
  */
 
-#include <catch2/catch.hpp>
+#pragma once
 
-#include <readdy/testing/KernelTest.h>
+#include <readdy/model/actions/Actions.h>
+#include <readdy/kernel/singlecpu/SCPUKernel.h>
 
-namespace m = readdy::model;
-using namespace readdytesting::kernel;
+namespace readdy::kernel::scpu::actions::top {
 
-TEMPLATE_TEST_CASE("Test breaking bonds.", "[breakbonds]", SingleCPU, CPU) {
-    auto kernel = readdytesting::kernel::create<TestType>();
-    auto &ctx = kernel->context();
-    ctx.particleTypes().add("A", 1.0);
-    ctx.particleTypes().add("B", 1.0);
-    ctx.topologyRegistry().addType("T");
-
-    SECTION("Break due to large displacement with high rate, dimer") {
-        // "A"-"A" with threshold 10 kBT
-        // todo
-        readdy::scalar threshold = 10.;
-
-        auto &&breakingBonds = kernel->actions().breakBonds();
-
-
-
-    }
-
-    SECTION("Break due to large displacement with high rate, trimer") {
-
-    }
-
-    SECTION("Break due to large displacement with high rate, different types") {
-
-    }
-
-    SECTION("Break due to umbrella (box potential) pulling the bond apart (integration w/ forces and diffusion)") {
-
-    }
+class SCPUBreakBonds : public readdy::model::actions::top::BreakBonds {
+public:
+    explicit SCPUBreakBonds(SCPUKernel *kernel, scalar timeStep, readdy::model::actions::top::BreakConfig config)
+            : BreakBonds(kernel, timeStep, std::move(config)) {}
+};
 
 }

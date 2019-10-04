@@ -180,22 +180,60 @@ public:
     ~EvaluateTopologyReactions() override = default;
 };
 
+class BreakConfig {
+public:
+    void addBreakablePair(ParticleTypeId type1, ParticleTypeId type2, scalar thresholdEnergy, scalar rate) {
+        if (rate <= 0.) {
+            throw std::logic_error(fmt::format("Rate of breaking a bond must be positive, was {}", rate));
+        }
+        _thresholdEnergies.emplace(std::make_pair(std::make_pair(type1, type2), thresholdEnergy));
+        _breakRates.emplace(std::make_pair(std::make_pair(type1, type2), rate));
+    }
+
+    const util::particle_type_pair_unordered_map<scalar> &thresholdEnergies() const {
+        return _thresholdEnergies;
+    }
+
+    const util::particle_type_pair_unordered_map<scalar> &breakRates() const {
+        return _breakRates;
+    }
+
+private:
+    util::particle_type_pair_unordered_map<scalar> _thresholdEnergies{};
+    util::particle_type_pair_unordered_map<scalar> _breakRates{};
+};
+
 class BreakBonds : public TimeStepDependentAction {
 public:
     using vertex_ref = readdy::model::top::graph::Graph::vertex_ref;
 
-    explicit BreakBonds(Kernel * kernel, scalar timeStep);
+    explicit BreakBonds(Kernel *kernel, scalar timeStep, BreakConfig breakConfig);
 
     ~BreakBonds() override = default;
 
     void perform() override;
 
+    const util::particle_type_pair_unordered_map<scalar> &thresholdEnergies() const {
+        return breakConfig.thresholdEnergies();
+    }
+
+    const util::particle_type_pair_unordered_map<scalar> &breakRates() const {
+        return breakConfig.breakRates();
+    }
+
 protected:
-    Kernel * kernel;
+    Kernel *kernel;
+
+    virtual scalar evaluateEdgeEnergy(std::tuple<vertex_ref, vertex_ref>) const {
+        return 0.;
+    }
     // todo actionfactory, and implement evaluateEdgeEnergy that sums all pair potential terms for given edge
-    virtual scalar evaluateEdgeEnergy(std::tuple<vertex_ref, vertex_ref>) = 0;
-    util::particle_type_pair_unordered_map<scalar> breakRates;
-    util::particle_type_pair_unordered_map<scalar> thresholdEnergies;
+    // (assure vertices have edge), get particle types of vertex pair,
+    // get distance, get bond potentials between particleTypes, evaluate potentials and sum
+
+    const BreakConfig breakConfig;
+    //util::particle_type_pair_unordered_map<scalar> thresholdEnergies;
+    //util::particle_type_pair_unordered_map<scalar> breakRates;
 };
 
 }
@@ -277,4 +315,8 @@ const std::string getActionName(typename std::enable_if<std::is_base_of<Evaluate
     return "EvaluateCompartments";
 }
 
+template<typename T>
+const std::string getActionName(typename std::enable_if<std::is_base_of<top::BreakBonds, T>::value>::type * = 0) {
+    return "BreakBonds";
+}
 }

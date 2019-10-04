@@ -554,8 +554,8 @@ CalculateForces::CalculateForces() : Action() {}
 
 top::EvaluateTopologyReactions::EvaluateTopologyReactions(scalar timeStep) : TimeStepDependentAction(timeStep) {}
 
-top::BreakBonds::BreakBonds(Kernel *const kernel, scalar timeStep)
-        : TimeStepDependentAction(timeStep), kernel(kernel) {}
+top::BreakBonds::BreakBonds(Kernel *kernel, scalar timeStep, BreakConfig breakConfig)
+        : TimeStepDependentAction(timeStep), kernel(kernel), breakConfig(std::move(breakConfig)) {}
 
 void top::BreakBonds::perform() {
     for (auto *top : kernel->stateModel().getTopologies()) {
@@ -567,8 +567,8 @@ void top::BreakBonds::perform() {
                     const auto &v1Type = std::get<0>(edge)->particleType();
                     const auto &v2Type = std::get<1>(edge)->particleType();
                     const auto &typePair = std::make_tuple(v1Type, v2Type);
-                    if (energy > thresholdEnergies.at(typePair)) {
-                        const auto &rate = breakRates.at(typePair);
+                    if (energy > thresholdEnergies().at(typePair)) {
+                        const auto &rate = breakRates().at(typePair);
                         if (readdy::model::rnd::uniform_real() < 1 - std::exp(-rate * _timeStep)) {
                             recipe.removeEdge(edge);
                         }

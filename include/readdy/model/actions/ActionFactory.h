@@ -63,7 +63,8 @@ public:
                 getActionName<CreateNeighborList>(), getActionName<UpdateNeighborList>(),
                 getActionName<ClearNeighborList>(), getActionName<reactions::UncontrolledApproximation>(),
                 getActionName<reactions::Gillespie>(), getActionName<reactions::DetailedBalance>(),
-                getActionName<top::EvaluateTopologyReactions>(), getActionName<MdgfrdIntegrator>()
+                getActionName<top::EvaluateTopologyReactions>(), getActionName<MdgfrdIntegrator>(),
+                getActionName<top::BreakBonds>()
         };
     }
 
@@ -120,6 +121,8 @@ public:
     detailedBalance(scalar timeStep) const = 0;
 
     virtual std::unique_ptr<top::EvaluateTopologyReactions> evaluateTopologyReactions(scalar timeStep) const = 0;
+
+    virtual std::unique_ptr<top::BreakBonds> breakBonds(scalar timeStep, top::BreakConfig config) const = 0;
 
 };
 
