@@ -543,20 +543,29 @@ class Simulation(object):
         if self._checkpoint_saver is not None:
             loop.make_checkpoints(self._checkpoint_saver, self._checkpoint_stride)
 
-        if self.output_file is not None and len(self.output_file) > 0:
-            with closing(io.File.create(self.output_file)) as f:
+        write_outfile = self.output_file is not None and len(self.output_file) > 0
+
+        import contextlib
+
+        @contextlib.contextmanager
+        def nullcontext():
+            yield
+
+        with closing(io.File.create(self.output_file)) if write_outfile else nullcontext() as f:
+            if write_outfile:
                 for name, chunk_size, handle in self._observables._observable_handles:
                     handle.enable_write_to_file(f, name, chunk_size)
                 loop.write_config_to_file(f)
-        if show_summary:
-            print(self._simulation.context.describe())
-            print(loop.describe())
-        if self.show_progress:
-            import tqdm
-            loop.progress_output_stride = self._progress_output_stride
-            with tqdm.tqdm(total=n_steps // self._progress_output_stride) as progress:
-                loop.progress_callback = lambda t: progress.update(1)
+            if show_summary:
+                print(self._simulation.context.describe())
+                print(loop.describe())
+            if self.show_progress:
+                import tqdm
+                loop.progress_output_stride = self._progress_output_stride
+                with tqdm.tqdm(total=n_steps // self._progress_output_stride) as progress:
+                    loop.progress_callback = lambda t: progress.update(1)
+                    loop.run(n_steps)
+                    loop.progress_callback = None
+            else:
+
                 loop.run(n_steps)
-                loop.progress_callback = None
-        else:
-            loop.run(n_steps)
