@@ -110,6 +110,11 @@ std::unique_ptr<model::actions::reactions::DetailedBalance>
 CPUActionFactory::detailedBalance(scalar timeStep) const {
     throw std::invalid_argument("DetailedBalance reaction handler not implemented for CPU");
 }
+
+std::unique_ptr<model::actions::top::BreakBonds>
+CPUActionFactory::breakBonds(scalar timeStep, readdy::model::actions::top::BreakConfig config) const {
+    return {std::make_unique<top::CPUBreakBonds>(kernel, timeStep, config)};
+}
 }
 }
 }

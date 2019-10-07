@@ -207,11 +207,9 @@ class BreakBonds : public TimeStepDependentAction {
 public:
     using vertex_ref = readdy::model::top::graph::Graph::vertex_ref;
 
-    explicit BreakBonds(Kernel *kernel, scalar timeStep, BreakConfig breakConfig);
+    explicit BreakBonds(scalar timeStep, BreakConfig breakConfig);
 
     ~BreakBonds() override = default;
-
-    void perform() override;
 
     const util::particle_type_pair_unordered_map<scalar> &thresholdEnergies() const {
         return breakConfig.thresholdEnergies();
@@ -222,14 +220,7 @@ public:
     }
 
 protected:
-    Kernel *kernel;
-
-    virtual scalar evaluateEdgeEnergy(std::tuple<vertex_ref, vertex_ref>) const {
-        return 0.;
-    }
-    // todo actionfactory, and implement evaluateEdgeEnergy that sums all pair potential terms for given edge
-    // (assure vertices have edge), get particle types of vertex pair,
-    // get distance, get bond potentials between particleTypes, evaluate potentials and sum
+    
 
     const BreakConfig breakConfig;
     //util::particle_type_pair_unordered_map<scalar> thresholdEnergies;

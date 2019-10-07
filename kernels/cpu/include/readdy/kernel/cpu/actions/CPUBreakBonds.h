@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2018 Computational Molecular Biology Group,          *
+ * Copyright © 2019 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * Redistribution and use in source and binary forms, with or       *
@@ -32,62 +32,40 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                       *
  ********************************************************************/
 
-
 /**
- * @file CPUActionFactory.h
- * @brief Declaration of CPU action factory
- * @author clonker
- * @date 23.06.16
+ * « detailed description »
+ *
+ * @file CPUBreakBonds.h
+ * @brief « brief description »
+ * @author chrisfroe
+ * @date 07.10.19
  */
 
 #pragma once
 
-#include <readdy/model/actions/ActionFactory.h>
+#include <readdy/model/actions/Actions.h>
+#include <readdy/kernel/cpu/CPUKernel.h>
 
-namespace readdy {
-namespace kernel {
-namespace cpu {
-class CPUKernel;
-namespace actions {
-class CPUActionFactory : public readdy::model::actions::ActionFactory {
-    CPUKernel *const kernel;
+namespace readdy::kernel::cpu::actions::top {
+
+class CPUBreakBonds : public readdy::model::actions::top::BreakBonds {
 public:
-    explicit CPUActionFactory(CPUKernel *kernel);
+    explicit CPUBreakBonds(CPUKernel *kernel, scalar timeStep, readdy::model::actions::top::BreakConfig config)
+            : BreakBonds(timeStep, std::move(config)), kernel(kernel) {}
 
-    std::unique_ptr<model::actions::AddParticles>
-    addParticles(const std::vector<model::Particle> &particles) const override;
+    void perform() override {
+        // todo
+    }
 
-    std::unique_ptr<model::actions::EulerBDIntegrator> eulerBDIntegrator(scalar timeStep) const override;
+private:
+    CPUKernel *kernel;
 
-    std::unique_ptr<readdy::model::actions::MdgfrdIntegrator> mdgfrdIntegrator(scalar timeStep) const override;
-
-    std::unique_ptr<readdy::model::actions::CalculateForces> calculateForces() const override;
-
-    std::unique_ptr<model::actions::CreateNeighborList> createNeighborList(scalar interactionDistance) const override;
-
-    std::unique_ptr<model::actions::UpdateNeighborList> updateNeighborList() const override;
-
-    std::unique_ptr<model::actions::ClearNeighborList> clearNeighborList() const override;
-
-    std::unique_ptr<model::actions::EvaluateCompartments> evaluateCompartments() const override;
-
-    std::unique_ptr<model::actions::reactions::UncontrolledApproximation>
-    uncontrolledApproximation(scalar timeStep) const override;
-
-    std::unique_ptr<model::actions::reactions::Gillespie>
-    gillespie(scalar timeStep) const override;
-
-    std::unique_ptr<model::actions::reactions::DetailedBalance>
-    detailedBalance(scalar timeStep) const override;
-
-    std::unique_ptr<model::actions::top::EvaluateTopologyReactions>
-    evaluateTopologyReactions(scalar timeStep) const override;
-
-    std::unique_ptr<model::actions::top::BreakBonds>
-    breakBonds(scalar timeStep, readdy::model::actions::top::BreakConfig config) const override;
+    // Note that this also evaluates forces as a by-product, i.e. adds to the force property of particles
+    scalar
+    evaluateEdgeEnergy(std::tuple<vertex_ref, vertex_ref> edge, const readdy::model::top::GraphTopology &t) const {
+        // todo
+    }
 };
 
 }
-}
-}
-}
+
