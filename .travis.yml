@@ -45,6 +45,7 @@ install:
 - if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then export BUILD_TYPE="RelWithDebInfo"; else export BUILD_TYPE="Release"; fi
 
 script:
+- conda clean --all -y
 - conda-build --version
 - conda build -c defaults -c conda-forge tools/conda-recipe --python=$CONDA_PY
 
