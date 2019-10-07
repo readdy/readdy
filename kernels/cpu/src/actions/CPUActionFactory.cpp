@@ -48,6 +48,7 @@
 #include <readdy/kernel/cpu/actions/reactions/CPUGillespie.h>
 #include <readdy/kernel/cpu/actions/reactions/CPUUncontrolledApproximation.h>
 #include <readdy/kernel/cpu/actions/CPUEvaluateTopologyReactions.h>
+#include <readdy/kernel/cpu/actions/CPUBreakBonds.h>
 
 namespace core_p = readdy::model::actions;
 

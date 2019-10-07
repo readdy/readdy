@@ -43,25 +43,85 @@
 #include <catch2/catch.hpp>
 
 #include <readdy/testing/KernelTest.h>
+#include <readdy/testing/Utils.h>
 
 namespace m = readdy::model;
 using namespace readdytesting::kernel;
 
 TEMPLATE_TEST_CASE("Test breaking bonds.", "[breakbonds]", SingleCPU, CPU) {
+    readdy::log::set_level(spdlog::level::warn);
+
     auto kernel = readdytesting::kernel::create<TestType>();
     auto &ctx = kernel->context();
-    ctx.particleTypes().add("A", 1.0);
-    ctx.particleTypes().add("B", 1.0);
-    ctx.topologyRegistry().addType("T");
+    ctx.boxSize() = {10., 10., 10.};
+    auto &types = ctx.particleTypes();
+    auto &stateModel = kernel->stateModel();
 
-    SECTION("Break due to large displacement with high rate, dimer") {
-        // "A"-"A" with threshold 10 kBT
-        // todo
-        readdy::scalar threshold = 10.;
+    types.add("A", 1.0);
+    types.add("B", 1.0);
 
-        auto &&breakingBonds = kernel->actions().breakBonds();
+    auto &topReg = ctx.topologyRegistry();
+    topReg.addType("T");
+    readdy::scalar timeStep = 1.;
 
+    SECTION("Dimer") {
+        readdy::api::Bond bond{1., 1., readdy::api::BondType::HARMONIC};
+        topReg.configureBondPotential("A", "A", bond);
 
+        std::vector<readdy::model::TopologyParticle> particles{
+                {0., 0., 0., types.idOf("A")},
+                {0., 0., 2., types.idOf("A")}
+        };
+        // distance of A and A is 2, equilibrium distance is 1, bond extension is 1, bond energy is 1.
+
+        auto graphTop = stateModel.addTopology(topReg.idOf("T"), particles);
+        auto &graph = graphTop->graph();
+        graph.addEdgeBetweenParticles(0, 1);
+
+        // We have one dimer
+        auto topsBefore = stateModel.getTopologies();
+        REQUIRE(topsBefore.size() == 1);
+        REQUIRE(topsBefore.at(0)->type() == topReg.idOf("T"));
+        REQUIRE(topsBefore.at(0)->getNParticles() == 2);
+
+        SECTION("Low threshold, break") {
+            readdy::model::actions::top::BreakConfig breakConfig;
+            breakConfig.addBreakablePair(types.idOf("A"), types.idOf("A"), 0.9, 1e10);
+
+            auto &&breakingBonds = kernel->actions().breakBonds(timeStep, breakConfig);
+            breakingBonds->perform();
+
+            // Bond broke, thus no topologies anymore
+            auto topsAfter = stateModel.getTopologies();
+            //readdy::log::warn("topology[0] has size {}", topsAfter.at(0)->getNParticles());
+            REQUIRE(topsAfter.empty());
+        }
+
+        SECTION("High threshold, do not break") {
+            readdy::model::actions::top::BreakConfig breakConfig;
+            breakConfig.addBreakablePair(types.idOf("A"), types.idOf("A"), 1.1, 1e10);
+
+            auto &&breakingBonds = kernel->actions().breakBonds(timeStep, breakConfig);
+            breakingBonds->perform();
+
+            // We still have one dimer
+            auto topsAfter = stateModel.getTopologies();
+            REQUIRE(topsAfter.size() == 1);
+            REQUIRE(topsAfter.at(0)->type() == topReg.idOf("T"));
+            REQUIRE(topsAfter.at(0)->getNParticles() == 2);
+        }
+
+        // particles are still at their position
+        auto ps = stateModel.getParticles();
+        REQUIRE(ps.size() == 2);
+        REQUIRE(ps.at(0).type() == types.idOf("A"));
+        REQUIRE(ps.at(1).type() == types.idOf("A"));
+        if (readdy::testing::vec3eq(ps.at(0).pos(), readdy::Vec3(0., 0., 0.))) {
+            REQUIRE(readdy::testing::vec3eq(ps.at(1).pos(), readdy::Vec3(0., 0., 2.)));
+        } else {
+            REQUIRE(readdy::testing::vec3eq(ps.at(0).pos(), readdy::Vec3(0., 0., 2.)));
+            REQUIRE(readdy::testing::vec3eq(ps.at(1).pos(), readdy::Vec3(0., 0., 0.)));
+        }
 
     }
 

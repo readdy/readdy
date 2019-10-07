@@ -58,7 +58,7 @@ public:
         for (auto *top : kernel->stateModel().getTopologies()) {
             if (!top->isDeactivated()) {
                 auto reactionFunction = [&](
-                        readdy::model::top::GraphTopology &t) -> readdy::model::top::reactions::Recipe && {
+                        readdy::model::top::GraphTopology &t) -> readdy::model::top::reactions::Recipe {
                     readdy::model::top::reactions::Recipe recipe(t);
                     for (const auto &edge : t.graph().edges()) {
                         auto energy = evaluateEdgeEnergy(edge, t);
