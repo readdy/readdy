@@ -220,11 +220,7 @@ public:
     }
 
 protected:
-    
-
     const BreakConfig breakConfig;
-    //util::particle_type_pair_unordered_map<scalar> thresholdEnergies;
-    //util::particle_type_pair_unordered_map<scalar> breakRates;
 };
 
 }

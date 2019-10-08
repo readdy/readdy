@@ -65,10 +65,13 @@ public:
                         const auto &v1Type = std::get<0>(edge)->particleType();
                         const auto &v2Type = std::get<1>(edge)->particleType();
                         const auto &typePair = std::make_tuple(v1Type, v2Type);
-                        if (energy > thresholdEnergies().at(typePair)) {
-                            const auto &rate = breakRates().at(typePair);
-                            if (readdy::model::rnd::uniform_real() < 1 - std::exp(-rate * _timeStep)) {
-                                recipe.removeEdge(edge);
+                        const auto thresholdEnergyIt = thresholdEnergies().find(typePair);
+                        if (thresholdEnergyIt != thresholdEnergies().end()) {
+                            if (energy > thresholdEnergyIt->second) {
+                                const auto &rate = breakRates().at(typePair);
+                                if (readdy::model::rnd::uniform_real() < 1 - std::exp(-rate * _timeStep)) {
+                                    recipe.removeEdge(edge);
+                                }
                             }
                         }
                     }
