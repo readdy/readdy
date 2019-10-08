@@ -37,13 +37,16 @@
  * This files contains a selection of possible Actions that can be executed on a kernel:
  *   - AddParticles: An action with which particles can be added.
  *   - EulerBDIntegrator: Propagates the particles through the system.
- *   - UpdateNeighborList: Creates and updates neighbor lists.
+ *   - CreateNeighborList: Creates neighbor lists.
+ *   - UpdateNeighborList: Updates neighbor lists.
+ *   - ClearNeighborList: Clears neighbor lists.
  *   - CalculateForces: Calculates forces for later use in, e.g., integration schemes.
  *   - UncontrolledApproximation: Executes reactions, resolving conflicts in an uncontrolled way.
  *   - Gillespie: Executes reactions, sampling one reaction event after the other weighted with their rates.
  *   - DetailedBalance: Executes reactions, and assures detailed balance for reversible reactions.
  *   - EvaluateCompartments: Perform instantaneous particle conversions depending on the particles' position.
  *   - EvaluateTopologyReactions: Execute reactions involving topologies.
+ *   - BreakBonds: Remove edges in topologies based on current bond-energy.
  *
  * Further, specializations of ActionName<T> are declared.
  *
@@ -203,6 +206,11 @@ private:
     util::particle_type_pair_unordered_map<scalar> _breakRates{};
 };
 
+/**
+ * BreakBonds can remove edges in topology graphs, based on the current potential energy that the bond
+ * (belonging to the edge) contains. Uses the breakConfig, which holds threshold energies and rates (frequencies)
+ * at which edge-removals are attempted. These values are defined per pair of particle types.
+ */
 class BreakBonds : public TimeStepDependentAction {
 public:
     using vertex_ref = readdy::model::top::graph::Graph::vertex_ref;

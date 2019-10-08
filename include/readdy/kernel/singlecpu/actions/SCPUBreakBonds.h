@@ -33,10 +33,8 @@
  ********************************************************************/
 
 /**
- * « detailed description »
- *
  * @file SCPUBreakBonds.h
- * @brief « brief description »
+ * @brief Single CPU kernel implementation of the action BreakBonds
  * @author chrisfroe
  * @date 04.10.19
  */

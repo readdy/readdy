@@ -259,6 +259,7 @@ TEMPLATE_TEST_CASE("Test breaking bonds.", "[breakbonds]", SingleCPU, CPU) {
 
 TEST_CASE("Test breaking bonds via diffusion in external potential", "[breakbonds]") {
     GIVEN("A linear polymer with breakable bonds") {
+        // todo as soon as "first Context, then Simulation" change is available here
         //readdy::model::Context ctx;
         //readdy::Simulation simulation("CPU", ctx);
         WHEN("an external potential pulls the ends apart") {
