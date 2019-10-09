@@ -47,6 +47,7 @@ install:
 script:
 - conda clean --all -y
 - conda-build --version
+- conda install conda-verify
 - conda build -c defaults -c conda-forge tools/conda-recipe --python=$CONDA_PY
 
 after_success:
