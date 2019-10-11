@@ -43,16 +43,12 @@
  * @copyright BSD-3
  */
 
-#include <readdy/common/numeric.h>
 #include <readdy/common/Vec3Tensor.h>
 #include <readdy/model/topologies/TopologyActionFactory.h>
 
 #define SMALL .0001
 
-namespace readdy {
-namespace model {
-namespace top {
-namespace pot {
+namespace readdy::model::top::pot {
 
 scalar  CosineDihedralPotential::calculateEnergy(const Vec3 &x_ji, const Vec3 &x_kj, const Vec3 &x_kl,
                                                 const dihedral_configuration &dihedral) const {
@@ -167,7 +163,4 @@ CosineDihedralPotential::createForceAndEnergyAction(const TopologyActionFactory 
     return factory->createCalculateCosineDihedralPotential(this);
 }
 
-}
-}
-}
 }

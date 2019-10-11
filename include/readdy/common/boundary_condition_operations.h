@@ -58,14 +58,14 @@ inline void fixPosition(Vec3 &vec, const Container &box, const PBC &periodic) {
             while (vec[d] < -.5 * box[d]) vec[d] += box[d];
         }
     }
-};
+}
 
 template<typename PBC, int DIM = 3>
 inline Vec3 applyPBC(const Vec3 &in, const scalar *const box, const PBC &periodic) {
     Vec3 out(in);
     fixPosition<const scalar *const, PBC, DIM>(out, box, periodic);
     return out;
-};
+}
 
 template<typename Container, typename PBC, int DIM = 3>
 inline Vec3 shortestDifference(const Vec3 &lhs, const Vec3 &rhs, const Container &box, const PBC &periodic) {
@@ -77,7 +77,7 @@ inline Vec3 shortestDifference(const Vec3 &lhs, const Vec3 &rhs, const Container
         }
     }
     return dv;
-};
+}
 
 template<typename Container, typename PBC, int DIM = 3>
 inline scalar distSquared(const Vec3 &lhs, const Vec3 &rhs, const Container &box, const PBC &periodic) {

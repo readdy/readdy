@@ -115,7 +115,7 @@ public:
 class CPUAppendParticle : public readdy::model::top::reactions::actions::AppendParticle {
     CPUStateModel::data_type *const data;
     readdy::model::Particle particle;
-    std::size_t insertIndex;
+    std::size_t insertIndex {0};
     vertex newParticleIt;
 public:
     CPUAppendParticle(CPUStateModel::data_type *const data, model::top::GraphTopology *topology,

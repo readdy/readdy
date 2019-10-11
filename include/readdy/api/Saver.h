@@ -4,15 +4,15 @@
 
 #pragma once
 
-#ifdef __cpp_lib_filesystem
-#define CPP_FS 1
-#include <filesystem>
-namespace fs = std::filesystem;
-#else
+//#ifdef __cpp_lib_filesystem
+//#define CPP_FS 1
+//#include <filesystem>
+//namespace fs = std::filesystem;
+//#else
 #define CPP_FS 0
 #include <readdy/common/filesystem.h>
 namespace fs = readdy::util::fs;
-#endif
+//#endif
 
 #include <memory>
 #include <type_traits>

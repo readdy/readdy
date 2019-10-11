@@ -44,7 +44,6 @@ from readdy._internal.readdybinding.api import Simulation as _Simulation
 from readdy._internal.readdybinding.api import Saver as _Saver
 from readdy._internal.readdybinding.api import UserDefinedAction as _UserDefinedAction
 from readdy.api.utils import vec3_of as _v3_of
-from readdy.util.progress import SimulationProgress as _SimulationProgress
 from readdy._internal.readdybinding.api import KernelProvider as _KernelProvider
 
 
@@ -96,8 +95,6 @@ class Simulation(object):
         self.skin = skin
         self._show_progress = True
         self._progress_output_stride = 10
-
-        self._progress = None
 
         if kernel == "CPU":
             self._kernel_configuration = _CPUKernelConfiguration()
@@ -546,27 +543,29 @@ class Simulation(object):
         if self._checkpoint_saver is not None:
             loop.make_checkpoints(self._checkpoint_saver, self._checkpoint_stride)
 
-        if self.output_file is not None and len(self.output_file) > 0:
-            with closing(io.File.create(self.output_file)) as f:
+        write_outfile = self.output_file is not None and len(self.output_file) > 0
+
+        import contextlib
+
+        @contextlib.contextmanager
+        def nullcontext():
+            yield
+
+        with closing(io.File.create(self.output_file)) if write_outfile else nullcontext() as f:
+            if write_outfile:
                 for name, chunk_size, handle in self._observables._observable_handles:
                     handle.enable_write_to_file(f, name, chunk_size)
                 loop.write_config_to_file(f)
-                if self.show_progress:
-                    self._progress = _SimulationProgress(n_steps // self._progress_output_stride)
-                    loop.progress_callback = self._progress.callback
-                    loop.progress_output_stride = self._progress_output_stride
-                if show_summary:
-                    print(self._simulation.context.describe())
-                    print(loop.describe())
-                loop.run(n_steps)
-        else:
-            if self.show_progress:
-                self._progress = _SimulationProgress(n_steps // self._progress_output_stride)
-                loop.progress_callback = self._progress.callback
-                loop.progress_output_stride = self._progress_output_stride
             if show_summary:
                 print(self._simulation.context.describe())
                 print(loop.describe())
-            loop.run(n_steps)
-        if self.show_progress:
-            self._progress.finish()
+            if self.show_progress:
+                import tqdm
+                loop.progress_output_stride = self._progress_output_stride
+                with tqdm.tqdm(total=n_steps // self._progress_output_stride) as progress:
+                    loop.progress_callback = lambda t: progress.update(1)
+                    loop.run(n_steps)
+                    loop.progress_callback = None
+            else:
+
+                loop.run(n_steps)

@@ -47,9 +47,9 @@
 #include <readdy/common/numeric.h>
 #include <readdy/model/actions/DetailedBalance.h>
 
-namespace readdy {
-namespace model {
-namespace actions {
+#include <utility>
+
+namespace readdy::model::actions {
 
 
 CreateNeighborList::CreateNeighborList(scalar cutoffDistance) : _cutoffDistance(cutoffDistance) {}
@@ -62,7 +62,7 @@ reactions::UncontrolledApproximation::UncontrolledApproximation(scalar timeStep)
 
 reactions::ReversibleReactionConfig::ReversibleReactionConfig(ReactionId forwardId, ReactionId backwardId,
                                                               const Context &ctx)
-        : forwardId(forwardId), backwardId(backwardId) {
+        : forwardId(forwardId), backwardId(backwardId), lhsTypes(), rhsTypes() {
 
     forwardReaction = ctx.reactions().byId(forwardId);
     backwardReaction = ctx.reactions().byId(backwardId);
@@ -217,7 +217,7 @@ reactions::ReversibleReactionConfig::ReversibleReactionConfig(ReactionId forward
     }
 
     // effective interaction and reaction volumina
-    const auto integrand = [](const scalar radius, std::vector<pot> potentials, const scalar kbt_) -> scalar {
+    const auto integrand = [](const scalar radius, const std::vector<pot>& potentials, const scalar kbt_) -> scalar {
         scalar energy = 0.;
         for (const auto &pot : potentials) {
             const Vec3 difference(radius, 0., 0.);
@@ -501,7 +501,7 @@ void reactions::DetailedBalance::searchReversibleReactions(const Context &ctx) {
                         "Duplicate found in reversible reactions. Registered reactions might be ambiguous "
                         "with respect to reversibility. Method: {} file: {}",
                         "DetailedBalance::searchReversibleReactions", "Actions.cpp"));
-            };
+            }
         }
     }
 
@@ -539,8 +539,8 @@ std::string reactions::DetailedBalance::describe() const {
     return ss.str();
 }
 
-AddParticles::AddParticles(Kernel *const kernel, const std::vector<Particle> &particles)
-        : particles(particles), kernel(kernel) {}
+AddParticles::AddParticles(Kernel *const kernel, std::vector<Particle> particles)
+        : particles(std::move(particles)), kernel(kernel) {}
 
 void AddParticles::perform() {
     if(kernel != nullptr) {
@@ -554,6 +554,4 @@ CalculateForces::CalculateForces() : Action() {}
 
 top::EvaluateTopologyReactions::EvaluateTopologyReactions(scalar timeStep) : TimeStepDependentAction(timeStep) {}
 
-}
-}
 }

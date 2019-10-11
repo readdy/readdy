@@ -47,14 +47,12 @@
 
 #include <readdy/model/Kernel.h>
 
-namespace readdy {
-namespace model {
-namespace top {
+namespace readdy::model::top {
 
 GraphTopology::GraphTopology(TopologyTypeId type,
                              const Topology::particle_indices &particles, const types_vec &types,
                              const model::Context& context, const model::StateModel *stateModel)
-        : Topology(particles), _context(context), _topology_type(type), _stateModel(stateModel) {
+        : Topology(particles), _context(context), _topology_type(type), _stateModel(stateModel), _cumulativeRate(0) {
     assert(types.size() == particles.size());
     std::size_t i = 0;
     for (auto itTypes = types.begin(); itTypes != types.end(); ++itTypes, ++i) {
@@ -66,7 +64,7 @@ GraphTopology::GraphTopology(TopologyTypeId type,
                              Topology::particle_indices &&particles, graph::Graph &&graph,
                              const model::Context& context, const model::StateModel *stateModel)
         : Topology(std::move(particles)), _context(context), graph_(std::move(graph)), _topology_type(type),
-          _stateModel(stateModel) {
+          _stateModel(stateModel), _cumulativeRate(0) {
     if (GraphTopology::graph().vertices().size() != GraphTopology::getNParticles()) {
         log::error("tried creating graph topology with {} vertices but only {} particles.",
                    GraphTopology::graph().vertices().size(), GraphTopology::getNParticles());
@@ -145,7 +143,7 @@ void GraphTopology::configure() {
             case api::BondType::HARMONIC: {
                 addBondedPotential(std::make_unique<harmonic_bond>(bond.second));
                 break;
-            };
+            }
         }
     }
     for (const auto &angle : angles) {
@@ -153,7 +151,7 @@ void GraphTopology::configure() {
             case api::AngleType::HARMONIC: {
                 addAnglePotential(std::make_unique<harmonic_angle>(angle.second));
                 break;
-            };
+            }
         }
     }
     for (const auto &dih : dihedrals) {
@@ -161,7 +159,7 @@ void GraphTopology::configure() {
             case api::TorsionType::COS_DIHEDRAL: {
                 addTorsionPotential(std::make_unique<cos_dihedral>(dih.second));
                 break;
-            };
+            }
         }
     }
 }
@@ -197,7 +195,7 @@ std::vector<GraphTopology> GraphTopology::connectedComponents() {
     return std::move(components);
 }
 
-const bool GraphTopology::isNormalParticle(const Kernel &k) const {
+bool GraphTopology::isNormalParticle(const Kernel &k) const {
     if(getNParticles() == 1){
         const auto particle_type = k.stateModel().getParticleType(particles.front());
         const auto& info = k.context().particleTypes().infoOf(particle_type);
@@ -252,7 +250,6 @@ void GraphTopology::appendTopology(GraphTopology &other, Topology::particle_inde
 
     if(!otherGraph.vertices().empty()) {
 
-
         auto &thisGraph = graph();
 
         auto former_begin = otherGraph.vertices().begin();
@@ -297,6 +294,4 @@ Particle GraphTopology::particleForVertex(const vertex &vertex) const {
 }
 
 
-}
-}
 }

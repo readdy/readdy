@@ -46,6 +46,8 @@
 #include <readdy/model/topologies/reactions/TopologyReactionAction.h>
 #include <readdy/model/topologies/GraphTopology.h>
 
+#include <utility>
+
 namespace readdy::model::top::reactions::actions {
 
 TopologyReactionAction::TopologyReactionAction(GraphTopology *const topology) : topology(topology){ }
@@ -54,8 +56,8 @@ ChangeParticleType::ChangeParticleType(GraphTopology *const topology, const vert
                                        const ParticleTypeId &type_to)
         : TopologyReactionAction(topology), _vertex(v), type_to(type_to), previous_type(type_to){}
 
-AddEdge::AddEdge(GraphTopology *const topology, const edge &edge)
-        : TopologyReactionAction(topology), label_edge_(edge) {}
+AddEdge::AddEdge(GraphTopology *const topology, edge edge)
+        : TopologyReactionAction(topology), label_edge_(std::move(edge)) {}
 
 void AddEdge::execute() {
     topology->graph().addEdge(label_edge_);
@@ -65,8 +67,8 @@ void AddEdge::undo() {
     topology->graph().removeEdge(label_edge_);
 }
 
-RemoveEdge::RemoveEdge(GraphTopology *const topology, const edge& edge)
-        : TopologyReactionAction(topology), label_edge_(edge) {}
+RemoveEdge::RemoveEdge(GraphTopology *const topology, edge edge)
+        : TopologyReactionAction(topology), label_edge_(std::move(edge)) {}
 
 void RemoveEdge::execute() {
     topology->graph().removeEdge(label_edge_);

@@ -169,7 +169,7 @@ public:
      * @param topology the topology
      * @param edge the edge to introduce
      */
-    AddEdge(GraphTopology *topology, const edge &edge);
+    AddEdge(GraphTopology *topology, edge edge);
 
     /**
      * do!
@@ -195,7 +195,7 @@ public:
      * @param topology the topology
      * @param edge the edge to remove
      */
-    RemoveEdge(GraphTopology *topology, const edge &edge);
+    RemoveEdge(GraphTopology *topology, edge edge);
 
     /**
      * execute me

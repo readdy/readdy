@@ -9,7 +9,7 @@ os:
 - linux
 - osx
 
-osx_image: xcode9.4
+osx_image: xcode11
 
 addons:
   apt:
@@ -21,7 +21,7 @@ env:
   global:
   - PATH=$HOME/_cmake/bin:$HOME/miniconda/bin:$PATH
   - MACOSX_DEPLOYMENT_TARGET=10.7
-  - MAKEFLAGS="-j1 ${MAKEFLAGS}"
+  - MAKEFLAGS="-j2 ${MAKEFLAGS}"
 
   matrix:
   - python=3.6 CONDA_PY=36
@@ -45,7 +45,9 @@ install:
 - if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then export BUILD_TYPE="RelWithDebInfo"; else export BUILD_TYPE="Release"; fi
 
 script:
+- conda clean --all -y
 - conda-build --version
+- conda install conda-verify
 - conda build -c defaults -c conda-forge tools/conda-recipe --python=$CONDA_PY
 
 after_success:

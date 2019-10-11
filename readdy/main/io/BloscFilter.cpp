@@ -47,8 +47,7 @@
 #include "readdy/io/BloscFilter.h"
 #include "blosc_filter.h"
 
-namespace readdy {
-namespace io {
+namespace readdy::io {
 
 
 bool BloscFilter::available() const {
@@ -110,6 +109,5 @@ BloscFilter::BloscFilter(BloscFilter::Compressor compressor, unsigned int compre
     if (compressionLevel > 9) {
         throw std::invalid_argument("Blosc only allows compression levels ranging from 0 to 9.");
     }
-}
 }
 }
