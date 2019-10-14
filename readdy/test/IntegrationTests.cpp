@@ -343,3 +343,110 @@ TEMPLATE_TEST_CASE("Attach particle to topology", "[!hide][integration]", Single
     }
     REQUIRE(foundEndVertex);
 }
+
+TEMPLATE_TEST_CASE("Break bonds due to pulling", "[!hide][breakbonds][integration]", SingleCPU, CPU) {
+    GIVEN("A linear polymer with breakable bonds") {
+        // bond force constants are adjusted such that spontaneous breaking is unlikely,
+        // i.e. RMSD of bond when fluctuating is smaller than required when breaking threshold
+        // i.e. only the external pulling should break the bond
+        // RMSD = 1/sqrt(2 beta force-const)
+        // Stability threshold is 'dt D beta force-const < 1'
+        // When starting in rod-like configuration, there is an entropic force
+        // that collapses the polymer. To avoid that, put the polymer in a long thin tube like potential
+        auto kernel = readdytesting::kernel::create<TestType>();
+        auto &ctx = kernel->context();
+        auto &stateModel = kernel->stateModel();
+        auto &topReg = ctx.topologyRegistry();
+        auto &types = ctx.particleTypes();
+
+        ctx.kBT() = 0.01; // low temperature for sharp distribution
+        ctx.periodicBoundaryConditions() = {{true, true, true}};
+        topReg.addType("T1");
+        topReg.addType("T2");
+        ctx.boxSize() = {{20, 10, 10}};
+        types.add("head", 0.1, readdy::model::particleflavor::TOPOLOGY);
+        types.add("A", 0.1, readdy::model::particleflavor::TOPOLOGY);
+        types.add("tail", 0.1, readdy::model::particleflavor::TOPOLOGY);
+        topReg.configureBondPotential("head", "A", {10., 2});
+        topReg.configureBondPotential("A", "A", {10., 4});
+        topReg.configureBondPotential("A", "tail", {10., 2});
+        ctx.potentials().addCylinder("A", 100., {0.,0.,0.}, {1., 0., 0.}, 0.01, true);
+        ctx.potentials().addCylinder("head", 100., {0.,0.,0.}, {1., 0., 0.}, 0.01, true);
+        ctx.potentials().addCylinder("tail", 100., {0.,0.,0.}, {1., 0., 0.}, 0.01, true);
+
+        ctx.potentials().addBox("head", 10., {-4., -12.5, -12.5}, {0.000001, 25., 25.});
+
+        std::vector<readdy::model::TopologyParticle> particles{
+            {-4., 0., 0., types.idOf("head")},
+            {-2., 0., 0., types.idOf("A")},
+            {2., 0., 0., types.idOf("A")},
+            {4., 0., 0., types.idOf("tail")},
+        };
+        REQUIRE(particles.size() == 4);
+
+        auto graphTop = stateModel.addTopology(topReg.idOf("T1"), particles);
+        {
+            auto &graph = graphTop->graph();
+            for (std::size_t i = 0; i < 3; ++i) {
+                graph.addEdgeBetweenParticles(i, i + 1);
+            }
+        }
+
+        readdy::model::actions::top::BreakConfig breakConfig;
+        breakConfig.addBreakablePair(types.idOf("A"), types.idOf("A"), 1.0, 1.0);
+
+        readdy::scalar timeStep = 0.0005;
+        std::size_t nSteps = 100000;
+        auto diffusion = kernel->actions().eulerBDIntegrator(timeStep);
+        auto forces = kernel->actions().calculateForces();
+        auto breakingBonds = kernel->actions().breakBonds(timeStep, breakConfig);
+
+        WHEN("an external potential pulls the tail particle") {
+            ctx.potentials().addBox("tail", 100., {+8, -12.5, -12.5}, {0.000001, 25., 25.});
+
+            kernel->initialize();
+            forces->perform();
+            for (std::size_t t = 1; t < nSteps+1; t++) {
+                diffusion->perform();
+                breakingBonds->perform();
+                forces->perform();
+            }
+
+            THEN("some bond will break because the energy threshold is exceeded") {
+                auto topsAfter = stateModel.getTopologies();
+                REQUIRE_FALSE(topsAfter.empty());
+                REQUIRE(topsAfter.size() > 1);
+                // all sub topologies are linear chains (each vertex has at most 2 neighbors)
+                for (const auto &top : topsAfter) {
+                    const auto &graph = top->graph();
+                    const auto &vertices = graph.vertices();
+                    for (const auto &v : vertices) {
+                        CHECK(v.neighbors().size() <= 2);
+                    }
+                }
+            }
+        }
+
+        WHEN("there is no potential pulling on the chain") {
+            kernel->initialize();
+            forces->perform();
+            for (std::size_t t = 1; t < nSteps+1; t++) {
+                diffusion->perform();
+                breakingBonds->perform();
+                forces->perform();
+            }
+
+            THEN("No bond will break spontaneously") {
+                auto topsAfter = stateModel.getTopologies();
+                REQUIRE_FALSE(topsAfter.empty());
+                REQUIRE(topsAfter.size() == 1);
+                const auto &graph = topsAfter.at(0)->graph();
+                const auto &vertices = graph.vertices();
+                for (const auto &v : vertices) {
+                    CHECK(v.neighbors().size() <= 2);
+                    CHECK(!v.neighbors().empty());
+                }
+            }
+        }
+    }
+}

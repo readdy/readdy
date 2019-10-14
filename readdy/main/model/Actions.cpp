@@ -558,5 +558,3 @@ top::BreakBonds::BreakBonds(scalar timeStep, BreakConfig breakConfig)
         : TimeStepDependentAction(timeStep), breakConfig(std::move(breakConfig)) {}
 
 }
-}
-}

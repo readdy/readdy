@@ -78,7 +78,8 @@ public:
                     return std::move(recipe);
                 };
                 scalar rateDoesntMatter{1.};
-                readdy::model::top::reactions::StructuralTopologyReaction reaction(reactionFunction, rateDoesntMatter);
+                readdy::model::top::reactions::StructuralTopologyReaction reaction("__internal_break_bonds",
+                                                                                   reactionFunction, rateDoesntMatter);
 
                 auto resultingTopologies = reaction.execute(*top, kernel);
 
