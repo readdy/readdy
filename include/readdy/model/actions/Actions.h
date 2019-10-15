@@ -67,6 +67,9 @@
 #include <readdy/model/potentials/PotentialOrder2.h>
 #include <readdy/model/Context.h>
 #include <readdy/model/actions/DetailedBalance.h>
+#include <readdy/common/index_persistent_vector.h>
+#include "Utils.h"
+#include <readdy/model/topologies/GraphTopology.h>
 
 #if READDY_OSX || READDY_WINDOWS
 #include <functional>
@@ -229,6 +232,112 @@ public:
 
 protected:
     const BreakConfig breakConfig;
+
+    template<typename Kernel, typename TopologyRef, typename Model>
+    void perform(readdy::util::index_persistent_vector<TopologyRef> &topologies, Model model, Kernel *kernel) {
+        std::vector<readdy::model::top::GraphTopology> resultingTopologies;
+        std::size_t topologyIdx = 0;
+        for (auto &top : topologies) {
+            if (!top->isDeactivated()) {
+                auto reactionFunction = [&](
+                        readdy::model::top::GraphTopology &t) -> readdy::model::top::reactions::Recipe {
+                    readdy::model::top::reactions::Recipe recipe(t);
+                    for (const auto &edge : t.graph().edges()) {
+                        auto energy = evaluateEdgeEnergy(edge, t, kernel);
+                        const auto &v1Type = std::get<0>(edge)->particleType();
+                        const auto &v2Type = std::get<1>(edge)->particleType();
+                        const auto &typePair = std::make_tuple(v1Type, v2Type);
+                        const auto thresholdEnergyIt = thresholdEnergies().find(typePair);
+                        if (thresholdEnergyIt != thresholdEnergies().end()) {
+                            if (energy > thresholdEnergyIt->second) {
+                                const auto &rate = breakRates().at(typePair);
+                                if (readdy::model::rnd::uniform_real() < 1 - std::exp(-rate * _timeStep)) {
+                                    recipe.removeEdge(edge);
+                                }
+                            }
+                        }
+                    }
+                    return std::move(recipe);
+                };
+                scalar rateDoesntMatter{1.};
+                readdy::model::top::reactions::StructuralTopologyReaction reaction("__internal_break_bonds",
+                                                                                   reactionFunction, rateDoesntMatter);
+                readdy::model::actions::top::executeStructuralReaction(topologies, resultingTopologies, top, reaction,
+                                                                       topologyIdx,
+                                                                       *(kernel->getSCPUKernelStateModel().getParticleData()),
+                                                                       kernel);
+
+            }
+            ++topologyIdx;
+        }
+
+        const auto &context = kernel->context();
+        for (auto &&newTopology : resultingTopologies) {
+            if (!newTopology.isNormalParticle(*kernel)) {
+                // we have a new topology here, update data accordingly.
+                newTopology.updateReactionRates(
+                        context.topologyRegistry().structuralReactionsOf(newTopology.type()));
+                newTopology.configure();
+                model.insert_topology(std::move(newTopology));
+            } else {
+                // if we have a single particle that is not of flavor topology, remove from topology structure!
+                model.getParticleData()->entry_at(newTopology.getParticles().front()).topology_index = -1;
+            }
+        }
+    }
+
+    template <typename Kernel>
+    scalar
+    evaluateEdgeEnergy(std::tuple<vertex_ref, vertex_ref> edge, const readdy::model::top::GraphTopology &t, Kernel *kernel) const {
+        const auto[vertex1, vertex2] = edge;
+
+        // find bond configurations for given edge
+        std::unordered_map<api::BondType, std::vector<readdy::model::top::pot::BondConfiguration>, readdy::util::hash::EnumClassHash> bondConfigs;
+        {
+            const auto &potentialConfiguration = kernel->context().topologyRegistry().potentialConfiguration();
+            auto it = potentialConfiguration.pairPotentials.find(
+                    std::tie(vertex1->particleType(), vertex2->particleType()));
+            if (it != potentialConfiguration.pairPotentials.end()) {
+                for (const auto &cfg : it->second) {
+                    bondConfigs[cfg.type].emplace_back(vertex1->particleIndex, vertex2->particleIndex,
+                                                       cfg.forceConstant, cfg.length);
+                }
+            } else {
+                std::ostringstream ss;
+                auto p1 = t.particleForVertex(vertex1);
+                auto p2 = t.particleForVertex(vertex2);
+
+                ss << "The edge " << vertex1->particleIndex << " ("
+                   << kernel->context().particleTypes().nameOf(p1.type()) << ")";
+                ss << " -- " << vertex2->particleIndex << " (" << kernel->context().particleTypes().nameOf(p2.type())
+                   << ")";
+                ss << " has no bond configured!";
+
+                throw std::invalid_argument(ss.str());
+            }
+        }
+
+        // transform configurations to potential instances
+        std::vector<std::unique_ptr<readdy::model::top::Topology::bonded_potential>> bondedPotentials;
+        for (const auto &bond : bondConfigs) {
+            switch (bond.first) {
+                case api::BondType::HARMONIC: {
+                    bondedPotentials.push_back(
+                            std::make_unique<readdy::model::top::TopologyActionFactory::harmonic_bond>(bond.second));
+                    break;
+                };
+            }
+        }
+
+        // create actions, perform and accumulate energies on edge
+        auto taf = kernel->getTopologyActionFactory();
+        scalar totalEnergyForEdge{0.};
+        for (const auto &bondedPot : bondedPotentials) {
+            totalEnergyForEdge += bondedPot->createForceAndEnergyAction(taf)->perform(&t);
+        }
+
+        return totalEnergyForEdge;
+    }
 };
 
 }

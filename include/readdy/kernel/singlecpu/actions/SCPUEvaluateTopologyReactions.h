@@ -69,9 +69,9 @@ private:
 
     bool eventsDependent(const TREvent& evt1, const TREvent& evt2) const;
 
-    void handleStructuralReaction(SCPUStateModel::topologies_vec &topologies,
-                                  std::vector<SCPUStateModel::topology> &new_topologies,
-                                  const TREvent &event, SCPUStateModel::topology_ref &topology) const;
+    void handleStructuralReactionEvent(SCPUStateModel::topologies_vec &topologies,
+                                       std::vector<SCPUStateModel::topology> &new_topologies,
+                                       const TREvent &event, SCPUStateModel::topology_ref &topology) const;
 
     void handleTopologyParticleReaction(SCPUStateModel::topology_ref &topology, const TREvent &event);
 

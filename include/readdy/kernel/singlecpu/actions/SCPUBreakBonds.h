@@ -43,6 +43,7 @@
 
 #include <readdy/model/actions/Actions.h>
 #include <readdy/kernel/singlecpu/SCPUKernel.h>
+#include <readdy/model/actions/Utils.h>
 
 namespace readdy::kernel::scpu::actions::top {
 
@@ -52,8 +53,10 @@ public:
             : BreakBonds(timeStep, std::move(config)), kernel(kernel) {}
 
     void perform() override {
+        auto &topologies = kernel->getSCPUKernelStateModel().topologies();
+        std::vector<SCPUStateModel::topology> resultingTopologies;
         std::size_t topologyIdx = 0;
-        for (auto *top : kernel->stateModel().getTopologies()) {
+        for (auto &top : topologies) {
             if (!top->isDeactivated()) {
                 auto reactionFunction = [&](
                         readdy::model::top::GraphTopology &t) -> readdy::model::top::reactions::Recipe {
@@ -78,99 +81,33 @@ public:
                 scalar rateDoesntMatter{1.};
                 readdy::model::top::reactions::StructuralTopologyReaction reaction("__internal_break_bonds",
                                                                                    reactionFunction, rateDoesntMatter);
+                readdy::model::actions::top::executeStructuralReaction(topologies, resultingTopologies, top, reaction,
+                                                                       topologyIdx,
+                                                                       *(kernel->getSCPUKernelStateModel().getParticleData()),
+                                                                       kernel);
 
-                auto resultingTopologies = reaction.execute(*top, kernel);
-
-                auto &topologies = kernel->getSCPUKernelStateModel().topologies();
-                auto &model = kernel->getSCPUKernelStateModel();
-                const auto &context = kernel->context();
-
-                if (!resultingTopologies.empty()) {
-                    // we had a topology fission, so we need to actually remove the current topology from the
-                    // data structure
-                    topologies.erase(topologies.begin() + topologyIdx);
-                    //log::error("erased topology with index {}", event.topology_idx);
-                    assert(top->isDeactivated());
-
-                    for (auto &&newTopology : resultingTopologies) {
-                        if (!newTopology.isNormalParticle(*kernel)) {
-                            // we have a new topology here, update data accordingly.
-                            newTopology.updateReactionRates(
-                                    context.topologyRegistry().structuralReactionsOf(newTopology.type()));
-                            newTopology.configure();
-                            model.insert_topology(std::move(newTopology));
-                        } else {
-                            // if we have a single particle that is not of flavor topology, remove from topology structure!
-                            model.getParticleData()->entry_at(newTopology.getParticles().front()).topology_index = -1;
-                        }
-                    }
-
-                } else {
-                    if (top->isNormalParticle(*kernel)) {
-                        kernel->getSCPUKernelStateModel().getParticleData()->entry_at(
-                                top->getParticles().front()).topology_index = -1;
-                        topologies.erase(topologies.begin() + topologyIdx);
-                        //log::error("erased topology with index {}", event.topology_idx);
-                        assert(top->isDeactivated());
-                    }
-                }
             }
             ++topologyIdx;
+        }
+
+        auto &model = kernel->getSCPUKernelStateModel();
+        const auto &context = kernel->context();
+        for (auto &&newTopology : resultingTopologies) {
+            if (!newTopology.isNormalParticle(*kernel)) {
+                // we have a new topology here, update data accordingly.
+                newTopology.updateReactionRates(
+                        context.topologyRegistry().structuralReactionsOf(newTopology.type()));
+                newTopology.configure();
+                model.insert_topology(std::move(newTopology));
+            } else {
+                // if we have a single particle that is not of flavor topology, remove from topology structure!
+                model.getParticleData()->entry_at(newTopology.getParticles().front()).topology_index = -1;
+            }
         }
     }
 
 private:
     SCPUKernel *kernel;
-
-    // Note that this also evaluates forces as a by-product, i.e. adds to the force property of particles
-    scalar
-    evaluateEdgeEnergy(std::tuple<vertex_ref, vertex_ref> edge, const readdy::model::top::GraphTopology &t) const {
-        const auto[vertex1, vertex2] = edge;
-
-        // find bond configurations for given edge
-        std::unordered_map<api::BondType, std::vector<readdy::model::top::pot::BondConfiguration>, readdy::util::hash::EnumClassHash> bondConfigs;
-        {
-            const auto &potentialConfiguration = kernel->context().topologyRegistry().potentialConfiguration();
-            auto it = potentialConfiguration.pairPotentials.find(
-                    std::tie(vertex1->particleType(), vertex2->particleType()));
-            if (it != potentialConfiguration.pairPotentials.end()) {
-                for (const auto &cfg : it->second) {
-                    bondConfigs[cfg.type].emplace_back(vertex1->particleIndex, vertex2->particleIndex,
-                                                       cfg.forceConstant, cfg.length);
-                }
-            } else {
-                std::ostringstream ss;
-                auto p1 = t.particleForVertex(vertex1);
-                auto p2 = t.particleForVertex(vertex2);
-
-                ss << "The edge " << vertex1->particleIndex << " (" << kernel->context().particleTypes().nameOf(p1.type()) << ")";
-                ss << " -- " << vertex2->particleIndex << " (" << kernel->context().particleTypes().nameOf(p2.type()) << ")";
-                ss << " has no bond configured!";
-
-                throw std::invalid_argument(ss.str());
-            }
-        }
-
-        // transform configurations to potential instances
-        std::vector<std::unique_ptr<readdy::model::top::Topology::bonded_potential>> bondedPotentials;
-        for (const auto &bond : bondConfigs) {
-            switch (bond.first) {
-                case api::BondType::HARMONIC: {
-                    bondedPotentials.push_back(std::make_unique<readdy::model::top::TopologyActionFactory::harmonic_bond>(bond.second));
-                    break;
-                };
-            }
-        }
-
-        // create actions, perform and accumulate energies on edge
-        auto taf = kernel->getTopologyActionFactory();
-        scalar totalEnergyForEdge {0.};
-        for (const auto &bondedPot : bondedPotentials) {
-            totalEnergyForEdge += bondedPot->createForceAndEnergyAction(taf)->perform(&t);
-        }
-
-        return totalEnergyForEdge;
-    }
 };
 
 }
