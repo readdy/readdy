@@ -57,6 +57,7 @@ TEMPLATE_TEST_CASE("Test breaking bonds.", "[breakbonds]", SingleCPU, CPU) {
 
     types.add("A", 1.0);
     types.add("B", 1.0);
+    types.add("C", 1.0);
 
     auto &topReg = ctx.topologyRegistry();
     topReg.addType("T");
@@ -255,8 +256,51 @@ TEMPLATE_TEST_CASE("Test breaking bonds.", "[breakbonds]", SingleCPU, CPU) {
             REQUIRE(readdy::testing::vec3eq(aParticle2->pos(), readdy::Vec3(0., 0., -1.)));
         }
     }
-}
 
-TEST_CASE("Test breaking bonds via diffusion in external potential", "[breakbonds]") {
+    GIVEN("Multiple dimers A-A, B-B, and C-C") {
+        readdy::api::Bond bond{1., 1., readdy::api::BondType::HARMONIC};
+        topReg.configureBondPotential("A", "A", bond);
+        topReg.configureBondPotential("B", "B", bond);
+        topReg.configureBondPotential("C", "C", bond);
 
+        for (auto type : {"A", "B", "C"}) {
+            std::vector<readdy::model::TopologyParticle> particles{
+                    {0., 0., 0., types.idOf(type)},
+                    {0., 0., 2., types.idOf(type)}
+            };
+
+            auto graphTop = stateModel.addTopology(topReg.idOf("T"), particles);
+            auto &graph = graphTop->graph();
+            graph.addEdgeBetweenParticles(0, 1);
+        }
+
+        auto topsBefore = stateModel.getTopologies();
+        REQUIRE(topsBefore.size() == 3);
+        REQUIRE(topsBefore.at(0)->type() == topReg.idOf("T"));
+        REQUIRE(topsBefore.at(1)->type() == topReg.idOf("T"));
+        REQUIRE(topsBefore.at(2)->type() == topReg.idOf("T"));
+        REQUIRE(topsBefore.at(0)->getNParticles() == 2);
+        REQUIRE(topsBefore.at(1)->getNParticles() == 2);
+        REQUIRE(topsBefore.at(2)->getNParticles() == 2);
+
+        WHEN("the three dimers are broken one after the other") {
+            readdy::model::actions::top::BreakConfig breakConfig;
+            breakConfig.addBreakablePair(types.idOf("A"), types.idOf("A"), 0.9, 1e10);
+            auto breakingBondsA = kernel->actions().breakBonds(timeStep, breakConfig);
+            breakingBondsA->perform();
+
+            breakConfig.addBreakablePair(types.idOf("B"), types.idOf("B"), 0.9, 1e10);
+            auto breakingBondsB = kernel->actions().breakBonds(timeStep, breakConfig);
+            breakingBondsB->perform();
+
+            breakConfig.addBreakablePair(types.idOf("C"), types.idOf("C"), 0.9, 1e10);
+            auto breakingBondsC = kernel->actions().breakBonds(timeStep, breakConfig);
+            breakingBondsC->perform();
+
+            THEN("the bonds break and there are no topologies") {
+                auto topsAfter = stateModel.getTopologies();
+                REQUIRE(topsAfter.empty());
+            }
+        }
+    }
 }

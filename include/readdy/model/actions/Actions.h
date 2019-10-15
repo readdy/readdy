@@ -233,8 +233,8 @@ public:
 protected:
     const BreakConfig breakConfig;
 
-    template<typename Kernel, typename TopologyRef, typename Model>
-    void perform(readdy::util::index_persistent_vector<TopologyRef> &topologies, Model model, Kernel *kernel) {
+    template<typename Kernel, typename TopologyRef, typename Model, typename ParticleData>
+    void genericPerform(readdy::util::index_persistent_vector<TopologyRef> &topologies, Model &model, Kernel *kernel, ParticleData &particleData) {
         std::vector<readdy::model::top::GraphTopology> resultingTopologies;
         std::size_t topologyIdx = 0;
         for (auto &top : topologies) {
@@ -264,7 +264,7 @@ protected:
                                                                                    reactionFunction, rateDoesntMatter);
                 readdy::model::actions::top::executeStructuralReaction(topologies, resultingTopologies, top, reaction,
                                                                        topologyIdx,
-                                                                       *(kernel->getSCPUKernelStateModel().getParticleData()),
+                                                                       particleData,
                                                                        kernel);
 
             }

@@ -50,7 +50,7 @@ namespace readdy::model::actions::top {
 
 template<typename Kernel, typename Topology, typename TopologyRef, typename ParticleData>
 void executeStructuralReaction(readdy::util::index_persistent_vector<TopologyRef> &topologies,
-                               std::vector<Topology> &new_topologies,
+                               std::vector<Topology> &newTopologies,
                                TopologyRef &topology,
                                const readdy::model::top::reactions::StructuralTopologyReaction &reaction,
                                std::size_t topologyIdx,
@@ -64,7 +64,7 @@ void executeStructuralReaction(readdy::util::index_persistent_vector<TopologyRef
         assert(topology->isDeactivated());
         for (auto &it : result) {
             if (!it.isNormalParticle(*kernel)) {
-                new_topologies.push_back(std::move(it));
+                newTopologies.push_back(std::move(it));
             }
         }
     } else {

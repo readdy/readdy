@@ -54,56 +54,9 @@ public:
 
     void perform() override {
         auto &topologies = kernel->getSCPUKernelStateModel().topologies();
-        std::vector<SCPUStateModel::topology> resultingTopologies;
-        std::size_t topologyIdx = 0;
-        for (auto &top : topologies) {
-            if (!top->isDeactivated()) {
-                auto reactionFunction = [&](
-                        readdy::model::top::GraphTopology &t) -> readdy::model::top::reactions::Recipe {
-                    readdy::model::top::reactions::Recipe recipe(t);
-                    for (const auto &edge : t.graph().edges()) {
-                        auto energy = evaluateEdgeEnergy(edge, t);
-                        const auto &v1Type = std::get<0>(edge)->particleType();
-                        const auto &v2Type = std::get<1>(edge)->particleType();
-                        const auto &typePair = std::make_tuple(v1Type, v2Type);
-                        const auto thresholdEnergyIt = thresholdEnergies().find(typePair);
-                        if (thresholdEnergyIt != thresholdEnergies().end()) {
-                            if (energy > thresholdEnergyIt->second) {
-                                const auto &rate = breakRates().at(typePair);
-                                if (readdy::model::rnd::uniform_real() < 1 - std::exp(-rate * _timeStep)) {
-                                    recipe.removeEdge(edge);
-                                }
-                            }
-                        }
-                    }
-                    return std::move(recipe);
-                };
-                scalar rateDoesntMatter{1.};
-                readdy::model::top::reactions::StructuralTopologyReaction reaction("__internal_break_bonds",
-                                                                                   reactionFunction, rateDoesntMatter);
-                readdy::model::actions::top::executeStructuralReaction(topologies, resultingTopologies, top, reaction,
-                                                                       topologyIdx,
-                                                                       *(kernel->getSCPUKernelStateModel().getParticleData()),
-                                                                       kernel);
-
-            }
-            ++topologyIdx;
-        }
-
         auto &model = kernel->getSCPUKernelStateModel();
-        const auto &context = kernel->context();
-        for (auto &&newTopology : resultingTopologies) {
-            if (!newTopology.isNormalParticle(*kernel)) {
-                // we have a new topology here, update data accordingly.
-                newTopology.updateReactionRates(
-                        context.topologyRegistry().structuralReactionsOf(newTopology.type()));
-                newTopology.configure();
-                model.insert_topology(std::move(newTopology));
-            } else {
-                // if we have a single particle that is not of flavor topology, remove from topology structure!
-                model.getParticleData()->entry_at(newTopology.getParticles().front()).topology_index = -1;
-            }
-        }
+        auto &particleData = *(kernel->getSCPUKernelStateModel().getParticleData());
+        genericPerform(topologies, model, kernel, particleData);
     }
 
 private:

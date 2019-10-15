@@ -62,14 +62,17 @@ readdy::scalar CPUCalculateHarmonicBondPotential::perform(const readdy::model::t
     for (const auto &bond : potential->getBonds()) {
         if(bond.forceConstant == 0) continue;
 
-        Vec3 forceUpdate{0, 0, 0};
         auto &e1 = data->entry_at(particleIndices.at(bond.idx1));
         auto &e2 = data->entry_at(particleIndices.at(bond.idx2));
         const auto x_ij = bcs::shortestDifference(e1.pos, e2.pos, context->boxSize(),
                                                   context->periodicBoundaryConditions());
-        potential->calculateForce(forceUpdate, x_ij, bond);
-        e1.force += forceUpdate;
-        e2.force -= forceUpdate;
+        //if (updateEntryForces) {
+            Vec3 forceUpdate{0, 0, 0};
+            potential->calculateForce(forceUpdate, x_ij, bond);
+            e1.force += forceUpdate;
+            e2.force -= forceUpdate;
+        //}
+
         energy += potential->calculateEnergy(x_ij, bond);
     }
     return energy;
@@ -128,8 +131,7 @@ readdy::scalar CPUCalculateCosineDihedralPotential::perform(const readdy::model:
     return energy;
 }
 
-namespace reactions {
-namespace op {
+namespace reactions::op {
 CPUChangeParticleType::CPUChangeParticleType(CPUStateModel::data_type *const data,
                                              model::top::GraphTopology *const topology,
                                              const model::top::reactions::actions::TopologyReactionAction::vertex &v,
@@ -160,7 +162,6 @@ void CPUChangeParticlePosition::undo() {
     execute();
 }
 
-}
 }
 
 }
