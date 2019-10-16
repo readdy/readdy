@@ -48,6 +48,7 @@
 #include <readdy/kernel/cpu/actions/reactions/CPUGillespie.h>
 #include <readdy/kernel/cpu/actions/reactions/CPUUncontrolledApproximation.h>
 #include <readdy/kernel/cpu/actions/CPUEvaluateTopologyReactions.h>
+#include <readdy/kernel/cpu/actions/CPUBreakBonds.h>
 
 namespace core_p = readdy::model::actions;
 
@@ -109,6 +110,11 @@ CPUActionFactory::evaluateTopologyReactions(scalar timeStep) const {
 std::unique_ptr<model::actions::reactions::DetailedBalance>
 CPUActionFactory::detailedBalance(scalar timeStep) const {
     throw std::invalid_argument("DetailedBalance reaction handler not implemented for CPU");
+}
+
+std::unique_ptr<model::actions::top::BreakBonds>
+CPUActionFactory::breakBonds(scalar timeStep, readdy::model::actions::top::BreakConfig config) const {
+    return {std::make_unique<top::CPUBreakBonds>(kernel, timeStep, config)};
 }
 }
 }

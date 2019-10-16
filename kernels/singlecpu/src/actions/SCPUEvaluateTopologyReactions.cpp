@@ -46,6 +46,7 @@
 #include <readdy/kernel/singlecpu/actions/SCPUEvaluateTopologyReactions.h>
 #include <readdy/common/algorithm.h>
 #include <readdy/common/boundary_condition_operations.h>
+#include <readdy/model/actions/Utils.h>
 
 namespace readdy::kernel::scpu::actions::top {
 
@@ -115,7 +116,10 @@ void SCPUEvaluateTopologyReactions::perform() {
                 }
                 assert(!topology->isDeactivated());
                 if (!event.spatial) {
-                    handleStructuralReaction(topologies, new_topologies, event, topology);
+                    handleStructuralReactionEvent(topologies, new_topologies, event, topology);
+                    if(context.recordReactionCounts()) {
+                        kernel->getSCPUKernelStateModel().structuralReactionCounts()[event.reactionId] += 1;
+                    }
                 } else {
                     if (event.topology_idx2 >= 0) {
                         auto &top2 = topologies.at(static_cast<std::size_t>(event.topology_idx2));
@@ -407,50 +411,21 @@ void SCPUEvaluateTopologyReactions::handleTopologyParticleReaction(SCPUStateMode
     topology->configure();
 }
 
-void SCPUEvaluateTopologyReactions::handleStructuralReaction(SCPUStateModel::topologies_vec &topologies,
-                                                             std::vector<SCPUStateModel::topology> &new_topologies,
-                                                             const SCPUEvaluateTopologyReactions::TREvent &event,
-                                                             SCPUStateModel::topology_ref &topology) const {
+void SCPUEvaluateTopologyReactions::handleStructuralReactionEvent(SCPUStateModel::topologies_vec &topologies,
+                                                                  std::vector<SCPUStateModel::topology> &new_topologies,
+                                                                  const SCPUEvaluateTopologyReactions::TREvent &event,
+                                                                  SCPUStateModel::topology_ref &topology) const {
     const auto &context = kernel->context();
     const auto &reactions = context.topologyRegistry().structuralReactionsOf(topology->type());
     const auto &reaction = reactions.at(static_cast<std::size_t>(event.reaction_idx));
-    auto result = reaction.execute(*topology, kernel);
-    if(context.recordReactionCounts()) {
-        kernel->getSCPUKernelStateModel().structuralReactionCounts()[event.reactionId] += 1;
-    }
-    /*if(result.size() != 2) {
-        throw std::logic_error("result size was not 2, split did not work");
-    }
-    if(result[0].getNParticles() < 2) {
-        throw std::logic_error("particle size < 2, should not happen");
-    }
-    if(result[1].getNParticles() < 2) {
-        throw std::logic_error("particle size < 2, should not happen 2");
-    }*/
-    if (!result.empty()) {
-        // we had a topology fission, so we need to actually remove the current topology from the
-        // data structure
-        topologies.erase(topologies.begin() + event.topology_idx);
-        //log::error("erased topology with index {}", event.topology_idx);
-        assert(topology->isDeactivated());
-        for (auto &it : result) {
-            if(!it.isNormalParticle(*kernel)) {
-                new_topologies.push_back(std::move(it));
-            }
-        }
-    } else {
-        if (topology->isNormalParticle(*kernel)) {
-            kernel->getSCPUKernelStateModel().getParticleData()->entry_at(topology->getParticles().front()).topology_index = -1;
-            topologies.erase(topologies.begin() + event.topology_idx);
-            //log::error("erased topology with index {}", event.topology_idx);
-            assert(topology->isDeactivated());
-        }
-    }
+    readdy::model::actions::top::executeStructuralReaction(topologies, new_topologies, topology, reaction,
+                                                           event.topology_idx,
+                                                           *(kernel->getSCPUKernelStateModel().getParticleData()),
+                                                           kernel);
 }
 
 bool SCPUEvaluateTopologyReactions::topologyDeactivated(std::size_t index) const {
     return kernel->getSCPUKernelStateModel().topologies().at(index)->isDeactivated();
 }
-
 
 }

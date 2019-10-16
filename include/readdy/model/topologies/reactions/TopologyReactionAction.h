@@ -61,7 +61,7 @@ public:
     /**
      * an edge in the graph
      */
-    using edge = topology_graph::edge;
+    using edge = topology_graph::Edge;
     /**
      * a vertex reference of the graph
      */

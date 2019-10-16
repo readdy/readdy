@@ -45,9 +45,9 @@
 
 #pragma once
 
-#include <functional>
 #include <stdexcept>
 #include <list>
+#include <algorithm>
 #include <unordered_map>
 #include "Vertex.h"
 
@@ -59,20 +59,12 @@ public:
     using vertex = Vertex;
     using vertex_list = std::list<vertex>;
     using vertex_ref = vertex_list::iterator;
-    using vertex_cref = vertex_list::const_iterator;
 
-    using edge = std::tuple<vertex_ref, vertex_ref>;
-    using cedge = std::tuple<vertex_cref, vertex_cref>;
+    using Edge = std::tuple<vertex_ref, vertex_ref>;
 
     using path_len_2 = std::tuple<vertex_ref, vertex_ref, vertex_ref>;
-    using cpath_len_2 = std::tuple<vertex_cref, vertex_cref, vertex_cref>;
 
     using path_len_3 = std::tuple<vertex_ref, vertex_ref, vertex_ref, vertex_ref>;
-    using cpath_len_3 = std::tuple<vertex_cref, vertex_cref, vertex_cref, vertex_cref>;
-
-    using edge_callback = std::function<void(const edge &)>;
-    using path_len_2_callback = std::function<void(const path_len_2 &)>;
-    using path_len_3_callback = std::function<void(const path_len_3 &)>;
 
     Graph() = default;
 
@@ -114,7 +106,7 @@ public:
         ));
     }
 
-    vertex_cref toRef(const vertex &v) const {
+    /*vertex_cref toRef(const vertex &v) const {
         auto it = std::find(std::begin(_vertices), std::end(_vertices), v);
         if (it != std::end(_vertices)) {
             return {it};
@@ -122,18 +114,17 @@ public:
         throw std::invalid_argument(fmt::format(
                 "Provided vertex {} was not part of the graph, no ref could be created!", v
         ));
-    }
+    }*/
 
-    bool containsEdge(const cedge &edge) const {
-        const auto &v1 = std::get<0>(edge);
-        const auto &v2 = std::get<1>(edge);
+    bool containsEdge(const Edge &edge) const {
+        const auto& [v1, v2] = edge;
         const auto &v1Neighbors = v1->neighbors();
         const auto &v2Neighbors = v2->neighbors();
         return std::find(v1Neighbors.begin(), v1Neighbors.end(), v2) != v1Neighbors.end()
                && std::find(v2Neighbors.begin(), v2Neighbors.end(), v1) != v2Neighbors.end();
     }
 
-    bool containsEdge(vertex_cref v1, vertex_cref v2) const {
+    bool containsEdge(vertex_ref v1, vertex_ref v2) const {
         return containsEdge(std::tie(v1, v2));
     }
 
@@ -151,12 +142,31 @@ public:
         _vertices.emplace_back(particleIndex, particleType);
     }
 
-    void addEdge(vertex_ref v1, vertex_ref v2) {
-        v1->addNeighbor(v2);
-        v2->addNeighbor(v1);
+    void addVertexNeighbor(Vertex& v1, const vertex_ref &v2) {
+        _dirty = true;
+        if (std::find(v1.neighbors_.begin(), v1.neighbors_.end(), v2) == v1.neighbors_.end()) {
+            v1.neighbors_.push_back(v2);
+        } else {
+            log::debug("tried to add an already existing edge ({} - {})", v1.particleIndex, v2->particleIndex);
+        }
     }
 
-    void addEdge(const edge &edge) {
+    void removeVertexNeighbor(Vertex& v1, const vertex_ref &v2) {
+        _dirty = true;
+        decltype(v1.neighbors_.begin()) it;
+        if ((it = std::find(v1.neighbors_.begin(), v1.neighbors_.end(), v2)) != v1.neighbors_.end()) {
+            v1.neighbors_.erase(it);
+        } else {
+            log::debug("tried to remove a non existing edge {} - {}", v1.particleIndex, v2->particleIndex);
+        }
+    }
+
+    void addEdge(vertex_ref v1, vertex_ref v2) {
+        addVertexNeighbor(*v1, v2);
+        addVertexNeighbor(*v2, v1);
+    }
+
+    void addEdge(const Edge &edge) {
         addEdge(std::get<0>(edge), std::get<1>(edge));
     }
 
@@ -164,8 +174,8 @@ public:
         auto it1 = vertexItForParticleIndex(particleIndex1);
         auto it2 = vertexItForParticleIndex(particleIndex2);
         if (it1 != _vertices.end() && it2 != _vertices.end()) {
-            it1->addNeighbor(it2);
-            it2->addNeighbor(it1);
+            addVertexNeighbor(*it1, it2);
+            addVertexNeighbor(*it2, it1);
         } else {
             throw std::invalid_argument("the particles indices did not exist...");
         }
@@ -173,11 +183,11 @@ public:
 
     void removeEdge(vertex_ref v1, vertex_ref v2) {
         assert(v1 != v2);
-        v1->removeNeighbor(v2);
-        v2->removeNeighbor(v1);
+        removeVertexNeighbor(*v1, v2);
+        removeVertexNeighbor(*v2, v1);
     }
 
-    void removeEdge(const edge &edge) {
+    void removeEdge(const Edge &edge) {
         removeEdge(std::get<0>(edge), std::get<1>(edge));
     }
 
@@ -198,34 +208,58 @@ public:
         }
     }
 
-    bool isConnected();
+    bool isConnected() const;
 
-    std::vector<std::tuple<vertex_ref, vertex_ref>> edges() {
-        std::vector<std::tuple<Graph::vertex_ref, Graph::vertex_ref>> result;
-        findEdges([&result](const edge &tup) {
-            result.push_back(tup);
-        });
-        return result;
+    const std::vector<Edge> &edges() const {
+        if(_dirty) {
+            _edges.clear();
+            findEdges([this](const Edge &tup) {
+                _edges.push_back(tup);
+            });
+            _dirty = false;
+        }
+        return _edges;
     };
 
-    bool hasEdge(const std::tuple<vertex_ref, vertex_ref> &edge) const {
+    bool hasEdge(const Edge &edge) const {
         const auto &v1 = std::get<0>(edge);
         const auto &v2 = std::get<1>(edge);
-        auto it1 = std::find(v1->neighbors().begin(), v1->neighbors().end(), v2);
-        auto it2 = std::find(v2->neighbors().begin(), v2->neighbors().end(), v1);
-        return it1 != v1->neighbors().end() && it2 != v2->neighbors().end();
+        const auto &e = edges();
+        auto it = std::find_if(e.begin(), e.end(), [&v1, &v2](const auto& ee) {
+            const auto &[ev1, ev2] = ee;
+            return (v1 == ev1 && v2 == ev2) || (v1 == ev2 && v2 == ev1);
+        });
+        return it != e.end();
     }
 
-    void findEdges(const edge_callback &edgeCallback);
+    template<typename TupleCallback>
+    void findEdges(const TupleCallback &edgeCallback) const {
+        for (auto &&v : vertices()) {
+            v.visited = false;
+        }
 
-    void findNTuples(const edge_callback &tuple_callback,
-                     const path_len_2_callback &triple_callback,
-                     const path_len_3_callback &quadruple_callback);
+        auto &vert = const_cast<vertex_list &>(_vertices);
+        for (auto it = vert.begin(); it != vert.end(); ++it) {
+            it->visited = true;
+            auto &neighbors = it->neighbors();
+            for (auto it_neigh : neighbors) {
+                if (!it_neigh->visited) {
+                    const Edge e{std::tie(it, it_neigh)};
+                    edgeCallback(e);
+                }
+            }
+        }
+    }
 
-    std::tuple<std::vector<edge>, std::vector<path_len_2>, std::vector<path_len_3>>
+    template<typename TupleCallback, typename TripleCallback, typename QuadrupleCallback>
+    void findNTuples(const TupleCallback &tuple_callback,
+                     const TripleCallback &triple_callback,
+                     const QuadrupleCallback &quadruple_callback);
+
+    std::tuple<std::vector<Edge>, std::vector<path_len_2>, std::vector<path_len_3>>
     findNTuples() {
-        auto tuple = std::make_tuple(std::vector<edge>(), std::vector<path_len_2>(), std::vector<path_len_3>());
-        findNTuples([&](const edge &tup) {
+        auto tuple = std::make_tuple(std::vector<Edge>(), std::vector<path_len_2>(), std::vector<path_len_3>());
+        findNTuples([&](const Edge &tup) {
             std::get<0>(tuple).push_back(tup);
         }, [&](const path_len_2 &path2) {
             std::get<1>(tuple).push_back(path2);
@@ -244,10 +278,14 @@ public:
 private:
     vertex_list _vertices{};
 
+    mutable bool _dirty {true};
+    mutable std::vector<Edge> _edges;
+
     void removeNeighborsEdges(vertex_ref vertex) {
-        std::for_each(std::begin(vertex->neighbors()), std::end(vertex->neighbors()), [vertex](const auto neighbor) {
-            neighbor->removeNeighbor(vertex);
+        std::for_each(std::begin(vertex->neighbors()), std::end(vertex->neighbors()), [this, vertex](const auto neighbor) {
+            removeVertexNeighbor(*neighbor, vertex);
         });
+        _dirty = true;
     }
 
     auto vertexItForParticleIndex(std::size_t particleIndex) -> decltype(_vertices.begin()) {
@@ -255,6 +293,63 @@ private:
             return vertex.particleIndex == particleIndex;
         });
     }
+
 };
+
+template<typename TupleCallback, typename TripleCallback, typename QuadrupleCallback>
+void Graph::findNTuples(const TupleCallback &tuple_callback,
+                 const TripleCallback &triple_callback,
+                 const QuadrupleCallback &quadruple_callback) {
+    for (auto &&v : _vertices) {
+        v.visited = false;
+    }
+
+    for (auto it = _vertices.begin(); it != _vertices.end(); ++it) {
+        it->visited = true;
+        auto v_type = it->particleType();
+        auto v_idx = it->particleIndex;
+        auto &neighbors = it->neighbors();
+        for (auto it_neigh : neighbors) {
+            auto vv_type = it_neigh->particleType();
+            auto vv_idx = it_neigh->particleIndex;
+            if (!it_neigh->visited) {
+                log::trace("got type tuple ({}, {}) for particles {}, {}", v_type, vv_type, v_idx, vv_idx);
+                // got edge (v, vv), now look for N(v)\{vv} and N(vv)\(N(v) + v)
+                tuple_callback(std::tie(it, it_neigh));
+                for (auto quad_it_1 : neighbors) {
+                    // N(v)\{vv}
+                    if (it_neigh != quad_it_1) {
+                        auto vvv_type = quad_it_1->particleType();
+                        auto vvv_idx = quad_it_1->particleIndex;
+                        // got one end of the quadruple
+                        for (auto quad_it_2 : it_neigh->neighbors()) {
+                            // if this other neighbor is no neighbor of v and not v itself,
+                            // we got the other end of the quadruple
+                            auto no_circle =
+                                    std::find(neighbors.begin(), neighbors.end(), quad_it_2) == neighbors.end();
+                            if (quad_it_2 != it && no_circle) {
+                                auto vvvv_type = quad_it_2->particleType();
+                                auto vvvv_idx = quad_it_2->particleIndex;
+                                log::trace("got type quadruple ({}, {}, {}, {}) for particles {}, {}, {}, {}", vvv_type, v_type,
+                                           vv_type, vvvv_type, vvv_idx, v_idx, vv_idx, vvvv_idx);
+                                quadruple_callback(std::tie(quad_it_1, it, it_neigh, quad_it_2));
+                            }
+                        }
+                    }
+                }
+            }
+            for (auto it_neigh2 : neighbors) {
+                if (it_neigh2 != it_neigh && it_neigh->particleIndex < it_neigh2->particleIndex) {
+                    auto vvv_type = it_neigh2->particleType();
+                    auto vvv_idx = it_neigh2->particleIndex;
+                    log::trace("got type triple ({}, {}, {}) for particles {}, {}, {}", vv_type, v_type, vvv_type,
+                               vv_idx, v_idx, vvv_idx);
+                    triple_callback(std::tie(it_neigh, it, it_neigh2));
+                }
+            }
+        }
+    }
+}
+
 
 }

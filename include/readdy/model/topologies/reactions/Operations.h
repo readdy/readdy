@@ -86,7 +86,7 @@ public:
     /**
      * an edge
      */
-    using edge = topology_graph::edge;
+    using edge = topology_graph::Edge;
 
     /**
      * Interface of the create_action method which will create the corresponding action on the selected kernel.

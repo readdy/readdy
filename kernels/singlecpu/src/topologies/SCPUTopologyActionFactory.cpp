@@ -50,11 +50,7 @@
 
 namespace c_top = readdy::model::top;
 
-namespace readdy {
-namespace kernel {
-namespace scpu {
-namespace model {
-namespace top {
+namespace readdy::kernel::scpu::model::top {
 
 SCPUTopologyActionFactory::SCPUTopologyActionFactory(SCPUKernel *const kernel) : kernel(kernel) {}
 
@@ -116,8 +112,4 @@ SCPUTopologyActionFactory::createAppendParticle(top::GraphTopology *topology,
             topology, neighbors, type, position);
 }
 
-}
-}
-}
-}
 }

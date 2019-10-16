@@ -554,4 +554,7 @@ CalculateForces::CalculateForces() : Action() {}
 
 top::EvaluateTopologyReactions::EvaluateTopologyReactions(scalar timeStep) : TimeStepDependentAction(timeStep) {}
 
+top::BreakBonds::BreakBonds(scalar timeStep, BreakConfig breakConfig)
+        : TimeStepDependentAction(timeStep), breakConfig(std::move(breakConfig)) {}
+
 }

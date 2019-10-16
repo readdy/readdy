@@ -91,7 +91,7 @@ void GraphTopology::configure() {
 
     const auto &config = context().topologyRegistry().potentialConfiguration();
 
-    graph_.findNTuples([&](const topology_graph::edge &tuple) {
+    graph_.findNTuples([&](const topology_graph::Edge &tuple) {
         auto v1 = std::get<0>(tuple);
         auto v2 = std::get<1>(tuple);
         auto it = config.pairPotentials.find(

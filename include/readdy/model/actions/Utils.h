@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2018 Computational Molecular Biology Group,          *
+ * Copyright © 2019 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * Redistribution and use in source and binary forms, with or       *
@@ -32,54 +32,49 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                       *
  ********************************************************************/
 
-
 /**
- * << detailed description >>
+ * « detailed description »
  *
- * @file CPUEvaluateTopologyReactions.h
- * @brief << brief description >>
- * @author clonker
- * @date 15.06.17
- * @copyright BSD-3
+ * @file Utils.h
+ * @brief « brief description »
+ * @author chrisfroe
+ * @date 15.10.19
  */
 
 #pragma once
 
+#include <readdy/model/topologies/reactions/StructuralTopologyReaction.h>
+#include <readdy/common/index_persistent_vector.h>
 
-#include <readdy/model/actions/Actions.h>
-#include "../CPUKernel.h"
+namespace readdy::model::actions::top {
 
-namespace readdy::kernel::cpu::actions::top {
-
-class CPUEvaluateTopologyReactions : public readdy::model::actions::top::EvaluateTopologyReactions {
-    using rate_t = readdy::model::top::GraphTopology::topology_reaction_rate;
-public:
-    CPUEvaluateTopologyReactions(CPUKernel* kernel, readdy::scalar timeStep);
-
-    void perform() override;
-
-private:
-    struct TREvent;
-
-    bool eventsDependent(const TREvent& evt1, const TREvent& evt2) const;
-
-    using topology_reaction_events = std::vector<TREvent>;
-
-    CPUKernel *const kernel;
-
-    topology_reaction_events gatherEvents();
-
-    bool topologyDeactivated(std::ptrdiff_t index) const;
-
-    void handleStructuralReactionEvent(CPUStateModel::topologies_vec &topologies,
-                                       std::vector<CPUStateModel::topology> &new_topologies,
-                                       const TREvent &event, CPUStateModel::topology_ref &topology) const;
-
-    void handleTopologyParticleReaction(CPUStateModel::topology_ref &topology, const TREvent &event);
-
-    void handleTopologyTopologyReaction(CPUStateModel::topology_ref &t1, CPUStateModel::topology_ref &t2,
-                                        const TREvent& event);
-};
-
+template<typename Kernel, typename Topology, typename TopologyRef, typename ParticleData>
+void executeStructuralReaction(readdy::util::index_persistent_vector<TopologyRef> &topologies,
+                               std::vector<Topology> &newTopologies,
+                               TopologyRef &topology,
+                               const readdy::model::top::reactions::StructuralTopologyReaction &reaction,
+                               std::size_t topologyIdx,
+                               ParticleData &particleData,
+                               Kernel *kernel) {
+    auto result = reaction.execute(*topology, kernel);
+    if (!result.empty()) {
+        // we had a topology fission, so we need to actually remove the current topology from the
+        // data structure
+        topologies.erase(topologies.begin() + topologyIdx);
+        assert(topology->isDeactivated());
+        for (auto &it : result) {
+            if (!it.isNormalParticle(*kernel)) {
+                newTopologies.push_back(std::move(it));
+            }
+        }
+    } else {
+        if (topology->isNormalParticle(*kernel)) {
+            const auto particleIdx = topology->getParticles().front();
+            particleData.entry_at(particleIdx).topology_index = -1;
+            topologies.erase(topologies.begin() + topologyIdx);
+            assert(topology->isDeactivated());
+        }
+    }
+}
 
 }

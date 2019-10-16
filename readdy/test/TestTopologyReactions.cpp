@@ -207,7 +207,7 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
         topology->updateReactionRates(reactions);
         auto result = reactions.back().execute(*topology, kernel.get());
         REQUIRE(result.empty()); // reaction is in-place, expect empty return vector
-        const auto &vertices = topology->graph().vertices();
+        auto &vertices = topology->graph().vertices();
         REQUIRE(topology->graph().containsEdge(std::make_tuple(vertices.begin(), std::prev(vertices.end()))));
     }
     SECTION("Remove edge straightforward") {
@@ -286,8 +286,8 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
             log::Level level (spdlog::level::err);
             result = toptypes.structuralReactionsOf("TA").back().execute(*topology, kernel.get());
         }
-        const auto& graph = topology->graph();
-        const auto& vertices = graph.vertices();
+        auto& graph = topology->graph();
+        auto& vertices = graph.vertices();
         REQUIRE(result.empty());
         REQUIRE(graph.containsEdge(vertices.begin(), ++vertices.begin()));
         REQUIRE(graph.containsEdge(++vertices.begin(), --vertices.end()));

@@ -82,6 +82,9 @@ public:
 
     std::unique_ptr<model::actions::top::EvaluateTopologyReactions>
     evaluateTopologyReactions(scalar timeStep) const override;
+
+    std::unique_ptr<model::actions::top::BreakBonds>
+    breakBonds(scalar timeStep, readdy::model::actions::top::BreakConfig config) const override;
 };
 
 }
