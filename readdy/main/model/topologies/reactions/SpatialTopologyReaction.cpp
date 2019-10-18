@@ -184,18 +184,25 @@ SpatialTopologyReaction STRParser::parse(const std::string &descriptor, scalar r
         reaction._types = std::make_tuple(particle_types.idOf(lhs_p1), particle_types.idOf(lhs_p2));
         reaction._types_to = std::make_tuple(particle_types.idOf(rhs_p1), particle_types.idOf(rhs_p2));
         if(rhs_fusion) {
-            // we are in the fusion case
-            if(rhs.find("[self=true]") != std::string::npos) {
-                reaction._mode = STRMode::TT_FUSION_ALLOW_SELF; // allow self?
-            } else {
-                reaction._mode = STRMode::TT_FUSION;
-            }
-            reaction._top_types_to = std::make_tuple(_topology_registry.get().idOf(rhs_t1), EmptyTopologyId);
+	  std::smatch network_match;
+	  std::regex network_rx("\[network>\d*\]")
+	  // we are in the fusion case
+	  if(rhs.find("[self=true]") != std::string::npos) {
+	    reaction._mode = STRMode::TT_FUSION_ALLOW_SELF; // allow self?
+	  } else if(std::regex_search(rhs, network_match, network_rx)) {
+	    reaction._mode = STRMode::TT_FUSION_NETWORK;
+	    auto net = rutil::str::trim_copy(network_match.str());
+	    auto min_distance = std::stoi(net.substr(9, net.size()-1));
+	    reaction._min_graph_distance = min_distance;
+	  } else {
+	    reaction._mode = STRMode::TT_FUSION;
+	  }
+	  reaction._top_types_to = std::make_tuple(_topology_registry.get().idOf(rhs_t1), EmptyTopologyId);
         } else {
-            // we are in the enzymatic case
-            reaction._mode = STRMode::TT_ENZYMATIC;
-            reaction._top_types_to = std::make_tuple(_topology_registry.get().idOf(rhs_t1),
-                                                     _topology_registry.get().idOf(rhs_t2));
+	  // we are in the enzymatic case
+	  reaction._mode = STRMode::TT_ENZYMATIC;
+	  reaction._top_types_to = std::make_tuple(_topology_registry.get().idOf(rhs_t1),
+						   _topology_registry.get().idOf(rhs_t2));
         }
     }
 

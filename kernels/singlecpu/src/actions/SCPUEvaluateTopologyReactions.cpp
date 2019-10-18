@@ -254,7 +254,31 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
                                                 events.push_back(event);
                                             }
                                             break;
-                                        case readdy::model::top::reactions::STRMode::TP_ENZYMATIC: // fall through
+				    case readdy::model::top::reactions::STRMode::TT_FUSION_NETWORK:
+				      if (tidx1 >= 0 && tidx2 >= 0) {
+					if (tidx1 == tidx2) {
+					  const auto &top = topologies.at(static_cast<std::size_t>(tidx1));
+					  auto graph = top->graph();
+					  const Vertex& v1 = top.vertexForParticle(pidx);
+					  const Vertex& v2 = top.vertexForParticle(neighborIdx);
+					  if (graph.areConnectedWithNOrLessEdges(reaction.min_graph_distance(),
+										 v1, v2)) {
+					    break;
+					  }
+					  event.topology_idx = static_cast<std::size_t>(tidx1);
+					  event.topology_idx2 = tidx2;
+					  event.t1 = entry.type;
+					  event.t2 = neighbor.type;
+					  event.idx1 = pidx;
+					  event.idx2 = neighborIdx;
+					  event.reaction_idx = reaction_index;
+					  event.spatial = true;
+					  
+					  events.push_back(event);
+					}
+				      }
+				      break;
+				        case readdy::model::top::reactions::STRMode::TP_ENZYMATIC: // fall through
                                         case readdy::model::top::reactions::STRMode::TP_FUSION:
                                             if (tidx1 >= 0 && tidx2 < 0) {
                                                 event.topology_idx = static_cast<std::size_t>(tidx1);
