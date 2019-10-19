@@ -134,7 +134,8 @@ std::string TopologyRegistry::describe() const {
                         break;
                     }
                     case reactions::STRMode::TT_FUSION:
-                    case reactions::STRMode::TT_FUSION_ALLOW_SELF: {
+                    case reactions::STRMode::TT_FUSION_ALLOW_SELF:
+		    case reactions::STRMode::TT_FUSION_NETWORK: {
                         ss << "Topology-topology fusion reaction \"";
                         break;
                     }

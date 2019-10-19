@@ -59,8 +59,7 @@ namespace reactions {
  * TP - Topology-Particle
  */
 enum class STRMode {
-    TT_ENZYMATIC = 0, TT_FUSION, TT_FUSION_ALLOW_SELF, TP_ENZYMATIC, TP_FUSION,
-    TT_FUSION_NETWORK
+   TT_ENZYMATIC = 0, TT_FUSION, TT_FUSION_ALLOW_SELF, TP_ENZYMATIC, TP_FUSION, TT_FUSION_NETWORK;
 };
 
 class STRParser;
@@ -141,7 +140,7 @@ public:
     }
 
     const bool is_fusion() const {
-        return _mode == STRMode::TT_FUSION || _mode == STRMode::TT_FUSION_ALLOW_SELF || _mode == STRMode::TP_FUSION || TT_FUSION_NETWORK;
+      return _mode == STRMode::TT_FUSION || _mode == STRMode::TT_FUSION_ALLOW_SELF || _mode == STRMode::TP_FUSION || _mode == STRMode::TT_FUSION_NETWORK;
     }
 
     const scalar rate() const {
