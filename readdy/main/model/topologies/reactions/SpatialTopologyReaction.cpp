@@ -185,7 +185,7 @@ SpatialTopologyReaction STRParser::parse(const std::string &descriptor, scalar r
         reaction._types_to = std::make_tuple(particle_types.idOf(rhs_p1), particle_types.idOf(rhs_p2));
         if(rhs_fusion) {
 	  std::smatch network_match;
-	  std::regex network_rx("\[network>\d*\]")
+	  std::regex network_rx(R"(\[network>\d*\])");
 	  // we are in the fusion case
 	  if(rhs.find("[self=true]") != std::string::npos) {
 	    reaction._mode = STRMode::TT_FUSION_ALLOW_SELF; // allow self?

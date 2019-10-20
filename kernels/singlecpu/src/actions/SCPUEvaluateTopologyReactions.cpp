@@ -256,6 +256,10 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
                                             break;
 				    case readdy::model::top::reactions::STRMode::TT_FUSION_NETWORK:
 				      if (tidx1 >= 0 && tidx2 >= 0) {
+					auto &model = kernel->getSCPUKernelStateModel();
+					const auto &context = kernel->context();
+					auto &topologies = model.topologies();
+
 					if (tidx1 == tidx2) {
 					  const auto &top = topologies.at(static_cast<std::size_t>(tidx1));
 					  auto graph = top->graph();

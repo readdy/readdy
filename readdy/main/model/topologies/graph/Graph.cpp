@@ -54,11 +54,11 @@ namespace readdy::model::top::graph {
     if (n==0) return false;
     bool found = false;
     for (const auto neigh: v1.neighbors()) {
-      if (neigh.particleIndex == v1.particleIndex) continue;
-      if (neigh.particleIndex == v2.particleIndex) {
+      if (neigh->particleIndex == v1.particleIndex) continue;
+      if (neigh->particleIndex == v2.particleIndex) {
 	return true;	
       }      
-      found = areConnectedWithNOrLessEdges(n-1, neigh, v2);
+      found = areConnectedWithNOrLessEdges(n-1, *neigh, v2);
       if (found) return true;
     }
     return false;
