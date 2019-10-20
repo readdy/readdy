@@ -53,7 +53,7 @@ namespace readdy::model::top::graph {
   bool Graph::areConnectedWithNOrLessEdges(std::size_t n, const Vertex &v1, const Vertex &v2) {
     if (n==0) return false;
     bool found = false;
-    for (const Vertex& neigh: v1.neighbors()) {
+    for (const auto neigh: v1.neighbors()) {
       if (neigh.particleIndex == v1.particleIndex) continue;
       if (neigh.particleIndex == v2.particleIndex) {
 	return true;	
