@@ -50,7 +50,7 @@
 
 namespace readdy::model::top::graph {
 
-  bool Graph::areConnectedWithNOrLessEdges(std::size_t n, const Vertex &v1, const Vertex &v2) {
+  bool Graph::areConnectedWithNOrLessEdges(std::size_t n, const Vertex &v1, const Vertex &v2) const {
     if (n==0) return false;
     bool found = false;
     for (const auto neigh: v1.neighbors()) {

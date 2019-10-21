@@ -256,17 +256,15 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
                                             break;
 				    case readdy::model::top::reactions::STRMode::TT_FUSION_NETWORK:
 				      if (tidx1 >= 0 && tidx2 >= 0) {
-					auto &model = kernel->getSCPUKernelStateModel();
-					const auto &context = kernel->context();
-					auto &topologies = model.topologies();
+					const SCPUStateModel::topologies_vec& topologies = stateModel.topologies();
 
 					if (tidx1 == tidx2) {
-					  const auto &top = topologies.at(static_cast<std::size_t>(tidx1));
-					  auto graph = top->graph();
-					  const Vertex& v1 = top.vertexForParticle(pidx);
-					  const Vertex& v2 = top.vertexForParticle(neighborIdx);
-					  if (graph.areConnectedWithNOrLessEdges(reaction.min_graph_distance(),
-										 v1, v2)) {
+					  const std::unique_ptr<readdy::model::top::GraphTopology> &t1 = topologies.at(static_cast<std::size_t>(tidx1));
+					  const readdy::model::top::graph::Graph& gr = t1->graph();
+					  const readdy::model::top::graph::Graph::vertex_ref& v1 = t1->vertexForParticle(pidx);
+					  const readdy::model::top::graph::Graph::vertex_ref& v2 = t1->vertexForParticle(neighborIdx);
+					  bool result = gr.areConnectedWithNOrLessEdges(reaction.min_graph_distance(), *v1, *v2);
+					  if (result) {
 					    break;
 					  }
 					  event.topology_idx = static_cast<std::size_t>(tidx1);

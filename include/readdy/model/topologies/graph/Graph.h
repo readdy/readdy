@@ -208,7 +208,7 @@ public:
         }
     }
 
-    bool areConnectedWithNOrLessEdges(std::size_t n, const Vertex& v1, const Vertex& v2);
+    bool areConnectedWithNOrLessEdges(std::size_t n, const Vertex& v1, const Vertex& v2) const;
 
     bool isConnected() const;
 
