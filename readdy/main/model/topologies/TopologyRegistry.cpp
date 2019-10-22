@@ -134,11 +134,16 @@ std::string TopologyRegistry::describe() const {
                         break;
                     }
                     case reactions::STRMode::TT_FUSION:
-                    case reactions::STRMode::TT_FUSION_ALLOW_SELF:
-		    case reactions::STRMode::TT_FUSION_NETWORK: {
+                    case reactions::STRMode::TT_FUSION_ALLOW_SELF: {
                         ss << "Topology-topology fusion reaction \"";
                         break;
                     }
+		      
+		    case reactions::STRMode::TT_FUSION_NETWORK: {
+		      ss << "Topology-topology fusion reaction, network > "
+			 << reaction.min_graph_distance() << " \"";
+		      break;
+		    }
                     case reactions::STRMode::TP_ENZYMATIC: {
                         ss << "Topology-particle enzymatic reaction \"";
                         break;
@@ -337,6 +342,9 @@ std::string TopologyRegistry::generateSpatialReactionRepresentation(const Spatia
             if(reaction.allow_self_connection()) {
                 ss << " [self=true]";
             }
+	    if (reaction.mode() == reactions::STRMode::TT_FUSION_NETWORK) {
+	      ss << " [network>" << reaction.min_graph_distance() << "]";
+	    }
             break;
         }
         case reactions::STRMode::TP_ENZYMATIC: {
