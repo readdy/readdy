@@ -263,12 +263,7 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
 					  const readdy::model::top::graph::Graph::vertex_ref& v1 = t1->vertexForParticle(pidx);
 					  const readdy::model::top::graph::Graph::vertex_ref& v2 = t1->vertexForParticle(neighborIdx);
 					  bool result = gr.areConnectedWithNOrLessEdges(reaction.min_graph_distance(), *v1, *v2);
-					  if (result) {
-					    std::stringstream ss;
-					    ss << "event not added! result = "
-					       << result;
-
-					    readdy::log::warn(ss.str());
+					  if (result) {					    
 					    break;
 					  }				       
 					}
@@ -282,7 +277,6 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
 					event.spatial = true;
 					
 					events.push_back(event);
-					readdy::log::warn("event added!");
 				      }
 				      break;
 				        case readdy::model::top::reactions::STRMode::TP_ENZYMATIC: // fall through

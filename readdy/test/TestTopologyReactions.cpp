@@ -580,10 +580,10 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
 	  ctx.topologyRegistry().configureBondPotential("head", "link", {.0, .01});
 	  ctx.topologyRegistry().configureBondPotential("tail", "link", {.0, .01});
 	  ctx.topologyRegistry().configureBondPotential("link", "link", {.0, .01});
-
+	  
 	  SECTION("min. number of edges too large for full connection") {
 	    ctx.topologyRegistry().addSpatialReaction("connect: polymer(core) + polymer(core) -> polymer(link--link) [network>16]",
-						      1e10, 1.0);
+						      1e10, 1.1);
 
 	    Simulation sim(kernel->name(), ctx);
 	    
@@ -625,17 +625,30 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
 	      t3->graph().addEdgeBetweenParticles(i, i+1);
 	      t4->graph().addEdgeBetweenParticles(i, i+1);	      
 	    }
-	    sim.run(1, 1e-3);
+	    sim.run(3, 1e-3);
 
 	    auto topologies = sim.currentTopologies();
-
 	    REQUIRE( topologies.size() == 1 );
+
 	    auto top = topologies.at(0);
-	    REQUIRE(false);	  
+	    auto particles = sim.currentParticles();
+	    unsigned n_links = 0;
+	    auto typeLink = ctx.particleTypes().infoOf("link").typeId;
+
+	    for (auto vref=top->graph().firstVertex(); vref!=top->graph().lastVertex(); vref++) {
+	      auto pidx = vref->particleIndex;
+	      if (particles.at(pidx).type() == typeLink) n_links++;
+	    }
+	    REQUIRE( 6 == n_links );	    
+	    
+	    //for (auto p: particles) {
+	    //  if (p.type() == typeLink) n_links++;
+	    //}
+	    //REQUIRE( 6 == n_links );	    
 	  }
 	  SECTION("full connection") {
-	    ctx.topologyRegistry().addSpatialReaction("connect: polymer(core) + polymer(core) -> polymer(link--link) [network>14]",
-						      1e10, 1.0);
+	    ctx.topologyRegistry().addSpatialReaction("connect: polymer(core) + polymer(core) -> polymer(link--link) [network>14]", // >14
+						      1e10, 1.01);
 
 	    Simulation sim(kernel->name(), ctx);
 	    
@@ -678,7 +691,21 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
 	      t3->graph().addEdgeBetweenParticles(i, i+1);
 	      t4->graph().addEdgeBetweenParticles(i, i+1);	      
 	    }
-	    REQUIRE(false);	  
+	    sim.run(5, 1e-3);
+
+	    auto topologies = sim.currentTopologies();
+	    REQUIRE( topologies.size() == 1 );
+
+	    auto top = topologies.at(0);
+	    auto particles = sim.currentParticles();
+	    unsigned n_links = 0;
+	    auto typeLink = ctx.particleTypes().infoOf("link").typeId;
+
+	    for (auto vref=top->graph().firstVertex(); vref!=top->graph().lastVertex(); vref++) {
+	      auto pidx = vref->particleIndex;
+	      if (particles.at(pidx).type() == typeLink) n_links++;
+	    }
+	    REQUIRE( 8 == n_links );	    	    
 	  }
 	}
     }
