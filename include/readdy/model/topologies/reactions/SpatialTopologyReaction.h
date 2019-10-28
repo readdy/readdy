@@ -157,7 +157,7 @@ public:
     }
 
     const bool allow_self_connection() const {
-        return _mode == STRMode::TT_FUSION_ALLOW_SELF;
+      return _mode == STRMode::TT_FUSION_ALLOW_SELF || _mode == STRMode::TT_FUSION_NETWORK;
     }
 
     const STRMode &mode() const {

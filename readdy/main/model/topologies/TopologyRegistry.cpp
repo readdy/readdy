@@ -334,12 +334,13 @@ std::string TopologyRegistry::generateSpatialReactionRepresentation(const Spatia
             break;
         }
         case reactions::STRMode::TT_FUSION:
-        case reactions::STRMode::TT_FUSION_ALLOW_SELF: {
+        case reactions::STRMode::TT_FUSION_ALLOW_SELF:
+        case reactions::STRMode::TT_FUSION_NETWORK: {
             ss << fmt::format("{}({}) + {}({}) -> {}({}--{})",
                               tName(reaction.top_type1()), pName(reaction.type1()),
                               tName(reaction.top_type2()), pName(reaction.type2()),
                               tName(reaction.top_type_to1()), pName(reaction.type_to1()), pName(reaction.type_to2()));
-            if(reaction.allow_self_connection()) {
+            if(reaction.mode() == reactions::STRMode::TT_FUSION_ALLOW_SELF) {
                 ss << " [self=true]";
             }
 	    if (reaction.mode() == reactions::STRMode::TT_FUSION_NETWORK) {

@@ -71,6 +71,13 @@ readdy::model::top::GraphTopology* setUpSmallTopology(readdy::model::Kernel* ker
     return topology;
 }
 
+bool isNotConnected(const readdy::model::top::graph::Graph& g,
+		    std::list<readdy::model::top::graph::Vertex>::iterator v) {
+  const auto neighbors = (*v).neighbors();
+  if (neighbors.size() == 0) return true;
+  return false;
+}
+
 TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
     auto kernel = create<TestType>();
     auto &ctx = kernel->context();
@@ -566,6 +573,8 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
 	SECTION("TTFusionNetwork") {
 	  model::Context ctx;
 
+	  ctx.boxSize() = {{30, 30, 30}};
+
 	  ctx.particleTypes().addTopologyType("head", 0);
 	  ctx.particleTypes().addTopologyType("core", 0);
 	  ctx.particleTypes().addTopologyType("tail", 0);
@@ -634,8 +643,9 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
 	    auto particles = sim.currentParticles();
 	    unsigned n_links = 0;
 	    auto typeLink = ctx.particleTypes().infoOf("link").typeId;
-
-	    for (auto vref=top->graph().firstVertex(); vref!=top->graph().lastVertex(); vref++) {
+	    auto vref_last = top->graph().lastVertex();
+	    vref_last++;
+	    for (auto vref=top->graph().firstVertex(); vref != vref_last; vref++) {
 	      auto pidx = vref->particleIndex;
 	      if (particles.at(pidx).type() == typeLink) n_links++;
 	    }
@@ -647,7 +657,7 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
 	    //REQUIRE( 6 == n_links );	    
 	  }
 	  SECTION("full connection") {
-	    ctx.topologyRegistry().addSpatialReaction("connect: polymer(core) + polymer(core) -> polymer(link--link) [network>14]", // >14
+	    ctx.topologyRegistry().addSpatialReaction("connect: polymer(core) + polymer(core) -> polymer(link--link) [network>5]", // >14
 						      1e10, 1.01);
 
 	    Simulation sim(kernel->name(), ctx);
@@ -691,7 +701,7 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
 	      t3->graph().addEdgeBetweenParticles(i, i+1);
 	      t4->graph().addEdgeBetweenParticles(i, i+1);	      
 	    }
-	    sim.run(5, 1e-3);
+	    sim.run(10, 1e-3);
 
 	    auto topologies = sim.currentTopologies();
 	    REQUIRE( topologies.size() == 1 );
@@ -700,9 +710,13 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
 	    auto particles = sim.currentParticles();
 	    unsigned n_links = 0;
 	    auto typeLink = ctx.particleTypes().infoOf("link").typeId;
-
-	    for (auto vref=top->graph().firstVertex(); vref!=top->graph().lastVertex(); vref++) {
+	    
+	    auto vref_last = top->graph().lastVertex();
+	    vref_last++;
+	    for (auto vref=top->graph().firstVertex(); vref != vref_last; vref++) {
 	      auto pidx = vref->particleIndex;
+	      bool r = isNotConnected(top->graph(), vref);
+	      if (r) continue;
 	      if (particles.at(pidx).type() == typeLink) n_links++;
 	    }
 	    REQUIRE( 8 == n_links );	    	    
