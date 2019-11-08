@@ -223,7 +223,33 @@ TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU
             REQUIRE(r.name() == "topology-topology fusion type1");
             REQUIRE(r.rate() == 10.);
             REQUIRE(r.radius() == 11.);
+	    REQUIRE(r.min_graph_distance() == 0);	    
         }
+	{
+	  auto r = parser.parse("topology-topology fusion type1: T1 (p1) + T2 (p2) -> T3 (p3--p4) [self=true, distance>6]", 10., 11.);
+	  REQUIRE(r.mode() == readdy::model::top::reactions::STRMode::TT_FUSION_ALLOW_SELF);
+	  REQUIRE(r.top_type1() == ctx.topologyRegistry().idOf("T1"));
+	  REQUIRE(r.top_type2() == ctx.topologyRegistry().idOf("T2"));
+	  REQUIRE(r.type1() == ctx.particleTypes().idOf("p1"));
+	  REQUIRE(r.type2() == ctx.particleTypes().idOf("p2"));
+	  REQUIRE(r.top_type_to1() == ctx.topologyRegistry().idOf("T3"));
+	  REQUIRE(r.top_type_to2() == readdy::EmptyTopologyId);
+	  REQUIRE(r.type_to1() == ctx.particleTypes().idOf("p3"));
+	  REQUIRE(r.type_to2() == ctx.particleTypes().idOf("p4"));
+	  REQUIRE(r.name() == "topology-topology fusion type1");
+	  REQUIRE(r.rate() == 10.);
+	  REQUIRE(r.radius() == 11.);
+	  REQUIRE(r.min_graph_distance() == 6);
+	}
+	{
+	  // distance option without self=true option should throw an error
+	  try {
+	    auto r = parser.parse("topology-topology fusion type1: T1 (p1) + T2 (p2) -> T3 (p3--p4) [distance>6]", 10., 11.);
+	    REQUIRE( false );
+	  } catch (std::runtime_error const &e) {
+	    REQUIRE( true );
+	  }
+	}
         {
             auto r = parser.parse("topology-topology fusion type2: T1 (p1) + T2 (p2) -> T3 (p3--p4)", 10., 11.);
             REQUIRE(r.mode() == readdy::model::top::reactions::STRMode::TT_FUSION);

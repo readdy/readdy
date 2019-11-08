@@ -239,8 +239,7 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
                                                 events.push_back(event);
                                             }
                                             break;
-                                        case readdy::model::top::reactions::STRMode::TT_ENZYMATIC: // fall through
-                                        case readdy::model::top::reactions::STRMode::TT_FUSION_ALLOW_SELF:
+                                        case readdy::model::top::reactions::STRMode::TT_ENZYMATIC:
                                             if(tidx1 >= 0 && tidx2 >= 0) {
                                                 event.topology_idx = static_cast<std::size_t>(tidx1);
                                                 event.topology_idx2 = tidx2;
@@ -254,7 +253,7 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
                                                 events.push_back(event);
                                             }
                                             break;
-				    case readdy::model::top::reactions::STRMode::TT_FUSION_NETWORK:
+				    case readdy::model::top::reactions::STRMode::TT_FUSION_ALLOW_SELF:
 				      if (tidx1 >= 0 && tidx2 >= 0) {
 					const SCPUStateModel::topologies_vec& topologies = stateModel.topologies();
 					if (tidx1 == tidx2) {

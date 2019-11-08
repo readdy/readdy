@@ -51,9 +51,9 @@
 
 namespace readdy::model::top::reactions {
 
-ReactionId SpatialTopologyReaction::counter = 0;
+  ReactionId SpatialTopologyReaction::counter = 0;
 
-SpatialTopologyReaction STRParser::parse(const std::string &descriptor, scalar rate, scalar radius) const {
+  SpatialTopologyReaction STRParser::parse(const std::string &descriptor, scalar rate, scalar radius) const {
     namespace mutil = readdy::model::util;
     namespace rutil = readdy::util;
     SpatialTopologyReaction reaction;
@@ -184,16 +184,22 @@ SpatialTopologyReaction STRParser::parse(const std::string &descriptor, scalar r
         reaction._types = std::make_tuple(particle_types.idOf(lhs_p1), particle_types.idOf(lhs_p2));
         reaction._types_to = std::make_tuple(particle_types.idOf(rhs_p1), particle_types.idOf(rhs_p2));
         if(rhs_fusion) {
-	  std::smatch network_match;
-	  std::regex network_rx(R"(\[network>\d*\])");
 	  // we are in the fusion case
-	  if(rhs.find("[self=true]") != std::string::npos) {
-	    reaction._mode = STRMode::TT_FUSION_ALLOW_SELF; // allow self?
-	  } else if(std::regex_search(rhs, network_match, network_rx)) {
-	    reaction._mode = STRMode::TT_FUSION_NETWORK;
-	    auto net = rutil::str::trim_copy(network_match.str());
-	    auto min_distance = std::stoi(net.substr(9, net.size()-1));
-	    reaction._min_graph_distance = min_distance;
+	  std::smatch option_match;
+	  std::regex option_rx(R"(\[(.*?)\])");
+	  // check for options
+	  if(std::regex_search(rhs, option_match, option_rx)) {
+	    auto option_str = option_match.str();
+	    std::vector<std::string> options = parse_options(
+	      option_str.substr(1, option_str.length()-1)
+	    );
+	    if (!has_option_allow_self(options)) {
+	      throw std::runtime_error("Option \"self=true\" is missing. This option is currently required for all valid options. If you don't want to allow self fusion, ommit the option block (in square brackets).");
+	    }
+	    reaction._mode = STRMode::TT_FUSION_ALLOW_SELF;	    
+	    int d = get_distance(options);
+	    if (d == -1) reaction._min_graph_distance = 0;
+	    else reaction._min_graph_distance = (unsigned) d;	    
 	  } else {
 	    reaction._mode = STRMode::TT_FUSION;
 	  }
@@ -207,6 +213,36 @@ SpatialTopologyReaction STRParser::parse(const std::string &descriptor, scalar r
     }
 
     return reaction;
-}
+  }
 
+  std::vector<std::string> STRParser::parse_options(const std::string &option_str) const {
+    std::vector<std::string> options;
+    size_t pos = 0;
+    std::string s = option_str.substr();
+    std::string o;
+    while ((pos = s.find(",")) != std::string::npos) {
+      o = s.substr(0, pos);
+      readdy::util::str::trim(o);
+      options.push_back(o);
+      s.erase(0, pos + 1);
+    }
+    return options;
+  }
+
+  bool STRParser::has_option_allow_self(const std::vector<std::string> &options) const {
+    auto it = std::find(options.begin(),
+			options.end(),
+			"self=true");
+    if (it != options.end()) return true;
+    return false;
+  }
+
+  int STRParser::get_distance(const std::vector<std::string> &options) const {
+    for (auto &o: options) {
+      if(o.find("distance>") == std::string::npos) continue;
+      auto dist = std::stoi(o.substr(9));
+      return dist;
+    }
+    return -1;
+  }
 }

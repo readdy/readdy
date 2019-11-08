@@ -295,7 +295,7 @@ CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReacti
                                     } else {
                                         log::critical("got no topology for topology-fusion");
                                     }				    
-				    if (reaction.mode() == readdy::model::top::reactions::STRMode::TT_FUSION_NETWORK &&
+				    if (reaction.allow_self_connection() &&
 					entry.topology_index == neighbor.topology_index) {
 				      const auto& topol = model.topologies().at(static_cast<std::size_t>(neighbor.topology_index));
 										// auto topol = topologies.at(event.topology_idx);

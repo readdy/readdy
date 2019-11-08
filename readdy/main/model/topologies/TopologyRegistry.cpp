@@ -133,14 +133,12 @@ std::string TopologyRegistry::describe() const {
                         ss << "Topology-topology enzymatic reaction \"";
                         break;
                     }
-                    case reactions::STRMode::TT_FUSION:
-                    case reactions::STRMode::TT_FUSION_ALLOW_SELF: {
+                    case reactions::STRMode::TT_FUSION: {
                         ss << "Topology-topology fusion reaction \"";
                         break;
-                    }
-		      
-		    case reactions::STRMode::TT_FUSION_NETWORK: {
-		      ss << "Topology-topology fusion reaction, network > "
+                    }		      
+		    case reactions::STRMode::TT_FUSION_ALLOW_SELF: {
+		      ss << "Topology-topology fusion reaction, distance > "
 			 << reaction.min_graph_distance() << " \"";
 		      break;
 		    }
@@ -334,17 +332,16 @@ std::string TopologyRegistry::generateSpatialReactionRepresentation(const Spatia
             break;
         }
         case reactions::STRMode::TT_FUSION:
-        case reactions::STRMode::TT_FUSION_ALLOW_SELF:
-        case reactions::STRMode::TT_FUSION_NETWORK: {
+        case reactions::STRMode::TT_FUSION_ALLOW_SELF: {
             ss << fmt::format("{}({}) + {}({}) -> {}({}--{})",
                               tName(reaction.top_type1()), pName(reaction.type1()),
                               tName(reaction.top_type2()), pName(reaction.type2()),
                               tName(reaction.top_type_to1()), pName(reaction.type_to1()), pName(reaction.type_to2()));
             if(reaction.mode() == reactions::STRMode::TT_FUSION_ALLOW_SELF) {
-                ss << " [self=true]";
-            }
-	    if (reaction.mode() == reactions::STRMode::TT_FUSION_NETWORK) {
-	      ss << " [network>" << reaction.min_graph_distance() << "]";
+                ss << " [self=true]";            
+		if (reaction.min_graph_distance() > 0) {
+		  ss << " [distance>" << reaction.min_graph_distance() << "]";
+		}
 	    }
             break;
         }
