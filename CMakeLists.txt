@@ -199,8 +199,10 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
     #####################################
 
     MESSAGE(STATUS "Initializing and updating submodules")
-    EXECUTE_PROCESS(COMMAND git submodule update --init WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+    EXECUTE_PROCESS(COMMAND git submodule update --recursive --init WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
     add_subdirectory(libraries/h5rd)
+    set(graphs_BUILD_TESTING OFF)
+    add_subdirectory(libraries/graph)
 
     #####################################
     #                                   #
