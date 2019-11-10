@@ -260,6 +260,4 @@ Particle GraphTopology::particleForVertex(const vertex &vertex) const {
     }
     return _stateModel->getParticleForIndex(getParticles().at(vertex.particleIndex));
 }
-
-
 }

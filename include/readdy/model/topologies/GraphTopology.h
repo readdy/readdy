@@ -50,7 +50,6 @@
 #include "Topology.h"
 #include "reactions/reactions.h"
 #include "TopologyRegistry.h"
-#include "Utils.h"
 
 namespace readdy::model {
 class StateModel;
@@ -112,9 +111,9 @@ public:
 
     void validate() {
         if (!graph().isConnected()) {
-            throw std::invalid_argument(fmt::format("The graph is not connected! (GEXF representation: {})",
-                                                    util::to_gexf(graph())));
+            throw std::invalid_argument(fmt::format("The graph is not connected! (GEXF representation: {})", _graph.gexf()));
         }
+        // todo also validate that all edges are not pointing to tombstone vertices
     }
 
     std::vector<GraphTopology> connectedComponents();
