@@ -591,7 +591,7 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
 	  ctx.topologyRegistry().configureBondPotential("link", "link", {.0, .01});
 	  
 	  SECTION("min. number of edges too large for full connection") {
-	    ctx.topologyRegistry().addSpatialReaction("connect: polymer(core) + polymer(core) -> polymer(link--link) [network>16]",
+	    ctx.topologyRegistry().addSpatialReaction("connect: polymer(core) + polymer(core) -> polymer(link--link) [self=true, distance>16]",
 						      1e10, 1.1);
 
 	    Simulation sim(kernel->name(), ctx);
@@ -657,7 +657,7 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
 	    //REQUIRE( 6 == n_links );	    
 	  }
 	  SECTION("full connection") {
-	    ctx.topologyRegistry().addSpatialReaction("connect: polymer(core) + polymer(core) -> polymer(link--link) [network>5]", // >14
+	    ctx.topologyRegistry().addSpatialReaction("connect: polymer(core) + polymer(core) -> polymer(link--link) [self=true, distance>14]", // >14
 						      1e10, 1.01);
 
 	    Simulation sim(kernel->name(), ctx);
