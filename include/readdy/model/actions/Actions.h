@@ -318,7 +318,7 @@ protected:
         }
 
         // transform configurations to potential instances
-        std::vector<std::unique_ptr<readdy::model::top::Topology::bonded_potential>> bondedPotentials;
+        std::vector<std::unique_ptr<readdy::model::top::Topology::BondedPotential>> bondedPotentials;
         for (const auto &bond : bondConfigs) {
             switch (bond.first) {
                 case api::BondType::HARMONIC: {

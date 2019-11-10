@@ -45,7 +45,6 @@
 #pragma once
 
 #include <memory>
-#include <readdy/model/topologies/graph/Graph.h>
 
 namespace readdy::model::top {
 class GraphTopology;
@@ -56,7 +55,7 @@ public:
     /**
      * the GraphTopology's graph
      */
-    using topology_graph = graph::Graph;
+    using topology_graph = graphs::Graph;
 
     /**
      * an edge in the graph

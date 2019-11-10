@@ -45,8 +45,9 @@
 
 #pragma once
 
+#include <graphs/graphs.h>
+
 #include "Topology.h"
-#include "graph/Graph.h"
 #include "reactions/reactions.h"
 #include "TopologyRegistry.h"
 #include "Utils.h"
@@ -55,38 +56,28 @@ namespace readdy::model {
 class StateModel;
 namespace top {
 
+struct VertexData {
+    using ParticleIndex = std::size_t;
+
+    ParticleIndex particleIndex;
+    ParticleTypeId particleType;
+};
+
 class GraphTopology : public Topology {
 public:
-
-    using topology_graph = graph::Graph;
-    using topology_reaction_rate = scalar;
-    using topology_reaction_rates = std::vector<topology_reaction_rate>;
-    using types_vec = std::vector<ParticleTypeId>;
-    using vertex = graph::Vertex;
+    using Vertex = graphs::Vertex<VertexData>;
+    using Graph = graphs::Graph<Vertex>;
+    using ReactionRate = scalar;
+    using ReactionRates = std::vector<ReactionRate>;
 
     /**
      * Creates a new graph topology. An internal graph object will be created with vertices corresponding to the
      * particles handed in.
      * @param type the type
-     * @param particles the particles
-     * @param types particle's types
      * @param context the kernel's context
      * @param stateModel the kernel's state model
      */
-    GraphTopology(TopologyTypeId type, const particle_indices &particles, const types_vec &types,
-                  const model::Context &context, const StateModel *stateModel);
-
-    /**
-     * Will create a graph topology out of an already existing graph and a list of particles, where the i-th vertex
-     * of the graph will map to the i-th particles in the particles list.
-     * @param type the type
-     * @param particles the particles list
-     * @param graph the already existing graph
-     * @param context the kernel's context
-     * @param stateModel the kernels state model
-     */
-    GraphTopology(TopologyTypeId type, particle_indices &&particles, topology_graph &&graph,
-                  const model::Context &context, const StateModel *stateModel);
+    GraphTopology(TopologyTypeId type, Graph graph, const model::Context &context, const StateModel *stateModel);
 
     ~GraphTopology() override = default;
 
@@ -98,12 +89,12 @@ public:
 
     GraphTopology &operator=(const GraphTopology &) = delete;
 
-    topology_graph &graph() {
-        return graph_;
+    void setGraph(Graph graph) {
+        _graph = std::move(graph);
     }
 
-    const topology_graph &graph() const {
-        return graph_;
+    [[nodiscard]] const Graph &graph() const {
+        return _graph;
     }
 
     void configure();
@@ -128,7 +119,7 @@ public:
 
     std::vector<GraphTopology> connectedComponents();
 
-    const bool isDeactivated() const {
+    [[nodiscard]] bool isDeactivated() const {
         return deactivated;
     }
 
@@ -136,22 +127,22 @@ public:
         deactivated = true;
     }
 
-    bool isNormalParticle(const Kernel &k) const;
+    [[nodiscard]] bool isNormalParticle(const Kernel &k) const;
 
-    const topology_reaction_rate cumulativeRate() const {
+    [[nodiscard]] ReactionRate cumulativeRate() const {
         return _cumulativeRate;
     }
 
     void appendParticle(particle_index newParticle, ParticleTypeId newParticleType,
-                        particle_index counterPart, ParticleTypeId counterPartType);
+                        Graph::VertexIndex counterPart, ParticleTypeId counterPartType);
 
     void appendParticle(particle_index newParticle, ParticleTypeId newParticleType,
-                        topology_graph::vertex_ref counterPart, ParticleTypeId counterPartType);
+                        Graph::VertexIndex counterPart, ParticleTypeId counterPartType);
 
     void appendTopology(GraphTopology &other, particle_index otherParticle, ParticleTypeId otherNewParticleType,
                         particle_index thisParticle, ParticleTypeId thisNewParticleType, TopologyTypeId newType);
 
-    const TopologyTypeId &type() const {
+    [[nodiscard]] TopologyTypeId type() const {
         return _topology_type;
     }
 
@@ -159,40 +150,36 @@ public:
         return _topology_type;
     }
 
-    topology_graph::vertex_ref vertexForParticle(particle_index particle) {
+    Graph::vertex_ref vertexForParticle(particle_index particle) {
         auto it = std::find(particles.begin(), particles.end(), particle);
         if (it != particles.end()) {
-            return std::next(graph_.vertices().begin(), std::distance(particles.begin(), it));
+            return std::next(_graph.vertices().begin(), std::distance(particles.begin(), it));
         }
-        return graph_.vertices().end();
+        return _graph.vertices().end();
     }
 
-    const topology_reaction_rates &rates() const {
+    [[nodiscard]] const ReactionRates &rates() const {
         return _reaction_rates;
     }
 
-    const model::Context &context() const {
+    [[nodiscard]] const model::Context &context() const {
         return _context.get();
     }
 
-    std::vector<Particle> fetchParticles() const;
+    [[nodiscard]] std::vector<Particle> fetchParticles() const;
 
-    Particle particleForVertex(const vertex &vertex) const;
+    [[nodiscard]] Particle particleForVertex(const Vertex &vertex) const;
 
-    Particle particleForVertex(topology_graph::vertex_ref vertexRef) const {
+    [[nodiscard]] Particle particleForVertex(Graph::vertex_ref vertexRef) const {
         return particleForVertex(*vertexRef);
     }
 
-    topology_graph::vertex_ref toVertexRef(const vertex &vertex) {
-        return graph_.toRef(vertex);
-    }
-
 protected:
-    topology_graph graph_;
+    Graph _graph;
     std::reference_wrapper<const model::Context> _context;
     const model::StateModel *_stateModel;
-    topology_reaction_rates _reaction_rates;
-    topology_reaction_rate _cumulativeRate{};
+    ReactionRates _reaction_rates;
+    ReactionRate _cumulativeRate{};
     TopologyTypeId _topology_type;
     bool deactivated{false};
 };
