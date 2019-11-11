@@ -191,7 +191,7 @@ namespace readdy::model::top::reactions {
 	  if(std::regex_search(rhs, option_match, option_rx)) {
 	    auto option_str = option_match.str();
 	    std::vector<std::string> options = parse_options(
-	      option_str.substr(1, option_str.length()-1)
+	      option_str.substr(1, option_str.length()-2)
 	    );
 	    if (!has_option_allow_self(options)) {
 	      throw std::runtime_error("Option \"self=true\" is missing. This option is currently required for all valid options. If you don't want to allow self fusion, ommit the option block (in square brackets).");
@@ -226,6 +226,8 @@ namespace readdy::model::top::reactions {
       options.push_back(o);
       s.erase(0, pos + 1);
     }
+    readdy::util::str::trim(s);
+    options.push_back(s);
     return options;
   }
 
@@ -237,7 +239,7 @@ namespace readdy::model::top::reactions {
     return false;
   }
 
-  int STRParser::get_distance(const std::vector<std::string> &options) const {
+  int STRParser::get_distance(const std::vector<std::string> &options) const {    
     for (auto &o: options) {
       if(o.find("distance>") == std::string::npos) continue;
       auto dist = std::stoi(o.substr(9));
