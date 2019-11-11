@@ -75,7 +75,7 @@ std::vector<GraphTopology> StructuralTopologyReaction::execute(GraphTopology &to
     auto& steps = recipe.steps();
     if(!steps.empty()) {
         auto topologyActionFactory = kernel->getTopologyActionFactory();
-        std::vector<op::Operation::action_ptr> actions;
+        std::vector<op::Operation::ActionPtr> actions;
         actions.reserve(steps.size());
         for (auto &op : steps) {
             actions.push_back(op->create_action(&topology, topologyActionFactory));

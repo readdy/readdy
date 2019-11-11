@@ -65,15 +65,15 @@ public:
     std::unique_ptr<top::pot::CalculateCosineDihedralPotential>
     createCalculateCosineDihedralPotential(const cos_dihedral *potential) const override;
 
-    action_ref createChangeParticleType(top::GraphTopology *topology, const vertex &v,
-                                        const ParticleTypeId &type_to) const override;
+    ActionPtr createChangeParticleType(top::GraphTopology *topology, const vertex &v,
+                                       const ParticleTypeId &type_to) const override;
 
-    action_ref
+    ActionPtr
     createChangeParticlePosition(top::GraphTopology *topology, const vertex &v, Vec3 position) const override;
 
-    action_ref createChangeTopologyType(top::GraphTopology *topology, const std::string &type_to) const override;
+    ActionPtr createChangeTopologyType(top::GraphTopology *topology, const std::string &type_to) const override;
 
-    action_ref
+    ActionPtr
     createAppendParticle(top::GraphTopology *topology, const std::vector<vertex> &neighbors, ParticleTypeId type,
                          const Vec3 &position) const override;
 

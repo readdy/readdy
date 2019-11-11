@@ -47,6 +47,7 @@
 
 #include <graphs/graphs.h>
 
+#include "common.h"
 #include "Topology.h"
 #include "reactions/reactions.h"
 #include "TopologyRegistry.h"
@@ -54,13 +55,6 @@
 namespace readdy::model {
 class StateModel;
 namespace top {
-
-struct VertexData {
-    using ParticleIndex = std::size_t;
-
-    ParticleIndex particleIndex;
-    ParticleTypeId particleType;
-};
 
 class GraphTopology : public Topology {
 public:
@@ -132,14 +126,15 @@ public:
         return _cumulativeRate;
     }
 
-    void appendParticle(particle_index newParticle, ParticleTypeId newParticleType,
-                        Graph::VertexIndex counterPart, ParticleTypeId counterPartType);
+    typename Graph::VertexList::iterator vertexIndexForParticle(VertexData::ParticleIndex index);
 
-    void appendParticle(particle_index newParticle, ParticleTypeId newParticleType,
-                        Graph::VertexIndex counterPart, ParticleTypeId counterPartType);
+    void appendParticle(VertexData::ParticleIndex newParticle, ParticleTypeId newParticleType,
+                        VertexData::ParticleIndex counterPart, ParticleTypeId counterPartType);
 
-    void appendTopology(GraphTopology &other, particle_index otherParticle, ParticleTypeId otherNewParticleType,
-                        particle_index thisParticle, ParticleTypeId thisNewParticleType, TopologyTypeId newType);
+    void appendTopology(GraphTopology &other,
+                        VertexData::ParticleIndex otherParticle, ParticleTypeId otherNewParticleType,
+                        VertexData::ParticleIndex thisParticle, ParticleTypeId thisNewParticleType,
+                        TopologyTypeId newType);
 
     [[nodiscard]] TopologyTypeId type() const {
         return _topology_type;
@@ -147,14 +142,6 @@ public:
 
     TopologyTypeId &type() {
         return _topology_type;
-    }
-
-    Graph::vertex_ref vertexForParticle(particle_index particle) {
-        auto it = std::find(particles.begin(), particles.end(), particle);
-        if (it != particles.end()) {
-            return std::next(_graph.vertices().begin(), std::distance(particles.begin(), it));
-        }
-        return _graph.vertices().end();
     }
 
     [[nodiscard]] const ReactionRates &rates() const {
@@ -169,8 +156,8 @@ public:
 
     [[nodiscard]] Particle particleForVertex(const Vertex &vertex) const;
 
-    [[nodiscard]] Particle particleForVertex(Graph::vertex_ref vertexRef) const {
-        return particleForVertex(*vertexRef);
+    [[nodiscard]] Particle particleForVertex(Graph::VertexIndex vertexRef) const {
+        return particleForVertex(_graph.vertices().at(vertexRef));
     }
 
 protected:

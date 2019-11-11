@@ -46,6 +46,8 @@
 #include <sstream>
 
 #include <readdy/model/Kernel.h>
+#include <readdy/model/topologies/GraphTopology.h>
+
 
 namespace readdy::model::top {
 
@@ -172,47 +174,23 @@ bool GraphTopology::isNormalParticle(const Kernel &k) const {
     return false;
 }
 
-void GraphTopology::appendParticle(particle_index newParticle, ParticleTypeId newParticleType,
-                                   Graph::vertex_ref counterPart, ParticleTypeId counterPartType) {
-
-    // this is costly so I am just assuming that the counter part iterator (vertex_ref) belongs to `this` topology...
-    //if(std::find(graph().vertices().begin(), graph().vertices().end(), *counterPart) == graph().vertices().end()) {
-    //    throw std::logic_error("Could not locate graph vertex iterator within vertices list.");
-    //}
-
-    particles.push_back(newParticle);
-    graph().addVertex(particles.size() - 1, newParticleType);
-
-    auto newParticleIt = std::prev(graph().vertices().end());
-    auto otherParticleIt = counterPart;
-    otherParticleIt->particleType() = counterPartType;
-
-    graph().addEdge(newParticleIt, otherParticleIt);
-
-    counterPart->particleType() = counterPartType;
-}
-
-void GraphTopology::appendParticle(particle_index newParticle, ParticleTypeId newParticleType,
-                                   particle_index counterPart, ParticleTypeId counterPartType) {
-    auto it = std::find(particles.begin(), particles.end(), counterPart);
-    if(it != particles.end()) {
-        auto counterPartIdx = std::distance(particles.begin(), it);
-
-        particles.push_back(newParticle);
-        graph().addVertex(particles.size() - 1, newParticleType);
-
-        auto newParticleIt = std::prev(graph().vertices().end());
-        auto otherParticleIt = std::next(graph().vertices().begin(), counterPartIdx);
-        otherParticleIt->particleType() = counterPartType;
-
-        graph().addEdge(newParticleIt, otherParticleIt);
-    } else {
-        log::critical("counterPart {} was not contained in topology, this should not happen", counterPart);
+void GraphTopology::appendParticle(VertexData::ParticleIndex newParticle, ParticleTypeId newParticleType,
+                                   VertexData::ParticleIndex counterPart, ParticleTypeId counterPartType) {
+    auto it = vertexIndexForParticle(counterPart);
+    if(it == _graph.vertices().end()) {
+        throw std::invalid_argument(fmt::format("Vertex with particle {} was not in graph or deactivated!", counterPart));
     }
+    auto ix = _graph.addVertex(VertexData{
+        .particleIndex = newParticle,
+        .particleType = newParticleType
+    });
+
+    (*it)->particleType = counterPartType;
+    _graph.addEdge(ix, std::distance(_graph.vertices().begin(), it));
 }
 
-void GraphTopology::appendTopology(GraphTopology &other, Topology::particle_index otherParticle,
-                                   ParticleTypeId otherNewParticleType, Topology::particle_index thisParticle,
+void GraphTopology::appendTopology(GraphTopology &other, VertexData::ParticleIndex otherParticle,
+                                   ParticleTypeId otherNewParticleType, VertexData::ParticleIndex thisParticle,
                                    ParticleTypeId thisNewParticleType, TopologyTypeId newType) {
     auto &otherGraph = other.graph();
 
@@ -220,27 +198,20 @@ void GraphTopology::appendTopology(GraphTopology &other, Topology::particle_inde
 
         auto &thisGraph = graph();
 
-        auto former_begin = otherGraph.vertices().begin();
-        auto former_n_vertices = particles.size();
-
-        auto other_vert = other.vertexForParticle(otherParticle);
-        auto this_vert = vertexForParticle(thisParticle);
-
-        // insert other particles into this' particles
-        particles.insert(std::end(particles), std::begin(other.particles), std::end(other.particles));
-        // move other graph into this graph
-        thisGraph.vertices().splice(thisGraph.vertices().end(), otherGraph.vertices());
-
-        for (auto it = former_begin; it != graph().vertices().end(); ++it) {
-            it->particleIndex = former_n_vertices;
-            ++former_n_vertices;
+        auto it = vertexIndexForParticle(thisParticle);
+        if(it == _graph.vertices().end()) {
+            throw std::invalid_argument("...");
         }
+        (*it)->particleType = thisNewParticleType;
 
-        // add edge between the formerly two topologies
-        graph().addEdge(other_vert, this_vert);
-        other_vert->particleType() = otherNewParticleType;
-        this_vert->particleType() = thisNewParticleType;
+        auto itOther = other.vertexIndexForParticle(otherParticle);
+        if(itOther == other.graph().vertices().end()) {
+            throw std::invalid_argument("...");
+        }
+        (*itOther)->particleType = otherNewParticleType;
 
+        thisGraph.append(otherGraph, std::distance(_graph.vertices().begin(), it),
+                         std::distance(otherGraph.vertices().begin(), itOther));
         _topology_type = newType;
     } else {
         log::warn("encountered empty topology which was deactivated={}", other.isDeactivated());
@@ -254,10 +225,16 @@ std::vector<Particle> GraphTopology::fetchParticles() const {
     return _stateModel->getParticlesForTopology(*this);
 }
 
-Particle GraphTopology::particleForVertex(const vertex &vertex) const {
+typename Graph::VertexList::iterator GraphTopology::vertexIndexForParticle(VertexData::ParticleIndex index) {
+    return std::find_if(_graph.vertices().begin(), _graph.vertices().end(), [index](const auto& v) {
+        return !v.deactivated() && v->particleIndex == index;
+    });
+}
+
+Particle GraphTopology::particleForVertex(const Vertex &vertex) const {
     if(!_stateModel) {
         throw std::logic_error("Cannot fetch particle if not state model was provided!");
     }
-    return _stateModel->getParticleForIndex(getParticles().at(vertex.particleIndex));
+    return _stateModel->getParticleForIndex(vertex->particleIndex);
 }
 }

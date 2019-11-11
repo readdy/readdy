@@ -240,6 +240,8 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
     # readdy core                       #
     #                                   #
     #####################################
+    # external spdlog
+    add_definitions(-DSPDLOG_FMT_EXTERNAL)
 
     # include blosc
     SET(DEACTIVATE_SNAPPY ON CACHE BOOL "")

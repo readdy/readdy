@@ -79,7 +79,7 @@ SCPUTopologyActionFactory::createCalculateCosineDihedralPotential(
     );
 }
 
-SCPUTopologyActionFactory::action_ref
+SCPUTopologyActionFactory::ActionPtr
 SCPUTopologyActionFactory::createChangeParticleType(top::GraphTopology *const topology, const vertex &v,
                                                     const ParticleTypeId &type_to) const {
     return std::make_unique<reactions::op::SCPUChangeParticleType>(
@@ -87,7 +87,7 @@ SCPUTopologyActionFactory::createChangeParticleType(top::GraphTopology *const to
     );
 }
 
-top::reactions::actions::TopologyReactionActionFactory::action_ref
+top::reactions::actions::TopologyReactionActionFactory::ActionPtr
 SCPUTopologyActionFactory::createChangeTopologyType(top::GraphTopology *const topology,
                                                     const std::string &type_to) const {
     return std::make_unique<readdy::model::top::reactions::actions::ChangeTopologyType>(
@@ -95,7 +95,7 @@ SCPUTopologyActionFactory::createChangeTopologyType(top::GraphTopology *const to
     );
 }
 
-top::reactions::actions::TopologyReactionActionFactory::action_ref
+top::reactions::actions::TopologyReactionActionFactory::ActionPtr
 SCPUTopologyActionFactory::createChangeParticlePosition(top::GraphTopology *topology,
                                                         const vertex &v,
                                                         Vec3 position) const {
@@ -104,7 +104,7 @@ SCPUTopologyActionFactory::createChangeParticlePosition(top::GraphTopology *topo
     );
 }
 
-top::reactions::actions::TopologyReactionActionFactory::action_ref
+top::reactions::actions::TopologyReactionActionFactory::ActionPtr
 SCPUTopologyActionFactory::createAppendParticle(top::GraphTopology *topology,
                                                 const std::vector<top::reactions::actions::TopologyReactionActionFactory::vertex> &neighbors,
                                                 ParticleTypeId type, const Vec3 &position) const {

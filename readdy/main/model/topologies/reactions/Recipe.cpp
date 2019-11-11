@@ -48,45 +48,19 @@
 
 namespace readdy::model::top::reactions {
 
-Recipe &Recipe::changeParticleType(const Recipe::vertex_ref &ref, const std::string &to) {
+Recipe &Recipe::changeParticleType(Graph::VertexIndex ref, const std::string &to) {
     return changeParticleType(ref, _topology.get().context().particleTypes().idOf(to));
 }
 
-Recipe &Recipe::changeParticleType(const Recipe::Vertex &vertex, const std::string &to) {
-    return changeParticleType(_topology.get().toVertexRef(vertex), to);
+Recipe &Recipe::separateVertex(Graph::VertexIndex vertex) {
+    const auto &v = _topology.get().graph().vertices().at(vertex);
+    std::for_each(v.neighbors().begin(), v.neighbors().end(), [=](auto neighbor) {
+        this->removeEdge(std::make_tuple(vertex, neighbor));
+    });
+    return *this;
 }
 
-Recipe &Recipe::changeParticleType(const Recipe::Vertex &vertex, const ParticleTypeId &to) {
-    return changeParticleType(_topology.get().toVertexRef(vertex), to);
-}
-
-Recipe &Recipe::changeParticlePosition(const Recipe::Vertex &v, Vec3 pos) {
-    return changeParticlePosition(_topology.get().toVertexRef(v), pos);
-}
-
-Recipe &Recipe::addEdge(const Recipe::Vertex &v1, const Recipe::Vertex &v2) {
-    return addEdge(_topology.get().toVertexRef(v1), _topology.get().toVertexRef(v2));
-}
-
-Recipe &Recipe::removeEdge(const Recipe::Vertex &v1, const Recipe::Vertex &v2) {
-    return removeEdge(_topology.get().toVertexRef(v1), _topology.get().toVertexRef(v2));
-}
-
-Recipe &Recipe::separateVertex(const Recipe::Vertex &vertex) {
-    return separateVertex(_topology.get().toVertexRef(vertex));
-}
-
-Recipe &
-Recipe::appendNewParticle(const std::vector<Recipe::Vertex> &neighbors, const std::string &type, const Vec3 &position) {
-    std::vector<vertex_ref> refs;
-    auto transf = [this](const Vertex &v) {
-        return _topology.get().toVertexRef(v);
-    };
-    auto neighborsRef = std::transform(neighbors.begin(), neighbors.end(), std::back_inserter(refs), transf);
-    return appendNewParticle(refs, type, position);
-}
-
-Recipe &Recipe::appendNewParticle(const std::vector<vertex_ref> &neighbors, const std::string &type,
+Recipe &Recipe::appendNewParticle(const std::vector<Graph::VertexIndex> &neighbors, const std::string &type,
                                   const Vec3 &position) {
     if(neighbors.empty()) throw std::invalid_argument("Cannot append new particle without specifying any neighbors.");
     auto typeId = _topology.get().context().particleTypes().idOf(type);

@@ -51,21 +51,9 @@ namespace readdy::model::top::reactions::actions {
 class TopologyReactionActionFactory {
 public:
     /**
-     * type of the graph topology's graph
-     */
-    using topology_graph = TopologyReactionAction::topology_graph;
-    /**
      * reference to a topology reaction action
      */
-    using action_ref = std::unique_ptr<TopologyReactionAction>;
-    /**
-     * reference of a vertex
-     */
-    using vertex = topology_graph::vertex_ref;
-    /**
-     * an edge in the graph
-     */
-    using edge = TopologyReactionAction::edge;
+    using ActionPtr = std::unique_ptr<TopologyReactionAction>;
 
     /**
      * creates an action that changes the particle type of one of the particles contained in the topology
@@ -74,13 +62,13 @@ public:
      * @param type_to the target type
      * @return a unique pointer to the action
      */
-    virtual action_ref createChangeParticleType(GraphTopology *topology, const vertex &v,
-                                                const ParticleTypeId &type_to) const = 0;
+    virtual ActionPtr createChangeParticleType(GraphTopology *topology, const Graph::VertexIndex &v,
+                                               const ParticleTypeId &type_to) const = 0;
 
-    virtual action_ref createChangeParticlePosition(GraphTopology *topology, const vertex &v, Vec3 position) const = 0;
+    virtual ActionPtr createChangeParticlePosition(GraphTopology *topology, const Graph::VertexIndex &v, Vec3 position) const = 0;
 
-    virtual action_ref createAppendParticle(GraphTopology *topology, const std::vector<vertex> &neighbors,
-                                            ParticleTypeId type, const Vec3 &position) const = 0;
+    virtual ActionPtr createAppendParticle(GraphTopology *topology, const std::vector<Graph::VertexIndex> &neighbors,
+                                           ParticleTypeId type, const Vec3 &position) const = 0;
 
     /**
      * creates an action that adds an edge in the topology
@@ -88,7 +76,7 @@ public:
      * @param edge which edge to add
      * @return a unique pointer to the action
      */
-    action_ref createAddEdge(GraphTopology *const topology, const edge &edge) const {
+    ActionPtr createAddEdge(GraphTopology *const topology, const Graph::Edge &edge) const {
         return std::make_unique<AddEdge>(topology, edge);
     };
 
@@ -98,7 +86,7 @@ public:
      * @param edge which edge to remove
      * @return a unique pointer to the action
      */
-    action_ref createRemoveEdge(GraphTopology *const topology, const edge &edge) const {
+    ActionPtr createRemoveEdge(GraphTopology *const topology, const Graph::Edge &edge) const {
         return std::make_unique<RemoveEdge>(topology, edge);
     };
 
@@ -108,7 +96,7 @@ public:
      * @param type_to the target type
      * @return a unique pointer to the action
      */
-    virtual action_ref createChangeTopologyType(GraphTopology *topology, const std::string &type_to) const = 0;
+    virtual ActionPtr createChangeTopologyType(GraphTopology *topology, const std::string &type_to) const = 0;
 
 };
 
