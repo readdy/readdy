@@ -245,8 +245,8 @@ protected:
                     for (const auto &edge : t.graph().edges()) {
                         auto [e1, e2] = edge;
                         auto energy = evaluateEdgeEnergy(edge, t, kernel);
-                        auto v1Type = t.graph().vertices().at(e1)->particleType;
-                        auto v2Type = t.graph().vertices().at(e2)->particleType;
+                        auto v1Type = t.particleForVertex(e1).type();
+                        auto v2Type = t.particleForVertex(e2).type();
                         const auto thresholdEnergyIt = thresholdEnergies().find(std::tie(v1Type, v2Type));
                         if (thresholdEnergyIt != thresholdEnergies().end()) {
                             if (energy > thresholdEnergyIt->second) {

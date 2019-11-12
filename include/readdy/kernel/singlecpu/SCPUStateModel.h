@@ -114,8 +114,8 @@ public:
         return _observableData.time;
     }
 
-    scalar &time() override {
-        return _observableData.time;
+    void setTime(scalar t) override {
+        _observableData.time = t;
     }
 
     SCPUStateModel(const readdy::model::Context &context, const topology_action_factory *);

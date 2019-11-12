@@ -76,7 +76,7 @@ public:
 
     virtual ~Particle() = default;
 
-    const Vec3 &pos() const {
+    [[nodiscard]] const Vec3 &pos() const {
         return _pos;
     }
 
@@ -84,11 +84,11 @@ public:
         return _pos;
     }
 
-    const ParticleTypeId &type() const {
+    [[nodiscard]] ParticleTypeId type() const {
         return _type;
     }
 
-    const ParticleId id() const {
+    [[nodiscard]] ParticleId id() const {
         return _id;
     }
 

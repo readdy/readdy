@@ -146,8 +146,8 @@ public:
         return _observableData.time;
     };
 
-    scalar &time() override {
-        return _observableData.time;
+    void setTime(scalar t) override {
+        _observableData.time = t;
     };
 
     data_type const *const getParticleData() const {

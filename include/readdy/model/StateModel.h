@@ -66,13 +66,13 @@ public:
     virtual ~StateModel() = default;
 
     // const accessor methods
-    virtual const std::vector<Vec3> getParticlePositions() const = 0;
+    [[nodiscard]] virtual const std::vector<Vec3> getParticlePositions() const = 0;
 
-    virtual const std::vector<Particle> getParticles() const = 0;
+    [[nodiscard]] virtual const std::vector<Particle> getParticles() const = 0;
 
-    virtual Particle getParticleForIndex(std::size_t index) const = 0;
+    [[nodiscard]] virtual Particle getParticleForIndex(std::size_t index) const = 0;
 
-    virtual ParticleTypeId getParticleType(std::size_t index) const = 0;
+    [[nodiscard]] virtual ParticleTypeId getParticleType(std::size_t index) const = 0;
 
     /**
      * Initialize the neighbor list such that all particle-particle interactions
@@ -95,11 +95,11 @@ public:
     virtual readdy::model::top::GraphTopology *const
     addTopology(TopologyTypeId type, const std::vector<TopologyParticle> &particles) = 0;
 
-    virtual std::vector<Particle> getParticlesForTopology(const top::GraphTopology &topology) const;
+    [[nodiscard]] virtual std::vector<Particle> getParticlesForTopology(const top::GraphTopology &topology) const;
 
     virtual std::vector<top::GraphTopology *> getTopologies() = 0;
 
-    virtual top::GraphTopology const *getTopologyForParticle(top::VertexData::ParticleIndex particle) const = 0;
+    [[nodiscard]] virtual top::GraphTopology const *getTopologyForParticle(top::VertexData::ParticleIndex particle) const = 0;
 
     virtual top::GraphTopology *getTopologyForParticle(top::VertexData::ParticleIndex particle) = 0;
 
@@ -107,13 +107,13 @@ public:
 
     virtual void removeAllParticles() = 0;
 
-    virtual scalar energy() const = 0;
+    [[nodiscard]] virtual scalar energy() const = 0;
 
     virtual scalar &energy() = 0;
 
-    virtual scalar time() const = 0;
+    [[nodiscard]] virtual scalar time() const = 0;
 
-    virtual scalar &time() = 0;
+    virtual void setTime(scalar t) = 0;
 
     virtual void toDenseParticleIndices(std::vector<std::size_t>::iterator begin,
                                         std::vector<std::size_t>::iterator end) const = 0;
