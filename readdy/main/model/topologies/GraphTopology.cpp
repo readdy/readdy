@@ -73,8 +73,7 @@ void GraphTopology::configure() {
         auto [i1, i2] = tuple;
         const auto& v1 = _graph.vertices().at(i1);
         const auto& v2 = _graph.vertices().at(i2);
-        auto it = config.pairPotentials.find(
-                std::tie(v1->particleType, v2->particleType));
+        auto it = config.pairPotentials.find(std::make_tuple(typeOf(v1), typeOf(v2)));
         if (it != config.pairPotentials.end()) {
             for (const auto &cfg : it->second) {
                 bonds[cfg.type].emplace_back(v1->particleIndex, v2->particleIndex, cfg.forceConstant, cfg.length);
@@ -95,7 +94,7 @@ void GraphTopology::configure() {
         const auto& v1 = _graph.vertices().at(i1);
         const auto& v2 = _graph.vertices().at(i2);
         const auto& v3 = _graph.vertices().at(i3);
-        auto it = config.anglePotentials.find(std::tie(v1->particleType, v2->particleType, v3->particleType));
+        auto it = config.anglePotentials.find(std::make_tuple(typeOf(v1), typeOf(v2), typeOf(v3)));
         if (it != config.anglePotentials.end()) {
             for (const auto &cfg : it->second) {
                 angles[cfg.type].emplace_back(v1->particleIndex, v2->particleIndex, v3->particleIndex,
@@ -108,8 +107,7 @@ void GraphTopology::configure() {
         const auto& v2 = _graph.vertices().at(i2);
         const auto& v3 = _graph.vertices().at(i3);
         const auto& v4 = _graph.vertices().at(i4);
-        auto it = config.torsionPotentials.find(
-                std::tie(v1->particleType, v2->particleType, v3->particleType, v4->particleType));
+        auto it = config.torsionPotentials.find(std::make_tuple(typeOf(v1), typeOf(v2), typeOf(v3), typeOf(v4)));
         if (it != config.torsionPotentials.end()) {
             for (const auto &cfg : it->second) {
                 dihedrals[cfg.type].emplace_back(v1->particleIndex, v2->particleIndex, v3->particleIndex,
@@ -164,7 +162,7 @@ bool GraphTopology::isNormalParticle(const Kernel &k) const {
     if(_graph.nVertices() == 1){
         for(const auto &v : _graph.vertices()) {
             if (!v.deactivated()) {
-                const auto particle_type = k.stateModel().getParticleType(v->particleType);
+                const auto particle_type = k.stateModel().getParticleType(typeOf(v));
                 const auto& info = k.context().particleTypes().infoOf(particle_type);
                 return info.flavor == particleflavor::NORMAL;
             }
@@ -182,7 +180,6 @@ void GraphTopology::appendParticle(VertexData::ParticleIndex newParticle, Partic
     }
     auto ix = _graph.addVertex(VertexData{
         .particleIndex = newParticle,
-        .particleType = newParticleType
     });
 
     (*it)->particleType = counterPartType;
@@ -220,7 +217,7 @@ void GraphTopology::appendTopology(GraphTopology &other, VertexData::ParticleInd
 
 std::vector<Particle> GraphTopology::fetchParticles() const {
     if(!_stateModel) {
-        throw std::logic_error("Cannot fetch particles if no state model was provided!");
+        throw std::logic_error("Cannot fetch particles if state model was not provided!");
     }
     return _stateModel->getParticlesForTopology(*this);
 }
@@ -233,8 +230,17 @@ typename Graph::VertexList::iterator GraphTopology::vertexIndexForParticle(Verte
 
 Particle GraphTopology::particleForVertex(const Vertex &vertex) const {
     if(!_stateModel) {
-        throw std::logic_error("Cannot fetch particle if not state model was provided!");
+        throw std::logic_error("Cannot fetch particle if state model was not provided!");
     }
     return _stateModel->getParticleForIndex(vertex->particleIndex);
 }
+
+ParticleTypeId GraphTopology::typeOf(Graph::VertexIndex vertex) const {
+    return typeOf(graph().vertices().at(vertex));
+}
+
+ParticleTypeId GraphTopology::typeOf(const Vertex &v) const {
+    return particleForVertex(v).type();
+}
+
 }

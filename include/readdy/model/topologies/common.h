@@ -16,7 +16,6 @@ struct VertexData {
     using ParticleIndex = std::size_t;
 
     ParticleIndex particleIndex;
-    ParticleTypeId particleType;
 };
 
 using Vertex = graphs::Vertex<VertexData>;

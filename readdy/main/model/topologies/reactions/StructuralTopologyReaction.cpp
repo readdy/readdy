@@ -48,7 +48,6 @@
 #include <readdy/model/topologies/reactions/StructuralTopologyReaction.h>
 
 #include <readdy/model/Kernel.h>
-#include <readdy/model/topologies/Utils.h>
 #include <readdy/model/topologies/reactions/TopologyReactionException.h>
 
 namespace readdy::model::top::reactions {
@@ -116,14 +115,14 @@ std::vector<GraphTopology> StructuralTopologyReaction::execute(GraphTopology &to
                 {
                     // check if all particle types are topology flavored
                     for (const auto &v : topology.graph().vertices()) {
-                        if (types.infoOf(v.particleType()).flavor != particleflavor::TOPOLOGY) {
+                        if (types.infoOf(v->particleType).flavor != particleflavor::TOPOLOGY) {
                             log::warn("The topology contained particles that were not topology flavored.");
                             valid = false;
                         }
                     }
                 }
                 if (!valid) {
-                    log::warn("GEXF representation: {}", util::to_gexf(topology.graph()));
+                    log::warn("GEXF representation: {}", topology.graph().gexf());
                     if (rolls_back_if_invalid()) {
                         log::warn("rolling back...");
                         for (auto it = actions.rbegin(); it != actions.rend(); ++it) {

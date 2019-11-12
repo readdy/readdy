@@ -216,7 +216,7 @@ private:
  */
 class BreakBonds : public TimeStepDependentAction {
 public:
-    using vertex_ref = readdy::model::top::graph::Graph::vertex_ref;
+    using vertex_ref = readdy::model::top::Graph::VertexIndex;
 
     explicit BreakBonds(scalar timeStep, BreakConfig breakConfig);
 
@@ -243,14 +243,14 @@ protected:
                         readdy::model::top::GraphTopology &t) -> readdy::model::top::reactions::Recipe {
                     readdy::model::top::reactions::Recipe recipe(t);
                     for (const auto &edge : t.graph().edges()) {
+                        auto [e1, e2] = edge;
                         auto energy = evaluateEdgeEnergy(edge, t, kernel);
-                        const auto &v1Type = std::get<0>(edge)->particleType();
-                        const auto &v2Type = std::get<1>(edge)->particleType();
-                        const auto &typePair = std::make_tuple(v1Type, v2Type);
-                        const auto thresholdEnergyIt = thresholdEnergies().find(typePair);
+                        auto v1Type = t.graph().vertices().at(e1)->particleType;
+                        auto v2Type = t.graph().vertices().at(e2)->particleType;
+                        const auto thresholdEnergyIt = thresholdEnergies().find(std::tie(v1Type, v2Type));
                         if (thresholdEnergyIt != thresholdEnergies().end()) {
                             if (energy > thresholdEnergyIt->second) {
-                                const auto &rate = breakRates().at(typePair);
+                                const auto &rate = breakRates().at(std::tie(v1Type, v2Type));
                                 if (readdy::model::rnd::uniform_real() < 1 - std::exp(-rate * _timeStep)) {
                                     recipe.removeEdge(edge);
                                 }
@@ -263,9 +263,7 @@ protected:
                 readdy::model::top::reactions::StructuralTopologyReaction reaction("__internal_break_bonds",
                                                                                    reactionFunction, rateDoesntMatter);
                 readdy::model::actions::top::executeStructuralReaction(topologies, resultingTopologies, top, reaction,
-                                                                       topologyIdx,
-                                                                       particleData,
-                                                                       kernel);
+                                                                       topologyIdx, particleData, kernel);
 
             }
             ++topologyIdx;
@@ -281,39 +279,46 @@ protected:
                 model.insert_topology(std::move(newTopology));
             } else {
                 // if we have a single particle that is not of flavor topology, remove from topology structure!
-                model.getParticleData()->entry_at(newTopology.getParticles().front()).topology_index = -1;
+                auto particleIndex = 0;
+                {
+                    // find first particle that is not deactivated
+                    for(auto it = newTopology.graph().vertices().begin(); it != newTopology.graph().vertices().end(); ++it) {
+                        if(!it->deactivated()) {
+                            particleIndex = std::distance(newTopology.graph().vertices().begin(), it);
+                            break;
+                        }
+                    }
+                }
+                model.getParticleData()->entry_at(particleIndex).topology_index = -1;
             }
         }
     }
 
     template <typename Kernel>
     scalar
-    evaluateEdgeEnergy(std::tuple<vertex_ref, vertex_ref> edge, const readdy::model::top::GraphTopology &t, Kernel *kernel) const {
-        const auto[vertex1, vertex2] = edge;
+    evaluateEdgeEnergy(model::top::Graph::Edge edge, const readdy::model::top::GraphTopology &t, Kernel *kernel) const {
+        auto [i1, i2] = edge;
+        const auto& v1 = t.graph().vertices().at(i1);
+        const auto& v2 = t.graph().vertices().at(i2);
 
         // find bond configurations for given edge
         std::unordered_map<api::BondType, std::vector<readdy::model::top::pot::BondConfiguration>, readdy::util::hash::EnumClassHash> bondConfigs;
         {
             const auto &potentialConfiguration = kernel->context().topologyRegistry().potentialConfiguration();
-            auto it = potentialConfiguration.pairPotentials.find(
-                    std::tie(vertex1->particleType(), vertex2->particleType()));
+            auto it = potentialConfiguration.pairPotentials.find(std::tie(v1->particleType, v2->particleType));
             if (it != potentialConfiguration.pairPotentials.end()) {
                 for (const auto &cfg : it->second) {
-                    bondConfigs[cfg.type].emplace_back(vertex1->particleIndex, vertex2->particleIndex,
-                                                       cfg.forceConstant, cfg.length);
+                    bondConfigs[cfg.type].emplace_back(v1->particleIndex, v2->particleIndex,
+                            cfg.forceConstant, cfg.length);
                 }
             } else {
                 std::ostringstream ss;
-                auto p1 = t.particleForVertex(vertex1);
-                auto p2 = t.particleForVertex(vertex2);
+                auto p1 = t.particleForVertex(i1);
+                auto p2 = t.particleForVertex(i2);
 
-                ss << "The edge " << vertex1->particleIndex << " ("
-                   << kernel->context().particleTypes().nameOf(p1.type()) << ")";
-                ss << " -- " << vertex2->particleIndex << " (" << kernel->context().particleTypes().nameOf(p2.type())
-                   << ")";
-                ss << " has no bond configured!";
-
-                throw std::invalid_argument(ss.str());
+                throw std::invalid_argument(fmt::format("The edge {} ({}) == {} ({}) has no bond configured!",
+                        v1->particleIndex, kernel->context().particleTypes().nameOf(p1.type()), v2->particleIndex,
+                        kernel->context().particleTypes().nameOf(p2.type())));
             }
         }
 

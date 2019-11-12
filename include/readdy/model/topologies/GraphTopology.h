@@ -92,6 +92,10 @@ public:
 
     void configure();
 
+    ParticleTypeId typeOf(Graph::VertexIndex vertex) const;
+
+    ParticleTypeId typeOf(const Vertex &v) const;
+
     void updateReactionRates(const TopologyRegistry::StructuralReactionCollection &reactions) {
         _cumulativeRate = 0;
         _reaction_rates.resize(reactions.size());
