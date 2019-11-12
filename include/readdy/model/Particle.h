@@ -80,8 +80,8 @@ public:
         return _pos;
     }
 
-    Vec3 &pos() {
-        return _pos;
+    void setPos(Vec3 pos) {
+        _pos = pos;
     }
 
     [[nodiscard]] ParticleTypeId type() const {
@@ -115,11 +115,6 @@ protected:
     ParticleId _id;
 
     static std::atomic<ParticleId> idCounter;
-};
-
-class TopologyParticle : public Particle {
-public:
-    using Particle::Particle;
 };
 
 }

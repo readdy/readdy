@@ -115,7 +115,7 @@ std::vector<GraphTopology> StructuralTopologyReaction::execute(GraphTopology &to
                 {
                     // check if all particle types are topology flavored
                     for (const auto &v : topology.graph().vertices()) {
-                        if (types.infoOf(v->particleType).flavor != particleflavor::TOPOLOGY) {
+                        if (types.infoOf(topology.particleForVertex(v).type()).flavor != particleflavor::TOPOLOGY) {
                             log::warn("The topology contained particles that were not topology flavored.");
                             valid = false;
                         }

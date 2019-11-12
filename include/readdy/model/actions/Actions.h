@@ -301,11 +301,14 @@ protected:
         const auto& v1 = t.graph().vertices().at(i1);
         const auto& v2 = t.graph().vertices().at(i2);
 
+        auto type1 = t.particleForVertex(v1).type();
+        auto type2 = t.particleForVertex(v2).type();
+
         // find bond configurations for given edge
         std::unordered_map<api::BondType, std::vector<readdy::model::top::pot::BondConfiguration>, readdy::util::hash::EnumClassHash> bondConfigs;
         {
             const auto &potentialConfiguration = kernel->context().topologyRegistry().potentialConfiguration();
-            auto it = potentialConfiguration.pairPotentials.find(std::tie(v1->particleType, v2->particleType));
+            auto it = potentialConfiguration.pairPotentials.find(std::tie(type1, type2));
             if (it != potentialConfiguration.pairPotentials.end()) {
                 for (const auto &cfg : it->second) {
                     bondConfigs[cfg.type].emplace_back(v1->particleIndex, v2->particleIndex,
@@ -362,70 +365,70 @@ public:
 };
 
 template<typename T>
-const std::string getActionName(typename std::enable_if<std::is_base_of<AddParticles, T>::value>::type * = 0) {
+std::string getActionName(typename std::enable_if<std::is_base_of<AddParticles, T>::value>::type * = 0) {
     return "AddParticles";
 }
 
 template<typename T>
-const std::string getActionName(typename std::enable_if<std::is_base_of<EulerBDIntegrator, T>::value>::type * = 0) {
+std::string getActionName(typename std::enable_if<std::is_base_of<EulerBDIntegrator, T>::value>::type * = 0) {
     return "EulerBDIntegrator";
 }
 
 template<typename T>
-const std::string getActionName(typename std::enable_if<std::is_base_of<MdgfrdIntegrator, T>::value>::type * = 0) {
+std::string getActionName(typename std::enable_if<std::is_base_of<MdgfrdIntegrator, T>::value>::type * = 0) {
     return "MdgfrdIntegrator";
 }
 
 template<typename T>
-const std::string getActionName(typename std::enable_if<std::is_base_of<CalculateForces, T>::value>::type * = 0) {
+std::string getActionName(typename std::enable_if<std::is_base_of<CalculateForces, T>::value>::type * = 0) {
     return "Calculate forces";
 }
 
 template<typename T>
-const std::string getActionName(typename std::enable_if<std::is_base_of<CreateNeighborList, T>::value>::type * = 0) {
+std::string getActionName(typename std::enable_if<std::is_base_of<CreateNeighborList, T>::value>::type * = 0) {
     return "Create neighbor list";
 }
 
 template<typename T>
-const std::string getActionName(typename std::enable_if<std::is_base_of<UpdateNeighborList, T>::value>::type * = 0) {
+std::string getActionName(typename std::enable_if<std::is_base_of<UpdateNeighborList, T>::value>::type * = 0) {
     return "Update neighbor list";
 }
 
 template<typename T>
-const std::string getActionName(typename std::enable_if<std::is_base_of<ClearNeighborList, T>::value>::type * = 0) {
+std::string getActionName(typename std::enable_if<std::is_base_of<ClearNeighborList, T>::value>::type * = 0) {
     return "Clear neighbor list";
 }
 
 template<typename T>
-const std::string
+std::string
 getActionName(typename std::enable_if<std::is_base_of<reactions::UncontrolledApproximation, T>::value>::type * = 0) {
     return "UncontrolledApproximation";
 }
 
 template<typename T>
-const std::string getActionName(typename std::enable_if<std::is_base_of<reactions::Gillespie, T>::value>::type * = 0) {
+std::string getActionName(typename std::enable_if<std::is_base_of<reactions::Gillespie, T>::value>::type * = 0) {
     return "Gillespie";
 }
 
 template<typename T>
-const std::string
+std::string
 getActionName(typename std::enable_if<std::is_base_of<reactions::DetailedBalance, T>::value>::type * = 0) {
     return "DetailedBalance";
 }
 
 template<typename T>
-const std::string
+std::string
 getActionName(typename std::enable_if<std::is_base_of<top::EvaluateTopologyReactions, T>::value>::type * = 0) {
     return "EvaluateTopologyReactions";
 }
 
 template<typename T>
-const std::string getActionName(typename std::enable_if<std::is_base_of<EvaluateCompartments, T>::value>::type * = 0) {
+std::string getActionName(typename std::enable_if<std::is_base_of<EvaluateCompartments, T>::value>::type * = 0) {
     return "EvaluateCompartments";
 }
 
 template<typename T>
-const std::string getActionName(typename std::enable_if<std::is_base_of<top::BreakBonds, T>::value>::type * = 0) {
+std::string getActionName(typename std::enable_if<std::is_base_of<top::BreakBonds, T>::value>::type * = 0) {
     return "BreakBonds";
 }
 }

@@ -93,7 +93,7 @@ public:
     virtual void addParticles(const std::vector<Particle> &p) = 0;
 
     virtual readdy::model::top::GraphTopology *const
-    addTopology(TopologyTypeId type, const std::vector<TopologyParticle> &particles) = 0;
+    addTopology(TopologyTypeId type, const std::vector<Particle> &particles) = 0;
 
     [[nodiscard]] virtual std::vector<Particle> getParticlesForTopology(const top::GraphTopology &topology) const;
 

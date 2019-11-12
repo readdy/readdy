@@ -90,11 +90,27 @@ public:
         return _graph;
     }
 
+    void addEdge(Graph::Edge edge) {
+        _graph.addEdge(edge);
+    }
+
+    void addEdge(Graph::VertexIndex ix1, Graph::VertexIndex ix2) {
+        _graph.addEdge(ix1, ix2);
+    }
+
+    void removeEdge(Graph::Edge edge) {
+        _graph.removeEdge(edge);
+    }
+
+    void removeEdge(Graph::VertexIndex ix1, Graph::VertexIndex ix2) {
+        _graph.removeEdge(ix1, ix2);
+    }
+
     void configure();
 
-    ParticleTypeId typeOf(Graph::VertexIndex vertex) const;
+    [[nodiscard]] ParticleTypeId typeOf(Graph::VertexIndex vertex) const;
 
-    ParticleTypeId typeOf(const Vertex &v) const;
+    [[nodiscard]] ParticleTypeId typeOf(const Vertex &v) const;
 
     void updateReactionRates(const TopologyRegistry::StructuralReactionCollection &reactions) {
         _cumulativeRate = 0;
@@ -111,7 +127,19 @@ public:
         if (!graph().isConnected()) {
             throw std::invalid_argument(fmt::format("The graph is not connected! (GEXF representation: {})", _graph.gexf()));
         }
-        // todo also validate that all edges are not pointing to tombstone vertices
+        for(const auto [i1, i2] : graph().edges()) {
+            if(graph().vertices().at(i1).deactivated()) {
+                throw std::logic_error(fmt::format("Edge ({} -- {}) points to deactivated vertex {}!", i1, i2, i1));
+            }
+            if(graph().vertices().at(i2).deactivated()) {
+                throw std::logic_error(fmt::format("Edge ({} -- {}) points to deactivated vertex {}!", i1, i2, i2));
+            }
+        }
+        for(const auto& p : fetchParticles()) {
+            if(context().particleTypes().infoOf(p.type()).flavor != particleflavor::TOPOLOGY) {
+                throw std::runtime_error(fmt::format("Topology contains particle {} which is not a topology particle!", p));
+            }
+        }
     }
 
     std::vector<GraphTopology> connectedComponents();
@@ -130,15 +158,15 @@ public:
         return _cumulativeRate;
     }
 
-    typename Graph::VertexList::iterator vertexIndexForParticle(VertexData::ParticleIndex index);
+    [[nodiscard]] typename Graph::VertexList::iterator vertexIndexForParticle(VertexData::ParticleIndex index);
 
-    void appendParticle(VertexData::ParticleIndex newParticle, ParticleTypeId newParticleType,
-                        VertexData::ParticleIndex counterPart, ParticleTypeId counterPartType);
+    [[nodiscard]] typename Graph::VertexList::const_iterator vertexIndexForParticle(VertexData::ParticleIndex index) const;
 
-    void appendTopology(GraphTopology &other,
-                        VertexData::ParticleIndex otherParticle, ParticleTypeId otherNewParticleType,
-                        VertexData::ParticleIndex thisParticle, ParticleTypeId thisNewParticleType,
-                        TopologyTypeId newType);
+    [[nodiscard]] typename Graph::VertexIndex appendParticle(VertexData::ParticleIndex newParticle,
+                                               VertexData::ParticleIndex counterPart);
+
+    [[nodiscard]] typename Graph::VertexIndex appendTopology(const GraphTopology &other, VertexData::ParticleIndex otherParticle,
+                                               VertexData::ParticleIndex thisParticle, TopologyTypeId newType);
 
     [[nodiscard]] TopologyTypeId type() const {
         return _topology_type;

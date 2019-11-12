@@ -60,22 +60,22 @@ AddEdge::AddEdge(GraphTopology *const topology, Graph::Edge edge)
         : TopologyReactionAction(topology), label_edge_(std::move(edge)) {}
 
 void AddEdge::execute() {
-    topology->graph().addEdge(label_edge_);
+    topology->addEdge(label_edge_);
 }
 
 void AddEdge::undo() {
-    topology->graph().removeEdge(label_edge_);
+    topology->removeEdge(label_edge_);
 }
 
 RemoveEdge::RemoveEdge(GraphTopology *const topology, Graph::Edge edge)
         : TopologyReactionAction(topology), label_edge_(std::move(edge)) {}
 
 void RemoveEdge::execute() {
-    topology->graph().removeEdge(label_edge_);
+    topology->removeEdge(label_edge_);
 }
 
 void RemoveEdge::undo() {
-    topology->graph().addEdge(label_edge_);
+    topology->addEdge(label_edge_);
 }
 
 
