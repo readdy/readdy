@@ -66,9 +66,9 @@ public:
     virtual ~StateModel() = default;
 
     // const accessor methods
-    [[nodiscard]] virtual const std::vector<Vec3> getParticlePositions() const = 0;
+    [[nodiscard]] virtual std::vector<Vec3> getParticlePositions() const = 0;
 
-    [[nodiscard]] virtual const std::vector<Particle> getParticles() const = 0;
+    [[nodiscard]] virtual std::vector<Particle> getParticles() const = 0;
 
     [[nodiscard]] virtual Particle getParticleForIndex(std::size_t index) const = 0;
 

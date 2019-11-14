@@ -45,9 +45,7 @@
 #include <algorithm>
 #include <readdy/kernel/singlecpu/SCPUStateModel.h>
 
-namespace readdy {
-namespace kernel {
-namespace scpu {
+namespace readdy::kernel::scpu {
 
 SCPUStateModel::SCPUStateModel(const readdy::model::Context &context, topology_action_factory const *const taf)
         : _context(context) {
@@ -55,8 +53,7 @@ SCPUStateModel::SCPUStateModel(const readdy::model::Context &context, topology_a
     topologyActionFactory = taf;
 }
 
-const std::vector<Vec3>
-readdy::kernel::scpu::SCPUStateModel::getParticlePositions() const {
+std::vector<Vec3> readdy::kernel::scpu::SCPUStateModel::getParticlePositions() const {
     const auto &data = particleData;
     std::vector<Vec3> target{};
     target.reserve(data.size());
@@ -66,7 +63,7 @@ readdy::kernel::scpu::SCPUStateModel::getParticlePositions() const {
     return target;
 }
 
-const std::vector<readdy::model::Particle> SCPUStateModel::getParticles() const {
+std::vector<readdy::model::Particle> SCPUStateModel::getParticles() const {
     const auto &data = particleData;
     std::vector<readdy::model::Particle> result;
     result.reserve(data.size());
@@ -79,19 +76,21 @@ const std::vector<readdy::model::Particle> SCPUStateModel::getParticles() const 
 }
 
 
-readdy::model::top::GraphTopology *const SCPUStateModel::addTopology(TopologyTypeId type, const std::vector<readdy::model::TopologyParticle> &particles) {
-    std::vector<std::size_t> ids = particleData.addTopologyParticles(particles);
-    std::vector<ParticleTypeId> types;
-    types.reserve(ids.size());
-    for (const auto &p : particles) {
-        types.push_back(p.type());
+readdy::model::top::GraphTopology *const SCPUStateModel::addTopology(TopologyTypeId type, const std::vector<readdy::model::Particle> &particles) {
+    std::vector<std::size_t> indices = particleData.addTopologyParticles(particles);
+    readdy::model::top::Graph graph;
+    for(auto index : indices) {
+        graph.addVertex(readdy::model::top::VertexData{.particleIndex=index});
     }
+
     auto it = _topologies.emplace_back(
-            std::make_unique<topology>(type, std::move(ids), std::move(types), _context.get(), this)
+            std::make_unique<topology>(type, std::move(graph), _context.get(), this)
     );
     const auto idx = std::distance(topologies().begin(), it);
-    for(const auto p : (*it)->getParticles()) {
-        particleData.entry_at(p).topology_index = idx;
+    for(auto v : (*it)->graph().vertices()) {
+        if(!v.deactivated()) {
+            particleData.entry_at(v->particleIndex).topology_index = idx;
+        }
     }
     return it->get();
 }
@@ -107,7 +106,7 @@ std::vector<readdy::model::top::GraphTopology*> SCPUStateModel::getTopologies() 
     return result;
 }
 
-const readdy::model::top::GraphTopology *SCPUStateModel::getTopologyForParticle(readdy::model::top::Topology::particle_index particle) const {
+const readdy::model::top::GraphTopology *SCPUStateModel::getTopologyForParticle(readdy::model::top::VertexData::ParticleIndex particle) const {
     const auto& entry = particleData.entry_at(particle);
     if(!entry.deactivated) {
         if(entry.topology_index >= 0) {
@@ -119,7 +118,7 @@ const readdy::model::top::GraphTopology *SCPUStateModel::getTopologyForParticle(
     throw std::logic_error(fmt::format("requested particle was deactivated in getTopologyForParticle(p={})", particle));
 }
 
-readdy::model::top::GraphTopology *SCPUStateModel::getTopologyForParticle(readdy::model::top::Topology::particle_index particle) {
+readdy::model::top::GraphTopology *SCPUStateModel::getTopologyForParticle(readdy::model::top::VertexData::ParticleIndex particle) {
     const auto& entry = particleData.entry_at(particle);
     if(!entry.deactivated) {
         if(entry.topology_index >= 0) {
@@ -134,10 +133,10 @@ readdy::model::top::GraphTopology *SCPUStateModel::getTopologyForParticle(readdy
 void SCPUStateModel::insert_topology(SCPUStateModel::topology &&top) {
     auto it = _topologies.push_back(std::make_unique<topology>(std::move(top)));
     auto idx = std::distance(_topologies.begin(), it);
-    const auto& particles = it->get()->getParticles();
+    const auto& vertices = it->get()->graph().vertices();
     auto& data = particleData;
-    std::for_each(particles.begin(), particles.end(), [idx, &data](const topology::particle_index p) {
-        data.entry_at(p).topology_index = idx;
+    std::for_each(vertices.begin(), vertices.end(), [idx, &data](const auto& vertex) {
+        data.entry_at(vertex->particleIndex).topology_index = idx;
     });
 }
 
@@ -184,6 +183,4 @@ void SCPUStateModel::clear() {
     energy() = 0;
 }
 
-}
-}
 }

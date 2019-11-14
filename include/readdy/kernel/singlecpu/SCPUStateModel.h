@@ -90,9 +90,9 @@ public:
         particleData.clear();
     }
 
-    readdy::model::top::GraphTopology *const addTopology(TopologyTypeId type, const std::vector<readdy::model::TopologyParticle> &particles) override;
+    readdy::model::top::GraphTopology *const addTopology(TopologyTypeId type, const std::vector<readdy::model::Particle> &particles) override;
 
-    const std::vector<Vec3> getParticlePositions() const override;
+    std::vector<Vec3> getParticlePositions() const override;
 
     readdy::model::Particle getParticleForIndex(std::size_t index) const override {
         return particleData.getParticle(index);
@@ -147,7 +147,7 @@ public:
         return neighborList.get();
     }
 
-    const std::vector<readdy::model::Particle> getParticles() const override;
+    std::vector<readdy::model::Particle> getParticles() const override;
 
     std::vector<readdy::model::reactions::ReactionRecord>& reactionRecords() {
         return _observableData.reactionRecords;
@@ -228,9 +228,9 @@ public:
 
     std::vector<readdy::model::top::GraphTopology*> getTopologies() override;
 
-    const readdy::model::top::GraphTopology *getTopologyForParticle(readdy::model::top::Topology::particle_index particle) const override;
+    const readdy::model::top::GraphTopology *getTopologyForParticle(readdy::model::top::VertexData::ParticleIndex particle) const override;
 
-    readdy::model::top::GraphTopology *getTopologyForParticle(readdy::model::top::Topology::particle_index particle) override;
+    readdy::model::top::GraphTopology *getTopologyForParticle(readdy::model::top::VertexData::ParticleIndex particle) override;
 
     void clear() override;
 
