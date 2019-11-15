@@ -80,7 +80,7 @@ SCPUTopologyActionFactory::createCalculateCosineDihedralPotential(
 }
 
 SCPUTopologyActionFactory::ActionPtr
-SCPUTopologyActionFactory::createChangeParticleType(top::GraphTopology *const topology, const vertex &v,
+SCPUTopologyActionFactory::createChangeParticleType(top::GraphTopology *const topology, const top::Graph::VertexIndex &v,
                                                     const ParticleTypeId &type_to) const {
     return std::make_unique<reactions::op::SCPUChangeParticleType>(
             kernel->getSCPUKernelStateModel().getParticleData(), topology, v, type_to
@@ -97,7 +97,7 @@ SCPUTopologyActionFactory::createChangeTopologyType(top::GraphTopology *const to
 
 top::reactions::actions::TopologyReactionActionFactory::ActionPtr
 SCPUTopologyActionFactory::createChangeParticlePosition(top::GraphTopology *topology,
-                                                        const vertex &v,
+                                                        const top::Graph::VertexIndex &v,
                                                         Vec3 position) const {
     return std::make_unique<reactions::op::SCPUChangeParticlePosition>(
             kernel->getSCPUKernelStateModel().getParticleData(), topology, v, position
@@ -106,7 +106,7 @@ SCPUTopologyActionFactory::createChangeParticlePosition(top::GraphTopology *topo
 
 top::reactions::actions::TopologyReactionActionFactory::ActionPtr
 SCPUTopologyActionFactory::createAppendParticle(top::GraphTopology *topology,
-                                                const std::vector<top::reactions::actions::TopologyReactionActionFactory::vertex> &neighbors,
+                                                const std::vector<top::Graph::VertexIndex> &neighbors,
                                                 ParticleTypeId type, const Vec3 &position) const {
     return std::make_unique<reactions::op::SCPUAppendParticle>(kernel->getSCPUKernelStateModel().getParticleData(),
             topology, neighbors, type, position);

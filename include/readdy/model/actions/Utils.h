@@ -69,8 +69,13 @@ void executeStructuralReaction(readdy::util::index_persistent_vector<TopologyRef
         }
     } else {
         if (topology->isNormalParticle(*kernel)) {
-            const auto particleIdx = topology->getParticles().front();
-            particleData.entry_at(particleIdx).topology_index = -1;
+            auto it = std::find_if(topology->graph().vertices().begin(), topology->graph().vertices().end(), [](const auto &v) {
+                return !v.deactivated();
+            });
+            if(it == topology->graph().vertices().end()) {
+                throw std::runtime_error("Topology had size 1 but no active vertices!");
+            }
+            particleData.entry_at((*it)->particleIndex).topology_index = -1;
             topologies.erase(topologies.begin() + topologyIdx);
             assert(topology->isDeactivated());
         }

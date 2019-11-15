@@ -90,6 +90,14 @@ public:
         return _graph;
     }
 
+    [[nodiscard]] auto containsEdge(Graph::Edge edge) const {
+        return _graph.containsEdge(std::forward<Graph::Edge>(edge));
+    }
+
+    [[nodiscard]] auto containsEdge(Graph::VertexIndex ix1, Graph::VertexIndex ix2) const {
+        return _graph.containsEdge(ix1, ix2);
+    }
+
     void addEdge(Graph::Edge edge) {
         _graph.addEdge(edge);
     }
@@ -158,15 +166,25 @@ public:
         return _cumulativeRate;
     }
 
-    [[nodiscard]] typename Graph::VertexList::iterator vertexIndexForParticle(VertexData::ParticleIndex index);
+    [[nodiscard]] typename Graph::VertexList::iterator vertexIteratorForParticle(VertexData::ParticleIndex index);
 
-    [[nodiscard]] typename Graph::VertexList::const_iterator vertexIndexForParticle(VertexData::ParticleIndex index) const;
+    [[nodiscard]] typename Graph::VertexList::const_iterator vertexIteratorForParticle(VertexData::ParticleIndex index) const;
 
-    [[nodiscard]] typename Graph::VertexIndex appendParticle(VertexData::ParticleIndex newParticle,
+    [[nodiscard]] Graph::VertexIndex vertexIndexForParticle(VertexData::ParticleIndex index) const {
+        auto it = vertexIteratorForParticle(index);
+        if(it == _graph.vertices().end()) {
+            throw std::invalid_argument(fmt::format("Particle {} not contained in graph", index));
+        }
+        return std::distance(_graph.vertices().begin(), it);
+    }
+
+    typename Graph::VertexIndex appendParticle(VertexData::ParticleIndex newParticle,
                                                VertexData::ParticleIndex counterPart);
 
-    [[nodiscard]] typename Graph::VertexIndex appendTopology(const GraphTopology &other, VertexData::ParticleIndex otherParticle,
+    typename Graph::VertexIndex appendTopology(const GraphTopology &other, VertexData::ParticleIndex otherParticle,
                                                VertexData::ParticleIndex thisParticle, TopologyTypeId newType);
+
+    [[nodiscard]] std::vector<VertexData::ParticleIndex> particleIndices() const;
 
     [[nodiscard]] TopologyTypeId type() const {
         return _topology_type;

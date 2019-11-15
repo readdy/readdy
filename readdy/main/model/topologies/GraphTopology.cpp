@@ -174,7 +174,7 @@ bool GraphTopology::isNormalParticle(const Kernel &k) const {
 
 typename Graph::VertexIndex GraphTopology::appendParticle(VertexData::ParticleIndex newParticle,
                                                           VertexData::ParticleIndex counterPart) {
-    auto it = vertexIndexForParticle(counterPart);
+    auto it = vertexIteratorForParticle(counterPart);
     if(it == _graph.vertices().end()) {
         throw std::invalid_argument(fmt::format("Vertex with particle {} was not in graph or deactivated!", counterPart));
     }
@@ -191,13 +191,13 @@ typename Graph::VertexIndex GraphTopology::appendTopology(const GraphTopology &o
 
     if(!otherGraph.vertices().empty()) {
 
-        auto it = vertexIndexForParticle(thisParticle);
+        auto it = vertexIteratorForParticle(thisParticle);
         if(it == _graph.vertices().end()) {
             throw std::invalid_argument(fmt::format("Could not find particle {} in this topology.", thisParticle));
         }
         auto thisIx = std::distance(_graph.vertices().begin(), it);
 
-        auto itOther = other.vertexIndexForParticle(otherParticle);
+        auto itOther = other.vertexIteratorForParticle(otherParticle);
         if(itOther == other.graph().vertices().end()) {
             throw std::invalid_argument(fmt::format("Could not find particle {} in other topology.", otherParticle));
         }
@@ -219,13 +219,13 @@ std::vector<Particle> GraphTopology::fetchParticles() const {
     return _stateModel->getParticlesForTopology(*this);
 }
 
-typename Graph::VertexList::iterator GraphTopology::vertexIndexForParticle(VertexData::ParticleIndex index) {
+typename Graph::VertexList::iterator GraphTopology::vertexIteratorForParticle(VertexData::ParticleIndex index) {
     return std::find_if(_graph.vertices().begin(), _graph.vertices().end(), [index](const auto& v) {
         return !v.deactivated() && v->particleIndex == index;
     });
 }
 
-typename Graph::VertexList::const_iterator GraphTopology::vertexIndexForParticle(VertexData::ParticleIndex index) const {
+typename Graph::VertexList::const_iterator GraphTopology::vertexIteratorForParticle(VertexData::ParticleIndex index) const {
     return std::find_if(_graph.vertices().begin(), _graph.vertices().end(), [index](const auto& v) {
         return !v.deactivated() && v->particleIndex == index;
     });
@@ -244,6 +244,17 @@ ParticleTypeId GraphTopology::typeOf(Graph::VertexIndex vertex) const {
 
 ParticleTypeId GraphTopology::typeOf(const Vertex &v) const {
     return particleForVertex(v).type();
+}
+
+std::vector<VertexData::ParticleIndex> GraphTopology::particleIndices() const {
+    std::vector<VertexData::ParticleIndex> result;
+    result.reserve(_graph.vertices().size());
+    for(const auto& v : _graph.vertices()) {
+        if(!v.deactivated()) {
+            result.push_back(v->particleIndex);
+        }
+    }
+    return result;
 }
 
 }

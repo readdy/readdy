@@ -149,7 +149,14 @@ void SCPUEvaluateTopologyReactions::perform() {
                         model.insert_topology(std::move(top));
                     } else {
                         // if we have a single particle that is not of flavor topology, remove from topology structure!
-                        model.getParticleData()->entry_at(top.getParticles().front()).topology_index = -1;
+                        auto it = top.graph().vertices().begin();
+                        while(it != top.graph().vertices().end() && !it->deactivated()) {
+                            ++it;
+                        }
+                        if(it == top.graph().vertices().end()) {
+                            throw std::logic_error("Graph had size 1 but no active vertex!");
+                        }
+                        model.getParticleData()->entry_at((*it)->particleIndex).topology_index = -1;
                     }
                 }
             }
@@ -331,33 +338,24 @@ void SCPUEvaluateTopologyReactions::handleTopologyTopologyReaction(SCPUStateMode
         //topology->appendTopology(otherTopology, ...)
         if(event.topology_idx == event.topology_idx2) {
             // introduce edge if not already present
-            auto v1 = t1->vertexForParticle(event.idx1);
-            auto v2 = t1->vertexForParticle(event.idx2);
+            auto ix1 = t1->vertexIndexForParticle(event.idx1);
+            auto ix2 = t2->vertexIndexForParticle(event.idx2);
 
-            if(v1->particleType() == reaction.type1() && t1->type() == reaction.top_type1()) {
-                v1->particleType() = reaction.type_to1();
-                v2->particleType() = reaction.type_to2();
-            } else {
-                v1->particleType() = reaction.type_to2();
-                v2->particleType() = reaction.type_to1();
-            }
-            if(!t1->graph().containsEdge(v1, v2)) {
-                t1->graph().addEdge(v1, v2);
+            if(!t1->containsEdge(ix1, ix2)) {
+                t1->addEdge(ix1, ix2);
             }
             t1->type() = reaction.top_type_to1();
 
         } else {
             // merge topologies
-            for(auto pidx : t2->getParticles()) {
+            for(auto pidx : t2->particleIndices()) {
                 data.entry_at(pidx).topology_index = event.topology_idx;
             }
             auto &topologies = model.topologies();
-            t1->appendTopology(*t2, event.idx2, entry2Type, event.idx1, entry1Type, reaction.top_type_to1());
+            t1->appendTopology(*t2, event.idx2, event.idx1, reaction.top_type_to1());
             topologies.erase(topologies.begin() + event.topology_idx2);
         }
     } else {
-        t1->vertexForParticle(event.idx1)->particleType() = entry1Type;
-        t2->vertexForParticle(event.idx2)->particleType() = entry2Type;
         t1->type() = top_type_to1;
         t2->type() = top_type_to2;
 
@@ -394,9 +392,7 @@ void SCPUEvaluateTopologyReactions::handleTopologyParticleReaction(SCPUStateMode
         entry2.topology_index = event.topology_idx;
 
         if(reaction.is_fusion()) {
-            topology->appendParticle(event.idx2, entry2Type, event.idx1, entry1Type);
-        } else {
-            topology->vertexForParticle(event.idx1)->particleType() = entry1Type;
+            topology->appendParticle(event.idx2, event.idx1);
         }
     } else {
         throw std::logic_error("this branch should never be reached as topology-topology reactions are "
