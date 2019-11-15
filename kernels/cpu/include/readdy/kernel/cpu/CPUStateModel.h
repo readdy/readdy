@@ -89,9 +89,9 @@ public:
         _neighborListCellRadius = nl.cll_radius;
     }
 
-    const std::vector<Vec3> getParticlePositions() const override;
+    std::vector<Vec3> getParticlePositions() const override;
 
-    const std::vector<particle_type> getParticles() const override;
+    std::vector<particle_type> getParticles() const override;
 
     void initializeNeighborList(scalar interactionDistance) override {
         _neighborList->setUp(interactionDistance, _neighborListCellRadius);
@@ -242,9 +242,9 @@ public:
 
     std::vector<readdy::model::top::GraphTopology *> getTopologies() override;
 
-    const readdy::model::top::GraphTopology *getTopologyForParticle(readdy::model::top::Topology::particle_index particle) const override;
+    const readdy::model::top::GraphTopology *getTopologyForParticle(readdy::model::top::VertexData::ParticleIndex particle) const override;
 
-    readdy::model::top::GraphTopology *getTopologyForParticle(readdy::model::top::Topology::particle_index particle) override;
+    readdy::model::top::GraphTopology *getTopologyForParticle(readdy::model::top::VertexData::ParticleIndex particle) override;
 
     void toDenseParticleIndices(std::vector<std::size_t>::iterator begin,
                                 std::vector<std::size_t>::iterator end) const override;

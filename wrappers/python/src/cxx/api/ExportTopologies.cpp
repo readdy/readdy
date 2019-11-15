@@ -51,13 +51,12 @@ namespace py = pybind11;
 using rvp = py::return_value_policy;
 
 using particle = readdy::model::Particle;
-using topology_particle = readdy::model::TopologyParticle;
 using base_topology = readdy::model::top::Topology;
 using topology = readdy::model::top::GraphTopology;
 using reaction = readdy::model::top::reactions::StructuralTopologyReaction;
 using reaction_recipe = readdy::model::top::reactions::Recipe;
-using graph = readdy::model::top::graph::Graph;
-using vertex = readdy::model::top::graph::Vertex;
+using graph = readdy::model::top::Graph;
+using vertex = readdy::model::top::Vertex;
 using topology_potential = readdy::model::top::pot::TopologyPotential;
 using bonded_potential = readdy::model::top::pot::BondedPotential;
 using angle_potential = readdy::model::top::pot::AnglePotential;
