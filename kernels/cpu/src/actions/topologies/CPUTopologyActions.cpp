@@ -44,11 +44,7 @@
 
 #include "readdy/kernel/cpu/actions/topologies/CPUTopologyActions.h"
 
-namespace readdy {
-namespace kernel {
-namespace cpu {
-namespace actions {
-namespace top {
+namespace readdy::kernel::cpu::actions::top {
 
 
 CPUCalculateHarmonicBondPotential::CPUCalculateHarmonicBondPotential(const model::Context *const context,
@@ -56,9 +52,9 @@ CPUCalculateHarmonicBondPotential::CPUCalculateHarmonicBondPotential(const model
                                                                      const harmonic_bond *const potential)
         : CalculateHarmonicBondPotential(context), potential(potential), data(data) {}
 
-readdy::scalar CPUCalculateHarmonicBondPotential::perform(const readdy::model::top::Topology *const topology) {
+readdy::scalar CPUCalculateHarmonicBondPotential::perform(const readdy::model::top::GraphTopology* topology) {
     scalar energy = 0;
-    const auto &particleIndices = topology->getParticles();
+    const auto &particleIndices = topology->particleIndices();
     for (const auto &bond : potential->getBonds()) {
         if(bond.forceConstant == 0) continue;
 
@@ -84,9 +80,9 @@ CPUCalculateHarmonicAnglePotential::CPUCalculateHarmonicAnglePotential(const mod
                                                                        const harmonic_angle *const potential)
         : CalculateHarmonicAnglePotential(context), potential(potential), data(data) {}
 
-readdy::scalar CPUCalculateHarmonicAnglePotential::perform(const readdy::model::top::Topology *const topology) {
+readdy::scalar CPUCalculateHarmonicAnglePotential::perform(const readdy::model::top::GraphTopology* topology) {
     scalar energy = 0;
-    const auto &particleIndices = topology->getParticles();
+    const auto &particleIndices = topology->particleIndices();
 
 
     for (const auto &angle : potential->getAngles()) {
@@ -110,9 +106,9 @@ CPUCalculateCosineDihedralPotential::CPUCalculateCosineDihedralPotential(const m
         : CalculateCosineDihedralPotential(context), potential(pot), data(data) {
 }
 
-readdy::scalar CPUCalculateCosineDihedralPotential::perform(const readdy::model::top::Topology *const topology) {
+readdy::scalar CPUCalculateCosineDihedralPotential::perform(const readdy::model::top::GraphTopology* topology) {
     scalar energy = 0;
-    const auto &particleIndices = topology->getParticles();
+    const auto &particleIndices = topology->particleIndices();
 
     for (const auto &dih : potential->getDihedrals()) {
         auto &e_i = data->entry_at(particleIndices.at(dih.idx1));
@@ -134,38 +130,21 @@ readdy::scalar CPUCalculateCosineDihedralPotential::perform(const readdy::model:
 namespace reactions::op {
 CPUChangeParticleType::CPUChangeParticleType(CPUStateModel::data_type *const data,
                                              model::top::GraphTopology *const topology,
-                                             const model::top::reactions::actions::TopologyReactionAction::vertex &v,
+                                             const readdy::model::top::Graph::VertexIndex &v,
                                              const ParticleTypeId &type_to)
         : ChangeParticleType(topology, v, type_to), data(data) {}
 
 void CPUChangeParticleType::execute() {
-    const auto idx = topology->getParticles().at(_vertex->particleIndex);
-    _vertex->particleType() = previous_type;
-    std::swap(data->entry_at(idx).type, previous_type);
-}
-
-void CPUChangeParticleType::undo() {
-    execute();
+    data->entry_at(topology->graph().vertices().at(_vertex)->particleIndex).type = type_to;
 }
 
 CPUChangeParticlePosition::CPUChangeParticlePosition(
         CPUStateModel::data_type *const data, model::top::GraphTopology *topology,
-        const model::top::reactions::actions::TopologyReactionAction::vertex &v, Vec3 position)
+        const readdy::model::top::Graph::VertexIndex &v, Vec3 position)
         : ChangeParticlePosition(topology, v, position), data(data) { }
 
 void CPUChangeParticlePosition::execute() {
-    const auto idx = topology->getParticles().at(_vertex->particleIndex);
-    std::swap(data->entry_at(idx).pos, _posTo);
-}
-
-void CPUChangeParticlePosition::undo() {
-    execute();
-}
-
-}
-
-}
-}
+    data->entry_at(topology->graph().vertices().at(_vertex)->particleIndex).pos = _posTo;
 }
 }
 }

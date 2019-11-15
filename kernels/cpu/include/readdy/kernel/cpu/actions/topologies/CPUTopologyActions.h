@@ -62,7 +62,7 @@ public:
                                       CPUStateModel::data_type *data,
                                       const harmonic_bond *potential);
 
-    readdy::scalar perform(const readdy::model::top::Topology *topology) override;
+    readdy::scalar perform(const readdy::model::top::GraphTopology *topology) override;
 };
 
 
@@ -73,7 +73,7 @@ public:
     CPUCalculateHarmonicAnglePotential(const readdy::model::Context *context, CPUStateModel::data_type *data,
                                        const harmonic_angle *potential);
 
-    readdy::scalar perform(const readdy::model::top::Topology *topology) override;
+    readdy::scalar perform(const readdy::model::top::GraphTopology* topology) override;
 };
 
 class CPUCalculateCosineDihedralPotential : public readdy::model::top::pot::CalculateCosineDihedralPotential {
@@ -84,7 +84,7 @@ public:
                                         CPUStateModel::data_type *data,
                                         const cos_dihedral *pot);
 
-    readdy::scalar perform(const readdy::model::top::Topology *topology) override;
+    readdy::scalar perform(const readdy::model::top::GraphTopology* topology) override;
 };
 
 namespace reactions::op {
@@ -92,12 +92,11 @@ namespace reactions::op {
 class CPUChangeParticleType : public readdy::model::top::reactions::actions::ChangeParticleType {
     CPUStateModel::data_type *const data;
 public:
-    CPUChangeParticleType(CPUStateModel::data_type *data, model::top::GraphTopology *topology, const vertex &v,
+    CPUChangeParticleType(CPUStateModel::data_type *data, model::top::GraphTopology *topology,
+                          const readdy::model::top::Graph::VertexIndex &v,
                           const ParticleTypeId &type_to);
 
     void execute() override;
-
-    void undo() override;
 
 };
 
@@ -105,11 +104,9 @@ class CPUChangeParticlePosition : public readdy::model::top::reactions::actions:
     CPUStateModel::data_type *const data;
 public:
     CPUChangeParticlePosition(CPUStateModel::data_type *data, model::top::GraphTopology *topology,
-                              const vertex &v, Vec3 position);
+                              const readdy::model::top::Graph::VertexIndex &v, Vec3 position);
 
     void execute() override;
-
-    void undo() override;
 };
 
 class CPUAppendParticle : public readdy::model::top::reactions::actions::AppendParticle {

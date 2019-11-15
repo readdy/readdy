@@ -47,11 +47,7 @@
 #include <readdy/common/algorithm.h>
 #include <readdy/model/actions/Utils.h>
 
-namespace readdy {
-namespace kernel {
-namespace cpu {
-namespace actions {
-namespace top {
+namespace readdy::kernel::cpu::actions::top {
 
 CPUEvaluateTopologyReactions::CPUEvaluateTopologyReactions(CPUKernel *const kernel, scalar timeStep)
         : EvaluateTopologyReactions(timeStep), kernel(kernel) {}
@@ -169,7 +165,13 @@ void CPUEvaluateTopologyReactions::perform() {
                         model.insert_topology(std::move(top));
                     } else {
                         // if we have a single particle that is not of flavor topology, remove from topology structure!
-                        model.getParticleData()->entry_at(top.getParticles().front()).topology_index = -1;
+                        auto it = std::find_if(top.graph().vertices().begin(), top.graph().vertices().end(), [](const auto& v) {
+                            return !v.deactivated();
+                        });
+                        if(it == top.graph().vertices().end()) {
+                            throw std::logic_error("Topology was size 1 but contains no active vertices");
+                        }
+                        model.getParticleData()->entry_at((*it)->particleIndex).topology_index = -1;
                     }
                 }
             }
@@ -337,9 +339,7 @@ void CPUEvaluateTopologyReactions::handleTopologyParticleReaction(CPUStateModel:
         entry2.topology_index = event.topology_idx;
 
         if(reaction.is_fusion()) {
-            topology->appendParticle(event.idx2, entry2Type, event.idx1, entry1Type);
-        } else {
-            topology->vertexForParticle(event.idx1)->particleType() = entry1Type;
+            topology->appendParticle(event.idx2, event.idx1);
         }
     } else {
         throw std::logic_error("this branch should never be reached as topology-topology reactions are "
@@ -385,31 +385,22 @@ void CPUEvaluateTopologyReactions::handleTopologyTopologyReaction(CPUStateModel:
         //topology->appendTopology(otherTopology, ...)
         if(event.topology_idx == event.topology_idx2) {
             // introduce edge if not already present
-            auto v1 = t1->vertexForParticle(event.idx1);
-            auto v2 = t1->vertexForParticle(event.idx2);
-            if(v1->particleType() == reaction.type1() && t1->type() == reaction.top_type1()) {
-                v1->particleType() = reaction.type_to1();
-                v2->particleType() = reaction.type_to2();
-            } else {
-                v1->particleType() = reaction.type_to2();
-                v2->particleType() = reaction.type_to1();
-            }
+            auto v1 = t1->vertexIndexForParticle(event.idx1);
+            auto v2 = t1->vertexIndexForParticle(event.idx2);
             if(!t1->graph().containsEdge(v1, v2)) {
                 t1->graph().addEdge(v1, v2);
             }
             t1->type() = reaction.top_type_to1();
         } else {
             // merge topologies
-            for(auto pidx : t2->getParticles()) {
-                data.entry_at(pidx).topology_index = event.topology_idx;
+            for(auto particleIndex : t2->particleIndices()) {
+                data.entry_at(particleIndex).topology_index = event.topology_idx;
             }
             auto &topologies = kernel->getCPUKernelStateModel().topologies();
-            t1->appendTopology(*t2, event.idx2, entry2Type, event.idx1, entry1Type, reaction.top_type_to1());
+            t1->appendTopology(*t2, event.idx2, event.idx1, reaction.top_type_to1());
             topologies.erase(topologies.begin() + event.topology_idx2);
         }
     } else {
-        t1->vertexForParticle(event.idx1)->particleType() = entry1Type;
-        t2->vertexForParticle(event.idx2)->particleType() = entry2Type;
         t1->type() = top_type_to1;
         t2->type() = top_type_to2;
 
@@ -435,8 +426,4 @@ bool CPUEvaluateTopologyReactions::topologyDeactivated(std::ptrdiff_t index) con
             static_cast<std::size_t>(index))->isDeactivated();
 }
 
-}
-}
-}
-}
 }

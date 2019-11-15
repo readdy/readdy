@@ -90,11 +90,6 @@ public:
      */
     virtual void execute() = 0;
 
-    /**
-     * base method for undoing the action
-     */
-    virtual void undo() = 0;
-
 protected:
     /**
      * a pointer to the topology on which this action should be executed
@@ -158,15 +153,7 @@ public:
      */
     AddEdge(GraphTopology *topology, Graph::Edge edge);
 
-    /**
-     * do!
-     */
     void execute() override;
-
-    /**
-     * undo!
-     */
-    void undo() override;
 
 private:
     /**
@@ -189,11 +176,6 @@ public:
      */
     void execute() override;
 
-    /**
-     * oops, undo
-     */
-    void undo() override;
-
 private:
     /**
      * the edge to remove
@@ -215,20 +197,8 @@ public:
      */
     void execute() override;
 
-    /**
-     * oops, undo
-     */
-    void undo() override;
-
 private:
-    /**
-     * the target type
-     */
     TopologyTypeId _newType;
-    /**
-     * the previous type, stored for undo
-     */
-    TopologyTypeId _prevType{0};
 };
 
 }

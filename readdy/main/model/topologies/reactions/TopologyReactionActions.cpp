@@ -63,10 +63,6 @@ void AddEdge::execute() {
     topology->addEdge(label_edge_);
 }
 
-void AddEdge::undo() {
-    topology->removeEdge(label_edge_);
-}
-
 RemoveEdge::RemoveEdge(GraphTopology *const topology, Graph::Edge edge)
         : TopologyReactionAction(topology), label_edge_(std::move(edge)) {}
 
@@ -74,21 +70,12 @@ void RemoveEdge::execute() {
     topology->removeEdge(label_edge_);
 }
 
-void RemoveEdge::undo() {
-    topology->addEdge(label_edge_);
-}
-
 
 ChangeTopologyType::ChangeTopologyType(GraphTopology *topology, TopologyTypeId newType)
         : TopologyReactionAction(topology), _newType(newType){}
 
 void ChangeTopologyType::execute() {
-    _prevType = topology->type();
     topology->type() = _newType;
-}
-
-void ChangeTopologyType::undo() {
-    topology->type() = _prevType;
 }
 
 ChangeParticlePosition::ChangeParticlePosition(GraphTopology *topology, Graph::VertexIndex v, Vec3 posTo)

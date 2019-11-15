@@ -61,7 +61,6 @@ public:
     using EntriesUpdate = std::vector<T>;
     // tuple of new entries and indices of deleted entries
     using DataUpdate = std::tuple<Entries, std::vector<std::size_t>>;
-    using ReorderSignal = readdy::signals::signal<void(const std::vector<std::size_t>)>;
     using topology_index_t = std::ptrdiff_t;
     using size_type = typename Entries::size_type;
 
@@ -69,17 +68,17 @@ public:
     using const_iterator = typename Entries::const_iterator;
 
     DataContainer(const readdy::model::Context &context, thread_pool &pool)
-            : _context(context), _pool(pool), reorderSignal(std::make_shared<ReorderSignal>()) {};
+            : _context(context), _pool(pool) {};
 
     virtual ~DataContainer() = default;
 
-    std::size_t size() const {
+    [[nodiscard]] std::size_t size() const {
         return _entries.size();
     };
 
     virtual void reserve(std::size_t n) = 0;
 
-    bool empty() const {
+    [[nodiscard]] bool empty() const {
         return size() == getNDeactivated();
     };
 
@@ -98,7 +97,7 @@ public:
      * @param grid_width precision
      * @return bitmask
      */
-    std::array<unsigned long long, 3> project(Vec3 value, scalar grid_width) const {
+    [[nodiscard]] std::array<unsigned long long, 3> project(Vec3 value, scalar grid_width) const {
         const auto &box_size = _context.get().boxSize();
         const auto i = static_cast<const unsigned long long>((value.x + .5 * box_size[0]) / grid_width);
         const auto j = static_cast<const unsigned long long>((value.y + .5 * box_size[1]) / grid_width);
@@ -211,24 +210,11 @@ public:
         return _blanks.size();
     }
 
-    readdy::signals::scoped_connection registerReorderEventListener(const ReorderSignal::slot_type &slot) {
-        return reorderSignal->connect_scoped(slot);
-    }
-
     virtual std::vector<size_type> update(DataUpdate &&) = 0;
 
     virtual void displace(size_type entry, const Particle::Position &delta) = 0;
 
-    void blanks_moved_to_end() {
-        auto n_blanks = _blanks.size();
-        std::iota(_blanks.begin(), _blanks.end(), size() - n_blanks - 1);
-    }
-
-    void blanks_moved_to_front() {
-        std::iota(_blanks.begin(), _blanks.end(), 0);
-    }
-
-    const readdy::model::Context &context() const {
+    [[nodiscard]] const readdy::model::Context &context() const {
         return _context.get();
     }
 
@@ -250,8 +236,6 @@ protected:
 
     std::vector<size_type> _blanks {};
     Entries _entries {};
-
-    std::shared_ptr<ReorderSignal> reorderSignal;
 };
 
 struct Entry {
