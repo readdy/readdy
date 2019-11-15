@@ -57,7 +57,6 @@ class DataContainer {
 public:
 
     using Particle = readdy::model::Particle;
-    using TopologyParticle = readdy::model::TopologyParticle;
     using Entries = std::vector<T>;
     using EntriesUpdate = std::vector<T>;
     // tuple of new entries and indices of deleted entries
@@ -111,7 +110,7 @@ public:
 
     virtual void addParticles(const std::vector<Particle> &particles) = 0;
 
-    virtual std::vector<size_type> addTopologyParticles(const std::vector<TopologyParticle> &topologyParticles) = 0;
+    virtual std::vector<size_type> addTopologyParticles(const std::vector<Particle> &topologyParticles) = 0;
 
     Particle getParticle(size_type index) const {
         const auto& entry = *(_entries.begin() + index);
