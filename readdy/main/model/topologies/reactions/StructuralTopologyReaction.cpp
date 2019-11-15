@@ -80,79 +80,50 @@ std::vector<GraphTopology> StructuralTopologyReaction::execute(GraphTopology &to
             actions.push_back(op->create_action(&topology, topologyActionFactory));
         }
 
-        bool exceptionOccurred = false;
-        {
-            // perform reaction
-            auto it = actions.begin();
-            try {
-                for (; it != actions.end(); ++it) {
-                    (*it)->execute();
-                }
-            } catch (const TopologyReactionException &exception) {
-                log::warn("exception occurred while executing topology reaction: {}", exception.what());
-                exceptionOccurred = true;
-                if (raises_if_invalid()) {
-                    throw;
-                }
-            }
-            if (exceptionOccurred && rolls_back_if_invalid() && it != actions.begin()) {
-                log::warn("rolling back...");
-                for (;; --it) {
-                    (*it)->undo();
-                    if (it == actions.begin()) break;
-                }
-            }
+        // perform reaction
+        for (auto& action : actions) {
+            action->execute();
         }
-        if (!exceptionOccurred) {
-            // post reaction
-            if (expects_connected_after_reaction()) {
-                bool valid = true;
-                if (!topology.graph().isConnected()) {
-                    // we expected it to be connected after the reaction.. but it is not, raise or rollback.
-                    log::warn("The topology was expected to still be connected after the reaction, but it was not.");
-                    valid = false;
-                }
-                {
-                    // check if all particle types are topology flavored
-                    for (const auto &v : topology.graph().vertices()) {
-                        if (types.infoOf(topology.particleForVertex(v).type()).flavor != particleflavor::TOPOLOGY) {
-                            log::warn("The topology contained particles that were not topology flavored.");
-                            valid = false;
-                        }
+
+        // post reaction
+        if (expects_connected_after_reaction()) {
+            bool valid = true;
+            if (!topology.graph().isConnected()) {
+                // we expected it to be connected after the reaction.. but it is not, raise or rollback.
+                log::warn("The topology was expected to still be connected after the reaction, but it was not.");
+                valid = false;
+            }
+            {
+                // check if all particle types are topology flavored
+                for (const auto &v : topology.graph().vertices()) {
+                    if (types.infoOf(topology.particleForVertex(v).type()).flavor != particleflavor::TOPOLOGY) {
+                        log::warn("The topology contained particles that were not topology flavored.");
+                        valid = false;
                     }
                 }
-                if (!valid) {
-                    log::warn("GEXF representation: {}", topology.graph().gexf());
-                    if (rolls_back_if_invalid()) {
-                        log::warn("rolling back...");
-                        for (auto it = actions.rbegin(); it != actions.rend(); ++it) {
-                            (*it)->undo();
-                        }
-                    } else {
-                        throw TopologyReactionException(
-                                "The topology was invalid after the reaction, see previous warning messages.");
-                    }
-                } else {
-                    // if valid, update force field
-                    topology.configure();
-                    // and update reaction rates
-                    topology.updateReactionRates(topology_types.structuralReactionsOf(topology.type()));
-                }
+            }
+            if (!valid) {
+                log::warn("GEXF representation: {}", topology.graph().gexf());
+                throw TopologyReactionException(
+                        "The topology was invalid after the reaction, see previous warning messages.");
             } else {
-                if (!topology.graph().isConnected()) {
-                    auto subTopologies = topology.connectedComponents();
-                    assert(subTopologies.size() > 1 && "This should be at least 2 as the graph is not connected.");
-                    return std::move(subTopologies);
-                }
                 // if valid, update force field
                 topology.configure();
                 // and update reaction rates
                 topology.updateReactionRates(topology_types.structuralReactionsOf(topology.type()));
             }
+        } else {
+            if (!topology.graph().isConnected()) {
+                auto subTopologies = topology.connectedComponents();
+                assert(subTopologies.size() > 1 && "This should be at least 2 as the graph is not connected.");
+                return std::move(subTopologies);
+            }
+            // if valid, update force field
+            topology.configure();
+            // and update reaction rates
+            topology.updateReactionRates(topology_types.structuralReactionsOf(topology.type()));
         }
     }
     return {};
 }
-
-
 }

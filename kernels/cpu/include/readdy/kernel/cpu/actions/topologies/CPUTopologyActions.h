@@ -113,10 +113,9 @@ class CPUAppendParticle : public readdy::model::top::reactions::actions::AppendP
     CPUStateModel::data_type *const data;
     readdy::model::Particle particle;
     std::size_t insertIndex {0};
-    vertex newParticleIt;
 public:
     CPUAppendParticle(CPUStateModel::data_type *const data, model::top::GraphTopology *topology,
-                      std::vector<vertex> neighbors, ParticleTypeId type, Vec3 pos)
+                      std::vector<readdy::model::top::Graph::VertexIndex> neighbors, ParticleTypeId type, Vec3 pos)
             : AppendParticle(topology, std::move(neighbors), type, pos), data(data), particle(pos, type) {};
 
     void execute() override {
@@ -124,21 +123,10 @@ public:
         insertIndex = data->addEntry(std::move(entry));
 
         auto firstNeighbor = neighbors[0];
-        topology->appendParticle(insertIndex, type, firstNeighbor, firstNeighbor->particleType());
-        // new particles get appended to the end of the linked list
-        newParticleIt = std::prev(topology->graph().vertices().end());
-        for (auto it = neighbors.begin() + 1; it != neighbors.end(); ++it) {
-            topology->graph().addEdge(newParticleIt, *it);
+        auto ix = topology->appendParticle(insertIndex, firstNeighbor);
+        for(auto v : neighbors) {
+            topology->addEdge(v, ix);
         }
-    }
-
-    void undo() override {
-        for (auto &neighbor : neighbors) {
-            topology->graph().removeEdge(newParticleIt, neighbor);
-        }
-        topology->graph().removeVertex(newParticleIt);
-        topology->getParticles().erase(topology->getParticles().cend() - 1);
-        data->removeEntry(insertIndex);
     }
 };
 

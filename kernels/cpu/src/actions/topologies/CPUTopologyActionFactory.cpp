@@ -75,7 +75,7 @@ ctop::CPUTopologyActionFactory::createCalculateCosineDihedralPotential(
 
 ctop::CPUTopologyActionFactory::ActionPtr
 ctop::CPUTopologyActionFactory::createChangeParticleType(
-        top::GraphTopology *const topology, const vertex &v,
+        top::GraphTopology *const topology, const readdy::model::top::Graph::VertexIndex &v,
         const readdy::ParticleTypeId &type_to) const {
     return std::make_unique<reactions::op::CPUChangeParticleType>(&_data.get(), topology, v, type_to);
 }
@@ -90,14 +90,14 @@ readdy::kernel::cpu::actions::top::CPUTopologyActionFactory::createChangeTopolog
 
 top::reactions::actions::TopologyReactionActionFactory::ActionPtr
 readdy::kernel::cpu::actions::top::CPUTopologyActionFactory::createChangeParticlePosition(
-        top::GraphTopology *topology, const top::reactions::actions::TopologyReactionActionFactory::vertex &v,
+        top::GraphTopology *topology, const readdy::model::top::Graph::VertexIndex &v,
         readdy::Vec3 position) const {
     return std::make_unique<reactions::op::CPUChangeParticlePosition>(&_data.get(), topology, v, position);
 }
 
 top::reactions::actions::TopologyReactionActionFactory::ActionPtr
 readdy::kernel::cpu::actions::top::CPUTopologyActionFactory::createAppendParticle(top::GraphTopology *topology,
-                                                                                  const std::vector<vertex> &neighbors,
+                                                                                  const std::vector<readdy::model::top::Graph::VertexIndex> &neighbors,
                                                                                   ParticleTypeId type,
                                                                                   const Vec3 &position) const {
     return std::make_unique<reactions::op::CPUAppendParticle>(&_data.get(), topology, neighbors, type, position);

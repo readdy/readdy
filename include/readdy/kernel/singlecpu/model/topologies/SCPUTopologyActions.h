@@ -163,10 +163,6 @@ public:
         std::swap(data->entry_at(idx).type, previous_type);
     }
 
-    void undo() override {
-        execute();
-    }
-
 };
 
 class SCPUChangeParticlePosition : public readdy::model::top::reactions::actions::ChangeParticlePosition {
@@ -181,16 +177,12 @@ public:
         std::swap(data->entry_at(idx).pos, _posTo);
     }
 
-    void undo() override {
-        execute();
-    }
 };
 
 class SCPUAppendParticle : public readdy::model::top::reactions::actions::AppendParticle {
     SCPUParticleData<model::Entry> *const data;
     readdy::model::Particle particle;
-    SCPUParticleData<model::Entry>::EntryIndex insertIndex;
-    top::Graph::VertexIndex newParticleIx;
+    SCPUParticleData<model::Entry>::EntryIndex insertIndex {};
 public:
     SCPUAppendParticle(SCPUParticleData<model::Entry> *const data, top::GraphTopology *topology,
                        std::vector<top::Graph::VertexIndex> neighbors, ParticleTypeId type, Vec3 pos)
@@ -201,21 +193,10 @@ public:
         insertIndex = data->addEntry(entry);
         auto firstNeighbor = neighbors[0];
         auto ix = topology->appendParticle(insertIndex, firstNeighbor);
-        newParticleIx = ix;
         // new particles get appended to the end of the linked list
         for (auto neighborIx : neighbors) {
             topology->addEdge(ix, neighborIx);
         }
-    }
-
-    void undo() override {
-        /*for (auto neighbor : neighbors) {
-            topology->removeEdge(newParticleIx, neighbor);
-        }
-        topology->removeVertex(newParticleIx);
-        topology->getParticles().erase(topology->getParticles().cend() - 1);
-        data->removeEntry(insertIndex);*/
-        throw std::runtime_error("undo not supported for scpu append particle");
     }
 };
 

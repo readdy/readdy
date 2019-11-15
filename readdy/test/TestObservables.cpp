@@ -103,7 +103,7 @@ TEMPLATE_TEST_CASE("Test observables", "[observables]", SingleCPU, CPU) {
         auto &toptypes = context.topologyRegistry();
         toptypes.addType("TA");
 
-        std::vector<readdy::model::TopologyParticle> topologyParticles;
+        std::vector<readdy::model::Particle> topologyParticles;
         {
             topologyParticles.reserve(n_chain_elements);
             for (std::size_t i = 0; i < n_chain_elements; ++i) {
@@ -113,12 +113,12 @@ TEMPLATE_TEST_CASE("Test observables", "[observables]", SingleCPU, CPU) {
         }
         auto topology = kernel->stateModel().addTopology(toptypes.idOf("TA"), topologyParticles);
         {
-            auto it = topology->graph().vertices().begin();
-            auto it2 = ++topology->graph().vertices().begin();
-            while (it2 != topology->graph().vertices().end()) {
-                topology->graph().addEdge(it, it2);
-                std::advance(it, 1);
-                std::advance(it2, 1);
+            auto it = 0;
+            auto it2 = 1;
+            while (it2 < topology->graph().vertices().size()) {
+                topology->addEdge(it, it2);
+                ++it;
+                ++it2;
             }
         }
 
@@ -130,8 +130,8 @@ TEMPLATE_TEST_CASE("Test observables", "[observables]", SingleCPU, CPU) {
                 auto current_n_vertices = vertices.size();
                 if (current_n_vertices > 1) {
                     auto edge = readdy::model::rnd::uniform_int<>(0, static_cast<int>(current_n_vertices - 2));
-                    auto it1 = vertices.begin();
-                    auto it2 = ++vertices.begin();
+                    auto it1 = 0;
+                    auto it2 = 1;
                     for (int i = 0; i < edge; ++i) {
                         ++it1;
                         ++it2;
@@ -142,11 +142,10 @@ TEMPLATE_TEST_CASE("Test observables", "[observables]", SingleCPU, CPU) {
                 return recipe;
             };
             auto rateFunction = [](const readdy::model::top::GraphTopology &top) {
-                return top.getNParticles() > 1 ? top.getNParticles() / 50. : 0;
+                return top.graph().nVertices() > 1 ? top.graph().nVertices() / 50. : 0;
             };
             readdy::model::top::reactions::StructuralTopologyReaction reaction{"r", reactionFunction, rateFunction};
             reaction.create_child_topologies_after_reaction();
-            reaction.roll_back_if_invalid();
 
             toptypes.addStructuralReaction("TA", reaction);
         }
@@ -155,8 +154,7 @@ TEMPLATE_TEST_CASE("Test observables", "[observables]", SingleCPU, CPU) {
             auto reactionFunction = [&](readdy::model::top::GraphTopology &top) {
                 readdy::model::top::reactions::Recipe recipe(top);
                 if (top.graph().vertices().size() == 1) {
-                    recipe.changeParticleType(top.graph().vertices().begin(),
-                                              context.particleTypes().idOf("A"));
+                    recipe.changeParticleType(0, context.particleTypes().idOf("A"));
                 } else {
                     throw std::logic_error("this reaction should only be executed when there is exactly "
                                            "one particle in the topology");

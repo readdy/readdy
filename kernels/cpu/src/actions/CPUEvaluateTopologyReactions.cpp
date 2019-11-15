@@ -388,7 +388,7 @@ void CPUEvaluateTopologyReactions::handleTopologyTopologyReaction(CPUStateModel:
             auto v1 = t1->vertexIndexForParticle(event.idx1);
             auto v2 = t1->vertexIndexForParticle(event.idx2);
             if(!t1->graph().containsEdge(v1, v2)) {
-                t1->graph().addEdge(v1, v2);
+                t1->addEdge(v1, v2);
             }
             t1->type() = reaction.top_type_to1();
         } else {

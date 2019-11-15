@@ -88,7 +88,7 @@ public:
      * @return the created topology particle instance
      * @see addTopology()
      */
-    readdy::model::TopologyParticle createTopologyParticle(const std::string &type, const Vec3 &pos) const {
+    [[nodiscard]] readdy::model::Particle createTopologyParticle(const std::string &type, const Vec3 &pos) const {
         return _kernel->createTopologyParticle(type, pos);
     }
 
@@ -96,7 +96,7 @@ public:
      * Checks whether the selected kernel supports topologies
      * @return true if the kernel supports topologies
      */
-    bool kernelSupportsTopologies() const {
+    [[nodiscard]] bool kernelSupportsTopologies() const {
         return _kernel->supportsTopologies();
     }
 
@@ -110,7 +110,7 @@ public:
      * @see createTopologyParticle(type, pos)
      */
     readdy::model::top::GraphTopology *addTopology(const std::string &type,
-                                                   const std::vector<readdy::model::TopologyParticle> &particles) {
+                                                   const std::vector<readdy::model::Particle> &particles) {
         if (kernelSupportsTopologies()) {
             auto typeId = _kernel->context().topologyRegistry().idOf(type);
             return _kernel->stateModel().addTopology(typeId, particles);
@@ -126,7 +126,7 @@ public:
         return _kernel->stateModel().getTopologies();
     }
 
-    auto currentParticles() const {
+    [[nodiscard]] auto currentParticles() const {
         return _kernel->stateModel().getParticles();
     }
 
@@ -136,11 +136,11 @@ public:
      * @param topology the topology instance
      * @return a vector of particles
      */
-    std::vector<model::Particle> getParticlesForTopology(const model::top::GraphTopology &topology) const {
+    [[nodiscard]] std::vector<model::Particle> getParticlesForTopology(const model::top::GraphTopology &topology) const {
         return _kernel->stateModel().getParticlesForTopology(topology);
     }
 
-    const model::observables::ObservableFactory &observe() const {
+    [[nodiscard]] const model::observables::ObservableFactory &observe() const {
         return _kernel->observe();
     }
 
@@ -223,7 +223,7 @@ public:
      * Method that gives access to all the positions of all the particles in the system.
      * @return a vector containing all the positions
      */
-    const std::vector<Vec3> getAllParticlePositions() const {
+    [[nodiscard]] std::vector<Vec3> getAllParticlePositions() const {
         return _kernel->stateModel().getParticlePositions();
     }
 
@@ -231,7 +231,7 @@ public:
      * Yields a nonmodifyable reference to the current context of this simulation.
      * @return cref to the context
      */
-    const model::Context &context() const {
+    [[nodiscard]] const model::Context &context() const {
         return _kernel->context();
     }
 
@@ -240,7 +240,7 @@ public:
      * Raises if there is no kernel selected.
      * @return the kernel id string
      */
-    const std::string &selectedKernelType() const {
+    [[nodiscard]] const std::string &selectedKernelType() const {
         return _kernel->name();
     }
 
@@ -262,7 +262,7 @@ public:
      * Checks if the kernel is running on single precision.
      * @return true if it is running on single precision
      */
-    bool singlePrecision() const {
+    [[nodiscard]] bool singlePrecision() const {
         return _kernel->singlePrecision();
     }
 
@@ -270,7 +270,7 @@ public:
      * Checks if the kernel is running on double precision.
      * @return true if it is running on double precision
      */
-    bool doublePrecision() const {
+    [[nodiscard]] bool doublePrecision() const {
         return _kernel->doublePrecision();
     }
 
@@ -286,7 +286,7 @@ public:
         return _kernel->stateModel();
     }
 
-    const model::StateModel &stateModel() const {
+    [[nodiscard]] const model::StateModel &stateModel() const {
         return _kernel->stateModel();
     }
 

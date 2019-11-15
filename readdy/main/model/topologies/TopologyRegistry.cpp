@@ -162,8 +162,8 @@ std::string TopologyRegistry::describe() const {
                 description += fmt::format("     - for topology type \"{}\" with {} structural reactions:\n",
                                            entry.name, entry.structuralReactions.size());
                 for (const auto &r : entry.structuralReactions) {
-                    description += fmt::format("         * reaction with roll_back = {} and create child topologies = {}\n",
-                                               r.rolls_back_if_invalid(), r.creates_child_topologies_after_reaction());
+                    description += fmt::format("         * reaction with create child topologies = {}\n",
+                                               r.creates_child_topologies_after_reaction());
                 }
             }
         }
