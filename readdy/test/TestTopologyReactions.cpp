@@ -48,7 +48,6 @@
 #include <readdy/model/topologies/GraphTopology.h>
 #include <readdy/testing/KernelTest.h>
 #include <readdy/testing/Utils.h>
-#include <readdy/model/topologies/Utils.h>
 #include <readdy/api/Simulation.h>
 
 using namespace readdy;
@@ -56,17 +55,15 @@ using namespace readdytesting::kernel;
 
 readdy::model::top::GraphTopology* setUpSmallTopology(readdy::model::Kernel* kernel, readdy::TopologyTypeId type) {
     auto &ctx = kernel->context();
-    model::TopologyParticle x_0{0, 0, 0, ctx.particleTypes().idOf("Topology A")};
-    model::TopologyParticle x_1{0, 0, 0, ctx.particleTypes().idOf("Topology A")};
-    model::TopologyParticle x_2{0, 0, 0, ctx.particleTypes().idOf("Topology A")};
+    model::Particle x_0{0, 0, 0, ctx.particleTypes().idOf("Topology A")};
+    model::Particle x_1{0, 0, 0, ctx.particleTypes().idOf("Topology A")};
+    model::Particle x_2{0, 0, 0, ctx.particleTypes().idOf("Topology A")};
     auto topology = kernel->stateModel().addTopology(type, {x_0, x_1, x_2});
     {
         auto it = topology->graph().vertices().begin();
         auto it2 = ++topology->graph().vertices().begin();
-        topology->graph().addEdge(it, it2);
-        std::advance(it, 1);
-        std::advance(it2, 1);
-        topology->graph().addEdge(it, it2);
+        topology->addEdge(0, 1);
+        topology->addEdge(1, 2);
     }
     return topology;
 }
@@ -103,13 +100,6 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
         REQUIRE_FALSE(topologyReaction.expects_connected_after_reaction());
         REQUIRE(topologyReaction.creates_child_topologies_after_reaction());
 
-        topologyReaction.raise_if_invalid();
-        REQUIRE(topologyReaction.raises_if_invalid());
-        REQUIRE_FALSE(topologyReaction.rolls_back_if_invalid());
-
-        topologyReaction.roll_back_if_invalid();
-        REQUIRE_FALSE(topologyReaction.raises_if_invalid());
-        REQUIRE(topologyReaction.rolls_back_if_invalid());
     }
 
     SECTION("Change a particle type") {
