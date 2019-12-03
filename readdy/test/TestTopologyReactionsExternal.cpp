@@ -45,7 +45,6 @@
 #include <readdy/testing/KernelTest.h>
 #include <readdy/testing/Utils.h>
 #include <readdy/api/Simulation.h>
-#include <readdy/model/topologies/Utils.h>
 #include <readdy/common/FloatingPoints.h>
 
 using namespace readdy;
@@ -72,7 +71,7 @@ TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU
 
         Simulation simulation {create<TestType>(), ctx};
 
-        model::TopologyParticle x_0{0., 0., 0., simulation.context().particleTypes().idOf("Topology A")};
+        model::Particle x_0{0., 0., 0., simulation.context().particleTypes().idOf("Topology A")};
         {
             auto tid = ctx.topologyRegistry().addType("MyType");
             simulation.stateModel().addTopology(tid, {x_0});
@@ -117,11 +116,11 @@ TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU
 
     SECTION("Get topology for particle") {
         Simulation simulation {create<TestType>(), ctx};
-        model::TopologyParticle x_0{0., 0., 0., ctx.particleTypes().idOf("Topology A")};
+        model::Particle x_0{0., 0., 0., ctx.particleTypes().idOf("Topology A")};
         auto toplogy = simulation.addTopology("T", {x_0});
         simulation.addParticle("A", 0, 0, 0);
 
-        for(auto particle : toplogy->getParticles()) {
+        for(auto particle : toplogy->particleIndices()) {
             auto returned_top = simulation.stateModel().getTopologyForParticle(particle);
             REQUIRE(toplogy == returned_top);
         }
@@ -143,9 +142,9 @@ TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU
 
         model::top::reactions::StructuralTopologyReaction r {"r", [aId](model::top::GraphTopology& top) {
             model::top::reactions::Recipe recipe (top);
-            if(top.getNParticles() > 1) {
-                auto rnd = model::rnd::uniform_int(0, static_cast<const int>(top.getNParticles() - 2));
-                auto it1 = top.graph().vertices().begin();
+            if(top.nParticles() > 1) {
+                auto rnd = model::rnd::uniform_int(0, static_cast<const int>(top.nParticles() - 2));
+                auto it1 = top.graph().begin();
                 auto it2 = std::next(it1, 1);
                 if(rnd > 0) {
                     std::advance(it1, rnd);

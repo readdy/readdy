@@ -210,6 +210,10 @@ public:
         return particleForVertex(_graph.vertices().at(vertexRef));
     }
 
+    [[nodiscard]] auto nParticles() const {
+        return _graph.nVertices();
+    }
+
 protected:
     Graph _graph;
     std::reference_wrapper<const model::Context> _context;

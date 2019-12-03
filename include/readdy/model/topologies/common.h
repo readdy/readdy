@@ -15,7 +15,8 @@ namespace readdy::model::top {
 struct VertexData {
     using ParticleIndex = std::size_t;
 
-    ParticleIndex particleIndex;
+    ParticleIndex particleIndex {};
+    std::string data {};
 };
 
 using Vertex = graphs::Vertex<VertexData>;
