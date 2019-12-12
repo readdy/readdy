@@ -72,6 +72,13 @@ bool isNotConnected(readdy::model::top::Graph::iterator v) {
     return v->neighbors().empty();
 }
 
+readdy::scalar constant_rate_function(
+        const readdy::model::top::GraphTopology &top1,
+        const readdy::model::top::GraphTopology &top2
+) {
+    return 1e10;
+}
+
 TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
     auto kernel = create<TestType>();
     auto &ctx = kernel->context();
@@ -424,7 +431,14 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
             ctx.topologyRegistry().addType("T2");
 
             ctx.topologyRegistry().configureBondPotential("Y", "Z", {0., .1});
-            ctx.topologyRegistry().addSpatialReaction("connect: T(X1) + T(X2) -> T2(Y--Z)", 1e10, 1.);
+            SECTION("Scalar Constant Rate") {
+                ctx.topologyRegistry().addSpatialReaction("connect: T(X1) + T(X2) -> T2(Y--Z)", 1e10, 1.);
+            }
+            SECTION("Constant Rate via function") {
+                ctx.topologyRegistry().addSpatialReaction("connect: T(X1) + T(X2) -> T2(Y--Z)",
+                                                          std::move(constant_rate_function),
+                                                          1.);
+            }
 
             Simulation sim(std::move(kernel), ctx);
 
@@ -474,7 +488,13 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
             ctx.topologyRegistry().configureBondPotential("X", "X", {.0, .01});
             ctx.topologyRegistry().configureBondPotential("X", "Y", {.0, .01});
             ctx.topologyRegistry().configureBondPotential("X", "Z", {.0, .01});
-            ctx.topologyRegistry().addSpatialReaction("connect: T(X) + T(X) -> T2(Y--Z) [self=true]", 1e10, 1.);
+            SECTION("Constant Scalar Rate") {
+                ctx.topologyRegistry().addSpatialReaction("connect: T(X) + T(X) -> T2(Y--Z) [self=true]", 1e10, 1.);
+            }
+            SECTION("Constant Rate via Function") {
+                ctx.topologyRegistry().addSpatialReaction("connect: T(X) + T(X) -> T2(Y--Z) [self=true]",
+                                                          std::move(constant_rate_function), 1.);
+            }
 
             Simulation sim(kernel->name(), ctx);
 
@@ -525,9 +545,17 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
             ctx.topologyRegistry().configureBondPotential("link", "link", {.0, .01});
 
             SECTION("min. number of edges too large for full connection") {
-                ctx.topologyRegistry().addSpatialReaction(
-                        "connect: polymer(core) + polymer(core) -> polymer(link--link) [self=true, distance>16]",
-                        1e10, 1.1);
+                SECTION("Constant Scalar Rate") {
+                    ctx.topologyRegistry().addSpatialReaction(
+                            "connect: polymer(core) + polymer(core) -> polymer(link--link) [self=true, distance>16]",
+                            1e10, 1.1);
+                }
+                SECTION("Constant Rate via Function") {
+                    ctx.topologyRegistry().addSpatialReaction(
+                            "connect: polymer(core) + polymer(core) -> polymer(link--link) [self=true, distance>16]",
+                            std::move(constant_rate_function), 1.1);
+                }
+
 
                 Simulation sim(kernel->name(), ctx);
 
@@ -590,9 +618,16 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
                 //REQUIRE( 6 == n_links );
             }
             SECTION("full connection") {
-                ctx.topologyRegistry().addSpatialReaction(
-                        "connect: polymer(core) + polymer(core) -> polymer(link--link) [self=true, distance>14]", // >14
-                        1e10, 1.01);
+                SECTION("Constant Scalar Rate") {
+                    ctx.topologyRegistry().addSpatialReaction(
+                            "connect: polymer(core) + polymer(core) -> polymer(link--link) [self=true, distance>14]", // >14
+                            1e10, 1.01);
+                }
+                SECTION("Constant Rate via Function") {
+                    ctx.topologyRegistry().addSpatialReaction(
+                            "connect: polymer(core) + polymer(core) -> polymer(link--link) [self=true, distance>14]", // >14
+                            std::move(constant_rate_function), 1.01);
+                }
 
                 Simulation sim(kernel->name(), ctx);
 

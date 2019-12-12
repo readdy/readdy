@@ -84,6 +84,7 @@ struct rate_function_sink {
     }
 };
 
+
 struct NeighborIteratorState {
     PyTopology* top;
     top::Vertex::NeighborList::const_iterator it;
@@ -96,6 +97,7 @@ void exportTopologies(py::module &m) {
 
     py::class_<reaction_function_sink>(m, "ReactionFunction").def(py::init<py::function>());
     py::class_<rate_function_sink>(m, "RateFunction").def(py::init<py::function>());
+    py::class_<spatial_rate_function_sink>(m, "SpatialRateFunction").def(py::init<py::function>());
 
     py::class_<reactions::StructuralTopologyReaction>(m, "StructuralTopologyReaction")
             .def(py::init<std::string, reaction_function_sink, rate_function_sink>())

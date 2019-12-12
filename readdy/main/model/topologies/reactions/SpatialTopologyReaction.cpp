@@ -54,165 +54,181 @@ namespace readdy::model::top::reactions {
   ReactionId SpatialTopologyReaction::counter = 0;
 
   SpatialTopologyReaction STRParser::parse(const std::string &descriptor, scalar rate, scalar radius) const {
-    namespace mutil = readdy::model::util;
-    namespace rutil = readdy::util;
-    SpatialTopologyReaction reaction;
-    reaction._rate = rate;
-    reaction._radius = radius;
+      SpatialTopologyReaction reaction;
+      reaction._rate = rate;
+      reaction._radius = radius;
 
-    log::trace("begin parsing \"{}\"", descriptor);
-    auto arrowPos = descriptor.find(mutil::arrow);
-    if (arrowPos == std::string::npos) {
-        throw std::invalid_argument(fmt::format(
-                "the descriptor must contain an arrow (\"{}\") to indicate lhs and rhs.", mutil::arrow
-        ));
-    }
-    if (descriptor.find(mutil::arrow, arrowPos + 1) != std::string::npos) {
-        throw std::invalid_argument(fmt::format(
-                "the descriptor must not contain more than one arrow (\"{}\").", mutil::arrow
-        ));
-    }
-    auto lhs = descriptor.substr(0, arrowPos);
-    auto rhs = descriptor.substr(arrowPos + std::strlen(mutil::arrow), std::string::npos);
+      parse_descriptor(descriptor, reaction);
+      return reaction;
+  }
 
-    rutil::str::trim(lhs);
-    rutil::str::trim(rhs);
+  SpatialTopologyReaction STRParser::parse(const std::string &descriptor,
+                                           std::function<scalar(const GraphTopology &, const GraphTopology&)> rate_func,
+                                           scalar radius) const {
+      SpatialTopologyReaction reaction;
+      reaction._rate_is_const = false;
+      reaction._rate_function = std::move(rate_func);
+      reaction._radius = radius;
 
-    std::string name;
-    {
-        auto colonPos = lhs.find(':');
-        if (colonPos == std::string::npos) {
-            throw std::invalid_argument("The descriptor did not contain a colon ':' to specify the end of the name.");
-        }
-        name = rutil::str::trim_copy(lhs.substr(0, colonPos));
-        lhs = rutil::str::trim_copy(lhs.substr(colonPos + 1, std::string::npos));
-    }
-    reaction._name = name;
+      parse_descriptor(descriptor, reaction);
+      return reaction;
+  }
 
-    static std::regex particleTypeRegex(R"(\(([^\)]*)\))");
-    static std::regex topologyTypeRegex(R"([^(]*)");
+  void STRParser::parse_descriptor(const std::string &descriptor, SpatialTopologyReaction &reaction) const {
+      namespace mutil = readdy::model::util;
+      namespace rutil = readdy::util;
 
-    static auto getTop = [](const std::string &s) {
-        std::smatch topMatch;
-        if (std::regex_search(s, topMatch, topologyTypeRegex)) {
-            return rutil::str::trim_copy(topMatch.str());
-        }
-        throw std::invalid_argument(fmt::format("The term \"{}\" did not contain a topology type.", s));
-    };
-    static auto getParticleType = [](const std::string &s) {
-        std::smatch ptMatch;
-        if (std::regex_search(s, ptMatch, particleTypeRegex)) {
-            auto pt = rutil::str::trim_copy(ptMatch.str());
-            return rutil::str::trim_copy(pt.substr(1, pt.size() - 2));
-        }
-        throw std::invalid_argument(fmt::format("The term \"{}\" did not contain a particle type.", s));
-    };
+      log::trace("begin parsing \"{}\"", descriptor);
+      auto arrowPos = descriptor.find(mutil::arrow);
+      if (arrowPos == std::string::npos) {
+          throw std::invalid_argument(fmt::format(
+                  "the descriptor must contain an arrow (\"{}\") to indicate lhs and rhs.", mutil::arrow
+          ));
+      }
+      if (descriptor.find(mutil::arrow, arrowPos + 1) != std::string::npos) {
+          throw std::invalid_argument(fmt::format(
+                  "the descriptor must not contain more than one arrow (\"{}\").", mutil::arrow
+          ));
+      }
+      auto lhs = descriptor.substr(0, arrowPos);
+      auto rhs = descriptor.substr(arrowPos + std::strlen(mutil::arrow), std::string::npos);
 
-    static auto treatTerm = [](const std::string &s) {
-        return std::make_tuple(getParticleType(s), getTop(s));
-    };
+      rutil::str::trim(lhs);
+      rutil::str::trim(rhs);
 
-    static auto treatSide = [](const std::string &s) {
-        auto plusPos = s.find('+');
-        if (plusPos == std::string::npos) {
-            throw std::invalid_argument("The left hand side of the topology reaction did not contain a '+'.");
-        }
-        auto educt1 = rutil::str::trim_copy(s.substr(0, plusPos));
-        auto educt2 = rutil::str::trim_copy(s.substr(plusPos + 1, std::string::npos));
+      std::string name;
+      {
+          auto colonPos = lhs.find(':');
+          if (colonPos == std::string::npos) {
+              throw std::invalid_argument("The descriptor did not contain a colon ':' to specify the end of the name.");
+          }
+          name = rutil::str::trim_copy(lhs.substr(0, colonPos));
+          lhs = rutil::str::trim_copy(lhs.substr(colonPos + 1, std::string::npos));
+      }
+      reaction._name = name;
 
-        std::string t1, t2, p1, p2;
-        std::tie(p1, t1) = treatTerm(educt1);
-        std::tie(p2, t2) = treatTerm(educt2);
+      static std::regex particleTypeRegex(R"(\(([^\)]*)\))");
+      static std::regex topologyTypeRegex(R"([^(]*)");
 
-        return std::make_tuple(p1, t1, p2, t2);
-    };
+      static auto getTop = [](const std::string &s) {
+          std::smatch topMatch;
+          if (std::regex_search(s, topMatch, topologyTypeRegex)) {
+              return rutil::str::trim_copy(topMatch.str());
+          }
+          throw std::invalid_argument(fmt::format("The term \"{}\" did not contain a topology type.", s));
+      };
+      static auto getParticleType = [](const std::string &s) {
+          std::smatch ptMatch;
+          if (std::regex_search(s, ptMatch, particleTypeRegex)) {
+              auto pt = rutil::str::trim_copy(ptMatch.str());
+              return rutil::str::trim_copy(pt.substr(1, pt.size() - 2));
+          }
+          throw std::invalid_argument(fmt::format("The term \"{}\" did not contain a particle type.", s));
+      };
 
-    std::string lhs_p1, lhs_t1, lhs_p2, lhs_t2;
-    {
-        std::tie(lhs_p1, lhs_t1, lhs_p2, lhs_t2) = treatSide(lhs);
-    }
+      static auto treatTerm = [](const std::string &s) {
+          return std::make_tuple(getParticleType(s), getTop(s));
+      };
 
-    std::string rhs_p1, rhs_t1, rhs_p2, rhs_t2;
-    bool rhs_fusion {false};
-    {
-        auto plusPos = rhs.find('+');
-        rhs_fusion = plusPos == std::string::npos;
-        if (plusPos == std::string::npos) {
-            // fusion type
-            std::string fuse;
-            std::tie(fuse, rhs_t1) = treatTerm(rhs);
-            rhs_t2 = "";
+      static auto treatSide = [](const std::string &s) {
+          auto plusPos = s.find('+');
+          if (plusPos == std::string::npos) {
+              throw std::invalid_argument("The left hand side of the topology reaction did not contain a '+'.");
+          }
+          auto educt1 = rutil::str::trim_copy(s.substr(0, plusPos));
+          auto educt2 = rutil::str::trim_copy(s.substr(plusPos + 1, std::string::npos));
 
-            auto separatorPos = fuse.find(mutil::bond);
-            if (separatorPos == std::string::npos) {
-                throw std::invalid_argument(fmt::format(
-                        "The right-hand side was of fusion type but there was no bond \"{}\" defined.", mutil::bond
-                ));
-            }
+          std::string t1, t2, p1, p2;
+          std::tie(p1, t1) = treatTerm(educt1);
+          std::tie(p2, t2) = treatTerm(educt2);
 
-            rhs_p1 = rutil::str::trim_copy(fuse.substr(0, separatorPos));
-            rhs_p2 = rutil::str::trim_copy(fuse.substr(separatorPos + std::strlen(mutil::bond), std::string::npos));
-        } else {
-            // enzymatic type
-            std::tie(rhs_p1, rhs_t1, rhs_p2, rhs_t2) = treatSide(rhs);
-        }
+          return std::make_tuple(p1, t1, p2, t2);
+      };
 
-        log::trace(R"(got lhs with toplogies "{}" and "{}", particle types "{}" and "{}")", lhs_t1, lhs_t2, lhs_p1,
-                   lhs_p2);
-        log::trace(R"(got rhs with topologies "{}" and "{}", particles "{}" and "{}")", rhs_t1, rhs_t2, rhs_p1, rhs_p2);
-    }
+      std::string lhs_p1, lhs_t1, lhs_p2, lhs_t2;
+      {
+          std::tie(lhs_p1, lhs_t1, lhs_p2, lhs_t2) = treatSide(lhs);
+      }
 
-    const auto &particle_types = _topology_registry.get().particleTypeRegistry();
+      std::string rhs_p1, rhs_t1, rhs_p2, rhs_t2;
+      bool rhs_fusion {false};
+      {
+          auto plusPos = rhs.find('+');
+          rhs_fusion = plusPos == std::string::npos;
+          if (plusPos == std::string::npos) {
+              // fusion type
+              std::string fuse;
+              std::tie(fuse, rhs_t1) = treatTerm(rhs);
+              rhs_t2 = "";
 
-    if(lhs_t2.empty()) {
-        // we are in the topology-particle case
-        reaction._top_types = std::make_tuple(_topology_registry.get().idOf(lhs_t1), EmptyTopologyId);
-        reaction._types = std::make_tuple(particle_types.idOf(lhs_p1), particle_types.idOf(lhs_p2));
-        reaction._types_to = std::make_tuple(particle_types.idOf(rhs_p1), particle_types.idOf(rhs_p2));
-        reaction._top_types_to = std::make_tuple(_topology_registry.get().idOf(rhs_t1), EmptyTopologyId);
-        if(rhs_fusion) {
-            // we are in the fusion case
-            reaction._mode = STRMode::TP_FUSION;
-        } else {
-            // we are in the enzymatic case
-            reaction._mode = STRMode::TP_ENZYMATIC;
-        }
-    } else {
-        // we are in the topology-topology case
-        reaction._top_types = std::make_tuple(_topology_registry.get().idOf(lhs_t1),
-                                              _topology_registry.get().idOf(lhs_t2));
-        reaction._types = std::make_tuple(particle_types.idOf(lhs_p1), particle_types.idOf(lhs_p2));
-        reaction._types_to = std::make_tuple(particle_types.idOf(rhs_p1), particle_types.idOf(rhs_p2));
-        if(rhs_fusion) {
-	  // we are in the fusion case
-	  std::smatch option_match;
-	  std::regex option_rx(R"(\[(.*?)\])");
-	  // check for options
-	  if(std::regex_search(rhs, option_match, option_rx)) {
-	    auto option_str = option_match.str();
-	    std::vector<std::string> options = parse_options(
-	      option_str.substr(1, option_str.length()-2)
-	    );
-	    if (!has_option_allow_self(options)) {
-	      throw std::runtime_error("Option \"self=true\" is missing. This option is currently required for all valid options. If you don't want to allow self fusion, ommit the option block (in square brackets).");
-	    }
-	    reaction._mode = STRMode::TT_FUSION_ALLOW_SELF;	    
-	    int d = get_distance(options);
-	    if (d == -1) reaction._min_graph_distance = 0;
-	    else reaction._min_graph_distance = (unsigned) d;	    
-	  } else {
-	    reaction._mode = STRMode::TT_FUSION;
-	  }
-	  reaction._top_types_to = std::make_tuple(_topology_registry.get().idOf(rhs_t1), EmptyTopologyId);
-        } else {
-	  // we are in the enzymatic case
-	  reaction._mode = STRMode::TT_ENZYMATIC;
-	  reaction._top_types_to = std::make_tuple(_topology_registry.get().idOf(rhs_t1),
-						   _topology_registry.get().idOf(rhs_t2));
-        }
-    }
+              auto separatorPos = fuse.find(mutil::bond);
+              if (separatorPos == std::string::npos) {
+                  throw std::invalid_argument(fmt::format(
+                          "The right-hand side was of fusion type but there was no bond \"{}\" defined.", mutil::bond
+                  ));
+              }
 
-    return reaction;
+              rhs_p1 = rutil::str::trim_copy(fuse.substr(0, separatorPos));
+              rhs_p2 = rutil::str::trim_copy(fuse.substr(separatorPos + std::strlen(mutil::bond), std::string::npos));
+          } else {
+              // enzymatic type
+              std::tie(rhs_p1, rhs_t1, rhs_p2, rhs_t2) = treatSide(rhs);
+          }
+
+          log::trace(R"(got lhs with toplogies "{}" and "{}", particle types "{}" and "{}")", lhs_t1, lhs_t2, lhs_p1,
+                     lhs_p2);
+          log::trace(R"(got rhs with topologies "{}" and "{}", particles "{}" and "{}")", rhs_t1, rhs_t2, rhs_p1, rhs_p2);
+      }
+
+      const auto &particle_types = _topology_registry.get().particleTypeRegistry();
+
+      if(lhs_t2.empty()) {
+          // we are in the topology-particle case
+          reaction._top_types = std::make_tuple(_topology_registry.get().idOf(lhs_t1), EmptyTopologyId);
+          reaction._types = std::make_tuple(particle_types.idOf(lhs_p1), particle_types.idOf(lhs_p2));
+          reaction._types_to = std::make_tuple(particle_types.idOf(rhs_p1), particle_types.idOf(rhs_p2));
+          reaction._top_types_to = std::make_tuple(_topology_registry.get().idOf(rhs_t1), EmptyTopologyId);
+          if(rhs_fusion) {
+              // we are in the fusion case
+              reaction._mode = STRMode::TP_FUSION;
+          } else {
+              // we are in the enzymatic case
+              reaction._mode = STRMode::TP_ENZYMATIC;
+          }
+      } else {
+          // we are in the topology-topology case
+          reaction._top_types = std::make_tuple(_topology_registry.get().idOf(lhs_t1),
+                                                _topology_registry.get().idOf(lhs_t2));
+          reaction._types = std::make_tuple(particle_types.idOf(lhs_p1), particle_types.idOf(lhs_p2));
+          reaction._types_to = std::make_tuple(particle_types.idOf(rhs_p1), particle_types.idOf(rhs_p2));
+          if(rhs_fusion) {
+              // we are in the fusion case
+              std::smatch option_match;
+              std::regex option_rx(R"(\[(.*?)\])");
+              // check for options
+              if(std::regex_search(rhs, option_match, option_rx)) {
+                  auto option_str = option_match.str();
+                  std::vector<std::string> options = parse_options(
+                          option_str.substr(1, option_str.length()-2)
+                  );
+                  if (!has_option_allow_self(options)) {
+                      throw std::runtime_error("Option \"self=true\" is missing. This option is currently required for all valid options. If you don't want to allow self fusion, ommit the option block (in square brackets).");
+                  }
+                  reaction._mode = STRMode::TT_FUSION_ALLOW_SELF;
+                  int d = get_distance(options);
+                  if (d == -1) reaction._min_graph_distance = 0;
+                  else reaction._min_graph_distance = (unsigned) d;
+              } else {
+                  reaction._mode = STRMode::TT_FUSION;
+              }
+              reaction._top_types_to = std::make_tuple(_topology_registry.get().idOf(rhs_t1), EmptyTopologyId);
+          } else {
+              // we are in the enzymatic case
+              reaction._mode = STRMode::TT_ENZYMATIC;
+              reaction._top_types_to = std::make_tuple(_topology_registry.get().idOf(rhs_t1),
+                                                       _topology_registry.get().idOf(rhs_t2));
+          }
+      }
   }
 
   std::vector<std::string> STRParser::parse_options(const std::string &option_str) const {

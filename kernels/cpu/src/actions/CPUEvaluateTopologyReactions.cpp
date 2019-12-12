@@ -270,8 +270,6 @@ CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReacti
                                 if (distSquared < reaction.radius() * reaction.radius()) {
                                     TREvent event{};
                                     event.reactionId = reaction.id();
-                                    event.rate = reaction.rate();
-                                    event.cumulativeRate = event.rate + current_cumulative_rate;
                                     current_cumulative_rate = event.cumulativeRate;
                                     if (hasEntryTop && !hasNeighborTop) {
                                         // entry is a topology, neighbor an ordinary particle
@@ -280,6 +278,8 @@ CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReacti
                                         event.t2 = neighbor.type;
                                         event.idx1 = *itParticle;
                                         event.idx2 = neighborIndex;
+                                        event.rate = reaction.rate();
+                                        event.cumulativeRate = event.rate + current_cumulative_rate;
                                     } else if (!hasEntryTop && hasNeighborTop) {
                                         // neighbor is a topology, entry an ordinary particle
                                         event.topology_idx = static_cast<std::size_t>(neighbor.topology_index);
@@ -287,6 +287,8 @@ CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReacti
                                         event.t2 = entry.type;
                                         event.idx1 = neighborIndex;
                                         event.idx2 = *itParticle;
+                                        event.rate = reaction.rate();
+                                        event.cumulativeRate = event.rate + current_cumulative_rate;
                                     } else if (hasEntryTop && hasNeighborTop) {
                                         // this is a topology-topology fusion
                                         event.topology_idx = static_cast<std::size_t>(entry.topology_index);
@@ -294,7 +296,11 @@ CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReacti
                                         event.t1 = entry.type;
                                         event.t2 = neighbor.type;
                                         event.idx1 = *itParticle;
-                                        event.idx2 = neighborIndex;
+                                        event.idx2 = neighborIndex;event.rate = reaction.rate(
+                                                *topologies.at(event.topology_idx),
+                                                *topologies.at(event.topology_idx2)
+                                        );
+                                        event.cumulativeRate = event.rate + current_cumulative_rate;
                                     } else {
                                         log::critical("got no topology for topology-fusion");
                                     }

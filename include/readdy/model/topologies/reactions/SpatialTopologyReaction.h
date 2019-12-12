@@ -50,8 +50,11 @@
 #include <readdy/model/topologies/TopologyParticleTypeMap.h>
 #include <readdy/common/string.h>
 
-namespace readdy::model::top {
+namespace readdy::model {
+class Particle;
+namespace top {
 class TopologyRegistry;
+class GraphTopology;
 namespace reactions {
 
 /**
@@ -67,12 +70,35 @@ class STRParser;
 
 class SpatialTopologyReaction {
 public:
+    /**
+     * rate function type, yielding a rate
+     */
+
+    using rate_function = std::function<scalar(const GraphTopology &,
+                                               const GraphTopology &)>;
+
 
     SpatialTopologyReaction(std::string name, util::particle_type_pair types, topology_type_pair top_types,
                             util::particle_type_pair types_to, topology_type_pair top_types_to, scalar rate,
                             scalar radius, STRMode mode)
             : _name(std::move(name)), _types(std::move(types)), _types_to(std::move(types_to)), _rate(rate),
-              _radius(radius), _mode(mode), _top_types(std::move(top_types)), _top_types_to(std::move(top_types_to)) {};
+              _radius(radius), _mode(mode), _top_types(std::move(top_types)), _top_types_to(std::move(top_types_to)),
+              _rate_is_const(true)
+    {
+        if (_rate <=0) {
+            throw std::invalid_argument(fmt::format("The rate of an structural topology reaction ({}) "
+                                                    "should always be positive", _name));
+        }
+    };
+
+    SpatialTopologyReaction(std::string name, util::particle_type_pair types, topology_type_pair top_types,
+                            util::particle_type_pair types_to, topology_type_pair top_types_to,
+                            rate_function rate_func,
+                            scalar radius, STRMode mode)
+            : _name(std::move(name)), _types(std::move(types)), _types_to(std::move(types_to)),
+              _rate_function(std::move(rate_func)),
+              _radius(radius), _mode(mode), _top_types(std::move(top_types)), _top_types_to(std::move(top_types_to)),
+              _rate_is_const(false) {};
 
     ~SpatialTopologyReaction() = default;
 
@@ -144,11 +170,24 @@ public:
       return _mode == STRMode::TT_FUSION || _mode == STRMode::TT_FUSION_ALLOW_SELF || _mode == STRMode::TP_FUSION;
     }
 
-    const scalar rate() const {
-        return _rate;
+    [[nodiscard]] scalar rate(const GraphTopology &topology1,
+                              const GraphTopology &topology2) const {
+        if (_rate_is_const) return _rate;
+        scalar current_rate = _rate_function(topology1, topology2);
+        if (current_rate < 0.0) {
+            throw std::runtime_error(
+                    fmt::format("Your rate function for reaction {} produced a rate "
+                                "smaller than 0, make sure rate functions only return values >= 0.",
+                                _name)
+            );
+        }
+        return current_rate;
     }
 
-    scalar &rate() {
+    [[nodiscard]] scalar rate() const {
+        if (!_rate_is_const) {
+            throw std::runtime_error("rate is not static, use method rate with two topologies as arguments");
+        }
         return _rate;
     }
 
@@ -190,6 +229,8 @@ private:
     scalar _radius{0};
     STRMode _mode{STRMode::TP_ENZYMATIC};
     unsigned _min_graph_distance{0};
+    bool _rate_is_const{true};
+    rate_function _rate_function;
 };
 
 class STRParser {
@@ -217,6 +258,14 @@ public:
      */
     SpatialTopologyReaction parse(const std::string &descriptor, scalar rate, scalar radius) const;
 
+    SpatialTopologyReaction parse(const std::string &descriptor,
+                                  std::function<scalar(const GraphTopology &,
+                                                       const GraphTopology &)> rate_func,
+                                  scalar radius) const;
+
+    void parse_descriptor(const std::string &descriptor, SpatialTopologyReaction &reaction) const;
+
+
     /**
      * Take complete option string and split at commata into single option strings.
      */
@@ -239,5 +288,6 @@ private:
     std::reference_wrapper<const TopologyRegistry> _topology_registry;
 };
   
+}
 }
 }
