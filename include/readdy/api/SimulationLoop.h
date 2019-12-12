@@ -173,7 +173,7 @@ public:
 
     void runTopologyReactions() {
       if (_topologyReactions) {
-	_topologyReactions->perform();
+          _topologyReactions->perform();
       }
     }
 

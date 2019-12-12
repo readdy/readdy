@@ -90,7 +90,6 @@ bool performReactionEvent<false>(const scalar rate, const scalar timeStep) {
 }
 
 void CPUEvaluateTopologyReactions::perform() {
-  std::cerr << "perform called" << std::endl;
     auto &model = kernel->getCPUKernelStateModel();
     const auto &context = kernel->context();
     auto &topologies = model.topologies();
@@ -193,7 +192,6 @@ void CPUEvaluateTopologyReactions::handleStructuralReactionEvent(CPUStateModel::
 }
 
 CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReactions::gatherEvents() {
-  std::cerr << "gatherEvents called" << std::endl;
     topology_reaction_events events;
     const auto &topology_types = kernel->context().topologyRegistry();
     {
@@ -261,8 +259,7 @@ CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReacti
                             const auto &reactions = top_registry.spatialReactionsByType(entry.type, tt1,
                                                                                         neighbor.type, tt2);
                             for (const auto &reaction : reactions) {
-			      std::cerr << "some reaction" << std::endl;
-                                if (!reaction.allow_self_connection() &&
+			                    if (!reaction.allow_self_connection() &&
                                     entry.topology_index == neighbor.topology_index) {
                                     ++reaction_index;
                                     continue;
@@ -300,16 +297,14 @@ CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReacti
                                     }				    
 				    if (reaction.allow_self_connection() &&
 					entry.topology_index == neighbor.topology_index) {
-				      log::warn(R"(in self fusion case)", reaction.min_graph_distance());
 				      const auto& topol = model.topologies().at(static_cast<std::size_t>(neighbor.topology_index));
 										// auto topol = topologies.at(event.topology_idx);
 				      const readdy::model::top::graph::Graph& gr = topol->graph();
 				      const readdy::model::top::graph::Graph::vertex_ref& v1 = topol->vertexForParticle(event.idx1);
 				      const readdy::model::top::graph::Graph::vertex_ref& v2 = topol->vertexForParticle(event.idx2);
 				      if (gr.areConnectedWithNOrLessEdges(reaction.min_graph_distance(), *v1, *v2)) {
-					log::warn(R"(skipping, not connected with < {} edges)", reaction.min_graph_distance());
-					++reaction_index;
-					continue;
+                          ++reaction_index;
+                          continue;
 				      }
 				    }
                                     event.reaction_idx = reaction_index;
