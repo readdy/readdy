@@ -208,6 +208,8 @@ public:
         }
     }
 
+    bool areConnectedWithNOrLessEdges(std::size_t n, const Vertex& v1, const Vertex& v2) const;
+
     bool isConnected() const;
 
     const std::vector<Edge> &edges() const {

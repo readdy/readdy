@@ -182,7 +182,6 @@ TEST_CASE("Test topology graphs") {
                 REQUIRE(containsTuple(quadruples, std::make_tuple(c, d, a, b)));
             }
         }
-
         SECTION("Find N tuples in triangle") {
             graph.addVertex(2, 0);
 
@@ -213,6 +212,34 @@ TEST_CASE("Test topology graphs") {
             REQUIRE(containsTuple(triples, std::make_tuple(b, c, a)));
             REQUIRE(containsTuple(triples, std::make_tuple(c, a, b)));
         }
+	SECTION("Are connected with N or less edges") {
+	  for (unsigned i=2; i<7; i++) {
+	    graph.addVertex(i, 0);
+	  }
+	  // setup linear graph
+	  for (unsigned i=0; i<6; i++) {
+	    graph.addEdge(std::next(graph.firstVertex(), i), std::next(graph.firstVertex(), i+1));
+	  }
+	  for (unsigned i=1; i<7; i++) {
+	    REQUIRE( graph.areConnectedWithNOrLessEdges(i, *(graph.firstVertex()),
+							*(std::next(graph.firstVertex(), i))) );
+	    REQUIRE( !graph.areConnectedWithNOrLessEdges(i-1, *(graph.firstVertex()),
+							 *(std::next(graph.firstVertex(), i))) );
+	  }
+	  // now connect both ends of the graph
+	  graph.addEdge(std::next(graph.firstVertex(), 6), graph.firstVertex());
+	  for (unsigned i=0; i<5; i++) {
+	    REQUIRE( graph.areConnectedWithNOrLessEdges(2, *(std::next(graph.firstVertex(), i)),
+							*std::next(graph.firstVertex(), i+2)) );
+	    REQUIRE( graph.areConnectedWithNOrLessEdges(2, *std::next(graph.firstVertex(), i),
+							*std::next(graph.firstVertex(),(i-2)%7)) );
+	    REQUIRE( !graph.areConnectedWithNOrLessEdges(1, *(std::next(graph.firstVertex(), i)),
+							 *std::next(graph.firstVertex(), i+2)) );
+	    REQUIRE( !graph.areConnectedWithNOrLessEdges(1, *std::next(graph.firstVertex(), i),
+							 *std::next(graph.firstVertex(),(i-2)%7)) );
+		     
+	  }
+	}
     }
 
     SECTION("Append particle") {

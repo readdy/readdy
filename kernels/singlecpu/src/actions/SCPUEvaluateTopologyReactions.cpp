@@ -239,8 +239,7 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
                                                 events.push_back(event);
                                             }
                                             break;
-                                        case readdy::model::top::reactions::STRMode::TT_ENZYMATIC: // fall through
-                                        case readdy::model::top::reactions::STRMode::TT_FUSION_ALLOW_SELF:
+                                        case readdy::model::top::reactions::STRMode::TT_ENZYMATIC:
                                             if(tidx1 >= 0 && tidx2 >= 0) {
                                                 event.topology_idx = static_cast<std::size_t>(tidx1);
                                                 event.topology_idx2 = tidx2;
@@ -254,7 +253,32 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
                                                 events.push_back(event);
                                             }
                                             break;
-                                        case readdy::model::top::reactions::STRMode::TP_ENZYMATIC: // fall through
+				    case readdy::model::top::reactions::STRMode::TT_FUSION_ALLOW_SELF:
+				      if (tidx1 >= 0 && tidx2 >= 0) {
+					const SCPUStateModel::topologies_vec& topologies = stateModel.topologies();
+					if (tidx1 == tidx2) {
+					  const std::unique_ptr<readdy::model::top::GraphTopology> &t1 = topologies.at(static_cast<std::size_t>(tidx1));
+					  const readdy::model::top::graph::Graph& gr = t1->graph();
+					  const readdy::model::top::graph::Graph::vertex_ref& v1 = t1->vertexForParticle(pidx);
+					  const readdy::model::top::graph::Graph::vertex_ref& v2 = t1->vertexForParticle(neighborIdx);
+					  bool result = gr.areConnectedWithNOrLessEdges(reaction.min_graph_distance(), *v1, *v2);
+					  if (result) {					    
+					    break;
+					  }				       
+					}
+					event.topology_idx = static_cast<std::size_t>(tidx1);
+					event.topology_idx2 = tidx2;
+					event.t1 = entry.type;
+					event.t2 = neighbor.type;
+					event.idx1 = pidx;
+					event.idx2 = neighborIdx;
+					event.reaction_idx = reaction_index;
+					event.spatial = true;
+					
+					events.push_back(event);
+				      }
+				      break;
+				        case readdy::model::top::reactions::STRMode::TP_ENZYMATIC: // fall through
                                         case readdy::model::top::reactions::STRMode::TP_FUSION:
                                             if (tidx1 >= 0 && tidx2 < 0) {
                                                 event.topology_idx = static_cast<std::size_t>(tidx1);

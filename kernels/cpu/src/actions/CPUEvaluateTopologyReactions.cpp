@@ -259,7 +259,7 @@ CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReacti
                             const auto &reactions = top_registry.spatialReactionsByType(entry.type, tt1,
                                                                                         neighbor.type, tt2);
                             for (const auto &reaction : reactions) {
-                                if (!reaction.allow_self_connection() &&
+			                    if (!reaction.allow_self_connection() &&
                                     entry.topology_index == neighbor.topology_index) {
                                     ++reaction_index;
                                     continue;
@@ -294,7 +294,19 @@ CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReacti
                                         event.idx2 = neighborIndex;
                                     } else {
                                         log::critical("got no topology for topology-fusion");
-                                    }
+                                    }				    
+				    if (reaction.allow_self_connection() &&
+					entry.topology_index == neighbor.topology_index) {
+				      const auto& topol = model.topologies().at(static_cast<std::size_t>(neighbor.topology_index));
+										// auto topol = topologies.at(event.topology_idx);
+				      const readdy::model::top::graph::Graph& gr = topol->graph();
+				      const readdy::model::top::graph::Graph::vertex_ref& v1 = topol->vertexForParticle(event.idx1);
+				      const readdy::model::top::graph::Graph::vertex_ref& v2 = topol->vertexForParticle(event.idx2);
+				      if (gr.areConnectedWithNOrLessEdges(reaction.min_graph_distance(), *v1, *v2)) {
+                          ++reaction_index;
+                          continue;
+				      }
+				    }
                                     event.reaction_idx = reaction_index;
                                     event.spatial = true;
 
