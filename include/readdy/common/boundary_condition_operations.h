@@ -67,10 +67,10 @@ template<typename PBC, int DIM = 3>
     return out;
 }
 
-template<typename Container, typename PBC, int DIM = 3>
+template<typename Container, typename PBC>
 [[nodiscard]] inline Vec3 shortestDifference(const Vec3 &lhs, const Vec3 &rhs, const Container &box, const PBC &periodic) {
     auto dv = rhs - lhs;
-    for (int i = 0; i < DIM; ++i) {
+    for (int i = 0; i < 3; ++i) {
         if (periodic[i]) {
             if (dv[i] > box[i] * .5) dv[i] -= box[i];
             else if (dv[i] <= -box[i] * .5) dv[i] += box[i];
@@ -79,15 +79,15 @@ template<typename Container, typename PBC, int DIM = 3>
     return dv;
 }
 
-template<typename Container, typename PBC, int DIM = 3>
+template<typename Container, typename PBC>
 [[nodiscard]] inline scalar distSquared(const Vec3 &lhs, const Vec3 &rhs, const Container &box, const PBC &periodic) {
-    auto dv = shortestDifference<Container, PBC, DIM>(lhs, rhs, box, periodic);
+    auto dv = shortestDifference<Container, PBC>(lhs, rhs, box, periodic);
     return dv * dv;
 }
 
-template<typename Container, typename PBC, int DIM = 3>
+template<typename Container, typename PBC>
 [[nodiscard]] inline scalar dist(const Vec3 &lhs, const Vec3 &rhs, const Container &box, const PBC &periodic) {
-    return std::sqrt(distSquared<Container, PBC, DIM>(lhs, rhs, box, periodic));
+    return std::sqrt(distSquared<Container, PBC>(lhs, rhs, box, periodic));
 }
 
 }

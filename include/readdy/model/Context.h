@@ -72,11 +72,6 @@ public:
     using PeriodicBoundaryConditions = std::array<bool, 3>;
     using KernelConfiguration = conf::Configuration;
 
-    using fix_pos_fun = std::function<void(Vec3 &)>;
-    using pbc_fun = std::function<Vec3(const Vec3 &)>;
-    using dist_squared_fun = std::function<scalar(const Vec3 &, const Vec3 &)>;
-    using shortest_dist_fun = std::function<Vec3(const Vec3 &, const Vec3 &)>;
-
     const scalar &kBT() const {
         return _kBT;
     }
