@@ -454,7 +454,7 @@ TEMPLATE_TEST_CASE("Break bonds due to pulling", "[!hide][breakbonds][integratio
 
 TEMPLATE_TEST_CASE("Helix grows by spatial topology reactions", "[!hide][integration]", SingleCPU, CPU) {
     GIVEN("An initial polymer B-A-A-...-A-C with helical structure") {
-        std::vector<std::array<readdy::scalar, 3>> initPos23 =
+        std::vector<readdy::Vec3> initPos23 =
                 {{-1.75373831, -2.14809599,  3.09407703},
                 {-0.75373831, -2.14809599,  3.09407703},
                 { 0.13171772, -1.68337282,  3.09407703},
@@ -505,14 +505,11 @@ TEMPLATE_TEST_CASE("Helix grows by spatial topology reactions", "[!hide][integra
             {
                 std::vector<readdy::model::TopologyParticle> topParticles;
                 topParticles.reserve(23);
-                topParticles.emplace_back(initPos23[0][0], initPos23[0][1], initPos23[0][2],
-                                          ctx.particleTypes().idOf("B"));
+                topParticles.emplace_back(initPos23.front(),ctx.particleTypes().idOf("B"));
                 for (std::size_t i = 1; i < initPos23.size() - 1; ++i) {
-                    topParticles.emplace_back(initPos23[i][0], initPos23[i][1], initPos23[i][2],
-                                              ctx.particleTypes().idOf("A"));
+                    topParticles.emplace_back(initPos23[i],ctx.particleTypes().idOf("A"));
                 }
-                topParticles.emplace_back(initPos23[0][0], initPos23[0][1], initPos23[0][2],
-                                          ctx.particleTypes().idOf("C"));
+                topParticles.emplace_back(initPos23.back(),ctx.particleTypes().idOf("C"));
                 auto top = simulation.addTopology("helix", topParticles);
                 auto &graph = top->graph();
                 for (std::size_t i = 0; i < topParticles.size()-1; ++i) {
@@ -529,11 +526,10 @@ TEMPLATE_TEST_CASE("Helix grows by spatial topology reactions", "[!hide][integra
 
             auto obs = simulation.observe().positions(1000, {"B", "C"});
             std::vector<readdy::scalar> distances;
-            auto callback = [&distances, &ctx](std::vector<readdy::Vec3> dist){
-                //std::cout << "CALLBACK" << std::endl;
-                const auto d = readdy::bcs::distSquared(dist.at(0), dist.at(1),
-                                                        ctx.boxSize(), ctx.periodicBoundaryConditions());
-                distances.push_back(std::sqrt(d));
+            auto callback = [&distances, &ctx](const std::vector<readdy::Vec3> &dist){
+                const auto d = readdy::bcs::dist(dist.at(0), dist.at(1), ctx.boxSize(),
+                                                 ctx.periodicBoundaryConditions());
+                distances.push_back(d);
             };
             simulation.registerObservable(std::move(obs), callback);
 
@@ -563,7 +559,7 @@ TEMPLATE_TEST_CASE("Helix grows by spatial topology reactions", "[!hide][integra
 
 TEMPLATE_TEST_CASE("Helix grows by structural topology reactions", "[!hide][integration]", SingleCPU, CPU) {
     GIVEN("An initial polymer B-A-A-...-A-C with helical structure") {
-        std::vector<std::array<readdy::scalar, 3>> initPos23 =
+        std::vector<readdy::Vec3> initPos23 =
                 {{-1.75373831, -2.14809599,  3.09407703},
                  {-0.75373831, -2.14809599,  3.09407703},
                  { 0.13171772, -1.68337282,  3.09407703},
@@ -651,14 +647,11 @@ TEMPLATE_TEST_CASE("Helix grows by structural topology reactions", "[!hide][inte
             {
                 std::vector<readdy::model::TopologyParticle> topParticles;
                 topParticles.reserve(23);
-                topParticles.emplace_back(initPos23[0][0], initPos23[0][1], initPos23[0][2],
-                        ctx.particleTypes().idOf("B"));
+                topParticles.emplace_back(initPos23.front(), ctx.particleTypes().idOf("B"));
                 for (std::size_t i = 1; i < initPos23.size() - 1; ++i) {
-                    topParticles.emplace_back(initPos23[i][0], initPos23[i][1], initPos23[i][2],
-                        ctx.particleTypes().idOf("A"));
+                    topParticles.emplace_back(initPos23[i], ctx.particleTypes().idOf("A"));
                 }
-                topParticles.emplace_back(initPos23[0][0], initPos23[0][1], initPos23[0][2],
-                        ctx.particleTypes().idOf("C"));
+                topParticles.emplace_back(initPos23.back(), ctx.particleTypes().idOf("C"));
                 auto top = simulation.addTopology("helix", topParticles);
                 auto &graph = top->graph();
                 for (std::size_t i = 0; i < topParticles.size()-1; ++i) {
@@ -668,11 +661,10 @@ TEMPLATE_TEST_CASE("Helix grows by structural topology reactions", "[!hide][inte
 
             auto obs = simulation.observe().positions(1000, {"B", "C"});
             std::vector<readdy::scalar> distances;
-            auto callback = [&distances, &ctx](std::vector<readdy::Vec3> dist){
-                //std::cout << "CALLBACK" << std::endl;
-                const auto d = readdy::bcs::distSquared(dist.at(0), dist.at(1),
-                                                        ctx.boxSize(), ctx.periodicBoundaryConditions());
-                distances.push_back(std::sqrt(d));
+            auto callback = [&distances, &ctx](const std::vector<readdy::Vec3> &dist){
+                const auto d = readdy::bcs::dist(dist.at(0), dist.at(1), ctx.boxSize(),
+                                                 ctx.periodicBoundaryConditions());
+                distances.push_back(d);
             };
             simulation.registerObservable(std::move(obs), callback);
 
@@ -699,4 +691,3 @@ TEMPLATE_TEST_CASE("Helix grows by structural topology reactions", "[!hide][inte
         }
     }
 }
-
