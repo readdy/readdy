@@ -187,7 +187,6 @@ void MPIStateModel::addParticles(const std::vector<Particle> &p) {
     if (not util::isRequiredRank(*_domain)) {
         return;
     }
-    // todo test this
     util::Timer timer("MPIStateModel::addParticles");
     // todo use MPI_Scatter
     if (_domain->rank == 0) {

@@ -35,7 +35,8 @@
 
 
 /**
- * « detailed description »
+ * These tests do not need a MPISession and need not be called using mpirun,
+ * because it tests helper objects that do not call MPI functions, e.g. MPIDomain.
  *
  * @file TestMain.cpp
  * @brief « brief description »

@@ -54,8 +54,6 @@
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/kernel/mpi/MPIKernel.h>
 
-TEST_CASE("Integration test", "[mpi]") {
-    auto kernel = std::make_unique<readdy::kernel::mpi::MPIKernel>();
-    auto &ctx = kernel->context();
-
+TEST_CASE("Integration test", "[!hide][mpi]") {
+    // there is nothing here
 }

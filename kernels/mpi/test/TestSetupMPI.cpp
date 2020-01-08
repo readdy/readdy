@@ -34,6 +34,9 @@
 
 /**
  * Test the general workflow of MPI kernel, i.e. set up a simulation with a couple of particles and run it.
+ * A general complication with running MPI tests is that the number of processes is set from the outside via mpirun,
+ * so the tests should be called with a certain minimum amount of workers. Having more workers is OK, some will
+ * just idle. Having less will cause an error because all domains must have a worker.
  *
  * @file TestSetupMPI.cpp
  * @brief « brief description »
@@ -52,8 +55,8 @@ using json = nlohmann::json;
 
 TEST_CASE("Test mpi kernel observe particle number", "[mpi]") {
     if (false) {
-        readdy::Simulation simulation("MPI");
-        auto &ctx = simulation.context();
+        readdy::model::Context ctx;
+        readdy::Simulation simulation("MPI", ctx);
 
         REQUIRE(simulation.selectedKernelType() == "MPI");
 

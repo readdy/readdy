@@ -50,7 +50,7 @@
 
 using json = nlohmann::json;
 
-TEST_CASE("Test weak scaling distribute particles and gather them again ", "[mpi]") {
+TEST_CASE("Test weak scaling distribute particles and gather them again ", "[!hide][mpi]") {
     int worldSize;
     MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
     std::size_t nWorkers = worldSize - 1;

@@ -53,7 +53,7 @@ class MPIDomain {
     /** Members which the master rank also knows */
 public:
     const int rank;
-    const int worldSize; // todo worldSize can actually be static
+    const int worldSize;
     const scalar haloThickness;
 
 private:
@@ -206,7 +206,7 @@ public:
 
     int rankOfPosition(const Vec3 &pos) const {
         const auto ijk = ijkOfPosition(pos);
-        return _domainIndex(ijk[0], ijk[1], ijk[2]) + 1;
+        return _domainIndex(ijk[0], ijk[1], ijk[2]) + 1; // + 1 because master rank = 0
     };
 
     bool isInDomainCore(const Vec3 &pos) const {

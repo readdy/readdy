@@ -63,8 +63,6 @@ public:
     MPISession(int argc, char **argv) {
         MPI_Init(&argc, &argv);
 
-
-
         MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
         MPI_Comm_rank(MPI_COMM_WORLD, &rank);
         MPI_Get_processor_name(processorName, &nameLen);
@@ -76,9 +74,6 @@ public:
     }
 
     ~MPISession() {
-        //std::string dir {"/storage/mi/chrisfr/workspace/data/readdympi/nonblock/n1/"};
-        //std::string filename {"rank_" + std::to_string(rank)};
-        //readdy::kernel::mpi::util::Timer::writePerfToFile(dir + filename);
         MPI_Finalize();
     }
 
