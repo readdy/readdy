@@ -9,6 +9,7 @@
 
 #include <readdy/testing/KernelTest.h>
 #include <readdy/testing/Utils.h>
+#include <readdy/common/boundary_condition_operations.h>
 
 using namespace readdytesting::kernel;
 
@@ -446,6 +447,246 @@ TEMPLATE_TEST_CASE("Break bonds due to pulling", "[!hide][breakbonds][integratio
                     CHECK(v.neighbors().size() <= 2);
                     CHECK(!v.neighbors().empty());
                 }
+            }
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("Helix grows by spatial topology reactions", "[!hide][integration]", SingleCPU, CPU) {
+    GIVEN("An initial polymer B-A-A-...-A-C with helical structure") {
+        std::vector<readdy::Vec3> initPos23 =
+                {{-1.75373831, -2.14809599,  3.09407703},
+                {-0.75373831, -2.14809599,  3.09407703},
+                { 0.13171772, -1.68337282,  3.09407703},
+                { 0.7030635 , -0.86664044,  3.0133787 },
+                { 0.8416891 ,  0.09866305,  2.79208227},
+                { 0.54051056,  0.97080799,  2.40652464},
+                {-0.09420439,  1.53207468,  1.87537811},
+                {-0.87022492,  1.64486677,  1.25483795},
+                {-1.55890118,  1.2871743 ,  0.62413906},
+                {-1.95409477,  0.55824634,  0.06513454},
+                {-1.92530725, -0.34698867, -0.35880043},
+                {-1.45131376, -1.18816226, -0.61910247},
+                {-0.62563341, -1.74141669, -0.72938167},
+                { 0.36757365, -1.85710024, -0.74191387},
+                { 1.30097023, -1.49833734, -0.73416743},
+                { 1.96263423, -0.75053257, -0.7888372 },
+                { 2.21067781,  0.20064083, -0.97253135},
+                { 2.00981645,  1.11709499, -1.3186043 },
+                { 1.44046291,  1.76969029, -1.81856021},
+                { 0.67800228,  1.99729206, -2.42424266},
+                {-0.05241042,  1.74830016, -3.06024607},
+                {-0.53387995,  1.09394804, -3.64335016},
+                {-0.61367178,  0.20994353, -4.10396854}};
+
+        readdy::scalar angle = 2.* M_PI / 13;
+        readdy::scalar dihedral = -10. * M_PI / 180.;
+
+        readdy::model::Context ctx;
+        ctx.boxSize() = {50., 50., 50.};
+        ctx.particleTypes().add("A", 0.1, readdy::model::particleflavor::TOPOLOGY);
+        ctx.particleTypes().add("B", 0.1, readdy::model::particleflavor::TOPOLOGY);
+        ctx.particleTypes().add("C", 0.1, readdy::model::particleflavor::TOPOLOGY);
+        ctx.particleTypes().add("S", 1000., readdy::model::particleflavor::TOPOLOGY);
+        ctx.topologyRegistry().addType("helix");
+        ctx.topologyRegistry().configureBondPotential("A","A",{1000., 1.});
+        ctx.topologyRegistry().configureBondPotential("B","A",{1000., 1.});
+        ctx.topologyRegistry().configureBondPotential("C","A",{1000., 1.});
+        ctx.topologyRegistry().configureAnglePotential("A", "A", "A", {1000., M_PI - angle});
+        ctx.topologyRegistry().configureAnglePotential("B", "A", "A", {1000., M_PI - angle});
+        ctx.topologyRegistry().configureAnglePotential("A", "A", "C", {1000., M_PI - angle});
+        ctx.topologyRegistry().configureTorsionPotential("A", "A", "A", "A", {1000., 1., -dihedral});
+        ctx.topologyRegistry().configureTorsionPotential("B", "A", "A", "A", {1000., 1., -dihedral});
+        ctx.topologyRegistry().configureTorsionPotential("A", "A", "A", "C", {1000., 1., -dihedral});
+        ctx.topologyRegistry().addSpatialReaction("Fusion: helix(C)+(S) -> helix(A--C)", 10000., 10.);
+
+        readdy::Simulation simulation(create<TestType>(), ctx);
+        WHEN("the helix elongates by attaching 20 segments from substrate particles") {
+            {
+                std::vector<readdy::model::TopologyParticle> topParticles;
+                topParticles.reserve(23);
+                topParticles.emplace_back(initPos23.front(),ctx.particleTypes().idOf("B"));
+                for (std::size_t i = 1; i < initPos23.size() - 1; ++i) {
+                    topParticles.emplace_back(initPos23[i],ctx.particleTypes().idOf("A"));
+                }
+                topParticles.emplace_back(initPos23.back(),ctx.particleTypes().idOf("C"));
+                auto top = simulation.addTopology("helix", topParticles);
+                auto &graph = top->graph();
+                for (std::size_t i = 0; i < topParticles.size()-1; ++i) {
+                    graph.addEdgeBetweenParticles(i, i + 1);
+                }
+
+                for (std::size_t i=0; i<20; ++i) {
+                    readdy::scalar x = readdy::model::rnd::uniform_real(-25.,25.);
+                    readdy::scalar y = readdy::model::rnd::uniform_real(-25.,25.);
+                    readdy::scalar z = readdy::model::rnd::uniform_real(-25.,25.);
+                    simulation.addParticle("S", x, y, z);
+                }
+            }
+
+            auto obs = simulation.observe().positions(1000, {"B", "C"});
+            std::vector<readdy::scalar> distances;
+            auto callback = [&distances, &ctx](const std::vector<readdy::Vec3> &dist){
+                const auto d = readdy::bcs::dist(dist.at(0), dist.at(1), ctx.boxSize(),
+                                                 ctx.periodicBoundaryConditions());
+                distances.push_back(d);
+            };
+            simulation.registerObservable(std::move(obs), callback);
+
+            std::size_t nSteps = 2400000;
+            readdy::scalar dt = 4e-5;
+            simulation.run(nSteps, dt);
+
+            REQUIRE(distances.size() > 0);
+
+            THEN("the average end-to-end distance after absorption of all substrate particles is roughly ~14.4") {
+                // extract recorded distances after a certain number of steps
+                // when all substrates are most likely absorbed
+                auto n = distances.size();
+                auto first = distances.begin() + 2*n/10; // i.e. after 20% of the time
+                std::vector<readdy::scalar> distances2(first, distances.end());
+                auto n2 = distances2.size();
+                auto mean = std::accumulate(distances2.begin(), distances2.end(), 0.);
+                mean /= static_cast<readdy::scalar>(n2);
+                readdy::scalar expected = 14.434;
+                auto relativeErr = std::abs(mean - expected) / expected;
+                // allow for 5% deviation. Usually the observed mean is expected to deviate about ~0.5%
+                CHECK(relativeErr < 0.05);
+            }
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("Helix grows by structural topology reactions", "[!hide][integration]", SingleCPU, CPU) {
+    GIVEN("An initial polymer B-A-A-...-A-C with helical structure") {
+        std::vector<readdy::Vec3> initPos23 =
+                {{-1.75373831, -2.14809599,  3.09407703},
+                 {-0.75373831, -2.14809599,  3.09407703},
+                 { 0.13171772, -1.68337282,  3.09407703},
+                 { 0.7030635 , -0.86664044,  3.0133787 },
+                 { 0.8416891 ,  0.09866305,  2.79208227},
+                 { 0.54051056,  0.97080799,  2.40652464},
+                 {-0.09420439,  1.53207468,  1.87537811},
+                 {-0.87022492,  1.64486677,  1.25483795},
+                 {-1.55890118,  1.2871743 ,  0.62413906},
+                 {-1.95409477,  0.55824634,  0.06513454},
+                 {-1.92530725, -0.34698867, -0.35880043},
+                 {-1.45131376, -1.18816226, -0.61910247},
+                 {-0.62563341, -1.74141669, -0.72938167},
+                 { 0.36757365, -1.85710024, -0.74191387},
+                 { 1.30097023, -1.49833734, -0.73416743},
+                 { 1.96263423, -0.75053257, -0.7888372 },
+                 { 2.21067781,  0.20064083, -0.97253135},
+                 { 2.00981645,  1.11709499, -1.3186043 },
+                 { 1.44046291,  1.76969029, -1.81856021},
+                 { 0.67800228,  1.99729206, -2.42424266},
+                 {-0.05241042,  1.74830016, -3.06024607},
+                 {-0.53387995,  1.09394804, -3.64335016},
+                 {-0.61367178,  0.20994353, -4.10396854}};
+
+        readdy::scalar angle = 2.* M_PI / 13;
+        readdy::scalar dihedral = -10. * M_PI / 180.;
+
+        readdy::model::Context ctx;
+        ctx.boxSize() = {50., 50., 50.};
+        ctx.particleTypes().add("A", 0.1, readdy::model::particleflavor::TOPOLOGY);
+        ctx.particleTypes().add("B", 0.1, readdy::model::particleflavor::TOPOLOGY);
+        ctx.particleTypes().add("C", 0.1, readdy::model::particleflavor::TOPOLOGY);
+        ctx.topologyRegistry().addType("helix");
+        ctx.topologyRegistry().configureBondPotential("A","A",{1000., 1.});
+        ctx.topologyRegistry().configureBondPotential("B","A",{1000., 1.});
+        ctx.topologyRegistry().configureBondPotential("C","A",{1000., 1.});
+        ctx.topologyRegistry().configureAnglePotential("A", "A", "A", {1000., M_PI - angle});
+        ctx.topologyRegistry().configureAnglePotential("B", "A", "A", {1000., M_PI - angle});
+        ctx.topologyRegistry().configureAnglePotential("A", "A", "C", {1000., M_PI - angle});
+        ctx.topologyRegistry().configureTorsionPotential("A", "A", "A", "A", {1000., 1., -dihedral});
+        ctx.topologyRegistry().configureTorsionPotential("B", "A", "A", "A", {1000., 1., -dihedral});
+        ctx.topologyRegistry().configureTorsionPotential("A", "A", "A", "C", {1000., 1., -dihedral});
+
+        namespace rmt = readdy::model::top;
+        auto reactionFunction = [&ctx](rmt::GraphTopology &topology) -> rmt::reactions::Recipe {
+            rmt::reactions::Recipe recipe(topology);
+            auto &graph = topology.graph();
+            for (auto &vertex : graph.vertices()) {
+                if (vertex.particleType() == ctx.particleTypes().idOf("C")) {
+                    readdy::Vec3 pos1;
+                    for (auto &neighbor : vertex.neighbors()) {
+                        pos1 = topology.particleForVertex(*neighbor).pos();
+                    }
+
+                    auto pos2 = topology.particleForVertex(vertex).pos();
+                    auto newPosition = pos2 + (pos2 - pos1);
+
+                    auto ida = ctx.particleTypes().idOf("A");
+                    recipe.changeParticleType(vertex, ida);
+
+                    std::vector<rmt::graph::Vertex::vertex_ptr> neighbors = {graph.toRef(vertex)};
+
+                    std::string ctype = "C";
+                    recipe.appendNewParticle(neighbors, ctype, newPosition);
+                }
+            }
+            return recipe;
+        };
+
+        auto rateFunction = [](const rmt::GraphTopology &topology) -> readdy::scalar {
+            auto nVertices = topology.graph().vertices().size();
+            if (nVertices < 43) {
+                return 1e2;
+            } else {
+                return 0.;
+            }
+        };
+
+        readdy::model::top::reactions::StructuralTopologyReaction reaction("append", reactionFunction, rateFunction);
+        std::string type = "helix";
+        ctx.topologyRegistry().addStructuralReaction(type, reaction);
+
+        readdy::Simulation simulation(create<TestType>(), ctx);
+        WHEN("the helix elongates by attaching 20 segments from substrate particles") {
+            {
+                std::vector<readdy::model::TopologyParticle> topParticles;
+                topParticles.reserve(23);
+                topParticles.emplace_back(initPos23.front(), ctx.particleTypes().idOf("B"));
+                for (std::size_t i = 1; i < initPos23.size() - 1; ++i) {
+                    topParticles.emplace_back(initPos23[i], ctx.particleTypes().idOf("A"));
+                }
+                topParticles.emplace_back(initPos23.back(), ctx.particleTypes().idOf("C"));
+                auto top = simulation.addTopology("helix", topParticles);
+                auto &graph = top->graph();
+                for (std::size_t i = 0; i < topParticles.size()-1; ++i) {
+                    graph.addEdgeBetweenParticles(i, i + 1);
+                }
+            }
+
+            auto obs = simulation.observe().positions(1000, {"B", "C"});
+            std::vector<readdy::scalar> distances;
+            auto callback = [&distances, &ctx](const std::vector<readdy::Vec3> &dist){
+                const auto d = readdy::bcs::dist(dist.at(0), dist.at(1), ctx.boxSize(),
+                                                 ctx.periodicBoundaryConditions());
+                distances.push_back(d);
+            };
+            simulation.registerObservable(std::move(obs), callback);
+
+            std::size_t nSteps = 2400000;
+            readdy::scalar dt = 4e-5;
+            simulation.run(nSteps, dt);
+
+            REQUIRE(distances.size() > 0);
+
+            THEN("the average end-to-end distance after absorption of all substrate particles is roughly ~14.4") {
+                // extract recorded distances after a certain number of steps
+                // when all substrates are most likely absorbed
+                auto n = distances.size();
+                auto first = distances.begin() + 2*n/10; // i.e. after 20% of the time
+                std::vector<readdy::scalar> distances2(first, distances.end());
+                auto n2 = distances2.size();
+                auto mean = std::accumulate(distances2.begin(), distances2.end(), 0.);
+                mean /= static_cast<readdy::scalar>(n2);
+                readdy::scalar expected = 14.434;
+                auto relativeErr = std::abs(mean - expected) / expected;
+                // allow for 5% deviation. Usually the observed mean is expected to deviate about ~0.5%
+                CHECK(relativeErr < 0.05);
             }
         }
     }
