@@ -44,10 +44,7 @@
 #include <readdy/kernel/cpu/nl/CellLinkedList.h>
 #include <readdy/common/numeric.h>
 
-namespace readdy {
-namespace kernel {
-namespace cpu {
-namespace nl {
+namespace readdy::kernel::cpu::nl {
 
 CellLinkedList::CellLinkedList(data_type &data, const readdy::model::Context &context, thread_pool &pool)
         : _data(data), _context(context), _pool(pool) {}
@@ -250,7 +247,4 @@ void CompactCellLinkedList::setUpBins() {
     }
 }
 
-}
-}
-}
 }

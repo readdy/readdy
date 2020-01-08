@@ -8,6 +8,7 @@ unset MACOSX_DEPLOYMENT_TARGET
 #                                                       #
 #########################################################
 
+echo ${PREFIX}
 # install prefix
 CMAKE_FLAGS="-DCMAKE_INSTALL_PREFIX=${PREFIX}"
 # prefix path

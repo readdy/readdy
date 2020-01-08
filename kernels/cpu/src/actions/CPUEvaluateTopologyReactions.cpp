@@ -45,6 +45,7 @@
 
 #include <readdy/kernel/cpu/actions/CPUEvaluateTopologyReactions.h>
 #include <readdy/common/algorithm.h>
+#include <readdy/model/actions/Utils.h>
 
 namespace readdy {
 namespace kernel {
@@ -121,7 +122,7 @@ void CPUEvaluateTopologyReactions::perform() {
                     }
                     assert(!topology->isDeactivated());
                     if (!event.spatial) {
-                        handleStructuralReaction(topologies, new_topologies, event, topology);
+                        handleStructuralReactionEvent(topologies, new_topologies, event, topology);
                         if(kernel->context().recordReactionCounts()) {
                             kernel->getCPUKernelStateModel().structuralReactionCounts()[event.reactionId] += 1;
                         }
@@ -176,32 +177,18 @@ void CPUEvaluateTopologyReactions::perform() {
     }
 }
 
-void CPUEvaluateTopologyReactions::handleStructuralReaction(CPUStateModel::topologies_vec &topologies,
-                                                            std::vector<CPUStateModel::topology> &new_topologies,
-                                                            const CPUEvaluateTopologyReactions::TREvent &event,
-                                                            CPUStateModel::topology_ref &topology) const {
-    const auto &topology_type_registry = kernel->context().topologyRegistry();
-    auto &reaction = topology_type_registry.structuralReactionsOf(topology->type()).at(static_cast<std::size_t>(event.reaction_idx));
-    auto result = reaction.execute(*topology, kernel);
-    if (!result.empty()) {
-        // we had a topology fission, so we need to actually remove the current topology from the
-        // data structure
-        topologies.erase(topologies.begin() + event.topology_idx);
-        assert(topology->isDeactivated());
+void CPUEvaluateTopologyReactions::handleStructuralReactionEvent(CPUStateModel::topologies_vec &topologies,
+                                                                 std::vector<CPUStateModel::topology> &new_topologies,
+                                                                 const CPUEvaluateTopologyReactions::TREvent &event,
+                                                                 CPUStateModel::topology_ref &topology) const {
 
-        for (auto &it : result) {
-            if(!it.isNormalParticle(*kernel)) {
-                new_topologies.push_back(std::move(it));
-            }
-        }
-    } else {
-        if (topology->isNormalParticle(*kernel)) {
-            kernel->getCPUKernelStateModel().getParticleData()->entry_at(topology->getParticles().front()).topology_index = -1;
-            topologies.erase(topologies.begin() + event.topology_idx);
-            //log::error("erased topology with index {}", event.topology_idx);
-            assert(topology->isDeactivated());
-        }
-    }
+    const auto &context = kernel->context();
+    const auto &reactions = context.topologyRegistry().structuralReactionsOf(topology->type());
+    const auto &reaction = reactions.at(static_cast<std::size_t>(event.reaction_idx));
+    readdy::model::actions::top::executeStructuralReaction(topologies, new_topologies, topology, reaction,
+                                                           event.topology_idx,
+                                                           *(kernel->getCPUKernelStateModel().getParticleData()),
+                                                           kernel);
 }
 
 CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReactions::gatherEvents() {
@@ -272,7 +259,7 @@ CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReacti
                             const auto &reactions = top_registry.spatialReactionsByType(entry.type, tt1,
                                                                                         neighbor.type, tt2);
                             for (const auto &reaction : reactions) {
-                                if (!reaction.allow_self_connection() &&
+			                    if (!reaction.allow_self_connection() &&
                                     entry.topology_index == neighbor.topology_index) {
                                     ++reaction_index;
                                     continue;
@@ -307,7 +294,19 @@ CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReacti
                                         event.idx2 = neighborIndex;
                                     } else {
                                         log::critical("got no topology for topology-fusion");
-                                    }
+                                    }				    
+				    if (reaction.allow_self_connection() &&
+					entry.topology_index == neighbor.topology_index) {
+				      const auto& topol = model.topologies().at(static_cast<std::size_t>(neighbor.topology_index));
+										// auto topol = topologies.at(event.topology_idx);
+				      const readdy::model::top::graph::Graph& gr = topol->graph();
+				      const readdy::model::top::graph::Graph::vertex_ref& v1 = topol->vertexForParticle(event.idx1);
+				      const readdy::model::top::graph::Graph::vertex_ref& v2 = topol->vertexForParticle(event.idx2);
+				      if (gr.areConnectedWithNOrLessEdges(reaction.min_graph_distance(), *v1, *v2)) {
+                          ++reaction_index;
+                          continue;
+				      }
+				    }
                                     event.reaction_idx = reaction_index;
                                     event.spatial = true;
 

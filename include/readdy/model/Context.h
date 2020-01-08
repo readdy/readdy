@@ -114,7 +114,7 @@ public:
         return std::make_tuple(lowerLeft, upperRight);
     };
 
-    const scalar calculateMaxCutoff() const;
+    scalar calculateMaxCutoff() const;
 
     /**
      * Method for sanity checking some parts of the configuration.

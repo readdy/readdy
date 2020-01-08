@@ -62,15 +62,16 @@ class TestIOUtils(ReaDDyTestCase):
         cls.dir = tempfile.mkdtemp("test-config-io")
         cls.fname = os.path.join(cls.dir, "test_io_utils.h5")
 
-        sim = api.Simulation("CPU")
-        sim.context.particle_types.add("A", 1.)
-        sim.context.particle_types.add("B", 2.)
-        sim.context.particle_types.add("C", 3.)
-        sim.context.reactions.add_conversion("mylabel", "A", "B", .00001)
-        sim.context.reactions.add_conversion("A->B", "A", "B", 1.)
+        context = api.Context()
+        context.particle_types.add("A", 1.)
+        context.particle_types.add("B", 2.)
+        context.particle_types.add("C", 3.)
+        context.reactions.add_conversion("mylabel", "A", "B", .00001)
+        context.reactions.add_conversion("A->B", "A", "B", 1.)
         fusion_rate = 0.4
         educt_distance = 0.2
-        sim.context.reactions.add_fusion("B+C->A", "B", "C", "A", fusion_rate, educt_distance, .5, .5)
+        context.reactions.add_fusion("B+C->A", "B", "C", "A", fusion_rate, educt_distance, .5, .5)
+        sim = api.Simulation("CPU", context)
         with contextlib.closing(io.File.create(cls.fname)) as f:
             loop = sim.create_loop(.1)
             loop.write_config_to_file(f)

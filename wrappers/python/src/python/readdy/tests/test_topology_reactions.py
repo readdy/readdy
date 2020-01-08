@@ -49,6 +49,7 @@ import readdy._internal.readdybinding.common as common
 from readdy._internal.readdybinding.api import KernelProvider
 from readdy._internal.readdybinding.api import ParticleTypeFlavor
 from readdy._internal.readdybinding.api import Simulation
+from readdy._internal.readdybinding.api import Context
 from readdy.util import platform_utils
 from readdy.util.testing_utils import ReaDDyTestCase
 
@@ -108,14 +109,19 @@ class TestTopologyReactions(ReaDDyTestCase):
         return reaction
 
     def chain_decay(self, kernel):
-        sim = Simulation(kernel)
-        sim.context.box_size = [10., 10., 10.]
-        sim.context.topologies.add_type("TA")
-        np.testing.assert_equal(sim.kernel_supports_topologies(), True)
+        context = Context()
+        context.box_size = [10., 10., 10.]
+        context.topologies.add_type("TA")
 
-        sim.context.particle_types.add("B", 1.0, ParticleTypeFlavor.NORMAL)
-        sim.context.particle_types.add("Topology A", 1.0, ParticleTypeFlavor.TOPOLOGY)
-        sim.context.topologies.configure_bond_potential("Topology A", "Topology A", BondedPotentialConfiguration(10, 10, "harmonic"))
+        context.particle_types.add("B", 1.0, ParticleTypeFlavor.NORMAL)
+        context.particle_types.add("Topology A", 1.0, ParticleTypeFlavor.TOPOLOGY)
+        context.topologies.configure_bond_potential("Topology A", "Topology A", BondedPotentialConfiguration(10, 10, "harmonic"))
+
+        context.topologies.add_structural_reaction("TA", self._get_decay_reaction())
+        context.topologies.add_structural_reaction("TA", self._get_split_reaction())
+
+        sim = Simulation(kernel, context)
+        np.testing.assert_equal(sim.kernel_supports_topologies(), True)
 
         n_elements = 50.
         particles = [sim.create_topology_particle("Topology A", common.Vec(-5. + i * 10. / n_elements, 0, 0))
@@ -125,8 +131,7 @@ class TestTopologyReactions(ReaDDyTestCase):
         for i in range(int(n_elements - 1)):
             topology.get_graph().add_edge(i, i + 1)
 
-        sim.context.topologies.add_structural_reaction("TA", self._get_decay_reaction())
-        sim.context.topologies.add_structural_reaction("TA", self._get_split_reaction())
+
 
         # h = sim.register_observable_n_particles(1, [], lambda x: print("n particles=%s" % x))
 

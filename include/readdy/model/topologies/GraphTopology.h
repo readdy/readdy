@@ -136,7 +136,7 @@ public:
         deactivated = true;
     }
 
-    const bool isNormalParticle(const Kernel &k) const;
+    bool isNormalParticle(const Kernel &k) const;
 
     const topology_reaction_rate cumulativeRate() const {
         return _cumulativeRate;
@@ -187,16 +187,12 @@ public:
         return graph_.toRef(vertex);
     }
 
-    topology_graph::vertex_cref toVertexRef(const vertex &vertex) const {
-        return graph_.toRef(vertex);
-    }
-
 protected:
     topology_graph graph_;
     std::reference_wrapper<const model::Context> _context;
     const model::StateModel *_stateModel;
     topology_reaction_rates _reaction_rates;
-    topology_reaction_rate _cumulativeRate;
+    topology_reaction_rate _cumulativeRate{};
     TopologyTypeId _topology_type;
     bool deactivated{false};
 };

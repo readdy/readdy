@@ -60,8 +60,7 @@ public:
     using topology_graph = actions::TopologyReactionAction::topology_graph;
     using Vertex = topology_graph::vertex;
     using vertex_ref = topology_graph::vertex_ref;
-    using vertex_cref = topology_graph::vertex_cref;
-    using edge = topology_graph::edge;
+    using edge = topology_graph::Edge;
     using graph_topology = GraphTopology;
 
     explicit Recipe(graph_topology &topology) : _topology(topology) {};

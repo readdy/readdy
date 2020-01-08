@@ -46,6 +46,7 @@
 #include <readdy/kernel/singlecpu/actions/SCPUEvaluateTopologyReactions.h>
 #include <readdy/common/algorithm.h>
 #include <readdy/common/boundary_condition_operations.h>
+#include <readdy/model/actions/Utils.h>
 
 namespace readdy::kernel::scpu::actions::top {
 
@@ -115,7 +116,10 @@ void SCPUEvaluateTopologyReactions::perform() {
                 }
                 assert(!topology->isDeactivated());
                 if (!event.spatial) {
-                    handleStructuralReaction(topologies, new_topologies, event, topology);
+                    handleStructuralReactionEvent(topologies, new_topologies, event, topology);
+                    if(context.recordReactionCounts()) {
+                        kernel->getSCPUKernelStateModel().structuralReactionCounts()[event.reactionId] += 1;
+                    }
                 } else {
                     if (event.topology_idx2 >= 0) {
                         auto &top2 = topologies.at(static_cast<std::size_t>(event.topology_idx2));
@@ -235,8 +239,7 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
                                                 events.push_back(event);
                                             }
                                             break;
-                                        case readdy::model::top::reactions::STRMode::TT_ENZYMATIC: // fall through
-                                        case readdy::model::top::reactions::STRMode::TT_FUSION_ALLOW_SELF:
+                                        case readdy::model::top::reactions::STRMode::TT_ENZYMATIC:
                                             if(tidx1 >= 0 && tidx2 >= 0) {
                                                 event.topology_idx = static_cast<std::size_t>(tidx1);
                                                 event.topology_idx2 = tidx2;
@@ -250,7 +253,32 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
                                                 events.push_back(event);
                                             }
                                             break;
-                                        case readdy::model::top::reactions::STRMode::TP_ENZYMATIC: // fall through
+				    case readdy::model::top::reactions::STRMode::TT_FUSION_ALLOW_SELF:
+				      if (tidx1 >= 0 && tidx2 >= 0) {
+					const SCPUStateModel::topologies_vec& topologies = stateModel.topologies();
+					if (tidx1 == tidx2) {
+					  const std::unique_ptr<readdy::model::top::GraphTopology> &t1 = topologies.at(static_cast<std::size_t>(tidx1));
+					  const readdy::model::top::graph::Graph& gr = t1->graph();
+					  const readdy::model::top::graph::Graph::vertex_ref& v1 = t1->vertexForParticle(pidx);
+					  const readdy::model::top::graph::Graph::vertex_ref& v2 = t1->vertexForParticle(neighborIdx);
+					  bool result = gr.areConnectedWithNOrLessEdges(reaction.min_graph_distance(), *v1, *v2);
+					  if (result) {					    
+					    break;
+					  }				       
+					}
+					event.topology_idx = static_cast<std::size_t>(tidx1);
+					event.topology_idx2 = tidx2;
+					event.t1 = entry.type;
+					event.t2 = neighbor.type;
+					event.idx1 = pidx;
+					event.idx2 = neighborIdx;
+					event.reaction_idx = reaction_index;
+					event.spatial = true;
+					
+					events.push_back(event);
+				      }
+				      break;
+				        case readdy::model::top::reactions::STRMode::TP_ENZYMATIC: // fall through
                                         case readdy::model::top::reactions::STRMode::TP_FUSION:
                                             if (tidx1 >= 0 && tidx2 < 0) {
                                                 event.topology_idx = static_cast<std::size_t>(tidx1);
@@ -407,50 +435,21 @@ void SCPUEvaluateTopologyReactions::handleTopologyParticleReaction(SCPUStateMode
     topology->configure();
 }
 
-void SCPUEvaluateTopologyReactions::handleStructuralReaction(SCPUStateModel::topologies_vec &topologies,
-                                                             std::vector<SCPUStateModel::topology> &new_topologies,
-                                                             const SCPUEvaluateTopologyReactions::TREvent &event,
-                                                             SCPUStateModel::topology_ref &topology) const {
+void SCPUEvaluateTopologyReactions::handleStructuralReactionEvent(SCPUStateModel::topologies_vec &topologies,
+                                                                  std::vector<SCPUStateModel::topology> &new_topologies,
+                                                                  const SCPUEvaluateTopologyReactions::TREvent &event,
+                                                                  SCPUStateModel::topology_ref &topology) const {
     const auto &context = kernel->context();
     const auto &reactions = context.topologyRegistry().structuralReactionsOf(topology->type());
     const auto &reaction = reactions.at(static_cast<std::size_t>(event.reaction_idx));
-    auto result = reaction.execute(*topology, kernel);
-    if(context.recordReactionCounts()) {
-        kernel->getSCPUKernelStateModel().structuralReactionCounts()[event.reactionId] += 1;
-    }
-    /*if(result.size() != 2) {
-        throw std::logic_error("result size was not 2, split did not work");
-    }
-    if(result[0].getNParticles() < 2) {
-        throw std::logic_error("particle size < 2, should not happen");
-    }
-    if(result[1].getNParticles() < 2) {
-        throw std::logic_error("particle size < 2, should not happen 2");
-    }*/
-    if (!result.empty()) {
-        // we had a topology fission, so we need to actually remove the current topology from the
-        // data structure
-        topologies.erase(topologies.begin() + event.topology_idx);
-        //log::error("erased topology with index {}", event.topology_idx);
-        assert(topology->isDeactivated());
-        for (auto &it : result) {
-            if(!it.isNormalParticle(*kernel)) {
-                new_topologies.push_back(std::move(it));
-            }
-        }
-    } else {
-        if (topology->isNormalParticle(*kernel)) {
-            kernel->getSCPUKernelStateModel().getParticleData()->entry_at(topology->getParticles().front()).topology_index = -1;
-            topologies.erase(topologies.begin() + event.topology_idx);
-            //log::error("erased topology with index {}", event.topology_idx);
-            assert(topology->isDeactivated());
-        }
-    }
+    readdy::model::actions::top::executeStructuralReaction(topologies, new_topologies, topology, reaction,
+                                                           event.topology_idx,
+                                                           *(kernel->getSCPUKernelStateModel().getParticleData()),
+                                                           kernel);
 }
 
 bool SCPUEvaluateTopologyReactions::topologyDeactivated(std::size_t index) const {
     return kernel->getSCPUKernelStateModel().topologies().at(index)->isDeactivated();
 }
-
 
 }

@@ -46,13 +46,14 @@
 #include <readdy/model/ParticleTypeRegistry.h>
 #include <readdy/model/Utils.h>
 
-namespace readdy {
-namespace model {
+#include <utility>
+
+namespace readdy::model {
 
 
-ParticleTypeInfo::ParticleTypeInfo(const std::string &name, const scalar diffusionConstant,
+ParticleTypeInfo::ParticleTypeInfo(std::string name, const scalar diffusionConstant,
                                    const ParticleFlavor flavor, const ParticleTypeId typeId)
-        : name(name), diffusionConstant(diffusionConstant), flavor(flavor), typeId(typeId) {}
+        : name(std::move(name)), diffusionConstant(diffusionConstant), flavor(flavor), typeId(typeId) {}
 
 
 void ParticleTypeRegistry::add(const std::string &name, const scalar diffusionConst, const ParticleFlavor flavor) {
@@ -101,5 +102,4 @@ std::string ParticleTypeRegistry::describe() const {
     return description;
 }
 
-}
 }

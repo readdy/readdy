@@ -59,34 +59,21 @@ struct Event {
 };
 
 TEST_CASE("Sanity check of the simulation loop.", "[loop]") {
-    Simulation sim ("SingleCPU");
-    sim.context().topologyRegistry().addType("Polymer");
-    sim.context().particleTypes().addTopologyType("A", 1);
-    sim.context().particleTypes().add("B", 1.);
-    sim.context().topologyRegistry().addSpatialReaction("Attach: Polymer(A) + (B) -> Polymer(A--A)", 1., 5.);
-    sim.context().reactions().add("myfus: B +(5) B -> B", 10);
-    sim.context().reactions().add("myconv: B -> B", 10);
+    model::Context ctx;
 
+    ctx.topologyRegistry().addType("Polymer");
+    ctx.particleTypes().addTopologyType("A", 1);
+    ctx.particleTypes().add("B", 1.);
+    ctx.topologyRegistry().addSpatialReaction("Attach: Polymer(A) + (B) -> Polymer(A--A)", 1., 5.);
+    ctx.reactions().add("myfus: B +(5) B -> B", 10);
+    ctx.reactions().add("myconv: B -> B", 10);
+    ctx.topologyRegistry().configureBondPotential("A", "A", {0., 10.});
+
+    Simulation sim ("SingleCPU", ctx);
     sim.addParticle("B", 0., 0., 0.);
     sim.addTopology("Polymer", {sim.createTopologyParticle("A", {0., 0., 0.})});
-    sim.context().topologyRegistry().configureBondPotential("A", "A", {0., 10.});
 
     auto loop = sim.createLoop(1.5);
-
-    loop.addCallback([&](const auto t) {
-        // triggers evaluation of rate functions for each topology
-        for (auto topology : sim.stateModel().getTopologies()) {
-            topology->updateReactionRates(
-                    sim.context().topologyRegistry().structuralReactionsOf(topology->type())
-            );
-        }
-        // change spatial topology reaction rate
-        sim.context().topologyRegistry().spatialReactionByName("Attach").rate() = 5000;
-        // change unimolecular reaction rate
-        sim.context().reactions().order1ByName("myconv")->rate() = 100;
-        // change bimolecular reaction rate
-        sim.context().reactions().order2ByName("myfus")->rate() = 100;
-    });
 
     loop.run(500);
 }

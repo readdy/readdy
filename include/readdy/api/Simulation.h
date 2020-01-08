@@ -68,13 +68,16 @@ public:
     template<typename T>
     using observable_callback = typename std::function<void(typename T::result_type)>;
 
-    explicit Simulation(plugin::KernelProvider::kernel_ptr kernel) : _kernel(std::move(kernel)) {}
+    /** User provided context is copied, and no modifyable view on it is provided after construction of Simulation */
+    explicit Simulation(plugin::KernelProvider::kernel_ptr kernel, model::Context ctx) : _kernel(std::move(kernel)) {
+        _kernel->context() = std::move(ctx);
+    }
 
     /**
      * The default constructor.
      */
-    explicit Simulation(const std::string &kernel) : Simulation(
-            plugin::KernelProvider::getInstance().create(kernel)) {};
+    explicit Simulation(const std::string &kernel, model::Context ctx) : Simulation(
+            plugin::KernelProvider::getInstance().create(kernel), std::move(ctx)) {};
 
     /**
      * Creates a topology particle of a certain type at a position without adding it to the simulation box yet.
@@ -222,15 +225,6 @@ public:
      */
     const std::vector<Vec3> getAllParticlePositions() const {
         return _kernel->stateModel().getParticlePositions();
-    }
-
-    /**
-     * Yields a modifyable reference to the current context of this simulation. Can be used to set time-independent
-     * properties.
-     * @return the context
-     */
-    model::Context &context() {
-        return _kernel->context();
     }
 
     /**

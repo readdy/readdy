@@ -81,7 +81,7 @@ struct ParticleTypeInfo {
     ParticleFlavor flavor;
     ParticleTypeId typeId;
 
-    ParticleTypeInfo(const std::string &name, scalar diffusionConstant,
+    ParticleTypeInfo(std::string name, scalar diffusionConstant,
                      ParticleFlavor flavor, ParticleTypeId typeId);
 };
 

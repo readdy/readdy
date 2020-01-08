@@ -44,14 +44,11 @@
  */
 
 #include <readdy/model/observables/Reactions.h>
-#include <readdy/model/IOUtils.h>
 #include <readdy/model/Kernel.h>
 #include <readdy/model/observables/io/Types.h>
 #include <readdy/model/observables/io/TimeSeriesWriter.h>
 
-namespace readdy {
-namespace model {
-namespace observables {
+namespace readdy::model::observables {
 
 struct Reactions::Impl {
     using reactions_record_t = readdy::model::reactions::ReactionRecord;
@@ -104,6 +101,4 @@ std::string_view Reactions::type() const {
 
 Reactions::~Reactions() = default;
 
-}
-}
 }

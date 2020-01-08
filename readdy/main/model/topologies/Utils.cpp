@@ -58,7 +58,6 @@ std::string to_gexf(graph::Graph& graph) {
         std::size_t id = 0;
         for (auto &v : graph.vertices()) {
             ss << "<node id=\"" << v.particleIndex << "\"/>";
-            v.visited = false;
             ++id;
         }
         ss << "</nodes>";
@@ -66,16 +65,10 @@ std::string to_gexf(graph::Graph& graph) {
     {
         ss << "<edges>";
         std::size_t id = 0;
-        for(auto& v : graph.vertices()) {
-            for(const auto& neighbor : v.neighbors()) {
-                if(!neighbor->visited) {
-                    ss << "<edge id=\"" << id << "\" "
-                            "source=\"" << v.particleIndex << "\" "
-                            "target=\"" << neighbor->particleIndex << "\" />";
-                    ++id;
-                }
-            }
-            v.visited = true;
+        for(const auto& [v1, v2] : graph.edges()) {
+            ss << "<edge id=\"" << id << "\" " "source=\"" << v1->particleIndex
+               << "\" " "target=\"" << v2->particleIndex << "\" />";
+            ++id;
         }
         ss << "</edges>";
     }

@@ -51,8 +51,7 @@
 #include <readdy/common/boundary_condition_operations.h>
 #include <readdy/model/potentials/PotentialsOrder1.h>
 
-namespace readdy {
-namespace model {
+namespace readdy::model {
 
 using particle_t = readdy::model::Particle;
 
@@ -130,7 +129,7 @@ std::string Context::describe() {
     return description;
 }
 
-const scalar Context::calculateMaxCutoff() const {
+scalar Context::calculateMaxCutoff() const {
     scalar max_cutoff{0};
     for (const auto &entry : potentials().potentialsOrder2()) {
         for (const auto &potential : entry.second) {
@@ -150,5 +149,4 @@ const scalar Context::calculateMaxCutoff() const {
     return max_cutoff;
 }
 
-}
 }

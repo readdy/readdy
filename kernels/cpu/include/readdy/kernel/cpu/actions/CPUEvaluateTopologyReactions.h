@@ -71,9 +71,9 @@ private:
 
     bool topologyDeactivated(std::ptrdiff_t index) const;
 
-    void handleStructuralReaction(CPUStateModel::topologies_vec &topologies,
-                                  std::vector<CPUStateModel::topology> &new_topologies,
-                                  const TREvent &event, CPUStateModel::topology_ref &topology) const;
+    void handleStructuralReactionEvent(CPUStateModel::topologies_vec &topologies,
+                                       std::vector<CPUStateModel::topology> &new_topologies,
+                                       const TREvent &event, CPUStateModel::topology_ref &topology) const;
 
     void handleTopologyParticleReaction(CPUStateModel::topology_ref &topology, const TREvent &event);
 

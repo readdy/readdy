@@ -166,10 +166,10 @@ void writeTopologyReactionInformation(h5rd::Group &group, const Context &context
         }
     }
 
-    for(auto i = 0U; i < spatialInfos.size(); ++i) {
+    for(std::size_t i = 0; i < spatialInfos.size(); ++i) {
         spatialInfos[i].descriptor = spatialInfoDescriptors[i].c_str();
     }
-    for(auto i = 0U; i < structuralInfos.size(); ++i) {
+    for(std::size_t i = 0; i < structuralInfos.size(); ++i) {
         structuralInfos[i].name = structuralInfoNames[i].c_str();
     }
 
@@ -200,7 +200,7 @@ CompoundType getParticleTypeInfoType(h5rd::Object::ParentFileRef ref) {
             .insert<decltype(std::declval<ParticleTypeInfo>().diffusion_constant)>("diffusion_constant", offsetof(ParticleTypeInfo, diffusion_constant))
             .build();
     return std::make_tuple(nct, STDCompoundType(nct));
-};
+}
 
 CompoundType getTopologyTypeInfoType(h5rd::Object::ParentFileRef ref) {
     using namespace h5rd;
@@ -226,7 +226,7 @@ CompoundType getReactionInfoMemoryType(h5rd::Object::ParentFileRef ref) {
             .build();
     STDCompoundType sct (nct);
     return std::make_tuple(nct, sct);
-};
+}
 
 CompoundType getSpatialTopologyReactionInfoType(h5rd::Object::ParentFileRef ref) {
     using namespace h5rd;

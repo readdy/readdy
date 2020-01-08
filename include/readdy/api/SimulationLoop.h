@@ -177,7 +177,9 @@ public:
     }
 
     void runTopologyReactions() {
-        if (_topologyReactions) _topologyReactions->perform();
+      if (_topologyReactions) {
+          _topologyReactions->perform();
+      }
     }
 
     TimeStepActionPtr &integrator() { return _integrator; }

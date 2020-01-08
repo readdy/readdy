@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2018 Computational Molecular Biology Group,          *
+ * Copyright © 2019 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * Redistribution and use in source and binary forms, with or       *
@@ -32,82 +32,36 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                       *
  ********************************************************************/
 
-
 /**
- * << detailed description >>
+ * « detailed description »
  *
- * @file BloscFilter.cpp
- * @brief << brief description >>
- * @author clonker
- * @date 06.09.17
- * @copyright BSD-3
+ * @file CPUBreakBonds.h
+ * @brief « brief description »
+ * @author chrisfroe
+ * @date 07.10.19
  */
 
+#pragma once
 
-#include "readdy/io/BloscFilter.h"
-#include "blosc_filter.h"
+#include <readdy/model/actions/Actions.h>
+#include <readdy/kernel/cpu/CPUKernel.h>
 
-namespace readdy::io {
+namespace readdy::kernel::cpu::actions::top {
 
+class CPUBreakBonds : public readdy::model::actions::top::BreakBonds {
+public:
+    explicit CPUBreakBonds(CPUKernel *kernel, scalar timeStep, readdy::model::actions::top::BreakConfig config)
+            : BreakBonds(timeStep, std::move(config)), kernel(kernel) {}
 
-bool BloscFilter::available() const {
-    return H5Zfilter_avail(FILTER_BLOSC) > 0;
-}
-
-void BloscFilter::activate(h5rd::PropertyList &plist) {
-    registerFilter();
-    unsigned int cd_values[7];
-    // compression level 0-9 (0 no compression, 9 highest compression)
-    cd_values[4] = compressionLevel;
-    // 0: shuffle not active, 1: shuffle active
-    cd_values[5] = shuffle ? 1 : 0;
-    // the compressor to use
-    switch (compressor) {
-        case BloscLZ: {
-            cd_values[6] = BLOSC_BLOSCLZ;
-            break;
-        }
-        case LZ4: {
-            cd_values[6] = BLOSC_LZ4;
-            break;
-        }
-        case LZ4HC: {
-            cd_values[6] = BLOSC_LZ4HC;
-            break;
-        }
-        case SNAPPY: {
-            cd_values[6] = BLOSC_SNAPPY;
-            break;
-        }
-        case ZLIB: {
-            cd_values[6] = BLOSC_ZLIB;
-            break;
-        }
-        case ZSTD: {
-            cd_values[6] = BLOSC_ZSTD;
-            break;
-        }
+    void perform() override {
+        auto &topologies = kernel->getCPUKernelStateModel().topologies();
+        auto &model = kernel->getCPUKernelStateModel();
+        auto &particleData = *(kernel->getCPUKernelStateModel().getParticleData());
+        genericPerform(topologies, model, kernel, particleData);
     }
-    if (H5Pset_filter(plist.id(), FILTER_BLOSC, H5Z_FLAG_OPTIONAL, 7, cd_values) < 0) {
-        H5Eprint(H5Eget_current_stack(), stderr);
-        throw h5rd::Exception("Could not set blosc filter!");
-    }
-}
 
-void BloscFilter::registerFilter() {
-    static std::atomic_bool initialized{false};
-    if (!initialized.load()) {
-        char *version, *date;
-        register_blosc(&version, &date);
-        log::debug("registered blosc with version {} ({})", version, date);
-        initialized = true;
-    }
-}
+private:
+    CPUKernel *kernel;
+};
 
-BloscFilter::BloscFilter(BloscFilter::Compressor compressor, unsigned int compressionLevel, bool shuffle) : compressor(
-        compressor), compressionLevel(compressionLevel), shuffle(shuffle) {
-    if (compressionLevel > 9) {
-        throw std::invalid_argument("Blosc only allows compression levels ranging from 0 to 9.");
-    }
-}
 }

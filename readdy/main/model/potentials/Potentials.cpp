@@ -44,9 +44,7 @@
 #include <readdy/model/Kernel.h>
 #include <readdy/model/potentials/PotentialsOrder1.h>
 
-namespace readdy {
-namespace model {
-namespace potentials {
+namespace readdy::model::potentials {
 
 std::string PotentialRegistry::describe() const {
     namespace rus = readdy::util::str;
@@ -270,6 +268,4 @@ std::string ScreenedElectrostatics::type() const {
     return getPotentialName<ScreenedElectrostatics>();
 }
 
-}
-}
 }
