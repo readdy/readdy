@@ -52,16 +52,22 @@ namespace readdy::kernel::mpi::model {
 class MPIDomain {
     /** Members which the master rank also knows */
 public:
-    const int rank;
-    const int worldSize;
-    const scalar haloThickness;
+
+    [[nodiscard]] int rank() const { return _rank; }
+    [[nodiscard]] int worldSize() const { return _worldSize; }
+    [[nodiscard]] scalar haloThickness() const { return _haloThickness; }
 
 private:
+
+    int _rank;
+    int _worldSize;
+    scalar _haloThickness;
+
     int _nUsedRanks; // counts master rank and all workers
     int _nWorkerRanks; // counts all workers, which is a subset of used ranks
     int _nIdleRanks; // counts all idle
     std::vector<int> _workerRanks; // can be returned as const ref to conveniently iterate over ranks
-    bool _amINeeded{true};
+    bool _isIdle{true};
     std::array<std::size_t, 3> _nDomainsPerAxis{};
     util::Index3D _domainIndex; // rank of (ijk) is domainIndex(i,j,k)+1
 
@@ -75,12 +81,11 @@ private:
     Vec3 _extentWithHalo;
 
     std::array<std::size_t, 3> _myIdx{}; // (ijk) indices of this domain
-    const std::size_t _three{3};
-
 public:
     // Neighborhood stuff
     // map from ([0-2], [0-2], [0-2]) to the index of the 27 neighbors (including self)
-    const util::Index3D neighborIndex = util::Index3D(_three, _three, _three);
+    const util::Index3D neighborIndex = util::Index3D(static_cast<std::size_t>(3), static_cast<std::size_t>(3),
+                                                      static_cast<std::size_t>(3));
 
     enum NeighborType {
         self, // is a valid neighbor, but due to periodicity it is this domain
@@ -96,14 +101,14 @@ private:
 
 public:
     MPIDomain(int rank, int worldSize, std::array<scalar, 3> minDomainWidths, const readdy::model::Context &ctx)
-            : rank(rank), worldSize(worldSize), _context(std::cref(ctx)), haloThickness(ctx.calculateMaxCutoff()),
-            _nUsedRanks(0) {
+            : _rank(rank), _worldSize(worldSize), _context(std::cref(ctx)), _haloThickness(ctx.calculateMaxCutoff()),
+              _nUsedRanks(0) {
         const auto &boxSize = _context.get().boxSize();
         const auto &periodic = _context.get().periodicBoundaryConditions();
 
         for (int i = 0; i < 3; ++i) {
             if (minDomainWidths[i] <= 0.) {
-                minDomainWidths[i] = 2. * haloThickness;
+                minDomainWidths[i] = 2. * _haloThickness;
                 readdy::log::info("Setting minDomainWidths[{}] to 2 * haloThickness", i);
             }
         }
@@ -152,8 +157,8 @@ public:
             for (std::size_t i = 0; i < 3; ++i) {
                 _extent[i] = boxSize[i] / static_cast<scalar>(_nDomainsPerAxis[i]);
                 _origin[i] = -0.5 * boxSize[i] + _myIdx[i] * _extent[i];
-                _originWithHalo[i] = _origin[i] - haloThickness;
-                _extentWithHalo[i] = _extent[i] + 2 * haloThickness;
+                _originWithHalo[i] = _origin[i] - _haloThickness;
+                _extentWithHalo[i] = _extent[i] + 2 * _haloThickness;
             }
 
             // set up neighbors, i.e. the adjacency between domains
@@ -200,7 +205,7 @@ public:
             }
         } else {
             // allocated but unneeded workers
-            _amINeeded = false;
+            _isIdle = false;
         }
     }
 
@@ -216,6 +221,7 @@ public:
                 _origin.z <= pos.z and pos.z < _origin.z + _extent.z);
     }
 
+    // @todo consider hyperplanes
     bool isInDomainCoreOrHalo(const Vec3 &pos) const {
         validateRankNotMaster();
         // additionally need to consider wrapped position if it is at the edge of the box
@@ -244,9 +250,9 @@ public:
         for (int d = 0; d < 3; ++d) {
             if (ijk[d] != _myIdx[d]) { // only attempt wrap in axes, which are not identical
                 if (periodic[d]) {
-                    if (pos[d] < - 0.5 * box[d] + haloThickness) { // account for halo region in target direction
+                    if (pos[d] < - 0.5 * box[d] + _haloThickness) { // account for halo region in target direction
                         wrappedPos[d] += box[d];
-                    } else if (pos[d] > 0.5 * box[d] - haloThickness) {
+                    } else if (pos[d] > 0.5 * box[d] - _haloThickness) {
                         wrappedPos[d] -= box[d];
                     }
                 }
@@ -303,20 +309,16 @@ public:
         return _nIdleRanks;
     }
 
-    bool amINeeded() const {
-        return _amINeeded;
-    }
-
     bool isMasterRank() const {
-        return (rank == 0);
+        return (_rank == 0);
     }
 
     bool isWorkerRank() const {
-        return (_amINeeded and not isMasterRank());
+        return (_isIdle and not isMasterRank());
     }
 
     bool isIdleRank() const {
-        return (not _amINeeded);
+        return (not _isIdle);
     }
 
     const std::vector<int> &workerRanks() const {
@@ -375,22 +377,8 @@ public:
     }
 
 private:
-    std::array<scalar, 3> determineDomainWidths(const std::array<scalar, 3> &minDomainWidths) {
-        const auto &boxSize = _context.get().boxSize();
-        // Find out nDomainsPerAxis per axis from minDomainWidths
-        std::array<scalar, 3> domainWidths{};
-        for (std::size_t i = 0; i < 3; ++i) {
-            _nDomainsPerAxis[i] = static_cast<unsigned int>(std::max(1., std::floor(boxSize[i] / minDomainWidths[i])));
-            domainWidths[i] = boxSize[i] / static_cast<scalar>(_nDomainsPerAxis[i]);
-        }
-        _nUsedRanks = _nDomainsPerAxis[0] * _nDomainsPerAxis[1] * _nDomainsPerAxis[2] + 1;
-        return domainWidths;
-    }
-
     void validateRankNotMaster() const {
-        if (rank != 0) {
-            return;
-        } else {
+        if (_rank == 0) {
             throw std::logic_error("Master rank 0 cannot know which domain you're referring to.");
         }
     }

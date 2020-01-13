@@ -84,12 +84,11 @@ public:
                                                                       kernel(kernel) {}
 
     void perform() override {
-        kernel->getMPIKernelStateModel().initializeMPINeighborList(cutoffDistance(), kernel->domain());
+        kernel->getMPIKernelStateModel().initializeNeighborList(cutoffDistance());
     }
 
 private:
     MPIKernel *const kernel;
-
 };
 
 class MPIUpdateNeighborList : public readdy::model::actions::UpdateNeighborList {

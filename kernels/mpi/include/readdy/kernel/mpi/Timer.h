@@ -49,9 +49,7 @@
 namespace readdy::kernel::mpi::util {
 
 struct PerformanceData {
-
     using time = double;
-
     /**
      * Creates a new performance datum containing the cumulative time and the number of calls.
      * @param t the initial cumulative time

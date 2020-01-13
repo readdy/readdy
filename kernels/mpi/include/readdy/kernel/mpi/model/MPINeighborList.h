@@ -68,7 +68,7 @@ public:
     CellLinkedList(Data &data, const readdy::model::Context &context)
             : _data(data), _context(context), _head{}, _list{}, _radius{0} {};
 
-    void setUp(scalar cutoff, CellRadius radius, std::shared_ptr<const model::MPIDomain> domain) {
+    void setUp(scalar cutoff, CellRadius radius, const model::MPIDomain* domain) {
         if (!_isSetUp || _cutoff != cutoff || _radius != radius) {
             if (cutoff <= 0) {
                 throw std::logic_error("The cutoff distance for setting up a neighbor list must be > 0");
@@ -80,7 +80,7 @@ public:
             }
             _radius = radius;
             _cutoff = cutoff;
-            _domain = std::move(domain);
+            _domain = domain;
 
             auto size = _domain->extentWithHalo();
             auto desiredWidth = static_cast<scalar>((_cutoff) / static_cast<scalar>(radius));
@@ -327,7 +327,7 @@ protected:
 
     std::reference_wrapper<Data> _data;
     std::reference_wrapper<const readdy::model::Context> _context;
-    std::shared_ptr<const model::MPIDomain> _domain{nullptr};
+    const model::MPIDomain * _domain{nullptr};
 };
 
 class BoxIterator {

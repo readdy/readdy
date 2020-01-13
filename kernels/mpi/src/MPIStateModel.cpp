@@ -72,13 +72,13 @@ MPIStateModel::getParticles() const {
     std::vector<int> numberBytes(_domain->nUsedRanks(), 0);
     // convert number of particles to number of bytes from each rank
     for (std::size_t i = 0; i<numberParticles.size(); ++i) {
-        numberBytes[i] = static_cast<int>(numberParticles[i] * sizeof(util::ThinParticle));
+        numberBytes[i] = static_cast<int>(numberParticles[i] * sizeof(util::ParticlePOD));
     }
 
     // now send and receive thin particles
     if (_domain->isMasterRank()) {
         std::size_t totalNumberParticles = std::accumulate(numberParticles.begin(), numberParticles.end(), 0);
-        std::vector<util::ThinParticle> thinParticles(totalNumberParticles, {{0.,0.,0.}, 0}); // receive buffer
+        std::vector<util::ParticlePOD> thinParticles(totalNumberParticles, {{0., 0., 0.}, 0}); // receive buffer
         std::vector<int> displacements(_domain->nUsedRanks(), 0);
         displacements[0] = 0;
         for (int i = 1; i<displacements.size(); ++i) {
@@ -88,17 +88,17 @@ MPIStateModel::getParticles() const {
         // convert to particles
         std::vector<Particle> particles;
         std::for_each(thinParticles.begin(), thinParticles.end(),
-                      [&particles](const util::ThinParticle &tp) {
+                      [&particles](const util::ParticlePOD &tp) {
                           particles.emplace_back(tp.position, tp.typeId);
                       });
         return particles;
     } else {
         // prepare send data
-        std::vector<util::ThinParticle> thinParticles;
+        std::vector<util::ParticlePOD> thinParticles;
         for (const auto &entry : _data.get()) {
-            thinParticles.emplace_back(entry.position(), entry.type);
+            thinParticles.push_back({entry.position(), entry.type});
         }
-        MPI_Gatherv((void *) thinParticles.data(), static_cast<int>(thinParticles.size() * sizeof(util::ThinParticle)), MPI_BYTE, nullptr, nullptr, nullptr, nullptr, 0, _commUsedRanks);
+        MPI_Gatherv((void *) thinParticles.data(), static_cast<int>(thinParticles.size() * sizeof(util::ParticlePOD)), MPI_BYTE, nullptr, nullptr, nullptr, nullptr, 0, _commUsedRanks);
         return {};
     }
 }
@@ -155,27 +155,27 @@ void MPIStateModel::addParticle(const Particle &p) {
     util::Timer timer("MPIStateModel::addParticle");
     readdy::log::trace("MPIStateModel::addParticle");
     MPI_Barrier(_commUsedRanks);
-    if (_domain->rank == 0) {
+    if (_domain->rank() == 0) {
         //MPI_Barrier(*_commUsedRanks);
         int targetRank = _domain->rankOfPosition(p.pos());
         // broadcast target
         MPI_Bcast(&targetRank, 1, MPI_INT, 0, _commUsedRanks);
         // send
-        std::vector<util::ThinParticle> thinParticles{{p.pos(), p.type()}};
+        std::vector<util::ParticlePOD> thinParticles{{p.pos(), p.type()}};
         MPI_Send((void *) thinParticles.data(),
-                 static_cast<int>(thinParticles.size() * sizeof(util::ThinParticle)), MPI_BYTE,
+                 static_cast<int>(thinParticles.size() * sizeof(util::ParticlePOD)), MPI_BYTE,
                  targetRank, util::tags::sendParticles, _commUsedRanks);
     } else {
         //MPI_Barrier(_commUsedRanks);
         // am i the target?
         int targetRank;
         MPI_Bcast(&targetRank, 1, MPI_INT, 0, _commUsedRanks);
-        if (_domain->rank == targetRank) {
+        if (_domain->rank() == targetRank) {
             // receive, ignore argument p here
             const auto thinParticles = util::receiveParticlesFrom(0, _commUsedRanks);
             std::vector<Particle> particles;
             std::for_each(thinParticles.begin(), thinParticles.end(),
-                          [&particles](const util::ThinParticle &tp) {
+                          [&particles](const util::ParticlePOD &tp) {
                               particles.emplace_back(tp.position, tp.typeId);
                           });
             getParticleData()->addParticles(particles);
@@ -189,16 +189,16 @@ void MPIStateModel::addParticles(const std::vector<Particle> &p) {
     }
     util::Timer timer("MPIStateModel::addParticles");
     // todo use MPI_Scatter
-    if (_domain->rank == 0) {
-        std::unordered_map<int, std::vector<util::ThinParticle>> targetParticleMap;
+    if (_domain->rank() == 0) {
+        std::unordered_map<int, std::vector<util::ParticlePOD>> targetParticleMap;
         for (const auto &particle : p) {
             int target = _domain->rankOfPosition(particle.pos());
             const auto &find = targetParticleMap.find(target);
             if (find != targetParticleMap.end()) {
-                find->second.emplace_back(particle.pos(), particle.type());
+                find->second.push_back({particle.pos(), particle.type()});
             } else {
                 targetParticleMap.emplace(std::make_pair(
-                        target, std::vector<util::ThinParticle>{{particle.pos(), particle.type()}}
+                        target, std::vector<util::ParticlePOD>{{particle.pos(), particle.type()}}
                 ));
             }
 
@@ -213,8 +213,8 @@ void MPIStateModel::addParticles(const std::vector<Particle> &p) {
         for (auto&&[target, thinParticles] : targetParticleMap) {
             MPI_Request req;
             MPI_Isend((void *) thinParticles.data(),
-                     static_cast<int>(thinParticles.size() * sizeof(util::ThinParticle)), MPI_BYTE,
-                     target, util::tags::sendParticles, _commUsedRanks, &req);
+                      static_cast<int>(thinParticles.size() * sizeof(util::ParticlePOD)), MPI_BYTE,
+                      target, util::tags::sendParticles, _commUsedRanks, &req);
             MPI_Request_free(&req);
         }
         MPI_Barrier(_commUsedRanks);
@@ -222,12 +222,12 @@ void MPIStateModel::addParticles(const std::vector<Particle> &p) {
         std::vector<char> isTarget(_domain->nUsedRanks(), false);
         // am i one of the targets?
         MPI_Bcast(isTarget.data(), isTarget.size(), MPI_CHAR, 0, _commUsedRanks);
-        if (isTarget[_domain->rank]) {
+        if (isTarget[_domain->rank()]) {
             // receive, ignore argument p here
             const auto thinParticles = util::receiveParticlesFrom(0, _commUsedRanks);
             std::vector<Particle> particles;
             std::for_each(thinParticles.begin(), thinParticles.end(),
-                          [&particles](const util::ThinParticle &tp) {
+                          [&particles](const util::ParticlePOD &tp) {
                               particles.emplace_back(tp.position, tp.typeId);
                           });
             getParticleData()->addParticles(particles);

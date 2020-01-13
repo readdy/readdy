@@ -79,13 +79,9 @@ public:
     const std::vector<Particle> getParticles() const override;
 
     void initializeNeighborList(scalar interactionDistance) override {
-        throw std::runtime_error("not implemented on MPI use initializeMPINeighborList() instead");
-    };
-
-    void initializeMPINeighborList(scalar interactionDistance, std::shared_ptr<const model::MPIDomain> domain) {
-        _neighborList->setUp(interactionDistance, 1, std::move(domain));
+        _neighborList->setUp(interactionDistance, _neighborListCellRadius, domain());
         _neighborList->update();
-    }
+    };
 
     void updateNeighborList() override {
         _neighborList->update();
@@ -207,8 +203,12 @@ public:
         throw std::logic_error("no topologies on MPI kernel");
     }
 
-    std::shared_ptr<const model::MPIDomain> &domain() {
+    const model::MPIDomain * domain() const {
         return _domain;
+    }
+
+    void setDomain(const model::MPIDomain *domain) {
+        _domain = domain;
     }
 
     MPI_Comm &commUsedRanks() {
@@ -222,7 +222,7 @@ private:
     std::unique_ptr<NeighborList> _neighborList;
     NeighborList::CellRadius _neighborListCellRadius{1};
     std::unique_ptr<readdy::signals::scoped_connection> _reorderConnection;
-    std::shared_ptr<const model::MPIDomain> _domain{nullptr};
+    const model::MPIDomain* _domain{nullptr};
     MPI_Comm _commUsedRanks = MPI_COMM_WORLD;
 };
 

@@ -68,7 +68,7 @@ TEST_CASE("Test weak scaling distribute particles and gather them again ", "[!hi
     readdy::kernel::mpi::MPIKernel kernel(ctx); // this also initializes domains
 
     CHECK(kernel.domain()->nWorkerRanks() == nWorkers);
-    CHECK(kernel.domain()->worldSize == worldSize);
+    CHECK(kernel.domain()->worldSize() == worldSize);
 
     auto idA = kernel.context().particleTypes().idOf("A");
     const std::size_t nParticles = nParticlesPerWorker * nWorkers;
@@ -97,6 +97,6 @@ TEST_CASE("Test weak scaling distribute particles and gather them again ", "[!hi
     }
 
     std::string dir {"/storage/mi/chrisfr/workspace/data/readdympi/nonblock-more-particles/n"+std::to_string(kernel.domain()->nUsedRanks())+"/"};
-    std::string filename {"rank_" + std::to_string(kernel.domain()->rank)};
+    std::string filename {"rank_" + std::to_string(kernel.domain()->rank())};
     readdy::kernel::mpi::util::Timer::writePerfToFile(dir + filename);
 }

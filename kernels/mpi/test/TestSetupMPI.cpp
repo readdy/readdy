@@ -124,8 +124,7 @@ TEST_CASE("Test distribute particles and gather them again", "[mpi]") {
     auto idA = kernel.context().particleTypes().idOf("A");
     const std::size_t nParticles = kernel.domain()->nDomains(); // one particle per domain
     for (const auto &rank : kernel.domain()->workerRanks()) {
-        readdy::Vec3 origin, extent;
-        std::tie(origin, extent) = kernel.domain()->coreOfDomain(rank);
+        auto [origin, extent] = kernel.domain()->coreOfDomain(rank);
         auto center = origin + 0.5 * extent;
         readdy::model::Particle p(center, idA);
         kernel.getMPIKernelStateModel().addParticle(p);

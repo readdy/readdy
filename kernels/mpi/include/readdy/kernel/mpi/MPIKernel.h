@@ -126,8 +126,8 @@ public:
         return false;
     }
 
-    std::shared_ptr<const model::MPIDomain> domain() const {
-        return _domain;
+    const model::MPIDomain* domain() const {
+        return _domain.get();
     }
 
 protected:
@@ -139,7 +139,7 @@ protected:
     actions::MPIActionFactory _actions;
     observables::MPIObservableFactory _observables;
     MPIStateModel _stateModel;
-    std::shared_ptr<model::MPIDomain> _domain{nullptr}; // construction is delayed until initialize()
+    std::unique_ptr<model::MPIDomain> _domain; // construction is delayed until initialize()
 
     // The communicator for the subgroup of actually used workers, can point to _commIfNotWorld or MPI_COMM_WORLD
     MPI_Comm commUsedRanks = MPI_COMM_WORLD;

@@ -49,23 +49,22 @@
 
 namespace readdy::kernel::mpi::util {
 
-struct ThinParticle {
-    ThinParticle(const Vec3 &position, ParticleTypeId typeId) : position(position), typeId(typeId) {};
-    Vec3 position;
-    ParticleTypeId typeId;
+struct ParticlePOD {
+    Vec3 position {};
+    ParticleTypeId typeId {};
 };
 
 enum tags {
     sendParticles
 };
 
-inline std::vector<ThinParticle> receiveParticlesFrom(int sender, const MPI_Comm &comm) {
+inline std::vector<ParticlePOD> receiveParticlesFrom(int sender, const MPI_Comm &comm) {
     MPI_Status status;
     MPI_Probe(sender, tags::sendParticles, comm, &status);
     int byteCount;
     MPI_Get_count(&status, MPI_BYTE, &byteCount);
-    const int nParticles = byteCount / sizeof(ThinParticle);
-    std::vector<ThinParticle> particles(nParticles, {{0.,0.,0.}, 0});
+    const int nParticles = byteCount / sizeof(ParticlePOD);
+    std::vector<ParticlePOD> particles(nParticles, {{0., 0., 0.}, 0});
     MPI_Recv((void *) particles.data(), byteCount, MPI_BYTE, sender, tags::sendParticles, comm,
              MPI_STATUS_IGNORE);
     if (nParticles > 0) {
@@ -76,7 +75,7 @@ inline std::vector<ThinParticle> receiveParticlesFrom(int sender, const MPI_Comm
 }
 
 inline bool isRequiredRank(const model::MPIDomain &domain) {
-    return domain.amINeeded();
+    return !domain.isIdleRank();
 }
 
 }
