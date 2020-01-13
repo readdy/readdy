@@ -50,6 +50,7 @@
 #include <readdy/kernel/mpi/actions/MPIActionFactory.h>
 #include <readdy/kernel/mpi/observables/MPIObservableFactory.h>
 #include <readdy/kernel/mpi/model/MPIDomain.h>
+#include <readdy/kernel/mpi/Timer.h>
 
 namespace readdy::kernel::mpi {
 
@@ -60,6 +61,8 @@ public:
     MPIKernel();
 
     ~MPIKernel() override = default;
+
+    explicit MPIKernel(readdy::model::Context ctx);
 
     MPIKernel(const MPIKernel &) = delete;
 
@@ -119,6 +122,14 @@ public:
         return nullptr;
     };
 
+    bool supportsGillespie() const override {
+        return false;
+    }
+
+    const model::MPIDomain* domain() const {
+        return _domain.get();
+    }
+
 protected:
     int rank;
     int worldSize;
@@ -128,7 +139,10 @@ protected:
     actions::MPIActionFactory _actions;
     observables::MPIObservableFactory _observables;
     MPIStateModel _stateModel;
-    std::unique_ptr<model::MPIDomain> domain{nullptr}; // construction is delayed until initialize()
+    std::unique_ptr<model::MPIDomain> _domain; // construction is delayed until initialize()
+
+    // The communicator for the subgroup of actually used workers, can point to _commIfNotWorld or MPI_COMM_WORLD
+    MPI_Comm commUsedRanks = MPI_COMM_WORLD;
 };
 
 }

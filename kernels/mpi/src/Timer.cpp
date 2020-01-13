@@ -33,29 +33,37 @@
  ********************************************************************/
 
 /**
- * Integration tests:
- * - MSD
- * - Stationary distribution in 1D potential
- * - Thermodynamics of LJ suspension
- * - Michaelis-Menten kinetics (see main library tests)
- * -
+ * « detailed description »
  *
- * Scale number of processes, measure performance also
- *
- * @file TestIntegration.cpp
+ * @file Timer.cpp
  * @brief « brief description »
  * @author chrisfroe
- * @date 03.06.19
+ * @date 26.07.19
  */
 
-#include <catch2/catch.hpp>
+#include <readdy/kernel/mpi/Timer.h>
+#include <fstream>
+#include <readdy/common/filesystem.h>
 
-#include <readdy/model/Kernel.h>
-#include <readdy/plugin/KernelProvider.h>
-#include <readdy/kernel/mpi/MPIKernel.h>
+namespace readdy::kernel::mpi::util {
 
-TEST_CASE("Integration test", "[mpi]") {
-    auto kernel = std::make_unique<readdy::kernel::mpi::MPIKernel>();
-    auto &ctx = kernel->context();
+std::unordered_map<std::string, PerformanceData> Timer::perf {};
+
+void to_json(nlohmann::json &j, const PerformanceData &pd) {
+    j = nlohmann::json{{"time",  pd.cumulativeTime()},
+                       {"count", pd.count()}};
+}
+
+void Timer::writePerfToFile(const std::string &path) {
+    nlohmann::json j;
+    for (const auto &entry : Timer::perf) {
+        nlohmann::json jEntry(entry.second);
+        j[entry.first] = jEntry;
+    }
+    if (not j.empty()) {
+        std::ofstream stream(path, std::ofstream::out |std::ofstream::trunc);
+        stream << j << std::endl;
+    }
+}
 
 }

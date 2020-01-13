@@ -103,5 +103,9 @@ MPIActionFactory::evaluateTopologyReactions(scalar timeStep) const {
     throw std::invalid_argument("EvaluateTopologyReactions not implemented for MPI");
 }
 
+std::unique_ptr<readdy::model::actions::top::BreakBonds>
+MPIActionFactory::breakBonds(scalar timeStep, readdy::model::actions::top::BreakConfig config) const {
+    throw std::invalid_argument("BreakBonds not implemented for MPI");
+}
 
 }

@@ -32,35 +32,50 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                       *
  ********************************************************************/
 
-
-
 /**
- * These tests do not need a MPISession and need not be called using mpirun,
- * because it tests helper objects that do not call MPI functions, e.g. MPIDomain.
+ * « detailed description »
  *
- * @file TestMain.cpp
+ * @file MPIUtils.h
  * @brief « brief description »
  * @author chrisfroe
- * @date 17.06.19
+ * @date 24.07.19
  */
 
-#define CATCH_CONFIG_RUNNER
+#pragma once
 
-#include <catch2/catch.hpp>
+#include <string>
+#include <mpi.h>
+#include <vector>
 
-#include <readdy/testing/Utils.h>
-#include <readdy/plugin/KernelProvider.h>
+namespace readdy::kernel::mpi::util {
 
-int main(int argc, char **argv) {
-    readdy::log::console()->set_level(spdlog::level::warn);
-    Catch::Session session;
-    int returnCode = session.applyCommandLine(argc, argv);
-    if (returnCode != 0) return returnCode;
+struct ParticlePOD {
+    Vec3 position {};
+    ParticleTypeId typeId {};
+};
 
-    if (!session.config().listTestNamesOnly()) {
-        const auto dir = readdy::testing::getPluginsDirectory();
-        readdy::plugin::KernelProvider::getInstance().loadKernelsFromDirectory(dir);
+enum tags {
+    sendParticles
+};
+
+inline std::vector<ParticlePOD> receiveParticlesFrom(int sender, const MPI_Comm &comm) {
+    MPI_Status status;
+    MPI_Probe(sender, tags::sendParticles, comm, &status);
+    int byteCount;
+    MPI_Get_count(&status, MPI_BYTE, &byteCount);
+    const int nParticles = byteCount / sizeof(ParticlePOD);
+    std::vector<ParticlePOD> particles(nParticles, {{0., 0., 0.}, 0});
+    MPI_Recv((void *) particles.data(), byteCount, MPI_BYTE, sender, tags::sendParticles, comm,
+             MPI_STATUS_IGNORE);
+    if (nParticles > 0) {
+        return particles;
+    } else {
+        throw std::runtime_error("y u no send particles?");
     }
+}
 
-    return session.run();
+inline bool isRequiredRank(const model::MPIDomain &domain) {
+    return !domain.isIdleRank();
+}
+
 }

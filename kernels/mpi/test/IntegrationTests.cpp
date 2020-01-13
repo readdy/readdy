@@ -32,35 +32,28 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                       *
  ********************************************************************/
 
-
-
 /**
- * These tests do not need a MPISession and need not be called using mpirun,
- * because it tests helper objects that do not call MPI functions, e.g. MPIDomain.
+ * Integration tests:
+ * - MSD
+ * - Stationary distribution in 1D potential
+ * - Thermodynamics of LJ suspension
+ * - Michaelis-Menten kinetics (see main library tests)
+ * -
  *
- * @file TestMain.cpp
+ * Scale number of processes, measure performance also
+ *
+ * @file TestIntegration.cpp
  * @brief « brief description »
  * @author chrisfroe
- * @date 17.06.19
+ * @date 03.06.19
  */
-
-#define CATCH_CONFIG_RUNNER
 
 #include <catch2/catch.hpp>
 
-#include <readdy/testing/Utils.h>
+#include <readdy/model/Kernel.h>
 #include <readdy/plugin/KernelProvider.h>
+#include <readdy/kernel/mpi/MPIKernel.h>
 
-int main(int argc, char **argv) {
-    readdy::log::console()->set_level(spdlog::level::warn);
-    Catch::Session session;
-    int returnCode = session.applyCommandLine(argc, argv);
-    if (returnCode != 0) return returnCode;
-
-    if (!session.config().listTestNamesOnly()) {
-        const auto dir = readdy::testing::getPluginsDirectory();
-        readdy::plugin::KernelProvider::getInstance().loadKernelsFromDirectory(dir);
-    }
-
-    return session.run();
+TEST_CASE("Integration test", "[!hide][mpi]") {
+    // there is nothing here
 }

@@ -145,6 +145,10 @@ public:
     bool supportsTopologies() const {
         return getTopologyActionFactory() != nullptr;
     };
+    
+    virtual bool supportsGillespie() const {
+        return true;
+    }
 
     /*
      * 
