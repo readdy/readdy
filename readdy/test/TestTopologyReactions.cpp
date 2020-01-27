@@ -68,6 +68,13 @@ readdy::model::top::GraphTopology* setUpSmallTopology(readdy::model::Kernel* ker
     return topology;
 }
 
+bool isNotConnected(const readdy::model::top::graph::Graph& g,
+		    std::list<readdy::model::top::graph::Vertex>::iterator v) {
+  const auto neighbors = (*v).neighbors();
+  if (neighbors.size() == 0) return true;
+  return false;
+}
+
 TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
     auto kernel = create<TestType>();
     auto &ctx = kernel->context();
@@ -552,5 +559,158 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
                 particles.erase(itX);
             }
         }
+
+	SECTION("TTFusionNetwork") {
+	  model::Context ctx;
+
+	  ctx.boxSize() = {{30, 30, 30}};
+
+	  ctx.particleTypes().addTopologyType("head", 0);
+	  ctx.particleTypes().addTopologyType("core", 0);
+	  ctx.particleTypes().addTopologyType("tail", 0);
+	  ctx.particleTypes().addTopologyType("link", 0);
+
+	  ctx.topologyRegistry().addType("polymer");
+
+	  ctx.topologyRegistry().configureBondPotential("head", "core", {.0, .01});
+	  ctx.topologyRegistry().configureBondPotential("core", "tail", {.0, .01});
+	  ctx.topologyRegistry().configureBondPotential("core", "core", {.0, .01});
+	  ctx.topologyRegistry().configureBondPotential("core", "link", {.0, .01});
+	  ctx.topologyRegistry().configureBondPotential("head", "link", {.0, .01});
+	  ctx.topologyRegistry().configureBondPotential("tail", "link", {.0, .01});
+	  ctx.topologyRegistry().configureBondPotential("link", "link", {.0, .01});
+	  
+	  SECTION("min. number of edges too large for full connection") {
+	    ctx.topologyRegistry().addSpatialReaction("connect: polymer(core) + polymer(core) -> polymer(link--link) [self=true, distance>16]",
+						      1e10, 1.1);
+
+	    Simulation sim(kernel->name(), ctx);
+	    
+	    auto p11 = sim.createTopologyParticle("head", {-1, 0, 0});
+	    auto p12 = sim.createTopologyParticle("core", {0, 0, 0});
+	    auto p13 = sim.createTopologyParticle("core", {1, 0, 0});
+	    auto p14 = sim.createTopologyParticle("core", {2, 0, 0});
+	    auto p15 = sim.createTopologyParticle("core", {3, 0, 0});
+	    auto p16 = sim.createTopologyParticle("tail", {4, 0, 0});
+	    
+	    auto p21 = sim.createTopologyParticle("head", {3,  1, 1});
+	    auto p22 = sim.createTopologyParticle("core", {3,  0, 1});
+	    auto p23 = sim.createTopologyParticle("core", {3, -1, 1});
+	    auto p24 = sim.createTopologyParticle("core", {3, -2, 1});
+	    auto p25 = sim.createTopologyParticle("core", {3, -3, 1});
+	    auto p26 = sim.createTopologyParticle("tail", {3, -4, 1});
+	    
+	    auto p31 = sim.createTopologyParticle("head", { 4, -3, 0});
+	    auto p32 = sim.createTopologyParticle("core", { 3, -3, 0});
+	    auto p33 = sim.createTopologyParticle("core", { 2, -3, 0});
+	    auto p34 = sim.createTopologyParticle("core", { 1, -3, 0});
+	    auto p35 = sim.createTopologyParticle("core", { 0, -3, 0});
+	    auto p36 = sim.createTopologyParticle("tail", {-1, -3, 0});
+	    
+	    auto p41 = sim.createTopologyParticle("head", {0, -4, 1});
+	    auto p42 = sim.createTopologyParticle("core", {0, -3, 1});
+	    auto p43 = sim.createTopologyParticle("core", {0, -2, 1});
+	    auto p44 = sim.createTopologyParticle("core", {0, -1, 1});
+	    auto p45 = sim.createTopologyParticle("core", {0,  0, 1});
+	    auto p46 = sim.createTopologyParticle("tail", {0,  1, 1});
+	  
+	    auto t1 = sim.addTopology("polymer", {p11, p12, p13, p14, p15, p16});
+	    auto t2 = sim.addTopology("polymer", {p21, p22, p23, p24, p25, p26});
+	    auto t3 = sim.addTopology("polymer", {p31, p32, p33, p34, p35, p36});
+	    auto t4 = sim.addTopology("polymer", {p41, p42, p43, p44, p45, p46});
+	    for (unsigned i=0; i<5; i++) {
+	      t1->graph().addEdgeBetweenParticles(i, i+1);
+	      t2->graph().addEdgeBetweenParticles(i, i+1);
+	      t3->graph().addEdgeBetweenParticles(i, i+1);
+	      t4->graph().addEdgeBetweenParticles(i, i+1);	      
+	    }
+	    sim.run(3, 1e-3);
+
+	    auto topologies = sim.currentTopologies();
+	    REQUIRE( topologies.size() == 1 );
+
+	    auto top = topologies.at(0);
+	    auto particles = sim.currentParticles();
+	    unsigned n_links = 0;
+	    auto typeLink = ctx.particleTypes().infoOf("link").typeId;
+	    auto vref_last = top->graph().lastVertex();
+	    vref_last++;
+	    for (auto vref=top->graph().firstVertex(); vref != vref_last; vref++) {
+	      auto pidx = vref->particleIndex;
+	      if (particles.at(pidx).type() == typeLink) n_links++;
+	    }
+	    REQUIRE( 6 == n_links );	    
+	    
+	    //for (auto p: particles) {
+	    //  if (p.type() == typeLink) n_links++;
+	    //}
+	    //REQUIRE( 6 == n_links );	    
+	  }
+	  SECTION("full connection") {
+	    ctx.topologyRegistry().addSpatialReaction("connect: polymer(core) + polymer(core) -> polymer(link--link) [self=true, distance>14]", // >14
+						      1e10, 1.01);
+
+	    Simulation sim(kernel->name(), ctx);
+	    
+	    auto p11 = sim.createTopologyParticle("head", {-1, 0, 0});
+	    auto p12 = sim.createTopologyParticle("core", {0, 0, 0});
+	    auto p13 = sim.createTopologyParticle("core", {1, 0, 0});
+	    auto p14 = sim.createTopologyParticle("core", {2, 0, 0});
+	    auto p15 = sim.createTopologyParticle("core", {3, 0, 0});
+	    auto p16 = sim.createTopologyParticle("tail", {4, 0, 0});
+	    
+	    auto p21 = sim.createTopologyParticle("head", {3,  1, 1});
+	    auto p22 = sim.createTopologyParticle("core", {3,  0, 1});
+	    auto p23 = sim.createTopologyParticle("core", {3, -1, 1});
+	    auto p24 = sim.createTopologyParticle("core", {3, -2, 1});
+	    auto p25 = sim.createTopologyParticle("core", {3, -3, 1});
+	    auto p26 = sim.createTopologyParticle("tail", {3, -4, 1});
+	    
+	    auto p31 = sim.createTopologyParticle("head", { 4, -3, 0});
+	    auto p32 = sim.createTopologyParticle("core", { 3, -3, 0});
+	    auto p33 = sim.createTopologyParticle("core", { 2, -3, 0});
+	    auto p34 = sim.createTopologyParticle("core", { 1, -3, 0});
+	    auto p35 = sim.createTopologyParticle("core", { 0, -3, 0});
+	    auto p36 = sim.createTopologyParticle("tail", {-1, -3, 0});
+	    
+	    auto p41 = sim.createTopologyParticle("head", {0, -4, 1});
+	    auto p42 = sim.createTopologyParticle("core", {0, -3, 1});
+	    auto p43 = sim.createTopologyParticle("core", {0, -2, 1});
+	    auto p44 = sim.createTopologyParticle("core", {0, -1, 1});
+	    auto p45 = sim.createTopologyParticle("core", {0,  0, 1});
+	    auto p46 = sim.createTopologyParticle("tail", {0,  1, 1});
+
+	  
+	    auto t1 = sim.addTopology("polymer", {p11, p12, p13, p14, p15, p16});
+	    auto t2 = sim.addTopology("polymer", {p21, p22, p23, p24, p25, p26});
+	    auto t3 = sim.addTopology("polymer", {p31, p32, p33, p34, p35, p36});
+	    auto t4 = sim.addTopology("polymer", {p41, p42, p43, p44, p45, p46});
+	    for (unsigned i=0; i<5; i++) {
+	      t1->graph().addEdgeBetweenParticles(i, i+1);
+	      t2->graph().addEdgeBetweenParticles(i, i+1);
+	      t3->graph().addEdgeBetweenParticles(i, i+1);
+	      t4->graph().addEdgeBetweenParticles(i, i+1);	      
+	    }
+	    sim.run(10, 1e-3);
+
+	    auto topologies = sim.currentTopologies();
+	    REQUIRE( topologies.size() == 1 );
+
+	    auto top = topologies.at(0);
+	    auto particles = sim.currentParticles();
+	    unsigned n_links = 0;
+	    auto typeLink = ctx.particleTypes().infoOf("link").typeId;
+	    
+	    auto vref_last = top->graph().lastVertex();
+	    vref_last++;
+	    for (auto vref=top->graph().firstVertex(); vref != vref_last; vref++) {
+	      auto pidx = vref->particleIndex;
+	      bool r = isNotConnected(top->graph(), vref);
+	      if (r) continue;
+	      if (particles.at(pidx).type() == typeLink) n_links++;
+	    }
+	    REQUIRE( 8 == n_links );	    	    
+	  }
+	}
     }
 }

@@ -89,7 +89,6 @@ public:
 
 private:
     MPIKernel *const kernel;
-
 };
 
 class MPIUpdateNeighborList : public readdy::model::actions::UpdateNeighborList {

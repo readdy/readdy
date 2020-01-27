@@ -59,7 +59,8 @@ namespace reactions {
  * TP - Topology-Particle
  */
 enum class STRMode {
-    TT_ENZYMATIC = 0, TT_FUSION, TT_FUSION_ALLOW_SELF, TP_ENZYMATIC, TP_FUSION
+   TT_ENZYMATIC = 0, TT_FUSION, TT_FUSION_ALLOW_SELF, TP_ENZYMATIC,
+   TP_FUSION
 };
 
 class STRParser;
@@ -140,7 +141,7 @@ public:
     }
 
     const bool is_fusion() const {
-        return _mode == STRMode::TT_FUSION || _mode == STRMode::TT_FUSION_ALLOW_SELF || _mode == STRMode::TP_FUSION;
+      return _mode == STRMode::TT_FUSION || _mode == STRMode::TT_FUSION_ALLOW_SELF || _mode == STRMode::TP_FUSION;
     }
 
     const scalar rate() const {
@@ -156,7 +157,7 @@ public:
     }
 
     const bool allow_self_connection() const {
-        return _mode == STRMode::TT_FUSION_ALLOW_SELF;
+      return _mode == STRMode::TT_FUSION_ALLOW_SELF;
     }
 
     const STRMode &mode() const {
@@ -167,6 +168,10 @@ public:
         return _id;
     }
 
+  const std::size_t min_graph_distance() const {
+    return _min_graph_distance;
+  }
+  
 private:
 
     static ReactionId counter;
@@ -184,6 +189,7 @@ private:
     scalar _rate{0};
     scalar _radius{0};
     STRMode _mode{STRMode::TP_ENZYMATIC};
+    unsigned _min_graph_distance{0};
 };
 
 class STRParser {
@@ -211,9 +217,27 @@ public:
      */
     SpatialTopologyReaction parse(const std::string &descriptor, scalar rate, scalar radius) const;
 
+    /**
+     * Take complete option string and split at commata into single option strings.
+     */
+    std::vector<std::string> parse_options(const std::string &option_str) const;
+  
+    /**
+     * Search options vector for self=true option
+     * @return true if option is present, false otherwise.
+     */
+    bool has_option_allow_self(const std::vector<std::string> &options) const;
+  
+    /**
+     * Search options vector for distance option.
+     * @return -1 if no distnace option was found, or parsed distance value otherwise.
+     */
+    int get_distance(const std::vector<std::string> &options) const;
+  
+  
 private:
     std::reference_wrapper<const TopologyRegistry> _topology_registry;
 };
-
+  
 }
 }
