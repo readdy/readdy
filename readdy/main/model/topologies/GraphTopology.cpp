@@ -172,40 +172,47 @@ bool GraphTopology::isNormalParticle(const Kernel &k) const {
     return false;
 }
 
-typename Graph::VertexIndex GraphTopology::appendParticle(VertexData::ParticleIndex newParticle,
-                                                          VertexData::ParticleIndex counterPart) {
-    auto it = vertexIteratorForParticle(counterPart);
-    if(it == _graph.vertices().end()) {
+typename Graph::PersistentVertexIndex GraphTopology::appendParticle(VertexData::ParticleIndex newParticle,
+                                                                    Graph::PersistentVertexIndex counterPart) {
+    auto it = _graph.begin_persistent() + counterPart.value;
+    if(it == _graph.vertices().end_persistent()) {
         throw std::invalid_argument(fmt::format("Vertex with particle {} was not in graph or deactivated!", counterPart));
     }
-    auto ix = _graph.addVertex(VertexData{
-        .particleIndex = newParticle,
+    auto itNew = _graph.addVertex(VertexData{
+            .particleIndex = newParticle,
     });
-    _graph.addEdge(ix, std::distance(_graph.vertices().begin(), it));
-    return ix;
+    _graph.addEdge(it, itNew.to_persistent());
+    return itNew.persistent_index();
 }
 
-typename Graph::VertexIndex GraphTopology::appendTopology(const GraphTopology &other,
+
+typename Graph::PersistentVertexIndex GraphTopology::appendParticle(VertexData::ParticleIndex newParticle,
+                                                                    VertexData::ParticleIndex counterPart) {
+    auto it = vertexIteratorForParticle(counterPart);
+    return appendParticle(newParticle, _graph.vertices().persistentIndex(it));
+}
+
+typename Graph::PersistentVertexIndex GraphTopology::appendTopology(const GraphTopology &other,
         VertexData::ParticleIndex otherParticle, VertexData::ParticleIndex thisParticle, TopologyTypeId newType) {
     auto &otherGraph = other.graph();
 
     if(!otherGraph.vertices().empty()) {
 
         auto it = vertexIteratorForParticle(thisParticle);
-        if(it == _graph.vertices().end()) {
+        if(it == _graph.end_persistent()) {
             throw std::invalid_argument(fmt::format("Could not find particle {} in this topology.", thisParticle));
         }
-        auto thisIx = std::distance(_graph.vertices().begin(), it);
 
         auto itOther = other.vertexIteratorForParticle(otherParticle);
-        if(itOther == other.graph().vertices().end()) {
+        if(itOther == other.graph().end_persistent()) {
             throw std::invalid_argument(fmt::format("Could not find particle {} in other topology.", otherParticle));
         }
-        auto otherIx = std::distance(otherGraph.vertices().begin(), itOther);
+        auto ix = _graph.vertices().persistentIndex(it);
+        auto otherIx = _graph.vertices().persistentIndex(itOther);
 
-        auto mapping = _graph.append(otherGraph, thisIx, otherIx);
+        auto mapping = _graph.append(otherGraph, ix, otherIx);
         _topology_type = newType;
-        return mapping.at(otherIx);
+        return mapping.at(otherIx.value);
     } else {
         log::warn("encountered empty topology which was deactivated={}", other.isDeactivated());
     }
@@ -219,14 +226,14 @@ std::vector<Particle> GraphTopology::fetchParticles() const {
     return _stateModel->getParticlesForTopology(*this);
 }
 
-typename Graph::VertexList::iterator GraphTopology::vertexIteratorForParticle(VertexData::ParticleIndex index) {
-    return std::find_if(_graph.vertices().begin(), _graph.vertices().end(), [index](const auto& v) {
+typename Graph::VertexList::persistent_iterator GraphTopology::vertexIteratorForParticle(VertexData::ParticleIndex index) {
+    return std::find_if(_graph.vertices().begin_persistent(), _graph.vertices().end_persistent(), [index](const auto& v) {
         return !v.deactivated() && v->particleIndex == index;
     });
 }
 
-typename Graph::VertexList::const_iterator GraphTopology::vertexIteratorForParticle(VertexData::ParticleIndex index) const {
-    return std::find_if(_graph.vertices().begin(), _graph.vertices().end(), [index](const auto& v) {
+typename Graph::VertexList::const_persistent_iterator GraphTopology::vertexIteratorForParticle(VertexData::ParticleIndex index) const {
+    return std::find_if(_graph.vertices().begin_persistent(), _graph.vertices().end_persistent(), [index](const auto& v) {
         return !v.deactivated() && v->particleIndex == index;
     });
 }
@@ -238,7 +245,7 @@ Particle GraphTopology::particleForVertex(const Vertex &vertex) const {
     return _stateModel->getParticleForIndex(vertex->particleIndex);
 }
 
-ParticleTypeId GraphTopology::typeOf(Graph::VertexIndex vertex) const {
+ParticleTypeId GraphTopology::typeOf(Graph::PersistentVertexIndex vertex) const {
     return typeOf(graph().vertices().at(vertex));
 }
 

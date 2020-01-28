@@ -108,13 +108,13 @@ public:
      * @param v the vertex pointing to the particle whose type should be changed
      * @param type_to the target type
      */
-    ChangeParticleType(GraphTopology *topology, Graph::VertexIndex v, ParticleTypeId type_to);
+    ChangeParticleType(GraphTopology *topology, Graph::PersistentVertexIndex v, ParticleTypeId type_to);
 
 protected:
     /**
      * a reference to the vertex
      */
-    Graph::VertexIndex _vertex;
+    Graph::PersistentVertexIndex _vertex;
     /**
      * the target type
      */
@@ -127,19 +127,20 @@ protected:
 
 class ChangeParticlePosition : public TopologyReactionAction {
 public:
-    ChangeParticlePosition(GraphTopology *topology, Graph::VertexIndex v, Vec3 posTo);
+    ChangeParticlePosition(GraphTopology *topology, Graph::PersistentVertexIndex v, Vec3 posTo);
 
 protected:
-    Graph::VertexIndex _vertex;
+    Graph::PersistentVertexIndex _vertex;
     Vec3 _posTo;
 };
 
 class AppendParticle : public TopologyReactionAction {
 public:
-    AppendParticle(GraphTopology *topology, std::vector<Graph::VertexIndex> neighbors, ParticleTypeId type, Vec3 pos);
+    AppendParticle(GraphTopology *topology, std::vector<Graph::PersistentVertexIndex> neighbors,
+                   ParticleTypeId type, Vec3 pos);
 
 protected:
-    std::vector<Graph::VertexIndex> neighbors;
+    std::vector<Graph::PersistentVertexIndex> neighbors;
     ParticleTypeId type;
     Vec3 pos;
 };

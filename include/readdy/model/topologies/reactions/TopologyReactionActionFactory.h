@@ -62,12 +62,14 @@ public:
      * @param type_to the target type
      * @return a unique pointer to the action
      */
-    virtual ActionPtr createChangeParticleType(GraphTopology *topology, const Graph::VertexIndex &v,
+    virtual ActionPtr createChangeParticleType(GraphTopology *topology, const Graph::PersistentVertexIndex &v,
                                                const ParticleTypeId &type_to) const = 0;
 
-    virtual ActionPtr createChangeParticlePosition(GraphTopology *topology, const Graph::VertexIndex &v, Vec3 position) const = 0;
+    virtual ActionPtr createChangeParticlePosition(GraphTopology *topology, const Graph::PersistentVertexIndex &v,
+                                                   Vec3 position) const = 0;
 
-    virtual ActionPtr createAppendParticle(GraphTopology *topology, const std::vector<Graph::VertexIndex> &neighbors,
+    virtual ActionPtr createAppendParticle(GraphTopology *topology,
+                                           const std::vector<Graph::PersistentVertexIndex> &neighbors,
                                            ParticleTypeId type, const Vec3 &position) const = 0;
 
     /**

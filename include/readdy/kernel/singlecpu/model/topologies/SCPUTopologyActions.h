@@ -155,7 +155,7 @@ class SCPUChangeParticleType : public readdy::model::top::reactions::actions::Ch
     SCPUParticleData<model::Entry> *const data;
 public:
     SCPUChangeParticleType(SCPUParticleData<model::Entry> *const data, top::GraphTopology *const topology,
-                           const top::Graph::VertexIndex &v, const ParticleTypeId &type_to)
+                           const top::Graph::PersistentVertexIndex &v, const ParticleTypeId &type_to)
                            : ChangeParticleType(topology, v, type_to), data(data) {}
 
     void execute() override {
@@ -169,7 +169,7 @@ class SCPUChangeParticlePosition : public readdy::model::top::reactions::actions
     SCPUParticleData<model::Entry> *const data;
 public:
     SCPUChangeParticlePosition(SCPUParticleData<model::Entry> *const data, top::GraphTopology *const topology,
-                               const top::Graph::VertexIndex &v, Vec3 posTo)
+                               const top::Graph::PersistentVertexIndex &v, Vec3 posTo)
                                : ChangeParticlePosition(topology, v, posTo), data(data) {}
 
     void execute() override {
@@ -185,17 +185,18 @@ class SCPUAppendParticle : public readdy::model::top::reactions::actions::Append
     SCPUParticleData<model::Entry>::EntryIndex insertIndex {};
 public:
     SCPUAppendParticle(SCPUParticleData<model::Entry> *const data, top::GraphTopology *topology,
-                       std::vector<top::Graph::VertexIndex> neighbors, ParticleTypeId type, Vec3 pos)
+                       std::vector<top::Graph::PersistentVertexIndex> neighbors, ParticleTypeId type, Vec3 pos)
             : AppendParticle(topology, std::move(neighbors), type, pos), data(data), particle(pos, type) {};
 
     void execute() override {
         auto entry = Entry(particle);
         insertIndex = data->addEntry(entry);
         auto firstNeighbor = neighbors[0];
+        // append particle forming edge to the first neighbor
         auto ix = topology->appendParticle(insertIndex, firstNeighbor);
-        // new particles get appended to the end of the linked list
-        for (auto neighborIx : neighbors) {
-            topology->addEdge(ix, neighborIx);
+        // add remaining edges
+        for(std::size_t i = 1; i < neighbors.size(); ++i) {
+            topology->addEdge(ix, neighbors[i]);
         }
     }
 };

@@ -20,6 +20,6 @@ struct VertexData {
 };
 
 using Vertex = graphs::Vertex<VertexData>;
-using Graph = graphs::Graph<Vertex>;
+using Graph = graphs::Graph<graphs::IndexPersistentVector, Vertex>;
 
 }

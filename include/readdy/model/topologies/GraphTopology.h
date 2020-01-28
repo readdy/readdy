@@ -58,8 +58,6 @@ namespace top {
 
 class GraphTopology : public Topology {
 public:
-    using Vertex = graphs::Vertex<VertexData>;
-    using Graph = graphs::Graph<Vertex>;
     using ReactionRate = scalar;
     using ReactionRates = std::vector<ReactionRate>;
 
@@ -94,7 +92,7 @@ public:
         return _graph.containsEdge(std::forward<Graph::Edge>(edge));
     }
 
-    [[nodiscard]] auto containsEdge(Graph::VertexIndex ix1, Graph::VertexIndex ix2) const {
+    [[nodiscard]] auto containsEdge(Graph::PersistentVertexIndex ix1, Graph::PersistentVertexIndex ix2) const {
         return _graph.containsEdge(ix1, ix2);
     }
 
@@ -102,7 +100,7 @@ public:
         _graph.addEdge(edge);
     }
 
-    void addEdge(Graph::VertexIndex ix1, Graph::VertexIndex ix2) {
+    void addEdge(Graph::PersistentVertexIndex ix1, Graph::PersistentVertexIndex ix2) {
         _graph.addEdge(ix1, ix2);
     }
 
@@ -110,13 +108,13 @@ public:
         _graph.removeEdge(edge);
     }
 
-    void removeEdge(Graph::VertexIndex ix1, Graph::VertexIndex ix2) {
+    void removeEdge(Graph::PersistentVertexIndex ix1, Graph::PersistentVertexIndex ix2) {
         _graph.removeEdge(ix1, ix2);
     }
 
     void configure();
 
-    [[nodiscard]] ParticleTypeId typeOf(Graph::VertexIndex vertex) const;
+    [[nodiscard]] ParticleTypeId typeOf(Graph::PersistentVertexIndex vertex) const;
 
     [[nodiscard]] ParticleTypeId typeOf(const Vertex &v) const;
 
@@ -166,22 +164,25 @@ public:
         return _cumulativeRate;
     }
 
-    [[nodiscard]] typename Graph::VertexList::iterator vertexIteratorForParticle(VertexData::ParticleIndex index);
+    [[nodiscard]] typename Graph::VertexList::persistent_iterator vertexIteratorForParticle(VertexData::ParticleIndex index);
 
-    [[nodiscard]] typename Graph::VertexList::const_iterator vertexIteratorForParticle(VertexData::ParticleIndex index) const;
+    [[nodiscard]] typename Graph::VertexList::const_persistent_iterator vertexIteratorForParticle(VertexData::ParticleIndex index) const;
 
-    [[nodiscard]] Graph::VertexIndex vertexIndexForParticle(VertexData::ParticleIndex index) const {
+    [[nodiscard]] Graph::PersistentVertexIndex vertexIndexForParticle(VertexData::ParticleIndex index) const {
         auto it = vertexIteratorForParticle(index);
-        if(it == _graph.vertices().end()) {
+        if(it == _graph.vertices().end_persistent()) {
             throw std::invalid_argument(fmt::format("Particle {} not contained in graph", index));
         }
-        return std::distance(_graph.vertices().begin(), it);
+        return {static_cast<std::size_t>(std::distance(_graph.vertices().begin_persistent(), it))};
     }
 
-    typename Graph::VertexIndex appendParticle(VertexData::ParticleIndex newParticle,
+    typename Graph::PersistentVertexIndex appendParticle(VertexData::ParticleIndex newParticle,
+                                                         Graph::PersistentVertexIndex counterPart);
+
+    typename Graph::PersistentVertexIndex appendParticle(VertexData::ParticleIndex newParticle,
                                                VertexData::ParticleIndex counterPart);
 
-    typename Graph::VertexIndex appendTopology(const GraphTopology &other, VertexData::ParticleIndex otherParticle,
+    typename Graph::PersistentVertexIndex appendTopology(const GraphTopology &other, VertexData::ParticleIndex otherParticle,
                                                VertexData::ParticleIndex thisParticle, TopologyTypeId newType);
 
     [[nodiscard]] std::vector<VertexData::ParticleIndex> particleIndices() const;
@@ -206,7 +207,7 @@ public:
 
     [[nodiscard]] Particle particleForVertex(const Vertex &vertex) const;
 
-    [[nodiscard]] Particle particleForVertex(Graph::VertexIndex vertexRef) const {
+    [[nodiscard]] Particle particleForVertex(Graph::PersistentVertexIndex vertexRef) const {
         return particleForVertex(_graph.vertices().at(vertexRef));
     }
 

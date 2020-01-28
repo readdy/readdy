@@ -52,7 +52,7 @@ namespace readdy::model::top::reactions::actions {
 
 TopologyReactionAction::TopologyReactionAction(GraphTopology *const topology) : topology(topology){ }
 
-ChangeParticleType::ChangeParticleType(GraphTopology *const topology, Graph::VertexIndex v,
+ChangeParticleType::ChangeParticleType(GraphTopology *const topology, Graph::PersistentVertexIndex v,
                                        ParticleTypeId type_to)
         : TopologyReactionAction(topology), _vertex(v), type_to(type_to), previous_type(type_to){}
 
@@ -78,10 +78,10 @@ void ChangeTopologyType::execute() {
     topology->type() = _newType;
 }
 
-ChangeParticlePosition::ChangeParticlePosition(GraphTopology *topology, Graph::VertexIndex v, Vec3 posTo)
+ChangeParticlePosition::ChangeParticlePosition(GraphTopology *topology, Graph::PersistentVertexIndex v, Vec3 posTo)
         : TopologyReactionAction(topology), _vertex(v), _posTo(posTo) {}
 
-AppendParticle::AppendParticle(GraphTopology *topology, std::vector<Graph::VertexIndex> neighbors,
+AppendParticle::AppendParticle(GraphTopology *topology, std::vector<Graph::PersistentVertexIndex> neighbors,
                                ParticleTypeId type, Vec3 pos)
         : TopologyReactionAction(topology), neighbors(std::move(neighbors)), type(type), pos(pos) {}
 }

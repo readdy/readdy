@@ -48,11 +48,11 @@
 
 namespace readdy::model::top::reactions {
 
-Recipe &Recipe::changeParticleType(Graph::VertexIndex ref, const std::string &to) {
+Recipe &Recipe::changeParticleType(Graph::PersistentVertexIndex ref, const std::string &to) {
     return changeParticleType(ref, _topology.get().context().particleTypes().idOf(to));
 }
 
-Recipe &Recipe::separateVertex(Graph::VertexIndex vertex) {
+Recipe &Recipe::separateVertex(Graph::PersistentVertexIndex vertex) {
     const auto &v = _topology.get().graph().vertices().at(vertex);
     std::for_each(v.neighbors().begin(), v.neighbors().end(), [=](auto neighbor) {
         this->removeEdge(std::make_tuple(vertex, neighbor));
@@ -60,7 +60,7 @@ Recipe &Recipe::separateVertex(Graph::VertexIndex vertex) {
     return *this;
 }
 
-Recipe &Recipe::appendNewParticle(const std::vector<Graph::VertexIndex> &neighbors, const std::string &type,
+Recipe &Recipe::appendNewParticle(const std::vector<Graph::PersistentVertexIndex> &neighbors, const std::string &type,
                                   const Vec3 &position) {
     if(neighbors.empty()) throw std::invalid_argument("Cannot append new particle without specifying any neighbors.");
     auto typeId = _topology.get().context().particleTypes().idOf(type);

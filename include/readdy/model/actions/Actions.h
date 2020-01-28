@@ -124,7 +124,7 @@ public:
 
     scalar &cutoffDistance() { return _cutoffDistance; }
 
-    const scalar &cutoffDistance() const { return _cutoffDistance; }
+    [[nodiscard]] scalar cutoffDistance() const { return _cutoffDistance; }
 
 protected:
     scalar _cutoffDistance;
@@ -216,8 +216,6 @@ private:
  */
 class BreakBonds : public TimeStepDependentAction {
 public:
-    using vertex_ref = readdy::model::top::Graph::VertexIndex;
-
     explicit BreakBonds(scalar timeStep, BreakConfig breakConfig);
 
     ~BreakBonds() override = default;
@@ -333,7 +331,7 @@ protected:
                     bondedPotentials.push_back(
                             std::make_unique<readdy::model::top::TopologyActionFactory::harmonic_bond>(bond.second));
                     break;
-                };
+                }
             }
         }
 

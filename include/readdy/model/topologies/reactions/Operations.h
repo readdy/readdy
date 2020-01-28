@@ -92,7 +92,7 @@ public:
      * @param vertex the vertex
      * @param type_to the target type
      */
-    ChangeParticleType(const Graph::VertexIndex &vertex, ParticleTypeId type_to) : _vertex(vertex), _type_to(type_to) {}
+    ChangeParticleType(const Graph::PersistentVertexIndex &vertex, ParticleTypeId type_to) : _vertex(vertex), _type_to(type_to) {}
 
     /**
      * Create the corresponding action.
@@ -105,14 +105,14 @@ public:
     }
 
 private:
-    Graph::VertexIndex _vertex;
+    Graph::PersistentVertexIndex _vertex;
     ParticleTypeId _type_to;
 };
 
 class AppendParticle : public Operation {
 public:
 
-    AppendParticle(std::vector<Graph::VertexIndex> neighbors, ParticleTypeId type, const Vec3 &pos)
+    AppendParticle(std::vector<Graph::PersistentVertexIndex> neighbors, ParticleTypeId type, const Vec3 &pos)
             : neighbors(std::move(neighbors)), type(type), pos(pos) {};
 
     ActionPtr create_action(TopologyPtr topology, FactoryPtr factory) const override {
@@ -120,21 +120,21 @@ public:
     }
 
 private:
-    std::vector<Graph::VertexIndex> neighbors;
+    std::vector<Graph::PersistentVertexIndex> neighbors;
     ParticleTypeId type;
     Vec3 pos;
 };
 
 class ChangeParticlePosition : public Operation {
 public:
-    ChangeParticlePosition(const Graph::VertexIndex &vertex, Vec3 position) : _vertex(vertex), _pos(position) {};
+    ChangeParticlePosition(const Graph::PersistentVertexIndex &vertex, Vec3 position) : _vertex(vertex), _pos(position) {};
 
     ActionPtr create_action(TopologyPtr topology, FactoryPtr factory) const override {
         return factory->createChangeParticlePosition(topology, _vertex, _pos);
     }
 
 private:
-    Graph::VertexIndex _vertex;
+    Graph::PersistentVertexIndex _vertex;
     Vec3 _pos;
 };
 

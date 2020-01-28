@@ -71,17 +71,17 @@ public:
 
     ~Recipe() = default;
 
-    Recipe &changeParticleType(Graph::VertexIndex ref, const std::string &to);
+    Recipe &changeParticleType(Graph::PersistentVertexIndex ref, const std::string &to);
 
-    Recipe &changeParticleType(Graph::VertexIndex ref, const ParticleTypeId &to) {
+    Recipe &changeParticleType(Graph::PersistentVertexIndex ref, const ParticleTypeId &to) {
         _steps.push_back(std::make_shared<op::ChangeParticleType>(ref, to));
         return *this;
     }
 
-    Recipe &appendNewParticle(const std::vector<Graph::VertexIndex> &neighbors, const std::string &type,
+    Recipe &appendNewParticle(const std::vector<Graph::PersistentVertexIndex> &neighbors, const std::string &type,
                               const Vec3 &position);
 
-    Recipe &changeParticlePosition(Graph::VertexIndex ref, const Vec3 &pos) {
+    Recipe &changeParticlePosition(Graph::PersistentVertexIndex ref, const Vec3 &pos) {
         _steps.push_back(std::make_shared<op::ChangeParticlePosition>(ref, pos));
         return *this;
     }
@@ -91,7 +91,7 @@ public:
         return *this;
     }
 
-    Recipe &addEdge(Graph::VertexIndex v1, Graph::VertexIndex v2) {
+    Recipe &addEdge(Graph::PersistentVertexIndex v1, Graph::PersistentVertexIndex v2) {
         return addEdge(std::tie(v1, v2));
     }
 
@@ -100,11 +100,11 @@ public:
         return *this;
     }
 
-    Recipe &removeEdge(Graph::VertexIndex v1, Graph::VertexIndex v2) {
+    Recipe &removeEdge(Graph::PersistentVertexIndex v1, Graph::PersistentVertexIndex v2) {
         return removeEdge(std::tie(v1, v2));
     }
 
-    Recipe &separateVertex(Graph::VertexIndex vertex);
+    Recipe &separateVertex(Graph::PersistentVertexIndex vertex);
 
     Recipe &changeTopologyType(const std::string &type) {
         _steps.push_back(std::make_shared<op::ChangeTopologyType>(type));
