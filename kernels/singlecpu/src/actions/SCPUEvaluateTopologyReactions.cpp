@@ -265,9 +265,9 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
 					const SCPUStateModel::topologies_vec& topologies = stateModel.topologies();
 					if (tidx1 == tidx2) {
 					  const std::unique_ptr<readdy::model::top::GraphTopology> &t1 = topologies.at(static_cast<std::size_t>(tidx1));
-					  const readdy::model::top::graph::Graph& gr = t1->graph();
-					  const readdy::model::top::graph::Graph::vertex_ref& v1 = t1->vertexForParticle(pidx);
-					  const readdy::model::top::graph::Graph::vertex_ref& v2 = t1->vertexForParticle(neighborIdx);
+					  const auto& gr = t1->graph();
+					  const auto& v1 = t1->vertexIteratorForParticle(pidx);
+					  const auto& v2 = t1->vertexIteratorForParticle(neighborIdx);
 					  bool result = gr.areConnectedWithNOrLessEdges(reaction.min_graph_distance(), *v1, *v2);
 					  if (result) {					    
 					    break;

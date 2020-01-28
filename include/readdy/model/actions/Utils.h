@@ -69,9 +69,7 @@ void executeStructuralReaction(readdy::util::index_persistent_vector<TopologyRef
         }
     } else {
         if (topology->isNormalParticle(*kernel)) {
-            auto it = std::find_if(topology->graph().vertices().begin(), topology->graph().vertices().end(), [](const auto &v) {
-                return !v.deactivated();
-            });
+            auto it = topology->graph().vertices().begin();
             if(it == topology->graph().vertices().end()) {
                 throw std::runtime_error("Topology had size 1 but no active vertices!");
             }

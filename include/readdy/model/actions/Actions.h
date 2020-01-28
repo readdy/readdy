@@ -277,16 +277,11 @@ protected:
                 model.insert_topology(std::move(newTopology));
             } else {
                 // if we have a single particle that is not of flavor topology, remove from topology structure!
-                auto particleIndex = 0;
-                {
-                    // find first particle that is not deactivated
-                    for(auto it = newTopology.graph().vertices().begin(); it != newTopology.graph().vertices().end(); ++it) {
-                        if(!it->deactivated()) {
-                            particleIndex = std::distance(newTopology.graph().vertices().begin(), it);
-                            break;
-                        }
-                    }
+                auto it = newTopology.graph().begin();
+                if(it == newTopology.graph().end()) {
+                    throw std::logic_error("(BreakBonds) Topology had no active particle!");
                 }
+                auto particleIndex = it->data().particleIndex;
                 model.getParticleData()->entry_at(particleIndex).topology_index = -1;
             }
         }
