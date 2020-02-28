@@ -33,41 +33,42 @@
  ********************************************************************/
 
 /**
- * « detailed description »
- *
- * @file TestMain.cpp
- * @brief « brief description »
+ * @file Utils.h
+ * @brief Utilities like locating plugins, needed in writing readdy executables, e.g. tests
  * @author chrisfroe
- * @date 28.05.19
+ * @date 28.02.20
  */
 
+#pragma once
 
-#define CATCH_CONFIG_RUNNER
+#include <readdy/common/Utils.h>
+#include <readdy/common/logging.h>
+#include <readdy/common/string.h>
 
-#include <catch2/catch.hpp>
+namespace readdy::plugin::utils {
 
-#include <readdy/testing/Utils.h>
-#include <readdy/plugin/KernelProvider.h>
-#include <readdy/kernel/mpi/MPISession.h>
-
-
-int main(int argc, char **argv) {
-    MPISession mpisession(argc, argv);
-
-    // add own std::string dir, todo supply this argument to test functions somehow
-
-    Catch::Session session;
-    int returnCode = session.applyCommandLine(argc, argv);
-    if (returnCode != 0) return returnCode;
-
-    if (!session.config().listTestNamesOnly()) {
-        const auto dir = readdy::testing::getPluginsDirectory();
-        readdy::plugin::KernelProvider::getInstance().loadKernelsFromDirectory(dir);
+inline std::string getPluginsDirectory() {
+    // test for several environment variables
+    const std::string envs[]{"CONDA_ENV_PATH", "CONDA_PREFIX", "PREFIX"};
+    const char *env = nullptr;
+    for (auto &&key : envs) {
+        env = std::getenv(key.c_str());
+        if (env != nullptr) {
+            log::trace("Using env-variable for plugin dir prefix {}={}", key, env);
+            break;
+        }
     }
+    std::string pluginDir = "readdy/readdy_plugins";
+    if (env != nullptr) {
+        auto _env = std::string(env);
+        if (!util::str::has_suffix(_env, "/")) {
+            _env = _env.append("/");
+        }
+        pluginDir = _env.append(pluginDir);
+    } else {
+        log::trace("no environment variables found that indicate plugins dir.");
+    }
+    return pluginDir;
+}
 
-    //std::string dir {"/storage/mi/chrisfr/workspace/data/readdympi/nonblock-more-particles/n"+std::to_string(kernel.domain()->nUsedRanks())+"/"};
-    //std::string filename {"rank_" + std::to_string(kernel.domain()->rank())};
-    //readdy::kernel::mpi::util::Timer::writePerfToFile(dir + filename);
-
-    return session.run();
 }

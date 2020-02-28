@@ -33,12 +33,12 @@
 ####################################################################
 
 
-project(runPerformanceTests_mpi LANGUAGES C CXX)
+project(runPerformance_mpi LANGUAGES C CXX)
 
-add_executable(${PROJECT_NAME} TestMain.cpp TestPerformance.cpp ${TESTING_INCLUDE_DIR})
+add_executable(${PROJECT_NAME} PerformanceMain.cpp ${TESTING_INCLUDE_DIR})
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${READDY_INCLUDE_DIRS} ${TESTING_INCLUDE_DIR} ${MPI_INCLUDE_DIR})
-target_link_libraries(${PROJECT_NAME} PUBLIC readdy readdy_kernel_mpi Catch2::Catch2)
+target_link_libraries(${PROJECT_NAME} PUBLIC readdy readdy_kernel_mpi)# Catch2::Catch2)
 set_target_properties(${PROJECT_NAME} PROPERTIES
         LINK_FLAGS "${EXTRA_LINK_FLAGS}"
         COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}")

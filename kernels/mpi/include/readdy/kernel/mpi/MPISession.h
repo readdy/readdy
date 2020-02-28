@@ -53,24 +53,36 @@
  *  + [@todo] and writing performance data
  */
 class MPISession {
-    int worldSize;
-    int rank;
+    int _worldSize;
+    int _rank;
     int nameLen;
-    char processorName[MPI_MAX_PROCESSOR_NAME];
+    char _processorName[MPI_MAX_PROCESSOR_NAME];
 
 public:
     /** On most MPI implementations MPI_init */
     MPISession(int &argc, char **argv) {
         MPI_Init(&argc, &argv);
 
-        MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-        MPI_Get_processor_name(processorName, &nameLen);
+        MPI_Comm_size(MPI_COMM_WORLD, &_worldSize);
+        MPI_Comm_rank(MPI_COMM_WORLD, &_rank);
+        MPI_Get_processor_name(_processorName, &nameLen);
 
         readdy::log::console()->set_level(spdlog::level::info);
-        readdy::log::info("pid {} Rank {} / {} is on {}", static_cast<long>(getpid()), rank, worldSize, processorName);
+        readdy::log::info("pid {} Rank {} / {} is on {}", static_cast<long>(getpid()), _rank, _worldSize, _processorName);
         waitForDebugger();
         readdy::log::console()->set_level(spdlog::level::warn);
+    }
+
+    std::string processorName() {
+        return std::string(_processorName);
+    }
+
+    int rank() {
+        return _rank;
+    }
+
+    int worldSize() {
+        return _worldSize;
     }
 
     ~MPISession() {

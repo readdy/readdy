@@ -54,16 +54,17 @@ void to_json(nlohmann::json &j, const PerformanceData &pd) {
                        {"count", pd.count()}};
 }
 
-void Timer::writePerfToFile(const std::string &path) {
+nlohmann::json Timer::perfToJson() {
     nlohmann::json j;
     for (const auto &entry : Timer::perf) {
         nlohmann::json jEntry(entry.second);
         j[entry.first] = jEntry;
     }
-    if (not j.empty()) {
-        std::ofstream stream(path, std::ofstream::out |std::ofstream::trunc);
-        stream << j << std::endl;
-    }
+    return j;
+}
+
+void Timer::clear() {
+    perf.clear();
 }
 
 }

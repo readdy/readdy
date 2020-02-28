@@ -46,9 +46,9 @@
 
 #include <catch2/catch.hpp>
 
-#include <readdy/testing/Utils.h>
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/kernel/mpi/MPISession.h>
+#include <readdy/plugin/Utils.h>
 
 
 int main(int argc, char **argv) {
@@ -59,7 +59,7 @@ int main(int argc, char **argv) {
     if (returnCode != 0) return returnCode;
 
     if (!session.config().listTestNamesOnly()) {
-        const auto dir = readdy::testing::getPluginsDirectory();
+        const auto dir = readdy::plugin::utils::getPluginsDirectory();
         readdy::plugin::KernelProvider::getInstance().loadKernelsFromDirectory(dir);
     }
 

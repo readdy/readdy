@@ -69,7 +69,7 @@ private:
     std::vector<int> _workerRanks; // can be returned as const ref to conveniently iterate over ranks
     bool _isIdle{true};
     std::array<std::size_t, 3> _nDomainsPerAxis{};
-    util::Index3D _domainIndex; // rank of (ijk) is domainIndex(i,j,k)+1
+    readdy::util::Index3D _domainIndex; // rank of (ijk) is domainIndex(i,j,k)+1
 
     /** The following members will only be defined for rank != 0 */
 
@@ -84,7 +84,7 @@ private:
 public:
     // Neighborhood stuff
     // map from ([0-2], [0-2], [0-2]) to the index of the 27 neighbors (including self)
-    const util::Index3D neighborIndex = util::Index3D(static_cast<std::size_t>(3), static_cast<std::size_t>(3),
+    const readdy::util::Index3D neighborIndex = readdy::util::Index3D(static_cast<std::size_t>(3), static_cast<std::size_t>(3),
                                                       static_cast<std::size_t>(3));
 
     enum NeighborType {
@@ -148,7 +148,7 @@ public:
         assert(_workerRanks.back() == _nUsedRanks-1);
         _nIdleRanks = worldSize - _nUsedRanks;
 
-        _domainIndex = util::Index3D(_nDomainsPerAxis[0], _nDomainsPerAxis[1], _nDomainsPerAxis[2]);
+        _domainIndex = readdy::util::Index3D(_nDomainsPerAxis[0], _nDomainsPerAxis[1], _nDomainsPerAxis[2]);
 
         // the rest is only for workers
         if (rank != 0 and rank < _nUsedRanks) {
@@ -261,72 +261,72 @@ public:
         return wrappedPos;
     }
 
-    bool isInDomainHalo(const Vec3 &pos) const {
+    [[nodiscard]] bool isInDomainHalo(const Vec3 &pos) const {
         return isInDomainCoreOrHalo(pos) and not isInDomainCore(pos);
     }
 
-    const Vec3 &origin() const {
+    [[nodiscard]] const Vec3 &origin() const {
         validateRankNotMaster();
         return _origin;
     }
 
-    const Vec3 &extent() const {
+    [[nodiscard]] const Vec3 &extent() const {
         // master rank has this information
         return _extent;
     }
 
-    const Vec3 &originWithHalo() const {
+    [[nodiscard]] const Vec3 &originWithHalo() const {
         validateRankNotMaster();
         return _originWithHalo;
     }
 
-    const Vec3 &extentWithHalo() const {
+    [[nodiscard]] const Vec3 &extentWithHalo() const {
         validateRankNotMaster();
         return _extentWithHalo;
     }
 
-    const util::Index3D &domainIndex() const {
+    [[nodiscard]] const readdy::util::Index3D &domainIndex() const {
         return _domainIndex;
     }
 
-    const std::array<std::size_t, 3> &nDomainsPerAxis() const {
+    [[nodiscard]] const std::array<std::size_t, 3> &nDomainsPerAxis() const {
         return _nDomainsPerAxis;
     }
 
-    const std::size_t nDomains() const {
+    [[nodiscard]] const std::size_t nDomains() const {
         return std::accumulate(_nDomainsPerAxis.begin(), _nDomainsPerAxis.end(), 1, std::multiplies<>());
     }
 
-    int nUsedRanks() const {
+    [[nodiscard]] int nUsedRanks() const {
         return _nUsedRanks;
     }
 
-    int nWorkerRanks() const {
+    [[nodiscard]] int nWorkerRanks() const {
         return _nWorkerRanks;
     }
 
-    int nIdleRanks() const {
+    [[nodiscard]] int nIdleRanks() const {
         return _nIdleRanks;
     }
 
-    bool isMasterRank() const {
+    [[nodiscard]] bool isMasterRank() const {
         return (_rank == 0);
     }
 
-    bool isWorkerRank() const {
+    [[nodiscard]] bool isWorkerRank() const {
         return (_isIdle and not isMasterRank());
     }
 
-    bool isIdleRank() const {
+    [[nodiscard]] bool isIdleRank() const {
         return (not _isIdle);
     }
 
-    const std::vector<int> &workerRanks() const {
+    [[nodiscard]] const std::vector<int> &workerRanks() const {
         return _workerRanks;
     }
 
     /** calculate the core region (given by origin and extent) of domain associated with otherRank */
-    std::pair<Vec3, Vec3> coreOfDomain(int otherRank) const {
+    [[nodiscard]] std::pair<Vec3, Vec3> coreOfDomain(int otherRank) const {
         if (otherRank != 0 and otherRank < _nUsedRanks) {
             // find out which this ranks' ijk coordinates are, consider -1 because of master rank 0
             const auto &boxSize = _context.get().boxSize();
@@ -347,22 +347,22 @@ public:
     /**
      * @return This domains' (ijk) array
      */
-    const std::array<std::size_t, 3> &myIdx() const {
+    [[nodiscard]] const std::array<std::size_t, 3> &myIdx() const {
         validateRankNotMaster();
         return _myIdx;
     }
 
-    const std::array<NeighborType, 27> &neighborTypes() const {
+    [[nodiscard]] const std::array<NeighborType, 27> &neighborTypes() const {
         validateRankNotMaster();
         return _neighborTypes;
     }
 
-    const std::array<int, 27> &neighborRanks() const {
+    [[nodiscard]] const std::array<int, 27> &neighborRanks() const {
         validateRankNotMaster();
         return _neighborRanks;
     }
 
-    std::array<std::size_t, 3> ijkOfPosition(const Vec3 &pos) const {
+    [[nodiscard]] std::array<std::size_t, 3> ijkOfPosition(const Vec3 &pos) const {
         const auto &boxSize = _context.get().boxSize();
         if (!(-.5 * boxSize[0] <= pos.x && .5 * boxSize[0] > pos.x
               && -.5 * boxSize[1] <= pos.y && .5 * boxSize[1] > pos.y
@@ -383,7 +383,7 @@ private:
         }
     }
 
-    int wrapDomainIdx(int posIdx, std::uint8_t axis) const {
+    [[nodiscard]] int wrapDomainIdx(int posIdx, std::uint8_t axis) const {
         auto &pbc = _context.get().periodicBoundaryConditions();
         auto nDomainsAxis = static_cast<int>(_domainIndex[axis]);
         if (pbc[axis]) {
@@ -395,7 +395,7 @@ private:
         }
     }
 
-    bool isValidDecomposition(const std::array<std::size_t, 3> nDomains) const {
+    [[nodiscard]] bool isValidDecomposition(const std::array<std::size_t, 3> nDomains) const {
         const auto cutoff = _context.get().calculateMaxCutoff();
         const auto periodic = _context.get().periodicBoundaryConditions();
         const auto boxSize = _context.get().boxSize();

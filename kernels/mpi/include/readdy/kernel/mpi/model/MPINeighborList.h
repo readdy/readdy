@@ -90,7 +90,7 @@ public:
                 _cellSize[i] = size[i] / static_cast<scalar>(dims[i]);
             }
 
-            _cellIndex = util::Index3D(dims[0], dims[1], dims[2]);
+            _cellIndex = readdy::util::Index3D(dims[0], dims[1], dims[2]);
 
             {
                 // set up cell adjacency list
@@ -99,7 +99,7 @@ public:
                     nNeighbors[i] = std::min(nNeighbors[i], static_cast<std::size_t>(2 * radius + 1));
                 }
                 auto nAdjacentCells = nNeighbors[0] * nNeighbors[1] * nNeighbors[2];
-                _cellNeighbors = util::Index2D(_cellIndex.size(), 1 + nAdjacentCells);
+                _cellNeighbors = readdy::util::Index2D(_cellIndex.size(), 1 + nAdjacentCells);
                 _cellNeighborsContent.resize(_cellNeighbors.size());
                 {
                     int r = _radius;
@@ -172,11 +172,11 @@ public:
         _isSetUp = false;
     };
 
-    const util::Index3D &cellIndex() const {
+    const readdy::util::Index3D &cellIndex() const {
         return _cellIndex;
     };
 
-    const util::Index2D &neighborIndex() const {
+    const readdy::util::Index2D &neighborIndex() const {
         return _cellNeighbors;
     };
 
@@ -319,9 +319,9 @@ protected:
 
     Vec3 _cellSize{0, 0, 0};
 
-    util::Index3D _cellIndex;
+    readdy::util::Index3D _cellIndex;
     // index of size (n_cells x (1 + nAdjacentCells)), where the first element tells how many adj cells are stored
-    util::Index2D _cellNeighbors;
+    readdy::util::Index2D _cellNeighbors;
     // backing vector of _cellNeighbors index of size (n_cells x (1 + nAdjacentCells))
     std::vector<std::size_t> _cellNeighborsContent;
 

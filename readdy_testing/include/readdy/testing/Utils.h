@@ -69,27 +69,4 @@ inline std::vector<std::string> getKernelsToTest() {
     return kernels;
 }
 
-inline std::string getPluginsDirectory() {
-    // test for several environment variables
-    const std::string envs[]{"CONDA_ENV_PATH", "CONDA_PREFIX", "PREFIX"};
-    const char *env = nullptr;
-    for (auto &&key : envs) {
-        env = std::getenv(key.c_str());
-        if (env != nullptr) {
-            log::trace("Using env-variable for plugin dir prefix {}={}", key, env);
-            break;
-        }
-    }
-    std::string pluginDir = "readdy/readdy_plugins";
-    if (env != nullptr) {
-        auto _env = std::string(env);
-        if (!util::str::has_suffix(_env, "/")) {
-            _env = _env.append("/");
-        }
-        pluginDir = _env.append(pluginDir);
-    } else {
-        log::trace("no environment variables found that indicate plugins dir.");
-    }
-    return pluginDir;
-}
 }

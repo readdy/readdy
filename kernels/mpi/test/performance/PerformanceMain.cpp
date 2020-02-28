@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2019 Computational Molecular Biology Group,          *
+ * Copyright © 2020 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * Redistribution and use in source and binary forms, with or       *
@@ -35,64 +35,62 @@
 /**
  * « detailed description »
  *
- * @file TestPerformance.cpp
+ * @file TestMain.cpp
  * @brief « brief description »
  * @author chrisfroe
- * @date 28.02.20
+ * @date 28.05.19
  */
 
-#include <catch2/catch.hpp>
-
-#include <readdy/model/Kernel.h>
-#include <readdy/kernel/mpi/MPIKernel.h>
-#include <readdy/api/Simulation.h>
-#include <readdy/api/KernelConfiguration.h>
+#include <readdy/plugin/KernelProvider.h>
+#include <readdy/kernel/mpi/MPISession.h>
+#include <readdy/plugin/Utils.h>
+#include <fstream>
+#include "Scenarios.h"
 
 using json = nlohmann::json;
+namespace perf = readdy::kernel::mpi::performance;
 
-TEST_CASE("Test weak scaling distribute particles and gather them again ", "[!hide][mpi]") {
-    int worldSize;
-    MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
-    std::size_t nWorkers = worldSize - 1;
-    std::size_t nParticlesPerWorker = 10000;
+int main(int argc, char **argv) {
+    // MPI_Init will modify argc, argv such that they behave ''normal'' again, i.e. without the mpirun arguments
+    MPISession mpiSession(argc, argv);
 
-    readdy::model::Context ctx;
-
-    ctx.boxSize() = {static_cast<readdy::scalar>(nWorkers * 5.), 5., 5.};
-    ctx.particleTypes().add("A", 1.);
-    ctx.particleTypes().add("B", 1.);
-    ctx.potentials().addHarmonicRepulsion("A", "A", 10., 2.4);
-    json conf = {{"MPI", {{"dx", 4.9}, {"dy", 4.9}, {"dz", 4.9}}}};
-    ctx.kernelConfiguration() = conf.get<readdy::conf::Configuration>();
-
-    readdy::kernel::mpi::MPIKernel kernel(ctx); // this also initializes domains
-
-    CHECK(kernel.domain()->nWorkerRanks() == nWorkers);
-    CHECK(kernel.domain()->worldSize() == worldSize);
-
-    auto idA = kernel.context().particleTypes().idOf("A");
-    const std::size_t nParticles = nParticlesPerWorker * nWorkers;
-    std::vector<readdy::model::Particle> particles;
-    for (std::size_t i = 0; i < nParticles; ++i) {
-        auto x = readdy::model::rnd::uniform_real() * ctx.boxSize()[0] - 0.5 * ctx.boxSize()[0];
-        auto y = readdy::model::rnd::uniform_real() * 5. - 2.5;
-        auto z = readdy::model::rnd::uniform_real() * 5. - 2.5;
-        particles.emplace_back(x,y,z, idA);
+    {
+        const auto dir = readdy::plugin::utils::getPluginsDirectory();
+        readdy::plugin::KernelProvider::getInstance().loadKernelsFromDirectory(dir);
     }
-    kernel.stateModel().addParticles(particles);
 
-    if (kernel.domain()->isMasterRank()) {
-        CHECK(kernel.getMPIKernelStateModel().getParticleData()->size() == 0); // master data is emtpy
-    } else if (kernel.domain()->isWorkerRank()) {
-        CHECK(kernel.getMPIKernelStateModel().getParticleData()->size() > 0); // worker should have gotten one particle
-    } else if (kernel.domain()->isIdleRank()) {
-        CHECK(kernel.getMPIKernelStateModel().getParticleData()->size() == 0); // idle workers are idle
+    std::string outDir;
+    if (argc > 1) {
+        outDir = std::string(argv[1]);
     } else {
-        throw std::runtime_error("Must be one of those above");
+        outDir = "~/";
     }
 
-    const auto currentParticles = kernel.stateModel().getParticles();
-    if (kernel.domain()->isMasterRank()) {
-        CHECK(currentParticles.size() == nParticles);
+    std::vector<std::unique_ptr<perf::Scenario>> scenarios;
+    scenarios.push_back(std::make_unique<perf::DistributeParticles>());
+
+    for (const auto &s : scenarios) {
+        // run and get results
+        auto json = s->run();
+
+        // misc. info to json
+        json["rank"] = mpiSession.rank();
+        json["worldSize"] = mpiSession.worldSize();
+        json["processorName"] = mpiSession.processorName();
+        json["scenarioName"] = s->name();
+        json["scenarioDescription"] = s->description();
+
+        // save json with a different name for every rank
+        std::string filename{s->name() + "_rank_" + std::to_string(mpiSession.rank())};
+        std::string path = outDir + filename;
+
+        if (not json.empty()) {
+            std::ofstream stream(path, std::ofstream::out |std::ofstream::trunc);
+            stream << json << std::endl;
+        }
+
+        MPI_Barrier(MPI_COMM_WORLD);
     }
+
+    return 0;
 }

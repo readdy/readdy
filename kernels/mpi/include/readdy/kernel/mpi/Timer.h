@@ -136,7 +136,9 @@ public:
 
     Timer &operator=(Timer &&) = delete;
 
-    static void writePerfToFile(const std::string &outFile);
+    static nlohmann::json perfToJson();
+
+    static void clear();
 
 private:
     bool measure{true};
