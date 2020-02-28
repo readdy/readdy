@@ -1,5 +1,5 @@
 ####################################################################
-# Copyright © 2019 Computational Molecular Biology Group,          #
+# Copyright © 2020 Computational Molecular Biology Group,          #
 #                  Freie Universität Berlin (GER)                  #
 #                                                                  #
 # Redistribution and use in source and binary forms, with or       #
@@ -33,9 +33,9 @@
 ####################################################################
 
 
-project(runUnitTests_mpi LANGUAGES C CXX)
+project(runPerformanceTests_mpi LANGUAGES C CXX)
 
-add_executable(${PROJECT_NAME} TestMain.cpp TestSetupMPI.cpp IntegrationTests.cpp performance/TestPerformance.cpp ${TESTING_INCLUDE_DIR})
+add_executable(${PROJECT_NAME} TestMain.cpp TestPerformance.cpp ${TESTING_INCLUDE_DIR})
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${READDY_INCLUDE_DIRS} ${TESTING_INCLUDE_DIR} ${MPI_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} PUBLIC readdy readdy_kernel_mpi Catch2::Catch2)
@@ -50,6 +50,3 @@ if (READDY_INSTALL_UNIT_TEST_EXECUTABLE)
             LIBRARY DESTINATION lib
             ARCHIVE DESTINATION lib)
 endif (READDY_INSTALL_UNIT_TEST_EXECUTABLE)
-
-add_subdirectory(nompi)
-add_subdirectory(performance)

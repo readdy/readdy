@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2019 Computational Molecular Biology Group,          *
+ * Copyright © 2020 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * Redistribution and use in source and binary forms, with or       *
@@ -54,6 +54,8 @@
 int main(int argc, char **argv) {
     MPISession mpisession(argc, argv);
 
+    // add own std::string dir, todo supply this argument to test functions somehow
+
     Catch::Session session;
     int returnCode = session.applyCommandLine(argc, argv);
     if (returnCode != 0) return returnCode;
@@ -62,6 +64,10 @@ int main(int argc, char **argv) {
         const auto dir = readdy::testing::getPluginsDirectory();
         readdy::plugin::KernelProvider::getInstance().loadKernelsFromDirectory(dir);
     }
+
+    //std::string dir {"/storage/mi/chrisfr/workspace/data/readdympi/nonblock-more-particles/n"+std::to_string(kernel.domain()->nUsedRanks())+"/"};
+    //std::string filename {"rank_" + std::to_string(kernel.domain()->rank())};
+    //readdy::kernel::mpi::util::Timer::writePerfToFile(dir + filename);
 
     return session.run();
 }

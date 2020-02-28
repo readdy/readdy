@@ -38,7 +38,7 @@
  * @file TestPerformance.cpp
  * @brief « brief description »
  * @author chrisfroe
- * @date 28.07.19
+ * @date 28.02.20
  */
 
 #include <catch2/catch.hpp>
@@ -95,8 +95,4 @@ TEST_CASE("Test weak scaling distribute particles and gather them again ", "[!hi
     if (kernel.domain()->isMasterRank()) {
         CHECK(currentParticles.size() == nParticles);
     }
-
-    std::string dir {"/storage/mi/chrisfr/workspace/data/readdympi/nonblock-more-particles/n"+std::to_string(kernel.domain()->nUsedRanks())+"/"};
-    std::string filename {"rank_" + std::to_string(kernel.domain()->rank())};
-    readdy::kernel::mpi::util::Timer::writePerfToFile(dir + filename);
 }
