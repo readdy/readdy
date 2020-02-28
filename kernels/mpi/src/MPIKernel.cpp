@@ -122,14 +122,13 @@ void MPIKernel::initialize() {
         MPI_Group_range_excl(worldGroup, 1, removeRanges, &usedGroup);
 
         // the new communicator of used ranks -> use this in barriers and stuff
-
-        MPI_Comm_create(MPI_COMM_WORLD, usedGroup, &commUsedRanks);
+        MPI_Comm_create(MPI_COMM_WORLD, usedGroup, &_commUsedRanks);
     } else {
-        commUsedRanks = MPI_COMM_WORLD;
+        _commUsedRanks = MPI_COMM_WORLD;
     }
 
-    // propagate to other classes that need communicator
-    _stateModel.commUsedRanks() = commUsedRanks;
+    // propagate to other classes that need communicator and don't know the kernel
+    _stateModel.commUsedRanks() = _commUsedRanks;
 
     _stateModel.reactionRecords().clear();
     _stateModel.resetReactionCounts();

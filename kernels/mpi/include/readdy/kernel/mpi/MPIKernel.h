@@ -130,6 +130,10 @@ public:
         return _domain.get();
     }
 
+    const MPI_Comm &commUsedRanks() const {
+        return _commUsedRanks;
+    }
+
 protected:
     int rank;
     int worldSize;
@@ -141,8 +145,8 @@ protected:
     MPIStateModel _stateModel;
     std::unique_ptr<model::MPIDomain> _domain; // construction is delayed until initialize()
 
-    // The communicator for the subgroup of actually used workers, can point to _commIfNotWorld or MPI_COMM_WORLD
-    MPI_Comm commUsedRanks = MPI_COMM_WORLD;
+    // The communicator for the subgroup of actually used workers
+    MPI_Comm _commUsedRanks = MPI_COMM_WORLD;
 };
 
 }

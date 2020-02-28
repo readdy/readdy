@@ -82,6 +82,7 @@ public:
             particles.emplace_back(x, y, z, idA);
         }
 
+        MPI_Barrier(kernel.commUsedRanks());
         kernel.stateModel().addParticles(particles);
 
         if (kernel.domain()->isMasterRank()) {
@@ -99,8 +100,6 @@ public:
         if (kernel.domain()->isMasterRank()) {
             require(currentParticles.size() == nParticles);
         }
-
-        MPI_Barrier(MPI_COMM_WORLD);
 
         Json json = readdy::kernel::mpi::util::Timer::perfToJson();
         readdy::kernel::mpi::util::Timer::clear();

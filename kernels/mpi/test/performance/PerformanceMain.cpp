@@ -33,10 +33,11 @@
  ********************************************************************/
 
 /**
- * « detailed description »
+ * Run performance scenarios for the MPI kernel. As these do validate the correctness of readdy but mainly
+ * measure runtime, this does not need the unit test library.
  *
- * @file TestMain.cpp
- * @brief « brief description »
+ * @file PerformanceMain.cpp
+ * @brief Run performance scenarios for the MPI kernel
  * @author chrisfroe
  * @date 28.05.19
  */
@@ -63,24 +64,23 @@ int main(int argc, char **argv) {
     if (argc > 1) {
         outDir = std::string(argv[1]);
     } else {
+        readdy::log::warn("Using home directory as output");
         outDir = "~/";
     }
 
     std::vector<std::unique_ptr<perf::Scenario>> scenarios;
     scenarios.push_back(std::make_unique<perf::DistributeParticles>());
+    scenarios.push_back(std::make_unique<perf::DistributeParticles>());
 
     for (const auto &s : scenarios) {
-        // run and get results
         auto json = s->run();
 
-        // misc. info to json
         json["rank"] = mpiSession.rank();
         json["worldSize"] = mpiSession.worldSize();
         json["processorName"] = mpiSession.processorName();
         json["scenarioName"] = s->name();
         json["scenarioDescription"] = s->description();
 
-        // save json with a different name for every rank
         std::string filename{s->name() + "_rank_" + std::to_string(mpiSession.rank())};
         std::string path = outDir + filename;
 

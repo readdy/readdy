@@ -34,7 +34,9 @@
 
 /**
  * Each worker/rank is responsible for one region in space and the particles that live in it. The region of space
- * is defined by the ranks' MPIDomain. It also provides neighborship information like: ranks of the adjacent domains
+ * is defined by the ranks' MPIDomain. It also provides neighborship information like: ranks of the adjacent domains.
+ * Although this holds much valuable information for communicating amongst processes,
+ * MPIDomain makes no calls to the MPI library, which allows for intensive testing/debugging without the MPI context.
  *
  * @file MPIDomain.h
  * @brief Spatial setup of MPI domains
