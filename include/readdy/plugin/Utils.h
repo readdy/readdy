@@ -35,7 +35,7 @@
 /**
  * @file Utils.h
  * @brief Utilities like locating plugins, needed in writing readdy executables, e.g. tests
- * @author chrisfroe
+ * @author clonker, chrisfroe
  * @date 28.02.20
  */
 
