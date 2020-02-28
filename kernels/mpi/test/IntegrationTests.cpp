@@ -33,14 +33,7 @@
  ********************************************************************/
 
 /**
- * Integration tests:
- * - MSD
- * - Stationary distribution in 1D potential
- * - Thermodynamics of LJ suspension
- * - Michaelis-Menten kinetics (see main library tests)
- * -
  *
- * Scale number of processes, measure performance also
  *
  * @file TestIntegration.cpp
  * @brief « brief description »

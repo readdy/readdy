@@ -1,6 +1,12 @@
 
 /**
- * << detailed description >>
+ * Scenarios to measure performance, and optionally observables to ensure that the physics is correct
+ * Examples to implement with constant density and adaptive volume based on number of workers:
+ * - MSD -> free diffusion
+ * - Stationary distribution in an external potential -> diffusion in double well along one dimension
+ * - Thermodynamics of LJ suspension -> diffusion subject to pair-interactions
+ * - Michaelis-Menten kinetics -> irreversible reaction-diffusion without forces in the reaction-limit (well-mixed)
+ * - A+B<-->C with LJ stationary distr. -> reversible reaction-diffusion with forces, can do diffusion-influenced
  *
  * @file Scenarios.h
  * @brief << brief description >>
