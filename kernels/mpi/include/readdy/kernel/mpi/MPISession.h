@@ -45,7 +45,7 @@
 #pragma once
 
 #include <mpi.h>
-#include <readdy/kernel/mpi/Timer.h>
+#include <readdy/common/logging.h>
 
 /**
  * Tiny RAII wrapper for MPI Init and Finalize
@@ -67,10 +67,8 @@ public:
         MPI_Comm_rank(MPI_COMM_WORLD, &_rank);
         MPI_Get_processor_name(_processorName, &nameLen);
 
-        readdy::log::console()->set_level(spdlog::level::info);
         readdy::log::info("pid {} Rank {} / {} is on {}", static_cast<long>(getpid()), _rank, _worldSize, _processorName);
         waitForDebugger();
-        readdy::log::console()->set_level(spdlog::level::warn);
     }
 
     std::string processorName() {
@@ -112,8 +110,8 @@ public:
             static int rankToDebug = 0;
             if (rank == rankToDebug) {
                 volatile int i = 0;
-                readdy::log::console()->warn("pid {} w/ rank {} on processor {} waiting for debugger",
-                                             static_cast<unsigned long>(getpid()), rank, processorName);
+                readdy::log::warn("pid {} w/ rank {} on processor {} waiting for debugger",
+                                  static_cast<unsigned long>(getpid()), rank, processorName);
                 while (i == 0) { /* change ’i’ in the debugger */ }
             }
         }

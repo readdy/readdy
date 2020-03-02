@@ -53,6 +53,11 @@
 
 int main(int argc, char **argv) {
     MPISession mpisession(argc, argv);
+    if (mpisession.rank() == 0) {
+        readdy::log::console()->set_level(spdlog::level::info);
+    } else {
+        readdy::log::console()->set_level(spdlog::level::warn);
+    }
 
     Catch::Session session;
     int returnCode = session.applyCommandLine(argc, argv);

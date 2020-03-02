@@ -53,7 +53,17 @@
 
 using json = nlohmann::json;
 
+TEST_CASE("Kernel construction and delayed initialization", "[mpi]") {
+    WHEN("Kernel is constructed without context") {
+        readdy::kernel::mpi::MPIKernel kernel;
+        THEN("The kernel is not initialized") {
+            CHECK_FALSE(kernel.isInitialized());
+        }
+    }
+}
+
 TEST_CASE("Test mpi kernel observe particle number", "[mpi]") {
+    MPI_Barrier(MPI_COMM_WORLD);
     if (false) {
         readdy::model::Context ctx;
         readdy::Simulation simulation("MPI", ctx);
@@ -91,6 +101,7 @@ TEST_CASE("Test mpi kernel observe particle number", "[mpi]") {
 }
 
 TEST_CASE("Test kernel configuration from context", "[mpi]") {
+    MPI_Barrier(MPI_COMM_WORLD);
     readdy::model::Context ctx;
     ctx.boxSize() = {10., 10., 10.};
     ctx.particleTypes().add("A", 0.1);
@@ -110,6 +121,7 @@ TEST_CASE("Test kernel configuration from context", "[mpi]") {
 }
 
 TEST_CASE("Test distribute particles and gather them again", "[mpi]") {
+    MPI_Barrier(MPI_COMM_WORLD);
     readdy::model::Context ctx;
 
     ctx.boxSize() = {10., 10., 10.};
