@@ -108,6 +108,13 @@ public:
         const auto &boxSize = _context.get().boxSize();
         const auto &periodic = _context.get().periodicBoundaryConditions();
 
+        if (_haloThickness <= 0.) {
+            // this scenario is anyway pointless because there are no interactions,
+            // but we cannot have minDomainWidths = 0
+            auto minBoxLength = std::min_element(boxSize.begin(), boxSize.end());
+            _haloThickness = *minBoxLength;
+        }
+
         for (int i = 0; i < 3; ++i) {
             if (minDomainWidths[i] <= 0.) {
                 minDomainWidths[i] = 2. * _haloThickness;

@@ -46,9 +46,7 @@
 namespace readdy::kernel::mpi {
 
 /**
- * An Entry similar to SCPU with additional rank, which is the MPI rank this particle belongs to, 
- * because IDs are local to kernel and we need a unique identifier for particles, 
- * which is the compound (rank, id).
+ * An Entry similar to SCPU with additional MPI related data.
  */
 struct MPIEntry {
     using Particle = readdy::model::Particle;
@@ -56,7 +54,7 @@ struct MPIEntry {
 
     explicit MPIEntry(const Particle &particle, int rank = -1)
             : pos(particle.pos()), force(Force()), type(particle.type()), deactivated(false),
-              id(particle.id()), rank(rank) {}
+              id(particle.id()), responsible(true) {}
 
     bool is_deactivated() const {
         return deactivated;
@@ -71,9 +69,41 @@ struct MPIEntry {
     ParticleId id;
     ParticleTypeId type;
     bool deactivated;
+    /**
+     * rank, which is the MPI rank this particle belongs to (not necessarily determined by position but by responsibility),
+     * because IDs are local to kernel and we need a unique identifier for particles, e.g. in reactions,
+     * which is the compound (rank, id).
+     */
     int rank;
+    // todo is the following true: responsible=(myDomain.rank==entry.rank) ?
+    // todo is rank needed? maybe for more efficient transmission of responsible particles
+    /**
+     * The responsible flag indicates that this particle will be sent to other workers during sync,
+     * and that it will not be deleted when applying received sync data from other workers.
+     * States that the worker associated with this kernel/rank is responsible for this particle,
+     * i.e. the worker must inform other workers about it during synchronization.
+     * Particles, that the rank is not responsible for, are deleted/deactivated/replaced during sync.
+     *
+     * Responsibility depends on the operation to be performed:
+     * - Initially responsibility is responsible=isInDomainCore(p.pos)
+     * - For diffusion step: if the initial position of the particle was in the domain core,
+     *   then the present worker is responsible
+     * - For reactions within domain core (i.e. excluding bimolecular reactions with particles in halo):
+     *   same as diffusion, any particle that was in domain core has responsible=true,
+     *   additionally all newly created particles have responsible=true
+     * - For reactions across domains: all possible reaction events are bimolecular and between particles of
+     *   different responsibility, the worker whose (responsible) particle p1 has lower rankOfPosition(p.pos)
+     *   will become responsible for both particles, while the worker whose (responsible) particle p2 has higher rank
+     *   will drop the responsibility for p2. Then the lower rank worker is responsible for sending the updated state
+     *   and the higher rank will drop its own p2 during synchronization.
+     */
+    bool responsible;
 };
 
 using MPIDataContainer = readdy::kernel::scpu::model::SCPUParticleData<MPIEntry>;
+
+class MPIParticleData : public readdy::kernel::scpu::model::SCPUParticleData<MPIEntry> {
+    // todo add an iterator for responsible particles
+};
 
 }

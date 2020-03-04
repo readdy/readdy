@@ -74,8 +74,4 @@ inline std::vector<ParticlePOD> receiveParticlesFrom(int sender, const MPI_Comm 
     }
 }
 
-inline bool isRequiredRank(const model::MPIDomain &domain) {
-    return !domain.isIdleRank();
-}
-
 }

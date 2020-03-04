@@ -49,12 +49,21 @@ namespace readdy::kernel::mpi {
 MPIStateModel::MPIStateModel(Data &data, const readdy::model::Context &context) : _data(data), _context(context) {}
 
 const std::vector<readdy::Vec3> MPIStateModel::getParticlePositions() const {
-    throw std::runtime_error("impl");
+    const auto data = getParticleData();
+    std::vector<Vec3> target{};
+    target.reserve(data->size());
+    for (const auto &entry : *data) {
+        if (!entry.deactivated) target.push_back(entry.pos);
+    }
+    return target;
 }
 
 // todo procedure to send variable type objects?
+// -> templated wrappers around commonly used messages,
+// e.g. the following combination of Gather and Gatherv
+// to fill a vector<T> in targetRank that is a concatenation of all vector<T> on source ranks.
 const std::vector<MPIStateModel::Particle>
-MPIStateModel::getParticles() const {
+MPIStateModel::gatherParticles() const {
     if (_domain->isIdleRank()) {
         return {};
     }
@@ -147,51 +156,23 @@ void MPIStateModel::clear() {
     energy() = 0;
 }
 
-void MPIStateModel::addParticle(const Particle &p) {
-    MPI_Barrier(MPI_COMM_WORLD);
-    if (_domain->isIdleRank()) {
-        return;
-    }
-    util::Timer timer("MPIStateModel::addParticle");
-    readdy::log::trace("MPIStateModel::addParticle");
-    MPI_Barrier(_commUsedRanks);
-    if (_domain->rank() == 0) {
-        //MPI_Barrier(*_commUsedRanks);
-        int targetRank = _domain->rankOfPosition(p.pos());
-        // broadcast target
-        MPI_Bcast(&targetRank, 1, MPI_INT, 0, _commUsedRanks);
-        // send
-        std::vector<util::ParticlePOD> thinParticles{{p.pos(), p.type()}};
-        MPI_Send((void *) thinParticles.data(),
-                 static_cast<int>(thinParticles.size() * sizeof(util::ParticlePOD)), MPI_BYTE,
-                 targetRank, util::tags::sendParticles, _commUsedRanks);
-    } else {
-        //MPI_Barrier(_commUsedRanks);
-        // am i the target?
-        int targetRank;
-        MPI_Bcast(&targetRank, 1, MPI_INT, 0, _commUsedRanks);
-        if (_domain->rank() == targetRank) {
-            // receive, ignore argument p here
-            const auto thinParticles = util::receiveParticlesFrom(0, _commUsedRanks);
-            std::vector<Particle> particles;
-            std::for_each(thinParticles.begin(), thinParticles.end(),
-                          [&particles](const util::ParticlePOD &tp) {
-                              particles.emplace_back(tp.position, tp.typeId);
-                          });
-            getParticleData()->addParticles(particles);
-        }
-    }
+void MPIStateModel::distributeParticle(const Particle &p) {
+    distributeParticles({p});
 }
 
-void MPIStateModel::addParticles(const std::vector<Particle> &p) {
-    if (not util::isRequiredRank(*_domain)) {
+void MPIStateModel::addParticles(const std::vector<Particle> &particles) {
+    getParticleData()->addParticles(particles);
+}
+
+void MPIStateModel::distributeParticles(const std::vector<Particle> &ps) {
+    if (_domain->isIdleRank()) {
         return;
     }
     util::Timer timer("MPIStateModel::addParticles");
     // todo use MPI_Scatter
     if (_domain->rank() == 0) {
         std::unordered_map<int, std::vector<util::ParticlePOD>> targetParticleMap;
-        for (const auto &particle : p) {
+        for (const auto &particle : ps) {
             int target = _domain->rankOfPosition(particle.pos());
             const auto &find = targetParticleMap.find(target);
             if (find != targetParticleMap.end()) {
@@ -201,7 +182,6 @@ void MPIStateModel::addParticles(const std::vector<Particle> &p) {
                         target, std::vector<util::ParticlePOD>{{particle.pos(), particle.type()}}
                 ));
             }
-
         }
         std::vector<char> isTarget(_domain->nUsedRanks(), false);
         for (auto&&[target, vec] : targetParticleMap) {
@@ -230,10 +210,26 @@ void MPIStateModel::addParticles(const std::vector<Particle> &p) {
                           [&particles](const util::ParticlePOD &tp) {
                               particles.emplace_back(tp.position, tp.typeId);
                           });
-            getParticleData()->addParticles(particles);
+            addParticles(particles);
         }
         MPI_Barrier(_commUsedRanks);
     }
+}
+
+const std::vector<readdy::model::Particle> MPIStateModel::getParticles() const {
+    const auto *data = getParticleData();
+    std::vector<readdy::model::Particle> result;
+    result.reserve(data->size());
+    for (const auto &entry : *data) {
+        if (!entry.is_deactivated()) {
+            result.push_back(data->toParticle(entry));
+        }
+    }
+    return result;
+}
+
+void MPIStateModel::addParticle(const MPIStateModel::Particle &p) {
+    addParticles({p});
 }
 
 }

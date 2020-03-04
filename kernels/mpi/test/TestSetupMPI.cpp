@@ -53,11 +53,21 @@
 
 using json = nlohmann::json;
 
+// todo delayed initialization isn't nice
+// todo fix this, however this requires kernel specific factory that sets the context and initializes
 TEST_CASE("Kernel construction and delayed initialization", "[mpi]") {
     WHEN("Kernel is constructed without context") {
         readdy::kernel::mpi::MPIKernel kernel;
-        THEN("The kernel is not initialized") {
-            CHECK_FALSE(kernel.isInitialized());
+        THEN("The kernel is not usable") {
+            //CHECK(kernel.domain() != nullptr);
+        }
+    }
+    WHEN("Kernel is constructed with context") {
+        readdy::model::Context ctx;
+        // todo this cannot be done when kernel is dynamically loaded
+        readdy::kernel::mpi::MPIKernel kernel(ctx);
+        THEN("Kernel is initialized") {
+            CHECK(kernel.domain() != nullptr);
         }
     }
 }
@@ -133,39 +143,46 @@ TEST_CASE("Test distribute particles and gather them again", "[mpi]") {
 
     readdy::kernel::mpi::MPIKernel kernel(ctx); // this also initializes domains
 
-    auto idA = kernel.context().particleTypes().idOf("A");
-    const std::size_t nParticles = kernel.domain()->nDomains(); // one particle per domain
-    for (const auto &rank : kernel.domain()->workerRanks()) {
-        auto [origin, extent] = kernel.domain()->coreOfDomain(rank);
-        auto center = origin + 0.5 * extent;
-        readdy::model::Particle p(center, idA);
-        kernel.getMPIKernelStateModel().addParticle(p);
-    }
-
-    if (kernel.domain()->isMasterRank()) {
-        CHECK(kernel.getMPIKernelStateModel().getParticleData()->size() == 0); // master data is emtpy
-    } else if (kernel.domain()->isWorkerRank()) {
-        CHECK(kernel.getMPIKernelStateModel().getParticleData()->size() == 1); // worker should have gotten one particle
-    } else if (kernel.domain()->isIdleRank()) {
-        CHECK(kernel.getMPIKernelStateModel().getParticleData()->size() == 0); // idle workers are idle
-    } else {
-        throw std::runtime_error("Must be one of those above");
-    }
-
-    const auto currentParticles = kernel.stateModel().getParticles();
-
-    if (kernel.domain()->isMasterRank()) {
-        CHECK(currentParticles.size() == nParticles);
+    WHEN("One particle is placed in each domain's center") {
+        auto idA = kernel.context().particleTypes().idOf("A");
+        const std::size_t nParticles = kernel.domain()->nDomains(); // one particle per domain
         for (const auto &rank : kernel.domain()->workerRanks()) {
-            readdy::Vec3 origin, extent;
-            std::tie(origin, extent) = kernel.domain()->coreOfDomain(rank);
+            auto [origin, extent] = kernel.domain()->coreOfDomain(rank);
             auto center = origin + 0.5 * extent;
             readdy::model::Particle p(center, idA);
-            auto found = std::find_if(currentParticles.begin(), currentParticles.end(),
-                                      [&p](const readdy::model::Particle &p2) -> bool {
-                                          return p.type() == p2.type() and (p.pos() - p2.pos()).normSquared() < 0.01;
-                                      });
-            CHECK(found != currentParticles.end());
+            kernel.getMPIKernelStateModel().distributeParticle(p);
+        }
+
+        THEN("Each worker has exactly one particle is the data structure") {
+            if (kernel.domain()->isMasterRank()) {
+                CHECK(kernel.getMPIKernelStateModel().getParticleData()->size() == 0); // master data is emtpy
+            } else if (kernel.domain()->isWorkerRank()) {
+                CHECK(kernel.getMPIKernelStateModel().getParticleData()->size() == 1); // worker should have gotten one particle
+            } else if (kernel.domain()->isIdleRank()) {
+                CHECK(kernel.getMPIKernelStateModel().getParticleData()->size() == 0); // idle workers are idle
+            } else {
+                throw std::runtime_error("Must be one of those above");
+            }
+        }
+
+        AND_WHEN("Particles are gathered again") {
+            const auto currentParticles = kernel.getMPIKernelStateModel().gatherParticles();
+            THEN("At each domain's center there is a particle and the number of particles is conserved") {
+                if (kernel.domain()->isMasterRank()) {
+                    CHECK(currentParticles.size() == nParticles);
+                    for (const auto &rank : kernel.domain()->workerRanks()) {
+                        readdy::Vec3 origin, extent;
+                        std::tie(origin, extent) = kernel.domain()->coreOfDomain(rank);
+                        auto center = origin + 0.5 * extent;
+                        readdy::model::Particle p(center, idA);
+                        auto found = std::find_if(currentParticles.begin(), currentParticles.end(),
+                                                  [&p](const readdy::model::Particle &p2) -> bool {
+                                                      return p.type() == p2.type() and (p.pos() - p2.pos()).normSquared() < 0.01;
+                                                  });
+                        CHECK(found != currentParticles.end());
+                    }
+                }
+            }
         }
     }
 }

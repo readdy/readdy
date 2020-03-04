@@ -89,11 +89,10 @@ public:
 
     void addParticle(const Particle &p) override;
 
-    void addParticles(const std::vector<Particle> &p) override;
+    void addParticles(const std::vector<Particle> &ps) override;
 
     void removeParticle(const Particle &p) override {
-        throw std::runtime_error("Not yet implemented on MPI");
-        //getParticleData()->removeParticle(p);
+        getParticleData()->removeParticle(p);
     };
 
     void removeAllParticles() override {
@@ -213,6 +212,43 @@ public:
 
     MPI_Comm &commUsedRanks() {
         return _commUsedRanks;
+    }
+
+    /**
+     * Above are individual operations, i.e. each worker/rank, can execute them without side-effects.
+     * Following are MPI collective operations, i.e. behavior is different depending on rank
+     */
+    void distributeParticle(const Particle &p);
+
+    void distributeParticles(const std::vector<Particle> &ps);
+
+    const std::vector<MPIStateModel::Particle> gatherParticles() const;
+
+    void synchronizeWithNeighbors() {
+        if (domain()->isIdleRank() or domain()->isMasterRank()) {
+            return;
+        }
+        /** todo plimpton
+         * 1. fill list `own` of own-responsible particles [to be sent around]
+         * 2. prepare list `other` of other-responsible particles [to be applied to self and send to other directions]
+         * 3. send/receive EW
+         *    3.1 send data `own` to east and west
+         *    3.2 receive data from east and west and append to `other`
+         * 4. send/receive NS
+         *    4.1 send data `own` and `other` to north and south
+         *    4.2 receive data from north and south and append to `other`
+         * 5. send/receive UP
+         *    5.1 send data `own` and `other` to up and down
+         *    5.2 receive data from up and down and append to `other`
+         * --- now `other` contains all particles from all neighbors for which the worker is not responsible for
+         * 6. Delete all particles in particleData that have responsible=false
+         * 7. Add all particles p in `other` to particleData that have domain.isInCoreOrHalo(p.pos)
+         *    and set each p.responsible flag to domain.isInDomainCore(p.pos)
+         *
+         * The amount of actually sent data can be optimized by filtering out particles that will
+         * eventually be dropped by the receiving worker (because they are not in respective CoreOrHalo),
+         * but keep in mind that particles are indirectly transferred several times before arriving at the final worker.
+         **/
     }
 
 private:
