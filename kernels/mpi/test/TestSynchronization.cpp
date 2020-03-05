@@ -32,11 +32,16 @@ TEST_CASE("Synchronization of neighbors", "[mpi]") {
                 {1.5, 0., 0., idA},
                 {2.5, 0., 0., idA},
         };
-        kernel.stateModel().addParticles(particles);
+        WHEN("particles are distributed and gathered again we ")
+        kernel.getMPIKernelStateModel().distributeParticles(particles);
         // todo assert that particles are at given locations
-        kernel.getMPIKernelStateModel().getParticles();
+        kernel.getMPIKernelStateModel().gatherParticles();
 
         kernel.getMPIKernelStateModel().synchronizeWithNeighbors();
         // todo assert that domain1 sees 4 particles (3 own + 1 in halo), same for domain2
     }
+}
+
+TEST_CASE("Test send and receive operations", "[mpi]") {
+
 }

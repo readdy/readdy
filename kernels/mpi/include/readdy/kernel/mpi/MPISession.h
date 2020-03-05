@@ -107,7 +107,7 @@ public:
             MPI_Get_processor_name(processorName, &nameLen);
             MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-            static int rankToDebug = 0;
+            static int rankToDebug = 1;
             if (rank == rankToDebug) {
                 volatile int i = 0;
                 readdy::log::warn("pid {} w/ rank {} on processor {} waiting for debugger",

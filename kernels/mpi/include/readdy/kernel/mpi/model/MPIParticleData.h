@@ -52,9 +52,11 @@ struct MPIEntry {
     using Particle = readdy::model::Particle;
     using Force = Vec3;
 
-    explicit MPIEntry(const Particle &particle, int rank = -1)
-            : pos(particle.pos()), force(Force()), type(particle.type()), deactivated(false),
-              id(particle.id()), responsible(true) {}
+    explicit MPIEntry(const Particle &particle, bool responsible = true, int rank = -1)
+            : pos(particle.pos()), force(Force()), type(particle.type()),
+              id(particle.id()), deactivated(false), responsible(responsible), rank(rank) {
+
+    }
 
     bool is_deactivated() const {
         return deactivated;
@@ -64,8 +66,8 @@ struct MPIEntry {
         return pos;
     }
 
-    Force force;
     Particle::Position pos;
+    Force force;
     ParticleId id;
     ParticleTypeId type;
     bool deactivated;

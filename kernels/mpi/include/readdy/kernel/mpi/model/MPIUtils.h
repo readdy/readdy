@@ -50,27 +50,81 @@
 namespace readdy::kernel::mpi::util {
 
 struct ParticlePOD {
-    Vec3 position {};
-    ParticleTypeId typeId {};
+    Vec3 position;
+    ParticleTypeId typeId;
+
+    ParticlePOD() : position(Vec3()), typeId(0) {}
+    ParticlePOD(Vec3 position, ParticleTypeId typeId) : position(position), typeId(typeId) {}
+    explicit ParticlePOD(const MPIEntry& mpiEntry) : position(mpiEntry.pos), typeId(mpiEntry.type) {}
 };
 
 enum tags {
-    sendParticles
+    transmitObjects
 };
 
-inline std::vector<ParticlePOD> receiveParticlesFrom(int sender, const MPI_Comm &comm) {
+template <typename T>
+inline std::vector<T> receiveObjects(int senderRank, const MPI_Comm &comm) {
     MPI_Status status;
-    MPI_Probe(sender, tags::sendParticles, comm, &status);
+    MPI_Probe(senderRank, tags::transmitObjects, comm, &status);
     int byteCount;
     MPI_Get_count(&status, MPI_BYTE, &byteCount);
-    const int nParticles = byteCount / sizeof(ParticlePOD);
-    std::vector<ParticlePOD> particles(nParticles, {{0., 0., 0.}, 0});
-    MPI_Recv((void *) particles.data(), byteCount, MPI_BYTE, sender, tags::sendParticles, comm,
+    const int number = byteCount / sizeof(T);
+    std::vector<T> objects(number);
+    MPI_Recv((void *) objects.data(), byteCount, MPI_BYTE, senderRank, tags::transmitObjects, comm,
              MPI_STATUS_IGNORE);
-    if (nParticles > 0) {
-        return particles;
-    } else {
-        throw std::runtime_error("y u no send particles?");
+    return objects;
+}
+
+template <typename T>
+inline void receiveAppendObjects(int senderRank, std::vector<T> &result, const MPI_Comm &comm) {
+    MPI_Status status;
+    MPI_Probe(senderRank, tags::transmitObjects, comm, &status);
+    int byteCount;
+    MPI_Get_count(&status, MPI_BYTE, &byteCount);
+    const int number = byteCount / sizeof(T);
+    const std::size_t sizeBefore = result.size();
+    result.resize(sizeBefore + number);
+    MPI_Recv((void *) (result.data() + sizeBefore), byteCount, MPI_BYTE, senderRank, tags::transmitObjects, comm,
+             MPI_STATUS_IGNORE);
+}
+
+template <typename T>
+inline void sendObjects(int targetRank, std::vector<T> objects, const MPI_Comm &comm) {
+    MPI_Send((void *) objects.data(), static_cast<int>(objects.size() * sizeof(T)), MPI_BYTE,
+             targetRank, tags::transmitObjects, comm);
+}
+
+inline void sendThenReceive(std::array<std::size_t, 3> otherDirection, std::vector<util::ParticlePOD> &own,
+                     std::vector<util::ParticlePOD> &other, const model::MPIDomain &domain, const MPI_Comm &comm) {
+    const auto otherFlatIndex = domain.neighborIndex.index(otherDirection);
+    const auto nType = domain.neighborTypes().at(otherFlatIndex);
+    if (nType == model::MPIDomain::NeighborType::regular) {
+        const auto otherRank = domain.neighborRanks().at(otherFlatIndex);
+        // send
+        std::vector<util::ParticlePOD> objects;
+        objects.insert(objects.begin(), own.begin(), own.end());
+        objects.insert(objects.begin(), other.begin(), other.end());
+        util::sendObjects(otherRank, objects, comm);
+        // receive, todo consider receiveAppendObjects
+        auto received = util::receiveObjects<util::ParticlePOD>(otherRank, comm);
+        other.insert(other.end(), received.begin(), received.end());
+    }
+}
+
+inline void receiveThenSend(std::array<std::size_t, 3> otherDirection, std::vector<util::ParticlePOD> &own,
+                     std::vector<util::ParticlePOD> &other, const model::MPIDomain &domain, const MPI_Comm &comm) {
+    const auto otherFlatIndex = domain.neighborIndex.index(otherDirection);
+    const auto nType = domain.neighborTypes().at(otherFlatIndex);
+    if (nType == model::MPIDomain::NeighborType::regular) {
+        const auto otherRank = domain.neighborRanks().at(otherFlatIndex);
+        // receive, todo consider receiveAppendObjects
+        auto received = util::receiveObjects<util::ParticlePOD>(otherRank, comm);
+        other.insert(other.end(), received.begin(), received.end());
+        // send
+        std::vector<util::ParticlePOD> objects;
+        objects.insert(objects.begin(), own.begin(), own.end());
+        objects.insert(objects.begin(), other.begin(), other.end());
+        util::sendObjects(otherRank, objects, comm);
     }
 }
 

@@ -224,31 +224,108 @@ public:
 
     const std::vector<MPIStateModel::Particle> gatherParticles() const;
 
+    /**
+     * 1. fill list `own` of own-responsible particles [to be sent around]
+     * 2. prepare list `other` of other-responsible particles [to be applied to self and send to other directions]
+     * 3. send/receive EW (x direction)
+     *    3.1 send data `own` to east and west
+     *    3.2 receive data from east and west and append to `other`
+     * 4. send/receive NS (y direction)
+     *    4.1 send data `own` and `other` to north and south
+     *    4.2 receive data from north and south and append to `other`
+     * 5. send/receive UP (z direction)
+     *    5.1 send data `own` and `other` to up and down
+     *    5.2 receive data from up and down and append to `other`
+     * --- now `other` contains all particles from all neighbors for which the worker is not responsible for
+     * 6. Delete all particles in particleData that have responsible=false
+     * 7. Add all particles p in `other` to particleData that have domain.isInCoreOrHalo(p.pos)
+     *    and set each p.responsible flag to domain.isInDomainCore(p.pos)
+     *
+     * The amount of actually sent data can be optimized by filtering out particles that will
+     * eventually be dropped by the receiving worker (because they are not in respective CoreOrHalo),
+     * but keep in mind that particles are indirectly transferred several times before arriving at the final worker,
+     * so filtering out the wrong particles might lead to falsely synchronized states.
+     **/
     void synchronizeWithNeighbors() {
+        MPI_Barrier(MPI_COMM_WORLD);
         if (domain()->isIdleRank() or domain()->isMasterRank()) {
+            // fixme temporary barrier for debugging
+            MPI_Barrier(MPI_COMM_WORLD);
             return;
         }
-        /** todo plimpton
-         * 1. fill list `own` of own-responsible particles [to be sent around]
-         * 2. prepare list `other` of other-responsible particles [to be applied to self and send to other directions]
-         * 3. send/receive EW
-         *    3.1 send data `own` to east and west
-         *    3.2 receive data from east and west and append to `other`
-         * 4. send/receive NS
-         *    4.1 send data `own` and `other` to north and south
-         *    4.2 receive data from north and south and append to `other`
-         * 5. send/receive UP
-         *    5.1 send data `own` and `other` to up and down
-         *    5.2 receive data from up and down and append to `other`
-         * --- now `other` contains all particles from all neighbors for which the worker is not responsible for
-         * 6. Delete all particles in particleData that have responsible=false
-         * 7. Add all particles p in `other` to particleData that have domain.isInCoreOrHalo(p.pos)
-         *    and set each p.responsible flag to domain.isInDomainCore(p.pos)
-         *
-         * The amount of actually sent data can be optimized by filtering out particles that will
-         * eventually be dropped by the receiving worker (because they are not in respective CoreOrHalo),
-         * but keep in mind that particles are indirectly transferred several times before arriving at the final worker.
-         **/
+        auto& data = _data.get();
+        std::vector<util::ParticlePOD> own; // particles that this worker is responsible for
+        std::vector<std::size_t> removedEntries;
+
+        // gather own responsible and prepare data structure
+        // i.e. gather to-be-removed indices,
+        // and re-tag particles that are currently responsible but not in core of domain
+        for (size_t i = 0; i < data.size(); ++i) {
+            MPIEntry& entry = data.entry_at(i);
+            if (not entry.deactivated and entry.responsible) {
+                own.emplace_back(entry);
+                if (domain()->isInDomainHalo(entry.pos)) {
+                    entry.responsible = false;
+                }
+            } else if (not entry.deactivated and not entry.responsible) {
+                removedEntries.push_back(i);
+            }
+        }
+
+        // Plimpton synchronization
+        std::vector<util::ParticlePOD> other; // particles received by other workers
+        for (unsigned int coord=0; coord<3; coord++) { // east-west, north-south, up-down
+            const auto idx = domain()->myIdx()[coord];
+            if (idx % 2 == 0) {
+                // send + then receive +
+                {
+                    std::array<std::size_t, 3> otherDirection {1,1,1}; // (1,1,1) is self
+                    otherDirection.at(coord) += 1;
+                    util::sendThenReceive(otherDirection, own, other, *domain(), commUsedRanks());
+                }
+                // send - then receive -
+                {
+                    std::array<std::size_t, 3> otherDirection {1,1,1};
+                    otherDirection.at(coord) -= 1;
+                    util::sendThenReceive(otherDirection, own, other, *domain(), commUsedRanks());
+                }
+            } else {
+                // receive - then send -
+                {
+                    std::array<std::size_t, 3> otherDirection {1,1,1};
+                    otherDirection.at(coord) -= 1;
+                    util::receiveThenSend(otherDirection, own, other, *domain(), commUsedRanks());
+                }
+                // receive + then send +
+                {
+                    std::array<std::size_t, 3> otherDirection {1,1,1};
+                    otherDirection.at(coord) += 1;
+                    util::receiveThenSend(otherDirection, own, other, *domain(), commUsedRanks());
+                }
+            }
+        }
+        // only add new entries if in domain coreOrHalo and additionally set responsible=true if in core
+        std::vector<MPIEntry> newEntries;
+        for (const auto &p : other) {
+            if (domain()->isInDomainCore(p.position)) {
+                // gets added and worker is responsible
+                Particle particle(p.position, p.typeId);
+                MPIEntry entry(particle, true, domain()->rank());
+                newEntries.emplace_back(entry);
+            } else if (domain()->isInDomainCoreOrHalo(p.position)) {
+                // gets added but worker is not responsible
+                Particle particle(p.position, p.typeId);
+                MPIEntry entry(particle, false, domain()->rankOfPosition(p.position));
+                newEntries.emplace_back(entry);
+            } else {
+                // does not get added
+            }
+        }
+        auto update = std::make_pair(std::move(newEntries), std::move(removedEntries));
+        data.update(std::move(update));
+
+        // fixme temporary barrier for debugging
+        MPI_Barrier(MPI_COMM_WORLD);
     }
 
 private:

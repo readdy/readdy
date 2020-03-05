@@ -58,10 +58,7 @@ const std::vector<readdy::Vec3> MPIStateModel::getParticlePositions() const {
     return target;
 }
 
-// todo procedure to send variable type objects?
-// -> templated wrappers around commonly used messages,
-// e.g. the following combination of Gather and Gatherv
-// to fill a vector<T> in targetRank that is a concatenation of all vector<T> on source ranks.
+// encapsulate the following combination of Gather and Gatherv, e.g. for gathering particles or observables
 const std::vector<MPIStateModel::Particle>
 MPIStateModel::gatherParticles() const {
     if (_domain->isIdleRank()) {
@@ -103,9 +100,10 @@ MPIStateModel::gatherParticles() const {
         return particles;
     } else {
         // prepare send data
+        // todo only send particles that this worker is responsible for
         std::vector<util::ParticlePOD> thinParticles;
-        for (const auto &entry : _data.get()) {
-            thinParticles.push_back({entry.position(), entry.type});
+        for (const MPIEntry &entry : _data.get()) {
+            thinParticles.emplace_back(entry);
         }
         MPI_Gatherv((void *) thinParticles.data(), static_cast<int>(thinParticles.size() * sizeof(util::ParticlePOD)), MPI_BYTE, nullptr, nullptr, nullptr, nullptr, 0, _commUsedRanks);
         return {};
@@ -176,7 +174,7 @@ void MPIStateModel::distributeParticles(const std::vector<Particle> &ps) {
             int target = _domain->rankOfPosition(particle.pos());
             const auto &find = targetParticleMap.find(target);
             if (find != targetParticleMap.end()) {
-                find->second.push_back({particle.pos(), particle.type()});
+                find->second.emplace_back(particle.pos(), particle.type());
             } else {
                 targetParticleMap.emplace(std::make_pair(
                         target, std::vector<util::ParticlePOD>{{particle.pos(), particle.type()}}
@@ -194,7 +192,7 @@ void MPIStateModel::distributeParticles(const std::vector<Particle> &ps) {
             MPI_Request req;
             MPI_Isend((void *) thinParticles.data(),
                       static_cast<int>(thinParticles.size() * sizeof(util::ParticlePOD)), MPI_BYTE,
-                      target, util::tags::sendParticles, _commUsedRanks, &req);
+                      target, util::tags::transmitObjects, _commUsedRanks, &req);
             MPI_Request_free(&req);
         }
         MPI_Barrier(_commUsedRanks);
@@ -204,7 +202,7 @@ void MPIStateModel::distributeParticles(const std::vector<Particle> &ps) {
         MPI_Bcast(isTarget.data(), isTarget.size(), MPI_CHAR, 0, _commUsedRanks);
         if (isTarget[_domain->rank()]) {
             // receive, ignore argument p here
-            const auto thinParticles = util::receiveParticlesFrom(0, _commUsedRanks);
+            const auto thinParticles = util::receiveObjects<util::ParticlePOD>(0, _commUsedRanks);
             std::vector<Particle> particles;
             std::for_each(thinParticles.begin(), thinParticles.end(),
                           [&particles](const util::ParticlePOD &tp) {

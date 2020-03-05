@@ -183,6 +183,25 @@ public:
     }
 
     /**
+     * map Dims-dimensional array to 1D index
+     * @param indices the Dims-dimensional index
+     * @return the 1D index
+     */
+    value_type index(const GridDims &indices) const {
+        /*if(n_elems > 0)*/ {
+            std::size_t result = 0;
+            auto prefactor = n_elems / _size[0];
+            for (std::size_t d = 0; d < Dims - 1; ++d) {
+                result += prefactor * indices[d];
+                prefactor /= _size[d + 1];
+            }
+            result += indices[Dims - 1];
+            return result;
+        }
+        return 0;
+    }
+
+    /**
      * Inverse mapping 1D index to Dims-dimensional tuple
      * @param idx
      * @return
