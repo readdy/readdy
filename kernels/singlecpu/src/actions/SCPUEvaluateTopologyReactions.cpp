@@ -268,8 +268,8 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
 					  const auto& gr = t1->graph();
 					  const auto& v1 = t1->vertexIteratorForParticle(pidx);
 					  const auto& v2 = t1->vertexIteratorForParticle(neighborIdx);
-					  bool result = gr.areConnectedWithNOrLessEdges(reaction.min_graph_distance(), *v1, *v2);
-					  if (result) {					    
+					  auto d = gr.graphDistance(v1, v2);
+					  if (d != -1 && d <= reaction.min_graph_distance()) {
 					    break;
 					  }				       
 					}
