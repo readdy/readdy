@@ -54,7 +54,6 @@ using entries_it = CPUStateModel::data_type::Entries::iterator;
 using topologies_it = std::vector<std::unique_ptr<readdy::model::top::GraphTopology>>::const_iterator;
 using pot1Map = readdy::model::potentials::PotentialRegistry::PotentialsO1Map;
 using pot2Map = readdy::model::potentials::PotentialRegistry::PotentialsO2Map;
-using dist_fun = readdy::model::Context::shortest_dist_fun;
 
 std::vector<Vec3> CPUStateModel::getParticlePositions() const {
     const auto data = getParticleData();

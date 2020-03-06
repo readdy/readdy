@@ -93,7 +93,7 @@ class CPUChangeParticleType : public readdy::model::top::reactions::actions::Cha
     CPUStateModel::data_type *const data;
 public:
     CPUChangeParticleType(CPUStateModel::data_type *data, model::top::GraphTopology *topology,
-                          const readdy::model::top::Graph::VertexIndex &v,
+                          const readdy::model::top::Graph::PersistentVertexIndex &v,
                           const ParticleTypeId &type_to);
 
     void execute() override;
@@ -104,7 +104,7 @@ class CPUChangeParticlePosition : public readdy::model::top::reactions::actions:
     CPUStateModel::data_type *const data;
 public:
     CPUChangeParticlePosition(CPUStateModel::data_type *data, model::top::GraphTopology *topology,
-                              const readdy::model::top::Graph::VertexIndex &v, Vec3 position);
+                              const readdy::model::top::Graph::PersistentVertexIndex &v, Vec3 position);
 
     void execute() override;
 };
@@ -115,7 +115,7 @@ class CPUAppendParticle : public readdy::model::top::reactions::actions::AppendP
     std::size_t insertIndex {0};
 public:
     CPUAppendParticle(CPUStateModel::data_type *const data, model::top::GraphTopology *topology,
-                      std::vector<readdy::model::top::Graph::VertexIndex> neighbors, ParticleTypeId type, Vec3 pos)
+                      std::vector<readdy::model::top::Graph::PersistentVertexIndex> neighbors, ParticleTypeId type, Vec3 pos)
             : AppendParticle(topology, std::move(neighbors), type, pos), data(data), particle(pos, type) {};
 
     void execute() override {

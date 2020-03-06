@@ -95,22 +95,22 @@ TEST_CASE("Test topology graphs") {
         }
     }
     SECTION("Test the graph") {
-        readdy::model::top::graph::Graph graph;
-        graph.addVertex(0, 0);
-        graph.addVertex(1, 0);
+        readdy::model::top::Graph graph;
+        auto it1 = graph.addVertex({{0, ""}});
+        auto it2 = graph.addVertex({{1, ""}});
         SECTION("Access with indices") {
-            graph.addEdge(graph.vertices().begin(), ++graph.vertices().begin());
+            graph.addEdge(it1, it2);
             REQUIRE(graph.vertices().size() == 2);
-            REQUIRE(graph.vertexForParticleIndex(0).particleIndex == 0);
-            REQUIRE(graph.vertexForParticleIndex(1).particleIndex == 1);
-            REQUIRE(graph.vertexForParticleIndex(0).neighbors().size() == 1);
-            REQUIRE(graph.vertexForParticleIndex(1).neighbors().size() == 1);
-            REQUIRE(graph.vertexForParticleIndex(0).neighbors()[0]->particleIndex == 1);
-            REQUIRE(graph.vertexForParticleIndex(1).neighbors()[0]->particleIndex == 0);
-            graph.removeParticle(0);
+            REQUIRE(it1->data().particleIndex == 0);
+            REQUIRE(it2->data().particleIndex == 1);
+            REQUIRE(it1->neighbors().size() == 1);
+            REQUIRE(it2->neighbors().size() == 1);
+            REQUIRE(graph.vertices().at(it1->neighbors()[0])->particleIndex == 1);
+            REQUIRE(graph.vertices().at(it2->neighbors()[0])->particleIndex == 0);
+            graph.removeVertex(it1);
             REQUIRE(graph.vertices().size() == 1);
-            REQUIRE(graph.vertexForParticleIndex(1).particleIndex == 1);
-            REQUIRE(graph.vertexForParticleIndex(1).neighbors().empty());
+            REQUIRE(graph.begin()->data().particleIndex == 1);
+            REQUIRE(graph.begin()->neighbors().empty());
         }
         SECTION("Connected components") {
             graph.addVertex(2, 0);
@@ -123,7 +123,7 @@ TEST_CASE("Test topology graphs") {
             auto it_adv = ++graph.vertices().begin();
             graph.addEdge(it, it_adv);
 
-            auto subGraphs = graph.connectedComponentsDestructive();
+            auto subGraphs = graph.connectedComponents();
             REQUIRE(subGraphs.size() == 2);
             {
                 REQUIRE(subGraphs[0].vertices().size() == 2);
@@ -145,9 +145,9 @@ TEST_CASE("Test topology graphs") {
             graph.addEdge(std::next(graph.firstVertex(), 3), graph.firstVertex());
 
             auto n_tuples = graph.findNTuples();
-            const auto& tuples = std::get<0>(n_tuples);
-            const auto& triples = std::get<1>(n_tuples);
-            const auto& quadruples = std::get<2>(n_tuples);
+            const auto &tuples = std::get<0>(n_tuples);
+            const auto &triples = std::get<1>(n_tuples);
+            const auto &quadruples = std::get<2>(n_tuples);
 
             REQUIRE(tuples.size() == 4);
             REQUIRE(triples.size() == 4);
@@ -190,9 +190,9 @@ TEST_CASE("Test topology graphs") {
             graph.addEdge(std::next(graph.firstVertex(), 2), graph.firstVertex());
 
             auto n_tuples = graph.findNTuples();
-            const auto& tuples = std::get<0>(n_tuples);
-            const auto& triples = std::get<1>(n_tuples);
-            const auto& quadruples = std::get<2>(n_tuples);
+            const auto &tuples = std::get<0>(n_tuples);
+            const auto &triples = std::get<1>(n_tuples);
+            const auto &quadruples = std::get<2>(n_tuples);
 
             REQUIRE(tuples.size() == 3);
             REQUIRE(triples.size() == 3);
@@ -212,34 +212,34 @@ TEST_CASE("Test topology graphs") {
             REQUIRE(containsTuple(triples, std::make_tuple(b, c, a)));
             REQUIRE(containsTuple(triples, std::make_tuple(c, a, b)));
         }
-	SECTION("Are connected with N or less edges") {
-	  for (unsigned i=2; i<7; i++) {
-	    graph.addVertex(i, 0);
-	  }
-	  // setup linear graph
-	  for (unsigned i=0; i<6; i++) {
-	    graph.addEdge(std::next(graph.firstVertex(), i), std::next(graph.firstVertex(), i+1));
-	  }
-	  for (unsigned i=1; i<7; i++) {
-	    REQUIRE( graph.areConnectedWithNOrLessEdges(i, *(graph.firstVertex()),
-							*(std::next(graph.firstVertex(), i))) );
-	    REQUIRE( !graph.areConnectedWithNOrLessEdges(i-1, *(graph.firstVertex()),
-							 *(std::next(graph.firstVertex(), i))) );
-	  }
-	  // now connect both ends of the graph
-	  graph.addEdge(std::next(graph.firstVertex(), 6), graph.firstVertex());
-	  for (unsigned i=0; i<5; i++) {
-	    REQUIRE( graph.areConnectedWithNOrLessEdges(2, *(std::next(graph.firstVertex(), i)),
-							*std::next(graph.firstVertex(), i+2)) );
-	    REQUIRE( graph.areConnectedWithNOrLessEdges(2, *std::next(graph.firstVertex(), i),
-							*std::next(graph.firstVertex(),(i-2)%7)) );
-	    REQUIRE( !graph.areConnectedWithNOrLessEdges(1, *(std::next(graph.firstVertex(), i)),
-							 *std::next(graph.firstVertex(), i+2)) );
-	    REQUIRE( !graph.areConnectedWithNOrLessEdges(1, *std::next(graph.firstVertex(), i),
-							 *std::next(graph.firstVertex(),(i-2)%7)) );
-		     
-	  }
-	}
+        SECTION("Are connected with N or less edges") {
+            for (unsigned i = 2; i < 7; i++) {
+                graph.addVertex(i, 0);
+            }
+            // setup linear graph
+            for (unsigned i = 0; i < 6; i++) {
+                graph.addEdge(std::next(graph.firstVertex(), i), std::next(graph.firstVertex(), i + 1));
+            }
+            for (unsigned i = 1; i < 7; i++) {
+                REQUIRE(graph.areConnectedWithNOrLessEdges(i, *(graph.firstVertex()),
+                                                           *(std::next(graph.firstVertex(), i))));
+                REQUIRE(!graph.areConnectedWithNOrLessEdges(i - 1, *(graph.firstVertex()),
+                                                            *(std::next(graph.firstVertex(), i))));
+            }
+            // now connect both ends of the graph
+            graph.addEdge(std::next(graph.firstVertex(), 6), graph.firstVertex());
+            for (unsigned i = 0; i < 5; i++) {
+                REQUIRE(graph.areConnectedWithNOrLessEdges(2, *(std::next(graph.firstVertex(), i)),
+                                                           *std::next(graph.firstVertex(), i + 2)));
+                REQUIRE(graph.areConnectedWithNOrLessEdges(2, *std::next(graph.firstVertex(), i),
+                                                           *std::next(graph.firstVertex(), (i - 2) % 7)));
+                REQUIRE(!graph.areConnectedWithNOrLessEdges(1, *(std::next(graph.firstVertex(), i)),
+                                                            *std::next(graph.firstVertex(), i + 2)));
+                REQUIRE(!graph.areConnectedWithNOrLessEdges(1, *std::next(graph.firstVertex(), i),
+                                                            *std::next(graph.firstVertex(), (i - 2) % 7)));
+
+            }
+        }
     }
 
     SECTION("Append particle") {
@@ -247,7 +247,7 @@ TEST_CASE("Test topology graphs") {
         model::Context context;
         context.topologyRegistry().potentialConfiguration().pairPotentials[std::make_tuple(0, 0)].emplace_back();
         context.topologyRegistry().potentialConfiguration().pairPotentials[std::make_tuple(0, 1)].emplace_back();
-        model::top::GraphTopology gt {0, {10, 1, 200}, {0, 0, 0}, context, nullptr};
+        model::top::GraphTopology gt{0, {10, 1, 200}, {0, 0, 0}, context, nullptr};
         {
             auto it = gt.graph().vertices().begin();
             auto it2 = ++gt.graph().vertices().begin();
@@ -258,9 +258,10 @@ TEST_CASE("Test topology graphs") {
         gt.appendParticle(13, 1, 1, 0);
         gt.configure();
 
-        auto it = std::find_if(gt.graph().vertices().begin(), gt.graph().vertices().end(), [](const model::top::graph::Vertex &v) -> bool {
-            return v.particleIndex == 3;
-        });
+        auto it = std::find_if(gt.graph().vertices().begin(), gt.graph().vertices().end(),
+                               [](const model::top::graph::Vertex &v) -> bool {
+                                   return v.particleIndex == 3;
+                               });
         REQUIRE(it != gt.graph().vertices().end());
         REQUIRE(it->particleType() == 1);
         auto v2 = std::next(gt.graph().vertices().begin());

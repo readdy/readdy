@@ -113,10 +113,10 @@ TEMPLATE_TEST_CASE("Test observables", "[observables]", SingleCPU, CPU) {
         }
         auto topology = kernel->stateModel().addTopology(toptypes.idOf("TA"), topologyParticles);
         {
-            auto it = 0;
-            auto it2 = 1;
+            std::size_t it = 0;
+            std::size_t it2 = 1;
             while (it2 < topology->graph().vertices().size()) {
-                topology->addEdge(it, it2);
+                topology->addEdge({it}, {it2});
                 ++it;
                 ++it2;
             }
@@ -130,13 +130,13 @@ TEMPLATE_TEST_CASE("Test observables", "[observables]", SingleCPU, CPU) {
                 auto current_n_vertices = vertices.size();
                 if (current_n_vertices > 1) {
                     auto edge = readdy::model::rnd::uniform_int<>(0, static_cast<int>(current_n_vertices - 2));
-                    auto it1 = 0;
-                    auto it2 = 1;
+                    std::size_t it1 = 0;
+                    std::size_t it2 = 1;
                     for (int i = 0; i < edge; ++i) {
                         ++it1;
                         ++it2;
                     }
-                    recipe.removeEdge(it1, it2);
+                    recipe.removeEdge({it1}, {it2});
                 }
 
                 return recipe;
@@ -154,7 +154,7 @@ TEMPLATE_TEST_CASE("Test observables", "[observables]", SingleCPU, CPU) {
             auto reactionFunction = [&](readdy::model::top::GraphTopology &top) {
                 readdy::model::top::reactions::Recipe recipe(top);
                 if (top.graph().vertices().size() == 1) {
-                    recipe.changeParticleType(0, context.particleTypes().idOf("A"));
+                    recipe.changeParticleType(top.graph().begin().persistent_index(), context.particleTypes().idOf("A"));
                 } else {
                     throw std::logic_error("this reaction should only be executed when there is exactly "
                                            "one particle in the topology");

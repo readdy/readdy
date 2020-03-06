@@ -130,7 +130,7 @@ readdy::scalar CPUCalculateCosineDihedralPotential::perform(const readdy::model:
 namespace reactions::op {
 CPUChangeParticleType::CPUChangeParticleType(CPUStateModel::data_type *const data,
                                              model::top::GraphTopology *const topology,
-                                             const readdy::model::top::Graph::VertexIndex &v,
+                                             const readdy::model::top::Graph::PersistentVertexIndex &v,
                                              const ParticleTypeId &type_to)
         : ChangeParticleType(topology, v, type_to), data(data) {}
 
@@ -140,7 +140,7 @@ void CPUChangeParticleType::execute() {
 
 CPUChangeParticlePosition::CPUChangeParticlePosition(
         CPUStateModel::data_type *const data, model::top::GraphTopology *topology,
-        const readdy::model::top::Graph::VertexIndex &v, Vec3 position)
+        const readdy::model::top::Graph::PersistentVertexIndex &v, Vec3 position)
         : ChangeParticlePosition(topology, v, position), data(data) { }
 
 void CPUChangeParticlePosition::execute() {
