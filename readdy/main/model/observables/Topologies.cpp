@@ -71,8 +71,10 @@ void Topologies::evaluate() {
         kernel->stateModel().toDenseParticleIndices(record.particleIndices.begin(), record.particleIndices.end());
 
         for (auto [e1, e2] : topologyPtr->graph().edges()) {
-            record.edges.emplace_back(topologyPtr->graph().vertices().at(e1)->particleIndex,
-                                      topologyPtr->graph().vertices().at(e2)->particleIndex);
+            auto itE1 = topologyPtr->graph().vertices().cpersistent_to_active_iterator(topologyPtr->graph().vertices().begin_persistent() + e1.value);
+            auto itE2 = topologyPtr->graph().vertices().cpersistent_to_active_iterator(topologyPtr->graph().vertices().begin_persistent() + e2.value);
+            record.edges.emplace_back(std::distance(topologyPtr->graph().vertices().begin(), itE1),
+                                      std::distance(topologyPtr->graph().vertices().begin(), itE2));
         }
         record.type = topologyPtr->type();
         result.push_back(record);

@@ -40,6 +40,7 @@
 #include <readdy/testing/Utils.h>
 #include <readdy/testing/KernelTest.h>
 #include <readdy/common/numeric.h>
+#include <readdy/kernel/singlecpu/SCPUKernel.h>
 
 using namespace readdy;
 using namespace readdytesting::kernel;
@@ -106,7 +107,7 @@ TEST_CASE("Test topology graphs") {
             REQUIRE(graph.vertices().at(it1).neighbors().size() == 1);
             REQUIRE(graph.vertices().at(it2).neighbors().size() == 1);
             REQUIRE(graph.vertices().at(graph.vertices().at(it1).neighbors()[0])->particleIndex == 1);
-            REQUIRE(graph.vertices().at(graph.vertices().at(it1).neighbors()[0])->particleIndex == 0);
+            REQUIRE(graph.vertices().at(graph.vertices().at(it2).neighbors()[0])->particleIndex == 0);
             graph.removeVertex(it1);
             REQUIRE(graph.vertices().size() == 1);
             REQUIRE(graph.begin()->data().particleIndex == 1);
@@ -127,23 +128,22 @@ TEST_CASE("Test topology graphs") {
             REQUIRE(subGraphs.size() == 2);
             {
                 REQUIRE(subGraphs[0].vertices().size() == 2);
-                REQUIRE(subGraphs[0].vertices().begin() == vertex_ref_0);
-                REQUIRE(++subGraphs[0].vertices().begin() == vertex_ref_1);
+                REQUIRE(subGraphs[0].vertices().begin()->data().particleIndex == vertex_ref_0->data().particleIndex);
+                REQUIRE((++subGraphs[0].vertices().begin())->data().particleIndex == vertex_ref_1->data().particleIndex);
             }
             {
                 REQUIRE(subGraphs[1].vertices().size() == 1);
-                REQUIRE(subGraphs[1].vertices().begin() == vertex_ref_2);
+                REQUIRE(subGraphs[1].vertices().begin()->data().particleIndex == vertex_ref_2->data().particleIndex);
             }
         }
         SECTION("Find N tuples") {
             graph.addVertex({{2, ""}});
             graph.addVertex({{3, ""}});
 
-            auto it = graph.begin();
-            graph.addEdge(it, ++it);
-            graph.addEdge(it, ++it);
-            graph.addEdge(it, ++it);
-            graph.addEdge(it, graph.begin());
+            graph.addEdge(graph.begin(), graph.begin()+1);
+            graph.addEdge(graph.begin() +1, graph.begin()+2);
+            graph.addEdge(graph.begin()+2, graph.begin()+3);
+            graph.addEdge(graph.begin()+3, graph.begin());
 
             auto n_tuples = graph.findNTuples();
             const auto &pairs = std::get<0>(n_tuples);
@@ -249,23 +249,25 @@ TEST_CASE("Test topology graphs") {
         model::Context context;
         context.topologyRegistry().potentialConfiguration().pairPotentials[std::make_tuple(0, 0)].emplace_back();
         context.topologyRegistry().potentialConfiguration().pairPotentials[std::make_tuple(0, 1)].emplace_back();
+        kernel::scpu::SCPUKernel kernel;
+        kernel.context() = context;
         model::top::Graph graph;
         graph.addVertex({{10}});
         graph.addVertex({{1}});
         graph.addVertex({{200}});
-        model::top::GraphTopology gt{0, graph, context, nullptr};
+        model::top::GraphTopology gt{0, graph, context, &kernel.stateModel()};
         {
             auto it = gt.graph().vertices().begin();
             auto it2 = ++gt.graph().vertices().begin();
             gt.addEdge(it.persistent_index(), it2.persistent_index());
             gt.addEdge((++it).persistent_index(), (++it2).persistent_index());
         }
-        gt.configure();
+        //gt.configure();
         gt.appendParticle(13, 1);
-        gt.configure();
+        //gt.configure();
 
         auto pred = [](const model::top::Vertex &v) -> bool {
-            return v->particleIndex == 3;
+            return v->particleIndex == 13;
         };
         auto it = std::find_if(gt.graph().begin(), gt.graph().end(), pred);
         REQUIRE(it != gt.graph().vertices().end());

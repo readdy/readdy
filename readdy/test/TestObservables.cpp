@@ -198,15 +198,16 @@ TEMPLATE_TEST_CASE("Test observables", "[observables]", SingleCPU, CPU) {
                     // topology particles should be contained in record.particleIndices
                     REQUIRE(contains2);
 
-                    auto topEdges = topPtr->graph().edges();
+                    //auto topEdges = topPtr->graph().edges();
+                    std::vector<readdy::model::top::Graph::Edge> topEdges;
+                    topPtr->graph().findEdges([&topEdges](const auto &e) { topEdges.push_back(e); });
                     REQUIRE(topEdges.size() == record.edges.size());
 
                     contains1 = std::all_of(record.edges.begin(), record.edges.end(), [&](const auto &edge) {
                         std::size_t ix1 = std::get<0>(edge);
                         std::size_t ix2 = std::get<1>(edge);
                         for (const auto &topEdge : topEdges) {
-                            const auto &v1 = std::get<0>(topEdge);
-                            const auto &v2 = std::get<1>(topEdge);
+                            const auto &[v1, v2] = topEdge;
                             if (v1.value == ix1 && v2.value == ix2) {
                                 return true;
                             }

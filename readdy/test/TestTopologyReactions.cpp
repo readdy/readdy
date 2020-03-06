@@ -212,10 +212,7 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
         }
         const auto &reactions = kernel->context().topologyRegistry().structuralReactionsOf("TA");
         topology->updateReactionRates(reactions);
-        std::vector<model::Particle> particles;
-        {
-            std::copy(topology->fetchParticles().begin(), topology->fetchParticles().end(), std::back_inserter(particles));
-        }
+        std::vector<model::Particle> particles = topology->fetchParticles();
         auto result = reactions.back().execute(*topology, kernel.get());
         REQUIRE(result.size() == 2);
 

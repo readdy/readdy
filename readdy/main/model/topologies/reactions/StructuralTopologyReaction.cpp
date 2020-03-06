@@ -118,10 +118,12 @@ std::vector<GraphTopology> StructuralTopologyReaction::execute(GraphTopology &to
                 assert(subTopologies.size() > 1 && "This should be at least 2 as the graph is not connected.");
                 return std::move(subTopologies);
             }
-            // if valid, update force field
-            topology.configure();
-            // and update reaction rates
-            topology.updateReactionRates(topology_types.structuralReactionsOf(topology.type()));
+            if(!topology.isNormalParticle(*kernel)) {
+                // if valid, update force field
+                topology.configure();
+                // and update reaction rates
+                topology.updateReactionRates(topology_types.structuralReactionsOf(topology.type()));
+            }
         }
     }
     return {};

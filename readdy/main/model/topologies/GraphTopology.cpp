@@ -162,7 +162,7 @@ bool GraphTopology::isNormalParticle(const Kernel &k) const {
     if(_graph.nVertices() == 1){
         for(const auto &v : _graph.vertices()) {
             if (!v.deactivated()) {
-                const auto particle_type = k.stateModel().getParticleType(typeOf(v));
+                const auto particle_type = typeOf(v);
                 const auto& info = k.context().particleTypes().infoOf(particle_type);
                 return info.flavor == particleflavor::NORMAL;
             }
@@ -174,14 +174,10 @@ bool GraphTopology::isNormalParticle(const Kernel &k) const {
 
 typename Graph::PersistentVertexIndex GraphTopology::appendParticle(VertexData::ParticleIndex newParticle,
                                                                     Graph::PersistentVertexIndex counterPart) {
-    auto it = _graph.begin_persistent() + counterPart.value;
-    if(it == _graph.vertices().end_persistent()) {
-        throw std::invalid_argument(fmt::format("Vertex with particle {} was not in graph or deactivated!", counterPart));
-    }
     auto itNew = _graph.addVertex(VertexData{
             .particleIndex = newParticle,
     });
-    _graph.addEdge(_graph.vertices().persistentIndex(it), itNew);
+    _graph.addEdge(counterPart, itNew);
     return itNew;
 }
 
