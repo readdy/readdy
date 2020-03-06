@@ -55,9 +55,9 @@ TEMPLATE_TEST_CASE("Test breaking bonds.", "[breakbonds]", SingleCPU, CPU) {
     auto &types = ctx.particleTypes();
     auto &stateModel = kernel->stateModel();
 
-    types.add("A", 1.0);
-    types.add("B", 1.0);
-    types.add("C", 1.0);
+    types.add("A", 1.0, readdy::model::particleflavor::TOPOLOGY);
+    types.add("B", 1.0, readdy::model::particleflavor::TOPOLOGY);
+    types.add("C", 1.0, readdy::model::particleflavor::TOPOLOGY);
 
     auto &topReg = ctx.topologyRegistry();
     topReg.addType("T");
@@ -89,10 +89,10 @@ TEMPLATE_TEST_CASE("Test breaking bonds.", "[breakbonds]", SingleCPU, CPU) {
             auto &&breakingBonds = kernel->actions().breakBonds(timeStep, breakConfig);
             breakingBonds->perform();
 
-            THEN("the bond breaks and there are no topologies") {
-                auto topsAfter = stateModel.getTopologies();
-                //readdy::log::warn("topology[0] has size {}", topsAfter.at(0)->getNParticles());
-                REQUIRE(topsAfter.empty());
+            THEN("the bond breaks") {
+                REQUIRE(stateModel.getTopologies().size() == 2);
+                REQUIRE(stateModel.getTopologies()[0]->nParticles() == 1);
+                REQUIRE(stateModel.getTopologies()[1]->nParticles() == 1);
             }
         }
 
@@ -152,16 +152,22 @@ TEMPLATE_TEST_CASE("Test breaking bonds.", "[breakbonds]", SingleCPU, CPU) {
             readdy::model::actions::top::BreakConfig breakConfig;
             breakConfig.addBreakablePair(types.idOf("A"), types.idOf("B"), 0.9, 1e10);
 
-            THEN("the bond A-B breaks and we are left with a A-A topology") {
+            THEN("the bond A-B breaks and we are left with a (B) and A-A topologies") {
                 auto &&breakingBonds = kernel->actions().breakBonds(timeStep, breakConfig);
                 breakingBonds->perform();
 
                 auto topsAfter = stateModel.getTopologies();
-                REQUIRE(topsAfter.size() == 1);
+                REQUIRE(topsAfter.size() == 2);
                 REQUIRE(topsAfter.at(0)->type() == topReg.idOf("T"));
-                REQUIRE(topsAfter.at(0)->nParticles() == 2);
+                REQUIRE(topsAfter.at(1)->type() == topReg.idOf("T"));
+                auto topAA = topsAfter.at(0);
+                if(topAA->nParticles() == 1) {
+                    topAA = topsAfter.at(1);
+                }
 
-                auto ps = topsAfter.at(0)->fetchParticles();
+                REQUIRE(topAA->nParticles() == 2);
+
+                auto ps = topAA->fetchParticles();
                 REQUIRE(ps.size() == 2);
                 REQUIRE(ps.at(0).type() == types.idOf("A"));
                 REQUIRE(ps.at(1).type() == types.idOf("A"));
@@ -183,11 +189,15 @@ TEMPLATE_TEST_CASE("Test breaking bonds.", "[breakbonds]", SingleCPU, CPU) {
                 breakingBonds->perform();
 
                 auto topsAfter = stateModel.getTopologies();
-                REQUIRE(topsAfter.size() == 1);
-                REQUIRE(topsAfter.at(0)->type() == topReg.idOf("T"));
-                REQUIRE(topsAfter.at(0)->nParticles() == 2);
+                REQUIRE(topsAfter.size() == 2);
+                auto topAB = topsAfter.at(0);
+                if(topAB->nParticles() == 1) {
+                    topAB = topsAfter.at(1);
+                }
+                REQUIRE(topAB->type() == topReg.idOf("T"));
+                REQUIRE(topAB->nParticles() == 2);
 
-                auto ps = topsAfter.at(0)->fetchParticles();
+                auto ps = topAB->fetchParticles();
                 REQUIRE(ps.size() == 2);
 
                 bool oneOfEach =
@@ -295,9 +305,9 @@ TEMPLATE_TEST_CASE("Test breaking bonds.", "[breakbonds]", SingleCPU, CPU) {
             auto breakingBondsC = kernel->actions().breakBonds(timeStep, breakConfig);
             breakingBondsC->perform();
 
-            THEN("the bonds break and there are no topologies") {
+            THEN("the bonds break and there are six one-particle topologies") {
                 auto topsAfter = stateModel.getTopologies();
-                REQUIRE(topsAfter.empty());
+                REQUIRE(topsAfter.size() == 6);
             }
         }
     }

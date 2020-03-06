@@ -69,13 +69,12 @@ public:
 
     scalar perform(const readdy::model::top::GraphTopology *const topology) override {
         scalar energy = 0;
-        const auto &particleIndices = topology->particleIndices();
         for (const auto &bond : potential->getBonds()) {
             if (bond.forceConstant == 0) continue;
 
             Vec3 forceUpdate{0, 0, 0};
-            auto &e1 = data->entry_at(particleIndices.at(bond.idx1));
-            auto &e2 = data->entry_at(particleIndices.at(bond.idx2));
+            auto &e1 = data->entry_at(bond.idx1);
+            auto &e2 = data->entry_at(bond.idx2);
             const auto x_ij = bcs::shortestDifference(e1.position(), e2.position(), context->boxSize().data(),
                                                       context->periodicBoundaryConditions().data());
             potential->calculateForce(forceUpdate, x_ij, bond);
@@ -100,12 +99,11 @@ public:
 
     scalar perform(const readdy::model::top::GraphTopology *const topology) override {
         scalar energy = 0;
-        const auto &particleIndices = topology->particleIndices();
 
         for (const auto &angle : potential->getAngles()) {
-            auto &e1 = data->entry_at(particleIndices.at(angle.idx1));
-            auto &e2 = data->entry_at(particleIndices.at(angle.idx2));
-            auto &e3 = data->entry_at(particleIndices.at(angle.idx3));
+            auto &e1 = data->entry_at(angle.idx1);
+            auto &e2 = data->entry_at(angle.idx2);
+            auto &e3 = data->entry_at(angle.idx3);
             const auto x_ji = bcs::shortestDifference(e2.pos, e1.pos, context->boxSize().data(),
                                                       context->periodicBoundaryConditions().data());
             const auto x_jk = bcs::shortestDifference(e2.pos, e3.pos, context->boxSize().data(),
@@ -129,13 +127,11 @@ public:
 
     scalar perform(const readdy::model::top::GraphTopology *const topology) override {
         scalar energy = 0;
-        const auto &particleIndices = topology->particleIndices();
-
         for (const auto &dih : potential->getDihedrals()) {
-            auto &e_i = data->entry_at(particleIndices.at(dih.idx1));
-            auto &e_j = data->entry_at(particleIndices.at(dih.idx2));
-            auto &e_k = data->entry_at(particleIndices.at(dih.idx3));
-            auto &e_l = data->entry_at(particleIndices.at(dih.idx4));
+            auto &e_i = data->entry_at(dih.idx1);
+            auto &e_j = data->entry_at(dih.idx2);
+            auto &e_k = data->entry_at(dih.idx3);
+            auto &e_l = data->entry_at(dih.idx4);
             const auto x_ji = bcs::shortestDifference(e_j.pos, e_i.pos, context->boxSize().data(),
                                                       context->periodicBoundaryConditions().data());
             const auto x_kj = bcs::shortestDifference(e_k.pos, e_j.pos, context->boxSize().data(),
