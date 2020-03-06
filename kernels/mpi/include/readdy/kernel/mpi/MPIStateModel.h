@@ -249,8 +249,6 @@ public:
     void synchronizeWithNeighbors() {
         MPI_Barrier(MPI_COMM_WORLD);
         if (domain()->isIdleRank() or domain()->isMasterRank()) {
-            // fixme temporary barrier for debugging
-            MPI_Barrier(MPI_COMM_WORLD);
             return;
         }
         auto& data = _data.get();
@@ -271,9 +269,6 @@ public:
                 removedEntries.push_back(i);
             }
         }
-
-        // fixme temporary barrier for debugging
-        MPI_Barrier(MPI_COMM_WORLD);
 
         // Plimpton synchronization
         std::vector<util::ParticlePOD> other; // particles received by other workers
