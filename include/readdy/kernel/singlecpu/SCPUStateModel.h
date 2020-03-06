@@ -228,10 +228,6 @@ public:
 
     std::vector<readdy::model::top::GraphTopology*> getTopologies() override;
 
-    const readdy::model::top::GraphTopology *getTopologyForParticle(readdy::model::top::VertexData::ParticleIndex particle) const override;
-
-    readdy::model::top::GraphTopology *getTopologyForParticle(readdy::model::top::VertexData::ParticleIndex particle) override;
-
     void clear() override;
 
 private:

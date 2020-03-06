@@ -133,8 +133,8 @@ TEMPLATE_TEST_CASE("Chain-decay integration test", "[!hide][integration]", Singl
         auto vIdx = readdy::model::rnd::uniform_int<>(0, static_cast<int>(current_n_vertices - 1));
         auto v = vertices.begin();
         std::advance(v, vIdx);
-        recipe.separateVertex(v);
-        recipe.changeParticleType(v, "Decay");
+        recipe.separateVertex(v.persistent_index());
+        recipe.changeParticleType(v.persistent_index(), "Decay");
         return recipe;
     };
     auto rateFunction = [](const readdy::model::top::GraphTopology &top) {
@@ -143,7 +143,7 @@ TEMPLATE_TEST_CASE("Chain-decay integration test", "[!hide][integration]", Singl
     readdy::model::top::reactions::StructuralTopologyReaction reaction {"rr", reactionFunction, rateFunction};
     ctx.topologyRegistry().addStructuralReaction("unstable", reaction);
 
-    std::vector<readdy::model::TopologyParticle> topologyParticles;
+    std::vector<readdy::model::Particle> topologyParticles;
     {
         topologyParticles.reserve(70);
         for (std::size_t i = 0; i < 70; ++i) {
@@ -161,7 +161,7 @@ TEMPLATE_TEST_CASE("Chain-decay integration test", "[!hide][integration]", Singl
         auto it = topology->graph().vertices().begin();
         auto it2 = ++topology->graph().vertices().begin();
         while(it2 != topology->graph().vertices().end()) {
-            topology->graph().addEdge(it, it2);
+            topology->addEdge(it.persistent_index(), it2.persistent_index());
             std::advance(it, 1);
             std::advance(it2, 1);
         }
@@ -183,7 +183,7 @@ TEMPLATE_TEST_CASE("Chain-decay integration test", "[!hide][integration]", Singl
 
             REQUIRE(record.particleIndices.size() == particles.size());
             for(std::size_t j = 0; j < record.particleIndices.size(); ++j) {
-                auto topParticles = top->getParticles();
+                auto topParticles = top->particleIndices();
                 kernel->stateModel().toDenseParticleIndices(topParticles.begin(), topParticles.end());
                 REQUIRE(std::find(topParticles.begin(), topParticles.end(),
                                   record.particleIndices.at(j)) != topParticles.end());
@@ -192,8 +192,8 @@ TEMPLATE_TEST_CASE("Chain-decay integration test", "[!hide][integration]", Singl
 
             for(const auto &edge : record.edges) {
                 auto it = std::find_if(edges.begin(), edges.end(), [&](const auto &e) {
-                    auto p1Idx = std::get<0>(e)->particleIndex;
-                    auto p2Idx = std::get<1>(e)->particleIndex;
+                    auto p1Idx = top->graph().vertices().at(std::get<0>(e))->particleIndex;
+                    auto p2Idx = top->graph().vertices().at(std::get<1>(e))->particleIndex;
                     return (p1Idx == std::get<0>(edge) && p2Idx == std::get<1>(edge))
                            || (p1Idx == std::get<1>(edge) && p2Idx == std::get<0>(edge));
                 });
@@ -262,9 +262,9 @@ TEMPLATE_TEST_CASE("Attach particle to topology", "[!hide][integration]", Single
     {
         auto it = top->graph().vertices().begin();
         auto it2 = std::next(top->graph().vertices().begin());
-        top->graph().addEdge(it, it2);
+        top->addEdge(it.persistent_index(), it2.persistent_index());
         ++it; ++it2;
-        top->graph().addEdge(it, it2);
+        top->addEdge(it.persistent_index(), it2.persistent_index());
     }
 
     simulation.addParticle("A", -2., 0, 0);
@@ -285,16 +285,18 @@ TEMPLATE_TEST_CASE("Attach particle to topology", "[!hide][integration]", Single
 
     REQUIRE(simulation.currentTopologies().size() == 1);
     auto chainTop = simulation.currentTopologies().at(0);
-    REQUIRE(chainTop->getNParticles() == 3 /*original topology particles*/ + 6 /*attached particles*/);
+    REQUIRE(chainTop->nParticles() == 3 /*original topology particles*/ + 6 /*attached particles*/);
 
     auto top_particles = simulation.stateModel().getParticlesForTopology(*chainTop);
 
     bool foundEndVertex {false};
     // check that graph is indeed linear
     for(std::size_t idx = 0; idx < chainTop->graph().vertices().size() && !foundEndVertex; ++idx) {
-        auto prev_neighbor = std::next(chainTop->graph().vertices().begin(), idx);
-        const auto& v_end = *prev_neighbor;
-        if(v_end.particleType() == type_registry.idOf("end")) {
+        auto prev_neighborIt = std::next(chainTop->graph().vertices().begin(), idx);
+        auto prev_neighbor = prev_neighborIt.persistent_index();
+        const auto& v_end = *prev_neighborIt;
+
+        if(chainTop->particleForVertex(v_end).type() == type_registry.idOf("end")) {
             foundEndVertex = true;
 
             REQUIRE(v_end.neighbors().size() == 1);
@@ -314,26 +316,27 @@ TEMPLATE_TEST_CASE("Attach particle to topology", "[!hide][integration]", Single
             // walk along topology sausage, check end particles are always at +-4, the other ones are of type middle
             auto next_neighbor = v_end.neighbors().at(0);
             std::size_t i = 0;
-            while(next_neighbor->particleType() != type_registry.idOf("end") && i < 20 /*no endless loop*/) {
-                auto next_idx = std::distance(chainTop->graph().vertices().begin(), next_neighbor);
-                const auto& next_particle = top_particles.at(static_cast<std::size_t>(next_idx));
+            auto nextNeighborType = chainTop->particleForVertex(next_neighbor).type();
+            while(nextNeighborType != type_registry.idOf("end") && i < 20 /*no endless loop*/) {
+                auto nextParticle = chainTop->particleForVertex(next_neighbor);
                 auto predicted_pos = factor*4. - factor*(i+1)*1.;
-                auto actual_pos = next_particle.pos().x;
+                auto actual_pos = nextParticle.pos().x;
                 REQUIRE((flouble(actual_pos).AlmostEquals(flouble(predicted_pos))));
-                REQUIRE((flouble(next_particle.pos().y)).AlmostEquals(flouble(0.)));
-                REQUIRE((flouble(next_particle.pos().z)).AlmostEquals(flouble(0.)));
-                if(next_neighbor->particleType() == type_registry.idOf("middle")) {
-                    REQUIRE(next_neighbor->neighbors().size() == 2);
-                    if(next_neighbor->neighbors().at(0) == prev_neighbor) {
+                REQUIRE((flouble(nextParticle.pos().y)).AlmostEquals(flouble(0.)));
+                REQUIRE((flouble(nextParticle.pos().z)).AlmostEquals(flouble(0.)));
+                const auto& neighborNeighbors = chainTop->graph().vertices().at(next_neighbor).neighbors();
+                if(nextParticle.type() == type_registry.idOf("middle")) {
+                    REQUIRE(neighborNeighbors.size() == 2);
+                    if(neighborNeighbors.at(0) == prev_neighbor) {
                         prev_neighbor = next_neighbor;
-                        next_neighbor = next_neighbor->neighbors().at(1);
+                        next_neighbor = neighborNeighbors.at(1);
                     } else {
                         prev_neighbor = next_neighbor;
-                        next_neighbor = next_neighbor->neighbors().at(0);
+                        next_neighbor = neighborNeighbors.at(0);
                     }
 
                 } else {
-                    REQUIRE(next_neighbor->neighbors().size() == 1);
+                    REQUIRE(neighborNeighbors.size() == 1);
                 }
 
                 ++i;
@@ -377,7 +380,7 @@ TEMPLATE_TEST_CASE("Break bonds due to pulling", "[!hide][breakbonds][integratio
 
         ctx.potentials().addBox("head", 10., {-4., -12.5, -12.5}, {0.000001, 25., 25.});
 
-        std::vector<readdy::model::TopologyParticle> particles{
+        std::vector<readdy::model::Particle> particles{
             {-4., 0., 0., types.idOf("head")},
             {-2., 0., 0., types.idOf("A")},
             {2., 0., 0., types.idOf("A")},
@@ -389,7 +392,7 @@ TEMPLATE_TEST_CASE("Break bonds due to pulling", "[!hide][breakbonds][integratio
         {
             auto &graph = graphTop->graph();
             for (std::size_t i = 0; i < 3; ++i) {
-                graph.addEdgeBetweenParticles(i, i + 1);
+                graphTop->addEdge({i}, {i+1});
             }
         }
 
@@ -503,7 +506,7 @@ TEMPLATE_TEST_CASE("Helix grows by spatial topology reactions", "[!hide][integra
         readdy::Simulation simulation(create<TestType>(), ctx);
         WHEN("the helix elongates by attaching 20 segments from substrate particles") {
             {
-                std::vector<readdy::model::TopologyParticle> topParticles;
+                std::vector<readdy::model::Particle> topParticles;
                 topParticles.reserve(23);
                 topParticles.emplace_back(initPos23.front(),ctx.particleTypes().idOf("B"));
                 for (std::size_t i = 1; i < initPos23.size() - 1; ++i) {
@@ -513,7 +516,7 @@ TEMPLATE_TEST_CASE("Helix grows by spatial topology reactions", "[!hide][integra
                 auto top = simulation.addTopology("helix", topParticles);
                 auto &graph = top->graph();
                 for (std::size_t i = 0; i < topParticles.size()-1; ++i) {
-                    graph.addEdgeBetweenParticles(i, i + 1);
+                    top->addEdgeBetweenParticles(i, i + 1);
                 }
 
                 for (std::size_t i=0; i<20; ++i) {
@@ -607,23 +610,22 @@ TEMPLATE_TEST_CASE("Helix grows by structural topology reactions", "[!hide][inte
         auto reactionFunction = [&ctx](rmt::GraphTopology &topology) -> rmt::reactions::Recipe {
             rmt::reactions::Recipe recipe(topology);
             auto &graph = topology.graph();
-            for (auto &vertex : graph.vertices()) {
-                if (vertex.particleType() == ctx.particleTypes().idOf("C")) {
+            for (auto vIt = graph.begin(); vIt != graph.end(); ++vIt) {
+                auto p = topology.particleForVertex(vIt.persistent_index());
+                if (p.type() == ctx.particleTypes().idOf("C")) {
                     readdy::Vec3 pos1;
-                    for (auto &neighbor : vertex.neighbors()) {
-                        pos1 = topology.particleForVertex(*neighbor).pos();
+                    for (auto &neighbor : vIt->neighbors()) {
+                        pos1 = topology.particleForVertex(neighbor).pos();
                     }
 
-                    auto pos2 = topology.particleForVertex(vertex).pos();
+                    auto pos2 = topology.particleForVertex(vIt.persistent_index()).pos();
                     auto newPosition = pos2 + (pos2 - pos1);
 
                     auto ida = ctx.particleTypes().idOf("A");
-                    recipe.changeParticleType(vertex, ida);
-
-                    std::vector<rmt::graph::Vertex::vertex_ptr> neighbors = {graph.toRef(vertex)};
+                    recipe.changeParticleType(vIt.persistent_index(), ida);
 
                     std::string ctype = "C";
-                    recipe.appendNewParticle(neighbors, ctype, newPosition);
+                    recipe.appendNewParticle({vIt.persistent_index()}, ctype, newPosition);
                 }
             }
             return recipe;
@@ -645,7 +647,7 @@ TEMPLATE_TEST_CASE("Helix grows by structural topology reactions", "[!hide][inte
         readdy::Simulation simulation(create<TestType>(), ctx);
         WHEN("the helix elongates by attaching 20 segments from substrate particles") {
             {
-                std::vector<readdy::model::TopologyParticle> topParticles;
+                std::vector<readdy::model::Particle> topParticles;
                 topParticles.reserve(23);
                 topParticles.emplace_back(initPos23.front(), ctx.particleTypes().idOf("B"));
                 for (std::size_t i = 1; i < initPos23.size() - 1; ++i) {
@@ -655,7 +657,7 @@ TEMPLATE_TEST_CASE("Helix grows by structural topology reactions", "[!hide][inte
                 auto top = simulation.addTopology("helix", topParticles);
                 auto &graph = top->graph();
                 for (std::size_t i = 0; i < topParticles.size()-1; ++i) {
-                    graph.addEdgeBetweenParticles(i, i + 1);
+                    top->addEdgeBetweenParticles(i, i + 1);
                 }
             }
 
@@ -672,7 +674,7 @@ TEMPLATE_TEST_CASE("Helix grows by structural topology reactions", "[!hide][inte
             readdy::scalar dt = 4e-5;
             simulation.run(nSteps, dt);
 
-            REQUIRE(distances.size() > 0);
+            REQUIRE(!distances.empty());
 
             THEN("the average end-to-end distance after absorption of all substrate particles is roughly ~14.4") {
                 // extract recorded distances after a certain number of steps

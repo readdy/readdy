@@ -330,14 +330,14 @@ TEMPLATE_TEST_CASE("Test topologies.", "[topologies]", SingleCPU, CPU) {
         auto top = kernel->stateModel().addTopology(0, {x_i, x_j, x_k, x_l});
         REQUIRE(top->graph().vertices().size() == 4);
         REQUIRE_FALSE(top->graph().isConnected());
-        top->addEdge(0, 1);
+        top->addEdge({0}, {1});
         REQUIRE_FALSE(top->graph().isConnected());
-        top->addEdge(1, 2);
+        top->addEdge({1}, {2});
         REQUIRE_FALSE(top->graph().isConnected());
-        top->addEdge(2, 3);
+        top->addEdge({2}, {3});
         REQUIRE(top->graph().isConnected());
 
-        top->addEdge(0, 3);
+        top->addEdge({0}, {3});
         REQUIRE(top->graph().isConnected());
         top->configure();
     }

@@ -181,8 +181,8 @@ typename Graph::PersistentVertexIndex GraphTopology::appendParticle(VertexData::
     auto itNew = _graph.addVertex(VertexData{
             .particleIndex = newParticle,
     });
-    _graph.addEdge(it, itNew.to_persistent());
-    return itNew.persistent_index();
+    _graph.addEdge(_graph.vertices().persistentIndex(it), itNew);
+    return itNew;
 }
 
 

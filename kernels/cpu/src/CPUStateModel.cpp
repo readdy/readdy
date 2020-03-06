@@ -113,30 +113,6 @@ std::vector<readdy::model::top::GraphTopology*> CPUStateModel::getTopologies() {
     return result;
 }
 
-const readdy::model::top::GraphTopology *CPUStateModel::getTopologyForParticle(readdy::model::top::VertexData::ParticleIndex particle) const {
-    const auto& entry = getParticleData()->entry_at(particle);
-    if(!entry.deactivated) {
-        if(entry.topology_index >= 0) {
-            return _topologies.at(static_cast<topologies_vec::size_type>(entry.topology_index)).get();
-        }
-        log::trace("requested particle {} of type {} had no assigned topology", particle, entry.type);
-        return nullptr;
-    }
-    throw std::logic_error(fmt::format("requested particle was deactivated in getTopologyForParticle(p={})", particle));
-}
-
-readdy::model::top::GraphTopology *CPUStateModel::getTopologyForParticle(readdy::model::top::VertexData::ParticleIndex particle) {
-    const auto& entry = getParticleData()->entry_at(particle);
-    if(!entry.deactivated) {
-        if(entry.topology_index >= 0) {
-            return _topologies.at(static_cast<topologies_vec::size_type>(entry.topology_index)).get();
-        }
-        log::trace("requested particle {} of type {} had no assigned topology", particle, entry.type);
-        return nullptr;
-    }
-    throw std::logic_error(fmt::format("requested particle was deactivated in getTopologyForParticle(p={})", particle));
-}
-
 void CPUStateModel::insert_topology(CPUStateModel::topology &&top) {
     auto it = _topologies.push_back(std::make_unique<topology>(std::move(top)));
     auto idx = std::distance(_topologies.begin(), it);

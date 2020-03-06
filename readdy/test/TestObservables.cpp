@@ -185,7 +185,7 @@ TEMPLATE_TEST_CASE("Test observables", "[observables]", SingleCPU, CPU) {
                      its.first != tops.end(); ++its.first, ++its.second) {
                     auto topPtr = *its.first;
                     const auto &record = *its.second;
-                    const auto &topParticles = topPtr->fetchParticles();
+                    const auto &topParticles = topPtr->particleIndices();
                     const auto &recordParticles = record.particleIndices;
                     auto contains1 = std::all_of(recordParticles.begin(), recordParticles.end(), [&](auto idx) {
                         return std::find(topParticles.begin(), topParticles.end(), idx) != topParticles.end();
@@ -207,10 +207,10 @@ TEMPLATE_TEST_CASE("Test observables", "[observables]", SingleCPU, CPU) {
                         for (const auto &topEdge : topEdges) {
                             const auto &v1 = std::get<0>(topEdge);
                             const auto &v2 = std::get<1>(topEdge);
-                            if (v1 == ix1 && v2 == ix2) {
+                            if (v1.value == ix1 && v2.value == ix2) {
                                 return true;
                             }
-                            if (v1 == ix2 && v2 == ix1) {
+                            if (v1.value == ix2 && v2.value == ix1) {
                                 return true;
                             }
                         }
@@ -218,8 +218,8 @@ TEMPLATE_TEST_CASE("Test observables", "[observables]", SingleCPU, CPU) {
                     });
 
                     contains2 = std::all_of(topEdges.begin(), topEdges.end(), [&](const auto &e) {
-                        auto vtup1 = std::make_tuple(std::get<0>(e), std::get<1>(e));
-                        auto vtup2 = std::make_tuple(std::get<1>(e), std::get<0>(e));
+                        auto vtup1 = std::make_tuple(std::get<0>(e).value, std::get<1>(e).value);
+                        auto vtup2 = std::make_tuple(std::get<1>(e).value, std::get<0>(e).value);
 
                         auto find1 = std::find(record.edges.begin(), record.edges.end(), vtup1);
                         auto find2 = std::find(record.edges.begin(), record.edges.end(), vtup2);

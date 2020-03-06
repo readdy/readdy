@@ -53,7 +53,7 @@
 using namespace readdy;
 using namespace readdytesting::kernel;
 
-readdy::model::top::GraphTopology* setUpSmallTopology(readdy::model::Kernel* kernel, readdy::TopologyTypeId type) {
+readdy::model::top::GraphTopology *setUpSmallTopology(readdy::model::Kernel *kernel, readdy::TopologyTypeId type) {
     auto &ctx = kernel->context();
     model::Particle x_0{0, 0, 0, ctx.particleTypes().idOf("Topology A")};
     model::Particle x_1{0, 0, 0, ctx.particleTypes().idOf("Topology A")};
@@ -62,17 +62,14 @@ readdy::model::top::GraphTopology* setUpSmallTopology(readdy::model::Kernel* ker
     {
         auto it = topology->graph().vertices().begin();
         auto it2 = ++topology->graph().vertices().begin();
-        topology->addEdge(0, 1);
-        topology->addEdge(1, 2);
+        topology->addEdge({0}, {1});
+        topology->addEdge({1}, {2});
     }
     return topology;
 }
 
-bool isNotConnected(const readdy::model::top::graph::Graph& g,
-		    std::list<readdy::model::top::graph::Vertex>::iterator v) {
-  const auto neighbors = (*v).neighbors();
-  if (neighbors.size() == 0) return true;
-  return false;
+bool isNotConnected(readdy::model::top::Graph::iterator v) {
+    return v->neighbors().empty();
 }
 
 TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
@@ -93,10 +90,10 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
         using namespace readdy::model::top;
 
         reactions::StructuralTopologyReaction::reaction_function rfun = [](GraphTopology &t) -> reactions::Recipe {
-            reactions::StructuralTopologyReaction::reaction_recipe recipe {t};
+            reactions::StructuralTopologyReaction::reaction_recipe recipe{t};
             return recipe;
         };
-        reactions::StructuralTopologyReaction topologyReaction ("r", rfun, [](const GraphTopology &) {
+        reactions::StructuralTopologyReaction topologyReaction("r", rfun, [](const GraphTopology &) {
             return 0;
         });
         topologyReaction.expect_connected_after_reaction();
@@ -115,30 +112,28 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
         const auto &types = kernel->context().particleTypes();
         {
             auto reactionFunction = [&](model::top::GraphTopology &top) {
-                model::top::reactions::Recipe recipe (top);
-                recipe.changeParticleType(top.graph().vertices().begin(), types.idOf("Topology B"));
+                model::top::reactions::Recipe recipe(top);
+                recipe.changeParticleType(top.graph().vertices().begin().persistent_index(), types.idOf("Topology B"));
                 return recipe;
             };
-            model::top::reactions::StructuralTopologyReaction reaction {"r", reactionFunction, 5};
+            model::top::reactions::StructuralTopologyReaction reaction{"r", reactionFunction, 5};
             reaction.expect_connected_after_reaction();
-            reaction.raise_if_invalid();
             kernel->context().topologyRegistry().addStructuralReaction(tid, reaction);
         }
         {
             auto reactionFunction = [&](model::top::GraphTopology &top) {
-                model::top::reactions::Recipe recipe (top);
-                recipe.changeParticleType(top.graph().vertices().begin(), types.idOf("Topology A"));
+                model::top::reactions::Recipe recipe(top);
+                recipe.changeParticleType(top.graph().vertices().begin().persistent_index(), types.idOf("Topology A"));
                 return recipe;
             };
             auto rateFunction = [&](const model::top::GraphTopology &top) {
                 return 15;
             };
-            model::top::reactions::StructuralTopologyReaction reaction {"r2", reactionFunction, rateFunction};
+            model::top::reactions::StructuralTopologyReaction reaction{"r2", reactionFunction, rateFunction};
             reaction.expect_connected_after_reaction();
-            reaction.raise_if_invalid();
             kernel->context().topologyRegistry().addStructuralReaction(tid, reaction);
         }
-        const auto& reactions = kernel->context().topologyRegistry().structuralReactionsOf(tid);
+        const auto &reactions = kernel->context().topologyRegistry().structuralReactionsOf(tid);
         topology->updateReactionRates(reactions);
         REQUIRE(topology->rates().at(0) == 5); // Expected (constant) rate: 5
         REQUIRE(topology->rates().at(1) == 15); // Expected (function) rate: 15
@@ -148,18 +143,14 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
             REQUIRE(result.empty()); // reaction is in-place, expect empty return vector
             auto particles = kernel->stateModel().getParticlesForTopology(*topology);
             auto v = topology->graph().vertices().begin();
-            REQUIRE(particles[v->particleIndex].type() == types.idOf("Topology B"));
-            // expect that the particle type in the graph representation and the particle data coincide
-            REQUIRE(v->particleType() == particles[v->particleIndex].type());
+            REQUIRE(particles[v->data().particleIndex].type() == types.idOf("Topology B"));
         }
         {
             auto result = reactions.at(1).execute(*topology, kernel.get());
             REQUIRE(result.empty()); // reaction is in-place, expect empty return vector
             auto particles = kernel->stateModel().getParticlesForTopology(*topology);
             auto v = topology->graph().vertices().begin();
-            REQUIRE(particles[v->particleIndex].type() == types.idOf("Topology A"));
-            // expect that the particle type in the graph representation and the particle data coincide
-            REQUIRE(v->particleType() == particles[v->particleIndex].type());
+            REQUIRE(particles[v->data().particleIndex].type() == types.idOf("Topology A"));
         }
     }
     SECTION("Add a named edge") {
@@ -169,13 +160,12 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
         const auto &types = kernel->context().particleTypes();
         {
             auto reactionFunction = [&](model::top::GraphTopology &top) {
-                model::top::reactions::Recipe recipe (top);
-                recipe.addEdge(top.graph().vertices().begin(), std::prev(top.graph().vertices().end()));
+                model::top::reactions::Recipe recipe(top);
+                recipe.addEdge(top.graph().vertices().begin().persistent_index(), std::prev(top.graph().vertices().end()).persistent_index());
                 return recipe;
             };
-            model::top::reactions::StructuralTopologyReaction reaction {"r", reactionFunction, 5};
+            model::top::reactions::StructuralTopologyReaction reaction{"r", reactionFunction, 5};
             reaction.expect_connected_after_reaction();
-            reaction.raise_if_invalid();
             kernel->context().topologyRegistry().addStructuralReaction(tid, reaction);
         }
         const auto &reactions = kernel->context().topologyRegistry().structuralReactionsOf(tid);
@@ -184,20 +174,19 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
         REQUIRE(result.empty()); // reaction is in-place, expect empty return vector
         auto v1 = topology->graph().vertices().begin();
         auto v2 = std::prev(topology->graph().vertices().end());
-        REQUIRE(topology->graph().containsEdge(std::make_tuple(v1, v2)));
+        REQUIRE(topology->containsEdge(v1.persistent_index(), v2.persistent_index()));
     }
     SECTION("Add edge by iterator") {
         auto tid = kernel->context().topologyRegistry().addType("TA");
         auto topology = setUpSmallTopology(kernel.get(), tid);
         {
             auto reactionFunction = [&](model::top::GraphTopology &top) {
-                model::top::reactions::Recipe recipe (top);
-                recipe.addEdge(std::make_tuple(top.graph().vertices().begin(), --top.graph().vertices().end()));
+                model::top::reactions::Recipe recipe(top);
+                recipe.addEdge(top.graph().vertices().begin().persistent_index(), (--top.graph().vertices().end()).persistent_index());
                 return recipe;
             };
-            model::top::reactions::StructuralTopologyReaction reaction {"r", reactionFunction, 5};
+            model::top::reactions::StructuralTopologyReaction reaction{"r", reactionFunction, 5};
             reaction.expect_connected_after_reaction();
-            reaction.raise_if_invalid();
             kernel->context().topologyRegistry().addStructuralReaction(tid, reaction);
         }
         const auto &reactions = kernel->context().topologyRegistry().structuralReactionsOf(tid);
@@ -205,7 +194,7 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
         auto result = reactions.back().execute(*topology, kernel.get());
         REQUIRE(result.empty()); // reaction is in-place, expect empty return vector
         auto &vertices = topology->graph().vertices();
-        REQUIRE(topology->graph().containsEdge(std::make_tuple(vertices.begin(), std::prev(vertices.end()))));
+        REQUIRE(topology->graph().containsEdge(vertices.begin().persistent_index(), std::prev(vertices.end()).persistent_index()));
     }
     SECTION("Remove edge straightforward") {
         kernel->context().topologyRegistry().addType("TA");
@@ -213,48 +202,47 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
 
         {
             auto reactionFunction = [&](model::top::GraphTopology &top) {
-                model::top::reactions::Recipe recipe (top);
-                recipe.removeEdge(top.graph().vertices().begin(), ++top.graph().vertices().begin());
+                model::top::reactions::Recipe recipe(top);
+                recipe.removeEdge(top.graph().vertices().begin().persistent_index(), (++top.graph().vertices().begin()).persistent_index());
                 return recipe;
             };
-            model::top::reactions::StructuralTopologyReaction reaction {"r", reactionFunction, 5};
+            model::top::reactions::StructuralTopologyReaction reaction{"r", reactionFunction, 5};
             reaction.create_child_topologies_after_reaction();
-            reaction.raise_if_invalid();
             kernel->context().topologyRegistry().addStructuralReaction("TA", reaction);
         }
         const auto &reactions = kernel->context().topologyRegistry().structuralReactionsOf("TA");
         topology->updateReactionRates(reactions);
-        model::top::Topology::particle_indices particles;
+        std::vector<model::Particle> particles;
         {
-            std::copy(topology->getParticles().begin(), topology->getParticles().end(), std::back_inserter(particles));
+            std::copy(topology->fetchParticles().begin(), topology->fetchParticles().end(), std::back_inserter(particles));
         }
         auto result = reactions.back().execute(*topology, kernel.get());
         REQUIRE(result.size() == 2);
 
-        const auto& top1 = result.at(0);
-        const auto& top2 = result.at(1);
+        const auto &top1 = result.at(0);
+        const auto &top2 = result.at(1);
 
         // first topology should have only 1 particle
-        REQUIRE(top1.getNParticles() == 1);
+        REQUIRE(top1.nParticles() == 1);
         // second topology should have 2 particles
-        REQUIRE(top2.getNParticles() == 2);
+        REQUIRE(top2.nParticles() == 2);
 
-        SECTION("Second topology has one edge"){
+        SECTION("Second topology has one edge") {
             REQUIRE(top2.graph().vertices().begin()->neighbors().size() == 1);
             REQUIRE((++top2.graph().vertices().begin())->neighbors().size() == 1);
-            REQUIRE(top2.graph().vertices().begin()->neighbors().at(0) == ++top2.graph().vertices().begin());
-            REQUIRE((++top2.graph().vertices().begin())->neighbors().at(0) == top2.graph().vertices().begin());
+            REQUIRE(top2.graph().vertices().begin()->neighbors().at(0) == (++top2.graph().vertices().begin()).persistent_index());
+            REQUIRE((++top2.graph().vertices().begin())->neighbors().at(0) == top2.graph().vertices().begin().persistent_index());
         }
         SECTION("Particle indices are topology-relative and should begin with 0") {
-            REQUIRE(top1.graph().vertices().begin()->particleIndex == 0);
-            REQUIRE(top2.graph().vertices().begin()->particleIndex == 0);
-            REQUIRE((++top2.graph().vertices().begin())->particleIndex == 1);
+            REQUIRE(top1.graph().vertices().begin()->data().particleIndex == 0);
+            REQUIRE(top2.graph().vertices().begin()->data().particleIndex == 0);
+            REQUIRE((++top2.graph().vertices().begin())->data().particleIndex == 1);
         }
 
         // check if particle mappings are still valid
-        REQUIRE(top1.getParticles().at(0) == particles.at(0));
-        REQUIRE(top2.getParticles().at(0) == particles.at(1));
-        REQUIRE(top2.getParticles().at(1) == particles.at(2));
+        REQUIRE(top1.fetchParticles().at(0) == particles.at(0));
+        REQUIRE(top2.fetchParticles().at(0) == particles.at(1));
+        REQUIRE(top2.fetchParticles().at(1) == particles.at(2));
     }
     SECTION("Remove edge with rollback") {
         auto &context = kernel->context();
@@ -264,30 +252,26 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
 
         {
             auto reactionFunction = [&](model::top::GraphTopology &top) {
-                model::top::reactions::Recipe recipe (top);
-                recipe.removeEdge(top.graph().vertices().begin(), ++top.graph().vertices().begin());
+                model::top::reactions::Recipe recipe(top);
+                recipe.removeEdge(top.graph().vertices().begin().persistent_index(), (++top.graph().vertices().begin()).persistent_index());
                 return recipe;
             };
-            model::top::reactions::StructuralTopologyReaction reaction {"r", reactionFunction, 5};
+            model::top::reactions::StructuralTopologyReaction reaction{"r", reactionFunction, 5};
             reaction.expect_connected_after_reaction();
-            reaction.roll_back_if_invalid();
             toptypes.addStructuralReaction("TA", reaction);
         }
         topology->updateReactionRates(toptypes.structuralReactionsOf("TA"));
-        model::top::Topology::particle_indices particles;
-        {
-            std::copy(topology->getParticles().begin(), topology->getParticles().end(), std::back_inserter(particles));
-        }
+        std::vector<model::Particle> particles = topology->fetchParticles();
         std::vector<model::top::GraphTopology> result;
         {
-            log::Level level (spdlog::level::err);
+            log::Level level(spdlog::level::err);
             result = toptypes.structuralReactionsOf("TA").back().execute(*topology, kernel.get());
         }
-        auto& graph = topology->graph();
-        auto& vertices = graph.vertices();
+        auto &graph = topology->graph();
+        auto &vertices = graph.vertices();
         REQUIRE(result.empty());
-        REQUIRE(graph.containsEdge(vertices.begin(), ++vertices.begin()));
-        REQUIRE(graph.containsEdge(++vertices.begin(), --vertices.end()));
+        REQUIRE(graph.containsEdge(vertices.begin().persistent_index(), (++vertices.begin()).persistent_index()));
+        REQUIRE(graph.containsEdge((++vertices.begin()).persistent_index(), (--vertices.end()).persistent_index()));
     }
 
     SECTION("Chain split up") {
@@ -297,7 +281,7 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
         toptypes.addType("TA");
 
         ctx.boxSize() = {{10, 10, 10}};
-        std::vector<readdy::model::TopologyParticle> topologyParticles;
+        std::vector<readdy::model::Particle> topologyParticles;
         {
             topologyParticles.reserve(n_chain_elements);
             for (std::size_t i = 0; i < n_chain_elements; ++i) {
@@ -309,8 +293,8 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
         {
             auto it = topology->graph().vertices().begin();
             auto it2 = ++topology->graph().vertices().begin();
-            while(it2 != topology->graph().vertices().end()) {
-                topology->graph().addEdge(it, it2);
+            while (it2 != topology->graph().vertices().end()) {
+                topology->addEdge(it.persistent_index(), it2.persistent_index());
                 std::advance(it, 1);
                 std::advance(it2, 1);
             }
@@ -318,27 +302,26 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
 
         {
             auto reactionFunction = [&](model::top::GraphTopology &top) {
-                model::top::reactions::Recipe recipe (top);
-                auto& vertices = top.graph().vertices();
+                model::top::reactions::Recipe recipe(top);
+                auto &vertices = top.graph().vertices();
                 auto current_n_vertices = vertices.size();
-                if(current_n_vertices > 1) {
-                    auto edge = readdy::model::rnd::uniform_int<>(0, static_cast<int>(current_n_vertices-2));
+                if (current_n_vertices > 1) {
+                    auto edge = readdy::model::rnd::uniform_int<>(0, static_cast<int>(current_n_vertices - 2));
                     auto it1 = vertices.begin();
                     auto it2 = ++vertices.begin();
-                    for(int i = 0; i < edge; ++i) {
+                    for (int i = 0; i < edge; ++i) {
                         ++it1;
                         ++it2;
                     }
-                    recipe.removeEdge(it1, it2);
+                    recipe.removeEdge(it1.persistent_index(), it2.persistent_index());
                 }
                 return recipe;
             };
             auto rateFunction = [](const model::top::GraphTopology &top) {
-                return top.getNParticles() > 1 ? top.getNParticles()/50. : 0;
+                return top.nParticles() > 1 ? top.nParticles() / 50. : 0;
             };
-            model::top::reactions::StructuralTopologyReaction reaction {"r", reactionFunction, rateFunction};
+            model::top::reactions::StructuralTopologyReaction reaction{"r", reactionFunction, rateFunction};
             reaction.create_child_topologies_after_reaction();
-            reaction.roll_back_if_invalid();
             toptypes.addStructuralReaction("TA", reaction);
         }
 
@@ -354,7 +337,7 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
 
             forces->perform();
             kernel->evaluateObservables(time);
-            for(time = 1; time < n_time_steps; ++time) {
+            for (time = 1; time < n_time_steps; ++time) {
                 integrator->perform();
                 topReactions->perform();
                 forces->perform();
@@ -363,8 +346,8 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
         }
 
         auto topologies = kernel->stateModel().getTopologies();
-        for(const auto topPtr : topologies) {
-            REQUIRE(topPtr->getNParticles() == 1);
+        for (const auto topPtr : topologies) {
+            REQUIRE(topPtr->nParticles() == 1);
             REQUIRE(topPtr->graph().vertices().size() == 1);
         }
     }
@@ -375,7 +358,7 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
         toptypes.addType("TA");
 
         ctx.boxSize() = {{10, 10, 10}};
-        std::vector<readdy::model::TopologyParticle> topologyParticles;
+        std::vector<readdy::model::Particle> topologyParticles;
         {
             topologyParticles.reserve(n_chain_elements);
             for (std::size_t i = 0; i < n_chain_elements; ++i) {
@@ -387,8 +370,8 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
         {
             auto it = topology->graph().vertices().begin();
             auto it2 = ++topology->graph().vertices().begin();
-            while(it2 != topology->graph().vertices().end()) {
-                topology->graph().addEdge(it, it2);
+            while (it2 != topology->graph().vertices().end()) {
+                topology->addEdge(it.persistent_index(), it2.persistent_index());
                 std::advance(it, 1);
                 std::advance(it2, 1);
             }
@@ -397,37 +380,36 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
         {
             // split reaction
             auto reactionFunction = [&](model::top::GraphTopology &top) {
-                model::top::reactions::Recipe recipe (top);
-                auto& vertices = top.graph().vertices();
+                model::top::reactions::Recipe recipe(top);
+                auto &vertices = top.graph().vertices();
                 auto current_n_vertices = vertices.size();
-                if(current_n_vertices > 1) {
+                if (current_n_vertices > 1) {
                     auto edge = readdy::model::rnd::uniform_int<>(0, static_cast<int>(current_n_vertices - 2));
                     auto it1 = vertices.begin();
                     auto it2 = ++vertices.begin();
-                    for(int i = 0; i < edge; ++i) {
+                    for (int i = 0; i < edge; ++i) {
                         ++it1;
                         ++it2;
                     }
-                    recipe.removeEdge(it1, it2);
+                    recipe.removeEdge(it1.persistent_index(), it2.persistent_index());
                 }
 
                 return recipe;
             };
             auto rateFunction = [](const model::top::GraphTopology &top) {
-                return top.getNParticles() > 1 ? top.getNParticles()/50. : 0;
+                return top.nParticles() > 1 ? top.nParticles() / 50. : 0;
             };
-            model::top::reactions::StructuralTopologyReaction reaction {"r", reactionFunction, rateFunction};
+            model::top::reactions::StructuralTopologyReaction reaction{"r", reactionFunction, rateFunction};
             reaction.create_child_topologies_after_reaction();
-            reaction.roll_back_if_invalid();
 
             toptypes.addStructuralReaction("TA", reaction);
         }
         {
             // decay reaction
             auto reactionFunction = [&](model::top::GraphTopology &top) {
-                model::top::reactions::Recipe recipe (top);
-                if(top.graph().vertices().size() == 1) {
-                    recipe.changeParticleType(top.graph().vertices().begin(),
+                model::top::reactions::Recipe recipe(top);
+                if (top.graph().vertices().size() == 1) {
+                    recipe.changeParticleType(top.graph().vertices().begin().persistent_index(),
                                               kernel->context().particleTypes().idOf("A"));
                 } else {
                     throw std::logic_error("this reaction should only be executed when there is exactly "
@@ -436,11 +418,10 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
                 return recipe;
             };
             auto rateFunction = [](const model::top::GraphTopology &top) {
-                return top.getNParticles() > 1 ? 0 : 1;
+                return top.nParticles() > 1 ? 0 : 1;
             };
-            model::top::reactions::StructuralTopologyReaction reaction {"r2", reactionFunction, rateFunction};
+            model::top::reactions::StructuralTopologyReaction reaction{"r2", reactionFunction, rateFunction};
             reaction.create_child_topologies_after_reaction();
-            reaction.roll_back_if_invalid();
             toptypes.addStructuralReaction("TA", reaction);
         }
 
@@ -456,7 +437,7 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
 
             forces->perform();
             kernel->evaluateObservables(time);
-            for(time = 1; time < n_time_steps; ++time) {
+            for (time = 1; time < n_time_steps; ++time) {
                 integrator->perform();
                 topReactions->perform();
                 forces->perform();
@@ -482,10 +463,10 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
             ctx.topologyRegistry().configureBondPotential("Y", "Z", {0., .1});
             ctx.topologyRegistry().addSpatialReaction("connect: T(X1) + T(X2) -> T2(Y--Z)", 1e10, 1.);
 
-            Simulation sim (std::move(kernel), ctx);
+            Simulation sim(std::move(kernel), ctx);
 
-            std::string x1type = "X1"; 
-            std::string x2type = "X2"; 
+            std::string x1type = "X1";
+            std::string x2type = "X2";
             std::string ttype = "T";
             REQUIRE(sim.context().topologyRegistry().spatialReactionsByType(x1type, ttype, x2type, ttype).size() == 1);
             REQUIRE(sim.context().topologyRegistry().spatialReactionsByType(x2type, ttype, x1type, ttype).size() == 1);
@@ -506,11 +487,11 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
             REQUIRE(topologies.size() == 1);
             auto top = topologies.at(0);
             REQUIRE(top->type() == sim.context().topologyRegistry().idOf("T2"));
-            REQUIRE(top->getNParticles() == 2);
+            REQUIRE(top->nParticles() == 2);
             auto particles = top->fetchParticles();
             REQUIRE((particles[0].type() == sim.context().particleTypes().idOf("Y") ||
-                        particles[0].type() == sim.context().particleTypes().idOf("Z")));
-            if(particles[0].type() == sim.context().particleTypes().idOf("Y")) {
+                     particles[0].type() == sim.context().particleTypes().idOf("Z")));
+            if (particles[0].type() == sim.context().particleTypes().idOf("Y")) {
                 REQUIRE(particles[1].type() == sim.context().particleTypes().idOf("Z"));
             } else {
                 REQUIRE(particles[1].type() == sim.context().particleTypes().idOf("Y"));
@@ -532,14 +513,14 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
             ctx.topologyRegistry().configureBondPotential("X", "Z", {.0, .01});
             ctx.topologyRegistry().addSpatialReaction("connect: T(X) + T(X) -> T2(Y--Z) [self=true]", 1e10, 1.);
 
-            Simulation sim (kernel->name(), ctx);
+            Simulation sim(kernel->name(), ctx);
 
             auto p1 = sim.createTopologyParticle("X", {0, 0, -.01});
             auto p2 = sim.createTopologyParticle("X", {0, 0, 0});
             auto p3 = sim.createTopologyParticle("X", {0, 0, .01});
             auto t = sim.addTopology("T", {p1, p2, p3});
-            t->graph().addEdgeBetweenParticles(0, 1);
-            t->graph().addEdgeBetweenParticles(1, 2);
+            t->addEdge({0}, {1});
+            t->addEdge({1}, {2});
 
             sim.run(1, 1e-3);
 
@@ -548,169 +529,166 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
             REQUIRE(topologies.size() == 1);
             auto top = topologies.at(0);
             REQUIRE(top->type() == sim.context().topologyRegistry().idOf("T2"));
-            REQUIRE(top->getNParticles() == 3);
+            REQUIRE(top->nParticles() == 3);
             auto particles = top->fetchParticles();
             for (auto ptype : {"X", "Y", "Z"}) {
                 auto itX = std::find_if(particles.begin(), particles.end(), [&](const auto &p) {
                     return p.type() == sim.context().particleTypes().idOf(ptype);
                 });
-                INFO("at least one "+std::string(ptype)+" particle should be contained");
+                INFO("at least one " + std::string(ptype) + " particle should be contained");
                 REQUIRE(itX != particles.end());
                 particles.erase(itX);
             }
         }
 
-	SECTION("TTFusionNetwork") {
-	  model::Context ctx;
+        SECTION("TTFusionNetwork") {
+            model::Context ctx;
 
-	  ctx.boxSize() = {{30, 30, 30}};
+            ctx.boxSize() = {{30, 30, 30}};
 
-	  ctx.particleTypes().addTopologyType("head", 0);
-	  ctx.particleTypes().addTopologyType("core", 0);
-	  ctx.particleTypes().addTopologyType("tail", 0);
-	  ctx.particleTypes().addTopologyType("link", 0);
+            ctx.particleTypes().addTopologyType("head", 0);
+            ctx.particleTypes().addTopologyType("core", 0);
+            ctx.particleTypes().addTopologyType("tail", 0);
+            ctx.particleTypes().addTopologyType("link", 0);
 
-	  ctx.topologyRegistry().addType("polymer");
+            ctx.topologyRegistry().addType("polymer");
 
-	  ctx.topologyRegistry().configureBondPotential("head", "core", {.0, .01});
-	  ctx.topologyRegistry().configureBondPotential("core", "tail", {.0, .01});
-	  ctx.topologyRegistry().configureBondPotential("core", "core", {.0, .01});
-	  ctx.topologyRegistry().configureBondPotential("core", "link", {.0, .01});
-	  ctx.topologyRegistry().configureBondPotential("head", "link", {.0, .01});
-	  ctx.topologyRegistry().configureBondPotential("tail", "link", {.0, .01});
-	  ctx.topologyRegistry().configureBondPotential("link", "link", {.0, .01});
-	  
-	  SECTION("min. number of edges too large for full connection") {
-	    ctx.topologyRegistry().addSpatialReaction("connect: polymer(core) + polymer(core) -> polymer(link--link) [self=true, distance>16]",
-						      1e10, 1.1);
+            ctx.topologyRegistry().configureBondPotential("head", "core", {.0, .01});
+            ctx.topologyRegistry().configureBondPotential("core", "tail", {.0, .01});
+            ctx.topologyRegistry().configureBondPotential("core", "core", {.0, .01});
+            ctx.topologyRegistry().configureBondPotential("core", "link", {.0, .01});
+            ctx.topologyRegistry().configureBondPotential("head", "link", {.0, .01});
+            ctx.topologyRegistry().configureBondPotential("tail", "link", {.0, .01});
+            ctx.topologyRegistry().configureBondPotential("link", "link", {.0, .01});
 
-	    Simulation sim(kernel->name(), ctx);
-	    
-	    auto p11 = sim.createTopologyParticle("head", {-1, 0, 0});
-	    auto p12 = sim.createTopologyParticle("core", {0, 0, 0});
-	    auto p13 = sim.createTopologyParticle("core", {1, 0, 0});
-	    auto p14 = sim.createTopologyParticle("core", {2, 0, 0});
-	    auto p15 = sim.createTopologyParticle("core", {3, 0, 0});
-	    auto p16 = sim.createTopologyParticle("tail", {4, 0, 0});
-	    
-	    auto p21 = sim.createTopologyParticle("head", {3,  1, 1});
-	    auto p22 = sim.createTopologyParticle("core", {3,  0, 1});
-	    auto p23 = sim.createTopologyParticle("core", {3, -1, 1});
-	    auto p24 = sim.createTopologyParticle("core", {3, -2, 1});
-	    auto p25 = sim.createTopologyParticle("core", {3, -3, 1});
-	    auto p26 = sim.createTopologyParticle("tail", {3, -4, 1});
-	    
-	    auto p31 = sim.createTopologyParticle("head", { 4, -3, 0});
-	    auto p32 = sim.createTopologyParticle("core", { 3, -3, 0});
-	    auto p33 = sim.createTopologyParticle("core", { 2, -3, 0});
-	    auto p34 = sim.createTopologyParticle("core", { 1, -3, 0});
-	    auto p35 = sim.createTopologyParticle("core", { 0, -3, 0});
-	    auto p36 = sim.createTopologyParticle("tail", {-1, -3, 0});
-	    
-	    auto p41 = sim.createTopologyParticle("head", {0, -4, 1});
-	    auto p42 = sim.createTopologyParticle("core", {0, -3, 1});
-	    auto p43 = sim.createTopologyParticle("core", {0, -2, 1});
-	    auto p44 = sim.createTopologyParticle("core", {0, -1, 1});
-	    auto p45 = sim.createTopologyParticle("core", {0,  0, 1});
-	    auto p46 = sim.createTopologyParticle("tail", {0,  1, 1});
-	  
-	    auto t1 = sim.addTopology("polymer", {p11, p12, p13, p14, p15, p16});
-	    auto t2 = sim.addTopology("polymer", {p21, p22, p23, p24, p25, p26});
-	    auto t3 = sim.addTopology("polymer", {p31, p32, p33, p34, p35, p36});
-	    auto t4 = sim.addTopology("polymer", {p41, p42, p43, p44, p45, p46});
-	    for (unsigned i=0; i<5; i++) {
-	      t1->graph().addEdgeBetweenParticles(i, i+1);
-	      t2->graph().addEdgeBetweenParticles(i, i+1);
-	      t3->graph().addEdgeBetweenParticles(i, i+1);
-	      t4->graph().addEdgeBetweenParticles(i, i+1);	      
-	    }
-	    sim.run(3, 1e-3);
+            SECTION("min. number of edges too large for full connection") {
+                ctx.topologyRegistry().addSpatialReaction(
+                        "connect: polymer(core) + polymer(core) -> polymer(link--link) [self=true, distance>16]",
+                        1e10, 1.1);
 
-	    auto topologies = sim.currentTopologies();
-	    REQUIRE( topologies.size() == 1 );
+                Simulation sim(kernel->name(), ctx);
 
-	    auto top = topologies.at(0);
-	    auto particles = sim.currentParticles();
-	    unsigned n_links = 0;
-	    auto typeLink = ctx.particleTypes().infoOf("link").typeId;
-	    auto vref_last = top->graph().lastVertex();
-	    vref_last++;
-	    for (auto vref=top->graph().firstVertex(); vref != vref_last; vref++) {
-	      auto pidx = vref->particleIndex;
-	      if (particles.at(pidx).type() == typeLink) n_links++;
-	    }
-	    REQUIRE( 6 == n_links );	    
-	    
-	    //for (auto p: particles) {
-	    //  if (p.type() == typeLink) n_links++;
-	    //}
-	    //REQUIRE( 6 == n_links );	    
-	  }
-	  SECTION("full connection") {
-	    ctx.topologyRegistry().addSpatialReaction("connect: polymer(core) + polymer(core) -> polymer(link--link) [self=true, distance>14]", // >14
-						      1e10, 1.01);
+                auto p11 = sim.createTopologyParticle("head", {-1, 0, 0});
+                auto p12 = sim.createTopologyParticle("core", {0, 0, 0});
+                auto p13 = sim.createTopologyParticle("core", {1, 0, 0});
+                auto p14 = sim.createTopologyParticle("core", {2, 0, 0});
+                auto p15 = sim.createTopologyParticle("core", {3, 0, 0});
+                auto p16 = sim.createTopologyParticle("tail", {4, 0, 0});
 
-	    Simulation sim(kernel->name(), ctx);
-	    
-	    auto p11 = sim.createTopologyParticle("head", {-1, 0, 0});
-	    auto p12 = sim.createTopologyParticle("core", {0, 0, 0});
-	    auto p13 = sim.createTopologyParticle("core", {1, 0, 0});
-	    auto p14 = sim.createTopologyParticle("core", {2, 0, 0});
-	    auto p15 = sim.createTopologyParticle("core", {3, 0, 0});
-	    auto p16 = sim.createTopologyParticle("tail", {4, 0, 0});
-	    
-	    auto p21 = sim.createTopologyParticle("head", {3,  1, 1});
-	    auto p22 = sim.createTopologyParticle("core", {3,  0, 1});
-	    auto p23 = sim.createTopologyParticle("core", {3, -1, 1});
-	    auto p24 = sim.createTopologyParticle("core", {3, -2, 1});
-	    auto p25 = sim.createTopologyParticle("core", {3, -3, 1});
-	    auto p26 = sim.createTopologyParticle("tail", {3, -4, 1});
-	    
-	    auto p31 = sim.createTopologyParticle("head", { 4, -3, 0});
-	    auto p32 = sim.createTopologyParticle("core", { 3, -3, 0});
-	    auto p33 = sim.createTopologyParticle("core", { 2, -3, 0});
-	    auto p34 = sim.createTopologyParticle("core", { 1, -3, 0});
-	    auto p35 = sim.createTopologyParticle("core", { 0, -3, 0});
-	    auto p36 = sim.createTopologyParticle("tail", {-1, -3, 0});
-	    
-	    auto p41 = sim.createTopologyParticle("head", {0, -4, 1});
-	    auto p42 = sim.createTopologyParticle("core", {0, -3, 1});
-	    auto p43 = sim.createTopologyParticle("core", {0, -2, 1});
-	    auto p44 = sim.createTopologyParticle("core", {0, -1, 1});
-	    auto p45 = sim.createTopologyParticle("core", {0,  0, 1});
-	    auto p46 = sim.createTopologyParticle("tail", {0,  1, 1});
+                auto p21 = sim.createTopologyParticle("head", {3, 1, 1});
+                auto p22 = sim.createTopologyParticle("core", {3, 0, 1});
+                auto p23 = sim.createTopologyParticle("core", {3, -1, 1});
+                auto p24 = sim.createTopologyParticle("core", {3, -2, 1});
+                auto p25 = sim.createTopologyParticle("core", {3, -3, 1});
+                auto p26 = sim.createTopologyParticle("tail", {3, -4, 1});
 
-	  
-	    auto t1 = sim.addTopology("polymer", {p11, p12, p13, p14, p15, p16});
-	    auto t2 = sim.addTopology("polymer", {p21, p22, p23, p24, p25, p26});
-	    auto t3 = sim.addTopology("polymer", {p31, p32, p33, p34, p35, p36});
-	    auto t4 = sim.addTopology("polymer", {p41, p42, p43, p44, p45, p46});
-	    for (unsigned i=0; i<5; i++) {
-	      t1->graph().addEdgeBetweenParticles(i, i+1);
-	      t2->graph().addEdgeBetweenParticles(i, i+1);
-	      t3->graph().addEdgeBetweenParticles(i, i+1);
-	      t4->graph().addEdgeBetweenParticles(i, i+1);	      
-	    }
-	    sim.run(10, 1e-3);
+                auto p31 = sim.createTopologyParticle("head", {4, -3, 0});
+                auto p32 = sim.createTopologyParticle("core", {3, -3, 0});
+                auto p33 = sim.createTopologyParticle("core", {2, -3, 0});
+                auto p34 = sim.createTopologyParticle("core", {1, -3, 0});
+                auto p35 = sim.createTopologyParticle("core", {0, -3, 0});
+                auto p36 = sim.createTopologyParticle("tail", {-1, -3, 0});
 
-	    auto topologies = sim.currentTopologies();
-	    REQUIRE( topologies.size() == 1 );
+                auto p41 = sim.createTopologyParticle("head", {0, -4, 1});
+                auto p42 = sim.createTopologyParticle("core", {0, -3, 1});
+                auto p43 = sim.createTopologyParticle("core", {0, -2, 1});
+                auto p44 = sim.createTopologyParticle("core", {0, -1, 1});
+                auto p45 = sim.createTopologyParticle("core", {0, 0, 1});
+                auto p46 = sim.createTopologyParticle("tail", {0, 1, 1});
 
-	    auto top = topologies.at(0);
-	    auto particles = sim.currentParticles();
-	    unsigned n_links = 0;
-	    auto typeLink = ctx.particleTypes().infoOf("link").typeId;
-	    
-	    auto vref_last = top->graph().lastVertex();
-	    vref_last++;
-	    for (auto vref=top->graph().firstVertex(); vref != vref_last; vref++) {
-	      auto pidx = vref->particleIndex;
-	      bool r = isNotConnected(top->graph(), vref);
-	      if (r) continue;
-	      if (particles.at(pidx).type() == typeLink) n_links++;
-	    }
-	    REQUIRE( 8 == n_links );	    	    
-	  }
-	}
+                auto t1 = sim.addTopology("polymer", {p11, p12, p13, p14, p15, p16});
+                auto t2 = sim.addTopology("polymer", {p21, p22, p23, p24, p25, p26});
+                auto t3 = sim.addTopology("polymer", {p31, p32, p33, p34, p35, p36});
+                auto t4 = sim.addTopology("polymer", {p41, p42, p43, p44, p45, p46});
+                for (unsigned i = 0; i < 5; i++) {
+                    t1->addEdge({i}, {i + 1});
+                    t2->addEdge({i}, {i + 1});
+                    t3->addEdge({i}, {i + 1});
+                    t4->addEdge({i}, {i + 1});
+                }
+                sim.run(3, 1e-3);
+
+                auto topologies = sim.currentTopologies();
+                REQUIRE(topologies.size() == 1);
+
+                auto top = topologies.at(0);
+                auto particles = sim.currentParticles();
+                unsigned n_links = 0;
+                auto typeLink = ctx.particleTypes().infoOf("link").typeId;
+                for (auto vref = top->graph().begin(); vref != top->graph().end(); vref++) {
+                    auto pidx = vref->data().particleIndex;
+                    if (particles.at(pidx).type() == typeLink) n_links++;
+                }
+                REQUIRE(6 == n_links);
+
+                //for (auto p: particles) {
+                //  if (p.type() == typeLink) n_links++;
+                //}
+                //REQUIRE( 6 == n_links );
+            }
+            SECTION("full connection") {
+                ctx.topologyRegistry().addSpatialReaction(
+                        "connect: polymer(core) + polymer(core) -> polymer(link--link) [self=true, distance>14]", // >14
+                        1e10, 1.01);
+
+                Simulation sim(kernel->name(), ctx);
+
+                auto p11 = sim.createTopologyParticle("head", {-1, 0, 0});
+                auto p12 = sim.createTopologyParticle("core", {0, 0, 0});
+                auto p13 = sim.createTopologyParticle("core", {1, 0, 0});
+                auto p14 = sim.createTopologyParticle("core", {2, 0, 0});
+                auto p15 = sim.createTopologyParticle("core", {3, 0, 0});
+                auto p16 = sim.createTopologyParticle("tail", {4, 0, 0});
+
+                auto p21 = sim.createTopologyParticle("head", {3, 1, 1});
+                auto p22 = sim.createTopologyParticle("core", {3, 0, 1});
+                auto p23 = sim.createTopologyParticle("core", {3, -1, 1});
+                auto p24 = sim.createTopologyParticle("core", {3, -2, 1});
+                auto p25 = sim.createTopologyParticle("core", {3, -3, 1});
+                auto p26 = sim.createTopologyParticle("tail", {3, -4, 1});
+
+                auto p31 = sim.createTopologyParticle("head", {4, -3, 0});
+                auto p32 = sim.createTopologyParticle("core", {3, -3, 0});
+                auto p33 = sim.createTopologyParticle("core", {2, -3, 0});
+                auto p34 = sim.createTopologyParticle("core", {1, -3, 0});
+                auto p35 = sim.createTopologyParticle("core", {0, -3, 0});
+                auto p36 = sim.createTopologyParticle("tail", {-1, -3, 0});
+
+                auto p41 = sim.createTopologyParticle("head", {0, -4, 1});
+                auto p42 = sim.createTopologyParticle("core", {0, -3, 1});
+                auto p43 = sim.createTopologyParticle("core", {0, -2, 1});
+                auto p44 = sim.createTopologyParticle("core", {0, -1, 1});
+                auto p45 = sim.createTopologyParticle("core", {0, 0, 1});
+                auto p46 = sim.createTopologyParticle("tail", {0, 1, 1});
+
+
+                auto t1 = sim.addTopology("polymer", {p11, p12, p13, p14, p15, p16});
+                auto t2 = sim.addTopology("polymer", {p21, p22, p23, p24, p25, p26});
+                auto t3 = sim.addTopology("polymer", {p31, p32, p33, p34, p35, p36});
+                auto t4 = sim.addTopology("polymer", {p41, p42, p43, p44, p45, p46});
+                for (unsigned i = 0; i < 5; i++) {
+                    t1->addEdge({i}, {i+1});
+                    t2->addEdge({i}, {i+1});
+                    t3->addEdge({i}, {i+1});
+                    t4->addEdge({i}, {i+1});
+                }
+                sim.run(10, 1e-3);
+
+                auto topologies = sim.currentTopologies();
+                REQUIRE(topologies.size() == 1);
+
+                auto top = topologies.at(0);
+                auto particles = sim.currentParticles();
+                unsigned n_links = 0;
+                auto typeLink = ctx.particleTypes().infoOf("link").typeId;
+
+                for (auto vref = top->graph().begin(); vref != top->graph().end(); vref++) {
+                    auto pidx = vref->data().particleIndex;
+                    if (vref->neighbors().empty()) continue;
+                    if (particles.at(pidx).type() == typeLink) n_links++;
+                }
+                REQUIRE(8 == n_links);
+            }
+        }
     }
 }

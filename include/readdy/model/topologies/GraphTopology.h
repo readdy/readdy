@@ -96,12 +96,20 @@ public:
         return _graph.containsEdge(ix1, ix2);
     }
 
+    void addEdge(Graph::iterator it1, Graph::iterator it2) {
+        _graph.addEdge(it1, it2);
+    }
+
     void addEdge(Graph::Edge edge) {
         _graph.addEdge(edge);
     }
 
     void addEdge(Graph::PersistentVertexIndex ix1, Graph::PersistentVertexIndex ix2) {
         _graph.addEdge(ix1, ix2);
+    }
+
+    void removeEdge(Graph::iterator it1, Graph::iterator it2) {
+        _graph.removeEdge(it1, it2);
     }
 
     void removeEdge(Graph::Edge edge) {
@@ -209,6 +217,10 @@ public:
 
     [[nodiscard]] Particle particleForVertex(Graph::PersistentVertexIndex vertexRef) const {
         return particleForVertex(_graph.vertices().at(vertexRef));
+    }
+
+    void addEdgeBetweenParticles(std::size_t particleIndex1, std::size_t particleIndex2) {
+        addEdge(vertexIndexForParticle(particleIndex1), vertexIndexForParticle(particleIndex2));
     }
 
     [[nodiscard]] auto nParticles() const {

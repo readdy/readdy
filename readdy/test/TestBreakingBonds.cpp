@@ -67,21 +67,20 @@ TEMPLATE_TEST_CASE("Test breaking bonds.", "[breakbonds]", SingleCPU, CPU) {
         readdy::api::Bond bond{1., 1., readdy::api::BondType::HARMONIC};
         topReg.configureBondPotential("A", "A", bond);
 
-        std::vector<readdy::model::TopologyParticle> particles{
+        std::vector<readdy::model::Particle> particles{
                 {0., 0., 0., types.idOf("A")},
                 {0., 0., 2., types.idOf("A")}
         };
         // distance of A and A is 2, equilibrium distance is 1, bond extension is 1, bond energy is 1.
 
         auto graphTop = stateModel.addTopology(topReg.idOf("T"), particles);
-        auto &graph = graphTop->graph();
-        graph.addEdgeBetweenParticles(0, 1);
+        graphTop->addEdge({0}, {1});
 
         // We have one dimer
         auto topsBefore = stateModel.getTopologies();
         REQUIRE(topsBefore.size() == 1);
         REQUIRE(topsBefore.at(0)->type() == topReg.idOf("T"));
-        REQUIRE(topsBefore.at(0)->getNParticles() == 2);
+        REQUIRE(topsBefore.at(0)->nParticles() == 2);
 
         WHEN("the threshold for breaking is low") {
             readdy::model::actions::top::BreakConfig breakConfig;
@@ -108,7 +107,7 @@ TEMPLATE_TEST_CASE("Test breaking bonds.", "[breakbonds]", SingleCPU, CPU) {
                 auto topsAfter = stateModel.getTopologies();
                 REQUIRE(topsAfter.size() == 1);
                 REQUIRE(topsAfter.at(0)->type() == topReg.idOf("T"));
-                REQUIRE(topsAfter.at(0)->getNParticles() == 2);
+                REQUIRE(topsAfter.at(0)->nParticles() == 2);
             }
         }
 
@@ -131,7 +130,7 @@ TEMPLATE_TEST_CASE("Test breaking bonds.", "[breakbonds]", SingleCPU, CPU) {
         topReg.configureBondPotential("A", "A", bond);
         topReg.configureBondPotential("B", "A", bond);
 
-        std::vector<readdy::model::TopologyParticle> particles{
+        std::vector<readdy::model::Particle> particles{
                 {0., 0., -1., types.idOf("A")},
                 {0., 0., 1., types.idOf("A")},
                 {0., 0., 3., types.idOf("B")}
@@ -140,14 +139,14 @@ TEMPLATE_TEST_CASE("Test breaking bonds.", "[breakbonds]", SingleCPU, CPU) {
 
         auto graphTop = stateModel.addTopology(topReg.idOf("T"), particles);
         auto &graph = graphTop->graph();
-        graph.addEdgeBetweenParticles(0, 1);
-        graph.addEdgeBetweenParticles(1, 2);
+        graphTop->addEdge({0}, {1});
+        graphTop->addEdge({1}, {2});
 
         // We have one topology
         auto topsBefore = stateModel.getTopologies();
         REQUIRE(topsBefore.size() == 1);
         REQUIRE(topsBefore.at(0)->type() == topReg.idOf("T"));
-        REQUIRE(topsBefore.at(0)->getNParticles() == 3);
+        REQUIRE(topsBefore.at(0)->nParticles() == 3);
 
         WHEN("A-B is a breakable bond with low threshold and high rate") {
             readdy::model::actions::top::BreakConfig breakConfig;
@@ -160,7 +159,7 @@ TEMPLATE_TEST_CASE("Test breaking bonds.", "[breakbonds]", SingleCPU, CPU) {
                 auto topsAfter = stateModel.getTopologies();
                 REQUIRE(topsAfter.size() == 1);
                 REQUIRE(topsAfter.at(0)->type() == topReg.idOf("T"));
-                REQUIRE(topsAfter.at(0)->getNParticles() == 2);
+                REQUIRE(topsAfter.at(0)->nParticles() == 2);
 
                 auto ps = topsAfter.at(0)->fetchParticles();
                 REQUIRE(ps.size() == 2);
@@ -186,7 +185,7 @@ TEMPLATE_TEST_CASE("Test breaking bonds.", "[breakbonds]", SingleCPU, CPU) {
                 auto topsAfter = stateModel.getTopologies();
                 REQUIRE(topsAfter.size() == 1);
                 REQUIRE(topsAfter.at(0)->type() == topReg.idOf("T"));
-                REQUIRE(topsAfter.at(0)->getNParticles() == 2);
+                REQUIRE(topsAfter.at(0)->nParticles() == 2);
 
                 auto ps = topsAfter.at(0)->fetchParticles();
                 REQUIRE(ps.size() == 2);
@@ -210,7 +209,7 @@ TEMPLATE_TEST_CASE("Test breaking bonds.", "[breakbonds]", SingleCPU, CPU) {
                 auto topsAfter = stateModel.getTopologies();
                 REQUIRE(topsAfter.size() == 1);
                 REQUIRE(topsAfter.at(0)->type() == topReg.idOf("T"));
-                REQUIRE(topsAfter.at(0)->getNParticles() == 3);
+                REQUIRE(topsAfter.at(0)->nParticles() == 3);
             }
         }
 
@@ -264,14 +263,13 @@ TEMPLATE_TEST_CASE("Test breaking bonds.", "[breakbonds]", SingleCPU, CPU) {
         topReg.configureBondPotential("C", "C", bond);
 
         for (auto type : {"A", "B", "C"}) {
-            std::vector<readdy::model::TopologyParticle> particles{
+            std::vector<readdy::model::Particle> particles{
                     {0., 0., 0., types.idOf(type)},
                     {0., 0., 2., types.idOf(type)}
             };
 
             auto graphTop = stateModel.addTopology(topReg.idOf("T"), particles);
-            auto &graph = graphTop->graph();
-            graph.addEdgeBetweenParticles(0, 1);
+            graphTop->addEdge({0}, {1});
         }
 
         auto topsBefore = stateModel.getTopologies();
@@ -279,9 +277,9 @@ TEMPLATE_TEST_CASE("Test breaking bonds.", "[breakbonds]", SingleCPU, CPU) {
         REQUIRE(topsBefore.at(0)->type() == topReg.idOf("T"));
         REQUIRE(topsBefore.at(1)->type() == topReg.idOf("T"));
         REQUIRE(topsBefore.at(2)->type() == topReg.idOf("T"));
-        REQUIRE(topsBefore.at(0)->getNParticles() == 2);
-        REQUIRE(topsBefore.at(1)->getNParticles() == 2);
-        REQUIRE(topsBefore.at(2)->getNParticles() == 2);
+        REQUIRE(topsBefore.at(0)->nParticles() == 2);
+        REQUIRE(topsBefore.at(1)->nParticles() == 2);
+        REQUIRE(topsBefore.at(2)->nParticles() == 2);
 
         WHEN("the three dimers are broken one after the other") {
             readdy::model::actions::top::BreakConfig breakConfig;
