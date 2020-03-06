@@ -272,6 +272,9 @@ public:
             }
         }
 
+        // fixme temporary barrier for debugging
+        MPI_Barrier(MPI_COMM_WORLD);
+
         // Plimpton synchronization
         std::vector<util::ParticlePOD> other; // particles received by other workers
         for (unsigned int coord=0; coord<3; coord++) { // east-west, north-south, up-down
@@ -323,9 +326,6 @@ public:
         }
         auto update = std::make_pair(std::move(newEntries), std::move(removedEntries));
         data.update(std::move(update));
-
-        // fixme temporary barrier for debugging
-        MPI_Barrier(MPI_COMM_WORLD);
     }
 
 private:

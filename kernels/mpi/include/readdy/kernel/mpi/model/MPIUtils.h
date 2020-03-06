@@ -117,14 +117,16 @@ inline void receiveThenSend(std::array<std::size_t, 3> otherDirection, std::vect
     const auto nType = domain.neighborTypes().at(otherFlatIndex);
     if (nType == model::MPIDomain::NeighborType::regular) {
         const auto otherRank = domain.neighborRanks().at(otherFlatIndex);
-        // receive, todo consider receiveAppendObjects
+        // receive
         auto received = util::receiveObjects<util::ParticlePOD>(otherRank, comm);
-        other.insert(other.end(), received.begin(), received.end());
         // send
         std::vector<util::ParticlePOD> objects;
         objects.insert(objects.begin(), own.begin(), own.end());
         objects.insert(objects.begin(), other.begin(), other.end());
         util::sendObjects(otherRank, objects, comm);
+
+        // append the received particles only after sending so we do not give the sender back its own particles
+        other.insert(other.end(), received.begin(), received.end());
     }
 }
 

@@ -32,13 +32,52 @@ TEST_CASE("Synchronization of neighbors", "[mpi]") {
                 {1.5, 0., 0., idA},
                 {2.5, 0., 0., idA},
         };
-        WHEN("particles are distributed and gathered again we ")
         kernel.getMPIKernelStateModel().distributeParticles(particles);
-        // todo assert that particles are at given locations
-        kernel.getMPIKernelStateModel().gatherParticles();
 
-        kernel.getMPIKernelStateModel().synchronizeWithNeighbors();
-        // todo assert that domain1 sees 4 particles (3 own + 1 in halo), same for domain2
+        WHEN("Particles are gathered again") {
+            auto gatheredParticles = kernel.getMPIKernelStateModel().gatherParticles();
+            THEN("All 6 particles are obtained") {
+                if (kernel.domain()->isMasterRank()) {
+                    CHECK(gatheredParticles.size() == 6);
+                }
+            }
+        }
+
+        const auto check = [&]() {
+            const auto data = kernel.getMPIKernelStateModel().getParticleData();
+            if (kernel.domain()->isWorkerRank()) {
+                auto n = std::count_if(data->begin(), data->end(),
+                                       [](const auto &entry) { return !entry.deactivated; });
+                CHECK(n == 4);
+                auto nResp = std::count_if(data->begin(), data->end(), [](const auto &entry){ return !entry.deactivated and entry.responsible; });
+                CHECK(nResp == 3);
+                for (const auto &entry : *data) {
+                    if (!entry.deactivated) {
+                        if (entry.responsible) {
+                            CHECK(kernel.domain()->isInDomainCore(entry.position()));
+                        } else {
+                            CHECK(kernel.domain()->isInDomainHalo(entry.position()));
+                        }
+                    }
+                }
+            } else if (kernel.domain()->isMasterRank()) {
+                // master has no active entries
+                CHECK(data->size() == data->n_deactivated());
+            }
+        };
+
+        WHEN("States are synchronized") {
+            kernel.getMPIKernelStateModel().synchronizeWithNeighbors();
+            THEN("each rank should see 4 particles, 3 for which it is responsible and 1 in halo") {
+                check();
+            }
+            AND_WHEN("States are synchronized again") {
+                kernel.getMPIKernelStateModel().synchronizeWithNeighbors();
+                THEN("We see the same result") {
+                    check();
+                }
+            }
+        }
     }
 }
 
