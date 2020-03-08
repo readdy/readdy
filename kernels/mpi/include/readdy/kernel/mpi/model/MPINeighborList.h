@@ -102,6 +102,16 @@ public:
                 _cellNeighbors = readdy::util::Index2D(_cellIndex.size(), 1 + nAdjacentCells);
                 _cellNeighborsContent.resize(_cellNeighbors.size());
                 {
+                    // todo
+                    auto pbc = _context.get().periodicBoundaryConditions();
+                    auto fixBoxIx = [&](auto cix, auto boxIx, std::uint8_t axis) {
+                        auto nCells = static_cast<int>(_cellIndex[axis]);
+                        if (pbc[axis] && nCells > 2) {
+                            return (boxIx % nCells + nCells) % nCells;
+                        }
+                        return boxIx;
+                    };
+
                     int r = _radius;
                     // local adjacency
                     std::vector<std::size_t> adj;
@@ -134,6 +144,16 @@ public:
                                             {{i + 1, j + 1, k + 0}},
                                             {{i + 1, j + 1, k + 1}},
                                     };
+
+                                    // todo wrap around
+                                    std::transform(boxCoords.begin(), boxCoords.end(), boxCoords.begin(),
+                                                   [&](auto arr) {
+                                                       for (std::uint8_t d = 0; d < 3; ++d) {
+                                                           arr.at(d) = fixBoxIx(ijk[d], arr.at(d), d);
+                                                       }
+                                                       return arr;
+                                                   }
+                                    );
 
                                     for (auto boxCoord : boxCoords) {
                                         if (boxCoord[0] >= 0 && boxCoord[1] >= 0 && boxCoord[2] >= 0
@@ -319,7 +339,9 @@ protected:
 
     Vec3 _cellSize{0, 0, 0};
 
+    // todo instead of mapping to a linear vector, this should index a map (because cells are sparse)
     readdy::util::Index3D _cellIndex;
+
     // index of size (n_cells x (1 + nAdjacentCells)), where the first element tells how many adj cells are stored
     readdy::util::Index2D _cellNeighbors;
     // backing vector of _cellNeighbors index of size (n_cells x (1 + nAdjacentCells))
