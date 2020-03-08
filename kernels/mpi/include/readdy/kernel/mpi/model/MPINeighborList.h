@@ -293,6 +293,7 @@ protected:
     virtual void setUpBins() {
         if (_isSetUp) {
             auto nParticles = _data.get().size();
+            // todo redo head
             _head.clear();
             _head.resize(_cellIndex.size());
             _list.resize(0);
@@ -312,6 +313,7 @@ protected:
                 if (not _domain->isInDomainCoreOrHalo(entry.pos)) {
                     throw std::runtime_error("MPI NeighborList fillBins(), particle not in (Domain+Halo)");
                 }
+                // todo do not wrap the boxes, instead adjust the underlying data structure to be sparse
                 // since bins i.e. the boxes can extend out of the boxSize,
                 // due to extent of halo region, wrap particles into
                 // this domains halo region
@@ -327,6 +329,7 @@ protected:
         }
     }
 
+    // todo head becomes a map, list remains as is
     HEAD _head;
     // particles, 1-indexed
     LIST _list;
@@ -381,7 +384,7 @@ public:
         BoxIterator tmp(*this);
         operator++();
         return tmp;
-    };
+    }
 
     pointer operator->() const {
         return &_val;
@@ -391,19 +394,19 @@ public:
         _state = _ccll.list().at(_state);
         _val = _state - 1;
         return *this;
-    };
+    }
 
     value_type operator*() const {
         return _val;
-    };
+    }
 
     bool operator==(const BoxIterator &rhs) const {
         return _state == rhs._state;
-    };
+    }
 
     bool operator!=(const BoxIterator &rhs) const {
         return _state != rhs._state;
-    };
+    }
 
 private:
     const CellLinkedList &_ccll;
