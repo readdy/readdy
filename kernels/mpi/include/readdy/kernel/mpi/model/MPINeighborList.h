@@ -68,114 +68,101 @@ public:
         if (!_isSetUp) {
             _domain = domain;
 
-            auto boxSize = _context.get().boxSize();
-            const auto desiredWidth = domain->haloThickness();
+            // Each domain is subdivided into `cellsExtent[coord]` cells along axis coord
+            // This guarantees that domain boundaries are also cell boundaries
+            const auto boxSize = _context.get().boxSize();
             std::array<std::size_t, 3> nCellsPerAxis{};
-            std::array<std::size_t, 3> cellsExtent{}; // number of cells for this domain core
-
-            // assure that the cell division is an integer extension of the domain division
-            std::array<std::size_t, 3> factor{1,1,1};
-            for (std::size_t i = 0; i < 3; ++i) {
-                factor[i] = static_cast<std::size_t>(std::max(1., std::floor(domain->extent()[i] / desiredWidth)));
-                nCellsPerAxis[i] = factor[i] * domain->nDomainsPerAxis()[i];
-                _cellSize[i] = boxSize[i] / static_cast<scalar>(nCellsPerAxis[i]);
-                cellsExtent[i] = static_cast<std::size_t>(domain->extent()[i] / _cellSize[i]);
+            std::array<std::size_t, 3> cellsExtent{}; // number of cells per domain per axis
+            std::array<std::size_t, 3> cellsOrigin{}; // ijk of this domain's origin cell, i.e. the lower left cell
+            for (std::size_t coord = 0; coord < 3; ++coord) {
+                cellsExtent[coord] = static_cast<std::size_t>(std::max(1., std::floor(domain->extent()[coord] / domain->haloThickness())));
+                cellsOrigin[coord] = domain->myIdx()[coord] * cellsExtent[coord];
+                nCellsPerAxis[coord] = cellsExtent[coord] * domain->nDomainsPerAxis()[coord];
+                _cellSize[coord] = boxSize[coord] / static_cast<scalar>(nCellsPerAxis[coord]);
             }
 
             _cellIndex = readdy::util::Index3D(nCellsPerAxis[0], nCellsPerAxis[1], nCellsPerAxis[2]);
 
-            std::vector<std::size_t> _cellsInDomain;
-
-            std::array<std::size_t, 3> cellsOrigin{}; // ijk of this domain's origin cell, i.e. the lower left cell
-            const auto eps = std::numeric_limits<readdy::scalar >::epsilon();
-            for (std::size_t i = 0; i< 3; ++i) {
-                cellsOrigin[i] = static_cast<std::size_t>(std::floor((domain->origin()[i] + eps) / _cellSize[i]));
-            }
-
             {
-                // set up cell adjacency list, only for cells that cover the domain
-                std::array<std::size_t, 3> nNeighbors{{_cellIndex[0], _cellIndex[1], _cellIndex[2]}};
-                for (int i = 0; i < 3; ++i) {
-                    nNeighbors[i] = std::min(nNeighbors[i], {3});
-                }
-                auto nAdjacentCells = nNeighbors[0] * nNeighbors[1] * nNeighbors[2];
-                _cellNeighbors = readdy::util::Index2D(_cellIndex.size(), 1 + nAdjacentCells);
-                _cellNeighborsContent.resize(_cellNeighbors.size());
+                // todo
+                // data structure that takes a map<uint,vector<uint>> as ctor arg, and provides a dense array access
+                // via Index2D and a backing structure which is one vector (with padding)
+                // difference to old impl here would be that the backing vector is sparse wrt to the index uint
+                // i.e. internally there is a remapping umap<uint,uint> from sparse to dense indices
+                // can this be efficient? due to umap memory is again fragmented
+                // -> my hunch is that one would just need a lookup-performance-optimized unordered_map
                 {
-                    // todo
-                    auto pbc = _context.get().periodicBoundaryConditions();
-                    auto fixBoxIx = [&](auto cix, auto boxIx, std::uint8_t axis) {
-                        auto nCells = static_cast<int>(_cellIndex[axis]);
-                        if (pbc[axis] && nCells > 2) {
-                            return (boxIx % nCells + nCells) % nCells;
-                        }
-                        return boxIx;
-                    };
+                    // local adjacency, iterate over cells in domain core
+                    for (int i = cellsOrigin[0]; i < cellsOrigin[0] + cellsExtent[0]; ++i) {
+                    for (int j = cellsOrigin[1]; j < cellsOrigin[1] + cellsExtent[1]; ++j) {
+                    for (int k = cellsOrigin[2]; k < cellsOrigin[2] + cellsExtent[2]; ++k) {
+                        const auto cellIdx = _cellIndex(i,j,k);
+                        _cellsInCore.push_back(cellIdx);
 
-                    int r = _radius;
-                    // local adjacency
-                    std::vector<std::size_t> adj;
-                    adj.reserve(1 + nAdjacentCells);
-                    for (int i = 0; i < _cellIndex[0]; ++i) {
-                        for (int j = 0; j < _cellIndex[1]; ++j) {
-                            for (int k = 0; k < _cellIndex[2]; ++k) {
-                                auto cellIdx = _cellIndex(static_cast<std::size_t>(i), static_cast<std::size_t>(j),
-                                                          static_cast<std::size_t>(k));
-                                std::array<std::size_t, 3> ijk {{static_cast<std::size_t>(i), static_cast<std::size_t>(j),static_cast<std::size_t>(k)}};
-
-                                adj.resize(0);
-                                {
-                                    std::vector<std::array<int, 3>> boxCoords{
-                                            {{i + 0, j + 0, k + 1}},
-
-                                            {{i + 0, j + 1, k - 1}},
-                                            {{i + 0, j + 1, k - 0}},
-                                            {{i + 0, j + 1, k + 1}},
-
-                                            {{i + 1, j - 1, k - 1}},
-                                            {{i + 1, j - 1, k + 0}},
-                                            {{i + 1, j - 1, k + 1}},
-
-                                            {{i + 1, j + 0, k - 1}},
-                                            {{i + 1, j + 0, k + 0}},
-                                            {{i + 1, j + 0, k + 1}},
-
-                                            {{i + 1, j + 1, k - 1}},
-                                            {{i + 1, j + 1, k + 0}},
-                                            {{i + 1, j + 1, k + 1}},
-                                    };
-
-                                    // todo wrap around
-                                    std::transform(boxCoords.begin(), boxCoords.end(), boxCoords.begin(),
-                                                   [&](auto arr) {
-                                                       for (std::uint8_t d = 0; d < 3; ++d) {
-                                                           arr.at(d) = fixBoxIx(ijk[d], arr.at(d), d);
-                                                       }
-                                                       return arr;
-                                                   }
-                                    );
-
-                                    for (auto boxCoord : boxCoords) {
-                                        if (boxCoord[0] >= 0 && boxCoord[1] >= 0 && boxCoord[2] >= 0
-                                            && boxCoord[0] < _cellIndex[0] && boxCoord[1] < _cellIndex[1] &&
-                                            boxCoord[2] < _cellIndex[2]) {
-                                            adj.push_back(_cellIndex(boxCoord[0], boxCoord[1], boxCoord[2]));
-                                        }
-                                    }
-                                }
-
-                                std::sort(adj.begin(), adj.end());
-                                adj.erase(std::unique(std::begin(adj), std::end(adj)), std::end(adj));
-                                adj.erase(std::remove(std::begin(adj), std::end(adj), _cellIndex(i, j, k)),
-                                          std::end(adj));
-
-                                auto begin = _cellNeighbors(cellIdx, 0_z);
-                                _cellNeighborsContent[begin] = adj.size();
-                                std::copy(adj.begin(), adj.end(), &_cellNeighborsContent.at(begin + 1));
+                        // for di,dj,dk, this also reaches neighbor cells that overlap with halo
+                        for (int di=-1; di<2; ++di) {
+                        for (int dj=-1; dj<2; ++dj) {
+                        for (int dk=-1; dk<2; ++dk) {
+                            if (di==0 and dj==0 and dk==0) {
+                                continue; // skip self
                             }
+                            std::array<int, 3> otherCell = {i+di, j+dj, k+dk};
+
+                            // fix boundaries
+                            bool isValidCell = true;
+                            for (std::uint8_t axis = 0; axis < 3; ++axis) {
+                                auto nCells = static_cast<int>(_cellIndex[axis]);
+                                const auto pbc = _context.get().periodicBoundaryConditions();
+                                if (pbc[axis] && nCells > 2) {
+                                    if (-1 <= otherCell[axis] and otherCell[axis] <= nCells) {
+                                        otherCell.at(axis) = (otherCell.at(axis) % nCells + nCells) % nCells;
+                                    } else {
+                                        isValidCell = false;
+                                    }
+                                } else if (0 <= otherCell[axis] and otherCell[axis] < nCells) {
+                                    // all good, cell is within boxSize
+                                } else {
+                                    isValidCell = false;
+                                }
+                            }
+
+                            // add otherCell to neighborhood of cell, avoid double neighborliness
+                            if (isValidCell) {
+                                assert(std::all_of(otherCell.begin(), otherCell.end(), [](const auto& x){return x>=0;}));
+                                const auto otherIdx = _cellIndex(otherCell[0],otherCell[1],otherCell[2]);
+                                const auto cellCenter = Vec3(
+                                        otherCell[0] * _cellSize[0] + 0.5 * _cellSize[0],
+                                        otherCell[1] * _cellSize[1] + 0.5 * _cellSize[1],
+                                        otherCell[2] * _cellSize[2] + 0.5 * _cellSize[2]);
+                                if (domain->isInDomainCore(cellCenter)) {
+                                    if (cellIdx < otherIdx) { // avoid double neighborliness for core cells
+                                        _cellNeighbors.at(cellIdx).push_back(otherIdx);
+                                    }
+                                } else {
+                                    // cells that are outside the core are only seen "from one side",
+                                    // because we iterate over the core cells only.
+                                    // thus always add them to the neighborhood
+                                    _cellNeighbors.at(cellIdx).push_back(otherIdx);
+                                    // additionally keep track of all cells that overlap with halo
+                                    _cellsInHalo.push_back(otherIdx);
+                                }
+                            }
+
+                        }
+                        }
                         }
                     }
+                    }
+                    }
                 }
+
+                // clean up, why not
+                std::sort(_cellsInCore.begin(), _cellsInCore.end());
+
+                // remove duplicates out of _cellsInHalo
+                std::sort(_cellsInHalo.begin(), _cellsInHalo.end());
+                auto last = std::unique(std::begin(_cellsInHalo), std::end(_cellsInHalo));
+                _cellsInHalo.erase(last, std::end(_cellsInHalo));
             }
             _isSetUp = true;
             setUpBins();
@@ -351,8 +338,11 @@ protected:
     // index of size (n_cells x (1 + nAdjacentCells)), where the first element tells how many adj cells are stored
     //readdy::util::Index2D _cellNeighbors;
     // maps from cell index to neighbor cell indices
-    std::unordered_map<std::size_t, std::vector<std::size_t>> _cellNeighborsContent;
+    std::unordered_map<std::size_t, std::vector<std::size_t>> _cellNeighbors;
 
+    // keep track which cells are in the core of the domain and which cells overlap with the halo region
+    std::vector<std::size_t> _cellsInCore;
+    std::vector<std::size_t> _cellsInHalo;
 
     std::reference_wrapper<Data> _data;
     std::reference_wrapper<const readdy::model::Context> _context;
