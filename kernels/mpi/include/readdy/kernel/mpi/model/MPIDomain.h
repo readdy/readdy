@@ -69,7 +69,7 @@ private:
     int _nWorkerRanks; // counts all workers, which is a subset of used ranks
     int _nIdleRanks; // counts all idle
     std::vector<int> _workerRanks; // can be returned as const ref to conveniently iterate over ranks
-    bool _isIdle{true};
+    bool _isNotIdle{true};
     std::array<std::size_t, 3> _nDomainsPerAxis{};
     readdy::util::Index3D _domainIndex; // rank of (ijk) is domainIndex(i,j,k)+1
 
@@ -130,6 +130,10 @@ public:
 
             for (std::size_t i = 0; i < 3; ++i) {
                 _nDomainsPerAxis[i] = static_cast<unsigned int>(std::max(1., std::floor(boxSize[i] / minDomainWidths[i])));
+                // todo uneven number of domains OK?
+                //if (_nDomainsPerAxis[i] % 2 != 0) {
+                //    // synchronization scheme is inefficient when we have to wait
+                //}
             }
             _nUsedRanks = _nDomainsPerAxis[0] * _nDomainsPerAxis[1] * _nDomainsPerAxis[2] + 1;
 
@@ -214,7 +218,7 @@ public:
             }
         } else {
             // allocated but unneeded workers
-            _isIdle = false;
+            _isNotIdle = false;
         }
     }
 
@@ -323,11 +327,11 @@ public:
     }
 
     [[nodiscard]] bool isWorkerRank() const {
-        return (_isIdle and not isMasterRank());
+        return (_isNotIdle and not isMasterRank());
     }
 
     [[nodiscard]] bool isIdleRank() const {
-        return (not _isIdle);
+        return (not _isNotIdle);
     }
 
     [[nodiscard]] const std::vector<int> &workerRanks() const {

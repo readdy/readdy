@@ -56,6 +56,7 @@ public:
     using CellRadius = std::uint8_t;
     using HEAD = std::unordered_map<std::size_t,std::size_t>;
     using LIST = std::vector<std::size_t>;
+    using CellNeighbors = std::unordered_map<std::size_t, std::vector<std::size_t>>;
     using EntryCref = const Data::EntryType &;
     using PairCallback = std::function<void(EntryCref, EntryCref)>;
 
@@ -174,64 +175,66 @@ public:
     }
 
     virtual void clear() {
-        _head.resize(0);
+        _head.clear();
         _list.resize(0);
         _isSetUp = false;
-    };
+    }
 
     const readdy::util::Index3D &cellIndex() const {
         return _cellIndex;
-    };
+    }
 
-    const readdy::util::Index2D &neighborIndex() const {
+    const CellNeighbors &neighborIndex() const {
         return _cellNeighbors;
-    };
+    }
 
-    const std::vector<std::size_t> &neighbors() const {
-        return _cellNeighborsContent;
-    };
+    CellNeighbors::mapped_type::iterator neighborsBegin(std::size_t cellIndex) {
+        return _cellNeighbors.at(cellIndex).begin();
+    }
 
-    std::size_t *neighborsBegin(std::size_t cellIndex) {
-        auto beginIdx = _cellNeighbors(cellIndex, 1_z);
-        return &_cellNeighborsContent.at(beginIdx);
-    };
+    CellNeighbors::mapped_type::const_iterator neighborsBegin(std::size_t cellIndex) const {
+        return _cellNeighbors.at(cellIndex).cbegin();
+    }
 
-    const std::size_t *neighborsBegin(std::size_t cellIndex) const {
-        auto beginIdx = _cellNeighbors(cellIndex, 1_z);
-        return &_cellNeighborsContent.at(beginIdx);
-    };
+    CellNeighbors::mapped_type::iterator neighborsEnd(std::size_t cellIndex) {
+        return _cellNeighbors.at(cellIndex).end();
+    }
 
-    std::size_t *neighborsEnd(std::size_t cellIndex) {
-        return neighborsBegin(cellIndex) + nNeighbors(cellIndex);
-    };
+    CellNeighbors::mapped_type::const_iterator neighborsEnd(std::size_t cellIndex) const {
+        return _cellNeighbors.at(cellIndex).cend();
+    }
 
-    const std::size_t *neighborsEnd(std::size_t cellIndex) const {
-        return neighborsBegin(cellIndex) + nNeighbors(cellIndex);
-    };
-
-    std::size_t nNeighbors(std::size_t cellIndex) const {
-        return _cellNeighborsContent.at(_cellNeighbors(cellIndex, 0_z));
-    };
+    [[nodiscard]] std::size_t nNeighbors(std::size_t cellIndex) const {
+        return _cellNeighbors.at(cellIndex).size();
+    }
 
     Data &data() {
         return _data.get();
-    };
+    }
 
     const Data &data() const {
         return _data.get();
-    };
+    }
 
     scalar cutoff() const {
         return _cutoff;
-    };
+    }
 
     const HEAD &head() const {
         return _head;
-    };
+    }
 
     const LIST &list() const {
         return _list;
-    };
+    }
+
+    const std::vector<std::size_t> &cellsInCore() const {
+        return _cellsInCore;
+    }
+
+    const std::vector<std::size_t> &cellsInHalo() const {
+        return _cellsInHalo;
+    }
 
     template<typename Function>
     void forEachNeighbor(BoxIterator particle, const Function &function) const;
@@ -241,7 +244,7 @@ public:
 
     bool cellEmpty(std::size_t index) const {
         return _head.at(index) == 0;
-    };
+    }
 
     std::size_t cellOfParticle(std::size_t index) const {
         const auto &entry = data().entry_at(index);
@@ -258,11 +261,11 @@ public:
         const auto j = static_cast<std::size_t>(std::floor((entry.pos.y + .5 * boxSize[1]) / _cellSize.y));
         const auto k = static_cast<std::size_t>(std::floor((entry.pos.z + .5 * boxSize[2]) / _cellSize.z));
         return _cellIndex(i, j, k);
-    };
+    }
 
     std::size_t nCells() const {
         return _cellIndex.size();
-    };
+    }
 
     BoxIterator particlesBegin(std::size_t cellIndex);
 
@@ -287,7 +290,7 @@ protected:
         } else {
             throw std::logic_error("Attempting to fill neighborlist bins, but cell structure is not set up yet");
         }
-    };
+    }
 
     void fillBins() {
         const auto &boxSize = _context.get().boxSize();
@@ -335,10 +338,8 @@ protected:
 
     readdy::util::Index3D _cellIndex;
 
-    // index of size (n_cells x (1 + nAdjacentCells)), where the first element tells how many adj cells are stored
-    //readdy::util::Index2D _cellNeighbors;
-    // maps from cell index to neighbor cell indices
-    std::unordered_map<std::size_t, std::vector<std::size_t>> _cellNeighbors;
+    // maps from cell index to neighbor cell indices, consider a dense structure again
+    CellNeighbors _cellNeighbors;
 
     // keep track which cells are in the core of the domain and which cells overlap with the halo region
     std::vector<std::size_t> _cellsInCore;

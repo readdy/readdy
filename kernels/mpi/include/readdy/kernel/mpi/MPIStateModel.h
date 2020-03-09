@@ -79,13 +79,13 @@ public:
     const std::vector<Particle> getParticles() const override;
 
     void initializeNeighborList(scalar interactionDistance) override {
-        _neighborList->setUp(interactionDistance, _neighborListCellRadius, domain());
+        _neighborList->setUp(domain());
         _neighborList->update();
-    };
+    }
 
     void updateNeighborList() override {
         _neighborList->update();
-    };
+    }
 
     void addParticle(const Particle &p) override;
 
@@ -93,11 +93,11 @@ public:
 
     void removeParticle(const Particle &p) override {
         getParticleData()->removeParticle(p);
-    };
+    }
 
     void removeAllParticles() override {
         getParticleData()->clear();
-    };
+    }
 
     readdy::kernel::scpu::model::ObservableData &observableData() {
         return _observableData;
@@ -117,66 +117,66 @@ public:
 
     scalar energy() const override {
         return _observableData.energy;
-    };
+    }
 
     scalar &energy() override {
         return _observableData.energy;
-    };
+    }
 
     scalar time() const override {
         return _observableData.time;
-    };
+    }
 
     scalar &time() override {
         return _observableData.time;
-    };
+    }
 
     Data const *const getParticleData() const {
         return &_data.get();
-    };
+    }
 
     Data *const getParticleData() {
         return &_data.get();
-    };
+    }
 
     NeighborList const *const getNeighborList() const {
         return _neighborList.get();
 
-    };
+    }
 
     NeighborList *const getNeighborList() {
         return _neighborList.get();
-    };
+    }
 
     void clearNeighborList() override {
         _neighborList->clear();
-    };
+    }
 
     std::vector<readdy::model::reactions::ReactionRecord> &reactionRecords() {
         return _observableData.reactionRecords;
-    };
+    }
 
     const std::vector<readdy::model::reactions::ReactionRecord> &reactionRecords() const {
         return _observableData.reactionRecords;
-    };
+    }
 
     const ReactionCountsMap &reactionCounts() const {
         return _observableData.reactionCounts;
-    };
+    }
 
     ReactionCountsMap &reactionCounts() {
         return _observableData.reactionCounts;
-    };
+    }
 
     void resetReactionCounts();
 
     Particle getParticleForIndex(std::size_t index) const override {
         return _data.get().getParticle(index);
-    };
+    }
 
     ParticleTypeId getParticleType(std::size_t index) const override {
         return _data.get().entry_at(index).type;
-    };
+    }
 
     void toDenseParticleIndices(std::vector<std::size_t>::iterator begin,
                                 std::vector<std::size_t>::iterator end) const override;
@@ -246,82 +246,7 @@ public:
      * but keep in mind that particles are indirectly transferred several times before arriving at the final worker,
      * so filtering out the wrong particles might lead to falsely synchronized states.
      **/
-    void synchronizeWithNeighbors() {
-        MPI_Barrier(MPI_COMM_WORLD);
-        if (domain()->isIdleRank() or domain()->isMasterRank()) {
-            return;
-        }
-        auto& data = _data.get();
-        std::vector<util::ParticlePOD> own; // particles that this worker is responsible for
-        std::vector<std::size_t> removedEntries;
-
-        // gather own responsible and prepare data structure
-        // i.e. gather to-be-removed indices,
-        // and re-tag particles that are currently responsible but not in core of domain
-        for (size_t i = 0; i < data.size(); ++i) {
-            MPIEntry& entry = data.entry_at(i);
-            if (not entry.deactivated and entry.responsible) {
-                own.emplace_back(entry);
-                if (domain()->isInDomainHalo(entry.pos)) {
-                    entry.responsible = false;
-                }
-            } else if (not entry.deactivated and not entry.responsible) {
-                removedEntries.push_back(i);
-            }
-        }
-
-        // Plimpton synchronization
-        std::vector<util::ParticlePOD> other; // particles received by other workers
-        for (unsigned int coord=0; coord<3; coord++) { // east-west, north-south, up-down
-            const auto idx = domain()->myIdx()[coord];
-            if (idx % 2 == 0) {
-                // send + then receive +
-                {
-                    std::array<std::size_t, 3> otherDirection {1,1,1}; // (1,1,1) is self
-                    otherDirection.at(coord) += 1;
-                    util::sendThenReceive(otherDirection, own, other, *domain(), commUsedRanks());
-                }
-                // send - then receive -
-                {
-                    std::array<std::size_t, 3> otherDirection {1,1,1};
-                    otherDirection.at(coord) -= 1;
-                    util::sendThenReceive(otherDirection, own, other, *domain(), commUsedRanks());
-                }
-            } else {
-                // receive - then send -
-                {
-                    std::array<std::size_t, 3> otherDirection {1,1,1};
-                    otherDirection.at(coord) -= 1;
-                    util::receiveThenSend(otherDirection, own, other, *domain(), commUsedRanks());
-                }
-                // receive + then send +
-                {
-                    std::array<std::size_t, 3> otherDirection {1,1,1};
-                    otherDirection.at(coord) += 1;
-                    util::receiveThenSend(otherDirection, own, other, *domain(), commUsedRanks());
-                }
-            }
-        }
-        // only add new entries if in domain coreOrHalo and additionally set responsible=true if in core
-        std::vector<MPIEntry> newEntries;
-        for (const auto &p : other) {
-            if (domain()->isInDomainCore(p.position)) {
-                // gets added and worker is responsible
-                Particle particle(p.position, p.typeId);
-                MPIEntry entry(particle, true, domain()->rank());
-                newEntries.emplace_back(entry);
-            } else if (domain()->isInDomainCoreOrHalo(p.position)) {
-                // gets added but worker is not responsible
-                Particle particle(p.position, p.typeId);
-                MPIEntry entry(particle, false, domain()->rankOfPosition(p.position));
-                newEntries.emplace_back(entry);
-            } else {
-                // does not get added
-            }
-        }
-        auto update = std::make_pair(std::move(newEntries), std::move(removedEntries));
-        data.update(std::move(update));
-    }
+    void synchronizeWithNeighbors();
 
 private:
     readdy::kernel::scpu::model::ObservableData _observableData;

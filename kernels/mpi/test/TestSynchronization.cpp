@@ -77,6 +77,56 @@ TEST_CASE("Synchronization of neighbors", "[mpi]") {
                     check();
                 }
             }
+            AND_WHEN("Particles are gathered again") {
+                auto gatheredParticles = kernel.getMPIKernelStateModel().gatherParticles();
+                THEN("All 6 particles are obtained") {
+                    if (kernel.domain()->isMasterRank()) {
+                        CHECK(gatheredParticles.size() == 6);
+                    }
+                }
+            }
+        }
+    }
+
+    GIVEN("Three domains in one periodic dimension with 15 particles") {
+        readdy::model::Context ctx;
+        ctx.boxSize() = {15., 5., 5.};
+        ctx.periodicBoundaryConditions() = {true, false, false};
+        json conf = {{"MPI", {{"dx", 4.9}, {"dy", 4.9}, {"dz", 4.9}}}};
+        ctx.kernelConfiguration() = conf.get<readdy::conf::Configuration>();
+        ctx.particleTypes().add("A", 1.);
+        ctx.potentials().addHarmonicRepulsion("A", "A", 1., 1.);
+        readdy::kernel::mpi::MPIKernel kernel(ctx);
+
+        auto idA = kernel.context().particleTypes().idOf("A");
+        std::vector<readdy::model::Particle> particles = {
+                {-7, 0., 0., idA}, // is in halo of neighbor
+                {-6, 0., 0., idA},
+                {-5, 0., 0., idA},
+                {-4, 0., 0., idA},
+                {-3, 0., 0., idA}, // is in halo of neighbor
+                // domain boundary
+                {-2, 0., 0., idA}, // is in halo of neighbor
+                {-1, 0., 0., idA},
+                {0, 0., 0., idA},
+                {1, 0., 0., idA},
+                {2, 0., 0., idA}, // is in halo of neighbor
+                // domain boundary
+                {3, 0., 0., idA}, // is in halo of neighbor
+                {4, 0., 0., idA},
+                {5, 0., 0., idA},
+                {6, 0., 0., idA},
+                {7, 0., 0., idA}, // is in halo of neighbor
+        };
+        kernel.getMPIKernelStateModel().distributeParticles(particles);
+
+        WHEN("Particles are gathered again") {
+            auto gatheredParticles = kernel.getMPIKernelStateModel().gatherParticles();
+            THEN("All 15 particles are obtained") {
+                if (kernel.domain()->isMasterRank()) {
+                    CHECK(gatheredParticles.size() == 15);
+                }
+            }
         }
     }
 }
