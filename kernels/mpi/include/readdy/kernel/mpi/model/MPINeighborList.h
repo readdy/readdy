@@ -44,11 +44,7 @@
 #pragma once
 
 #include <readdy/kernel/mpi/model/MPIParticleData.h>
-#include "MPIDomain.h"
-
-// todo Generic grid decomposition with variable adjacency
-// for force calculation the typical "see every pair once"
-// for reactions need the (MPICell 1 -> MPICell 2, ...)
+#include <readdy/kernel/mpi/model/MPIDomain.h>
 
 namespace readdy::kernel::mpi::model {
 
@@ -58,7 +54,7 @@ class CellLinkedList {
 public:
     using Data = readdy::kernel::mpi::MPIDataContainer;
     using CellRadius = std::uint8_t;
-    using HEAD = std::vector<std::size_t>;
+    using HEAD = std::unordered_map<std::size_t,std::size_t>;
     using LIST = std::vector<std::size_t>;
     using EntryCref = const Data::EntryType &;
     using PairCallback = std::function<void(EntryCref, EntryCref)>;
@@ -68,35 +64,39 @@ public:
     CellLinkedList(Data &data, const readdy::model::Context &context)
             : _data(data), _context(context), _head{}, _list{}, _radius{0} {};
 
-    void setUp(scalar cutoff, CellRadius radius, const model::MPIDomain* domain) {
-        if (!_isSetUp || _cutoff != cutoff || _radius != radius) {
-            if (cutoff <= 0) {
-                throw std::logic_error("The cutoff distance for setting up a neighbor list must be > 0");
-            }
-            if (cutoff < _context.get().calculateMaxCutoff()) {
-                log::warn(fmt::format(
-                        "The requested cutoff {} for neighbor-list set-up was smaller than the largest cutoff {}",
-                        cutoff, _context.get().calculateMaxCutoff()));
-            }
-            _radius = radius;
-            _cutoff = cutoff;
+    void setUp(const model::MPIDomain* domain) {
+        if (!_isSetUp) {
             _domain = domain;
 
-            auto size = _domain->extentWithHalo();
-            auto desiredWidth = static_cast<scalar>((_cutoff) / static_cast<scalar>(radius));
-            std::array<std::size_t, 3> dims{};
-            for (int i = 0; i < 3; ++i) {
-                dims[i] = static_cast<unsigned int>(std::max(1., std::floor(size[i] / desiredWidth)));
-                _cellSize[i] = size[i] / static_cast<scalar>(dims[i]);
+            auto boxSize = _context.get().boxSize();
+            const auto desiredWidth = domain->haloThickness();
+            std::array<std::size_t, 3> nCellsPerAxis{};
+            std::array<std::size_t, 3> cellsExtent{}; // number of cells for this domain core
+
+            // assure that the cell division is an integer extension of the domain division
+            std::array<std::size_t, 3> factor{1,1,1};
+            for (std::size_t i = 0; i < 3; ++i) {
+                factor[i] = static_cast<std::size_t>(std::max(1., std::floor(domain->extent()[i] / desiredWidth)));
+                nCellsPerAxis[i] = factor[i] * domain->nDomainsPerAxis()[i];
+                _cellSize[i] = boxSize[i] / static_cast<scalar>(nCellsPerAxis[i]);
+                cellsExtent[i] = static_cast<std::size_t>(domain->extent()[i] / _cellSize[i]);
             }
 
-            _cellIndex = readdy::util::Index3D(dims[0], dims[1], dims[2]);
+            _cellIndex = readdy::util::Index3D(nCellsPerAxis[0], nCellsPerAxis[1], nCellsPerAxis[2]);
+
+            std::vector<std::size_t> _cellsInDomain;
+
+            std::array<std::size_t, 3> cellsOrigin{}; // ijk of this domain's origin cell, i.e. the lower left cell
+            const auto eps = std::numeric_limits<readdy::scalar >::epsilon();
+            for (std::size_t i = 0; i< 3; ++i) {
+                cellsOrigin[i] = static_cast<std::size_t>(std::floor((domain->origin()[i] + eps) / _cellSize[i]));
+            }
 
             {
-                // set up cell adjacency list
+                // set up cell adjacency list, only for cells that cover the domain
                 std::array<std::size_t, 3> nNeighbors{{_cellIndex[0], _cellIndex[1], _cellIndex[2]}};
                 for (int i = 0; i < 3; ++i) {
-                    nNeighbors[i] = std::min(nNeighbors[i], static_cast<std::size_t>(2 * radius + 1));
+                    nNeighbors[i] = std::min(nNeighbors[i], {3});
                 }
                 auto nAdjacentCells = nNeighbors[0] * nNeighbors[1] * nNeighbors[2];
                 _cellNeighbors = readdy::util::Index2D(_cellIndex.size(), 1 + nAdjacentCells);
@@ -293,11 +293,9 @@ protected:
     virtual void setUpBins() {
         if (_isSetUp) {
             auto nParticles = _data.get().size();
-            // todo redo head
-            _head.clear();
-            _head.resize(_cellIndex.size());
+            _head.clear(); // head structure will be built lazily upon filling bins
             _list.resize(0);
-            _list.resize(nParticles + 1);
+            _list.resize(nParticles + 1); // _list[0] is terminator for a sequence of particles
             fillBins();
         } else {
             throw std::logic_error("Attempting to fill neighborlist bins, but cell structure is not set up yet");
@@ -306,32 +304,38 @@ protected:
 
     void fillBins() {
         const auto &boxSize = _context.get().boxSize();
-        const auto &domainOrigin = _domain->originWithHalo();
-        std::size_t pidx = 1;
+
+        const auto particleInBox = [&boxSize](const Vec3 &pos) {
+            return -.5*boxSize[0] <= pos.x && .5*boxSize[0] > pos.x
+                   && -.5*boxSize[1] <= pos.y && .5*boxSize[1] > pos.y
+                   && -.5*boxSize[2] <= pos.z && .5*boxSize[2] > pos.z;
+        };
+
+        std::size_t pidx = 1; // the list structure is 1-indexed, because 0 terminates the particle group
         for (const auto &entry : _data.get()) {
             if (not entry.deactivated) {
-                if (not _domain->isInDomainCoreOrHalo(entry.pos)) {
-                    throw std::runtime_error("MPI NeighborList fillBins(), particle not in (Domain+Halo)");
+                if (particleInBox(entry.pos)) {
+                    const auto i = static_cast<std::size_t>(std::floor((entry.pos.x + .5 * boxSize[0]) / _cellSize.x));
+                    const auto j = static_cast<std::size_t>(std::floor((entry.pos.y + .5 * boxSize[1]) / _cellSize.y));
+                    const auto k = static_cast<std::size_t>(std::floor((entry.pos.z + .5 * boxSize[2]) / _cellSize.z));
+                    const auto cellIndex = _cellIndex(i, j, k);
+                    // if head[cellIndex] does not exist here it is default (0) which is the terminator
+                    _list[pidx] = _head[cellIndex];
+                    _head[cellIndex] = pidx;
+                } else {
+                    readdy::log::warn("Particle not in box, will not be contained in the neighbor-list");
                 }
-                // todo do not wrap the boxes, instead adjust the underlying data structure to be sparse
-                // since bins i.e. the boxes can extend out of the boxSize,
-                // due to extent of halo region, wrap particles into
-                // this domains halo region
-                const auto wrapped = _domain->wrapIntoThisHalo(entry.pos);
-                const auto i = static_cast<std::size_t>(std::floor((wrapped.x - domainOrigin[0]) / _cellSize.x));
-                const auto j = static_cast<std::size_t>(std::floor((wrapped.y - domainOrigin[1]) / _cellSize.y));
-                const auto k = static_cast<std::size_t>(std::floor((wrapped.z - domainOrigin[2] ) / _cellSize.z));
-                const auto cellIndex = _cellIndex(i, j, k);
-                _list[pidx] = _head.at(cellIndex);
-                _head[cellIndex] = pidx;
             }
             ++pidx;
         }
     }
 
-    // todo head becomes a map, list remains as is
+    // head maps from cell indices to the first particle of a group in the list structure
     HEAD _head;
-    // particles, 1-indexed
+    // Linear list of particles, 1-indexed
+    // Used to build a string of particles (that are contained in a cell),
+    // index i refers to a particle index (i-1) and j=list[i] contains the index of the
+    // next particle, this string is terminated if j=0
     LIST _list;
 
 
@@ -342,13 +346,13 @@ protected:
 
     Vec3 _cellSize{0, 0, 0};
 
-    // todo instead of mapping to a linear vector, this should index a map (because cells are sparse)
     readdy::util::Index3D _cellIndex;
 
     // index of size (n_cells x (1 + nAdjacentCells)), where the first element tells how many adj cells are stored
-    readdy::util::Index2D _cellNeighbors;
-    // backing vector of _cellNeighbors index of size (n_cells x (1 + nAdjacentCells))
-    std::vector<std::size_t> _cellNeighborsContent;
+    //readdy::util::Index2D _cellNeighbors;
+    // maps from cell index to neighbor cell indices
+    std::unordered_map<std::size_t, std::vector<std::size_t>> _cellNeighborsContent;
+
 
     std::reference_wrapper<Data> _data;
     std::reference_wrapper<const readdy::model::Context> _context;
