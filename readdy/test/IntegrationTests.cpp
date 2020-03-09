@@ -384,8 +384,8 @@ TEMPLATE_TEST_CASE("Attach particle to topology", "[!hide][integration]", Single
 
             auto neighborIx = chainTop->graph().vertices().at(nneighbor).neighbors()[0] == endIt1.persistent_index() ? 1 : 0;
             auto prevNeighbor = nneighbor;
+            nneighbor = chainTop->graph().vertices().at(nneighbor).neighbors()[neighborIx];
             for(int i = -2; i <= 3; ++i) {
-                nneighbor = chainTop->graph().vertices().at(nneighbor).neighbors()[neighborIx];
                 REQUIRE(chainTop->particleForVertex(nneighbor).type() == type_registry.idOf("middle"));
                 REQUIRE(flouble(chainTop->particleForVertex(nneighbor).pos().x).AlmostEquals(flouble(i)));
                 REQUIRE(chainTop->graph().vertices().at(nneighbor).neighbors().size() == 2);
