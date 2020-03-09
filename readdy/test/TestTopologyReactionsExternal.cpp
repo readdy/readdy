@@ -374,10 +374,10 @@ TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU
                         } else {
                             endIt2 = it;
                         }
-                        break;
                     }
                 }
-                REQUIRE(it != chainTop->graph().end());
+                REQUIRE(endIt1 != chainTop->graph().end());
+                REQUIRE(endIt2 != chainTop->graph().end());
                 REQUIRE(chainTop->graph().graphDistance(endIt1, endIt2) == 8);
             }
         }

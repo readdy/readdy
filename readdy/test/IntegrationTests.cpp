@@ -170,36 +170,70 @@ TEMPLATE_TEST_CASE("Chain-decay integration test", "[!hide][integration]", Singl
     auto topsobs = kernel->observe().topologies(1);
     auto connection = kernel->connectObservable(topsobs.get());
     topsobs->callback() = [&](const readdy::model::observables::Topologies::result_type &result) {
-        auto tops = kernel->stateModel().getTopologies();
-        REQUIRE(result.size() == tops.size());
-        for(std::size_t i = 0; i < tops.size(); ++i) {
-            auto top = tops.at(i);
-            auto record = result.at(i);
-
-            auto edges = top->graph().edges();
-            REQUIRE(edges.size() == record.edges.size());
-
-            auto particles = top->fetchParticles();
-
-            REQUIRE(record.particleIndices.size() == particles.size());
-            for(std::size_t j = 0; j < record.particleIndices.size(); ++j) {
-                auto topParticles = top->particleIndices();
-                kernel->stateModel().toDenseParticleIndices(topParticles.begin(), topParticles.end());
-                REQUIRE(std::find(topParticles.begin(), topParticles.end(),
-                                  record.particleIndices.at(j)) != topParticles.end());
-                REQUIRE(particles.at(j).type() == ctx.particleTypes().idOf("T"));
+        WHEN("The topology observable makes a callback") {
+            auto tops = kernel->stateModel().getTopologies();
+            THEN("We expect that there are as many topologies in the simulation as there are topologies in the record") {
+                REQUIRE(result.size() == tops.size());
             }
+            WHEN("Presented with each record-topology pair in the simulation") {
+                for (std::size_t i = 0; i < tops.size(); ++i) {
+                    auto top = tops.at(i);
+                    auto record = result.at(i);
 
-            for(const auto &edge : record.edges) {
-                auto it = std::find_if(edges.begin(), edges.end(), [&](const auto &e) {
-                    auto p1Idx = top->graph().vertices().at(std::get<0>(e))->particleIndex;
-                    auto p2Idx = top->graph().vertices().at(std::get<1>(e))->particleIndex;
-                    return (p1Idx == std::get<0>(edge) && p2Idx == std::get<1>(edge))
-                           || (p1Idx == std::get<1>(edge) && p2Idx == std::get<0>(edge));
-                });
-                REQUIRE(it != edges.end());
+                    auto edges = top->graph().edges();
+                    THEN("The number of edges must match") {
+                        REQUIRE(edges.size() == record.edges.size());
+                    }
+
+                    auto particles = top->fetchParticles();
+
+                    THEN("The number of particles must match") {
+                        REQUIRE(record.particleIndices.size() == particles.size());
+                    }
+                    AND_WHEN("Converting the real particle indices to dense (ie remove blanks)") {
+                        auto topParticlesDense = top->particleIndices();
+                        kernel->stateModel().toDenseParticleIndices(topParticlesDense.begin(), topParticlesDense.end());
+                        THEN("the particle indices in record and reference must match in index and type") {
+                            for (std::size_t j = 0; j < record.particleIndices.size(); ++j) {
+                                REQUIRE(std::find(topParticlesDense.begin(), topParticlesDense.end(),
+                                                  record.particleIndices.at(j)) != topParticlesDense.end());
+                                REQUIRE(particles.at(j).type() == ctx.particleTypes().idOf("T"));
+                            }
+                        }
+                        AND_THEN("For each edge in the record, there must be a corresponding edge in the topology") {
+                            for (const auto &edge : record.edges) {
+                                // topology-local indices
+                                auto[recordV1, recordV2] = edge;
+                                // map to particle indices in record space
+                                auto p1Idx = record.particleIndices.at(recordV1);
+                                auto p2Idx = record.particleIndices.at(recordV2);
+                                // as we already tested that record and topology are consistent wrt particle indices
+                                // we can pick the "argwhere" of the dense topology indices to find the index in the
+                                // topParticleDense corresponding to our particle
+                                auto realP1IdxLocal = std::distance(
+                                        topParticlesDense.begin(), std::find(topParticlesDense.begin(),
+                                        topParticlesDense.end(), p1Idx));
+                                auto realP2IdxLocal = std::distance(topParticlesDense.begin(),
+                                                                    std::find(topParticlesDense.begin(),
+                                                                              topParticlesDense.end(),
+                                                                              p2Idx));
+                                // that index can be mapped back to space with blanks like this
+                                auto v1Ix = top->vertexIndexForParticle(top->particleIndices().at(realP1IdxLocal));
+                                auto v2Ix = top->vertexIndexForParticle(top->particleIndices().at(realP2IdxLocal));
+                                // and then we are also able to grab the corresponding vertices
+                                const auto &v1 = top->graph().vertices().at(v1Ix);
+                                const auto &v2 = top->graph().vertices().at(v2Ix);
+                                auto find1 = std::find(std::begin(v1.neighbors()), std::end(v1.neighbors()), v2Ix);
+                                auto find2 = std::find(std::begin(v2.neighbors()), std::end(v2.neighbors()), v1Ix);
+                                // making sure that the edge exists
+                                REQUIRE(find1 != std::end(v1.neighbors()));
+                                REQUIRE(find2 != std::end(v2.neighbors()));
+                            }
+                        }
+                    }
+
+                }
             }
-
         }
     };
 
@@ -314,35 +348,54 @@ TEMPLATE_TEST_CASE("Attach particle to topology", "[!hide][integration]", Single
             auto factor = x_end.AlmostEquals(flouble{4.}) ? 1. : -1.;
 
             // walk along topology sausage, check end particles are always at +-4, the other ones are of type middle
-            auto next_neighbor = v_end.neighbors().at(0);
-            std::size_t i = 0;
-            auto nextNeighborType = chainTop->particleForVertex(next_neighbor).type();
-            while(nextNeighborType != type_registry.idOf("end") && i < 20 /*no endless loop*/) {
-                auto nextParticle = chainTop->particleForVertex(next_neighbor);
-                auto predicted_pos = factor*4. - factor*(i+1)*1.;
-                auto actual_pos = nextParticle.pos().x;
-                REQUIRE((flouble(actual_pos).AlmostEquals(flouble(predicted_pos))));
-                REQUIRE((flouble(nextParticle.pos().y)).AlmostEquals(flouble(0.)));
-                REQUIRE((flouble(nextParticle.pos().z)).AlmostEquals(flouble(0.)));
-                const auto& neighborNeighbors = chainTop->graph().vertices().at(next_neighbor).neighbors();
-                if(nextParticle.type() == type_registry.idOf("middle")) {
-                    REQUIRE(neighborNeighbors.size() == 2);
-                    if(neighborNeighbors.at(0) == prev_neighbor) {
-                        prev_neighbor = next_neighbor;
-                        next_neighbor = neighborNeighbors.at(1);
+            auto it = chainTop->graph().begin();
+            auto endIt1 = it;
+            auto endIt2 = it;
+            bool firstEnd = true;
+            for(; it != chainTop->graph().end(); ++it) {
+                if(chainTop->particleForVertex(it.persistent_index()).type() == type_registry.idOf("end")) {
+                    if(firstEnd) {
+                        endIt1 = it;
+                        firstEnd = false;
                     } else {
-                        prev_neighbor = next_neighbor;
-                        next_neighbor = neighborNeighbors.at(0);
+                        endIt2 = it;
                     }
-
-                } else {
-                    REQUIRE(neighborNeighbors.size() == 1);
                 }
+            }
+            REQUIRE(endIt1 != chainTop->graph().end());
+            REQUIRE(endIt2 != chainTop->graph().end());
+            REQUIRE(chainTop->graph().graphDistance(endIt1, endIt2) == 8);
 
-                ++i;
+            if (flouble(chainTop->particleForVertex(endIt1.persistent_index()).pos().x).AlmostEquals(flouble(-4))) {
+                REQUIRE(flouble(chainTop->particleForVertex(endIt2.persistent_index()).pos().x).AlmostEquals(flouble(4)));
+            } else if(flouble(chainTop->particleForVertex(endIt1.persistent_index()).pos().x).AlmostEquals(flouble(4))) {
+                REQUIRE(flouble(chainTop->particleForVertex(endIt2.persistent_index()).pos().x).AlmostEquals(flouble(-4)));
+                std::swap(endIt1, endIt2);
+            } else {
+                FAIL("the ends must be at {-4, 4}");
             }
 
-            REQUIRE(i == 3+6-1-1);
+            // now endIt1 is at -4 and endIt2 is at 4
+            REQUIRE(chainTop->graph().vertices().at(endIt1.persistent_index()).neighbors().size() == 1);
+            auto nneighbor = chainTop->graph().vertices().at(endIt1.persistent_index()).neighbors()[0];
+            REQUIRE(chainTop->particleForVertex(nneighbor).type() == type_registry.idOf("middle"));
+            REQUIRE(flouble(chainTop->particleForVertex(nneighbor).pos().x).AlmostEquals(flouble(-3)));
+            REQUIRE(chainTop->graph().vertices().at(nneighbor).neighbors().size() == 2);
+
+            auto neighborIx = chainTop->graph().vertices().at(nneighbor).neighbors()[0] == endIt1.persistent_index() ? 1 : 0;
+            auto prevNeighbor = nneighbor;
+            for(int i = -2; i <= 3; ++i) {
+                nneighbor = chainTop->graph().vertices().at(nneighbor).neighbors()[neighborIx];
+                REQUIRE(chainTop->particleForVertex(nneighbor).type() == type_registry.idOf("middle"));
+                REQUIRE(flouble(chainTop->particleForVertex(nneighbor).pos().x).AlmostEquals(flouble(i)));
+                REQUIRE(chainTop->graph().vertices().at(nneighbor).neighbors().size() == 2);
+                neighborIx = chainTop->graph().vertices().at(nneighbor).neighbors()[0] == prevNeighbor ? 1 : 0;
+                prevNeighbor = nneighbor;
+                nneighbor = chainTop->graph().vertices().at(nneighbor).neighbors()[neighborIx];
+            }
+            REQUIRE(chainTop->particleForVertex(nneighbor).type() == type_registry.idOf("end"));
+            REQUIRE(flouble(chainTop->particleForVertex(nneighbor).pos().x).AlmostEquals(flouble(4)));
+            REQUIRE(chainTop->graph().vertices().at(nneighbor).neighbors().size() == 1);
         }
     }
     REQUIRE(foundEndVertex);

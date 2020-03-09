@@ -204,7 +204,7 @@ typename Graph::PersistentVertexIndex GraphTopology::appendTopology(const GraphT
             throw std::invalid_argument(fmt::format("Could not find particle {} in other topology.", otherParticle));
         }
         auto ix = _graph.vertices().persistentIndex(it);
-        auto otherIx = _graph.vertices().persistentIndex(itOther);
+        auto otherIx = otherGraph.vertices().persistentIndex(itOther);
 
         auto mapping = _graph.append(otherGraph, ix, otherIx);
         _topology_type = newType;

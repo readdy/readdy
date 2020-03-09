@@ -230,45 +230,11 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
             REQUIRE(top2.graph().vertices().begin()->neighbors().at(0) == (++top2.graph().vertices().begin()).persistent_index());
             REQUIRE((++top2.graph().vertices().begin())->neighbors().at(0) == top2.graph().vertices().begin().persistent_index());
         }
-        SECTION("Particle indices are topology-relative and should begin with 0") {
-            REQUIRE(top1.graph().vertices().begin()->data().particleIndex == 0);
-            REQUIRE(top2.graph().vertices().begin()->data().particleIndex == 0);
-            REQUIRE((++top2.graph().vertices().begin())->data().particleIndex == 1);
-        }
 
         // check if particle mappings are still valid
         REQUIRE(top1.fetchParticles().at(0) == particles.at(0));
         REQUIRE(top2.fetchParticles().at(0) == particles.at(1));
         REQUIRE(top2.fetchParticles().at(1) == particles.at(2));
-    }
-    SECTION("Remove edge with rollback") {
-        auto &context = kernel->context();
-        auto &toptypes = context.topologyRegistry();
-        toptypes.addType("TA");
-        auto topology = setUpSmallTopology(kernel.get(), toptypes.idOf("TA"));
-
-        {
-            auto reactionFunction = [&](model::top::GraphTopology &top) {
-                model::top::reactions::Recipe recipe(top);
-                recipe.removeEdge(top.graph().vertices().begin().persistent_index(), (++top.graph().vertices().begin()).persistent_index());
-                return recipe;
-            };
-            model::top::reactions::StructuralTopologyReaction reaction{"r", reactionFunction, 5};
-            reaction.expect_connected_after_reaction();
-            toptypes.addStructuralReaction("TA", reaction);
-        }
-        topology->updateReactionRates(toptypes.structuralReactionsOf("TA"));
-        std::vector<model::Particle> particles = topology->fetchParticles();
-        std::vector<model::top::GraphTopology> result;
-        {
-            log::Level level(spdlog::level::err);
-            result = toptypes.structuralReactionsOf("TA").back().execute(*topology, kernel.get());
-        }
-        auto &graph = topology->graph();
-        auto &vertices = graph.vertices();
-        REQUIRE(result.empty());
-        REQUIRE(graph.containsEdge(vertices.begin().persistent_index(), (++vertices.begin()).persistent_index()));
-        REQUIRE(graph.containsEdge((++vertices.begin()).persistent_index(), (--vertices.end()).persistent_index()));
     }
 
     SECTION("Chain split up") {
@@ -448,7 +414,7 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
 
     SECTION("Reaction types") {
         SECTION("TTFusion") {
-            model::Context ctx;
+            model::Context ctx {};
 
             ctx.particleTypes().addTopologyType("X1", 0);
             ctx.particleTypes().addTopologyType("X2", 0);
@@ -612,8 +578,8 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
                 auto particles = sim.currentParticles();
                 unsigned n_links = 0;
                 auto typeLink = ctx.particleTypes().infoOf("link").typeId;
-                for (auto vref = top->graph().begin(); vref != top->graph().end(); vref++) {
-                    auto pidx = vref->data().particleIndex;
+                for (const auto & vref : top->graph()) {
+                    auto pidx = vref.data().particleIndex;
                     if (particles.at(pidx).type() == typeLink) n_links++;
                 }
                 REQUIRE(6 == n_links);
