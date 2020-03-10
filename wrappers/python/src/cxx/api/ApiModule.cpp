@@ -103,7 +103,7 @@ void exportApi(py::module &api) {
             .def("create_topology_particle", &sim::createTopologyParticle, "type"_a, "position"_a)
             .def("get_particles_for_topology", &sim::getParticlesForTopology, "topology"_a)
             .def("add_topology", [](sim &self, const std::string &name,
-                                    const std::vector<readdy::model::TopologyParticle> &particles) {
+                                    const std::vector<readdy::model::Particle> &particles) {
                 return self.addTopology(name, particles);
             }, rvp::reference_internal, "type"_a, "particles"_a)
             .def("add_topology", [](sim &self, const std::string &name, const std::vector<std::string> &types,
@@ -114,7 +114,7 @@ void exportApi(py::module &api) {
                     throw std::invalid_argument(fmt::format("the number of particles ({}) must be equal to the "
                                                                     "number of types ({})!", nParticles, nTypes));
                 }
-                std::vector<readdy::model::TopologyParticle> particles;
+                std::vector<readdy::model::Particle> particles;
                 for(std::size_t i = 0; i < nParticles; ++i) {
                     auto type =  nTypes != 1 ? types[i] : types[0];
                     particles.push_back(self.createTopologyParticle(type, readdy::Vec3(positions.at(i, 0),

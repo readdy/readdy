@@ -227,6 +227,10 @@ public:
         return _graph.nVertices();
     }
 
+    void setVertexData(Graph::PersistentVertexIndex vix, const std::string &data) {
+        _graph.vertices().at(vix)->data = data;
+    }
+
 protected:
     Graph _graph;
     std::reference_wrapper<const model::Context> _context;

@@ -44,83 +44,130 @@
 #include <readdy/model/Particle.h>
 #include <readdy/model/topologies/GraphTopology.h>
 #include <readdy/model/_internal/Util.h>
+
+#include <utility>
 #include "PyFunction.h"
 #include "../common/ReadableParticle.h"
 
 namespace py = pybind11;
+
+namespace top = readdy::model::top;
+namespace reactions = readdy::model::top::reactions;
+
 using rvp = py::return_value_policy;
-
-using particle = readdy::model::Particle;
-
-using reaction = readdy::model::top::reactions::StructuralTopologyReaction;
-using reaction_recipe = readdy::model::top::reactions::Recipe;
-
-using topology_potential = readdy::model::top::pot::TopologyPotential;
-using bonded_potential = readdy::model::top::pot::BondedPotential;
-using angle_potential = readdy::model::top::pot::AnglePotential;
-using torsion_potential = readdy::model::top::pot::TorsionPotential;
-using harmonic_bond = readdy::model::top::pot::HarmonicBondPotential;
-using harmonic_angle = readdy::model::top::pot::HarmonicAnglePotential;
-using cosine_dihedral = readdy::model::top::pot::CosineDihedralPotential;
 
 class PyTopology {
 public:
     explicit PyTopology(readdy::model::top::GraphTopology* topology) : topology(topology) {}
 
-    auto get() {
+    readdy::model::top::GraphTopology* get() {
         return topology;
     }
+
+    [[nodiscard]] const readdy::model::top::GraphTopology* get() const {
+        return topology;
+    }
+
+    auto *operator->() {return topology;}
+    const auto*operator->() const {return topology;}
 private:
     readdy::model::top::GraphTopology* topology;
 };
 
 class PyGraph {
 public:
-    PyGraph(PyTopology* parent, readdy::model::top::Graph* graph) : parent(parent), graph(graph) {}
+    PyGraph(PyTopology* parent) : parent(parent) {}
+
+    [[nodiscard]] const top::Graph* get() const {
+        return &parent->get()->graph();
+    }
+
+    const auto *operator->() const { return get(); }
+
+    PyTopology* top() { return parent; }
 private:
     PyTopology* parent;
-    readdy::model::top::Graph* graph;
 };
 
 class PyVertex {
 public:
-    using VertexRef = readdy::model::top::Graph::VertexIndex;
-    PyVertex(PyGraph* parent, VertexRef vertex) : parent(parent), vertex(vertex) {}
+    using VertexRef = readdy::model::top::Graph::PersistentVertexIndex;
+    PyVertex() : parent(nullptr), vertex({0}) {}
+    PyVertex(PyTopology* parent, VertexRef vertex) : parent(parent), vertex(vertex) {}
 
-    auto get() const { return vertex; }
+    [[nodiscard]] VertexRef get() const { return vertex; }
+    PyTopology* top() { return parent; }
+
+    const PyTopology* top() const {return parent;}
 private:
-    PyGraph* parent;
+    PyTopology* parent;
     VertexRef vertex;
 };
 
-using Graph = PyGraph;
-using Vertex = PyVertex;
-using VertexRef = Vertex::VertexRef;
-using Topology = PyTopology;
+class PyEdge {
+public:
+    using EdgeRef = readdy::model::top::Graph::Edge;
 
+    PyEdge() : vertices(std::make_tuple(PyVertex(), PyVertex())) {}
+
+    PyEdge(PyVertex v1, PyVertex v2) : vertices(std::make_tuple(v1, v2)) {}
+
+    PyEdge(std::tuple<PyVertex, PyVertex> edge) : vertices(std::move(edge)) {}
+
+    EdgeRef get() {
+        return std::make_tuple(std::get<0>(vertices).get(), std::get<1>(vertices).get());
+    }
+
+private:
+    std::tuple<PyVertex, PyVertex> vertices;
+};
+
+class PyRecipe {
+public:
+    PyRecipe(PyTopology top) : top(top), recipe(std::make_shared<reactions::Recipe>(*top.get())) {}
+
+    [[nodiscard]] reactions::Recipe& get() { return *recipe; }
+
+    reactions::Recipe* operator->() {
+        return recipe.get();
+    }
+
+private:
+    PyTopology top;
+    std::shared_ptr<reactions::Recipe> recipe;
+};
 
 struct reaction_function_sink {
     std::shared_ptr<py::function> f;
-    reaction_function_sink(py::function f) : f(std::make_shared<py::function>(f)) {};
+    reaction_function_sink(const py::function& f) : f(std::make_shared<py::function>(f)) {};
 
-    inline reaction::reaction_function::result_type operator()(Topology& top) {
+    inline reactions::StructuralTopologyReaction::reaction_function::result_type operator()(top::GraphTopology& top) {
         py::gil_scoped_acquire gil;
-        auto t = py::cast(&top, py::return_value_policy::automatic_reference);
-        auto rv = (*f)(*(t.cast<Topology*>()->get()));
-        return rv.cast<reaction::reaction_function::result_type>();
+        PyTopology pyTop (&top);
+        auto t = py::cast(&pyTop, py::return_value_policy::automatic_reference);
+        auto rv = (*f)(*(t.cast<PyTopology*>()));
+        return rv.cast<reactions::StructuralTopologyReaction::reaction_function::result_type>();
     }
 };
 
 struct rate_function_sink {
     std::shared_ptr<py::function> f;
-    rate_function_sink(py::function f) : f(std::make_shared<py::function>(f)) {};
+    rate_function_sink(const py::function& f) : f(std::make_shared<py::function>(f)) {};
 
-    inline reaction::rate_function::result_type operator()(const Topology& top) {
+    inline reactions::StructuralTopologyReaction::rate_function::result_type operator()(const top::GraphTopology& top) {
         py::gil_scoped_acquire gil;
-        auto t = py::cast(&top, py::return_value_policy::automatic_reference);
-        auto rv = (*f)(*(t.cast<Topology*>()->get()));
-        return rv.cast<reaction::rate_function::result_type>();
+        PyTopology pyTop (&const_cast<top::GraphTopology&>(top));
+        auto t = py::cast(&pyTop, py::return_value_policy::automatic_reference);
+        auto rv = (*f)(*(t.cast<PyTopology*>()));
+        return rv.cast<reactions::StructuralTopologyReaction::rate_function::result_type>();
     }
+};
+
+struct NeighborIteratorState {
+    PyTopology* top;
+    top::Vertex::NeighborList::const_iterator it;
+    top::Vertex::NeighborList::const_iterator end;
+    bool first_or_done;
 };
 
 void exportTopologies(py::module &m) {
@@ -129,34 +176,33 @@ void exportTopologies(py::module &m) {
     py::class_<reaction_function_sink>(m, "ReactionFunction").def(py::init<py::function>());
     py::class_<rate_function_sink>(m, "RateFunction").def(py::init<py::function>());
 
-    py::class_<reaction>(m, "StructuralTopologyReaction")
+    py::class_<reactions::StructuralTopologyReaction>(m, "StructuralTopologyReaction")
             .def(py::init<std::string, reaction_function_sink, rate_function_sink>())
-            .def("rate", &reaction::rate, "topology"_a)
-            .def("expects_connected_after_reaction", &reaction::expects_connected_after_reaction)
-            .def("expect_connected_after_reaction", &reaction::expect_connected_after_reaction)
-            .def("creates_child_topologies_after_reaction", &reaction::creates_child_topologies_after_reaction)
-            .def("create_child_topologies_after_reaction", &reaction::create_child_topologies_after_reaction);
+            .def("rate", &reactions::StructuralTopologyReaction::rate, "topology"_a)
+            .def("expects_connected_after_reaction", &reactions::StructuralTopologyReaction::expects_connected_after_reaction)
+            .def("expect_connected_after_reaction", &reactions::StructuralTopologyReaction::expect_connected_after_reaction)
+            .def("creates_child_topologies_after_reaction", &reactions::StructuralTopologyReaction::creates_child_topologies_after_reaction)
+            .def("create_child_topologies_after_reaction", &reactions::StructuralTopologyReaction::create_child_topologies_after_reaction);
 
-    py::class_<reaction_recipe>(m, "Recipe")
-            .def(py::init<Topology&>(), R"topdoc(
+    py::class_<PyRecipe>(m, "Recipe")
+            .def(py::init<PyTopology>(), R"topdoc(
                  Creates a new reaction recipe.
 
                  :param topology: The topology for which this recipe should be created.
             )topdoc", "topology"_a)
-            .def("change_particle_type", [](reaction_recipe &self, const Vertex &v, const std::string &to) {
-                return self.changeParticleType(v.get(), to);
+            .def("change_particle_type", [](PyRecipe &self, const PyVertex &v, const std::string &to) {
+                self.get().changeParticleType(v.get(), to);
+                return self;
             }, py::return_value_policy::reference_internal)
-            .def("change_particle_type", [](reaction_recipe &self, const VertexRef &v, const std::string &to) {
-                return self.changeParticleType(v, to);
+            .def("change_particle_position", [](PyRecipe &self, const PyVertex &v, readdy::Vec3 pos) {
+                self.get().changeParticlePosition(v.get(), pos);
+                return self;
             }, py::return_value_policy::reference_internal)
-            .def("change_particle_position", [](reaction_recipe &self, const Vertex &v, readdy::Vec3 pos) {
-                return self.changeParticlePosition(v.get(), pos);
-            }, py::return_value_policy::reference_internal)
-            .def("change_particle_position", [](reaction_recipe &self, VertexRef ref, readdy::Vec3 pos) {
-                return self.changeParticlePosition(ref, pos);
-            }, py::return_value_policy::reference_internal)
-            .def("add_edge", [](reaction_recipe &self, std::size_t v1, std::size_t v2) {
-                return self.addEdge(v1, v2);
+            .def("add_edge", [](PyRecipe &self, std::size_t v1, std::size_t v2) {
+                auto pix1 = (self.get().topology().graph().begin() + v1).persistent_index();
+                auto pix2 = (self.get().topology().graph().begin() + v2).persistent_index();
+                self.get().addEdge(pix1, pix2);
+                return self;
             }, R"topdoc(
                 Adds an edge between the given vertices.
 
@@ -164,21 +210,33 @@ void exportTopologies(py::module &m) {
                 :param v_index2: index of the second vertex, as in `topology.get_graph().get_vertices()`
                 :return: a reference to this recipe to enable a fluent interface
             )topdoc", "v_index1"_a, "v_index2"_a, py::return_value_policy::reference_internal)
-            .def("add_edge", [](reaction_recipe &self, const Vertex &v1, const Vertex &v2) {
-                return self.addEdge(v1.get(), v2.get());
+            .def("add_edge", [](PyRecipe &self, const PyVertex &v1, const PyVertex &v2) {
+                self.get().addEdge(v1.get(), v2.get());
+                return self;
             }, py::return_value_policy::reference_internal)
-            .def("append_particle", [](reaction_recipe &self, const std::vector<Vertex> &neighbors,
+            .def("append_particle", [](PyRecipe &self, const std::vector<PyVertex> &neighbors,
                     const std::string &type, readdy::Vec3 pos){
-                std::vector<VertexRef> refs;
-                std::transform(neighbors.begin(), neighbors.end(), std::back_inserter(refs), &PyVertex::get);
-                return self.appendNewParticle(refs, type, pos);
+                std::vector<top::Graph::PersistentVertexIndex> refs;
+                std::transform(neighbors.begin(), neighbors.end(), std::back_inserter(refs), [](const PyVertex& v) {
+                    return v.get();
+                });
+                self.get().appendNewParticle(refs, type, pos);
+                return self;
             })
-            .def("append_particle", [](reaction_recipe &self, const std::vector<VertexRef> &neighbors,
+            .def("append_particle", [](PyRecipe &self, const std::vector<std::size_t> &neighbors,
                     const std::string &type, readdy::Vec3 pos){
-                return self.appendNewParticle(neighbors, type, pos);
+                std::vector<top::Graph::PersistentVertexIndex> refs;
+                std::transform(neighbors.begin(), neighbors.end(), std::back_inserter(refs), [&](auto ix) {
+                    return (self.get().topology().graph().begin() + ix).persistent_index();
+                });
+                self.get().appendNewParticle(refs, type, pos);
+                return self;
             })
-            .def("remove_edge", [](reaction_recipe &self, std::size_t v1, std::size_t v2) -> reaction_recipe& {
-                return self.removeEdge(v1, v2);
+            .def("remove_edge", [](PyRecipe &self, std::size_t v1, std::size_t v2) -> PyRecipe& {
+                auto ix1 = (self.get().topology().graph().begin() + v1).persistent_index();
+                auto ix2 = (self.get().topology().graph().begin() + v2).persistent_index();
+                self.get().removeEdge(ix1, ix2);
+                return self;
             }, R"topdoc(
                 Removes an edge between given vertices. Depending on the configuration of the topology reaction, this
                 can lead to failed states or multiple sub-topologies.
@@ -187,11 +245,13 @@ void exportTopologies(py::module &m) {
                 :param v_index2: index of the second vertex, as in `topology.get_graph().get_vertices()`
                 :return: a reference to this recipe to enable a fluent interface
             )topdoc", "v_index1"_a, "v_index2"_a, py::return_value_policy::reference_internal)
-            .def("remove_edge", [](reaction_recipe &self, const Vertex &v1, const Vertex &v2) {
-                return self.removeEdge(v1.get(), v2.get());
+            .def("remove_edge", [](PyRecipe &self, const PyVertex &v1, const PyVertex &v2) {
+                self->removeEdge(v1.get(), v2.get());
+                return self;
             }, py::return_value_policy::reference_internal)
-            .def("remove_edge", [](reaction_recipe &self, graph::Edge edge) -> reaction_recipe& {
-                return self.removeEdge(edge);
+            .def("remove_edge", [](PyRecipe &self, PyEdge edge) {
+                self->removeEdge(edge.get());
+                return self;
             }, R"topdoc(
                 Removes an edge between given vertices. Depending on the configuration of the topology reaction, this
                 can lead to failed states or multiple sub-topologies.
@@ -199,10 +259,10 @@ void exportTopologies(py::module &m) {
                 :param edge: the edge
                 :return: a reference to this recipe to enable a fluent interface
             )topdoc", "edge"_a, py::return_value_policy::reference_internal)
-            .def("separate_vertex", [](reaction_recipe &self, const std::size_t index) -> reaction_recipe& {
-                auto it = self.topology().graph().vertices().begin();
-                std::advance(it, index);
-                return self.separateVertex(it);
+            .def("separate_vertex", [](PyRecipe &self, const std::size_t index) {
+                auto it = self.get().topology().graph().vertices().begin() + index;
+                self.get().separateVertex(it.persistent_index());
+                return self;
             }, R"topdoc(
                 Removes all edges from the topology's graph that contain the vertex corresponding to the provided index.
 
@@ -215,13 +275,13 @@ void exportTopologies(py::module &m) {
                 :param index: The vertex' index with respect to `topology.get_graph().get_vertices()`
                 :return: a reference to this recipe to enable a fluent interface
             )topdoc", "index"_a, py::return_value_policy::reference_internal)
-            .def("separate_vertex", [](reaction_recipe &self, const vertex &v) {
-                return self.separateVertex(v);
+            .def("separate_vertex", [](PyRecipe &self, const PyVertex &v) {
+                return self.get().separateVertex(v.get());
             }, py::return_value_policy::reference_internal)
-            .def("separate_vertex", [](reaction_recipe &self, const vertex::vertex_ptr &v) {
-                return self.separateVertex(v);
-            }, py::return_value_policy::reference_internal)
-            .def("change_topology_type", &reaction_recipe::changeTopologyType, R"topdoc(
+            .def("change_topology_type", [](PyRecipe &self, std::string type) {
+                self.get().changeTopologyType(type);
+                return self;
+                }, R"topdoc(
                 Changes the type of the topology to the given type, potentially changing its structural and spatial
                 topology reactions.
 
@@ -229,175 +289,213 @@ void exportTopologies(py::module &m) {
                 :return: a reference to this recipe to enable a fluent interface
             )topdoc","type"_a, py::return_value_policy::reference_internal);
 
-    py::class_<topology>(m, "Topology")
-            .def("get_graph", [](topology &self) -> const graph & { return self.graph(); }, rvp::reference_internal)
-            .def_property_readonly("graph", [](topology &self) -> const graph & { return self.graph(); },
-                                   rvp::reference_internal)
-            .def("get_n_particles", [](const topology &self) { return self.graph().nVertices(); })
-            .def_property_readonly("n_particles", [](const topology &self) { return self.graph().nVertices(); })
-            .def_property_readonly("particles", [](const topology &self) -> std::vector<rpy::ReadableParticle> {
-                auto particles = self.fetchParticles();
+    py::class_<PyTopology>(m, "Topology")
+            .def("get_graph", [](PyTopology &self) -> PyGraph { return {&self}; })
+            .def_property_readonly("graph", [](PyTopology &self) { return PyGraph{&self}; })
+            .def("get_n_particles", [](const PyTopology &self) { return self.get()->graph().nVertices(); })
+            .def_property_readonly("n_particles", [](const PyTopology &self) { return self.get()->graph().nVertices(); })
+            .def_property_readonly("particles", [](const PyTopology &self) -> std::vector<rpy::ReadableParticle> {
+                auto particles = self.get()->fetchParticles();
                 std::vector<rpy::ReadableParticle> readableOutput;
                 readableOutput.reserve(particles.size());
                 std::transform(std::begin(particles), std::end(particles), std::back_inserter(readableOutput),
-                               [&self](const auto &particle) { return rpy::ReadableParticle(particle, self.context());});
+                               [&self](const auto &particle) { return rpy::ReadableParticle(particle, self.get()->context());});
                 return readableOutput;
                 }, R"topdoc(
                 Retrieves the particles contained in this topology.
 
                 :return: the particles
             )topdoc")
-            .def_property_readonly("type", [](const topology &self) {
-                return self.context().topologyRegistry().nameOf(self.type());
+            .def_property_readonly("type", [](const PyTopology &self) {
+                return self->context().topologyRegistry().nameOf(self->type());
             })
-            .def("particle_type_of_vertex", [](const topology &self, const vertex &v) -> std::string {
-                return self.context().particleTypes().nameOf(self.particleForVertex(v).type());
+            .def("particle_type_of_vertex", [](const PyTopology &self, const PyVertex &v) -> std::string {
+                return self->context().particleTypes().nameOf(self->particleForVertex(v.get()).type());
             }, R"topdoc(
                Retrieves the particle type corresponding to a vertex.
 
                :param v: the vertex
                :return: the particle type
             )topdoc")
-            .def("position_of_vertex", [](const topology &self, const vertex &v) -> readdy::Vec3 {
-                return self.particleForVertex(v).pos();
+            .def("position_of_vertex", [](const PyTopology &self, const PyVertex &v) -> readdy::Vec3 {
+                return self->particleForVertex(v.get()).pos();
             }, R"topdoc(
                 Retrieves the position of the particle corresponding to the given vertex.
 
                 :param v: the vertex
                 :return: the position
             )topdoc")
-            .def("particle_id_of_vertex", [](const topology &self, const vertex &v) -> readdy::ParticleId {
-                return self.particleForVertex(v).id();
+            .def("particle_id_of_vertex", [](const PyTopology &self, const PyVertex &v) -> readdy::ParticleId {
+                return self->particleForVertex(v.get()).id();
             }, R"topdoc(
                 Retrieves the id of the particle corresponding to the given vertex.
 
                 :param v: the vertex
                 :return: the id
             )topdoc")
-            .def("particle_type_of_vertex", [](const topology &self, const vertex::vertex_ptr &v) -> std::string {
-                return self.context().particleTypes().nameOf(self.particleForVertex(v).type());
-            }, R"topdoc(
-               Retrieves the particle type corresponding to a vertex.
+            .def("configure", [](PyTopology &self) {
+                self->configure();
+            })
+            .def("validate", [](PyTopology &self) {
+                self->validate();
+            });
 
-               :param v: the vertex
-               :return: the particle type
-            )topdoc")
-            .def("position_of_vertex", [](const topology &self, const vertex::vertex_ptr &v) -> readdy::Vec3 {
-                return self.particleForVertex(v).pos();
-            }, R"topdoc(
-                Retrieves the position of the particle corresponding to the given vertex.
-
-                :param v: the vertex
-                :return: the position
-            )topdoc")
-            .def("particle_id_of_vertex", [](const topology &self, const vertex::vertex_ptr &v) -> readdy::ParticleId {
-                return self.particleForVertex(v).id();
-            }, R"topdoc(
-                Retrieves the id of the particle corresponding to the given vertex.
-
-                :param v: the vertex
-                :return: the id
-            )topdoc")
-
-            .def("configure", &topology::configure)
-            .def("validate", &topology::validate);
-
-    py::class_<graph>(m, "Graph")
-            .def("get_vertices", [](graph &self) -> graph::vertex_list { return self.vertices(); },
+    py::class_<PyGraph>(m, "Graph")
+            .def("get_vertices", [](PyGraph &self) {
+                std::vector<PyVertex> vertices;
+                vertices.reserve(self->nVertices());
+                for(auto it = self->vertices().begin(); it != self->vertices().end(); ++it) {
+                    vertices.emplace_back(self.top(), it.persistent_index());
+                }
+                return vertices;
+            },
             R"topdoc(
                 Yields a list of vertices contained in this graph.
 
                 :return: list of vertices
             )topdoc",rvp::copy)
-            .def_property_readonly("vertices", [](graph &self) -> graph::vertex_list { return self.vertices(); },
+            .def_property_readonly("vertices", [](PyGraph &self) {
+                   std::vector<PyVertex> vertices;
+                   vertices.reserve(self->nVertices());
+                   for(auto it = self->vertices().begin(); it != self->vertices().end(); ++it) {
+                       vertices.emplace_back(self.top(), it.persistent_index());
+                   }
+                   return vertices;
+            },
             R"topdoc(
                 Yields a list of vertices contained in this graph.
 
                 :return: list of vertices
             )topdoc", rvp::copy)
-            .def("get_edges", [](graph &self) -> std::vector<graph::Edge> {
-                return self.edges();
+            .def("get_edges", [](PyGraph &self) -> std::vector<PyEdge> {
+                std::vector<PyEdge> edges;
+                edges.reserve(self->nEdges());
+                for(const auto& edge : self->edges()) {
+                    edges.emplace_back(PyVertex(self.top(), std::get<0>(edge)), PyVertex(self.top(), std::get<1>(edge)));
+                }
+                return edges;
             }, R"topdoc(
                 Yields a list of edges contained in this graph.
 
                 :return: list of edges
             )topdoc")
-            .def_property_readonly("edges", [](graph &self) -> std::vector<graph::Edge> {
-                return self.edges();
+            .def_property_readonly("edges", [](PyGraph &self) {
+                std::vector<PyEdge> edges;
+                edges.reserve(self->nEdges());
+                for(const auto& edge : self->edges()) {
+                    edges.emplace_back(PyVertex(self.top(), std::get<0>(edge)), PyVertex(self.top(), std::get<1>(edge)));
+                }
+                return edges;
             }, R"topdoc(
                 Yields a list of edges contained in this graph.
 
                 :return: list of edges
             )topdoc")
-            .def("has_edge", [](graph &self, std::size_t v1, std::size_t v2) {
-                if (v1 < self.vertices().size() && v2 < self.vertices().size()) {
-                    if(v2 < v1) std::swap(v1, v2);
-                    auto it1 = self.vertices().begin();
-                    std::advance(it1, v1);
-                    auto it2 = it1;
-                    std::advance(it2, v2-v1);
-                    return self.hasEdge(std::make_tuple(it1, it2));
-                } else {
+            .def("has_edge", [](PyGraph &self, std::size_t v1, std::size_t v2) {
+                if(v1 >= self->nVertices() || v2 >= self->nVertices()) {
                     throw std::invalid_argument("vertices out of bounds!");
                 }
+                auto pix1 = (self->begin() + v1).persistent_index();
+                auto pix2 = (self->begin() + v2).persistent_index();
+                return self->containsEdge(pix1, pix2);
             }, "vertex_index_1"_a, "vertex_index_2"_a)
-            .def("add_edge", [](graph &self, std::size_t v1, std::size_t v2) {
-                if (v1 < self.vertices().size() && v2 < self.vertices().size()) {
-                    if(v2 < v1) std::swap(v1, v2);
-                    auto it1 = self.vertices().begin();
-                    std::advance(it1, v1);
-                    auto it2 = it1;
-                    std::advance(it2, v2-v1);
-                    self.addEdge(it1, it2);
-                } else {
+            .def("add_edge", [](PyGraph &self, std::size_t v1, std::size_t v2) {
+                if(v1 >= self->nVertices() || v2 >= self->nVertices()) {
                     throw std::invalid_argument("vertices out of bounds!");
                 }
+                auto pix1 = (self->begin() + v1).persistent_index();
+                auto pix2 = (self->begin() + v2).persistent_index();
+                self.top()->get()->addEdge(pix1, pix2);
             }, "vertex_index_1"_a, "vertex_index_2"_a)
-            .def("add_edge", [](graph &self, const vertex &v1, const vertex &v2) {
-                auto it1 = std::find(self.vertices().begin(), self.vertices().end(), v1);
-                auto it2 = std::find(self.vertices().begin(), self.vertices().end(), v2);
-                if(it1 != self.vertices().end() && it2 != self.vertices().end()) {
-                    self.addEdge(it1, it2);
-                }
-            }, py::return_value_policy::reference_internal)
-            .def("add_edge", [](graph &self, const vertex::vertex_ptr &v1, const vertex::vertex_ptr &v2) {
-                return self.addEdge(v1, v2);
+            .def("add_edge", [](PyGraph &self, const PyVertex &v1, const PyVertex &v2) {
+                self.top()->get()->addEdge(v1.get(), v2.get());
             });
 
-    py::class_<vertex::vertex_ptr>(m, "VertexPointer")
-            .def("get", [](const vertex::vertex_ptr &edge) -> const vertex & { return *edge; }, rvp::reference_internal);
+    py::class_<NeighborIteratorState>(m, "iterator", pybind11::module_local())
+            .def("__iter__", [](NeighborIteratorState &s) -> NeighborIteratorState& { return s; })
+            .def("__next__", [](NeighborIteratorState &s) -> PyVertex {
+                if (!s.first_or_done)
+                    ++s.it;
+                else
+                    s.first_or_done = false;
+                if (s.it == s.end) {
+                    s.first_or_done = true;
+                    throw py::stop_iteration();
+                }
+                return PyVertex(s.top, *s.it);
+            });
 
-    py::class_<vertex>(m, "Vertex")
-            .def("particle_type", [](const vertex &self) { return self.particleType(); }, R"topdoc(
+    py::class_<PyVertex>(m, "Vertex")
+            .def("particle_type", [](const PyVertex &self) {
+                auto typeId = self.top()->get()->particleForVertex(self.get()).type();
+                return self.top()->get()->context().particleTypes().nameOf(typeId);
+            }, R"topdoc(
                 Yields this vertex' corresponding particle type.
 
                 :return: the particle type
             )topdoc", rvp::copy)
-            .def("neighbors", [](const vertex &self) { return self.neighbors(); }, R"topdoc(
+            .def("neighbors", [](PyVertex &self) {
+                const auto& v = self.top()->get()->graph().vertices().at(self.get());
+                std::vector<PyVertex> neighbors;
+                neighbors.reserve(v.neighbors().size());
+                for(auto pix : v.neighbors()) {
+                    neighbors.emplace_back(self.top(), pix);
+                }
+                return neighbors;
+            }, R"topdoc(
                 Yields this vertex' neighbors.
 
                 :return: this vertex' neighbors.
             )topdoc", rvp::copy)
-            .def("__len__", [](const vertex &v) { return v.neighbors().size(); }, R"topdoc(
+            .def("__len__", [](const PyVertex &self) {
+                const auto& v = self.top()->get()->graph().vertices().at(self.get());
+                return v.neighbors().size();
+            }, R"topdoc(
                 Yields the number of neighbors of this vertex.
 
                 :return: number of neighbors
             )topdoc", rvp::copy)
-            .def("__iter__", [](vertex &self) {
-                return py::make_iterator(self.neighbors().begin(), self.neighbors().end());
+            .def("__iter__", [](PyVertex &self) {
+                return NeighborIteratorState{
+                    .top = self.top(),
+                    .it = self.top()->get()->graph().vertices().at(self.get()).neighbors().begin(),
+                    .end = self.top()->get()->graph().vertices().at(self.get()).neighbors().end(),
+                    .first_or_done = true
+                };
             }, R"topdoc(
                 Yields an iterator over this vertex' neighbors.
 
                 :return: the iterator
             )topdoc", py::keep_alive<0, 1>())
-            .def_property_readonly("particle_index", [](const vertex &v) -> std::size_t{
-                return v.particleIndex;
+            .def_property_readonly("particle_index", [](const PyVertex &v) -> std::size_t{
+                return v.top()->get()->graph().vertices().at(v.get())->particleIndex;
             }, R"topdoc(
                 Retrieves the particle index for this particle vertex.
 
                 :return: the corresponding particle's index
             )topdoc")
-            .def("__repr__", [](const vertex &v) {
-                return readdy::model::_internal::util::to_string(v);
+            .def_property("data", [](const PyVertex& v) {
+                return v.top()->get()->graph().vertices().at(v.get())->data;
+            }, [](PyVertex &v, const std::string& s) {
+                v.top()->get()->setVertexData(v.get(), s);
+            })
+            .def("__repr__", [](const PyVertex &v) {
+                const auto &vertex = v.top()->get()->graph().vertices().at(v.get());
+                std::stringstream ss;
+
+                ss << "Vertex[";
+                ss << "particleIndex=" << vertex->particleIndex << ", ";
+                ss << "data=" << vertex->data << ", ";
+                ss << "neighbors=[";
+                for(std::size_t i = 0; i < vertex.neighbors().size(); ++i) {
+                    if (i > 0) ss << ", ";
+                    auto pix = vertex.neighbors().at(i);
+                    auto pit = v.top()->get()->graph().vertices().begin_persistent() + pix.value;
+                    auto ait = v.top()->get()->graph().vertices().persistent_to_active_iterator(pit);
+                    ss << std::distance(v.top()->get()->graph().vertices().begin(), ait);
+                }
+                ss << "]]";
+
+                return ss.str();
             });
 }
