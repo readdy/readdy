@@ -130,10 +130,6 @@ public:
 
             for (std::size_t i = 0; i < 3; ++i) {
                 _nDomainsPerAxis[i] = static_cast<unsigned int>(std::max(1., std::floor(boxSize[i] / minDomainWidths[i])));
-                // todo uneven number of domains OK?
-                //if (_nDomainsPerAxis[i] % 2 != 0) {
-                //    // synchronization scheme is inefficient when we have to wait
-                //}
             }
             _nUsedRanks = _nDomainsPerAxis[0] * _nDomainsPerAxis[1] * _nDomainsPerAxis[2] + 1;
 

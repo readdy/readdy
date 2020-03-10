@@ -168,9 +168,9 @@ void MPIStateModel::distributeParticles(const std::vector<Particle> &ps) {
     if (_domain->isIdleRank()) {
         return;
     }
-    util::Timer timer("MPIStateModel::addParticles");
+    util::Timer timer("MPIStateModel::distributeParticles");
     // todo use MPI_Scatter
-    if (_domain->isMasterRank() == 0) {
+    if (_domain->isMasterRank()) {
         std::unordered_map<int, std::vector<util::ParticlePOD>> targetParticleMap;
         for (const auto &particle : ps) {
             int target = _domain->rankOfPosition(particle.pos());
@@ -260,32 +260,36 @@ void MPIStateModel::synchronizeWithNeighbors() {
     std::vector<util::ParticlePOD> other; // particles received by other workers
     for (unsigned int coord=0; coord<3; coord++) { // east-west, north-south, up-down
         const auto idx = domain()->myIdx()[coord];
+        // such that received particles do not transit across more than one domain
         if (idx % 2 == 0) {
             // send + then receive +
-            {
-                std::array<std::size_t, 3> otherDirection {1,1,1}; // (1,1,1) is self
-                otherDirection.at(coord) += 1;
-                util::sendThenReceive(otherDirection, own, other, *domain(), commUsedRanks());
-            }
+            std::array<std::size_t, 3> otherDirection {1,1,1}; // (1,1,1) is self
+            otherDirection.at(coord) += 1;
+            auto received1 = util::sendThenReceive(otherDirection, own, other, *domain(), commUsedRanks());
+
             // send - then receive -
-            {
-                std::array<std::size_t, 3> otherDirection {1,1,1};
-                otherDirection.at(coord) -= 1;
-                util::sendThenReceive(otherDirection, own, other, *domain(), commUsedRanks());
-            }
+            otherDirection = {1,1,1};
+            otherDirection.at(coord) -= 1;
+            auto received2 = util::sendThenReceive(otherDirection, own, other, *domain(), commUsedRanks());
+
+            // after data from both directions have been received we can merge them with other,
+            // so they will be communicated along other coordinates
+            other.insert(other.end(), received1.begin(), received1.end());
+            other.insert(other.end(), received2.begin(), received2.end());
         } else {
             // receive - then send -
-            {
-                std::array<std::size_t, 3> otherDirection {1,1,1};
-                otherDirection.at(coord) -= 1;
-                util::receiveThenSend(otherDirection, own, other, *domain(), commUsedRanks());
-            }
+
+            std::array<std::size_t, 3> otherDirection {1,1,1};
+            otherDirection.at(coord) -= 1;
+            auto received1 = util::receiveThenSend(otherDirection, own, other, *domain(), commUsedRanks());
+
             // receive + then send +
-            {
-                std::array<std::size_t, 3> otherDirection {1,1,1};
-                otherDirection.at(coord) += 1;
-                util::receiveThenSend(otherDirection, own, other, *domain(), commUsedRanks());
-            }
+            otherDirection = {1,1,1};
+            otherDirection.at(coord) += 1;
+            auto received2 = util::receiveThenSend(otherDirection, own, other, *domain(), commUsedRanks());
+
+            other.insert(other.end(), received1.begin(), received1.end());
+            other.insert(other.end(), received2.begin(), received2.end());
         }
     }
 
