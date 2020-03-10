@@ -48,6 +48,7 @@
 #include <utility>
 #include "PyFunction.h"
 #include "../common/ReadableParticle.h"
+#include "PyTopology.h"
 
 namespace py = pybind11;
 
@@ -55,87 +56,6 @@ namespace top = readdy::model::top;
 namespace reactions = readdy::model::top::reactions;
 
 using rvp = py::return_value_policy;
-
-class PyTopology {
-public:
-    explicit PyTopology(readdy::model::top::GraphTopology* topology) : topology(topology) {}
-
-    readdy::model::top::GraphTopology* get() {
-        return topology;
-    }
-
-    [[nodiscard]] const readdy::model::top::GraphTopology* get() const {
-        return topology;
-    }
-
-    auto *operator->() {return topology;}
-    const auto*operator->() const {return topology;}
-private:
-    readdy::model::top::GraphTopology* topology;
-};
-
-class PyGraph {
-public:
-    PyGraph(PyTopology* parent) : parent(parent) {}
-
-    [[nodiscard]] const top::Graph* get() const {
-        return &parent->get()->graph();
-    }
-
-    const auto *operator->() const { return get(); }
-
-    PyTopology* top() { return parent; }
-private:
-    PyTopology* parent;
-};
-
-class PyVertex {
-public:
-    using VertexRef = readdy::model::top::Graph::PersistentVertexIndex;
-    PyVertex() : parent(nullptr), vertex({0}) {}
-    PyVertex(PyTopology* parent, VertexRef vertex) : parent(parent), vertex(vertex) {}
-
-    [[nodiscard]] VertexRef get() const { return vertex; }
-    PyTopology* top() { return parent; }
-
-    const PyTopology* top() const {return parent;}
-private:
-    PyTopology* parent;
-    VertexRef vertex;
-};
-
-class PyEdge {
-public:
-    using EdgeRef = readdy::model::top::Graph::Edge;
-
-    PyEdge() : vertices(std::make_tuple(PyVertex(), PyVertex())) {}
-
-    PyEdge(PyVertex v1, PyVertex v2) : vertices(std::make_tuple(v1, v2)) {}
-
-    PyEdge(std::tuple<PyVertex, PyVertex> edge) : vertices(std::move(edge)) {}
-
-    EdgeRef get() {
-        return std::make_tuple(std::get<0>(vertices).get(), std::get<1>(vertices).get());
-    }
-
-private:
-    std::tuple<PyVertex, PyVertex> vertices;
-};
-
-class PyRecipe {
-public:
-    PyRecipe(PyTopology top) : top(top), recipe(std::make_shared<reactions::Recipe>(*top.get())) {}
-
-    [[nodiscard]] reactions::Recipe& get() { return *recipe; }
-
-    reactions::Recipe* operator->() {
-        return recipe.get();
-    }
-
-private:
-    PyTopology top;
-    std::shared_ptr<reactions::Recipe> recipe;
-};
 
 struct reaction_function_sink {
     std::shared_ptr<py::function> f;
@@ -146,7 +66,8 @@ struct reaction_function_sink {
         PyTopology pyTop (&top);
         auto t = py::cast(&pyTop, py::return_value_policy::automatic_reference);
         auto rv = (*f)(*(t.cast<PyTopology*>()));
-        return rv.cast<reactions::StructuralTopologyReaction::reaction_function::result_type>();
+        auto pyrecipy = rv.cast<PyRecipe>();
+        return pyrecipy.get();
     }
 };
 
@@ -192,6 +113,15 @@ void exportTopologies(py::module &m) {
             )topdoc", "topology"_a)
             .def("change_particle_type", [](PyRecipe &self, const PyVertex &v, const std::string &to) {
                 self.get().changeParticleType(v.get(), to);
+                return self;
+            }, py::return_value_policy::reference_internal)
+            .def("change_particle_type", [](PyRecipe &self, std::size_t v, const std::string &to) {
+                if (v >= self->topology().graph().nVertices()) {
+                    throw std::invalid_argument("vertex index out of bounds (" + std::to_string(v) + " >= "
+                                                + std::to_string(self->topology().graph().nVertices()) + ")");
+                }
+                auto pix = (self->topology().graph().vertices().begin() + v).persistent_index();
+                self.get().changeParticleType(pix, to);
                 return self;
             }, py::return_value_policy::reference_internal)
             .def("change_particle_position", [](PyRecipe &self, const PyVertex &v, readdy::Vec3 pos) {
