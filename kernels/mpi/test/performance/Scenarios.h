@@ -49,7 +49,8 @@ public:
         return _name;
     }
 
-    virtual Json run() = 0;
+    // bool decides if observables are calculated, adds to computation time
+    virtual Json run(bool doObserve) = 0;
 };
 
 class DistributeParticles : public Scenario {
@@ -58,7 +59,7 @@ public:
             "DistributeParticles",
             "Distribute particles and gather them again") {}
 
-    Json run() override {
+    Json run(bool doObserve) override {
         int worldSize;
         MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
         std::size_t nWorkers = worldSize - 1;
