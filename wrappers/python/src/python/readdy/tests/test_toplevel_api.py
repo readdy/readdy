@@ -58,8 +58,8 @@ class TestTopLevelAPI(ReaDDyTestCase):
     def test_temperature(self):
         rds = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.])
         rds.temperature = 293.
-        np.testing.assert_equal(rds.temperature, 293. * rds.temperature_unit)
-        np.testing.assert_almost_equal(rds.kbt.magnitude, (2.4361374086224026 * rds.energy_unit).magnitude)
+        np.testing.assert_almost_equal(rds.temperature.magnitude, (293. * rds.temperature_unit).magnitude)
+        np.testing.assert_almost_equal(rds.kbt.magnitude, (2.4361374086224026 * rds.energy_unit).magnitude, decimal=4)
 
     def test_room_temperature_kbt(self):
         rds = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.], room_temperature_diffusion=True)
@@ -110,17 +110,17 @@ class TestTopLevelAPI(ReaDDyTestCase):
     def test_change_temperature(self):
         rds1 = readdy.ReactionDiffusionSystem(box_size=[10., 10., 10.], temperature=300.)
         rds1.temperature = 293.
-        self.assertEqual(rds1.temperature.magnitude, 293.)
+        np.testing.assert_almost_equal(rds1.temperature.magnitude, 293.)
 
         rds2 = readdy.ReactionDiffusionSystem(box_size=[10., 10., 10.], temperature=300.,
                                               unit_system={'energy_unit': 'joule'})
         rds2.temperature = 293.
-        self.assertEqual(rds2.temperature.magnitude, 293.)
+        np.testing.assert_almost_equal(rds2.temperature.magnitude, 293.)
 
         rds3 = readdy.ReactionDiffusionSystem(box_size=[10., 10., 10.], temperature=30. * readdy.units.kelvin,
                                               unit_system={'energy_unit': 'joule'})
         rds3.temperature = 293.
-        self.assertEqual(rds3.temperature.magnitude, 293.)
+        np.testing.assert_almost_equal(rds3.temperature.magnitude, 293.)
 
         rds4 = readdy.ReactionDiffusionSystem(box_size=[10., 10., 10.], temperature=300.)
         rds4.temperature = 293. * readdy.units.rankine
