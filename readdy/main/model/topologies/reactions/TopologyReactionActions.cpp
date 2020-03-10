@@ -52,30 +52,22 @@ namespace readdy::model::top::reactions::actions {
 
 TopologyReactionAction::TopologyReactionAction(GraphTopology *const topology) : topology(topology){ }
 
-ChangeParticleType::ChangeParticleType(GraphTopology *const topology, const vertex &v,
-                                       const ParticleTypeId &type_to)
+ChangeParticleType::ChangeParticleType(GraphTopology *const topology, Graph::PersistentVertexIndex v,
+                                       ParticleTypeId type_to)
         : TopologyReactionAction(topology), _vertex(v), type_to(type_to), previous_type(type_to){}
 
-AddEdge::AddEdge(GraphTopology *const topology, edge edge)
+AddEdge::AddEdge(GraphTopology *const topology, Graph::Edge edge)
         : TopologyReactionAction(topology), label_edge_(std::move(edge)) {}
 
 void AddEdge::execute() {
-    topology->graph().addEdge(label_edge_);
+    topology->addEdge(label_edge_);
 }
 
-void AddEdge::undo() {
-    topology->graph().removeEdge(label_edge_);
-}
-
-RemoveEdge::RemoveEdge(GraphTopology *const topology, edge edge)
+RemoveEdge::RemoveEdge(GraphTopology *const topology, Graph::Edge edge)
         : TopologyReactionAction(topology), label_edge_(std::move(edge)) {}
 
 void RemoveEdge::execute() {
-    topology->graph().removeEdge(label_edge_);
-}
-
-void RemoveEdge::undo() {
-    topology->graph().addEdge(label_edge_);
+    topology->removeEdge(label_edge_);
 }
 
 
@@ -83,17 +75,13 @@ ChangeTopologyType::ChangeTopologyType(GraphTopology *topology, TopologyTypeId n
         : TopologyReactionAction(topology), _newType(newType){}
 
 void ChangeTopologyType::execute() {
-    _prevType = topology->type();
     topology->type() = _newType;
 }
 
-void ChangeTopologyType::undo() {
-    topology->type() = _prevType;
-}
-
-ChangeParticlePosition::ChangeParticlePosition(GraphTopology *topology, const vertex &v, Vec3 posTo)
+ChangeParticlePosition::ChangeParticlePosition(GraphTopology *topology, Graph::PersistentVertexIndex v, Vec3 posTo)
         : TopologyReactionAction(topology), _vertex(v), _posTo(posTo) {}
 
-AppendParticle::AppendParticle(GraphTopology *topology, std::vector<vertex> neighbors, ParticleTypeId type, Vec3 pos)
+AppendParticle::AppendParticle(GraphTopology *topology, std::vector<Graph::PersistentVertexIndex> neighbors,
+                               ParticleTypeId type, Vec3 pos)
         : TopologyReactionAction(topology), neighbors(std::move(neighbors)), type(type), pos(pos) {}
 }

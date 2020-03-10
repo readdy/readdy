@@ -76,19 +76,19 @@ public:
 
     virtual ~Particle() = default;
 
-    const Vec3 &pos() const {
+    [[nodiscard]] const Vec3 &pos() const {
         return _pos;
     }
 
-    Vec3 &pos() {
-        return _pos;
+    void setPos(Vec3 pos) {
+        _pos = pos;
     }
 
-    const ParticleTypeId &type() const {
+    [[nodiscard]] ParticleTypeId type() const {
         return _type;
     }
 
-    const ParticleId id() const {
+    [[nodiscard]] ParticleId id() const {
         return _id;
     }
 
@@ -115,11 +115,6 @@ protected:
     ParticleId _id;
 
     static std::atomic<ParticleId> idCounter;
-};
-
-class TopologyParticle : public Particle {
-public:
-    using Particle::Particle;
 };
 
 }

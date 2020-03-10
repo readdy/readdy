@@ -45,7 +45,8 @@
 #pragma once
 
 #include <memory>
-#include <readdy/model/topologies/graph/Graph.h>
+
+#include "../common.h"
 
 namespace readdy::model::top {
 class GraphTopology;
@@ -53,20 +54,6 @@ namespace reactions::actions {
 
 class TopologyReactionAction {
 public:
-    /**
-     * the GraphTopology's graph
-     */
-    using topology_graph = graph::Graph;
-
-    /**
-     * an edge in the graph
-     */
-    using edge = topology_graph::Edge;
-    /**
-     * a vertex reference of the graph
-     */
-    using vertex = topology_graph::vertex_ref;
-
     /**
      * creates a new topology reaction action w.r.t. the given topology
      * @param topology the topology
@@ -103,11 +90,6 @@ public:
      */
     virtual void execute() = 0;
 
-    /**
-     * base method for undoing the action
-     */
-    virtual void undo() = 0;
-
 protected:
     /**
      * a pointer to the topology on which this action should be executed
@@ -126,13 +108,13 @@ public:
      * @param v the vertex pointing to the particle whose type should be changed
      * @param type_to the target type
      */
-    ChangeParticleType(GraphTopology *topology, const vertex &v, const ParticleTypeId &type_to);
+    ChangeParticleType(GraphTopology *topology, Graph::PersistentVertexIndex v, ParticleTypeId type_to);
 
 protected:
     /**
      * a reference to the vertex
      */
-    vertex _vertex;
+    Graph::PersistentVertexIndex _vertex;
     /**
      * the target type
      */
@@ -145,19 +127,20 @@ protected:
 
 class ChangeParticlePosition : public TopologyReactionAction {
 public:
-    ChangeParticlePosition(GraphTopology *topology, const vertex &v, Vec3 posTo);
+    ChangeParticlePosition(GraphTopology *topology, Graph::PersistentVertexIndex v, Vec3 posTo);
 
 protected:
-    vertex _vertex;
+    Graph::PersistentVertexIndex _vertex;
     Vec3 _posTo;
 };
 
 class AppendParticle : public TopologyReactionAction {
 public:
-    AppendParticle(GraphTopology *topology, std::vector<vertex> neighbors, ParticleTypeId type, Vec3 pos);
+    AppendParticle(GraphTopology *topology, std::vector<Graph::PersistentVertexIndex> neighbors,
+                   ParticleTypeId type, Vec3 pos);
 
 protected:
-    std::vector<vertex> neighbors;
+    std::vector<Graph::PersistentVertexIndex> neighbors;
     ParticleTypeId type;
     Vec3 pos;
 };
@@ -169,23 +152,15 @@ public:
      * @param topology the topology
      * @param edge the edge to introduce
      */
-    AddEdge(GraphTopology *topology, edge edge);
+    AddEdge(GraphTopology *topology, Graph::Edge edge);
 
-    /**
-     * do!
-     */
     void execute() override;
-
-    /**
-     * undo!
-     */
-    void undo() override;
 
 private:
     /**
      * the edge to introduce
      */
-    edge label_edge_;
+    top::Graph::Edge label_edge_;
 };
 
 class RemoveEdge : public TopologyReactionAction {
@@ -195,23 +170,18 @@ public:
      * @param topology the topology
      * @param edge the edge to remove
      */
-    RemoveEdge(GraphTopology *topology, edge edge);
+    RemoveEdge(GraphTopology *topology, Graph::Edge edge);
 
     /**
      * execute me
      */
     void execute() override;
 
-    /**
-     * oops, undo
-     */
-    void undo() override;
-
 private:
     /**
      * the edge to remove
      */
-    edge label_edge_;
+    top::Graph::Edge label_edge_;
 };
 
 class ChangeTopologyType : public TopologyReactionAction {
@@ -228,20 +198,8 @@ public:
      */
     void execute() override;
 
-    /**
-     * oops, undo
-     */
-    void undo() override;
-
 private:
-    /**
-     * the target type
-     */
     TopologyTypeId _newType;
-    /**
-     * the previous type, stored for undo
-     */
-    TopologyTypeId _prevType{0};
 };
 
 }

@@ -82,7 +82,7 @@ public:
 
     ~EvaluatePotentialAction() override = default;
 
-    virtual scalar perform(const Topology *topology) = 0;
+    virtual scalar perform(const GraphTopology *topology) = 0;
 };
 
 }

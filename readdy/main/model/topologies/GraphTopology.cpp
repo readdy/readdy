@@ -46,37 +46,15 @@
 #include <sstream>
 
 #include <readdy/model/Kernel.h>
+#include <readdy/model/topologies/GraphTopology.h>
+
 
 namespace readdy::model::top {
 
-GraphTopology::GraphTopology(TopologyTypeId type,
-                             const Topology::particle_indices &particles, const types_vec &types,
+GraphTopology::GraphTopology(TopologyTypeId type, Graph graph,
                              const model::Context& context, const model::StateModel *stateModel)
-        : Topology(particles), _context(context), _topology_type(type), _stateModel(stateModel), _cumulativeRate(0) {
-    assert(types.size() == particles.size());
-    std::size_t i = 0;
-    for (auto itTypes = types.begin(); itTypes != types.end(); ++itTypes, ++i) {
-        graph().addVertex(i, *itTypes);
-    }
-}
-
-GraphTopology::GraphTopology(TopologyTypeId type,
-                             Topology::particle_indices &&particles, graph::Graph &&graph,
-                             const model::Context& context, const model::StateModel *stateModel)
-        : Topology(std::move(particles)), _context(context), graph_(std::move(graph)), _topology_type(type),
-          _stateModel(stateModel), _cumulativeRate(0) {
-    if (GraphTopology::graph().vertices().size() != GraphTopology::getNParticles()) {
-        log::error("tried creating graph topology with {} vertices but only {} particles.",
-                   GraphTopology::graph().vertices().size(), GraphTopology::getNParticles());
-        throw std::invalid_argument("the number of particles and the number of vertices should match when creating"
-                                            "a graph in this way!");
-    }
-    std::size_t idx = 0;
-    auto &vertices = GraphTopology::graph().vertices();
-    for (auto &vertex : vertices) {
-        vertex.particleIndex = idx++;
-    }
-}
+        : Topology(), _context(context), _topology_type(type), _stateModel(stateModel), _cumulativeRate(0),
+        _graph(std::move(graph)) {}
 
 void GraphTopology::configure() {
     validate();
@@ -91,15 +69,14 @@ void GraphTopology::configure() {
 
     const auto &config = context().topologyRegistry().potentialConfiguration();
 
-    graph_.findNTuples([&](const topology_graph::Edge &tuple) {
-        auto v1 = std::get<0>(tuple);
-        auto v2 = std::get<1>(tuple);
-        auto it = config.pairPotentials.find(
-                std::tie(v1->particleType(), v2->particleType()));
+    _graph.findNTuples([&](const Graph::Edge &tuple) {
+        auto [i1, i2] = tuple;
+        const auto& v1 = _graph.vertices().at(i1);
+        const auto& v2 = _graph.vertices().at(i2);
+        auto it = config.pairPotentials.find(std::make_tuple(typeOf(v1), typeOf(v2)));
         if (it != config.pairPotentials.end()) {
             for (const auto &cfg : it->second) {
-                bonds[cfg.type].emplace_back(v1->particleIndex, v2->particleIndex,
-                                             cfg.forceConstant, cfg.length);
+                bonds[cfg.type].emplace_back(v1->particleIndex, v2->particleIndex, cfg.forceConstant, cfg.length);
             }
         } else {
             std::ostringstream ss;
@@ -112,24 +89,25 @@ void GraphTopology::configure() {
 
             throw std::invalid_argument(ss.str());
         }
-    }, [&](const topology_graph::path_len_2 &triple) {
-        const auto &v1 = std::get<0>(triple);
-        const auto &v2 = std::get<1>(triple);
-        const auto &v3 = std::get<2>(triple);
-        auto it = config.anglePotentials.find(std::tie(v1->particleType(), v2->particleType(), v3->particleType()));
+    }, [&](const Graph::Path3 &triple) {
+        auto [i1, i2, i3] = triple;
+        const auto& v1 = _graph.vertices().at(i1);
+        const auto& v2 = _graph.vertices().at(i2);
+        const auto& v3 = _graph.vertices().at(i3);
+        auto it = config.anglePotentials.find(std::make_tuple(typeOf(v1), typeOf(v2), typeOf(v3)));
         if (it != config.anglePotentials.end()) {
             for (const auto &cfg : it->second) {
                 angles[cfg.type].emplace_back(v1->particleIndex, v2->particleIndex, v3->particleIndex,
                                               cfg.forceConstant, cfg.equilibriumAngle);
             }
         }
-    }, [&](const topology_graph::path_len_3 &quadruple) {
-        const auto &v1 = std::get<0>(quadruple);
-        const auto &v2 = std::get<1>(quadruple);
-        const auto &v3 = std::get<2>(quadruple);
-        const auto &v4 = std::get<3>(quadruple);
-        auto it = config.torsionPotentials.find(
-                std::tie(v1->particleType(), v2->particleType(), v3->particleType(), v4->particleType()));
+    }, [&](const Graph::Path4 &quadruple) {
+        auto [i1, i2, i3, i4] = quadruple;
+        const auto& v1 = _graph.vertices().at(i1);
+        const auto& v2 = _graph.vertices().at(i2);
+        const auto& v3 = _graph.vertices().at(i3);
+        const auto& v4 = _graph.vertices().at(i4);
+        auto it = config.torsionPotentials.find(std::make_tuple(typeOf(v1), typeOf(v2), typeOf(v3), typeOf(v4)));
         if (it != config.torsionPotentials.end()) {
             for (const auto &cfg : it->second) {
                 dihedrals[cfg.type].emplace_back(v1->particleIndex, v2->particleIndex, v3->particleIndex,
@@ -141,7 +119,7 @@ void GraphTopology::configure() {
     for (const auto &bond : bonds) {
         switch (bond.first) {
             case api::BondType::HARMONIC: {
-                addBondedPotential(std::make_unique<harmonic_bond>(bond.second));
+                addBondedPotential(std::make_unique<HarmonicBond>(bond.second));
                 break;
             }
         }
@@ -149,7 +127,7 @@ void GraphTopology::configure() {
     for (const auto &angle : angles) {
         switch (angle.first) {
             case api::AngleType::HARMONIC: {
-                addAnglePotential(std::make_unique<harmonic_angle>(angle.second));
+                addAnglePotential(std::make_unique<HarmonicAngle>(angle.second));
                 break;
             }
         }
@@ -157,7 +135,7 @@ void GraphTopology::configure() {
     for (const auto &dih : dihedrals) {
         switch (dih.first) {
             case api::TorsionType::COS_DIHEDRAL: {
-                addTorsionPotential(std::make_unique<cos_dihedral>(dih.second));
+                addTorsionPotential(std::make_unique<CosineDihedral>(dih.second));
                 break;
             }
         }
@@ -165,30 +143,15 @@ void GraphTopology::configure() {
 }
 
 std::vector<GraphTopology> GraphTopology::connectedComponents() {
-    auto subGraphs = graph_.connectedComponentsDestructive();
-    // generate particles list for each sub graph, update sub graph's vertices to obey this new list
-    std::vector<particle_indices> subGraphsParticles;
-    {
-        subGraphsParticles.reserve(subGraphs.size());
-        for (auto &subGraph : subGraphs) {
-            subGraphsParticles.emplace_back();
-            auto &subParticles = subGraphsParticles.back();
-            subParticles.reserve(subGraph.vertices().size());
-            for (auto &vertex : subGraph.vertices()) {
-                subParticles.emplace_back(particles.at(vertex.particleIndex));
-                vertex.particleIndex = subParticles.size() - 1;
-            }
-        }
-    }
+    auto subGraphs = _graph.connectedComponents();
     // create actual GraphTopology objects from graphs and particles
     std::vector<GraphTopology> components;
     {
         components.reserve(subGraphs.size());
         {
             auto it_graphs = subGraphs.begin();
-            auto it_particles = subGraphsParticles.begin();
-            for(; it_graphs != subGraphs.end(); ++it_graphs, ++it_particles) {
-                components.emplace_back(_topology_type, std::move(*it_particles), std::move(*it_graphs), _context, _stateModel);
+            for(; it_graphs != subGraphs.end(); ++it_graphs) {
+                components.emplace_back(_topology_type, std::move(*it_graphs), _context, _stateModel);
             }
         }
     }
@@ -196,102 +159,105 @@ std::vector<GraphTopology> GraphTopology::connectedComponents() {
 }
 
 bool GraphTopology::isNormalParticle(const Kernel &k) const {
-    if(getNParticles() == 1){
-        const auto particle_type = k.stateModel().getParticleType(particles.front());
-        const auto& info = k.context().particleTypes().infoOf(particle_type);
-        return info.flavor == particleflavor::NORMAL;
+    if(_graph.nVertices() == 1){
+        for(const auto &v : _graph.vertices()) {
+            if (!v.deactivated()) {
+                const auto particle_type = typeOf(v);
+                const auto& info = k.context().particleTypes().infoOf(particle_type);
+                return info.flavor == particleflavor::NORMAL;
+            }
+        }
+        throw std::logic_error("graph has 1 vertex but only tombstone entries");
     }
     return false;
 }
 
-void GraphTopology::appendParticle(particle_index newParticle, ParticleTypeId newParticleType,
-                                   topology_graph::vertex_ref counterPart, ParticleTypeId counterPartType) {
-
-    // this is costly so I am just assuming that the counter part iterator (vertex_ref) belongs to `this` topology...
-    //if(std::find(graph().vertices().begin(), graph().vertices().end(), *counterPart) == graph().vertices().end()) {
-    //    throw std::logic_error("Could not locate graph vertex iterator within vertices list.");
-    //}
-
-    particles.push_back(newParticle);
-    graph().addVertex(particles.size() - 1, newParticleType);
-
-    auto newParticleIt = std::prev(graph().vertices().end());
-    auto otherParticleIt = counterPart;
-    otherParticleIt->particleType() = counterPartType;
-
-    graph().addEdge(newParticleIt, otherParticleIt);
-
-    counterPart->particleType() = counterPartType;
+typename Graph::PersistentVertexIndex GraphTopology::appendParticle(VertexData::ParticleIndex newParticle,
+                                                                    Graph::PersistentVertexIndex counterPart) {
+    auto itNew = _graph.addVertex(VertexData{
+            .particleIndex = newParticle,
+    });
+    _graph.addEdge(counterPart, itNew);
+    return itNew;
 }
 
-void GraphTopology::appendParticle(particle_index newParticle, ParticleTypeId newParticleType,
-                                   particle_index counterPart, ParticleTypeId counterPartType) {
-    auto it = std::find(particles.begin(), particles.end(), counterPart);
-    if(it != particles.end()) {
-        auto counterPartIdx = std::distance(particles.begin(), it);
 
-        particles.push_back(newParticle);
-        graph().addVertex(particles.size() - 1, newParticleType);
-
-        auto newParticleIt = std::prev(graph().vertices().end());
-        auto otherParticleIt = std::next(graph().vertices().begin(), counterPartIdx);
-        otherParticleIt->particleType() = counterPartType;
-
-        graph().addEdge(newParticleIt, otherParticleIt);
-    } else {
-        log::critical("counterPart {} was not contained in topology, this should not happen", counterPart);
-    }
+typename Graph::PersistentVertexIndex GraphTopology::appendParticle(VertexData::ParticleIndex newParticle,
+                                                                    VertexData::ParticleIndex counterPart) {
+    auto it = vertexIteratorForParticle(counterPart);
+    return appendParticle(newParticle, _graph.vertices().persistentIndex(it));
 }
 
-void GraphTopology::appendTopology(GraphTopology &other, Topology::particle_index otherParticle,
-                                   ParticleTypeId otherNewParticleType, Topology::particle_index thisParticle,
-                                   ParticleTypeId thisNewParticleType, TopologyTypeId newType) {
+typename Graph::PersistentVertexIndex GraphTopology::appendTopology(const GraphTopology &other,
+        VertexData::ParticleIndex otherParticle, VertexData::ParticleIndex thisParticle, TopologyTypeId newType) {
     auto &otherGraph = other.graph();
 
     if(!otherGraph.vertices().empty()) {
 
-        auto &thisGraph = graph();
-
-        auto former_begin = otherGraph.vertices().begin();
-        auto former_n_vertices = particles.size();
-
-        auto other_vert = other.vertexForParticle(otherParticle);
-        auto this_vert = vertexForParticle(thisParticle);
-
-        // insert other particles into this' particles
-        particles.insert(std::end(particles), std::begin(other.particles), std::end(other.particles));
-        // move other graph into this graph
-        thisGraph.vertices().splice(thisGraph.vertices().end(), otherGraph.vertices());
-
-        for (auto it = former_begin; it != graph().vertices().end(); ++it) {
-            it->particleIndex = former_n_vertices;
-            ++former_n_vertices;
+        auto it = vertexIteratorForParticle(thisParticle);
+        if(it == _graph.end_persistent()) {
+            throw std::invalid_argument(fmt::format("Could not find particle {} in this topology.", thisParticle));
         }
 
-        // add edge between the formerly two topologies
-        graph().addEdge(other_vert, this_vert);
-        other_vert->particleType() = otherNewParticleType;
-        this_vert->particleType() = thisNewParticleType;
+        auto itOther = other.vertexIteratorForParticle(otherParticle);
+        if(itOther == other.graph().end_persistent()) {
+            throw std::invalid_argument(fmt::format("Could not find particle {} in other topology.", otherParticle));
+        }
+        auto ix = _graph.vertices().persistentIndex(it);
+        auto otherIx = otherGraph.vertices().persistentIndex(itOther);
 
+        auto mapping = _graph.append(otherGraph, ix, otherIx);
         _topology_type = newType;
+        return mapping.at(otherIx.value);
     } else {
         log::warn("encountered empty topology which was deactivated={}", other.isDeactivated());
     }
+    throw std::invalid_argument("Tried to append an empty topology!");
 }
 
 std::vector<Particle> GraphTopology::fetchParticles() const {
     if(!_stateModel) {
-        throw std::logic_error("Cannot fetch particles if no state model was provided!");
+        throw std::logic_error("Cannot fetch particles if state model was not provided!");
     }
     return _stateModel->getParticlesForTopology(*this);
 }
 
-Particle GraphTopology::particleForVertex(const vertex &vertex) const {
-    if(!_stateModel) {
-        throw std::logic_error("Cannot fetch particle if not state model was provided!");
-    }
-    return _stateModel->getParticleForIndex(getParticles().at(vertex.particleIndex));
+typename Graph::VertexList::persistent_iterator GraphTopology::vertexIteratorForParticle(VertexData::ParticleIndex index) {
+    return std::find_if(_graph.vertices().begin_persistent(), _graph.vertices().end_persistent(), [index](const auto& v) {
+        return !v.deactivated() && v->particleIndex == index;
+    });
 }
 
+typename Graph::VertexList::const_persistent_iterator GraphTopology::vertexIteratorForParticle(VertexData::ParticleIndex index) const {
+    return std::find_if(_graph.vertices().begin_persistent(), _graph.vertices().end_persistent(), [index](const auto& v) {
+        return !v.deactivated() && v->particleIndex == index;
+    });
+}
+
+Particle GraphTopology::particleForVertex(const Vertex &vertex) const {
+    if(!_stateModel) {
+        throw std::logic_error("Cannot fetch particle if state model was not provided!");
+    }
+    return _stateModel->getParticleForIndex(vertex->particleIndex);
+}
+
+ParticleTypeId GraphTopology::typeOf(Graph::PersistentVertexIndex vertex) const {
+    return typeOf(graph().vertices().at(vertex));
+}
+
+ParticleTypeId GraphTopology::typeOf(const Vertex &v) const {
+    return particleForVertex(v).type();
+}
+
+std::vector<VertexData::ParticleIndex> GraphTopology::particleIndices() const {
+    std::vector<VertexData::ParticleIndex> result;
+    result.reserve(_graph.vertices().size());
+    for(const auto& v : _graph.vertices()) {
+        if(!v.deactivated()) {
+            result.push_back(v->particleIndex);
+        }
+    }
+    return result;
+}
 
 }

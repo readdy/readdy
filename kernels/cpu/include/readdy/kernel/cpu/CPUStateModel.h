@@ -89,9 +89,9 @@ public:
         _neighborListCellRadius = nl.cll_radius;
     }
 
-    const std::vector<Vec3> getParticlePositions() const override;
+    std::vector<Vec3> getParticlePositions() const override;
 
-    const std::vector<particle_type> getParticles() const override;
+    std::vector<particle_type> getParticles() const override;
 
     void initializeNeighborList(scalar interactionDistance) override {
         _neighborList->setUp(interactionDistance, _neighborListCellRadius);
@@ -146,8 +146,8 @@ public:
         return _observableData.time;
     };
 
-    scalar &time() override {
-        return _observableData.time;
+    void setTime(scalar t) override {
+        _observableData.time = t;
     };
 
     data_type const *const getParticleData() const {
@@ -172,7 +172,7 @@ public:
     };
 
     readdy::model::top::GraphTopology *const
-    addTopology(TopologyTypeId type, const std::vector<readdy::model::TopologyParticle> &particles) override;
+    addTopology(TopologyTypeId type, const std::vector<readdy::model::Particle> &particles) override;
 
     std::vector<readdy::model::reactions::ReactionRecord> &reactionRecords() {
         return _observableData.reactionRecords;
@@ -242,10 +242,6 @@ public:
 
     std::vector<readdy::model::top::GraphTopology *> getTopologies() override;
 
-    const readdy::model::top::GraphTopology *getTopologyForParticle(readdy::model::top::Topology::particle_index particle) const override;
-
-    readdy::model::top::GraphTopology *getTopologyForParticle(readdy::model::top::Topology::particle_index particle) override;
-
     void toDenseParticleIndices(std::vector<std::size_t>::iterator begin,
                                 std::vector<std::size_t>::iterator end) const override;
 
@@ -258,7 +254,6 @@ private:
     std::reference_wrapper<data_type> _data;
     std::unique_ptr<neighbor_list> _neighborList;
     neighbor_list::cell_radius_type _neighborListCellRadius {1};
-    std::unique_ptr<readdy::signals::scoped_connection> _reorderConnection;
     std::reference_wrapper<const readdy::model::top::TopologyActionFactory> _topologyActionFactory;
     topologies_vec _topologies{};
 };

@@ -45,11 +45,12 @@
 
 #pragma once
 
+#include <graphs/graphs.h>
+
+#include "common.h"
 #include "Topology.h"
-#include "graph/Graph.h"
 #include "reactions/reactions.h"
 #include "TopologyRegistry.h"
-#include "Utils.h"
 
 namespace readdy::model {
 class StateModel;
@@ -57,36 +58,17 @@ namespace top {
 
 class GraphTopology : public Topology {
 public:
-
-    using topology_graph = graph::Graph;
-    using topology_reaction_rate = scalar;
-    using topology_reaction_rates = std::vector<topology_reaction_rate>;
-    using types_vec = std::vector<ParticleTypeId>;
-    using vertex = graph::Vertex;
+    using ReactionRate = scalar;
+    using ReactionRates = std::vector<ReactionRate>;
 
     /**
      * Creates a new graph topology. An internal graph object will be created with vertices corresponding to the
      * particles handed in.
      * @param type the type
-     * @param particles the particles
-     * @param types particle's types
      * @param context the kernel's context
      * @param stateModel the kernel's state model
      */
-    GraphTopology(TopologyTypeId type, const particle_indices &particles, const types_vec &types,
-                  const model::Context &context, const StateModel *stateModel);
-
-    /**
-     * Will create a graph topology out of an already existing graph and a list of particles, where the i-th vertex
-     * of the graph will map to the i-th particles in the particles list.
-     * @param type the type
-     * @param particles the particles list
-     * @param graph the already existing graph
-     * @param context the kernel's context
-     * @param stateModel the kernels state model
-     */
-    GraphTopology(TopologyTypeId type, particle_indices &&particles, topology_graph &&graph,
-                  const model::Context &context, const StateModel *stateModel);
+    GraphTopology(TopologyTypeId type, Graph graph, const model::Context &context, const StateModel *stateModel);
 
     ~GraphTopology() override = default;
 
@@ -98,15 +80,51 @@ public:
 
     GraphTopology &operator=(const GraphTopology &) = delete;
 
-    topology_graph &graph() {
-        return graph_;
+    void setGraph(Graph graph) {
+        _graph = std::move(graph);
     }
 
-    const topology_graph &graph() const {
-        return graph_;
+    [[nodiscard]] const Graph &graph() const {
+        return _graph;
+    }
+
+    [[nodiscard]] auto containsEdge(Graph::Edge edge) const {
+        return _graph.containsEdge(std::forward<Graph::Edge>(edge));
+    }
+
+    [[nodiscard]] auto containsEdge(Graph::PersistentVertexIndex ix1, Graph::PersistentVertexIndex ix2) const {
+        return _graph.containsEdge(ix1, ix2);
+    }
+
+    void addEdge(Graph::iterator it1, Graph::iterator it2) {
+        _graph.addEdge(it1, it2);
+    }
+
+    void addEdge(Graph::Edge edge) {
+        _graph.addEdge(edge);
+    }
+
+    void addEdge(Graph::PersistentVertexIndex ix1, Graph::PersistentVertexIndex ix2) {
+        _graph.addEdge(ix1, ix2);
+    }
+
+    void removeEdge(Graph::iterator it1, Graph::iterator it2) {
+        _graph.removeEdge(it1, it2);
+    }
+
+    void removeEdge(Graph::Edge edge) {
+        _graph.removeEdge(edge);
+    }
+
+    void removeEdge(Graph::PersistentVertexIndex ix1, Graph::PersistentVertexIndex ix2) {
+        _graph.removeEdge(ix1, ix2);
     }
 
     void configure();
+
+    [[nodiscard]] ParticleTypeId typeOf(Graph::PersistentVertexIndex vertex) const;
+
+    [[nodiscard]] ParticleTypeId typeOf(const Vertex &v) const;
 
     void updateReactionRates(const TopologyRegistry::StructuralReactionCollection &reactions) {
         _cumulativeRate = 0;
@@ -121,14 +139,26 @@ public:
 
     void validate() {
         if (!graph().isConnected()) {
-            throw std::invalid_argument(fmt::format("The graph is not connected! (GEXF representation: {})",
-                                                    util::to_gexf(graph())));
+            throw std::invalid_argument(fmt::format("The graph is not connected! (GEXF representation: {})", _graph.gexf()));
+        }
+        for(const auto [i1, i2] : graph().edges()) {
+            if(graph().vertices().at(i1).deactivated()) {
+                throw std::logic_error(fmt::format("Edge ({} -- {}) points to deactivated vertex {}!", i1, i2, i1));
+            }
+            if(graph().vertices().at(i2).deactivated()) {
+                throw std::logic_error(fmt::format("Edge ({} -- {}) points to deactivated vertex {}!", i1, i2, i2));
+            }
+        }
+        for(const auto& p : fetchParticles()) {
+            if(context().particleTypes().infoOf(p.type()).flavor != particleflavor::TOPOLOGY) {
+                throw std::runtime_error(fmt::format("Topology contains particle {} which is not a topology particle!", p));
+            }
         }
     }
 
     std::vector<GraphTopology> connectedComponents();
 
-    const bool isDeactivated() const {
+    [[nodiscard]] bool isDeactivated() const {
         return deactivated;
     }
 
@@ -136,22 +166,36 @@ public:
         deactivated = true;
     }
 
-    bool isNormalParticle(const Kernel &k) const;
+    [[nodiscard]] bool isNormalParticle(const Kernel &k) const;
 
-    const topology_reaction_rate cumulativeRate() const {
+    [[nodiscard]] ReactionRate cumulativeRate() const {
         return _cumulativeRate;
     }
 
-    void appendParticle(particle_index newParticle, ParticleTypeId newParticleType,
-                        particle_index counterPart, ParticleTypeId counterPartType);
+    [[nodiscard]] typename Graph::VertexList::persistent_iterator vertexIteratorForParticle(VertexData::ParticleIndex index);
 
-    void appendParticle(particle_index newParticle, ParticleTypeId newParticleType,
-                        topology_graph::vertex_ref counterPart, ParticleTypeId counterPartType);
+    [[nodiscard]] typename Graph::VertexList::const_persistent_iterator vertexIteratorForParticle(VertexData::ParticleIndex index) const;
 
-    void appendTopology(GraphTopology &other, particle_index otherParticle, ParticleTypeId otherNewParticleType,
-                        particle_index thisParticle, ParticleTypeId thisNewParticleType, TopologyTypeId newType);
+    [[nodiscard]] Graph::PersistentVertexIndex vertexIndexForParticle(VertexData::ParticleIndex index) const {
+        auto it = vertexIteratorForParticle(index);
+        if(it == _graph.vertices().end_persistent()) {
+            throw std::invalid_argument(fmt::format("Particle {} not contained in graph", index));
+        }
+        return {static_cast<std::size_t>(std::distance(_graph.vertices().begin_persistent(), it))};
+    }
 
-    const TopologyTypeId &type() const {
+    typename Graph::PersistentVertexIndex appendParticle(VertexData::ParticleIndex newParticle,
+                                                         Graph::PersistentVertexIndex counterPart);
+
+    typename Graph::PersistentVertexIndex appendParticle(VertexData::ParticleIndex newParticle,
+                                               VertexData::ParticleIndex counterPart);
+
+    typename Graph::PersistentVertexIndex appendTopology(const GraphTopology &other, VertexData::ParticleIndex otherParticle,
+                                               VertexData::ParticleIndex thisParticle, TopologyTypeId newType);
+
+    [[nodiscard]] std::vector<VertexData::ParticleIndex> particleIndices() const;
+
+    [[nodiscard]] TopologyTypeId type() const {
         return _topology_type;
     }
 
@@ -159,40 +203,40 @@ public:
         return _topology_type;
     }
 
-    topology_graph::vertex_ref vertexForParticle(particle_index particle) {
-        auto it = std::find(particles.begin(), particles.end(), particle);
-        if (it != particles.end()) {
-            return std::next(graph_.vertices().begin(), std::distance(particles.begin(), it));
-        }
-        return graph_.vertices().end();
-    }
-
-    const topology_reaction_rates &rates() const {
+    [[nodiscard]] const ReactionRates &rates() const {
         return _reaction_rates;
     }
 
-    const model::Context &context() const {
+    [[nodiscard]] const model::Context &context() const {
         return _context.get();
     }
 
-    std::vector<Particle> fetchParticles() const;
+    [[nodiscard]] std::vector<Particle> fetchParticles() const;
 
-    Particle particleForVertex(const vertex &vertex) const;
+    [[nodiscard]] Particle particleForVertex(const Vertex &vertex) const;
 
-    Particle particleForVertex(topology_graph::vertex_ref vertexRef) const {
-        return particleForVertex(*vertexRef);
+    [[nodiscard]] Particle particleForVertex(Graph::PersistentVertexIndex vertexRef) const {
+        return particleForVertex(_graph.vertices().at(vertexRef));
     }
 
-    topology_graph::vertex_ref toVertexRef(const vertex &vertex) {
-        return graph_.toRef(vertex);
+    void addEdgeBetweenParticles(std::size_t particleIndex1, std::size_t particleIndex2) {
+        addEdge(vertexIndexForParticle(particleIndex1), vertexIndexForParticle(particleIndex2));
+    }
+
+    [[nodiscard]] auto nParticles() const {
+        return _graph.nVertices();
+    }
+
+    void setVertexData(Graph::PersistentVertexIndex vix, const std::string &data) {
+        _graph.vertices().at(vix)->data = data;
     }
 
 protected:
-    topology_graph graph_;
+    Graph _graph;
     std::reference_wrapper<const model::Context> _context;
     const model::StateModel *_stateModel;
-    topology_reaction_rates _reaction_rates;
-    topology_reaction_rate _cumulativeRate{};
+    ReactionRates _reaction_rates;
+    ReactionRate _cumulativeRate{};
     TopologyTypeId _topology_type;
     bool deactivated{false};
 };

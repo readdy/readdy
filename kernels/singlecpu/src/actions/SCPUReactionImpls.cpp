@@ -616,12 +616,12 @@ std::pair<model::SCPUParticleData<model::Entry>::EntriesUpdate, scalar> SCPUDeta
                 // which is required for constructing the appropriate backward update
                 readdy::model::Particle p1(entry1.position() - reaction->weight2() * distance * n3,
                                            reaction->products()[1]);
-                bcs::fixPosition(p1.pos(), box, pbc);
+                p1.setPos(bcs::applyPBC(p1.pos(), box, pbc));
                 newParticles.emplace_back(p1);
 
                 readdy::model::Particle p2(entry1.position() + reaction->weight1() * distance * n3,
                                            reaction->products()[0]);
-                bcs::fixPosition(p2.pos(), box, pbc);
+                p2.setPos(bcs::applyPBC(p2.pos(), box, pbc));
 
                 newParticles.emplace_back(p2);
                 decayedEntries.push_back(event.idx1);
@@ -658,7 +658,7 @@ std::pair<model::SCPUParticleData<model::Entry>::EntriesUpdate, scalar> SCPUDeta
 
                 // do not re-use entries for proper construction of backward update
                 readdy::model::Particle particle(position, reaction->products()[0]);
-                bcs::fixPosition(particle.pos(), box, pbc);
+                particle.setPos(bcs::applyPBC(particle.pos(), box, pbc));
 
                 newParticles.emplace_back(particle);
                 decayedEntries.push_back(event.idx1);

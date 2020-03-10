@@ -63,36 +63,17 @@ namespace reactions {
 
 /**
  * Struct holding the mode of the reaction:
- * - whether it should raise or roll back after a failed reaction
  * - whether it is expected to be still connected or if it should be "fissionated"
  */
 struct Mode {
     /**
-     * flag for raise or rollback
-     */
-    static constexpr std::size_t raise_or_rollback_flag = 0;
-    /**
      * flag for expect connected or create children
      */
-    static constexpr std::size_t expect_connected_or_create_children_flag = 1;
+    static constexpr std::size_t expect_connected_or_create_children_flag = 0;
     /**
      * bitset over the flags
      */
     std::bitset<2> flags;
-
-    /**
-     * activate the 'raise' mode, automatically disables 'rollback'
-     */
-    void raise() {
-        flags[raise_or_rollback_flag] = true;
-    }
-
-    /**
-     * activate the 'rollback' mode, automatically disables 'raise'
-     */
-    void rollback() {
-        flags[raise_or_rollback_flag] = false;
-    }
 
     /**
      * activate the 'expect_connected' mode, automatically disables 'create_children'
@@ -148,7 +129,7 @@ public:
      * @param topology the topology
      * @return the rate
      */
-    scalar rate(const GraphTopology &topology) const {
+    [[nodiscard]] scalar rate(const GraphTopology &topology) const {
         return _rate_function(topology);
     }
 
@@ -162,42 +143,10 @@ public:
     }
 
     /**
-     * checks if the reaction handler will raise if the post-reaction topology is invalid
-     * @return true if the reaction handler raises upon invalid topology
-     */
-    const bool raises_if_invalid() const {
-        return mode_.flags.test(mode::raise_or_rollback_flag);
-    }
-
-    /**
-     * instruct the reaction handler to raise if this reaction yields invalid topologies, counter part to
-     * `roll_back_if_invalid`
-     */
-    void raise_if_invalid() {
-        mode_.raise();
-    }
-
-    /**
-     * checks if the reaction handler triggers a roll-back if the post-reaction topology is invalid
-     * @return true in case a roll back should be performed
-     */
-    const bool rolls_back_if_invalid() const {
-        return !raises_if_invalid();
-    }
-
-    /**
-     * instruct the reaction handler to roll back if this reaction yields invalid topologies, counter part to
-     * `raise_if_invalid`
-     */
-    void roll_back_if_invalid() {
-        mode_.rollback();
-    }
-
-    /**
      * checks if this reaction is expected to yield connected topology graphs only
      * @return true if only connected topology graphs should be yielded
      */
-    const bool expects_connected_after_reaction() const {
+    [[nodiscard]] bool expects_connected_after_reaction() const {
         return mode_.flags.test(mode::expect_connected_or_create_children_flag);
     }
 
@@ -213,7 +162,7 @@ public:
      * checks if child topologies should be created if the topology reaction yielded more than one connected component
      * @return true if child topologies should be created
      */
-    const bool creates_child_topologies_after_reaction() const {
+    [[nodiscard]] bool creates_child_topologies_after_reaction() const {
         return !expects_connected_after_reaction();
     }
 
@@ -225,11 +174,11 @@ public:
         mode_.create_children();
     }
 
-    std::string_view name() const {
+    [[nodiscard]] std::string_view name() const {
         return _name;
     }
 
-    ReactionId id() const {
+    [[nodiscard]] ReactionId id() const {
         return _id;
     }
 

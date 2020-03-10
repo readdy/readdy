@@ -42,6 +42,7 @@
 #include <readdy/model/actions/UserDefinedAction.h>
 #include "ExportObservables.h"
 #include "../common/ReadableParticle.h"
+#include "PyTopology.h"
 
 namespace py = pybind11;
 
@@ -100,11 +101,20 @@ void exportApi(py::module &api) {
             .def("get_selected_kernel_type", &getSelectedKernelType)
             .def("get_particle_positions", &sim::getParticlePositions)
             .def("kernel_supports_topologies", &sim::kernelSupportsTopologies)
-            .def("create_topology_particle", &sim::createTopologyParticle, "type"_a, "position"_a)
+            .def("create_topology_particle", [](sim &self, const std::string& type, readdy::Vec3 pos) {
+                auto particle = self.createTopologyParticle(type, pos);
+                return rpy::ReadableParticle(particle, self.context());
+            }, "type"_a, "position"_a)
             .def("get_particles_for_topology", &sim::getParticlesForTopology, "topology"_a)
             .def("add_topology", [](sim &self, const std::string &name,
-                                    const std::vector<readdy::model::TopologyParticle> &particles) {
-                return self.addTopology(name, particles);
+                                    const std::vector<rpy::ReadableParticle> &particles) {
+                std::vector<readdy::model::Particle> rParticles;
+                rParticles.reserve(particles.size());
+                std::transform(particles.begin(), particles.end(), std::back_inserter(rParticles), [](const auto& p) {
+                    return p.toParticle();
+                });
+                auto* top = self.addTopology(name, rParticles);
+                return PyTopology(top);
             }, rvp::reference_internal, "type"_a, "particles"_a)
             .def("add_topology", [](sim &self, const std::string &name, const std::vector<std::string> &types,
                                     const py::array_t<readdy::scalar> &positions) {
@@ -114,16 +124,22 @@ void exportApi(py::module &api) {
                     throw std::invalid_argument(fmt::format("the number of particles ({}) must be equal to the "
                                                                     "number of types ({})!", nParticles, nTypes));
                 }
-                std::vector<readdy::model::TopologyParticle> particles;
+                std::vector<readdy::model::Particle> particles;
                 for(std::size_t i = 0; i < nParticles; ++i) {
                     auto type =  nTypes != 1 ? types[i] : types[0];
                     particles.push_back(self.createTopologyParticle(type, readdy::Vec3(positions.at(i, 0),
                                                                                        positions.at(i, 1),
                                                                                        positions.at(i, 2))));
                 }
-                return self.addTopology(name, particles);
+                return PyTopology(self.addTopology(name, particles));
             }, rvp::reference_internal)
-            .def_property_readonly("current_topologies", &sim::currentTopologies)
+            .def_property_readonly("current_topologies", [](sim &self) {
+                auto curr = self.currentTopologies();
+                std::vector<PyTopology> topologies;
+                topologies.reserve(curr.size());
+                std::transform(curr.begin(), curr.end(), std::back_inserter(topologies), [](auto* ptr) { return PyTopology(ptr); });
+                return topologies;
+            })
             .def_property_readonly("current_particles", [](const sim &self) {
                 std::vector<rpy::ReadableParticle> particles;
                 auto currentParticles = self.currentParticles();
@@ -142,7 +158,6 @@ void exportApi(py::module &api) {
                 self.run(steps, timeStep);
             }, "n_steps"_a, "time_step"_a);
     exportObservables(api, simulation);
-
 
     struct nodelete {
         void operator()(kp* ptr) const {}

@@ -90,9 +90,9 @@ public:
         particleData.clear();
     }
 
-    readdy::model::top::GraphTopology *const addTopology(TopologyTypeId type, const std::vector<readdy::model::TopologyParticle> &particles) override;
+    readdy::model::top::GraphTopology *const addTopology(TopologyTypeId type, const std::vector<readdy::model::Particle> &particles) override;
 
-    const std::vector<Vec3> getParticlePositions() const override;
+    std::vector<Vec3> getParticlePositions() const override;
 
     readdy::model::Particle getParticleForIndex(std::size_t index) const override {
         return particleData.getParticle(index);
@@ -114,8 +114,8 @@ public:
         return _observableData.time;
     }
 
-    scalar &time() override {
-        return _observableData.time;
+    void setTime(scalar t) override {
+        _observableData.time = t;
     }
 
     SCPUStateModel(const readdy::model::Context &context, const topology_action_factory *);
@@ -147,7 +147,7 @@ public:
         return neighborList.get();
     }
 
-    const std::vector<readdy::model::Particle> getParticles() const override;
+    std::vector<readdy::model::Particle> getParticles() const override;
 
     std::vector<readdy::model::reactions::ReactionRecord>& reactionRecords() {
         return _observableData.reactionRecords;
@@ -227,10 +227,6 @@ public:
                                 std::vector<std::size_t>::iterator end) const override;
 
     std::vector<readdy::model::top::GraphTopology*> getTopologies() override;
-
-    const readdy::model::top::GraphTopology *getTopologyForParticle(readdy::model::top::Topology::particle_index particle) const override;
-
-    readdy::model::top::GraphTopology *getTopologyForParticle(readdy::model::top::Topology::particle_index particle) override;
 
     void clear() override;
 

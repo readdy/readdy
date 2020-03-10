@@ -53,7 +53,7 @@ class ReadableParticle {
 public:
     ReadableParticle(const readdy::model::Particle &particle, const readdy::model::Context &context)
             : _pos(3, particle.pos().data.data()), _type(context.particleTypes().nameOf(particle.type())),
-              _id(particle.id()) {}
+              _id(particle.id()), _particle(particle) {}
 
     const auto &pos() const {
         return _pos;
@@ -67,10 +67,15 @@ public:
         return _id;
     }
 
+    const readdy::model::Particle &toParticle() const {
+        return _particle;
+    }
+
 private:
     np_array<readdy::scalar> _pos;
     std::string _type;
     readdy::ParticleId _id;
+    readdy::model::Particle _particle;
 };
 
 }
