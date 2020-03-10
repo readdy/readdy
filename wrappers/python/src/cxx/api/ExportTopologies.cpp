@@ -180,7 +180,7 @@ void exportTopologies(py::module &m) {
                 return self;
             }, py::return_value_policy::reference_internal)
             .def("remove_edge", [](PyRecipe &self, PyEdge edge) {
-                self->removeEdge(edge.get());
+                self->removeEdge(std::get<0>(edge).get(), std::get<1>(edge).get());
                 return self;
             }, R"topdoc(
                 Removes an edge between given vertices. Depending on the configuration of the topology reaction, this
@@ -408,6 +408,9 @@ void exportTopologies(py::module &m) {
                 return v.top()->get()->graph().vertices().at(v.get())->data;
             }, [](PyVertex &v, const std::string& s) {
                 v.top()->get()->setVertexData(v.get(), s);
+            })
+            .def("get", [](PyVertex &v) {
+                return PyVertex(v);
             })
             .def("__repr__", [](const PyVertex &v) {
                 const auto &vertex = v.top()->get()->graph().vertices().at(v.get());

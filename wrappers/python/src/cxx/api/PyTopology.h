@@ -53,23 +53,7 @@ class PyVertex {
         VertexRef vertex;
 };
 
-class PyEdge {
-        public:
-        using EdgeRef = readdy::model::top::Graph::Edge;
-
-        PyEdge() : vertices(std::make_tuple(PyVertex(), PyVertex())) {}
-
-        PyEdge(PyVertex v1, PyVertex v2) : vertices(std::make_tuple(v1, v2)) {}
-
-        PyEdge(std::tuple<PyVertex, PyVertex> edge) : vertices(std::move(edge)) {}
-
-        EdgeRef get() {
-            return std::make_tuple(std::get<0>(vertices).get(), std::get<1>(vertices).get());
-        }
-
-        private:
-        std::tuple<PyVertex, PyVertex> vertices;
-};
+using PyEdge = std::tuple<PyVertex, PyVertex>;
 
 class PyRecipe {
         public:

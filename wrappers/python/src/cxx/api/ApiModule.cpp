@@ -101,11 +101,19 @@ void exportApi(py::module &api) {
             .def("get_selected_kernel_type", &getSelectedKernelType)
             .def("get_particle_positions", &sim::getParticlePositions)
             .def("kernel_supports_topologies", &sim::kernelSupportsTopologies)
-            .def("create_topology_particle", &sim::createTopologyParticle, "type"_a, "position"_a)
+            .def("create_topology_particle", [](sim &self, const std::string& type, readdy::Vec3 pos) {
+                auto particle = self.createTopologyParticle(type, pos);
+                return rpy::ReadableParticle(particle, self.context());
+            }, "type"_a, "position"_a)
             .def("get_particles_for_topology", &sim::getParticlesForTopology, "topology"_a)
             .def("add_topology", [](sim &self, const std::string &name,
-                                    const std::vector<readdy::model::Particle> &particles) {
-                auto* top = self.addTopology(name, particles);
+                                    const std::vector<rpy::ReadableParticle> &particles) {
+                std::vector<readdy::model::Particle> rParticles;
+                rParticles.reserve(particles.size());
+                std::transform(particles.begin(), particles.end(), std::back_inserter(rParticles), [](const auto& p) {
+                    return p.toParticle();
+                });
+                auto* top = self.addTopology(name, rParticles);
                 return PyTopology(top);
             }, rvp::reference_internal, "type"_a, "particles"_a)
             .def("add_topology", [](sim &self, const std::string &name, const std::vector<std::string> &types,
