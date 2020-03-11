@@ -152,4 +152,37 @@ receiveThenSend(std::array<std::size_t, 3> otherDirection, std::vector<util::Par
     }
 }
 
+// specialized version for MPI, todo remove topology?
+template<typename ParticleContainer, typename EvaluateOnParticle, typename InteractionContainer,
+        typename EvaluateOnInteraction, typename TopologyContainer, typename EvaluateOnTopology>
+inline void evaluateOnContainers(ParticleContainer &&particleContainer,
+                                 const EvaluateOnParticle &evaluateOnParticle,
+                                 InteractionContainer &&interactionContainer,
+                                 const EvaluateOnInteraction &evaluateOnInteraction,
+                                 TopologyContainer &&topologyContainer,
+                                 const EvaluateOnTopology &evaluateOnTopology) {
+    // Evaluate on particles
+    {
+        std::for_each(particleContainer.begin(), particleContainer.end(), [&](auto &&entry){
+            if (!entry.deactivated) {
+                evaluateOnParticle(entry);
+            }
+        });
+    }
+
+    // Evaluate on interactions
+    {
+        interactionContainer.forAllPairs(evaluateOnInteraction);
+    }
+
+    // Evaluate on topologies
+    {
+        for (auto &&topology : topologyContainer) {
+            if (!topology->isDeactivated()) {
+                evaluateOnTopology(topology);
+            }
+        }
+    }
+}
+
 }

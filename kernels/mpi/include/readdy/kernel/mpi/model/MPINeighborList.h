@@ -65,6 +65,12 @@ public:
     CellLinkedList(Data &data, const readdy::model::Context &context)
             : _data(data), _context(context), _head{}, _list{}, _radius{0} {};
 
+    // todo this is not necessarily necessary
+    /**
+     * The resulting neighborhood of cells avoids double neighborliness (neighborhood is a directed graph)
+     * for core cells with core cells in the usual way i.e. cell1 has cell2 as neighbor if (cellIdx1 > cellIdx2),
+     * for neighborhood of core cells with halo cells the, core cell has the halo cell as neighbor but not vice versa.
+     */
     void setUp(const model::MPIDomain* domain) {
         if (!_isSetUp) {
             _domain = domain;
@@ -236,11 +242,19 @@ public:
         return _cellsInHalo;
     }
 
-    template<typename Function>
-    void forEachNeighbor(BoxIterator particle, const Function &function) const;
+    //template<typename Function>
+    //void forEachNeighbor(BoxIterator particle, const Function &function) const;
 
+    //template<typename Function>
+    //void forEachNeighbor(BoxIterator particle, std::size_t cell, const Function &function) const;
+
+    /**
+     * Function f is evaluated for each pair (e1, e2) of data entries that are potentially interacting,
+     * i.e. (e1, e2) live in neighboring cells or in the same cell.
+     * Identical permuted pairs (e2, e1) will not be counted.
+     **/
     template<typename Function>
-    void forEachNeighbor(BoxIterator particle, std::size_t cell, const Function &function) const;
+    void forAllPairs(const Function &f);
 
     bool cellEmpty(std::size_t index) const {
         return _head.at(index) == 0;
@@ -424,19 +438,45 @@ inline BoxIterator CellLinkedList::particlesEnd(std::size_t /*cellIndex*/) {
     return {*this, 0};
 }
 
-template<typename Function>
-inline void CellLinkedList::forEachNeighbor(BoxIterator particle, const Function &function) const {
-    forEachNeighbor(particle, cellOfParticle(*particle), function);
-}
+//template<typename Function>
+//inline void CellLinkedList::forEachNeighbor(BoxIterator particle, const Function &function) const {
+//    forEachNeighbor(particle, cellOfParticle(*particle), function);
+//}
+//
+//template<typename Function>
+//inline void CellLinkedList::forEachNeighbor(BoxIterator particle, std::size_t cell,
+//                                            const Function &function) const {
+//    std::for_each(std::next(particle, 1), particlesEnd(cell), [&function, particle](auto x) {
+//        function(x);
+//    });
+//    for (auto itNeighCell = neighborsBegin(cell); itNeighCell != neighborsEnd(cell); ++itNeighCell) {
+//        std::for_each(particlesBegin(*itNeighCell), particlesEnd(*itNeighCell), function);
+//    }
+//}
 
 template<typename Function>
-inline void CellLinkedList::forEachNeighbor(BoxIterator particle, std::size_t cell,
-                                            const Function &function) const {
-    std::for_each(std::next(particle, 1), particlesEnd(cell), [&function, particle](auto x) {
-        function(x);
-    });
-    for (auto itNeighCell = neighborsBegin(cell); itNeighCell != neighborsEnd(cell); ++itNeighCell) {
-        std::for_each(particlesBegin(*itNeighCell), particlesEnd(*itNeighCell), function);
+inline void CellLinkedList::forAllPairs(const Function &f) {
+    // due to the neighborhood structure, all pairs can be reached via the neighbors of core cells
+    // (might change, but the result would be the same)
+    auto &data = _data.get();
+    for (const auto &cellIdx : cellsInCore()) {
+        for (auto boxIt1 = particlesBegin(cellIdx); boxIt1 != particlesEnd(cellIdx); ++boxIt1) {
+            auto &entry1 = data.entry_at(*boxIt1);
+            // neighbors within cell
+            for (auto boxIt2 = particlesBegin(cellIdx); boxIt2 != particlesEnd(cellIdx); ++boxIt2) {
+                if (*boxIt1 < *boxIt2) { // avoid double counting of permuted pairs
+                    auto &entry2 = data.entry_at(*boxIt2);
+                    f(entry1, entry2);
+                }
+            }
+            // neighbors in adjacent cells
+            for (auto itNeighCell = neighborsBegin(cellIdx); itNeighCell != neighborsEnd(cellIdx); ++itNeighCell) {
+                for (auto boxIt2 = particlesBegin(*itNeighCell); boxIt2 != particlesEnd(*itNeighCell); ++boxIt2) {
+                    auto &entry2 = data.entry_at(*boxIt2);
+                    f(entry1, entry2);
+                }
+            }
+        }
     }
 }
 

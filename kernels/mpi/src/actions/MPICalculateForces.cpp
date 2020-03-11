@@ -105,7 +105,8 @@ void MPICalculateForces::performImpl() {
 
     auto noop = [](readdy::model::top::GraphTopology* topology){};
     std::vector<readdy::model::top::GraphTopology*> empty;
-    readdy::algo::evaluateOnContainers(data, order1eval, neighborList, order2eval, empty, noop);
+
+    readdy::kernel::mpi::util::evaluateOnContainers(data, order1eval, neighborList, order2eval, empty, noop);
 }
 
 template void MPICalculateForces::performImpl<true>();

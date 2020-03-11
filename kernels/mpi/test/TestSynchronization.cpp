@@ -37,16 +37,13 @@ using Json = nlohmann::json;
 using ParticlePODSet = std::unordered_set<rkmu::ParticlePOD, rkmu::HashPOD>;
 using ParticlePODPairSet = std::unordered_set<std::pair<rkmu::ParticlePOD,rkmu::ParticlePOD>, HashPODPair>;
 
-void check(const readdy::kernel::mpi::MPIKernel &kernel, std::size_t expNumberTotal, std::size_t expNumberResp,
-           const ParticlePODSet &expectedPODs = {}, const ParticlePODPairSet &expectedPODPairs = {}) {
+void check(const readdy::kernel::mpi::MPIKernel &kernel, std::size_t expNumberTotal,
+           const ParticlePODSet &expectedPODs, const ParticlePODPairSet &expectedPODPairs) {
     const auto data = kernel.getMPIKernelStateModel().getParticleData();
     if (kernel.domain()->isWorkerRank()) {
         auto n = std::count_if(data->begin(), data->end(),
                                [](const auto &entry) { return !entry.deactivated; });
         CHECK(n == expNumberTotal);
-        auto nResp = std::count_if(data->begin(), data->end(),
-                                   [](const auto &entry) { return !entry.deactivated and entry.responsible; });
-        CHECK(nResp == expNumberResp);
         for (const auto &entry : *data) {
             if (!entry.deactivated) {
                 if (entry.responsible) {
@@ -62,7 +59,7 @@ void check(const readdy::kernel::mpi::MPIKernel &kernel, std::size_t expNumberTo
     }
 }
 
-void synchronizeAndCheck(readdy::kernel::mpi::MPIKernel &kernel, std::size_t expNumberTotal, std::size_t expNumberResp,
+void synchronizeAndCheck(readdy::kernel::mpi::MPIKernel &kernel, std::size_t expNumberTotal,
                          const ParticlePODSet &expectedPODs, const ParticlePODPairSet &expectedPODPairs,
                          const std::vector<readdy::model::Particle> &allParticles) {
     WHEN("Particles are gathered again") {
@@ -77,12 +74,12 @@ void synchronizeAndCheck(readdy::kernel::mpi::MPIKernel &kernel, std::size_t exp
     WHEN("States are synchronized") {
         kernel.getMPIKernelStateModel().synchronizeWithNeighbors();
         THEN("each rank should see nPerWorkerTotal particles, nPerWorkerResp for which it is responsible") {
-            check(kernel, expNumberTotal, expNumberResp);
+            check(kernel, expNumberTotal, expectedPODs, expectedPODPairs);
         }
         AND_WHEN("States are synchronized again") {
             kernel.getMPIKernelStateModel().synchronizeWithNeighbors();
             THEN("We see the same result") {
-                check(kernel, expNumberTotal, expNumberResp);
+                check(kernel, expNumberTotal, expectedPODs, expectedPODPairs);
             }
         }
         AND_WHEN("Particles are gathered again") {
@@ -93,17 +90,35 @@ void synchronizeAndCheck(readdy::kernel::mpi::MPIKernel &kernel, std::size_t exp
                 }
             }
         }
-        THEN("Worker has the correct particles at the correct position, and the correct pairs") {
+        THEN("Worker has the correct particles at the correct position") {
             if (kernel.domain()->isWorkerRank()) {
-                ParticlePODSet actual;
-                for (const auto &entry : *(kernel.getMPIKernelStateModel().getParticleData())) {
-                    if (!entry.deactivated) {
-                        actual.emplace(entry);
+                {
+                    ParticlePODSet actual;
+                    for (const auto &entry : *(kernel.getMPIKernelStateModel().getParticleData())) {
+                        if (!entry.deactivated) {
+                            actual.emplace(entry);
+                        }
                     }
+                    CHECK(expectedPODs == actual);
                 }
-                CHECK(expectedPODs == actual);
 
-                // todo pairs
+            }
+        }
+        AND_WHEN("Neighborlist is filled") {
+            readdy::scalar willBeIgnored = 1.;
+            kernel.getMPIKernelStateModel().initializeNeighborList(willBeIgnored);
+            THEN("the correct pairs are in the neighborlist") {
+                ParticlePODPairSet actual;
+
+                auto emplacePair = [&actual](rkm::MPIEntry e1, rkm::MPIEntry e2) {
+                    actual.emplace(e1, e2);
+                };
+
+                const auto& nl = kernel.getMPIKernelStateModel().getNeighborList();
+                nl->forAllPairs(emplacePair);
+
+                // expected should be a subset of actual, todo ordered set, use hash for sorting
+                CHECK(std::includes(actual.begin(), actual.end(), expectedPODPairs.begin(), expectedPODPairs.end()));
             }
         }
     }
@@ -173,13 +188,13 @@ TEST_CASE("Synchronization of neighbors", "[mpi]") {
                 {2.5,  0., 0., idA},
         };
         std::size_t nPerWorkerTotal = 4; // todo extract this from the set, have another set for responsible particles
-        std::size_t nPerWorkerResp = 3;
+        //std::size_t nPerWorkerResp = 3;
 
         auto [expectedPODs, expectedPODPairs] = expectedParticlesAndPairs(kernel, particles);
 
         kernel.getMPIKernelStateModel().distributeParticles(particles);
 
-        synchronizeAndCheck(kernel, nPerWorkerTotal, nPerWorkerResp, expectedPODs, expectedPODPairs, particles);
+        synchronizeAndCheck(kernel, nPerWorkerTotal, expectedPODs, expectedPODPairs, particles);
     }
 
     GIVEN("Three domains in one periodic dimension with 15 particles") {
@@ -213,13 +228,12 @@ TEST_CASE("Synchronization of neighbors", "[mpi]") {
         };
 
         std::size_t nPerWorkerTotal = 7;
-        std::size_t nPerWorkerResp = 5;
 
         auto [expectedPODs, expectedPODPairs] = expectedParticlesAndPairs(kernel, particles);
 
         kernel.getMPIKernelStateModel().distributeParticles(particles);
 
-        synchronizeAndCheck(kernel, nPerWorkerTotal, nPerWorkerResp, expectedPODs, expectedPODPairs, particles);
+        synchronizeAndCheck(kernel, nPerWorkerTotal, expectedPODs, expectedPODPairs, particles);
     }
 
     // todo more cases with multiple domains in 2D and 3D, exclude certain cases should something be raised?
