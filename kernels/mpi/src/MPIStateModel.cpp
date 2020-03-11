@@ -272,13 +272,12 @@ void MPIStateModel::synchronizeWithNeighbors() {
             otherDirection.at(coord) -= 1;
             auto received2 = util::sendThenReceive(otherDirection, own, other, *domain(), commUsedRanks());
 
-            // after data from both directions have been received we can merge them with other,
+            // after data from both directions have been received we can merge them with `other`,
             // so they will be communicated along other coordinates
             other.insert(other.end(), received1.begin(), received1.end());
             other.insert(other.end(), received2.begin(), received2.end());
         } else {
             // receive - then send -
-
             std::array<std::size_t, 3> otherDirection {1,1,1};
             otherDirection.at(coord) -= 1;
             auto received1 = util::receiveThenSend(otherDirection, own, other, *domain(), commUsedRanks());

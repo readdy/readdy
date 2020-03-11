@@ -51,7 +51,7 @@
 #include <readdy/api/Simulation.h>
 #include <readdy/api/KernelConfiguration.h>
 
-using json = nlohmann::json;
+using Json = nlohmann::json;
 
 // todo delayed initialization isn't nice
 // todo fix this, however this requires kernel specific factory that sets the context and initializes
@@ -86,7 +86,7 @@ TEST_CASE("Test mpi kernel observe particle number", "[mpi]") {
             ctx.particleTypes().add("B", 1.);
             //ctx.reactions().add("fusili: A +(1.) A -> B", 0.1);
             ctx.potentials().addHarmonicRepulsion("A", "A", 10., 2.3);
-            json conf = {{"MPI", {{"dx", 4.9}, {"dy", 4.9}, {"dz", 4.9}}}};
+            Json conf = {{"MPI", {{"dx", 4.9}, {"dy", 4.9}, {"dz", 4.9}}}};
             ctx.kernelConfiguration() = conf.get<readdy::conf::Configuration>();
             const std::size_t nParticles = 100;
             for (std::size_t i = 0; i < nParticles; ++i) {
@@ -117,7 +117,7 @@ TEST_CASE("Test kernel configuration from context", "[mpi]") {
     ctx.particleTypes().add("A", 0.1);
     ctx.particleTypes().add("B", 0.1);
     ctx.potentials().addHarmonicRepulsion("B", "B", 1.0, 2.);
-    json conf = {{"MPI", {{"dx", 4.9}, {"dy", 4.9}, {"dz", 4.9}}}};
+    Json conf = {{"MPI", {{"dx", 4.9}, {"dy", 4.9}, {"dz", 4.9}}}};
     ctx.kernelConfiguration() = conf.get<readdy::conf::Configuration>();
 
     CHECK(ctx.kernelConfiguration().mpi.dx == Approx(4.9));
@@ -138,7 +138,7 @@ TEST_CASE("Test distribute particles and gather them again", "[mpi]") {
     ctx.particleTypes().add("A", 1.);
     ctx.particleTypes().add("B", 1.);
     ctx.potentials().addHarmonicRepulsion("A", "A", 10., 2.3);
-    json conf = {{"MPI", {{"dx", 4.9}, {"dy", 4.9}, {"dz", 4.9}}}};
+    Json conf = {{"MPI", {{"dx", 4.9}, {"dy", 4.9}, {"dz", 4.9}}}};
     ctx.kernelConfiguration() = conf.get<readdy::conf::Configuration>();
 
     readdy::kernel::mpi::MPIKernel kernel(ctx); // this also initializes domains

@@ -48,7 +48,7 @@
 #include <fstream>
 #include "Scenarios.h"
 
-using json = nlohmann::json;
+using Json = nlohmann::json;
 namespace perf = readdy::kernel::mpi::performance;
 
 int main(int argc, char **argv) {
