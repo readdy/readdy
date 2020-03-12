@@ -38,6 +38,8 @@
  * Although this holds much valuable information for communicating amongst processes,
  * MPIDomain makes no calls to the MPI library, which allows for intensive testing/debugging without the MPI context.
  *
+ * todo consider MPI_Cart_create and built-int neighborhood collectives
+ *
  * @file MPIDomain.h
  * @brief Spatial setup of MPI domains
  * @author chrisfroe
@@ -126,13 +128,13 @@ public:
                 minDomainWidths[0], minDomainWidths[1], minDomainWidths[2]);
 
         if (worldSize >= 2) {
-            int coord = 0;
 
             for (std::size_t i = 0; i < 3; ++i) {
                 _nDomainsPerAxis[i] = static_cast<unsigned int>(std::max(1., std::floor(boxSize[i] / minDomainWidths[i])));
             }
             _nUsedRanks = _nDomainsPerAxis[0] * _nDomainsPerAxis[1] * _nDomainsPerAxis[2] + 1;
 
+            unsigned int coord = 0;
             while (_nUsedRanks > worldSize) {
                 // try to increase size of domains (round robbing), to decrease usedRanks
                 minDomainWidths[coord] = 1.5 * minDomainWidths[coord];
@@ -218,12 +220,12 @@ public:
         }
     }
 
-    int rankOfPosition(const Vec3 &pos) const {
+    [[nodiscard]] int rankOfPosition(const Vec3 &pos) const {
         const auto ijk = ijkOfPosition(pos);
         return _domainIndex(ijk[0], ijk[1], ijk[2]) + 1; // + 1 because master rank = 0
     };
 
-    bool isInDomainCore(const Vec3 &pos) const {
+    [[nodiscard]] bool isInDomainCore(const Vec3 &pos) const {
         validateRankNotMaster();
         return (_origin.x <= pos.x and pos.x < _origin.x + _extent.x and
                 _origin.y <= pos.y and pos.y < _origin.y + _extent.y and
@@ -231,7 +233,7 @@ public:
     }
 
     // @todo consider hyperplanes
-    bool isInDomainCoreOrHalo(const Vec3 &pos) const {
+    [[nodiscard]] bool isInDomainCoreOrHalo(const Vec3 &pos) const {
         validateRankNotMaster();
         // additionally need to consider wrapped position if it is at the edge of the box
         // (i.e. in the outer shell with haloThickness of the box)
@@ -250,7 +252,7 @@ public:
                 _originWithHalo.z <= wrappedPos.z and wrappedPos.z < _originWithHalo.z + _extentWithHalo.z);
     }
 
-    Vec3 wrapIntoThisHalo(const Vec3 &pos) const {
+    [[nodiscard]] Vec3 wrapIntoThisHalo(const Vec3 &pos) const {
         validateRankNotMaster();
         Vec3 wrappedPos(pos);
         const auto &box = _context.get().boxSize();
@@ -302,7 +304,7 @@ public:
         return _nDomainsPerAxis;
     }
 
-    [[nodiscard]] const std::size_t nDomains() const {
+    [[nodiscard]] std::size_t nDomains() const {
         return std::accumulate(_nDomainsPerAxis.begin(), _nDomainsPerAxis.end(), 1, std::multiplies<>());
     }
 

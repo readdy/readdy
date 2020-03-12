@@ -107,12 +107,12 @@ public:
             MPI_Get_processor_name(processorName, &nameLen);
             MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-            static int rankToDebug = 1;
+            static int rankToDebug = 2;
             if (rank == rankToDebug) {
                 volatile int i = 0;
                 readdy::log::warn("pid {} w/ rank {} on processor {} waiting for debugger",
                                   static_cast<unsigned long>(getpid()), rank, processorName);
-                while (i == 0) { /* change ’i’ in the debugger */ }
+                while (i == 0) { /* change ’i’ in the debugger, `set variable i=1` */ }
             }
         }
         MPI_Barrier(MPI_COMM_WORLD);

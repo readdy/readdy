@@ -33,7 +33,25 @@
  ********************************************************************/
 
 /**
- * « detailed description »
+ * Catch sections (induced by SECTION, GIVEN, WHEN, THEN) cannot be used inside diverging program paths.
+ * I.e. if rank 1 and rank 2 perform different branches of programs with matching barriers,
+ * then a section inside that block would cause multiple execution runs.
+ * This eventually results in non-matching barriers, undefined behaviors, and dead-locks.
+ *
+ * BAD: single instruction multiple data (SIMD) model is not valid anymore
+ * if (rank == 0) {
+ *     SECTION("BLUB") {
+ *         REQUIRE(true);
+ *     }
+ * }
+ *
+ * GOOD:
+ * SECTION("BLUB") {
+ *     if (rank == 0) {
+ *         REQUIRE(true);
+ *     }
+ * }
+ *
  *
  * @file TestMain.cpp
  * @brief « brief description »

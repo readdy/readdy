@@ -63,9 +63,8 @@ public:
     using IteratorBounds = std::tuple<std::size_t, std::size_t>;
 
     CellLinkedList(Data &data, const readdy::model::Context &context)
-            : _data(data), _context(context), _head{}, _list{}, _radius{0} {};
+            : _data(data), _context(context), _head{}, _list{} {};
 
-    // todo this is not necessarily necessary
     /**
      * The resulting neighborhood of cells avoids double neighborliness (neighborhood is a directed graph)
      * for core cells with core cells in the usual way i.e. cell1 has cell2 as neighbor if (cellIdx1 > cellIdx2),
@@ -91,76 +90,67 @@ public:
             _cellIndex = readdy::util::Index3D(nCellsPerAxis[0], nCellsPerAxis[1], nCellsPerAxis[2]);
 
             {
-                // todo
-                // data structure that takes a map<uint,vector<uint>> as ctor arg, and provides a dense array access
-                // via Index2D and a backing structure which is one vector (with padding)
-                // difference to old impl here would be that the backing vector is sparse wrt to the index uint
-                // i.e. internally there is a remapping umap<uint,uint> from sparse to dense indices
-                // can this be efficient? due to umap memory is again fragmented
-                // -> my hunch is that one would just need a lookup-performance-optimized unordered_map
-                {
-                    // local adjacency, iterate over cells in domain core
-                    for (int i = cellsOrigin[0]; i < cellsOrigin[0] + cellsExtent[0]; ++i) {
-                    for (int j = cellsOrigin[1]; j < cellsOrigin[1] + cellsExtent[1]; ++j) {
-                    for (int k = cellsOrigin[2]; k < cellsOrigin[2] + cellsExtent[2]; ++k) {
-                        const auto cellIdx = _cellIndex(i,j,k);
-                        _cellsInCore.push_back(cellIdx);
+                // local adjacency, iterate over cells in domain core
+                for (int i = cellsOrigin[0]; i < cellsOrigin[0] + cellsExtent[0]; ++i) {
+                for (int j = cellsOrigin[1]; j < cellsOrigin[1] + cellsExtent[1]; ++j) {
+                for (int k = cellsOrigin[2]; k < cellsOrigin[2] + cellsExtent[2]; ++k) {
+                    const auto cellIdx = _cellIndex(i,j,k);
+                    _cellsInCore.push_back(cellIdx);
 
-                        // for di,dj,dk, this also reaches neighbor cells that overlap with halo
-                        for (int di=-1; di<2; ++di) {
-                        for (int dj=-1; dj<2; ++dj) {
-                        for (int dk=-1; dk<2; ++dk) {
-                            if (di==0 and dj==0 and dk==0) {
-                                continue; // skip self
-                            }
-                            std::array<int, 3> otherCell = {i+di, j+dj, k+dk};
+                    // for di,dj,dk, this also reaches neighbor cells that overlap with halo
+                    for (int di=-1; di<2; ++di) {
+                    for (int dj=-1; dj<2; ++dj) {
+                    for (int dk=-1; dk<2; ++dk) {
+                        if (di==0 and dj==0 and dk==0) {
+                            continue; // skip self
+                        }
+                        std::array<int, 3> otherCell = {i+di, j+dj, k+dk};
 
-                            // fix boundaries
-                            bool isValidCell = true;
-                            for (std::uint8_t axis = 0; axis < 3; ++axis) {
-                                auto nCells = static_cast<int>(_cellIndex[axis]);
-                                const auto pbc = _context.get().periodicBoundaryConditions();
-                                if (pbc[axis] && nCells > 2) {
-                                    if (-1 <= otherCell[axis] and otherCell[axis] <= nCells) {
-                                        otherCell.at(axis) = (otherCell.at(axis) % nCells + nCells) % nCells;
-                                    } else {
-                                        isValidCell = false;
-                                    }
-                                } else if (0 <= otherCell[axis] and otherCell[axis] < nCells) {
-                                    // all good, cell is within boxSize
+                        // fix boundaries
+                        bool isValidCell = true;
+                        for (std::uint8_t axis = 0; axis < 3; ++axis) {
+                            auto nCells = static_cast<int>(_cellIndex[axis]);
+                            const auto pbc = _context.get().periodicBoundaryConditions();
+                            if (pbc[axis] && nCells > 2) {
+                                if (-1 <= otherCell[axis] and otherCell[axis] <= nCells) {
+                                    otherCell.at(axis) = (otherCell.at(axis) % nCells + nCells) % nCells;
                                 } else {
                                     isValidCell = false;
                                 }
+                            } else if (0 <= otherCell[axis] and otherCell[axis] < nCells) {
+                                // all good, cell is within boxSize
+                            } else {
+                                isValidCell = false;
                             }
+                        }
 
-                            // add otherCell to neighborhood of cell, avoid double neighborliness
-                            if (isValidCell) {
-                                assert(std::all_of(otherCell.begin(), otherCell.end(), [](const auto& x){return x>=0;}));
-                                const auto otherIdx = _cellIndex(otherCell[0],otherCell[1],otherCell[2]);
-                                const auto cellCenter = Vec3(
-                                        otherCell[0] * _cellSize[0] + 0.5 * _cellSize[0],
-                                        otherCell[1] * _cellSize[1] + 0.5 * _cellSize[1],
-                                        otherCell[2] * _cellSize[2] + 0.5 * _cellSize[2]);
-                                if (domain->isInDomainCore(cellCenter)) {
-                                    if (cellIdx < otherIdx) { // avoid double neighborliness for core cells
-                                        _cellNeighbors.at(cellIdx).push_back(otherIdx);
-                                    }
-                                } else {
-                                    // cells that are outside the core are only seen "from one side",
-                                    // because we iterate over the core cells only.
-                                    // thus always add them to the neighborhood
-                                    _cellNeighbors.at(cellIdx).push_back(otherIdx);
-                                    // additionally keep track of all cells that overlap with halo
-                                    _cellsInHalo.push_back(otherIdx);
+                        // add otherCell to neighborhood of cell, avoid double neighborliness
+                        if (isValidCell) {
+                            assert(std::all_of(otherCell.begin(), otherCell.end(), [](const auto& x){return x>=0;}));
+                            const auto otherIdx = _cellIndex(otherCell[0],otherCell[1],otherCell[2]);
+                            const auto cellCenter = Vec3(
+                                    otherCell[0] * _cellSize[0] + 0.5 * _cellSize[0],
+                                    otherCell[1] * _cellSize[1] + 0.5 * _cellSize[1],
+                                    otherCell[2] * _cellSize[2] + 0.5 * _cellSize[2]);
+                            if (domain->isInDomainCore(cellCenter)) {
+                                if (cellIdx < otherIdx) { // avoid double neighborliness for core cells
+                                    _cellNeighbors[cellIdx].push_back(otherIdx);
                                 }
+                            } else {
+                                // cells that are outside the core are only seen "from one side",
+                                // because we iterate over the core cells only.
+                                // thus always add them to the neighborhood
+                                _cellNeighbors[cellIdx].push_back(otherIdx);
+                                // additionally keep track of all cells that overlap with halo
+                                _cellsInHalo.push_back(otherIdx);
                             }
+                        }
 
-                        }
-                        }
-                        }
                     }
                     }
                     }
+                }
+                }
                 }
 
                 // clean up, why not
@@ -222,10 +212,6 @@ public:
         return _data.get();
     }
 
-    scalar cutoff() const {
-        return _cutoff;
-    }
-
     const HEAD &head() const {
         return _head;
     }
@@ -242,40 +228,13 @@ public:
         return _cellsInHalo;
     }
 
-    //template<typename Function>
-    //void forEachNeighbor(BoxIterator particle, const Function &function) const;
-
-    //template<typename Function>
-    //void forEachNeighbor(BoxIterator particle, std::size_t cell, const Function &function) const;
-
     /**
      * Function f is evaluated for each pair (e1, e2) of data entries that are potentially interacting,
      * i.e. (e1, e2) live in neighboring cells or in the same cell.
-     * Identical permuted pairs (e2, e1) will not be counted.
+     * Identical permuted pairs (e2, e1) will not be evaluated.
      **/
     template<typename Function>
     void forAllPairs(const Function &f);
-
-    bool cellEmpty(std::size_t index) const {
-        return _head.at(index) == 0;
-    }
-
-    std::size_t cellOfParticle(std::size_t index) const {
-        const auto &entry = data().entry_at(index);
-        if (entry.deactivated) {
-            throw std::invalid_argument("requested deactivated entry");
-        }
-        const auto &boxSize = _context.get().boxSize();
-        if(!(-.5*boxSize[0] <= entry.pos.x && .5*boxSize[0] > entry.pos.x
-             && -.5*boxSize[1] <= entry.pos.y && .5*boxSize[1] > entry.pos.y
-             && -.5*boxSize[2] <= entry.pos.z && .5*boxSize[2] > entry.pos.z)) {
-            throw std::logic_error("CellLinkedList: requested neighbors of particle that was out of bounds.");
-        }
-        const auto i = static_cast<std::size_t>(std::floor((entry.pos.x + .5 * boxSize[0]) / _cellSize.x));
-        const auto j = static_cast<std::size_t>(std::floor((entry.pos.y + .5 * boxSize[1]) / _cellSize.y));
-        const auto k = static_cast<std::size_t>(std::floor((entry.pos.z + .5 * boxSize[2]) / _cellSize.z));
-        return _cellIndex(i, j, k);
-    }
 
     std::size_t nCells() const {
         return _cellIndex.size();
@@ -283,15 +242,7 @@ public:
 
     BoxIterator particlesBegin(std::size_t cellIndex);
 
-    BoxIterator particlesBegin(std::size_t cellIndex) const;
-
     BoxIterator particlesEnd(std::size_t cellIndex);
-
-    BoxIterator particlesEnd(std::size_t cellIndex) const;
-
-    const Vec3 &cellSize() const {
-        return _cellSize;
-    }
 
 protected:
     virtual void setUpBins() {
@@ -323,7 +274,6 @@ protected:
                     const auto j = static_cast<std::size_t>(std::floor((entry.pos.y + .5 * boxSize[1]) / _cellSize.y));
                     const auto k = static_cast<std::size_t>(std::floor((entry.pos.z + .5 * boxSize[2]) / _cellSize.z));
                     const auto cellIndex = _cellIndex(i, j, k);
-                    // if head[cellIndex] does not exist here it is default (0) which is the terminator
                     _list[pidx] = _head[cellIndex];
                     _head[cellIndex] = pidx;
                 } else {
@@ -342,11 +292,8 @@ protected:
     // next particle, this string is terminated if j=0
     LIST _list;
 
-
+    // refers to initialization of cellSize, cellIndex, cellNeighbors, cellsInCore, cellsInHalo
     bool _isSetUp{false};
-
-    scalar _cutoff{0};
-    std::uint8_t _radius;
 
     Vec3 _cellSize{0, 0, 0};
 
@@ -422,37 +369,14 @@ private:
     std::size_t _state, _val;
 };
 
+// no const iterator, because head is lazily default constructed if an unknown cellIndex is requested
 inline BoxIterator CellLinkedList::particlesBegin(std::size_t cellIndex) {
-    return {*this, _head.at(cellIndex)};
-}
-
-inline BoxIterator CellLinkedList::particlesBegin(std::size_t cellIndex) const {
-    return {*this, _head.at(cellIndex)};
-}
-
-inline BoxIterator CellLinkedList::particlesEnd(std::size_t /*cellIndex*/) const {
-    return {*this, 0};
+    return {*this, _head[cellIndex]};
 }
 
 inline BoxIterator CellLinkedList::particlesEnd(std::size_t /*cellIndex*/) {
     return {*this, 0};
 }
-
-//template<typename Function>
-//inline void CellLinkedList::forEachNeighbor(BoxIterator particle, const Function &function) const {
-//    forEachNeighbor(particle, cellOfParticle(*particle), function);
-//}
-//
-//template<typename Function>
-//inline void CellLinkedList::forEachNeighbor(BoxIterator particle, std::size_t cell,
-//                                            const Function &function) const {
-//    std::for_each(std::next(particle, 1), particlesEnd(cell), [&function, particle](auto x) {
-//        function(x);
-//    });
-//    for (auto itNeighCell = neighborsBegin(cell); itNeighCell != neighborsEnd(cell); ++itNeighCell) {
-//        std::for_each(particlesBegin(*itNeighCell), particlesEnd(*itNeighCell), function);
-//    }
-//}
 
 template<typename Function>
 inline void CellLinkedList::forAllPairs(const Function &f) {

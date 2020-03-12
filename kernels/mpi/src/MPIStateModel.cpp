@@ -46,7 +46,9 @@
 
 namespace readdy::kernel::mpi {
 
-MPIStateModel::MPIStateModel(Data &data, const readdy::model::Context &context) : _data(data), _context(context) {}
+MPIStateModel::MPIStateModel(Data &data, const readdy::model::Context &context) : _data(data), _context(context) {
+    _neighborList = std::make_unique<model::CellLinkedList>(data, context);
+}
 
 const std::vector<readdy::Vec3> MPIStateModel::getParticlePositions() const {
     const auto data = getParticleData();
@@ -164,12 +166,12 @@ void MPIStateModel::addParticles(const std::vector<Particle> &particles) {
     getParticleData()->addParticles(particles);
 }
 
+// todo use MPI_Scatter
 void MPIStateModel::distributeParticles(const std::vector<Particle> &ps) {
     if (_domain->isIdleRank()) {
         return;
     }
     util::Timer timer("MPIStateModel::distributeParticles");
-    // todo use MPI_Scatter
     if (_domain->isMasterRank()) {
         std::unordered_map<int, std::vector<util::ParticlePOD>> targetParticleMap;
         for (const auto &particle : ps) {
@@ -232,11 +234,16 @@ void MPIStateModel::addParticle(const MPIStateModel::Particle &p) {
     addParticles({p});
 }
 
+// todo use mpi built in cartesian graph communicator and neighborhood collectives
+// MPI_Neighbor_allgather(const void* sendbuf, int sendcount,
+//                        MPI_Datatype sendtype, void* recvbuf, int recvcount,
+//                        MPI_Datatype recvtype, MPI_Comm comm)
 void MPIStateModel::synchronizeWithNeighbors() {
     MPI_Barrier(MPI_COMM_WORLD);
     if (domain()->isIdleRank() or domain()->isMasterRank()) {
         return;
     }
+    util::Timer timer("MPIStateModel::synchronizeWithNeighbors");
     auto& data = _data.get();
     std::vector<util::ParticlePOD> own; // particles that this worker is responsible for
     std::vector<std::size_t> removedEntries; // particles that this worker is NOT responsible for
@@ -256,6 +263,7 @@ void MPIStateModel::synchronizeWithNeighbors() {
         }
     }
 
+    const auto &pbc = _context.get().periodicBoundaryConditions();
     // Plimpton synchronization
     std::vector<util::ParticlePOD> other; // particles received by other workers
     for (unsigned int coord=0; coord<3; coord++) { // east-west, north-south, up-down
@@ -270,7 +278,12 @@ void MPIStateModel::synchronizeWithNeighbors() {
             // send - then receive -
             otherDirection = {1,1,1};
             otherDirection.at(coord) -= 1;
-            auto received2 = util::sendThenReceive(otherDirection, own, other, *domain(), commUsedRanks());
+            std::vector<util::ParticlePOD> received2;
+            if (domain()->nDomainsPerAxis()[coord] == 2 and pbc[coord]) {
+                // skip because we have already communicated with that one
+            } else {
+                received2 = util::sendThenReceive(otherDirection, own, other, *domain(), commUsedRanks());
+            }
 
             // after data from both directions have been received we can merge them with `other`,
             // so they will be communicated along other coordinates
@@ -285,7 +298,12 @@ void MPIStateModel::synchronizeWithNeighbors() {
             // receive + then send +
             otherDirection = {1,1,1};
             otherDirection.at(coord) += 1;
-            auto received2 = util::receiveThenSend(otherDirection, own, other, *domain(), commUsedRanks());
+            std::vector<util::ParticlePOD> received2;
+            if (domain()->nDomainsPerAxis()[coord] == 2 and pbc[coord]) {
+                // skip because we have already communicated with that one
+            } else {
+                received2 = util::receiveThenSend(otherDirection, own, other, *domain(), commUsedRanks());
+            }
 
             other.insert(other.end(), received1.begin(), received1.end());
             other.insert(other.end(), received2.begin(), received2.end());

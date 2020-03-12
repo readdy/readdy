@@ -253,8 +253,6 @@ private:
     std::reference_wrapper<const readdy::model::Context> _context;
     std::reference_wrapper<Data> _data;
     std::unique_ptr<NeighborList> _neighborList;
-    NeighborList::CellRadius _neighborListCellRadius{1};
-    std::unique_ptr<readdy::signals::scoped_connection> _reorderConnection;
     const model::MPIDomain* _domain{nullptr};
     MPI_Comm _commUsedRanks = MPI_COMM_WORLD;
 };

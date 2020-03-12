@@ -73,7 +73,8 @@ int main(int argc, char **argv) {
     scenarios.push_back(std::make_unique<perf::DistributeParticles>());
 
     for (const auto &s : scenarios) {
-        auto json = s->run();
+        MPI_Barrier(MPI_COMM_WORLD);
+        auto json = s->run(false);
 
         json["rank"] = mpiSession.rank();
         json["worldSize"] = mpiSession.worldSize();
@@ -88,8 +89,6 @@ int main(int argc, char **argv) {
             std::ofstream stream(path, std::ofstream::out |std::ofstream::trunc);
             stream << json << std::endl;
         }
-
-        MPI_Barrier(MPI_COMM_WORLD);
     }
 
     return 0;
