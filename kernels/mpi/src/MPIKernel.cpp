@@ -54,8 +54,8 @@ readdy::model::Kernel *MPIKernel::create() {
 
 MPIKernel::MPIKernel() : MPIKernel(readdy::model::Context{}) {}
 
-MPIKernel::MPIKernel(readdy::model::Context ctx) : Kernel(name, std::move(ctx)), _domain(ctx), _data(&(_domain)),
-                                                   _actions(this), _observables(this), _stateModel(_data, _context) {
+MPIKernel::MPIKernel(readdy::model::Context ctx) : Kernel(name, std::move(ctx)), _domain(ctx), _data(&_domain),
+                                                   _actions(this), _observables(this), _stateModel(_data, _context, &_domain) {
     // Description of decomposition
     if (_domain.rank() == 0) {
         std::string description;

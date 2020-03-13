@@ -61,7 +61,7 @@ public:
     using ReactionCountsMap = readdy::model::reactions::ReactionCounts;
     using NeighborList = model::CellLinkedList;
 
-    MPIStateModel(Data &data, const readdy::model::Context &context);
+    MPIStateModel(Data &data, const readdy::model::Context &context, const readdy::kernel::mpi::model::MPIDomain *domain);
 
     ~MPIStateModel() override = default;
 
@@ -191,12 +191,8 @@ public:
         throw std::logic_error("no topologies on MPI kernel");
     }
 
-    const model::MPIDomain * domain() const {
+    const model::MPIDomain *domain() const {
         return _domain;
-    }
-
-    void setDomain(const model::MPIDomain *domain) {
-        _domain = domain;
     }
 
     MPI_Comm &commUsedRanks() {

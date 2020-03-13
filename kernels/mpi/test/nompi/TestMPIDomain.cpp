@@ -37,6 +37,8 @@
  * @brief Test proper construction of domains and their neighborhood
  * @author chrisfroe
  * @date 17.06.19
+ *
+ * todo make domain acquire rank and worldSize on its own, thus this becomes a normal mpi test that links against mpi
  */
 
 #include <catch2/catch.hpp>

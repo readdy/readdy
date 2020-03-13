@@ -46,7 +46,7 @@
 
 namespace readdy::kernel::mpi {
 
-MPIStateModel::MPIStateModel(Data &data, const readdy::model::Context &context) : _data(data), _context(context) {
+MPIStateModel::MPIStateModel(Data &data, const readdy::model::Context &context, const model::MPIDomain *domain) : _data(data), _context(context), _domain(domain) {
     _neighborList = std::make_unique<model::CellLinkedList>(data, context);
 }
 
@@ -268,7 +268,6 @@ void MPIStateModel::synchronizeWithNeighbors() {
     std::vector<util::ParticlePOD> other; // particles received by other workers
     for (unsigned int coord=0; coord<3; coord++) { // east-west, north-south, up-down
         const auto idx = domain()->myIdx()[coord];
-        // such that received particles do not transit across more than one domain
         if (idx % 2 == 0) {
             // send + then receive +
             std::array<std::size_t, 3> otherDirection {1,1,1}; // (1,1,1) is self

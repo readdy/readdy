@@ -54,6 +54,9 @@
 
 namespace readdy::kernel::mpi {
 
+// fixme MPIKernel cannot be constructed as dynamically loaded plugin in a useful way currently
+// because only the ctor with context provides a ready-to-use kernel,
+// the default ctor provides a kernel that is not (/cannot be) initialized
 class MPIKernel : public readdy::model::Kernel {
 public:
     static const std::string name;

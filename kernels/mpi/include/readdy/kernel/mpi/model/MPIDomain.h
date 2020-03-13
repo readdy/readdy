@@ -109,8 +109,15 @@ public:
               _nUsedRanks(0) {
         const auto conf = _context.get().kernelConfiguration();
         std::array<scalar, 3> minDomainWidths{conf.mpi.dx, conf.mpi.dy, conf.mpi.dz};
+        // todo it would be easier if domain would figure rank and worldSize out by itself, i.e. would need to depend on MPI here
         _rank = conf.mpi.rank;
         _worldSize = conf.mpi.worldSize;
+        if (_rank < 0) {
+            throw std::logic_error("rank was not correctly propagated to domain");
+        }
+        if (_worldSize < 1) {
+            throw std::logic_error("worldSize was not correctly propagated to domain");
+        }
 
         const auto &boxSize = _context.get().boxSize();
         const auto &periodic = _context.get().periodicBoundaryConditions();

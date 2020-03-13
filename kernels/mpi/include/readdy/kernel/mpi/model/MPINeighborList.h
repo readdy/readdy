@@ -96,6 +96,7 @@ public:
                 for (int k = cellsOrigin[2]; k < cellsOrigin[2] + cellsExtent[2]; ++k) {
                     const auto cellIdx = _cellIndex(i,j,k);
                     _cellsInCore.push_back(cellIdx);
+                    _cellNeighbors[cellIdx] = {}; // default initialize neighbors of cell, only relevant if this is the only cell
 
                     // for di,dj,dk, this also reaches neighbor cells that overlap with halo
                     for (int di=-1; di<2; ++di) {

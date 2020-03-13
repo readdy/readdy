@@ -59,9 +59,9 @@ void check(readdy::kernel::mpi::MPIKernel &kernel,
         for (const auto &entry : *data) {
             if (!entry.deactivated) {
                 if (entry.responsible) {
-                    CHECK(kernel.domain()->isInDomainCore(entry.position()));
+                    CHECK(kernel.domain().isInDomainCore(entry.position()));
                 } else {
-                    CHECK(kernel.domain()->isInDomainHalo(entry.position()));
+                    CHECK(kernel.domain().isInDomainHalo(entry.position()));
                 }
             }
         }
@@ -87,7 +87,6 @@ void check(readdy::kernel::mpi::MPIKernel &kernel,
                 auto emplacePair = [&actual](rkm::MPIEntry e1, rkm::MPIEntry e2) {
                     actual.emplace(e1, e2);
                 };
-
                 const auto &nl = kernel.getMPIKernelStateModel().getNeighborList();
                 nl->forAllPairs(emplacePair);
 
@@ -101,7 +100,7 @@ void check(readdy::kernel::mpi::MPIKernel &kernel,
                 CHECK(std::includes(actualVec.begin(), actualVec.end(), expectedVec.begin(), expectedVec.end(), ComparePODPair{}));
             }
         }
-    } else if (kernel.domain()->isMasterRank()) {
+    } else if (kernel.domain().isMasterRank()) {
         // master has no active entries
         CHECK(data->size() == data->n_deactivated());
     }
@@ -113,7 +112,7 @@ void synchronizeAndCheck(readdy::kernel::mpi::MPIKernel &kernel,
     WHEN("Particles are gathered") {
         auto gatheredParticles = kernel.getMPIKernelStateModel().gatherParticles();
         THEN("All particles are obtained") {
-            if (kernel.domain()->isMasterRank()) {
+            if (kernel.domain().isMasterRank()) {
                 CHECK(gatheredParticles.size() == allParticles.size());
             }
         }
@@ -129,7 +128,7 @@ void synchronizeAndCheck(readdy::kernel::mpi::MPIKernel &kernel,
                     AND_WHEN("Particles are gathered again") {
                         auto gatheredParticles = kernel.getMPIKernelStateModel().gatherParticles();
                         THEN("All particles are obtained") {
-                            if (kernel.domain()->isMasterRank()) {
+                            if (kernel.domain().isMasterRank()) {
                                 CHECK(gatheredParticles.size() == allParticles.size());
                             }
                         }
@@ -143,23 +142,23 @@ void synchronizeAndCheck(readdy::kernel::mpi::MPIKernel &kernel,
 std::pair<ParticlePODSet, ParticlePODPairSet> expectedParticlesAndPairs(
         const readdy::kernel::mpi::MPIKernel &kernel,
         const std::vector<readdy::model::Particle> &particles) {
-    if (kernel.domain()->isWorkerRank()) {
+    if (kernel.domain().isWorkerRank()) {
         ParticlePODSet expectedPODs;
         ParticlePODPairSet minimalExpectedPODPairs; // the workers have to have these at least
         for (std::size_t i = 0; i < particles.size(); ++i) {
             const auto &pi = particles.at(i);
 
             // for single particles, the worker needs to see all that are in domain core or halo
-            if (kernel.domain()->isInDomainCoreOrHalo(pi.pos())) {
+            if (kernel.domain().isInDomainCoreOrHalo(pi.pos())) {
                 expectedPODs.emplace(pi);
             }
 
             // for pairs we only consider core-core and core-halo pairs but not halo-halo,
             // because the worker will not evaluate forces/reactions for those
-            if (kernel.domain()->isInDomainCore(pi.pos())) {
+            if (kernel.domain().isInDomainCore(pi.pos())) {
                 for (std::size_t j = i + 1; j < particles.size(); ++j) {
                     const auto &pj = particles.at(j);
-                    if (kernel.domain()->isInDomainCoreOrHalo(pj.pos())) {
+                    if (kernel.domain().isInDomainCoreOrHalo(pj.pos())) {
                         // assume that the only interaction has a radius of 1
                         auto distance = readdy::bcs::dist(
                                 pi.pos(), pj.pos(), kernel.context().boxSize(),
@@ -178,7 +177,8 @@ std::pair<ParticlePODSet, ParticlePODPairSet> expectedParticlesAndPairs(
 }
 
 void setupContext(readdy::model::Context &ctx) {
-    Json conf = {{"MPI", {{"dx", 4.9}, {"dy", 4.9}, {"dz", 4.9}}}};
+    auto [rank, ws] = rkmu::getRankAndWorldSize();
+    Json conf = {{"MPI", {{"dx", 4.9}, {"dy", 4.9}, {"dz", 4.9}, {"rank", rank}, {"worldSize", ws}}}};
     ctx.kernelConfiguration() = conf.get<readdy::conf::Configuration>();
     ctx.particleTypes().add("A", 1.);
     ctx.potentials().addHarmonicRepulsion("A", "A", 1., 1.);
@@ -320,8 +320,8 @@ void randomPosititionsTest(std::array<readdy::scalar, 3> boxSize, std::array<boo
     const auto &box = kernel.context().boxSize();
     std::vector<readdy::model::Particle> particles;
     std::vector<rkmu::ParticlePOD> buffer;
-    std::size_t nParticles = 1000;
-    if (kernel.domain()->isMasterRank()) {
+    std::size_t nParticles = 500;
+    if (kernel.domain().isMasterRank()) {
         for (std::size_t i=0; i<nParticles; ++i) {
             readdy::Vec3 pos{rnd::uniform_real() * box[0] - 0.5 * box[0],
                              rnd::uniform_real() * box[1] - 0.5 * box[1],
@@ -330,7 +330,7 @@ void randomPosititionsTest(std::array<readdy::scalar, 3> boxSize, std::array<boo
             buffer.emplace_back(pos, idA);
         }
         MPI_Bcast(buffer.data(), nParticles * sizeof(rkmu::ParticlePOD), MPI_BYTE, 0, kernel.commUsedRanks());
-    } else if (kernel.domain()->isWorkerRank()) {
+    } else if (kernel.domain().isWorkerRank()) {
         buffer.resize(nParticles);
         MPI_Bcast(buffer.data(), nParticles * sizeof(rkmu::ParticlePOD), MPI_BYTE, 0, kernel.commUsedRanks());
         for (const auto& pod : buffer) {

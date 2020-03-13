@@ -21,6 +21,9 @@
 #include <readdy/api/Simulation.h>
 #include <readdy/api/KernelConfiguration.h>
 #include <utility>
+#include <readdy/kernel/mpi/model/MPIUtils.h>
+
+namespace rkmu = readdy::kernel::mpi::util;
 
 namespace readdy::kernel::mpi::performance {
 
@@ -71,10 +74,11 @@ public:
         ctx.particleTypes().add("A", 1.);
         ctx.particleTypes().add("B", 1.);
         ctx.potentials().addHarmonicRepulsion("A", "A", 10., 2.4);
-        Json conf = {{"MPI", {{"dx", 4.9}, {"dy", 4.9}, {"dz", 4.9}}}};
+        auto [rank, ws] = rkmu::getRankAndWorldSize();
+        Json conf = {{"MPI", {{"dx", 4.9}, {"dy", 4.9}, {"dz", 4.9}, {"rank", rank}, {"worldSize", ws}}}};
         ctx.kernelConfiguration() = conf.get<readdy::conf::Configuration>();
 
-        readdy::kernel::mpi::MPIKernel kernel(ctx); // this also initializes domains
+        readdy::kernel::mpi::MPIKernel kernel(ctx);
 
         require(kernel.domain().nWorkerRanks() == nWorkers);
         require(kernel.domain().worldSize() == worldSize);
