@@ -152,6 +152,7 @@ struct Configuration {
 namespace mpi {
 struct Configuration {
     scalar dx {-1.}, dy {-1.}, dz {-1.}; // widths of MPI boxes, for domain decomposition
+    int rank{-1}, worldSize{-1};
 };
 /**
  * Json serialization of Configuration

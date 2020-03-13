@@ -76,6 +76,8 @@ public:
      */
     explicit Kernel(std::string name) : _name(std::move(name)), _signal() {};
 
+    Kernel(std::string name, readdy::model::Context ctx) : _name(std::move(name)), _signal(), _context(std::move(ctx)) {};
+
     /**
      * The kernel destructor.
      */

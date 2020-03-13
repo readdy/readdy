@@ -104,9 +104,14 @@ private:
     std::reference_wrapper<const readdy::model::Context> _context;
 
 public:
-    MPIDomain(int rank, int worldSize, std::array<scalar, 3> minDomainWidths, const readdy::model::Context &ctx)
-            : _rank(rank), _worldSize(worldSize), _context(std::cref(ctx)), _haloThickness(ctx.calculateMaxCutoff()),
+    explicit MPIDomain(const readdy::model::Context &ctx)
+            : _context(std::cref(ctx)), _haloThickness(ctx.calculateMaxCutoff()),
               _nUsedRanks(0) {
+        const auto conf = _context.get().kernelConfiguration();
+        std::array<scalar, 3> minDomainWidths{conf.mpi.dx, conf.mpi.dy, conf.mpi.dz};
+        _rank = conf.mpi.rank;
+        _worldSize = conf.mpi.worldSize;
+
         const auto &boxSize = _context.get().boxSize();
         const auto &periodic = _context.get().periodicBoundaryConditions();
 
@@ -127,7 +132,7 @@ public:
         readdy::log::info("minDomainWidths are now {} {} {}",
                 minDomainWidths[0], minDomainWidths[1], minDomainWidths[2]);
 
-        if (worldSize >= 2) {
+        if (_worldSize >= 2) {
 
             for (std::size_t i = 0; i < 3; ++i) {
                 _nDomainsPerAxis[i] = static_cast<unsigned int>(std::max(1., std::floor(boxSize[i] / minDomainWidths[i])));
@@ -135,7 +140,7 @@ public:
             _nUsedRanks = _nDomainsPerAxis[0] * _nDomainsPerAxis[1] * _nDomainsPerAxis[2] + 1;
 
             unsigned int coord = 0;
-            while (_nUsedRanks > worldSize) {
+            while (_nUsedRanks > _worldSize) {
                 // try to increase size of domains (round robbing), to decrease usedRanks
                 minDomainWidths[coord] = 1.5 * minDomainWidths[coord];
                 coord = (coord + 1) % 3;
@@ -157,14 +162,14 @@ public:
         std::iota(_workerRanks.begin(), _workerRanks.end(), 1);
         assert(_workerRanks[0] == 1);
         assert(_workerRanks.back() == _nUsedRanks-1);
-        _nIdleRanks = worldSize - _nUsedRanks;
+        _nIdleRanks = _worldSize - _nUsedRanks;
 
         _domainIndex = readdy::util::Index3D(_nDomainsPerAxis[0], _nDomainsPerAxis[1], _nDomainsPerAxis[2]);
 
         // the rest is only for workers
-        if (rank != 0 and rank < _nUsedRanks) {
+        if (_rank != 0 and _rank < _nUsedRanks) {
             // find out which this ranks' ijk coordinates are, consider -1 because of master rank 0
-            _myIdx = _domainIndex.inverse(rank - 1);
+            _myIdx = _domainIndex.inverse(_rank - 1);
             for (std::size_t i = 0; i < 3; ++i) {
                 _extent[i] = boxSize[i] / static_cast<scalar>(_nDomainsPerAxis[i]);
                 _origin[i] = -0.5 * boxSize[i] + _myIdx[i] * _extent[i];
@@ -193,7 +198,7 @@ public:
                             neighborType = NeighborType::nan;
                         } else {
                             otherRank = _domainIndex(i, j, k) + 1; // +1 considers master rank
-                            if (otherRank == rank) {
+                            if (otherRank == _rank) {
                                 neighborType = NeighborType::self;
                             } else {
                                 neighborType = NeighborType::regular;
@@ -207,9 +212,9 @@ public:
                 }
             }
 
-            assert(_neighborRanks.at(neighborIndex(1, 1, 1)) == rank);
+            assert(_neighborRanks.at(neighborIndex(1, 1, 1)) == _rank);
 
-        } else if (rank == 0) {
+        } else if (_rank == 0) {
             // master rank 0 must at least know how big domains are
             for (std::size_t i = 0; i < 3; ++i) {
                 _extent[i] = boxSize[i] / static_cast<scalar>(_nDomainsPerAxis[i]);

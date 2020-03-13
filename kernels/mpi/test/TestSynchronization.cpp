@@ -50,7 +50,7 @@ using ParticlePODPairSet = std::unordered_set<std::pair<rkmu::ParticlePOD, rkmu:
 void check(readdy::kernel::mpi::MPIKernel &kernel,
            const ParticlePODSet &expectedPODs, const ParticlePODPairSet &expectedPODPairs) {
     const auto data = kernel.getMPIKernelStateModel().getParticleData();
-    if (kernel.domain()->isWorkerRank()) {
+    if (kernel.domain().isWorkerRank()) {
         // cannot use sections inside diverging parts of the program, thus commented out
         // THEN("The number of particles is correct and responsible particles are in the domain core")
         auto n = std::count_if(data->begin(), data->end(),

@@ -50,7 +50,7 @@ MPIStateModel::MPIStateModel(Data &data, const readdy::model::Context &context) 
     _neighborList = std::make_unique<model::CellLinkedList>(data, context);
 }
 
-const std::vector<readdy::Vec3> MPIStateModel::getParticlePositions() const {
+std::vector<readdy::Vec3> MPIStateModel::getParticlePositions() const {
     const auto data = getParticleData();
     std::vector<Vec3> target{};
     target.reserve(data->size());
@@ -61,7 +61,7 @@ const std::vector<readdy::Vec3> MPIStateModel::getParticlePositions() const {
 }
 
 // encapsulate the following combination of Gather and Gatherv, e.g. for gathering particles or observables
-const std::vector<MPIStateModel::Particle>
+std::vector<MPIStateModel::Particle>
 MPIStateModel::gatherParticles() const {
     if (_domain->isIdleRank()) {
         return {};
@@ -218,7 +218,7 @@ void MPIStateModel::distributeParticles(const std::vector<Particle> &ps) {
     }
 }
 
-const std::vector<readdy::model::Particle> MPIStateModel::getParticles() const {
+std::vector<readdy::model::Particle> MPIStateModel::getParticles() const {
     const auto *data = getParticleData();
     std::vector<readdy::model::Particle> result;
     result.reserve(data->size());

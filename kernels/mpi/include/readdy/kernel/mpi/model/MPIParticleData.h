@@ -42,6 +42,7 @@
 #pragma once
 
 #include <readdy/kernel/singlecpu/model/SCPUParticleData.h>
+#include <readdy/kernel/mpi/model/MPIDomain.h>
 
 namespace readdy::kernel::mpi {
 
@@ -56,6 +57,14 @@ struct MPIEntry {
             : pos(particle.pos()), force(Force()), type(particle.type()),
               id(particle.id()), deactivated(false), responsible(responsible), rank(rank) {
 
+    }
+
+    bool is_deactivated() const {
+        return deactivated;
+    }
+
+    const Particle::Position &position() const {
+        return pos;
     }
 
     Particle::Position pos;
@@ -92,20 +101,30 @@ struct MPIEntry {
     bool responsible;
 };
 
-//using MPIDataContainer = readdy::kernel::scpu::model::SCPUParticleData<MPIEntry>;
-
 class MPIParticleData : public readdy::kernel::scpu::model::SCPUParticleData<MPIEntry> {
+public:
+    MPIParticleData(const readdy::kernel::mpi::model::MPIDomain *domain) : SCPUParticleData(), _domain(domain) {}
+
+    // additionally sets the `rank` and `responsible` fields
     void addParticles(const std::vector<Particle> &particles) override {
         for(const auto& p : particles) {
+            MPIEntry entry {p};
+            entry.rank = _domain->rankOfPosition(entry.pos);
+            entry.responsible = (entry.rank == _domain->rank());
             if(!_blanks.empty()) {
                 const auto idx = _blanks.back();
                 _blanks.pop_back();
-                entries.at(idx) = MPIEntry{p};
+                entries.at(idx) = entry;
             } else {
-                entries.emplace_back(p);
+                entries.emplace_back(entry);
             }
         }
     }
+
+private:
+    const readdy::kernel::mpi::model::MPIDomain *_domain;
 };
+
+using MPIDataContainer = readdy::kernel::mpi::MPIParticleData;
 
 }

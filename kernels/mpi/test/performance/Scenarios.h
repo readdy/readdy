@@ -76,8 +76,8 @@ public:
 
         readdy::kernel::mpi::MPIKernel kernel(ctx); // this also initializes domains
 
-        require(kernel.domain()->nWorkerRanks() == nWorkers);
-        require(kernel.domain()->worldSize() == worldSize);
+        require(kernel.domain().nWorkerRanks() == nWorkers);
+        require(kernel.domain().worldSize() == worldSize);
 
         auto idA = kernel.context().particleTypes().idOf("A");
         const std::size_t nParticles = nParticlesPerWorker * nWorkers;
@@ -92,19 +92,19 @@ public:
         MPI_Barrier(kernel.commUsedRanks());
         kernel.stateModel().addParticles(particles);
 
-        if (kernel.domain()->isMasterRank()) {
+        if (kernel.domain().isMasterRank()) {
             require(kernel.getMPIKernelStateModel().getParticleData()->size() == 0); // master data is emtpy
-        } else if (kernel.domain()->isWorkerRank()) {
+        } else if (kernel.domain().isWorkerRank()) {
             require(kernel.getMPIKernelStateModel().getParticleData()->size() >
                     0); // worker should have gotten one particle
-        } else if (kernel.domain()->isIdleRank()) {
+        } else if (kernel.domain().isIdleRank()) {
             require(kernel.getMPIKernelStateModel().getParticleData()->size() == 0); // idle workers are idle
         } else {
             throw std::runtime_error("Must be one of those above");
         }
 
         const auto currentParticles = kernel.stateModel().getParticles();
-        if (kernel.domain()->isMasterRank()) {
+        if (kernel.domain().isMasterRank()) {
             require(currentParticles.size() == nParticles);
         }
 

@@ -53,25 +53,6 @@
 
 using Json = nlohmann::json;
 
-// todo delayed initialization isn't nice
-// todo fix this, however this requires kernel specific factory that sets the context and initializes
-TEST_CASE("Kernel construction and delayed initialization", "[mpi]") {
-    WHEN("Kernel is constructed without context") {
-        readdy::kernel::mpi::MPIKernel kernel;
-        THEN("The kernel is not usable") {
-            //CHECK(kernel.domain() != nullptr);
-        }
-    }
-    WHEN("Kernel is constructed with context") {
-        readdy::model::Context ctx;
-        // todo this cannot be done when kernel is dynamically loaded
-        readdy::kernel::mpi::MPIKernel kernel(ctx);
-        THEN("Kernel is initialized") {
-            CHECK(kernel.domain() != nullptr);
-        }
-    }
-}
-
 TEST_CASE("Test mpi kernel observe particle number", "[mpi]") {
     MPI_Barrier(MPI_COMM_WORLD);
     if (false) {

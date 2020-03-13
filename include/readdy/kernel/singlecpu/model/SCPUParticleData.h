@@ -123,7 +123,7 @@ public:
         addParticles({particle});
     }
 
-    void addParticles(const std::vector<Particle> &particles) {
+    virtual void addParticles(const std::vector<Particle> &particles) {
         for(const auto& p : particles) {
             if(!_blanks.empty()) {
                 const auto idx = _blanks.back();

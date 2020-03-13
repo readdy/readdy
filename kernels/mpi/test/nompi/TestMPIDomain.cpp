@@ -53,12 +53,17 @@ TEST_CASE("Test domain decomposition", "[mpi]") {
         context.boxSize() = {10., 1., 1.};
         context.periodicBoundaryConditions() = {true, false, false};
         // user given values should be at least twice the cutoff
-        std::array<readdy::scalar, 3> userMinDomainWidths{4.6, 4.6, 4.6};
+        context.kernelConfiguration().mpi.dx = 4.6;
+        context.kernelConfiguration().mpi.dy = 4.6;
+        context.kernelConfiguration().mpi.dz = 4.6;
+
         // expecting two workers, boxsize will be split in half, and one master rank -> 3
         int worldSize = 3;
 
         for (int rank = 0; rank < worldSize; ++rank) {
-            readdy::kernel::mpi::model::MPIDomain domain(rank, worldSize, userMinDomainWidths, context);
+            context.kernelConfiguration().mpi.rank = rank;
+            context.kernelConfiguration().mpi.worldSize = worldSize;
+            readdy::kernel::mpi::model::MPIDomain domain(context);
             CHECK(domain.worldSize() == 3);
             CHECK(domain.nDomainsPerAxis() == std::array<std::size_t, 3>({2, 1, 1}));
             CHECK(domain.domainIndex()(0, 0, 0) == 0);
@@ -136,9 +141,13 @@ TEST_CASE("Test domain decomposition", "[mpi]") {
         }
 
         SECTION("Rong user given domain widths") {
-            std::array<readdy::scalar, 3> incompatibleDomainWidths{2.2, 4.6, 4.6};
+            context.kernelConfiguration().mpi.dx = 2.2;
+            context.kernelConfiguration().mpi.dy = 4.6;
+            context.kernelConfiguration().mpi.dz = 4.6;
+            context.kernelConfiguration().mpi.rank = 0;
+            context.kernelConfiguration().mpi.worldSize = 4+1;
             auto ctor = [&]() {
-                readdy::kernel::mpi::model::MPIDomain domain(0, 4 + 1, incompatibleDomainWidths, context);
+                readdy::kernel::mpi::model::MPIDomain domain(context);
             };
             CHECK_THROWS(ctor());
         }
@@ -147,13 +156,17 @@ TEST_CASE("Test domain decomposition", "[mpi]") {
     SECTION("Check one position in (4 by 2 by 1) domains, periodic in xy") {
         context.boxSize() = {20., 10., 1.};
         context.periodicBoundaryConditions() = {true, true, false};
-        std::array<readdy::scalar, 3> userMinDomainWidths{4.6, 4.6, 4.6};
+        context.kernelConfiguration().mpi.dx = 4.6;
+        context.kernelConfiguration().mpi.dy = 4.6;
+        context.kernelConfiguration().mpi.dz = 4.6;
         int worldSize = 1 + (4 * 2 * 1);
         std::size_t posCount{0};
         readdy::Vec3 pos{-8., -4., 0.49};
         int south, north, west, east, northwest, southwest;
         for (int rank = 0; rank < worldSize; ++rank) {
-            readdy::kernel::mpi::model::MPIDomain domain(rank, worldSize, userMinDomainWidths, context);
+            context.kernelConfiguration().mpi.rank = rank;
+            context.kernelConfiguration().mpi.worldSize = worldSize;
+            readdy::kernel::mpi::model::MPIDomain domain(context);
             CHECK(domain.worldSize() == 9);
             CHECK(domain.nDomainsPerAxis() == std::array<std::size_t, 3>({4, 2, 1}));
             CHECK(domain.domainIndex()(0, 0, 0) == 0);
@@ -185,15 +198,20 @@ TEST_CASE("Test domain decomposition", "[mpi]") {
         }
         CHECK(posCount == 1); // can only be in one domain core
 
-        readdy::kernel::mpi::model::MPIDomain southDomain(south, worldSize, userMinDomainWidths, context);
+        context.kernelConfiguration().mpi.rank = south;
+        readdy::kernel::mpi::model::MPIDomain southDomain(context);
         CHECK(southDomain.isInDomainHalo(pos));
-        readdy::kernel::mpi::model::MPIDomain northDomain(north, worldSize, userMinDomainWidths, context);
+        context.kernelConfiguration().mpi.rank = north;
+        readdy::kernel::mpi::model::MPIDomain northDomain(context);
         CHECK(northDomain.isInDomainHalo(pos));
-        readdy::kernel::mpi::model::MPIDomain westDomain(west, worldSize, userMinDomainWidths, context);
+        context.kernelConfiguration().mpi.rank = west;
+        readdy::kernel::mpi::model::MPIDomain westDomain(context);
         CHECK(westDomain.isInDomainHalo(pos));
-        readdy::kernel::mpi::model::MPIDomain eastDomain(east, worldSize, userMinDomainWidths, context);
+        context.kernelConfiguration().mpi.rank = east;
+        readdy::kernel::mpi::model::MPIDomain eastDomain(context);
         CHECK_FALSE(eastDomain.isInDomainHalo(pos));
-        readdy::kernel::mpi::model::MPIDomain nwDomain(northwest, worldSize, userMinDomainWidths, context);
+        context.kernelConfiguration().mpi.rank = northwest;
+        readdy::kernel::mpi::model::MPIDomain nwDomain(context);
         CHECK(nwDomain.isInDomainHalo(pos));
     }
 
@@ -201,10 +219,14 @@ TEST_CASE("Test domain decomposition", "[mpi]") {
         context.boxSize() = {10., 5., 1.};
         context.periodicBoundaryConditions() = {true, true, false};
         // user given values should be at least twice the cutoff
-        std::array<readdy::scalar, 3> userMinDomainWidths{4.6, 4.6, 4.6};
+        context.kernelConfiguration().mpi.dx = 4.6;
+        context.kernelConfiguration().mpi.dy = 4.6;
+        context.kernelConfiguration().mpi.dz = 4.6;
         int worldSize = 3;
         for (int rank = 0; rank < worldSize; ++rank) {
-            readdy::kernel::mpi::model::MPIDomain domain(rank, worldSize, userMinDomainWidths, context);
+            context.kernelConfiguration().mpi.rank = rank;
+            context.kernelConfiguration().mpi.worldSize = worldSize;
+            readdy::kernel::mpi::model::MPIDomain domain(context);
             CHECK(domain.worldSize() == 3);
             CHECK(domain.nDomainsPerAxis() == std::array<std::size_t, 3>({2, 1, 1}));
             CHECK(domain.domainIndex()(0, 0, 0) == 0);
@@ -311,7 +333,9 @@ TEST_CASE("Test domain decomposition", "[mpi]") {
                 {32 + 1, {20., 20., 10.}},
                 {12 + 1, {10., 15., 10.}}};
 
-        std::array<readdy::scalar, 3> userMinDomainWidths{4.6, 4.6, 4.6};
+        context.kernelConfiguration().mpi.dx = 4.6;
+        context.kernelConfiguration().mpi.dy = 4.6;
+        context.kernelConfiguration().mpi.dz = 4.6;
         readdy::util::Index2D index2D(pbcs.size(), boxes.size());
         for (int i = 0; i < pbcs.size(); ++i) {
             const auto &pbc = pbcs[i];
@@ -324,7 +348,9 @@ TEST_CASE("Test domain decomposition", "[mpi]") {
                     // position is always at the positive "end" of the box
                     readdy::Vec3 pos{0.45 * box[0], 0.45 * box[1], 0.45 * box[2]};
                     for (int rank = 1; rank < worldSize; ++rank) {
-                        readdy::kernel::mpi::model::MPIDomain domain(rank, worldSize, userMinDomainWidths, context);
+                        context.kernelConfiguration().mpi.rank = rank;
+                        context.kernelConfiguration().mpi.worldSize = worldSize;
+                        readdy::kernel::mpi::model::MPIDomain domain(context);
                         auto wrapped = domain.wrapIntoThisHalo(pos);
                         if (domain.isInDomainCore(pos)) {
                             CHECK(pos == wrapped);

@@ -52,63 +52,33 @@ readdy::model::Kernel *MPIKernel::create() {
     return new MPIKernel();
 }
 
-MPIKernel::MPIKernel() : Kernel(name), _stateModel(_data, _context), _actions(this), _observables(this) {
-    // Since this kernel should be a drop-in replacement, we need to MPI_Init here
-    // given the option that it is already initialized?
-    int myWorldSize;
-    int myRank;
-    int nameLen;
-    char myProcessorName[MPI_MAX_PROCESSOR_NAME];
+MPIKernel::MPIKernel() : MPIKernel(readdy::model::Context{}) {}
 
-    MPI_Comm_size(MPI_COMM_WORLD, &myWorldSize);
-    MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
-    MPI_Get_processor_name(myProcessorName, &nameLen);
-
-    rank = myRank;
-    worldSize = myWorldSize;
-    processorName = myProcessorName;
-}
-
-MPIKernel::MPIKernel(readdy::model::Context ctx) : MPIKernel() {
-    _context = std::move(ctx);
-    initialize();
-}
-
-
-void MPIKernel::initialize() {
-    readdy::model::Kernel::initialize();
-    readdy::log::trace("MPIKernel::initialize");
-    // Spatial decomposition
-    {
-        const auto conf = _context.kernelConfiguration();
-        std::array<scalar, 3> minDomainWidths{conf.mpi.dx, conf.mpi.dy, conf.mpi.dz};
-        _domain = std::make_unique<model::MPIDomain>(rank, worldSize, minDomainWidths, _context);
-        _stateModel.setDomain(domain());
-    }
-
+MPIKernel::MPIKernel(readdy::model::Context ctx) : Kernel(name, std::move(ctx)), _domain(ctx), _data(&(_domain)),
+                                                   _actions(this), _observables(this), _stateModel(_data, _context) {
     // Description of decomposition
-    if (rank == 0) {
+    if (_domain.rank() == 0) {
         std::string description;
         description += fmt::format("MPI Kernel uses domain decomposition:\n");
         description += fmt::format("--------------------------------\n");
         description += fmt::format(" - Number of domains on axes (x,y,z) ({},{},{})\n",
-                                   _domain->nDomainsPerAxis()[0], _domain->nDomainsPerAxis()[1], _domain->nDomainsPerAxis()[2]);
+                                   _domain.nDomainsPerAxis()[0], _domain.nDomainsPerAxis()[1], _domain.nDomainsPerAxis()[2]);
         description += fmt::format(" - Domain widths on axes (x,y,z) ({},{},{})\n",
-                                   _context.boxSize()[0] / _domain->nDomainsPerAxis()[0],
-                                   _context.boxSize()[1] / _domain->nDomainsPerAxis()[1],
-                                   _context.boxSize()[2] / _domain->nDomainsPerAxis()[2]);
-        description += fmt::format(" - Used {} ranks of available worldSize {}\n", _domain->nUsedRanks(),
-                                   _domain->worldSize());
+                                   _context.boxSize()[0] / _domain.nDomainsPerAxis()[0],
+                                   _context.boxSize()[1] / _domain.nDomainsPerAxis()[1],
+                                   _context.boxSize()[2] / _domain.nDomainsPerAxis()[2]);
+        description += fmt::format(" - Used {} ranks of available worldSize {}\n", _domain.nUsedRanks(),
+                                   _domain.worldSize());
         readdy::log::info(description);
-        if (_domain->nUsedRanks() != _domain->worldSize()) {
+        if (_domain.nUsedRanks() != _domain.worldSize()) {
             readdy::log::warn("! Number of used workers {} is not equal to what was allocated {} !",
-                              _domain->nUsedRanks(), _domain->worldSize());
+                              _domain.nUsedRanks(), _domain.worldSize());
             readdy::log::warn("You should adapt your number of workers or tune the minimum domain widths");
         }
     }
 
     // Make a new communicator for only used processes
-    if (_domain->nUsedRanks() != _domain->worldSize()) {
+    if (_domain.nUsedRanks() != _domain.worldSize()) {
         // Create group of all in world
         MPI_Group worldGroup;
         MPI_Comm_group(MPI_COMM_WORLD, &worldGroup);
@@ -116,8 +86,8 @@ void MPIKernel::initialize() {
         // Remove all unnecessary ranks
         MPI_Group usedGroup;
         int removeRanges[1][3];
-        removeRanges[0][0] = _domain->nUsedRanks();
-        removeRanges[0][1] = _domain->worldSize() - 1;
+        removeRanges[0][0] = _domain.nUsedRanks();
+        removeRanges[0][1] = _domain.worldSize() - 1;
         removeRanges[0][2] = 1;
         MPI_Group_range_excl(worldGroup, 1, removeRanges, &usedGroup);
 

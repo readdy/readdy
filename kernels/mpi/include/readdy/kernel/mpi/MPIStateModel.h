@@ -56,7 +56,6 @@ namespace readdy::kernel::mpi {
 class MPIStateModel : public readdy::model::StateModel {
 
 public:
-
     using Data = MPIDataContainer;
     using Particle = readdy::model::Particle;
     using ReactionCountsMap = readdy::model::reactions::ReactionCounts;
@@ -74,9 +73,9 @@ public:
 
     MPIStateModel &operator=(MPIStateModel &&) = delete;
 
-    const std::vector<Vec3> getParticlePositions() const override;
+    std::vector<Vec3> getParticlePositions() const override;
 
-    const std::vector<Particle> getParticles() const override;
+    std::vector<Particle> getParticles() const override;
 
     void initializeNeighborList(scalar interactionDistance) override {
         _neighborList->setUp(domain());
@@ -127,8 +126,8 @@ public:
         return _observableData.time;
     }
 
-    scalar &time() override {
-        return _observableData.time;
+    void setTime(scalar value) override {
+        _observableData.time = value;
     }
 
     Data const *const getParticleData() const {
@@ -184,21 +183,11 @@ public:
     void clear() override;
 
     readdy::model::top::GraphTopology *const
-    addTopology(TopologyTypeId type, const std::vector<readdy::model::TopologyParticle> &particles) override {
+    addTopology(TopologyTypeId type, const std::vector<readdy::model::Particle> &particles) override {
         throw std::logic_error("no topologies on MPI kernel");
     }
 
     std::vector<readdy::model::top::GraphTopology *> getTopologies() override {
-        throw std::logic_error("no topologies on MPI kernel");
-    }
-
-    const readdy::model::top::GraphTopology *
-    getTopologyForParticle(readdy::model::top::Topology::particle_index particle) const override {
-        throw std::logic_error("no topologies on MPI kernel");
-    }
-
-    readdy::model::top::GraphTopology *
-    getTopologyForParticle(readdy::model::top::Topology::particle_index particle) override {
         throw std::logic_error("no topologies on MPI kernel");
     }
 
@@ -222,7 +211,7 @@ public:
 
     void distributeParticles(const std::vector<Particle> &ps);
 
-    const std::vector<MPIStateModel::Particle> gatherParticles() const;
+    std::vector<MPIStateModel::Particle> gatherParticles() const;
 
     /**
      * 1. fill list `own` of own-responsible particles [to be sent around]

@@ -103,7 +103,9 @@ namespace mpi {
 void to_json(json &j, const Configuration &conf) {
     j = json{{"dx", conf.dx},
              {"dy", conf.dy},
-             {"dz", conf.dz}};
+             {"dz", conf.dz},
+             {"rank", conf.rank},
+             {"worldSize"}, conf.worldSize};
 }
 
 void from_json(const json &j, Configuration &conf) {
@@ -121,6 +123,17 @@ void from_json(const json &j, Configuration &conf) {
         conf.dz = j.at("dz").get<scalar>();
     } else {
         conf.dz = {};
+    }
+
+    if (j.find("rank") != j.end()) {
+        conf.rank = j.at("rank").get<int>();
+    } else {
+        conf.rank = -1;
+    }
+    if (j.find("worldSize") != j.end()) {
+        conf.worldSize = j.at("worldSize").get<int>();
+    } else {
+        conf.worldSize = -1;
     }
 }
 }
