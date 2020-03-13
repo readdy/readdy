@@ -236,6 +236,10 @@ public:
     template<typename Function>
     void forAllPairs(const Function &f);
 
+    // not now, maybe later
+    // template<typename Function>
+    //void forAllCoreCorePairs(const Function &f);
+
     std::size_t nCells() const {
         return _cellIndex.size();
     }

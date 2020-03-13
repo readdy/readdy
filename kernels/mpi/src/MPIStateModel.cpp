@@ -223,7 +223,7 @@ const std::vector<readdy::model::Particle> MPIStateModel::getParticles() const {
     std::vector<readdy::model::Particle> result;
     result.reserve(data->size());
     for (const auto &entry : *data) {
-        if (!entry.is_deactivated()) {
+        if (!entry.deactivated) {
             result.push_back(data->toParticle(entry));
         }
     }

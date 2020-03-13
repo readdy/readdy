@@ -33,10 +33,8 @@
  ********************************************************************/
 
 /**
- * « detailed description »
- *
  * @file MPIEulerBDIntegrator.cpp
- * @brief « brief description »
+ * @brief Propagate positions of particles according to Brownian Dynamics
  * @author chrisfroe
  * @date 03.06.19
  */
@@ -54,7 +52,7 @@ void MPIEulerBDIntegrator::perform() {
     auto& stateModel = kernel->getMPIKernelStateModel();
     const auto pd = stateModel.getParticleData();
     for(auto& entry : *pd) {
-        if(!entry.is_deactivated()) {
+        if(!entry.is_deactivated() and entry.responsible) {
             const scalar D = context.particleTypes().diffusionConstantOf(entry.type);
             const auto randomDisplacement = std::sqrt(2. * D * _timeStep) *
                                             (readdy::model::rnd::normal3<readdy::scalar>());
