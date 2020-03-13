@@ -54,10 +54,12 @@ readdy::model::Kernel *MPIKernel::create() {
 
 MPIKernel::MPIKernel() : MPIKernel(readdy::model::Context{}) {}
 
-MPIKernel::MPIKernel(readdy::model::Context ctx) : Kernel(name, std::move(ctx)), _domain(ctx), _data(&_domain),
-                                                   _actions(this), _observables(this), _stateModel(_data, _context, &_domain) {
+// pay attention to order of initialization, which is defined by class hierarchy, then by order of declaration
+MPIKernel::MPIKernel(const readdy::model::Context &ctx)
+        : Kernel(name, ctx), _domain(_context), _data(&_domain), _actions(this), _observables(this),
+          _stateModel(_data, _context, &_domain) {
     // Description of decomposition
-    if (_domain.rank() == 0) {
+    if (_domain.isMasterRank()) {
         std::string description;
         description += fmt::format("MPI Kernel uses domain decomposition:\n");
         description += fmt::format("--------------------------------\n");

@@ -56,36 +56,36 @@ class MPIActionFactory : public readdy::model::actions::ActionFactory {
 public:
     explicit MPIActionFactory(MPIKernel *kernel);
 
-    std::unique_ptr<readdy::model::actions::AddParticles>
+    [[nodiscard]] std::unique_ptr<readdy::model::actions::AddParticles>
     addParticles(const std::vector<readdy::model::Particle> &particles) const override;
 
-    std::unique_ptr<readdy::model::actions::EulerBDIntegrator> eulerBDIntegrator(scalar timeStep) const override;
+    [[nodiscard]] std::unique_ptr<readdy::model::actions::EulerBDIntegrator> eulerBDIntegrator(scalar timeStep) const override;
 
-    std::unique_ptr<readdy::model::actions::MdgfrdIntegrator> mdgfrdIntegrator(scalar timeStep) const override;
+    [[nodiscard]] std::unique_ptr<readdy::model::actions::MdgfrdIntegrator> mdgfrdIntegrator(scalar timeStep) const override;
 
-    std::unique_ptr<readdy::model::actions::CalculateForces> calculateForces() const override;
+    [[nodiscard]] std::unique_ptr<readdy::model::actions::CalculateForces> calculateForces() const override;
 
-    std::unique_ptr<readdy::model::actions::CreateNeighborList> createNeighborList(scalar interactionDistance) const override;
+    [[nodiscard]] std::unique_ptr<readdy::model::actions::CreateNeighborList> createNeighborList(scalar interactionDistance) const override;
 
-    std::unique_ptr<readdy::model::actions::UpdateNeighborList> updateNeighborList() const override;
+    [[nodiscard]] std::unique_ptr<readdy::model::actions::UpdateNeighborList> updateNeighborList() const override;
 
-    std::unique_ptr<readdy::model::actions::ClearNeighborList> clearNeighborList() const override;
+    [[nodiscard]] std::unique_ptr<readdy::model::actions::ClearNeighborList> clearNeighborList() const override;
 
-    std::unique_ptr<readdy::model::actions::EvaluateCompartments> evaluateCompartments() const override;
+    [[nodiscard]] std::unique_ptr<readdy::model::actions::EvaluateCompartments> evaluateCompartments() const override;
 
-    std::unique_ptr<readdy::model::actions::reactions::UncontrolledApproximation>
+    [[nodiscard]] std::unique_ptr<readdy::model::actions::reactions::UncontrolledApproximation>
     uncontrolledApproximation(scalar timeStep) const override;
 
-    std::unique_ptr<readdy::model::actions::reactions::Gillespie>
+    [[nodiscard]] std::unique_ptr<readdy::model::actions::reactions::Gillespie>
     gillespie(scalar timeStep) const override;
 
-    std::unique_ptr<readdy::model::actions::reactions::DetailedBalance>
+    [[nodiscard]] std::unique_ptr<readdy::model::actions::reactions::DetailedBalance>
     detailedBalance(scalar timeStep) const override;
 
-    std::unique_ptr<readdy::model::actions::top::EvaluateTopologyReactions>
+    [[nodiscard]] std::unique_ptr<readdy::model::actions::top::EvaluateTopologyReactions>
     evaluateTopologyReactions(scalar timeStep) const override;
 
-    std::unique_ptr<readdy::model::actions::top::BreakBonds>
+    [[nodiscard]] std::unique_ptr<readdy::model::actions::top::BreakBonds>
     breakBonds(scalar timeStep, readdy::model::actions::top::BreakConfig config) const override;
 };
 

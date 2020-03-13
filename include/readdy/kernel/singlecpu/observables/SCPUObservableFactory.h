@@ -54,6 +54,8 @@ class SCPUObservableFactory : public readdy::model::observables::ObservableFacto
 public:
     explicit SCPUObservableFactory(readdy::kernel::scpu::SCPUKernel* kernel);
 
+    std::unique_ptr<readdy::model::observables::Energy> energy(Stride stride) const override;
+
     std::unique_ptr<readdy::model::observables::Virial> virial(Stride stride) const override;
 
     std::unique_ptr<readdy::model::observables::HistogramAlongAxis>

@@ -63,9 +63,7 @@ class ObservableFactory {
 public:
     explicit ObservableFactory(Kernel *const kernel) : kernel(kernel) {};
 
-    std::unique_ptr<Energy> energy(Stride stride) const {
-        return std::make_unique<Energy>(kernel, stride);
-    };
+    virtual std::unique_ptr<Energy> energy(Stride stride) const = 0;
 
     virtual std::unique_ptr<Virial> virial(Stride stride) const = 0;
     

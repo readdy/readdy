@@ -92,9 +92,12 @@ std::unique_ptr<readdy::model::observables::ReactionCounts> MPIObservableFactory
     return {std::make_unique<MPIReactionCounts>(kernel, stride)};
 }
 
-std::unique_ptr<readdy::model::observables::Virial>
-MPIObservableFactory::virial(Stride stride) const {
+std::unique_ptr<readdy::model::observables::Virial> MPIObservableFactory::virial(Stride stride) const {
     return {std::make_unique<MPIVirial>(kernel, stride)};
+}
+
+std::unique_ptr<readdy::model::observables::Energy> MPIObservableFactory::energy(Stride stride) const {
+    return {std::make_unique<MPIEnergy>(kernel, stride)};
 }
 
 }

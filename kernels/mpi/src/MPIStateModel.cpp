@@ -46,9 +46,8 @@
 
 namespace readdy::kernel::mpi {
 
-MPIStateModel::MPIStateModel(Data &data, const readdy::model::Context &context, const model::MPIDomain *domain) : _data(data), _context(context), _domain(domain) {
-    _neighborList = std::make_unique<model::CellLinkedList>(data, context);
-}
+MPIStateModel::MPIStateModel(Data &data, const readdy::model::Context &context, const model::MPIDomain *domain)
+        : _data(data), _context(context), _domain(domain), _neighborList(data, context, domain) {}
 
 std::vector<readdy::Vec3> MPIStateModel::getParticlePositions() const {
     const auto data = getParticleData();
@@ -239,7 +238,6 @@ void MPIStateModel::addParticle(const MPIStateModel::Particle &p) {
 //                        MPI_Datatype sendtype, void* recvbuf, int recvcount,
 //                        MPI_Datatype recvtype, MPI_Comm comm)
 void MPIStateModel::synchronizeWithNeighbors() {
-    MPI_Barrier(MPI_COMM_WORLD);
     if (domain()->isIdleRank() or domain()->isMasterRank()) {
         return;
     }

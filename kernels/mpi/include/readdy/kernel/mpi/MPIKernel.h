@@ -65,7 +65,7 @@ public:
 
     ~MPIKernel() override = default;
 
-    explicit MPIKernel(readdy::model::Context ctx);
+    explicit MPIKernel(const readdy::model::Context &ctx);
 
     MPIKernel(const MPIKernel &) = delete;
 
@@ -131,11 +131,17 @@ public:
     }
 
 protected:
+    // order here is order of initialization
+    // https://en.cppreference.com/w/cpp/language/initializer_list#Initialization_order
+    // domain needs context
+    // data needs domain
+    // state model needs data and domain
+    model::MPIDomain _domain;
     MPIStateModel::Data _data;
+    MPIStateModel _stateModel;
     actions::MPIActionFactory _actions;
     observables::MPIObservableFactory _observables;
-    MPIStateModel _stateModel;
-    model::MPIDomain _domain;
+
 
     // The communicator for the subgroup of actually used workers
     MPI_Comm _commUsedRanks = MPI_COMM_WORLD;

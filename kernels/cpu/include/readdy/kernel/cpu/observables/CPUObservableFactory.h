@@ -55,6 +55,8 @@ class CPUObservableFactory : public readdy::model::observables::ObservableFactor
 public:
     explicit CPUObservableFactory(CPUKernel* kernel);
 
+    std::unique_ptr<model::observables::Energy> energy(Stride stride) const override;
+
     std::unique_ptr<model::observables::Virial> virial(Stride stride) const override;
 
     std::unique_ptr<model::observables::HistogramAlongAxis>

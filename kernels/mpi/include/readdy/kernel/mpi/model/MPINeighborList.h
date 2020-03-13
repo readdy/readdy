@@ -62,18 +62,14 @@ public:
 
     using IteratorBounds = std::tuple<std::size_t, std::size_t>;
 
-    CellLinkedList(Data &data, const readdy::model::Context &context)
-            : _data(data), _context(context), _head{}, _list{} {};
-
     /**
-     * The resulting neighborhood of cells avoids double neighborliness (neighborhood is a directed graph)
-     * for core cells with core cells in the usual way i.e. cell1 has cell2 as neighbor if (cellIdx1 > cellIdx2),
-     * for neighborhood of core cells with halo cells the, core cell has the halo cell as neighbor but not vice versa.
-     */
-    void setUp(const model::MPIDomain* domain) {
-        if (!_isSetUp) {
-            _domain = domain;
-
+    * The resulting neighborhood of cells avoids double neighborliness (neighborhood is a directed graph)
+    * for core cells with core cells in the usual way i.e. cell1 has cell2 as neighbor if (cellIdx1 > cellIdx2),
+    * for neighborhood of core cells with halo cells the, core cell has the halo cell as neighbor but not vice versa.
+    */
+    CellLinkedList(Data &data, const readdy::model::Context &context, const model::MPIDomain *domain)
+            : _data(data), _context(context), _head{}, _list{}, _domain(domain) {
+        if (_domain->isWorkerRank()) {
             // Each domain is subdivided into `cellsExtent[coord]` cells along axis coord
             // This guarantees that domain boundaries are also cell boundaries
             const auto boxSize = _context.get().boxSize();
@@ -81,9 +77,9 @@ public:
             std::array<std::size_t, 3> cellsExtent{}; // number of cells per domain per axis
             std::array<std::size_t, 3> cellsOrigin{}; // ijk of this domain's origin cell, i.e. the lower left cell
             for (std::size_t coord = 0; coord < 3; ++coord) {
-                cellsExtent[coord] = static_cast<std::size_t>(std::max(1., std::floor(domain->extent()[coord] / domain->haloThickness())));
-                cellsOrigin[coord] = domain->myIdx()[coord] * cellsExtent[coord];
-                nCellsPerAxis[coord] = cellsExtent[coord] * domain->nDomainsPerAxis()[coord];
+                cellsExtent[coord] = static_cast<std::size_t>(std::max(1., std::floor(_domain->extent()[coord] / _domain->haloThickness())));
+                cellsOrigin[coord] = _domain->myIdx()[coord] * cellsExtent[coord];
+                nCellsPerAxis[coord] = cellsExtent[coord] * _domain->nDomainsPerAxis()[coord];
                 _cellSize[coord] = boxSize[coord] / static_cast<scalar>(nCellsPerAxis[coord]);
             }
 
@@ -92,66 +88,65 @@ public:
             {
                 // local adjacency, iterate over cells in domain core
                 for (int i = cellsOrigin[0]; i < cellsOrigin[0] + cellsExtent[0]; ++i) {
-                for (int j = cellsOrigin[1]; j < cellsOrigin[1] + cellsExtent[1]; ++j) {
-                for (int k = cellsOrigin[2]; k < cellsOrigin[2] + cellsExtent[2]; ++k) {
-                    const auto cellIdx = _cellIndex(i,j,k);
-                    _cellsInCore.push_back(cellIdx);
-                    _cellNeighbors[cellIdx] = {}; // default initialize neighbors of cell, only relevant if this is the only cell
+                    for (int j = cellsOrigin[1]; j < cellsOrigin[1] + cellsExtent[1]; ++j) {
+                        for (int k = cellsOrigin[2]; k < cellsOrigin[2] + cellsExtent[2]; ++k) {
+                            const auto cellIdx = _cellIndex(i,j,k);
+                            _cellsInCore.push_back(cellIdx);
+                            _cellNeighbors[cellIdx] = {}; // default initialize neighbors of cell, only relevant if this is the only cell
 
-                    // for di,dj,dk, this also reaches neighbor cells that overlap with halo
-                    for (int di=-1; di<2; ++di) {
-                    for (int dj=-1; dj<2; ++dj) {
-                    for (int dk=-1; dk<2; ++dk) {
-                        if (di==0 and dj==0 and dk==0) {
-                            continue; // skip self
-                        }
-                        std::array<int, 3> otherCell = {i+di, j+dj, k+dk};
+                            // for di,dj,dk, this also reaches neighbor cells that overlap with halo
+                            for (int di=-1; di<2; ++di) {
+                                for (int dj=-1; dj<2; ++dj) {
+                                    for (int dk=-1; dk<2; ++dk) {
+                                        if (di==0 and dj==0 and dk==0) {
+                                            continue; // skip self
+                                        }
+                                        std::array<int, 3> otherCell = {i+di, j+dj, k+dk};
 
-                        // fix boundaries
-                        bool isValidCell = true;
-                        for (std::uint8_t axis = 0; axis < 3; ++axis) {
-                            auto nCells = static_cast<int>(_cellIndex[axis]);
-                            const auto pbc = _context.get().periodicBoundaryConditions();
-                            if (pbc[axis] && nCells > 2) {
-                                if (-1 <= otherCell[axis] and otherCell[axis] <= nCells) {
-                                    otherCell.at(axis) = (otherCell.at(axis) % nCells + nCells) % nCells;
-                                } else {
-                                    isValidCell = false;
+                                        // fix boundaries
+                                        bool isValidCell = true;
+                                        for (std::uint8_t axis = 0; axis < 3; ++axis) {
+                                            auto nCells = static_cast<int>(_cellIndex[axis]);
+                                            const auto pbc = _context.get().periodicBoundaryConditions();
+                                            if (pbc[axis] && nCells > 2) {
+                                                if (-1 <= otherCell[axis] and otherCell[axis] <= nCells) {
+                                                    otherCell.at(axis) = (otherCell.at(axis) % nCells + nCells) % nCells;
+                                                } else {
+                                                    isValidCell = false;
+                                                }
+                                            } else if (0 <= otherCell[axis] and otherCell[axis] < nCells) {
+                                                // all good, cell is within boxSize
+                                            } else {
+                                                isValidCell = false;
+                                            }
+                                        }
+
+                                        // add otherCell to neighborhood of cell, avoid double neighborliness
+                                        if (isValidCell) {
+                                            assert(std::all_of(otherCell.begin(), otherCell.end(), [](const auto& x){return x>=0;}));
+                                            const auto otherIdx = _cellIndex(otherCell[0],otherCell[1],otherCell[2]);
+                                            const auto cellCenter = Vec3(
+                                                    otherCell[0] * _cellSize[0] + 0.5 * _cellSize[0],
+                                                    otherCell[1] * _cellSize[1] + 0.5 * _cellSize[1],
+                                                    otherCell[2] * _cellSize[2] + 0.5 * _cellSize[2]);
+                                            if (_domain->isInDomainCore(cellCenter)) {
+                                                if (cellIdx < otherIdx) { // avoid double neighborliness for core cells
+                                                    _cellNeighbors[cellIdx].push_back(otherIdx);
+                                                }
+                                            } else {
+                                                // cells that are outside the core are only seen "from one side",
+                                                // because we iterate over the core cells only.
+                                                // thus always add them to the neighborhood
+                                                _cellNeighbors[cellIdx].push_back(otherIdx);
+                                                // additionally keep track of all cells that overlap with halo
+                                                _cellsInHalo.push_back(otherIdx);
+                                            }
+                                        }
+                                    }
                                 }
-                            } else if (0 <= otherCell[axis] and otherCell[axis] < nCells) {
-                                // all good, cell is within boxSize
-                            } else {
-                                isValidCell = false;
                             }
                         }
-
-                        // add otherCell to neighborhood of cell, avoid double neighborliness
-                        if (isValidCell) {
-                            assert(std::all_of(otherCell.begin(), otherCell.end(), [](const auto& x){return x>=0;}));
-                            const auto otherIdx = _cellIndex(otherCell[0],otherCell[1],otherCell[2]);
-                            const auto cellCenter = Vec3(
-                                    otherCell[0] * _cellSize[0] + 0.5 * _cellSize[0],
-                                    otherCell[1] * _cellSize[1] + 0.5 * _cellSize[1],
-                                    otherCell[2] * _cellSize[2] + 0.5 * _cellSize[2]);
-                            if (domain->isInDomainCore(cellCenter)) {
-                                if (cellIdx < otherIdx) { // avoid double neighborliness for core cells
-                                    _cellNeighbors[cellIdx].push_back(otherIdx);
-                                }
-                            } else {
-                                // cells that are outside the core are only seen "from one side",
-                                // because we iterate over the core cells only.
-                                // thus always add them to the neighborhood
-                                _cellNeighbors[cellIdx].push_back(otherIdx);
-                                // additionally keep track of all cells that overlap with halo
-                                _cellsInHalo.push_back(otherIdx);
-                            }
-                        }
-
                     }
-                    }
-                    }
-                }
-                }
                 }
 
                 // clean up, why not
@@ -162,19 +157,13 @@ public:
                 auto last = std::unique(std::begin(_cellsInHalo), std::end(_cellsInHalo));
                 _cellsInHalo.erase(last, std::end(_cellsInHalo));
             }
-            _isSetUp = true;
-            setUpBins();
+            update();
         }
-    };
-
-    void update() {
-        setUpBins();
     }
 
     virtual void clear() {
         _head.clear();
         _list.resize(0);
-        _isSetUp = false;
     }
 
     const readdy::util::Index3D &cellIndex() const {
@@ -242,26 +231,28 @@ public:
     //void forAllCoreCorePairs(const Function &f);
 
     std::size_t nCells() const {
-        return _cellIndex.size();
+        if (_domain->isWorkerRank()) {
+            return _cellIndex.size();
+        } else {
+            throw std::logic_error("cannot know cell structure because not a worker rank");
+        }
     }
 
     BoxIterator particlesBegin(std::size_t cellIndex);
 
     BoxIterator particlesEnd(std::size_t cellIndex);
 
-protected:
-    virtual void setUpBins() {
-        if (_isSetUp) {
+    void update() {
+        if (_domain->isWorkerRank()) {
             auto nParticles = _data.get().size();
             _head.clear(); // head structure will be built lazily upon filling bins
             _list.resize(0);
             _list.resize(nParticles + 1); // _list[0] is terminator for a sequence of particles
             fillBins();
-        } else {
-            throw std::logic_error("Attempting to fill neighborlist bins, but cell structure is not set up yet");
         }
     }
 
+protected:
     void fillBins() {
         const auto &boxSize = _context.get().boxSize();
 
@@ -297,9 +288,6 @@ protected:
     // next particle, this string is terminated if j=0
     LIST _list;
 
-    // refers to initialization of cellSize, cellIndex, cellNeighbors, cellsInCore, cellsInHalo
-    bool _isSetUp{false};
-
     Vec3 _cellSize{0, 0, 0};
 
     readdy::util::Index3D _cellIndex;
@@ -313,7 +301,7 @@ protected:
 
     std::reference_wrapper<Data> _data;
     std::reference_wrapper<const readdy::model::Context> _context;
-    const model::MPIDomain * _domain{nullptr};
+    const model::MPIDomain * _domain;
 };
 
 class BoxIterator {

@@ -65,7 +65,7 @@ void MPICalculateForces::performImpl() {
     const auto &context = kernel->context();
     auto &stateModel = kernel->getMPIKernelStateModel();
     auto &data = *stateModel.getParticleData();
-    auto &neighborList = *stateModel.getNeighborList();
+    auto &neighborList = stateModel.getNeighborList();
 
     stateModel.energy() = 0;
     stateModel.virial() = Matrix33{{{0, 0, 0, 0, 0, 0, 0, 0, 0}}};

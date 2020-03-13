@@ -99,4 +99,8 @@ CPUObservableFactory::virial(Stride stride) const {
     return {std::make_unique<CPUVirial>(kernel, stride)};
 }
 
+std::unique_ptr<model::observables::Energy> CPUObservableFactory::energy(Stride stride) const {
+    return {std::make_unique<model::observables::Energy>(kernel, stride)};
+}
+
 }

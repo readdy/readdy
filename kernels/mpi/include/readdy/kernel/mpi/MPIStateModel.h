@@ -78,12 +78,13 @@ public:
     std::vector<Particle> getParticles() const override;
 
     void initializeNeighborList(scalar interactionDistance) override {
-        _neighborList->setUp(domain());
-        _neighborList->update();
+        /* noop, this neighborlist is initialized by construction */
     }
 
     void updateNeighborList() override {
-        _neighborList->update();
+        if (_domain->isWorkerRank()) {
+            _neighborList.update();
+        }
     }
 
     void addParticle(const Particle &p) override;
@@ -138,17 +139,26 @@ public:
         return &_data.get();
     }
 
-    NeighborList const *const getNeighborList() const {
-        return _neighborList.get();
-
+    const NeighborList &getNeighborList() const {
+        if (_domain->isWorkerRank()) {
+            return _neighborList;
+        } else {
+            throw std::logic_error("only worker ranks have a neighbor-list");
+        }
     }
 
-    NeighborList *const getNeighborList() {
-        return _neighborList.get();
+    NeighborList &getNeighborList() {
+        if (_domain->isWorkerRank()) {
+            return _neighborList;
+        } else {
+            throw std::logic_error("only worker ranks have a neighbor-list");
+        }
     }
 
     void clearNeighborList() override {
-        _neighborList->clear();
+        if (_domain->isWorkerRank()) {
+            _neighborList.clear();
+        }
     }
 
     std::vector<readdy::model::reactions::ReactionRecord> &reactionRecords() {
@@ -201,7 +211,8 @@ public:
 
     /**
      * Above are individual operations, i.e. each worker/rank, can execute them without side-effects.
-     * Following are MPI collective operations, i.e. behavior is different depending on rank
+     * Following are MPI collective operations, i.e. behavior is different depending on rank.
+     * They should not be called by user, but are better wrapped in Actions.
      */
     void distributeParticle(const Particle &p);
 
@@ -237,8 +248,8 @@ private:
     readdy::kernel::scpu::model::ObservableData _observableData;
     std::reference_wrapper<const readdy::model::Context> _context;
     std::reference_wrapper<Data> _data;
-    std::unique_ptr<NeighborList> _neighborList;
-    const model::MPIDomain* _domain{nullptr};
+    NeighborList _neighborList;
+    const model::MPIDomain* _domain;
     MPI_Comm _commUsedRanks = MPI_COMM_WORLD;
 };
 

@@ -93,7 +93,7 @@ public:
 
     virtual std::unique_ptr<AddParticles> addParticles(const std::vector<Particle> &particles) const = 0;
 
-    std::unique_ptr<AddParticles> addParticles(const Particle &particle) const {
+    virtual std::unique_ptr<AddParticles> addParticles(const Particle &particle) const {
         return addParticles(std::vector<Particle>{particle});
     }
 
