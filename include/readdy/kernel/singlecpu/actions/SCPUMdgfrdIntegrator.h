@@ -121,7 +121,7 @@ public:
         const auto &box = context.boxSize().data();
         auto& stateModel = kernel->getSCPUKernelStateModel();
         const auto pd = stateModel.getParticleData();
-        const auto t = stateModel.time();
+        auto t = stateModel.time();
         for (auto& entry : *pd){
 
         }

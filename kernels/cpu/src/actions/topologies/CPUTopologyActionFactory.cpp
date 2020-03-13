@@ -73,14 +73,14 @@ ctop::CPUTopologyActionFactory::createCalculateCosineDihedralPotential(
     );
 }
 
-ctop::CPUTopologyActionFactory::action_ref
+ctop::CPUTopologyActionFactory::ActionPtr
 ctop::CPUTopologyActionFactory::createChangeParticleType(
-        top::GraphTopology *const topology, const vertex &v,
+        top::GraphTopology *const topology, const readdy::model::top::Graph::PersistentVertexIndex &v,
         const readdy::ParticleTypeId &type_to) const {
     return std::make_unique<reactions::op::CPUChangeParticleType>(&_data.get(), topology, v, type_to);
 }
 
-top::reactions::actions::TopologyReactionActionFactory::action_ref
+top::reactions::actions::TopologyReactionActionFactory::ActionPtr
 readdy::kernel::cpu::actions::top::CPUTopologyActionFactory::createChangeTopologyType(top::GraphTopology *const topology,
                                                                                     const std::string &type_to) const {
     return std::make_unique<readdy::model::top::reactions::actions::ChangeTopologyType>(
@@ -88,16 +88,16 @@ readdy::kernel::cpu::actions::top::CPUTopologyActionFactory::createChangeTopolog
     );
 }
 
-top::reactions::actions::TopologyReactionActionFactory::action_ref
+top::reactions::actions::TopologyReactionActionFactory::ActionPtr
 readdy::kernel::cpu::actions::top::CPUTopologyActionFactory::createChangeParticlePosition(
-        top::GraphTopology *topology, const top::reactions::actions::TopologyReactionActionFactory::vertex &v,
+        top::GraphTopology *topology, const readdy::model::top::Graph::PersistentVertexIndex &v,
         readdy::Vec3 position) const {
     return std::make_unique<reactions::op::CPUChangeParticlePosition>(&_data.get(), topology, v, position);
 }
 
-top::reactions::actions::TopologyReactionActionFactory::action_ref
+top::reactions::actions::TopologyReactionActionFactory::ActionPtr
 readdy::kernel::cpu::actions::top::CPUTopologyActionFactory::createAppendParticle(top::GraphTopology *topology,
-                                                                                  const std::vector<vertex> &neighbors,
+                                                                                  const std::vector<readdy::model::top::Graph::PersistentVertexIndex> &neighbors,
                                                                                   ParticleTypeId type,
                                                                                   const Vec3 &position) const {
     return std::make_unique<reactions::op::CPUAppendParticle>(&_data.get(), topology, neighbors, type, position);

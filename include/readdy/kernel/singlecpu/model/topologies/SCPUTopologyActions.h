@@ -67,15 +67,14 @@ public:
             : CalculateHarmonicBondPotential(context), potential(potential), data(data),
               observableData(observableData) {}
 
-    scalar perform(const readdy::model::top::Topology *const topology) override {
+    scalar perform(const readdy::model::top::GraphTopology *const topology) override {
         scalar energy = 0;
-        const auto &particleIndices = topology->getParticles();
         for (const auto &bond : potential->getBonds()) {
             if (bond.forceConstant == 0) continue;
 
             Vec3 forceUpdate{0, 0, 0};
-            auto &e1 = data->entry_at(particleIndices.at(bond.idx1));
-            auto &e2 = data->entry_at(particleIndices.at(bond.idx2));
+            auto &e1 = data->entry_at(bond.idx1);
+            auto &e2 = data->entry_at(bond.idx2);
             const auto x_ij = bcs::shortestDifference(e1.position(), e2.position(), context->boxSize().data(),
                                                       context->periodicBoundaryConditions().data());
             potential->calculateForce(forceUpdate, x_ij, bond);
@@ -98,14 +97,13 @@ public:
             : CalculateHarmonicAnglePotential(context), potential(potential), data(data),
               observableData(observableData) {}
 
-    scalar perform(const readdy::model::top::Topology *const topology) override {
+    scalar perform(const readdy::model::top::GraphTopology *const topology) override {
         scalar energy = 0;
-        const auto &particleIndices = topology->getParticles();
 
         for (const auto &angle : potential->getAngles()) {
-            auto &e1 = data->entry_at(particleIndices.at(angle.idx1));
-            auto &e2 = data->entry_at(particleIndices.at(angle.idx2));
-            auto &e3 = data->entry_at(particleIndices.at(angle.idx3));
+            auto &e1 = data->entry_at(angle.idx1);
+            auto &e2 = data->entry_at(angle.idx2);
+            auto &e3 = data->entry_at(angle.idx3);
             const auto x_ji = bcs::shortestDifference(e2.pos, e1.pos, context->boxSize().data(),
                                                       context->periodicBoundaryConditions().data());
             const auto x_jk = bcs::shortestDifference(e2.pos, e3.pos, context->boxSize().data(),
@@ -127,15 +125,13 @@ public:
             : CalculateCosineDihedralPotential(context), potential(pot), data(data) {
     }
 
-    scalar perform(const readdy::model::top::Topology *const topology) override {
+    scalar perform(const readdy::model::top::GraphTopology *const topology) override {
         scalar energy = 0;
-        const auto &particleIndices = topology->getParticles();
-
         for (const auto &dih : potential->getDihedrals()) {
-            auto &e_i = data->entry_at(particleIndices.at(dih.idx1));
-            auto &e_j = data->entry_at(particleIndices.at(dih.idx2));
-            auto &e_k = data->entry_at(particleIndices.at(dih.idx3));
-            auto &e_l = data->entry_at(particleIndices.at(dih.idx4));
+            auto &e_i = data->entry_at(dih.idx1);
+            auto &e_j = data->entry_at(dih.idx2);
+            auto &e_k = data->entry_at(dih.idx3);
+            auto &e_l = data->entry_at(dih.idx4);
             const auto x_ji = bcs::shortestDifference(e_j.pos, e_i.pos, context->boxSize().data(),
                                                       context->periodicBoundaryConditions().data());
             const auto x_kj = bcs::shortestDifference(e_k.pos, e_j.pos, context->boxSize().data(),
@@ -154,17 +150,13 @@ namespace reactions::op {
 class SCPUChangeParticleType : public readdy::model::top::reactions::actions::ChangeParticleType {
     SCPUParticleData<model::Entry> *const data;
 public:
-    SCPUChangeParticleType(SCPUParticleData<model::Entry> *const data, top::GraphTopology *const topology, const vertex &v,
-                           const ParticleTypeId &type_to) : ChangeParticleType(topology, v, type_to), data(data) {}
+    SCPUChangeParticleType(SCPUParticleData<model::Entry> *const data, top::GraphTopology *const topology,
+                           const top::Graph::PersistentVertexIndex &v, const ParticleTypeId &type_to)
+                           : ChangeParticleType(topology, v, type_to), data(data) {}
 
     void execute() override {
-        const auto idx = topology->getParticles().at(_vertex->particleIndex);
-        _vertex->particleType() = previous_type;
+        const auto idx = topology->graph().vertices().at(_vertex)->particleIndex;
         std::swap(data->entry_at(idx).type, previous_type);
-    }
-
-    void undo() override {
-        execute();
     }
 
 };
@@ -173,47 +165,35 @@ class SCPUChangeParticlePosition : public readdy::model::top::reactions::actions
     SCPUParticleData<model::Entry> *const data;
 public:
     SCPUChangeParticlePosition(SCPUParticleData<model::Entry> *const data, top::GraphTopology *const topology,
-                               const vertex &v, Vec3 posTo) : ChangeParticlePosition(topology, v, posTo), data(data) {}
+                               const top::Graph::PersistentVertexIndex &v, Vec3 posTo)
+                               : ChangeParticlePosition(topology, v, posTo), data(data) {}
 
     void execute() override {
-        const auto idx = topology->getParticles().at(_vertex->particleIndex);
+        const auto idx = topology->graph().vertices().at(_vertex)->particleIndex;
         std::swap(data->entry_at(idx).pos, _posTo);
     }
 
-    void undo() override {
-        execute();
-    }
 };
 
 class SCPUAppendParticle : public readdy::model::top::reactions::actions::AppendParticle {
     SCPUParticleData<model::Entry> *const data;
     readdy::model::Particle particle;
-    SCPUParticleData<model::Entry>::EntryIndex insertIndex;
-    vertex newParticleIt;
+    SCPUParticleData<model::Entry>::EntryIndex insertIndex {};
 public:
     SCPUAppendParticle(SCPUParticleData<model::Entry> *const data, top::GraphTopology *topology,
-                       std::vector<vertex> neighbors, ParticleTypeId type, Vec3 pos)
+                       std::vector<top::Graph::PersistentVertexIndex> neighbors, ParticleTypeId type, Vec3 pos)
             : AppendParticle(topology, std::move(neighbors), type, pos), data(data), particle(pos, type) {};
 
     void execute() override {
         auto entry = Entry(particle);
         insertIndex = data->addEntry(entry);
         auto firstNeighbor = neighbors[0];
-        topology->appendParticle(insertIndex, type, firstNeighbor, firstNeighbor->particleType());
-        // new particles get appended to the end of the linked list
-        newParticleIt = std::prev(topology->graph().vertices().end());
-        for (auto it = neighbors.begin() + 1; it != neighbors.end(); ++it) {
-            topology->graph().addEdge(newParticleIt, *it);
+        // append particle forming edge to the first neighbor
+        auto ix = topology->appendParticle(insertIndex, firstNeighbor);
+        // add remaining edges
+        for(std::size_t i = 1; i < neighbors.size(); ++i) {
+            topology->addEdge(ix, neighbors[i]);
         }
-    }
-
-    void undo() override {
-        for (auto &neighbor : neighbors) {
-            topology->graph().removeEdge(newParticleIt, neighbor);
-        }
-        topology->graph().removeVertex(newParticleIt);
-        topology->getParticles().erase(topology->getParticles().cend() - 1);
-        data->removeEntry(insertIndex);
     }
 };
 

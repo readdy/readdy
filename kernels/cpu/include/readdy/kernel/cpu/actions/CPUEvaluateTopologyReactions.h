@@ -52,7 +52,7 @@
 namespace readdy::kernel::cpu::actions::top {
 
 class CPUEvaluateTopologyReactions : public readdy::model::actions::top::EvaluateTopologyReactions {
-    using rate_t = readdy::model::top::GraphTopology::topology_reaction_rate;
+    using rate_t = readdy::model::top::GraphTopology::ReactionRate;
 public:
     CPUEvaluateTopologyReactions(CPUKernel* kernel, readdy::scalar timeStep);
 

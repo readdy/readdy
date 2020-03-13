@@ -39,14 +39,20 @@ Created on 26.09.17
 @author: chrisfroe
 """
 
-import os
-from pint import UnitRegistry
+import pint
 
-current_dir = os.path.dirname(os.path.abspath(__file__))
-unit_definitions = os.path.join(current_dir, 'readdy_units.txt')
-ureg = UnitRegistry(unit_definitions)
+#current_dir = os.path.dirname(os.path.abspath(__file__))
+#unit_definitions = os.path.join(current_dir, 'readdy_units.txt')
+ureg = pint.UnitRegistry()
+ureg.define('molunit = []')
+ureg.define('molar = molunit / (1e-3 * m ** 3) = M')
+ureg.define('avogadro_number = 6.02214129e23 molunit^-1 = N_A = mole = mol')
+
 
 # enable automatic conversion from energy to temperature and vice versa
 ureg.enable_contexts("boltzmann")
 
 Q_ = ureg.Quantity
+
+pint.set_application_registry(ureg)
+del pint

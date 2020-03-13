@@ -46,9 +46,11 @@ namespace readdy::model {
 
 std::vector<Particle> StateModel::getParticlesForTopology(const top::GraphTopology &topology) const {
     std::vector<Particle> result;
-    result.reserve(topology.getNParticles());
-    for(const auto& p : topology.getParticles()) {
-        result.push_back(getParticleForIndex(p));
+    result.reserve(topology.graph().nVertices());
+    for(const auto& v : topology.graph().vertices()) {
+        if(!v.deactivated()) {
+            result.push_back(getParticleForIndex(v->particleIndex));
+        }
     }
     return result;
 }

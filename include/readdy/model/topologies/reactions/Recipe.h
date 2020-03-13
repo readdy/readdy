@@ -56,11 +56,7 @@ namespace top::reactions {
 class Recipe {
 public:
 
-    using reaction_operations = std::vector<op::Operation::Ref>;
-    using topology_graph = actions::TopologyReactionAction::topology_graph;
-    using Vertex = topology_graph::vertex;
-    using vertex_ref = topology_graph::vertex_ref;
-    using edge = topology_graph::Edge;
+    using reaction_operations = std::vector<op::Operation::OperationPtr>;
     using graph_topology = GraphTopology;
 
     explicit Recipe(graph_topology &topology) : _topology(topology) {};
@@ -75,65 +71,47 @@ public:
 
     ~Recipe() = default;
 
-    Recipe &changeParticleType(const Vertex &vertex, const std::string &to);
+    Recipe &changeParticleType(Graph::PersistentVertexIndex ref, const std::string &to);
 
-    Recipe &changeParticleType(const vertex_ref &ref, const std::string &to);
-
-    Recipe &changeParticleType(const Vertex &vertex, const ParticleTypeId &to);
-
-    Recipe &changeParticleType(const vertex_ref &ref, const ParticleTypeId &to) {
+    Recipe &changeParticleType(Graph::PersistentVertexIndex ref, const ParticleTypeId &to) {
         _steps.push_back(std::make_shared<op::ChangeParticleType>(ref, to));
         return *this;
     }
 
-    Recipe &appendNewParticle(const std::vector<Vertex> &neighbors, const std::string &type, const Vec3 &position);
+    Recipe &appendNewParticle(const std::vector<Graph::PersistentVertexIndex> &neighbors, const std::string &type,
+                              const Vec3 &position);
 
-    Recipe &appendNewParticle(const std::vector<vertex_ref> &neighbors, const std::string &type, const Vec3 &position);
-
-    Recipe &changeParticlePosition(const Vertex &v, Vec3 pos);
-
-    Recipe &changeParticlePosition(const vertex_ref &ref, const Vec3 &pos) {
+    Recipe &changeParticlePosition(Graph::PersistentVertexIndex ref, const Vec3 &pos) {
         _steps.push_back(std::make_shared<op::ChangeParticlePosition>(ref, pos));
         return *this;
     }
 
-    Recipe &addEdge(const edge &edge) {
+    Recipe &addEdge(const Graph::Edge &edge) {
         _steps.push_back(std::make_shared<op::AddEdge>(edge));
         return *this;
     }
 
-    Recipe &addEdge(vertex_ref v1, vertex_ref v2) {
+    Recipe &addEdge(Graph::PersistentVertexIndex v1, Graph::PersistentVertexIndex v2) {
         return addEdge(std::tie(v1, v2));
     }
 
-    Recipe &addEdge(const Vertex &v1, const Vertex &v2);
-
-    Recipe &removeEdge(const edge &edge) {
+    Recipe &removeEdge(const Graph::Edge &edge) {
         _steps.push_back(std::make_shared<op::RemoveEdge>(edge));
         return *this;
     }
 
-    Recipe &removeEdge(vertex_ref v1, vertex_ref v2) {
+    Recipe &removeEdge(Graph::PersistentVertexIndex v1, Graph::PersistentVertexIndex v2) {
         return removeEdge(std::tie(v1, v2));
     }
 
-    Recipe &removeEdge(const Vertex &v1, const Vertex &v2);
-
-    Recipe &separateVertex(const vertex_ref &vertex) {
-        std::for_each(vertex->neighbors().begin(), vertex->neighbors().end(), [this, &vertex](const auto &neighbor) {
-            this->removeEdge(std::make_tuple(vertex, neighbor));
-        });
-        return *this;
-    }
-
-    Recipe &separateVertex(const Vertex &vertex);
+    Recipe &separateVertex(Graph::PersistentVertexIndex vertex);
 
     Recipe &changeTopologyType(const std::string &type) {
         _steps.push_back(std::make_shared<op::ChangeTopologyType>(type));
         return *this;
     }
 
-    const reaction_operations &steps() const {
+    [[nodiscard]] const reaction_operations &steps() const {
         return _steps;
     }
 
@@ -141,7 +119,7 @@ public:
         return _topology;
     }
 
-    const graph_topology &topology() const {
+    [[nodiscard]] const graph_topology &topology() const {
         return _topology;
     }
 

@@ -49,7 +49,7 @@
 namespace readdy::model::top {
 
 struct TopologyRecord {
-    Topology::particle_indices particleIndices;
+    std::vector<VertexData::ParticleIndex> particleIndices;
     std::vector<std::tuple<std::size_t, std::size_t>> edges;
     TopologyTypeId type;
 

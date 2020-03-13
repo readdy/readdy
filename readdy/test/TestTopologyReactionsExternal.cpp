@@ -45,7 +45,6 @@
 #include <readdy/testing/KernelTest.h>
 #include <readdy/testing/Utils.h>
 #include <readdy/api/Simulation.h>
-#include <readdy/model/topologies/Utils.h>
 #include <readdy/common/FloatingPoints.h>
 
 using namespace readdy;
@@ -72,7 +71,7 @@ TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU
 
         Simulation simulation {create<TestType>(), ctx};
 
-        model::TopologyParticle x_0{0., 0., 0., simulation.context().particleTypes().idOf("Topology A")};
+        model::Particle x_0{0., 0., 0., simulation.context().particleTypes().idOf("Topology A")};
         {
             auto tid = ctx.topologyRegistry().addType("MyType");
             simulation.stateModel().addTopology(tid, {x_0});
@@ -115,18 +114,6 @@ TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU
         REQUIRE(foundBParticle);
     }
 
-    SECTION("Get topology for particle") {
-        Simulation simulation {create<TestType>(), ctx};
-        model::TopologyParticle x_0{0., 0., 0., ctx.particleTypes().idOf("Topology A")};
-        auto toplogy = simulation.addTopology("T", {x_0});
-        simulation.addParticle("A", 0, 0, 0);
-
-        for(auto particle : toplogy->getParticles()) {
-            auto returned_top = simulation.stateModel().getTopologyForParticle(particle);
-            REQUIRE(toplogy == returned_top);
-        }
-    }
-
     SECTION("Get topology for particle decay") {
         // check that the particles that are contained in (active) topologies point to their respective topologies, also
         // and especially after topology split reactions
@@ -143,17 +130,17 @@ TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU
 
         model::top::reactions::StructuralTopologyReaction r {"r", [aId](model::top::GraphTopology& top) {
             model::top::reactions::Recipe recipe (top);
-            if(top.getNParticles() > 1) {
-                auto rnd = model::rnd::uniform_int(0, static_cast<const int>(top.getNParticles() - 2));
-                auto it1 = top.graph().vertices().begin();
+            if(top.nParticles() > 1) {
+                auto rnd = model::rnd::uniform_int(0, static_cast<const int>(top.nParticles() - 2));
+                auto it1 = top.graph().begin();
                 auto it2 = std::next(it1, 1);
                 if(rnd > 0) {
                     std::advance(it1, rnd);
                     std::advance(it2, rnd);
                 }
-                recipe.removeEdge(it1, it2);
+                recipe.removeEdge(it1.persistent_index(), it2.persistent_index());
             } else {
-                recipe.changeParticleType(top.graph().vertices().begin(), aId);
+                recipe.changeParticleType(top.graph().vertices().begin().persistent_index(), aId);
             }
             return recipe;
         }, .7};
@@ -161,7 +148,7 @@ TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU
 
         Simulation simulation {create<TestType>(), ctx};
         
-        std::vector<model::TopologyParticle> topologyParticles;
+        std::vector<model::Particle> topologyParticles;
         {
             topologyParticles.reserve(90);
             for (int i = 0; i < 90; ++i) {
@@ -174,20 +161,13 @@ TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU
             auto it1 = graph.vertices().begin();
             auto it2 = std::next(graph.vertices().begin(), 1);
             while(it2 != graph.vertices().end()) {
-                graph.addEdge(it1, it2);
+                toplogy->addEdge(it1.persistent_index(), it2.persistent_index());
                 std::advance(it1, 1);
                 std::advance(it2, 1);
             }
         }
 
         simulation.run(35, 1.);
-
-        log::trace("got n topologies: {}", simulation.currentTopologies().size());
-        for(auto top : simulation.currentTopologies()) {
-            for(const auto p : top->getParticles()) {
-                REQUIRE(simulation.stateModel().getTopologyForParticle(p) == top);
-            }
-        }
     }
 
     SECTION("The parser") {
@@ -333,10 +313,10 @@ TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU
             {
                 auto it = top->graph().vertices().begin();
                 auto it2 = std::next(top->graph().vertices().begin());
-                top->graph().addEdge(it, it2);
+                top->addEdge(it.persistent_index(), it2.persistent_index());
                 ++it;
                 ++it2;
-                top->graph().addEdge(it, it2);
+                top->addEdge(it.persistent_index(), it2.persistent_index());
             }
         }
 
@@ -353,7 +333,7 @@ TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU
 
         REQUIRE(simulation.currentTopologies().size() == 1);
         auto chainTop = simulation.currentTopologies().at(0);
-        REQUIRE(chainTop->getNParticles() == 3 /*original topology particles*/ + 6 /*attached particles*/);
+        REQUIRE(chainTop->nParticles() == 3 /*original topology particles*/ + 6 /*attached particles*/);
 
         auto top_particles = simulation.stateModel().getParticlesForTopology(*chainTop);
 
@@ -362,7 +342,8 @@ TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU
         for(std::size_t idx = 0; idx < chainTop->graph().vertices().size() && !foundEndVertex; ++idx) {
             auto prev_neighbor = std::next(chainTop->graph().vertices().begin(), idx);
             const auto& v_end = *prev_neighbor;
-            if(v_end.particleType() == type_registry.idOf("end")) {
+            auto pix = v_end->particleIndex;
+            if(simulation.stateModel().getParticleForIndex(pix).type() == type_registry.idOf("end")) {
                 foundEndVertex = true;
 
                 REQUIRE(v_end.neighbors().size() == 1);
@@ -381,36 +362,24 @@ TEMPLATE_TEST_CASE("Test topology reactions external", "[topologies]", SingleCPU
                 auto factor = x_end.AlmostEquals(flouble{4.}) ? 1. : -1.;
 
                 // walk along topology sausage, check end particles are always at +-4, the other ones are of type middle
-                auto next_neighbor = v_end.neighbors().at(0);
-                std::size_t i = 0;
-                while(next_neighbor->particleType() != type_registry.idOf("end") && i < 20 /*no endless loop*/) {
-                    auto next_idx = std::distance(chainTop->graph().vertices().begin(), next_neighbor);
-                    const auto& next_particle = top_particles.at(static_cast<std::size_t>(next_idx));
-                    auto predicted_pos = factor*4. - factor*(i+1)*1.;
-                    auto actual_pos = next_particle.pos().x;
-                    REQUIRE((flouble(actual_pos).AlmostEquals(flouble(predicted_pos))));
-                    REQUIRE((flouble(next_particle.pos().y)).AlmostEquals(flouble(0.)));
-                    REQUIRE((flouble(next_particle.pos().z)).AlmostEquals(flouble(0.)));
-                    if(next_neighbor->particleType() == type_registry.idOf("middle")) {
-                        REQUIRE(next_neighbor->neighbors().size() == 2);
-                        if(next_neighbor->neighbors().at(0) == prev_neighbor) {
-                            prev_neighbor = next_neighbor;
-                            next_neighbor = next_neighbor->neighbors().at(1);
+                auto it = chainTop->graph().begin();
+                auto endIt1 = it;
+                auto endIt2 = it;
+                bool firstEnd = true;
+                for(; it != chainTop->graph().end(); ++it) {
+                    if(chainTop->particleForVertex(it.persistent_index()).type() == type_registry.idOf("end")) {
+                        if(firstEnd) {
+                            endIt1 = it;
+                            firstEnd = false;
                         } else {
-                            prev_neighbor = next_neighbor;
-                            next_neighbor = next_neighbor->neighbors().at(0);
+                            endIt2 = it;
                         }
-
-                    } else {
-                        REQUIRE(next_neighbor->neighbors().size() == 1);
                     }
-
-                    ++i;
                 }
-
-                REQUIRE(i == 3+6-1-1);
+                REQUIRE(endIt1 != chainTop->graph().end());
+                REQUIRE(endIt2 != chainTop->graph().end());
+                REQUIRE(chainTop->graph().graphDistance(endIt1, endIt2) == 8);
             }
         }
-        REQUIRE(foundEndVertex);
     }
 }

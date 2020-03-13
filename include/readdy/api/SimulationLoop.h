@@ -291,7 +291,7 @@ public:
                 });
                 ++t;
 
-                _kernel->stateModel().time() += _timeStep;
+                _kernel->stateModel().setTime(_kernel->stateModel().time() + _timeStep);
             }
             if (requiresNeighborList) runClearNeighborList();
             _start = t;

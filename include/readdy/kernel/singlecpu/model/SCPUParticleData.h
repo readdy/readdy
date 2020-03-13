@@ -94,7 +94,6 @@ public:
     using EntryIndex = typename Entries::size_type;
     using NewEntries = std::vector<Entry>;
     using Particle = readdy::model::Particle;
-    using TopParticle = readdy::model::TopologyParticle;
     using Force = Particle::Position;
     using Displacement = scalar;
     using iterator = typename Entries::iterator;
@@ -136,7 +135,7 @@ public:
         }
     }
 
-    std::vector<typename Entries::size_type> addTopologyParticles(const std::vector<TopParticle> &particles) {
+    std::vector<typename Entries::size_type> addTopologyParticles(const std::vector<Particle> &particles) {
         std::vector<typename Entries::size_type> indices;
         indices.reserve(particles.size());
         for(const auto& p : particles) {

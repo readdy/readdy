@@ -44,11 +44,7 @@
 
 #include "readdy/kernel/cpu/actions/topologies/CPUTopologyActions.h"
 
-namespace readdy {
-namespace kernel {
-namespace cpu {
-namespace actions {
-namespace top {
+namespace readdy::kernel::cpu::actions::top {
 
 
 CPUCalculateHarmonicBondPotential::CPUCalculateHarmonicBondPotential(const model::Context *const context,
@@ -56,14 +52,13 @@ CPUCalculateHarmonicBondPotential::CPUCalculateHarmonicBondPotential(const model
                                                                      const harmonic_bond *const potential)
         : CalculateHarmonicBondPotential(context), potential(potential), data(data) {}
 
-readdy::scalar CPUCalculateHarmonicBondPotential::perform(const readdy::model::top::Topology *const topology) {
+readdy::scalar CPUCalculateHarmonicBondPotential::perform(const readdy::model::top::GraphTopology* topology) {
     scalar energy = 0;
-    const auto &particleIndices = topology->getParticles();
     for (const auto &bond : potential->getBonds()) {
         if(bond.forceConstant == 0) continue;
 
-        auto &e1 = data->entry_at(particleIndices.at(bond.idx1));
-        auto &e2 = data->entry_at(particleIndices.at(bond.idx2));
+        auto &e1 = data->entry_at(bond.idx1);
+        auto &e2 = data->entry_at(bond.idx2);
         const auto x_ij = bcs::shortestDifference(e1.pos, e2.pos, context->boxSize(),
                                                   context->periodicBoundaryConditions());
         //if (updateEntryForces) {
@@ -84,15 +79,13 @@ CPUCalculateHarmonicAnglePotential::CPUCalculateHarmonicAnglePotential(const mod
                                                                        const harmonic_angle *const potential)
         : CalculateHarmonicAnglePotential(context), potential(potential), data(data) {}
 
-readdy::scalar CPUCalculateHarmonicAnglePotential::perform(const readdy::model::top::Topology *const topology) {
+readdy::scalar CPUCalculateHarmonicAnglePotential::perform(const readdy::model::top::GraphTopology* topology) {
     scalar energy = 0;
-    const auto &particleIndices = topology->getParticles();
-
 
     for (const auto &angle : potential->getAngles()) {
-        auto &e1 = data->entry_at(particleIndices.at(angle.idx1));
-        auto &e2 = data->entry_at(particleIndices.at(angle.idx2));
-        auto &e3 = data->entry_at(particleIndices.at(angle.idx3));
+        auto &e1 = data->entry_at(angle.idx1);
+        auto &e2 = data->entry_at(angle.idx2);
+        auto &e3 = data->entry_at(angle.idx3);
         const auto x_ji = bcs::shortestDifference(e2.pos, e1.pos, context->boxSize(),
                                                   context->periodicBoundaryConditions());
         const auto x_jk = bcs::shortestDifference(e2.pos, e3.pos, context->boxSize(),
@@ -110,15 +103,13 @@ CPUCalculateCosineDihedralPotential::CPUCalculateCosineDihedralPotential(const m
         : CalculateCosineDihedralPotential(context), potential(pot), data(data) {
 }
 
-readdy::scalar CPUCalculateCosineDihedralPotential::perform(const readdy::model::top::Topology *const topology) {
+readdy::scalar CPUCalculateCosineDihedralPotential::perform(const readdy::model::top::GraphTopology* topology) {
     scalar energy = 0;
-    const auto &particleIndices = topology->getParticles();
-
     for (const auto &dih : potential->getDihedrals()) {
-        auto &e_i = data->entry_at(particleIndices.at(dih.idx1));
-        auto &e_j = data->entry_at(particleIndices.at(dih.idx2));
-        auto &e_k = data->entry_at(particleIndices.at(dih.idx3));
-        auto &e_l = data->entry_at(particleIndices.at(dih.idx4));
+        auto &e_i = data->entry_at(dih.idx1);
+        auto &e_j = data->entry_at(dih.idx2);
+        auto &e_k = data->entry_at(dih.idx3);
+        auto &e_l = data->entry_at(dih.idx4);
         const auto x_ji = bcs::shortestDifference(e_j.pos, e_i.pos, context->boxSize(),
                                                   context->periodicBoundaryConditions());
         const auto x_kj = bcs::shortestDifference(e_k.pos, e_j.pos, context->boxSize(),
@@ -134,38 +125,21 @@ readdy::scalar CPUCalculateCosineDihedralPotential::perform(const readdy::model:
 namespace reactions::op {
 CPUChangeParticleType::CPUChangeParticleType(CPUStateModel::data_type *const data,
                                              model::top::GraphTopology *const topology,
-                                             const model::top::reactions::actions::TopologyReactionAction::vertex &v,
+                                             const readdy::model::top::Graph::PersistentVertexIndex &v,
                                              const ParticleTypeId &type_to)
         : ChangeParticleType(topology, v, type_to), data(data) {}
 
 void CPUChangeParticleType::execute() {
-    const auto idx = topology->getParticles().at(_vertex->particleIndex);
-    _vertex->particleType() = previous_type;
-    std::swap(data->entry_at(idx).type, previous_type);
-}
-
-void CPUChangeParticleType::undo() {
-    execute();
+    data->entry_at(topology->graph().vertices().at(_vertex)->particleIndex).type = type_to;
 }
 
 CPUChangeParticlePosition::CPUChangeParticlePosition(
         CPUStateModel::data_type *const data, model::top::GraphTopology *topology,
-        const model::top::reactions::actions::TopologyReactionAction::vertex &v, Vec3 position)
+        const readdy::model::top::Graph::PersistentVertexIndex &v, Vec3 position)
         : ChangeParticlePosition(topology, v, position), data(data) { }
 
 void CPUChangeParticlePosition::execute() {
-    const auto idx = topology->getParticles().at(_vertex->particleIndex);
-    std::swap(data->entry_at(idx).pos, _posTo);
-}
-
-void CPUChangeParticlePosition::undo() {
-    execute();
-}
-
-}
-
-}
-}
+    data->entry_at(topology->graph().vertices().at(_vertex)->particleIndex).pos = _posTo;
 }
 }
 }

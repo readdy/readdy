@@ -49,10 +49,7 @@
 #include <readdy/common/numeric.h>
 #include <readdy/common/Index.h>
 
-namespace readdy {
-namespace kernel {
-namespace scpu {
-namespace model {
+namespace readdy::kernel::scpu::model {
 
 class BoxIterator;
 
@@ -438,7 +435,4 @@ inline void CellLinkedList::forEachNeighbor(BoxIterator particle, std::size_t ce
     }
 }
 
-}
-}
-}
 }

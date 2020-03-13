@@ -109,7 +109,6 @@ struct ParticleBackup {
 
 class SCPUDetailedBalance : public readdy::model::actions::reactions::DetailedBalance {
     using scpu_data = readdy::kernel::scpu::model::SCPUParticleData<model::Entry>;
-    using fix_pos = readdy::model::Context::fix_pos_fun;
     using reaction_type = readdy::model::reactions::ReactionType;
 public:
     SCPUDetailedBalance(SCPUKernel *const kernel, scalar timeStep)

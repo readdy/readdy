@@ -65,7 +65,7 @@ TEST_CASE("Test the singlecpu neighbor list", "[scpu]") {
 
     INFO(fmt::format("Testing for box size ({}, {}, {})", boxSize[0], boxSize[1], boxSize[2]));
 
-    kernel::scpu::SCPUKernel kernel;
+    kernel::scpu::SCPUKernel kernel {};
     auto& context = kernel.context();
     context.particleTypes().add("Test", 1.);
     auto id = context.particleTypes().idOf("Test");
@@ -92,7 +92,8 @@ TEST_CASE("Test the singlecpu neighbor list", "[scpu]") {
         model::Particle particle(model::rnd::uniform_real<scalar>(-.5*context.boxSize()[0], .5*context.boxSize()[0]),
                                  model::rnd::uniform_real<scalar>(-.5*context.boxSize()[1], .5*context.boxSize()[1]),
                                  model::rnd::uniform_real<scalar>(-.5*context.boxSize()[2], .5*context.boxSize()[2]), id);
-        kernel.stateModel().addParticle(particle);
+        auto& stateModel = kernel.getSCPUKernelStateModel();
+        stateModel.addParticle(particle);
     }
 
     kernel.initialize();

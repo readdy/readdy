@@ -101,7 +101,7 @@ public:
     }
 
     std::vector<size_type>
-    addTopologyParticles(const std::vector<TopologyParticle> &topologyParticles) override {
+    addTopologyParticles(const std::vector<Particle> &topologyParticles) override {
         std::vector<size_type> indices;
         indices.reserve(topologyParticles.size());
         for(const auto& p : topologyParticles) {

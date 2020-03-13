@@ -131,7 +131,7 @@ public:
         return particle.id();
     };
 
-    TopologyParticle createTopologyParticle(const std::string &type, const Vec3 &pos) const {
+    Particle createTopologyParticle(const std::string &type, const Vec3 &pos) const {
         const auto &info = context().particleTypes().infoOf(type);
         if (info.flavor != particleflavor::TOPOLOGY) {
             throw std::invalid_argument(fmt::format(
@@ -139,7 +139,7 @@ public:
                     "Type was {}, flavor {}.", type, readdy::model::particleflavor::particleFlavorToString(info.flavor)
             ));
         }
-        return TopologyParticle(pos, info.typeId);
+        return Particle(pos, info.typeId);
     };
 
     bool supportsTopologies() const {

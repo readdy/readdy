@@ -47,17 +47,12 @@
 
 #include <readdy/common/boundary_condition_operations.h>
 
-namespace readdy {
-namespace kernel {
-namespace scpu {
-namespace actions {
-namespace reactions {
+namespace readdy::kernel::scpu::actions::reactions {
 
 using scpu_model = readdy::kernel::scpu::SCPUStateModel;
 using scpu_data = readdy::kernel::scpu::model::SCPUParticleData<model::Entry>;
 using reaction_type = readdy::model::reactions::ReactionType;
 using context = readdy::model::Context;
-using fix_pos = context::fix_pos_fun;
 using reaction_record = readdy::model::reactions::ReactionRecord;
 
 template<typename Reaction>
@@ -114,8 +109,12 @@ void performReaction(
                     reaction->productDistance() * std::cbrt(readdy::model::rnd::uniform_real<readdy::scalar>(0, 1));
             readdy::model::Particle p(entry1.position() - reaction->weight2() * distance * n3,
                                       reaction->products()[1]);
-            bcs::fixPosition(p.pos(), box, pbc);
-            newEntries.emplace_back(p);
+            {
+                auto pos = p.pos();
+                bcs::fixPosition(pos, box, pbc);
+                p.setPos(pos);
+                newEntries.emplace_back(p);
+            }
 
             entry1.type = reaction->products()[0];
             entry1.pos += reaction->weight1() * distance * n3;
@@ -146,8 +145,4 @@ void performReaction(
     }
 }
 
-}
-}
-}
-}
 }

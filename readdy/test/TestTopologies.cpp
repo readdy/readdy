@@ -69,12 +69,8 @@
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/common/numeric.h>
 
-namespace m = readdy::model;
-
+using namespace readdy;
 using namespace readdytesting::kernel;
-
-using particle_t = readdy::model::Particle;
-using topology_particle_t = readdy::model::TopologyParticle;
 
 using harmonic_bond = readdy::model::top::pot::HarmonicBondPotential;
 using angle_bond = readdy::model::top::pot::HarmonicAnglePotential;
@@ -100,8 +96,8 @@ TEMPLATE_TEST_CASE("Test topologies.", "[topologies]", SingleCPU, CPU) {
         auto &ctx = kernel->context();
         ctx.particleTypes().add("Topology A", 1.0, readdy::model::particleflavor::TOPOLOGY);
         ctx.boxSize() = {{10, 10, 10}};
-        topology_particle_t x_i{4, 0, 0, ctx.particleTypes().idOf("Topology A")};
-        topology_particle_t x_j{1, 0, 0, ctx.particleTypes().idOf("Topology A")};
+        model::Particle x_i{4, 0, 0, ctx.particleTypes().idOf("Topology A")};
+        model::Particle x_j{1, 0, 0, ctx.particleTypes().idOf("Topology A")};
         auto top = kernel->stateModel().addTopology(0,{x_i, x_j});
         {
             harmonic_bond::bond_configurations bonds;
@@ -146,9 +142,9 @@ TEMPLATE_TEST_CASE("Test topologies.", "[topologies]", SingleCPU, CPU) {
         auto &ctx = kernel->context();
         ctx.particleTypes().add("Topology A", 1.0, readdy::model::particleflavor::TOPOLOGY);
         ctx.boxSize() = {{10, 10, 10}};
-        topology_particle_t x_i{0, 0, 0, ctx.particleTypes().idOf("Topology A")};
-        topology_particle_t x_j{1, 0, 0, ctx.particleTypes().idOf("Topology A")};
-        topology_particle_t x_k{1, 1, 0, ctx.particleTypes().idOf("Topology A")};
+        model::Particle x_i{0, 0, 0, ctx.particleTypes().idOf("Topology A")};
+        model::Particle x_j{1, 0, 0, ctx.particleTypes().idOf("Topology A")};
+        model::Particle x_k{1, 1, 0, ctx.particleTypes().idOf("Topology A")};
         auto top = kernel->stateModel().addTopology(0, {x_i, x_j, x_k});
         {
             std::vector<angle_bond::angle> angles{{0, 1, 2, 1.0, readdy::util::numeric::pi<readdy::scalar>()}};
@@ -184,9 +180,9 @@ TEMPLATE_TEST_CASE("Test topologies.", "[topologies]", SingleCPU, CPU) {
         auto &ctx = kernel->context();
         ctx.particleTypes().add("Topology A", 1.0, readdy::model::particleflavor::TOPOLOGY);
         ctx.boxSize() = {{10, 10, 10}};
-        topology_particle_t x_i{0.1, 0.1, 0.1, ctx.particleTypes().idOf("Topology A")};
-        topology_particle_t x_j{1.0, 0.0, 0.0, ctx.particleTypes().idOf("Topology A")};
-        topology_particle_t x_k{1.0, 0.5, -.3, ctx.particleTypes().idOf("Topology A")};
+        model::Particle x_i{0.1, 0.1, 0.1, ctx.particleTypes().idOf("Topology A")};
+        model::Particle x_j{1.0, 0.0, 0.0, ctx.particleTypes().idOf("Topology A")};
+        model::Particle x_k{1.0, 0.5, -.3, ctx.particleTypes().idOf("Topology A")};
         auto top = kernel->stateModel().addTopology(0, {x_i, x_j, x_k});
         {
             std::vector<angle_bond::angle> angles{{0, 1, 2, 1.0, readdy::util::numeric::pi<readdy::scalar>()}};
@@ -240,10 +236,10 @@ TEMPLATE_TEST_CASE("Test topologies.", "[topologies]", SingleCPU, CPU) {
         auto &ctx = kernel->context();
         ctx.particleTypes().add("Topology A", 1.0, readdy::model::particleflavor::TOPOLOGY);
         ctx.boxSize() = {{10, 10, 10}};
-        topology_particle_t x_i{-1, 0, 0, ctx.particleTypes().idOf("Topology A")};
-        topology_particle_t x_j{0, 0, 0, ctx.particleTypes().idOf("Topology A")};
-        topology_particle_t x_k{0, 0, 1, ctx.particleTypes().idOf("Topology A")};
-        topology_particle_t x_l{1, .1, 1, ctx.particleTypes().idOf("Topology A")};
+        model::Particle x_i{-1, 0, 0, ctx.particleTypes().idOf("Topology A")};
+        model::Particle x_j{0, 0, 0, ctx.particleTypes().idOf("Topology A")};
+        model::Particle x_k{0, 0, 1, ctx.particleTypes().idOf("Topology A")};
+        model::Particle x_l{1, .1, 1, ctx.particleTypes().idOf("Topology A")};
         auto top = kernel->stateModel().addTopology(0, {x_i, x_j, x_k, x_l});
         {
             std::vector<dihedral_bond::dihedral_configuration> dihedrals{{0, 1, 2, 3, 1.0, 3,
@@ -279,10 +275,10 @@ TEMPLATE_TEST_CASE("Test topologies.", "[topologies]", SingleCPU, CPU) {
         auto &ctx = kernel->context();
         ctx.particleTypes().add("Topology A", 1.0, readdy::model::particleflavor::TOPOLOGY);
         ctx.boxSize() = {{10, 10, 10}};
-        topology_particle_t x_i{-1, 0, 0, ctx.particleTypes().idOf("Topology A")};
-        topology_particle_t x_j{0, 0, 0, ctx.particleTypes().idOf("Topology A")};
-        topology_particle_t x_k{0, 0, 1, ctx.particleTypes().idOf("Topology A")};
-        topology_particle_t x_l{1, 3, 1, ctx.particleTypes().idOf("Topology A")};
+        model::Particle x_i{-1, 0, 0, ctx.particleTypes().idOf("Topology A")};
+        model::Particle x_j{0, 0, 0, ctx.particleTypes().idOf("Topology A")};
+        model::Particle x_k{0, 0, 1, ctx.particleTypes().idOf("Topology A")};
+        model::Particle x_l{1, 3, 1, ctx.particleTypes().idOf("Topology A")};
         auto top = kernel->stateModel().addTopology(0, {x_i, x_j, x_k, x_l});
         {
             std::vector<dihedral_bond::dihedral_configuration> dihedral{{0, 1, 2, 3, 1.0, 3, readdy::util::numeric::pi<readdy::scalar>()}};
@@ -326,24 +322,22 @@ TEMPLATE_TEST_CASE("Test topologies.", "[topologies]", SingleCPU, CPU) {
                                                          {1.0, 1.0, 3.0});
 
         ctx.boxSize() = {{10, 10, 10}};
-        topology_particle_t x_i{-1, 0, 0, ctx.particleTypes().idOf("Topology A")};
-        topology_particle_t x_j{0, 0, 0, ctx.particleTypes().idOf("Topology A")};
-        topology_particle_t x_k{0, 0, 1, ctx.particleTypes().idOf("Topology B")};
-        topology_particle_t x_l{1, .1, 1, ctx.particleTypes().idOf("Topology A")};
+        model::Particle x_i{-1, 0, 0, ctx.particleTypes().idOf("Topology A")};
+        model::Particle x_j{0, 0, 0, ctx.particleTypes().idOf("Topology A")};
+        model::Particle x_k{0, 0, 1, ctx.particleTypes().idOf("Topology B")};
+        model::Particle x_l{1, .1, 1, ctx.particleTypes().idOf("Topology A")};
 
         auto top = kernel->stateModel().addTopology(0, {x_i, x_j, x_k, x_l});
         REQUIRE(top->graph().vertices().size() == 4);
-        auto it = top->graph().vertices().begin();
-        auto it2 = ++top->graph().vertices().begin();
         REQUIRE_FALSE(top->graph().isConnected());
-        top->graph().addEdge(it++, it2++);
+        top->addEdge({0}, {1});
         REQUIRE_FALSE(top->graph().isConnected());
-        top->graph().addEdge(it++, it2++);
+        top->addEdge({1}, {2});
         REQUIRE_FALSE(top->graph().isConnected());
-        top->graph().addEdge(it++, it2++);
+        top->addEdge({2}, {3});
         REQUIRE(top->graph().isConnected());
 
-        top->graph().addEdge(top->graph().firstVertex(), top->graph().lastVertex());
+        top->addEdge({0}, {3});
         REQUIRE(top->graph().isConnected());
         top->configure();
     }

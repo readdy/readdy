@@ -103,7 +103,7 @@ TEMPLATE_TEST_CASE("Test observables", "[observables]", SingleCPU, CPU) {
         auto &toptypes = context.topologyRegistry();
         toptypes.addType("TA");
 
-        std::vector<readdy::model::TopologyParticle> topologyParticles;
+        std::vector<readdy::model::Particle> topologyParticles;
         {
             topologyParticles.reserve(n_chain_elements);
             for (std::size_t i = 0; i < n_chain_elements; ++i) {
@@ -113,12 +113,12 @@ TEMPLATE_TEST_CASE("Test observables", "[observables]", SingleCPU, CPU) {
         }
         auto topology = kernel->stateModel().addTopology(toptypes.idOf("TA"), topologyParticles);
         {
-            auto it = topology->graph().vertices().begin();
-            auto it2 = ++topology->graph().vertices().begin();
-            while (it2 != topology->graph().vertices().end()) {
-                topology->graph().addEdge(it, it2);
-                std::advance(it, 1);
-                std::advance(it2, 1);
+            std::size_t it = 0;
+            std::size_t it2 = 1;
+            while (it2 < topology->graph().vertices().size()) {
+                topology->addEdge({it}, {it2});
+                ++it;
+                ++it2;
             }
         }
 
@@ -130,23 +130,22 @@ TEMPLATE_TEST_CASE("Test observables", "[observables]", SingleCPU, CPU) {
                 auto current_n_vertices = vertices.size();
                 if (current_n_vertices > 1) {
                     auto edge = readdy::model::rnd::uniform_int<>(0, static_cast<int>(current_n_vertices - 2));
-                    auto it1 = vertices.begin();
-                    auto it2 = ++vertices.begin();
+                    std::size_t it1 = 0;
+                    std::size_t it2 = 1;
                     for (int i = 0; i < edge; ++i) {
                         ++it1;
                         ++it2;
                     }
-                    recipe.removeEdge(it1, it2);
+                    recipe.removeEdge({it1}, {it2});
                 }
 
                 return recipe;
             };
             auto rateFunction = [](const readdy::model::top::GraphTopology &top) {
-                return top.getNParticles() > 1 ? top.getNParticles() / 50. : 0;
+                return top.graph().nVertices() > 1 ? top.graph().nVertices() / 50. : 0;
             };
             readdy::model::top::reactions::StructuralTopologyReaction reaction{"r", reactionFunction, rateFunction};
             reaction.create_child_topologies_after_reaction();
-            reaction.roll_back_if_invalid();
 
             toptypes.addStructuralReaction("TA", reaction);
         }
@@ -155,8 +154,7 @@ TEMPLATE_TEST_CASE("Test observables", "[observables]", SingleCPU, CPU) {
             auto reactionFunction = [&](readdy::model::top::GraphTopology &top) {
                 readdy::model::top::reactions::Recipe recipe(top);
                 if (top.graph().vertices().size() == 1) {
-                    recipe.changeParticleType(top.graph().vertices().begin(),
-                                              context.particleTypes().idOf("A"));
+                    recipe.changeParticleType(top.graph().begin().persistent_index(), context.particleTypes().idOf("A"));
                 } else {
                     throw std::logic_error("this reaction should only be executed when there is exactly "
                                            "one particle in the topology");
@@ -164,11 +162,10 @@ TEMPLATE_TEST_CASE("Test observables", "[observables]", SingleCPU, CPU) {
                 return recipe;
             };
             auto rateFunction = [](const readdy::model::top::GraphTopology &top) {
-                return top.getNParticles() > 1 ? 0 : 1;
+                return top.nParticles() > 1 ? 0 : 1;
             };
             readdy::model::top::reactions::StructuralTopologyReaction reaction{"r2", reactionFunction, rateFunction};
             reaction.create_child_topologies_after_reaction();
-            reaction.roll_back_if_invalid();
             toptypes.addStructuralReaction("TA", reaction);
         }
 
@@ -188,7 +185,7 @@ TEMPLATE_TEST_CASE("Test observables", "[observables]", SingleCPU, CPU) {
                      its.first != tops.end(); ++its.first, ++its.second) {
                     auto topPtr = *its.first;
                     const auto &record = *its.second;
-                    const auto &topParticles = topPtr->getParticles();
+                    const auto &topParticles = topPtr->particleIndices();
                     const auto &recordParticles = record.particleIndices;
                     auto contains1 = std::all_of(recordParticles.begin(), recordParticles.end(), [&](auto idx) {
                         return std::find(topParticles.begin(), topParticles.end(), idx) != topParticles.end();
@@ -201,19 +198,20 @@ TEMPLATE_TEST_CASE("Test observables", "[observables]", SingleCPU, CPU) {
                     // topology particles should be contained in record.particleIndices
                     REQUIRE(contains2);
 
-                    auto topEdges = topPtr->graph().edges();
+                    //auto topEdges = topPtr->graph().edges();
+                    std::vector<readdy::model::top::Graph::Edge> topEdges;
+                    topPtr->graph().findEdges([&topEdges](const auto &e) { topEdges.push_back(e); });
                     REQUIRE(topEdges.size() == record.edges.size());
 
                     contains1 = std::all_of(record.edges.begin(), record.edges.end(), [&](const auto &edge) {
                         std::size_t ix1 = std::get<0>(edge);
                         std::size_t ix2 = std::get<1>(edge);
                         for (const auto &topEdge : topEdges) {
-                            const auto &v1 = std::get<0>(topEdge);
-                            const auto &v2 = std::get<1>(topEdge);
-                            if (v1->particleIndex == ix1 && v2->particleIndex == ix2) {
+                            const auto &[v1, v2] = topEdge;
+                            if (v1.value == ix1 && v2.value == ix2) {
                                 return true;
                             }
-                            if (v1->particleIndex == ix2 && v2->particleIndex == ix1) {
+                            if (v1.value == ix2 && v2.value == ix1) {
                                 return true;
                             }
                         }
@@ -221,8 +219,8 @@ TEMPLATE_TEST_CASE("Test observables", "[observables]", SingleCPU, CPU) {
                     });
 
                     contains2 = std::all_of(topEdges.begin(), topEdges.end(), [&](const auto &e) {
-                        auto vtup1 = std::make_tuple(std::get<0>(e)->particleIndex, std::get<1>(e)->particleIndex);
-                        auto vtup2 = std::make_tuple(std::get<1>(e)->particleIndex, std::get<0>(e)->particleIndex);
+                        auto vtup1 = std::make_tuple(std::get<0>(e).value, std::get<1>(e).value);
+                        auto vtup2 = std::make_tuple(std::get<1>(e).value, std::get<0>(e).value);
 
                         auto find1 = std::find(record.edges.begin(), record.edges.end(), vtup1);
                         auto find2 = std::find(record.edges.begin(), record.edges.end(), vtup2);

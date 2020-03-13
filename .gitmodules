@@ -13,3 +13,6 @@
 [submodule "libraries/Catch2"]
 	path = libraries/Catch2
 	url = https://github.com/catchorg/Catch2.git
+[submodule "libraries/graph"]
+	path = libraries/graph
+	url = https://github.com/readdy/graph.git

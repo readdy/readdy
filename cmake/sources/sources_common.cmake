@@ -44,7 +44,7 @@ FIND_PACKAGE(Threads REQUIRED)
 SET(COMMON_INCLUDE_DIRS "${READDY_GLOBAL_INCLUDE_DIR};${SPDLOG_INCLUDE_DIR};${JSON_INCLUDE_DIR}" CACHE INTERNAL "Common include dirs")
 
 # dependent libraries
-SET(READDY_COMMON_LIBRARIES "" CACHE INTERNAL "Common libraries")
+SET(READDY_COMMON_LIBRARIES "graphs;fmt::fmt-header-only" CACHE INTERNAL "Common libraries")
 
 # sources
 LIST(APPEND READDY_COMMON_SOURCES "${SOURCES_DIR}/../api/KernelConfiguration.cpp")

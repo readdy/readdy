@@ -156,8 +156,7 @@ class TopologyRegistry(object):
         radius = self._units.convert(radius, self._units.length_unit)
         self._registry.add_spatial_reaction(descriptor, rate, radius)
 
-    def add_structural_reaction(self, name, topology_type, reaction_function, rate_function,
-                                raise_if_invalid=True, expect_connected=False):
+    def add_structural_reaction(self, name, topology_type, reaction_function, rate_function, expect_connected=False):
         """
         Adds a spatially independent structural topology reaction for a certain topology type. It basically consists
         out of two functions:
@@ -174,18 +173,11 @@ class TopologyRegistry(object):
         :param topology_type: the topology type for which this reaction is evaluated
         :param reaction_function: the reaction function, as described above
         :param rate_function: the rate function, as described above
-        :param raise_if_invalid: raises an error if the outcome of the reaction function is invalid and set to True,
-                                 otherwise it will just roll back to the state of before the reaction and print a
-                                 warning into the log
         :param expect_connected: can trigger a raise if set to true and the topology's connectivity graph decayed into
-                                 two or more independent components, depending on the value of `raise_if_invalid`.
+                                 two or more independent components.
         """
         fun1, fun2 = _top.ReactionFunction(lambda x: reaction_function(x)._get()), _top.RateFunction(rate_function)
         reaction = _top.StructuralTopologyReaction(name, fun1, fun2)
-        if raise_if_invalid:
-            reaction.raise_if_invalid()
-        else:
-            reaction.roll_back_if_invalid()
         if expect_connected:
             reaction.expect_connected_after_reaction()
         else:

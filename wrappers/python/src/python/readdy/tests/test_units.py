@@ -74,7 +74,8 @@ class TestUnits(ReaDDyTestCase):
     def test_radians(self):
         sys = readdy.ReactionDiffusionSystem(box_size=[1., 1., 1.])
         angle = 180 * sys.units.degree
-        np.testing.assert_equal(np.pi, angle.to(sys.units.radians).magnitude)
+        rads = angle.to(sys.units.radians)
+        np.testing.assert_equal(np.pi, rads.magnitude)
 
     def test_kbt_with_mole_to_temperature(self):
         """This tests the definition of moles in our `readdy_units.txt` and `constants_en.txt`"""

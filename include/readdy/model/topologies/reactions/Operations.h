@@ -62,31 +62,19 @@ public:
     /**
      * Reference to an operation
      */
-    using Ref = std::shared_ptr<Operation>;
+    using OperationPtr = std::shared_ptr<Operation>;
     /**
      * Reference to the respective topology reaction action factory
      */
-    using factory_ref = const actions::TopologyReactionActionFactory *const;
+    using FactoryPtr = const actions::TopologyReactionActionFactory *const;
     /**
      * Reference to the respective graph topology
      */
-    using topology_ref = GraphTopology *const;
-    /**
-     * Type of the graph of topologies
-     */
-    using topology_graph = actions::TopologyReactionAction::topology_graph;
+    using TopologyPtr = GraphTopology *const;
     /**
      * pointer type to a topology reaction action
      */
-    using action_ptr = std::unique_ptr<actions::TopologyReactionAction>;
-    /**
-     * reference to a vertex
-     */
-    using vertex_ref = topology_graph::vertex_ref;
-    /**
-     * an edge
-     */
-    using edge = topology_graph::Edge;
+    using ActionPtr = actions::TopologyReactionActionFactory::ActionPtr;
 
     /**
      * Interface of the create_action method which will create the corresponding action on the selected kernel.
@@ -94,7 +82,7 @@ public:
      * @param factory the factory
      * @return a unique pointer to the action
      */
-    virtual action_ptr create_action(topology_ref topology, factory_ref factory) const = 0;
+    virtual ActionPtr create_action(TopologyPtr topology, FactoryPtr factory) const = 0;
 };
 
 class ChangeParticleType : public Operation {
@@ -104,7 +92,7 @@ public:
      * @param vertex the vertex
      * @param type_to the target type
      */
-    ChangeParticleType(const vertex_ref &vertex, ParticleTypeId type_to) : _vertex(vertex), _type_to(type_to) {}
+    ChangeParticleType(const Graph::PersistentVertexIndex &vertex, ParticleTypeId type_to) : _vertex(vertex), _type_to(type_to) {}
 
     /**
      * Create the corresponding action.
@@ -112,41 +100,41 @@ public:
      * @param factory the action factory
      * @return a pointer to the change particle type action
      */
-    action_ptr create_action(topology_ref topology, factory_ref factory) const override {
+    ActionPtr create_action(TopologyPtr topology, FactoryPtr factory) const override {
         return factory->createChangeParticleType(topology, _vertex, _type_to);
     }
 
 private:
-    vertex_ref _vertex;
+    Graph::PersistentVertexIndex _vertex;
     ParticleTypeId _type_to;
 };
 
 class AppendParticle : public Operation {
 public:
 
-    AppendParticle(std::vector<vertex_ref> neighbors, ParticleTypeId type, const Vec3 &pos)
+    AppendParticle(std::vector<Graph::PersistentVertexIndex> neighbors, ParticleTypeId type, const Vec3 &pos)
             : neighbors(std::move(neighbors)), type(type), pos(pos) {};
 
-    action_ptr create_action(topology_ref topology, factory_ref factory) const override {
+    ActionPtr create_action(TopologyPtr topology, FactoryPtr factory) const override {
         return factory->createAppendParticle(topology, neighbors, type, pos);
     }
 
 private:
-    std::vector<vertex_ref> neighbors;
+    std::vector<Graph::PersistentVertexIndex> neighbors;
     ParticleTypeId type;
     Vec3 pos;
 };
 
 class ChangeParticlePosition : public Operation {
 public:
-    ChangeParticlePosition(const vertex_ref &vertex, Vec3 position) : _vertex(vertex), _pos(position) {};
+    ChangeParticlePosition(const Graph::PersistentVertexIndex &vertex, Vec3 position) : _vertex(vertex), _pos(position) {};
 
-    action_ptr create_action(topology_ref topology, factory_ref factory) const override {
+    ActionPtr create_action(TopologyPtr topology, FactoryPtr factory) const override {
         return factory->createChangeParticlePosition(topology, _vertex, _pos);
     }
 
 private:
-    vertex_ref _vertex;
+    Graph::PersistentVertexIndex _vertex;
     Vec3 _pos;
 };
 
@@ -164,7 +152,7 @@ public:
      * @param factory the action factory
      * @return a pointer to the action
      */
-    action_ptr create_action(topology_ref topology, factory_ref factory) const override {
+    ActionPtr create_action(TopologyPtr topology, FactoryPtr factory) const override {
         return factory->createChangeTopologyType(topology, _type_to);
     }
 
@@ -178,7 +166,7 @@ public:
      * Adds the specified edge on the graph.
      * @param edge the edge
      */
-    explicit AddEdge(edge edge) : _edge(std::move(edge)) {};
+    explicit AddEdge(Graph::Edge edge) : _edge(std::move(edge)) {};
 
     /**
      * Create the corresponding action
@@ -186,12 +174,12 @@ public:
      * @param factory the action factory
      * @return a pointer to the respective action
      */
-    action_ptr create_action(topology_ref topology, factory_ref factory) const override {
+    ActionPtr create_action(TopologyPtr topology, FactoryPtr factory) const override {
         return factory->createAddEdge(topology, _edge);
     }
 
 private:
-    edge _edge;
+    Graph::Edge _edge;
 };
 
 class RemoveEdge : public Operation {
@@ -200,7 +188,7 @@ public:
      * Operation for removing the specified edge on the graph.
      * @param edge the edge
      */
-    explicit RemoveEdge(edge edge) : _edge(std::move(edge)) {};
+    explicit RemoveEdge(Graph::Edge edge) : _edge(std::move(edge)) {};
 
     /**
      * Create the corresponding action
@@ -208,12 +196,12 @@ public:
      * @param factory the action factory
      * @return a pointer to the respective action
      */
-    action_ptr create_action(topology_ref topology, factory_ref factory) const override {
+    ActionPtr create_action(TopologyPtr topology, FactoryPtr factory) const override {
         return factory->createRemoveEdge(topology, _edge);
     }
 
 private:
-    edge _edge;
+    Graph::Edge _edge;
 };
 
 }
