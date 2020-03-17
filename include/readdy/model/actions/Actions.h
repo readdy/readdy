@@ -352,9 +352,21 @@ protected:
  */
 class EvaluateCompartments : public Action {
 public:
-    explicit EvaluateCompartments() : Action() {}
+    EvaluateCompartments() : Action() {}
 
     ~EvaluateCompartments() override = default;
+};
+
+/* Not an Action, because perform needs TimeStep t. */
+class EvaluateObservables {
+public:
+    virtual void perform(TimeStep t) = 0;
+};
+
+/* Not an Action, because perform needs TimeStep t. */
+class MakeCheckpoint {
+public:
+    virtual void perform(TimeStep t) = 0;
 };
 
 template<typename T>

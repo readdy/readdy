@@ -290,7 +290,6 @@ class ReactionDiffusionSystem(object):
 
         :return: The maximal cutoff distance [length]
         """
-        self._context.configure(False)
         return self._context.calculate_max_cutoff() * self.length_unit
 
     @property

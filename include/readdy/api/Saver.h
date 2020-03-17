@@ -72,15 +72,15 @@ public:
             traj.callback(t);
         }
         {
-            model::observables::Topologies tops (kernel, 1, false);
+            model::observables::Topologies tops(kernel, 1, false);
             tops.enableWriteToFile(*file, "topologies_ckpt", 1);
             tops.callback(t);
         }
 
-        while(_maxNSaves > 0 && previousCheckpoints.size() > _maxNSaves) {
-            const auto& oldestCheckpoint = previousCheckpoints.front();
+        while (_maxNSaves > 0 && previousCheckpoints.size() > _maxNSaves) {
+            const auto &oldestCheckpoint = previousCheckpoints.front();
             if (fs::exists(oldestCheckpoint)) {
-                if(!fs::remove(oldestCheckpoint)) {
+                if (!fs::remove(oldestCheckpoint)) {
                     throw std::runtime_error(fmt::format("Could not remove checkpoint {}", oldestCheckpoint));
                 }
             } else {
@@ -91,15 +91,15 @@ public:
         }
     }
 
-    std::string basePath() const {
+    [[nodiscard]] std::string basePath() const {
         return _basePath;
     }
 
-    std::size_t maxNSaves() const {
+    [[nodiscard]] std::size_t maxNSaves() const {
         return _maxNSaves;
     }
 
-    std::string checkpointTemplate() const {
+    [[nodiscard]] std::string checkpointTemplate() const {
         return _checkpointTemplate;
     }
 

@@ -46,6 +46,8 @@ from readdy._internal.readdybinding.api import UserDefinedAction as _UserDefined
 from readdy.api.utils import vec3_of as _v3_of
 from readdy._internal.readdybinding.api import KernelProvider as _KernelProvider
 
+from readdy.api.experimental.action_factory import ActionFactory as _ActionFactory
+
 
 class Simulation(object):
 
@@ -100,6 +102,12 @@ class Simulation(object):
             self._kernel_configuration = _CPUKernelConfiguration()
         else:
             self._kernel_configuration = _NOOPKernelConfiguration()
+
+        self._action_factory = _ActionFactory(self._simulation)
+
+    @property
+    def _actions(self):
+        return self._action_factory
 
     @property
     def units(self):
@@ -569,3 +577,46 @@ class Simulation(object):
             else:
 
                 loop.run(n_steps)
+
+    def run_custom_loop(self, custom_loop_function, show_summary=True):
+        """
+        Executes the simulation loop provided by argument, additionally takes care of preparing output file.
+
+        :param custom_loop_function: function to be executed, should contain calls to actions
+        :param show_summary: determines if system configuration is printed
+        """
+        import os
+        from contextlib import closing
+        import readdy._internal.readdybinding.common.io as io
+
+        self._simulation.context.validate()
+
+        if self.output_file is not None and len(self.output_file) > 0 and os.path.exists(self.output_file):
+            raise ValueError("Output file already existed: {}".format(self.output_file))
+
+        self._simulation.set_kernel_config(self.kernel_configuration.to_json())
+
+        # todo consider exposing enable_write_to_file as method of simulation (cpp and py),
+        # todo then we can delete this whole run_custom_loop method
+        # the actions created by the loop internally are not used
+        # the loop object here is merely used as convenient access to configuration
+        # e.g. enable_write_to_file, write_config_to_file, run_initialize
+        loop = self._simulation.create_loop(42.)
+
+        write_outfile = self.output_file is not None and len(self.output_file) > 0
+
+        import contextlib
+
+        @contextlib.contextmanager
+        def nullcontext():
+            yield
+
+        with closing(io.File.create(self.output_file)) if write_outfile else nullcontext() as f:
+            if write_outfile:
+                for name, chunk_size, handle in self._observables._observable_handles:
+                    handle.enable_write_to_file(f, name, chunk_size)
+                loop.write_config_to_file(f)
+                loop.run_initialize()  # writes the config to file here
+            if show_summary:
+                print(self._simulation.context.describe())
+            custom_loop_function()

@@ -72,9 +72,7 @@ public:
 
     ~TimeStepDependentAction() override = default;
 
-    scalar &timeStep() { return _timeStep; }
-
-    const scalar &timeStep() const { return _timeStep; }
+    [[nodiscard]] scalar timeStep() const { return _timeStep; }
 
 protected:
     scalar _timeStep;

@@ -245,7 +245,7 @@ public:
             return current < _start + steps;
         };
         run(defaultContinueCriterion);
-    };
+    }
 
     /**
      * ReaDDy scheme implementation of the simulation loop

@@ -49,6 +49,7 @@
 #include <readdy/kernel/cpu/actions/reactions/CPUUncontrolledApproximation.h>
 #include <readdy/kernel/cpu/actions/CPUEvaluateTopologyReactions.h>
 #include <readdy/kernel/cpu/actions/CPUBreakBonds.h>
+#include <readdy/kernel/cpu/actions/CPUMiscActions.h>
 
 namespace core_p = readdy::model::actions;
 
@@ -116,6 +117,16 @@ std::unique_ptr<model::actions::top::BreakBonds>
 CPUActionFactory::breakBonds(scalar timeStep, readdy::model::actions::top::BreakConfig config) const {
     return {std::make_unique<top::CPUBreakBonds>(kernel, timeStep, config)};
 }
+
+std::unique_ptr<model::actions::EvaluateObservables> CPUActionFactory::evaluateObservables() const {
+    return {std::make_unique<CPUEvaluateObservables>(kernel)};
+}
+
+std::unique_ptr<model::actions::MakeCheckpoint>
+CPUActionFactory::makeCheckpoint(std::string base, std::size_t maxNSaves) const {
+    return {std::make_unique<CPUMakeCheckpoint>(kernel, base, maxNSaves)};
+}
+
 }
 }
 }

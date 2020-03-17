@@ -290,6 +290,10 @@ public:
         return _kernel->stateModel();
     }
 
+    readdy::model::actions::ActionFactory &actions() {
+        _kernel->actions();
+    }
+
 private:
     plugin::KernelProvider::kernel_ptr _kernel;
     std::vector<std::unique_ptr<readdy::model::observables::ObservableBase>> _observables{};

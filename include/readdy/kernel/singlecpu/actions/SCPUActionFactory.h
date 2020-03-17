@@ -92,6 +92,10 @@ public:
     std::unique_ptr<readdy::model::actions::top::BreakBonds>
     breakBonds(scalar timeStep, readdy::model::actions::top::BreakConfig config) const override;
 
+    std::unique_ptr<readdy::model::actions::EvaluateObservables> evaluateObservables() const override;
+
+    std::unique_ptr<readdy::model::actions::MakeCheckpoint> makeCheckpoint(std::string base, std::size_t maxNSaves) const override;
+
 private:
     SCPUKernel *const kernel;
 };
