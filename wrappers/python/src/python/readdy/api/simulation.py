@@ -545,7 +545,7 @@ class Simulation(object):
         loop.use_reaction_scheduler(self.reaction_handler)
         loop.evaluate_observables(self.evaluate_observables)
         if self.integrator == "MdgfrdIntegrator":
-            loop.neighbor_list_cutoff = max(2. * loop.calculate_max_cutoff(), loop.neighbor_list_cutoff)
+            loop.neighbor_list_cutoff = max(2. * self._simulation.context.calculate_max_cutoff(), loop.neighbor_list_cutoff)
         if self._skin > 0.:
             loop.neighbor_list_cutoff = loop.neighbor_list_cutoff + self._skin
         if self._checkpoint_saver is not None:
@@ -578,7 +578,7 @@ class Simulation(object):
 
                 loop.run(n_steps)
 
-    def run_custom_loop(self, custom_loop_function, show_summary=True):
+    def _run_custom_loop(self, custom_loop_function, show_summary=True):
         """
         Executes the simulation loop provided by argument, additionally takes care of preparing output file.
 

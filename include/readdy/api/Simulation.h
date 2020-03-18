@@ -291,7 +291,7 @@ public:
     }
 
     readdy::model::actions::ActionFactory &actions() {
-        _kernel->actions();
+        return _kernel->actions(); // RETURRRRRN
     }
 
 private:

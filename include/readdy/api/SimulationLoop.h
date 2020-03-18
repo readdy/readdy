@@ -219,12 +219,8 @@ public:
         return _initNeighborList->cutoffDistance();
     }
 
-    const scalar &neighborListCutoff() const {
+    [[nodiscard]] scalar neighborListCutoff() const {
         return _initNeighborList->cutoffDistance();
-    }
-
-    const scalar calculateMaxCutoff() const {
-        return kernel()->context().calculateMaxCutoff();
     }
 
     /**

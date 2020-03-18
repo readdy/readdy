@@ -40,11 +40,12 @@ Created on 17.03.20
 
 import os
 import readdy
+from readdy.api.experimental.action_factory import BreakConfig
 import unittest
 import numpy as np
 import tempfile
 import shutil
-from tqdm import tqdm as tqdm
+from tqdm import tqdm
 
 
 class TestCustomLoop(unittest.TestCase):
@@ -112,7 +113,7 @@ class TestCustomLoop(unittest.TestCase):
                 if t % 100 == 0:
                     check(t)
 
-        simulation.run_custom_loop(loop)
+        simulation._run_custom_loop(loop)
 
         traj = readdy.Trajectory(simulation.output_file)
         ts, ns = traj.read_observable_number_of_particles()
@@ -123,3 +124,79 @@ class TestCustomLoop(unittest.TestCase):
         self.assertEqual(ns[-1, 0], 0)
         self.assertEqual(ns[-1, 1], 0)
         self.assertEqual(ns[-1, 2], 1)
+
+    def test_break_bonds_integration(self):
+        # basically the "Break bonds due to pulling" test from IntegrationTests.cpp translated to python
+        self._break_bonds_integration(True)  # test with pulling, topology is split in twain
+        self._break_bonds_integration(False)  # test without pulling, topology stays intact
+
+    def _break_bonds_integration(self, pull):
+        system = readdy.ReactionDiffusionSystem(
+            box_size=[20., 10., 10], periodic_boundary_conditions=[True, True, True], unit_system=None)
+        system.kbt = 0.01
+        system.add_topology_species("head", 0.1)
+        system.add_topology_species("A", 0.1)
+        system.add_topology_species("tail", 0.1)
+        system.potentials.add_cylinder("A", 100., [0., 0., 0.], [1., 0., 0.], 0.01, True)
+        system.potentials.add_cylinder("head", 100., [0., 0., 0.], [1., 0., 0.], 0.01, True)
+        system.potentials.add_cylinder("tail", 100., [0., 0., 0.], [1., 0., 0.], 0.01, True)
+        system.potentials.add_box("head", 10., [-4., -12.5, -12.5], [0.000001, 25., 25.])
+        if pull:
+            system.potentials.add_box("tail", 100., [+8, -12.5, -12.5], [0.000001, 25., 25.])
+        system.topologies.add_type("T1")
+        system.topologies.add_type("T2")
+        system.topologies.configure_harmonic_bond("head", "A", 10., 2.)
+        system.topologies.configure_harmonic_bond("A", "A", 10., 4.)
+        system.topologies.configure_harmonic_bond("A", "tail", 10., 2.)
+
+        simulation = system.simulation("CPU")
+
+        pos = np.array([
+            [-4., 0., 0.],
+            [-2., 0., 0.],
+            [2., 0., 0.],
+            [4., 0., 0.],
+        ])
+        types = ["head", "A", "A", "tail"]
+
+        topology = simulation.add_topology("T1", types, pos)
+        topology.graph.add_edge(0, 1)
+        topology.graph.add_edge(1, 2)
+        topology.graph.add_edge(2, 3)
+
+        conf = BreakConfig()
+        idA = system._context.particle_types.id_of("A")
+        conf.add_breakable_pair(idA, idA, 1.0, 1.0)
+
+        def loop():
+            nonlocal simulation
+            nonlocal conf
+            dt = 0.0002
+            n_steps = 100000
+            diff = simulation._actions.integrator_euler_brownian_dynamics(dt)
+            forces = simulation._actions.calculate_forces()
+            break_bonds = simulation._actions.break_bonds(dt, conf)
+
+            forces()
+            for t in tqdm(range(1, n_steps + 1)):
+                diff()
+                break_bonds()
+                forces()
+
+        simulation._run_custom_loop(loop)
+
+        tops_after = simulation.current_topologies
+        print("-------------------")
+        print(tops_after)
+        if pull:
+            self.assertTrue(len(tops_after) == 2)
+        else:
+            self.assertTrue(len(tops_after) == 1)
+
+        for top in tops_after:
+            for vertex in top.graph.vertices:
+                self.assertTrue(len(vertex.neighbors()) <= 2)
+
+
+if __name__ == '__main__':
+    unittest.main()

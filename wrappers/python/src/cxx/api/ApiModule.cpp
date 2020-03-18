@@ -45,6 +45,7 @@
 #include "PyTopology.h"
 
 namespace py = pybind11;
+namespace rma = readdy::model::actions;
 
 using rvp = py::return_value_policy;
 using sim = readdy::Simulation;
@@ -55,7 +56,7 @@ using ctx = readdy::model::Context;
 using kern = readdy::model::Kernel;
 
 void exportTopologies(py::module &);
-void exportLoopApi(py::module &module);
+void exportLoopApi(py::module &);
 void exportKernelContext(py::module &);
 
 std::string getSelectedKernelType(sim &self) { /* discard const reference */ return self.selectedKernelType(); }
@@ -166,8 +167,11 @@ void exportApi(py::module &api) {
         using MkCkpt = readdy::model::actions::MakeCheckpoint;
 
         auto actionsModule = api.def_submodule("actions");
-        py::class_<Action>(actionsModule, "Action").def("__call__", &Action::perform);
+        py::class_<Action>(actionsModule, "Action")
+                .def("__call__", &Action::perform);
+
         py::class_<readdy::model::actions::top::BreakConfig>(actionsModule, "BreakConfig")
+                .def(py::init<>())
                 .def("add_breakable_pair", &readdy::model::actions::top::BreakConfig::addBreakablePair);
 
         simulation
