@@ -48,8 +48,8 @@ namespace readdy::model::potentials {
 
 std::string PotentialRegistry::describe() const {
     namespace rus = readdy::util::str;
-    auto find_pot_name = [this](ParticleTypeId type) -> const std::string {
-        for (auto &&t : _types.get().typeMapping()) {
+    auto find_pot_name = [this](ParticleTypeId type) -> std::string {
+        for (auto &&t : _types->typeMapping()) {
             if (t.second == type) return t.first;
         }
         return "";

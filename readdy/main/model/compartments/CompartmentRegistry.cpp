@@ -67,8 +67,6 @@ CompartmentRegistry::addPlane(const Compartment::conversion_map &conversions, co
     return _compartments.back()->getId();
 }
 
-CompartmentRegistry::CompartmentRegistry(const ParticleTypeRegistry &types) : _types(types) {}
-
 }
 }
 }

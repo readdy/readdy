@@ -56,6 +56,8 @@
 #include "PotentialsOrder2.h"
 #include "PotentialsOrder1.h"
 
+namespace readdy::model { class Context; }
+
 namespace readdy::model::potentials {
 
 class PotentialRegistry {
@@ -67,8 +69,6 @@ public:
     using PotentialsO2Map = util::particle_type_pair_unordered_map<PotentialsO2Collection>;
     using AltPotentialsO2Map = std::unordered_map<ParticleTypeId, std::unordered_map<ParticleTypeId, PotentialsO2Collection>>;
 
-    explicit PotentialRegistry(std::reference_wrapper<const ParticleTypeRegistry> typeRegistry)
-            : _types(typeRegistry) {};
 
     /**
      * Adds a user defined external potential to the registry.
@@ -97,7 +97,7 @@ public:
      * @param extent the extent from the origin
      */
     void addBox(const std::string &particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &extent) {
-        addBox(_types(particleType), forceConstant, origin, extent);
+        addBox(_types->idOf(particleType), forceConstant, origin, extent);
     }
 
     void addBox(ParticleTypeId particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &extent) {
@@ -116,7 +116,7 @@ public:
      */
     void addHarmonicRepulsion(const std::string &type1, const std::string &type2, scalar forceConstant,
                               scalar interactionDistance) {
-        addHarmonicRepulsion(_types(type1), _types(type2), forceConstant, interactionDistance);
+        addHarmonicRepulsion(_types->idOf(type1), _types->idOf(type2), forceConstant, interactionDistance);
     }
 
     void addHarmonicRepulsion(ParticleTypeId type1, ParticleTypeId type2, scalar forceConstant,
@@ -144,14 +144,14 @@ public:
 
     void addWeakInteractionPiecewiseHarmonic(const std::string &type1, const std::string &type2,
                                              scalar forceConstant, scalar desiredDist, scalar depth, scalar cutoff) {
-        addWeakInteractionPiecewiseHarmonic(_types(type1), _types(type2), forceConstant, desiredDist,
+        addWeakInteractionPiecewiseHarmonic(_types->idOf(type1), _types->idOf(type2), forceConstant, desiredDist,
                                             depth, cutoff);
     }
 
     void
     addWeakInteractionPiecewiseHarmonic(const std::string &type1, const std::string &type2, scalar forceConstant,
                                         const WeakInteractionPiecewiseHarmonic::Configuration &config) {
-        addWeakInteractionPiecewiseHarmonic(_types(type1), _types(type2), forceConstant, config);
+        addWeakInteractionPiecewiseHarmonic(_types->idOf(type1), _types->idOf(type2), forceConstant, config);
     }
 
     void
@@ -185,7 +185,7 @@ public:
     */
     void addLennardJones(const std::string &type1, const std::string &type2, unsigned int m, unsigned int n,
                          scalar cutoff, bool shift, scalar epsilon, scalar sigma) {
-        addLennardJones(_types(type1), _types(type2), m, n, cutoff, shift, epsilon, sigma);
+        addLennardJones(_types->idOf(type1), _types->idOf(type2), m, n, cutoff, shift, epsilon, sigma);
     }
 
     void addLennardJones(ParticleTypeId type1, ParticleTypeId type2, unsigned int m, unsigned int n,
@@ -219,7 +219,7 @@ public:
                                    scalar electrostaticStrength, scalar inverseScreeningDepth,
                                    scalar repulsionStrength, scalar repulsionDistance, unsigned int exponent,
                                    scalar cutoff) {
-        addScreenedElectrostatics(_types(particleType1), _types(particleType2), electrostaticStrength,
+        addScreenedElectrostatics(_types->idOf(particleType1), _types->idOf(particleType2), electrostaticStrength,
                                   inverseScreeningDepth, repulsionStrength, repulsionDistance, exponent, cutoff);
     }
 
@@ -247,7 +247,7 @@ public:
      */
     void addSphere(const std::string &particleType, scalar forceConstant, const Vec3 &origin, scalar radius,
                    bool inclusion) {
-        addSphere(_types(particleType), forceConstant, origin, radius, inclusion);
+        addSphere(_types->idOf(particleType), forceConstant, origin, radius, inclusion);
     }
 
     void
@@ -273,7 +273,7 @@ public:
     */
     void addSphericalBarrier(const std::string &particleType, scalar height, scalar width, const Vec3 &origin,
                              scalar radius) {
-        addSphericalBarrier(_types(particleType), height, width, origin, radius);
+        addSphericalBarrier(_types->idOf(particleType), height, width, origin, radius);
     }
 
     void addSphericalBarrier(ParticleTypeId particleType, scalar height, scalar width, const Vec3 &origin,
@@ -298,7 +298,7 @@ public:
      */
     void addCylinder(const std::string &particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &normal,
                      scalar radius, bool inclusion) {
-        addCylinder(_types(particleType), forceConstant, origin, normal, radius, inclusion);
+        addCylinder(_types->idOf(particleType), forceConstant, origin, normal, radius, inclusion);
     }
 
     void addCylinder(ParticleTypeId particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &normal,
@@ -339,11 +339,11 @@ public:
     }
 
     const PotentialsO1Collection &potentialsOf(const std::string &type) const {
-        return potentialsOf(_types(type));
+        return potentialsOf(_types->idOf(type));
     }
 
     const PotentialsO2Collection &potentialsOf(const std::string &t1, const std::string &t2) const {
-        return potentialsOf(_types(t1), _types(t2));
+        return potentialsOf(_types->idOf(t1), _types->idOf(t2));
     }
 
     std::string describe() const;
@@ -354,7 +354,7 @@ private:
     using OwnPotentialsO1Map = std::unordered_map<ParticleTypeId, OwnPotentialsO1>;
     using OwnPotentialsO2Map = util::particle_type_pair_unordered_map<OwnPotentialsO2>;
 
-    std::reference_wrapper<const ParticleTypeRegistry> _types;
+    const ParticleTypeRegistry *_types;
 
     AltPotentialsO2Map _alternativeO2Registry{};
     PotentialsO1Map _potentialsO1{};
@@ -379,6 +379,7 @@ private:
         }
     }
 
+    friend readdy::model::Context;
 };
 
 }

@@ -168,18 +168,9 @@ public:
     template<typename... Ix>
     constexpr value_type operator()(Ix &&... ix) const {
         static_assert(sizeof...(ix) == Dims, "wrong input dim");
-        /*if(n_elems > 0)*/ {
-            std::array<typename detail::variadic_first<Ix...>::type, Dims> indices{std::forward<Ix>(ix)...};
-            std::size_t result = 0;
-            auto prefactor = n_elems / _size[0];
-            for (std::size_t d = 0; d < Dims - 1; ++d) {
-                result += prefactor * indices[d];
-                prefactor /= _size[d + 1];
-            }
-            result += indices[Dims - 1];
-            return result;
-        }
-        return 0;
+        std::array<typename detail::variadic_first<Ix...>::type, Dims> indices{std::forward<Ix>(ix)...};
+        // std::array<value_type, Dims> indices{std::forward<Ix>(ix)...}; // require ix to be unsigned?
+        return index(indices);
     }
 
     /**
@@ -187,18 +178,16 @@ public:
      * @param indices the Dims-dimensional index
      * @return the 1D index
      */
-    value_type index(const GridDims &indices) const {
-        /*if(n_elems > 0)*/ {
-            std::size_t result = 0;
-            auto prefactor = n_elems / _size[0];
-            for (std::size_t d = 0; d < Dims - 1; ++d) {
-                result += prefactor * indices[d];
-                prefactor /= _size[d + 1];
-            }
-            result += indices[Dims - 1];
-            return result;
+     template<typename Arr> // fixme should Arr always be assumed GridDims? (many use cases supply signed ints)
+    value_type index(const Arr &indices) const {
+        std::size_t result = 0;
+        auto prefactor = n_elems / _size[0];
+        for (std::size_t d = 0; d < Dims - 1; ++d) {
+            result += prefactor * indices[d];
+            prefactor /= _size[d + 1];
         }
-        return 0;
+        result += indices[Dims - 1];
+        return result;
     }
 
     /**
@@ -220,7 +209,6 @@ public:
     }
 
 private:
-
     GridDims _size;
     value_type n_elems;
 };

@@ -57,6 +57,8 @@
 
 #include "TopologyParticleTypeMap.h"
 
+namespace readdy::model { class Context; }
+
 namespace readdy::model::top {
 
 struct TopologyType {
@@ -86,17 +88,17 @@ public:
 
     using TypeCollection = std::vector<TopologyType>;
 
-    explicit TopologyRegistry(const ParticleTypeRegistry &typeRegistry);
-
-    TopologyRegistry(const TopologyRegistry &) = default;
-
-    TopologyRegistry &operator=(const TopologyRegistry &) = default;
-
-    TopologyRegistry(TopologyRegistry &&) = default;
-
-    TopologyRegistry &operator=(TopologyRegistry &&) = default;
-
-    ~TopologyRegistry() = default;
+//    explicit TopologyRegistry(const ParticleTypeRegistry &typeRegistry);
+//
+//    TopologyRegistry(const TopologyRegistry &) = default;
+//
+//    TopologyRegistry &operator=(const TopologyRegistry &) = default;
+//
+//    TopologyRegistry(TopologyRegistry &&) = default;
+//
+//    TopologyRegistry &operator=(TopologyRegistry &&) = default;
+//
+//    ~TopologyRegistry() = default;
 
     TopologyTypeId addType(const std::string &name, const StructuralReactionCollection &reactions = {});
 
@@ -276,8 +278,8 @@ public:
             const std::string &particleType1, const std::string &topologyType1,
             const std::string &particleType2, const std::string &topologyType2) const {
         return spatialReactionsByType(
-                _typeRegistry.get().idOf(particleType1), idOf(topologyType1),
-                _typeRegistry.get().idOf(particleType2), idOf(topologyType2));
+                _types->idOf(particleType1), idOf(topologyType1),
+                _types->idOf(particleType2), idOf(topologyType2));
     }
 
     const SpatialReactionCollection &spatialReactionsByType(ParticleTypeId t1, TopologyTypeId tt1,
@@ -309,7 +311,7 @@ public:
     }
 
     bool isSpatialReactionType(const std::string &name) const {
-        return isSpatialReactionType(_typeRegistry.get().idOf(name));
+        return isSpatialReactionType(_types->idOf(name));
     }
 
     bool isSpatialReactionType(ParticleTypeId type) const {
@@ -367,7 +369,7 @@ public:
     }
 
     const ParticleTypeRegistry &particleTypeRegistry() const {
-        return _typeRegistry.get();
+        return *_types;
     }
 
 private:
@@ -379,9 +381,11 @@ private:
     SpatialReactionCollection _defaultTopologyReactions{};
     SpatialReactionTypeIds _spatialReactionTypes{};
 
-    std::reference_wrapper<const ParticleTypeRegistry> _typeRegistry;
+    const ParticleTypeRegistry *_types;
 
     api::PotentialConfiguration _potentialConfiguration{};
+
+    friend readdy::model::Context;
 };
 
 }

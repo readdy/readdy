@@ -215,20 +215,17 @@ public:
 
     void setKernelConfiguration(const std::string &jsonStr);
 
-    // ctor and dtor
     Context();
 
     ~Context() = default;
 
-    // move
-    Context(Context &&rhs) = default;
+    Context(Context &&rhs) noexcept;
 
-    Context &operator=(Context &&rhs) = default;
+    Context &operator=(Context &&rhs) noexcept ;
 
-    // copy
-    Context(const Context &rhs) = default;
+    Context(const Context &rhs);
 
-    Context &operator=(const Context &rhs) = default;
+    Context &operator=(const Context &rhs);
 
 private:
     ParticleTypeRegistry _particleTypeRegistry;

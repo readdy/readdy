@@ -95,9 +95,6 @@ public:
      *
      * To enable debugging set the environment variable READDY_MPI_DEBUG,
      * which can be exported to processes via `mpirun`.
-     *
-     * @param rank of the process calling this function
-     * @param processorName name of the process calling this function
      */
     static void waitForDebugger() {
         if (getenv("READDY_MPI_DEBUG") != nullptr) {

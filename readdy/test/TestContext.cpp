@@ -368,7 +368,57 @@ TEST_CASE("Test context.", "[context]") {
     }
 
     SECTION("Copyability") {
-        Context context;
-        Context copy(context);
+        Context ctx;
+        ctx.particleTypes().add("A", 1.0);
+        ctx.potentials().addHarmonicRepulsion("A", "A", 1.0, 1.0);
+        ctx.reactions().addDecay("decay", "A", 1.0);
+        ctx.topologyRegistry().addType("T");
+        ctx.compartments().addSphere({{"A", "A"}}, "s",{0.,0.,0.}, 2., true);
+        Context ctx2(ctx);
+        CHECK(ctx2.particleTypes().idOf("A") >= 0);
+        CHECK(ctx2.particleTypes().nTypes() == 1);
+        CHECK(ctx2.potentials().potentialsOrder2().size() == 1);
+        CHECK(ctx2.potentials().potentialsOf("A", "A").size() == 1);
+        CHECK(ctx2.reactions().nOrder1() == 1);
+        CHECK(ctx2.reactions().idOf("decay") >= 0);
+        CHECK(ctx2.reactions().order1ByType("A").size() == 1);
+        CHECK(ctx2.topologyRegistry().idOf("T") >= 0);
+        CHECK_FALSE(ctx2.topologyRegistry().isSpatialReactionType("T"));
+        CHECK(ctx2.compartments().get().size() == 1);
+    }
+
+    SECTION("Modifying the copy should not influence the original") {
+        GIVEN("Context with one reaction for A, and a copy of that context") {
+            Context ctx;
+            ctx.particleTypes().add("A", 1.0);
+            ctx.reactions().addDecay("decay", "A", 1.0);
+            Context ctx2(ctx);
+            WHEN("The copy gets another reaction for A") {
+                ctx2.reactions().addFission("fiss", "A", "A", "A", 1.0, 1.0);
+                THEN("The original context still only has one reaction for A") {
+                    CHECK(ctx.reactions().order1ByType("A").size() == 1);
+                }
+            }
+        }
+    }
+
+    SECTION("Movability") {
+        Context ctx;
+        ctx.particleTypes().add("A", 1.0);
+        ctx.potentials().addHarmonicRepulsion("A", "A", 1.0, 1.0);
+        ctx.reactions().addDecay("decay", "A", 1.0);
+        ctx.topologyRegistry().addType("T");
+        ctx.compartments().addSphere({{"A", "A"}}, "s",{0.,0.,0.}, 2., true);
+        Context ctx2(std::move(ctx));
+        CHECK(ctx2.particleTypes().idOf("A") >= 0);
+        CHECK(ctx2.particleTypes().nTypes() == 1);
+        CHECK(ctx2.potentials().potentialsOrder2().size() == 1);
+        CHECK(ctx2.potentials().potentialsOf("A", "A").size() == 1);
+        CHECK(ctx2.reactions().nOrder1() == 1);
+        CHECK(ctx2.reactions().idOf("decay") >= 0);
+        CHECK(ctx2.reactions().order1ByType("A").size() == 1);
+        CHECK(ctx2.topologyRegistry().idOf("T") >= 0);
+        CHECK_FALSE(ctx2.topologyRegistry().isSpatialReactionType("T"));
+        CHECK(ctx2.compartments().get().size() == 1);
     }
 }

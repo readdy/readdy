@@ -62,3 +62,17 @@ SCENARIO("Testing the kernel provider") {
         }
     }
 }
+
+TEST_CASE("Test Kernel ctor") {
+    auto& provider = readdy::plugin::KernelProvider::getInstance();
+    auto kernel = provider.create("SingleCPU");
+    auto &ctx = kernel->context();
+    ctx.particleTypes().add("A", 1.);
+    ctx.particleTypes().add("B", 1.);
+    kernel->addParticle("A", readdy::Vec3(1, 0, 2));
+
+    std::unordered_map<std::string, std::string> conversionsMap = {{"A", "B"}};
+    //ctx.compartments().addSphere(conversionsMap, "kugelrund", readdy::Vec3(0, 0, 0), 10., false);
+    ctx.topologyRegistry().addType("T");
+    std::cout << ctx.topologyRegistry().isSpatialReactionType("T") << std::endl;
+}
