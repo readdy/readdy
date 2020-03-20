@@ -48,6 +48,7 @@ namespace readdy::kernel::mpi {
 
 /**
  * An Entry similar to SCPU with additional MPI related data.
+ * todo maybe ask particle instead of NL whether it is in halo (measure performance)
  */
 struct MPIEntry {
     using Particle = readdy::model::Particle;
@@ -59,11 +60,11 @@ struct MPIEntry {
 
     }
 
-    bool is_deactivated() const {
+    [[nodiscard]] bool is_deactivated() const {
         return deactivated;
     }
 
-    const Particle::Position &position() const {
+    [[nodiscard]] const Particle::Position &position() const {
         return pos;
     }
 

@@ -47,10 +47,7 @@ namespace rnd = readdy::model::rnd;
 
 TEST_CASE("Test diffusion conservation of particles when diffusing", "[mpi]") {
     GIVEN("System of A and B particles subject to soft repulsion") {
-        auto [rank, ws] = rkmu::getRankAndWorldSize();
         readdy::model::Context ctx;
-        ctx.kernelConfiguration().mpi.rank = rank;
-        ctx.kernelConfiguration().mpi.worldSize = ws;
         ctx.boxSize() = {10., 10., 10.};
         ctx.periodicBoundaryConditions() = {true, true, true};
         ctx.particleTypes().add("A", 1.0);

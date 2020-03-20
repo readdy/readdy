@@ -101,9 +101,6 @@ TEST_CASE("Test kernel configuration from context", "[mpi]") {
     ctx.potentials().addHarmonicRepulsion("B", "B", 1.0, 2.);
     Json conf = {{"MPI", {{"dx", 4.9}, {"dy", 4.9}, {"dz", 4.9}}}};
     ctx.kernelConfiguration() = conf.get<readdy::conf::Configuration>();
-    auto [rank, ws] = rkmu::getRankAndWorldSize();
-    ctx.kernelConfiguration().mpi.rank = rank;
-    ctx.kernelConfiguration().mpi.worldSize = ws;
 
     CHECK(ctx.kernelConfiguration().mpi.dx == Approx(4.9));
     CHECK(ctx.kernelConfiguration().mpi.dy == Approx(4.9));
@@ -123,8 +120,7 @@ TEST_CASE("Test distribute particles and gather them again", "[mpi]") {
     ctx.particleTypes().add("A", 1.);
     ctx.particleTypes().add("B", 1.);
     ctx.potentials().addHarmonicRepulsion("A", "A", 10., 2.3);
-    auto [rank, ws] = rkmu::getRankAndWorldSize();
-    Json conf = {{"MPI", {{"dx", 4.9}, {"dy", 4.9}, {"dz", 4.9}, {"rank", rank}, {"worldSize", ws}}}};
+    Json conf = {{"MPI", {{"dx", 4.9}, {"dy", 4.9}, {"dz", 4.9}}}};
     ctx.kernelConfiguration() = conf.get<readdy::conf::Configuration>();
 
     readdy::kernel::mpi::MPIKernel kernel(ctx);
@@ -139,7 +135,7 @@ TEST_CASE("Test distribute particles and gather them again", "[mpi]") {
             kernel.getMPIKernelStateModel().distributeParticle(p);
         }
 
-        THEN("Each worker has exactly one particle is the data structure") {
+        THEN("Each worker has exactly one particle in the data structure") {
             if (kernel.domain().isMasterRank()) {
                 CHECK(kernel.getMPIKernelStateModel().getParticleData()->size() == 0); // master data is emtpy
             } else if (kernel.domain().isWorkerRank()) {

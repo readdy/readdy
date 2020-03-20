@@ -50,6 +50,7 @@
 
 #include <readdy/common/common.h>
 #include <readdy/model/Context.h>
+#include <mpi.h>
 
 namespace readdy::kernel::mpi::model {
 
@@ -66,12 +67,13 @@ private:
     int _rank;
     int _worldSize;
     scalar _haloThickness;
+    std::array<scalar, 3> _minDomainWidths;
 
     int _nUsedRanks; // counts master rank and all workers
     int _nWorkerRanks; // counts all workers, which is a subset of used ranks
     int _nIdleRanks; // counts all idle
     std::vector<int> _workerRanks; // can be returned as const ref to conveniently iterate over ranks
-    bool _isNotIdle{true};
+    bool _idle{false};
     std::array<std::size_t, 3> _nDomainsPerAxis{};
     readdy::util::Index3D _domainIndex; // rank of (ijk) is domainIndex(i,j,k)+1
 
@@ -104,138 +106,27 @@ private:
     std::reference_wrapper<const readdy::model::Context> _context;
 
 public:
-    explicit MPIDomain(const readdy::model::Context &ctx)
-            : _context(std::cref(ctx)), _haloThickness(ctx.calculateMaxCutoff()),
-              _nUsedRanks(0) {
-        const auto conf = _context.get().kernelConfiguration();
-        std::array<scalar, 3> minDomainWidths{conf.mpi.dx, conf.mpi.dy, conf.mpi.dz};
-        // todo it would be easier if domain would figure rank and worldSize out by itself, i.e. would need to depend on MPI here
-        _rank = conf.mpi.rank;
-        _worldSize = conf.mpi.worldSize;
-        if (_rank < 0) {
-            throw std::logic_error("rank was not correctly propagated to domain");
-        }
-        if (_worldSize < 1) {
-            throw std::logic_error("worldSize was not correctly propagated to domain");
-        }
-
-        const auto &boxSize = _context.get().boxSize();
-        const auto &periodic = _context.get().periodicBoundaryConditions();
-
-        if (_haloThickness <= 0.) {
-            // this scenario is anyway pointless because there are no interactions,
-            // but we cannot have minDomainWidths = 0
-            auto minBoxLength = std::min_element(boxSize.begin(), boxSize.end());
-            _haloThickness = *minBoxLength;
-        }
-
-        for (int i = 0; i < 3; ++i) {
-            if (minDomainWidths[i] <= 0.) {
-                minDomainWidths[i] = 2. * _haloThickness;
-                readdy::log::info("Setting minDomainWidths[{}] to 2 * haloThickness", i);
-            }
-        }
-
-        readdy::log::info("minDomainWidths are now {} {} {}",
-                minDomainWidths[0], minDomainWidths[1], minDomainWidths[2]);
-
-        if (_worldSize >= 2) {
-
-            for (std::size_t i = 0; i < 3; ++i) {
-                _nDomainsPerAxis[i] = static_cast<unsigned int>(std::max(1., std::floor(boxSize[i] / minDomainWidths[i])));
-            }
-            _nUsedRanks = _nDomainsPerAxis[0] * _nDomainsPerAxis[1] * _nDomainsPerAxis[2] + 1;
-
-            unsigned int coord = 0;
-            while (_nUsedRanks > _worldSize) {
-                // try to increase size of domains (round robbing), to decrease usedRanks
-                minDomainWidths[coord] = 1.5 * minDomainWidths[coord];
-                coord = (coord + 1) % 3;
-                for (std::size_t i = 0; i < 3; ++i) {
-                    _nDomainsPerAxis[i] = static_cast<unsigned int>(std::max(1., std::floor(boxSize[i] / minDomainWidths[i])));
-                }
-                _nUsedRanks = _nDomainsPerAxis[0] * _nDomainsPerAxis[1] * _nDomainsPerAxis[2] + 1;
-            }
-            if (not isValidDecomposition(_nDomainsPerAxis)) {
-                throw std::runtime_error("Could not determine a valid domain decomposition");
-            }
-
-        } else {
-            throw std::logic_error("worldSize must be at least 2 (one master, one worker)");
-        }
-
-        _nWorkerRanks = _nUsedRanks-1;
-        _workerRanks.resize(_nWorkerRanks); // master rank 0 is also used, but not a worker, thus subtract it here
-        std::iota(_workerRanks.begin(), _workerRanks.end(), 1);
-        assert(_workerRanks[0] == 1);
-        assert(_workerRanks.back() == _nUsedRanks-1);
-        _nIdleRanks = _worldSize - _nUsedRanks;
-
-        _domainIndex = readdy::util::Index3D(_nDomainsPerAxis[0], _nDomainsPerAxis[1], _nDomainsPerAxis[2]);
-
-        // the rest is only for workers
+    explicit MPIDomain(const readdy::model::Context &ctx) : _context(std::cref(ctx)) {
+        obtainInputArguments();
+        validateInputArguments();
+        setUpDecomposition();
         if (_rank != 0 and _rank < _nUsedRanks) {
-            // find out which this ranks' ijk coordinates are, consider -1 because of master rank 0
-            _myIdx = _domainIndex.inverse(_rank - 1);
-            for (std::size_t i = 0; i < 3; ++i) {
-                _extent[i] = boxSize[i] / static_cast<scalar>(_nDomainsPerAxis[i]);
-                _origin[i] = -0.5 * boxSize[i] + _myIdx[i] * _extent[i];
-                _originWithHalo[i] = _origin[i] - _haloThickness;
-                _extentWithHalo[i] = _extent[i] + 2 * _haloThickness;
-            }
-
-            // set up neighbors, i.e. the adjacency between domains
-            for (int di = -1; di < 2; ++di) {
-                for (int dj = -1; dj < 2; ++dj) {
-                    for (int dk = -1; dk < 2; ++dk) {
-                        int i = _myIdx[0] + di;
-                        int j = _myIdx[1] + dj;
-                        int k = _myIdx[2] + dk;
-
-                        i = wrapDomainIdx(i, 0);
-                        j = wrapDomainIdx(j, 1);
-                        k = wrapDomainIdx(k, 2);
-
-                        // determine if neighbor is to be considered as such
-                        int otherRank;
-                        NeighborType neighborType;
-                        if (i == -1 or j == -1 or k == -1) {
-                            // other domain is not a neighbor
-                            otherRank = -1;
-                            neighborType = NeighborType::nan;
-                        } else {
-                            otherRank = _domainIndex(i, j, k) + 1; // +1 considers master rank
-                            if (otherRank == _rank) {
-                                neighborType = NeighborType::self;
-                            } else {
-                                neighborType = NeighborType::regular;
-                            }
-                        }
-
-                        auto dijk = neighborIndex(di + 1, dj + 1, dk + 1);
-                        _neighborRanks.at(dijk) = otherRank;
-                        _neighborTypes.at(dijk) = neighborType;
-                    }
-                }
-            }
-
-            assert(_neighborRanks.at(neighborIndex(1, 1, 1)) == _rank);
-
+            setupWorker();
         } else if (_rank == 0) {
             // master rank 0 must at least know how big domains are
             for (std::size_t i = 0; i < 3; ++i) {
-                _extent[i] = boxSize[i] / static_cast<scalar>(_nDomainsPerAxis[i]);
+                _extent[i] = _context.get().boxSize()[i] / static_cast<scalar>(_nDomainsPerAxis[i]);
             }
         } else {
             // allocated but unneeded workers
-            _isNotIdle = false;
+            _idle = true;
         }
     }
 
     [[nodiscard]] int rankOfPosition(const Vec3 &pos) const {
         const auto ijk = ijkOfPosition(pos);
         return _domainIndex(ijk[0], ijk[1], ijk[2]) + 1; // + 1 because master rank = 0
-    };
+    }
 
     [[nodiscard]] bool isInDomainCore(const Vec3 &pos) const {
         validateRankNotMaster();
@@ -337,11 +228,11 @@ public:
     }
 
     [[nodiscard]] bool isWorkerRank() const {
-        return (_isNotIdle and not isMasterRank());
+        return (not _idle and not isMasterRank());
     }
 
     [[nodiscard]] bool isIdleRank() const {
-        return (not _isNotIdle);
+        return _idle;
     }
 
     [[nodiscard]] const std::vector<int> &workerRanks() const {
@@ -418,10 +309,154 @@ private:
         }
     }
 
+    void obtainInputArguments() {
+        MPI_Comm_size(MPI_COMM_WORLD, &_worldSize);
+        MPI_Comm_rank(MPI_COMM_WORLD, &_rank);
+
+        const auto &conf = _context.get().kernelConfiguration();
+
+        if (conf.mpi.haloThickness > 0.) {
+            _haloThickness = conf.mpi.haloThickness;
+        } else {
+            _haloThickness = _context.get().calculateMaxCutoff();
+        }
+
+        _minDomainWidths = {conf.mpi.dx, conf.mpi.dy, conf.mpi.dz};
+        for (int i = 0; i < 3; ++i) {
+            if (_minDomainWidths[i] <= 0.) {
+                _minDomainWidths[i] = 2. * _haloThickness;
+            }
+        }
+    }
+
+    void validateInputArguments() {
+        if (_rank < 0) {
+            throw std::logic_error("Rank must be non-negative");
+        }
+        if (_worldSize < 2) {
+            throw std::logic_error("WorldSize must be at least 2, (one worker, one master)");
+        }
+        if (_haloThickness <= 0.) {
+            throw std::logic_error("Halo thickness {} must be positive");
+        }
+        const auto &boxSize = _context.get().boxSize();
+        const auto &pbc = _context.get().periodicBoundaryConditions();
+        for (int i = 0; i < 3; ++i) {
+            if (_minDomainWidths[i] > boxSize[i]) {
+                // is never ok
+                throw std::logic_error(fmt::format(
+                        "Minimal domain width {width} in direction "
+                        "{direction} must be smaller or equal to boxSize[{direction}]",
+                        fmt::arg("width", _minDomainWidths[i]),
+                        fmt::arg("direction", i)
+                        ));
+            }
+
+            if ((_minDomainWidths[i] > 0.5 * boxSize[i]) and (not pbc[i])) {
+                // is ok, there will only be one domain in this direction with no neighbors,
+                // i.e. no need to check for consistency with halo thickness
+            } else if (_minDomainWidths[i] < 2. * _haloThickness) {
+                // is not ok, there are potential neighbors in this direction (another domain or self)
+                // so min domain widths must be larger than twice the halo
+                throw std::logic_error(fmt::format(
+                        "Minimal domain width {width} in direction {direction} must be "
+                        "larger than 2 x halo = 2 x {halo} = {twohalo}",
+                        fmt::arg("width", _minDomainWidths[i]),
+                        fmt::arg("direction", i),
+                        fmt::arg("halo", _haloThickness),
+                        fmt::arg("twohalo", 2. * _haloThickness)));
+            }
+
+            // everything else is ok
+        }
+    }
+
+    void setUpDecomposition() {
+        const auto &boxSize = _context.get().boxSize();
+        const auto &periodic = _context.get().periodicBoundaryConditions();
+
+        for (std::size_t i = 0; i < 3; ++i) {
+            _nDomainsPerAxis[i] = static_cast<unsigned int>(std::max(1., std::floor(boxSize[i] / _minDomainWidths[i])));
+        }
+        _nUsedRanks = _nDomainsPerAxis[0] * _nDomainsPerAxis[1] * _nDomainsPerAxis[2] + 1;
+
+        unsigned int coord = 0;
+        while (_nUsedRanks > _worldSize) {
+            // try to increase size of domains (round-robin), to decrease usedRanks
+            _minDomainWidths[coord] = 1.5 * _minDomainWidths[coord];
+            coord = (coord + 1) % 3;
+            for (std::size_t i = 0; i < 3; ++i) {
+                _nDomainsPerAxis[i] = static_cast<unsigned int>(std::max(1., std::floor(boxSize[i] / _minDomainWidths[i])));
+            }
+            _nUsedRanks = _nDomainsPerAxis[0] * _nDomainsPerAxis[1] * _nDomainsPerAxis[2] + 1;
+        }
+        if (not isValidDecomposition(_nDomainsPerAxis)) {
+            throw std::runtime_error("Could not determine a valid domain decomposition");
+        }
+
+        _nWorkerRanks = _nUsedRanks-1;
+        _workerRanks.resize(_nWorkerRanks); // master rank 0 is also used, but not a worker, thus subtract it here
+        std::iota(_workerRanks.begin(), _workerRanks.end(), 1);
+        assert(_workerRanks[0] == 1);
+        assert(_workerRanks.back() == _nUsedRanks-1);
+        _nIdleRanks = _worldSize - _nUsedRanks;
+
+        _domainIndex = readdy::util::Index3D(_nDomainsPerAxis[0], _nDomainsPerAxis[1], _nDomainsPerAxis[2]);
+    }
+
+    void setupWorker() {
+        const auto &boxSize = _context.get().boxSize();
+        // find out which this ranks' ijk coordinates are, consider -1 because of master rank 0
+        _myIdx = _domainIndex.inverse(_rank - 1);
+        for (std::size_t i = 0; i < 3; ++i) {
+            _extent[i] = boxSize[i] / static_cast<scalar>(_nDomainsPerAxis[i]);
+            _origin[i] = -0.5 * boxSize[i] + _myIdx[i] * _extent[i];
+            _originWithHalo[i] = _origin[i] - _haloThickness;
+            _extentWithHalo[i] = _extent[i] + 2 * _haloThickness;
+        }
+
+        // set up neighbors, i.e. the adjacency between domains
+        for (int di = -1; di < 2; ++di) {
+            for (int dj = -1; dj < 2; ++dj) {
+                for (int dk = -1; dk < 2; ++dk) {
+                    int i = _myIdx[0] + di;
+                    int j = _myIdx[1] + dj;
+                    int k = _myIdx[2] + dk;
+
+                    i = wrapDomainIdx(i, 0);
+                    j = wrapDomainIdx(j, 1);
+                    k = wrapDomainIdx(k, 2);
+
+                    // determine if neighbor is to be considered as such
+                    int otherRank;
+                    NeighborType neighborType;
+                    if (i == -1 or j == -1 or k == -1) {
+                        // other domain is not a neighbor
+                        otherRank = -1;
+                        neighborType = NeighborType::nan;
+                    } else {
+                        otherRank = _domainIndex(i, j, k) + 1; // +1 considers master rank
+                        if (otherRank == _rank) {
+                            neighborType = NeighborType::self;
+                        } else {
+                            neighborType = NeighborType::regular;
+                        }
+                    }
+
+                    auto dijk = neighborIndex(di + 1, dj + 1, dk + 1);
+                    _neighborRanks.at(dijk) = otherRank;
+                    _neighborTypes.at(dijk) = neighborType;
+                }
+            }
+        }
+        assert(_neighborRanks.at(neighborIndex(1, 1, 1)) == _rank);
+    }
+
+    /** Another consistency check for the resulting composition nDomains */
     [[nodiscard]] bool isValidDecomposition(const std::array<std::size_t, 3> nDomains) const {
-        const auto cutoff = _context.get().calculateMaxCutoff();
-        const auto periodic = _context.get().periodicBoundaryConditions();
-        const auto boxSize = _context.get().boxSize();
+        const auto &cutoff = _context.get().calculateMaxCutoff();
+        const auto &periodic = _context.get().periodicBoundaryConditions();
+        const auto &boxSize = _context.get().boxSize();
         std::array<scalar, 3> domainWidths{};
         for (std::size_t i = 0; i < 3; ++i) {
             domainWidths[i] = boxSize[i] / static_cast<scalar>(nDomains[i]);

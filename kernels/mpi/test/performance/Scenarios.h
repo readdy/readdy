@@ -74,8 +74,7 @@ public:
         ctx.particleTypes().add("A", 1.);
         ctx.particleTypes().add("B", 1.);
         ctx.potentials().addHarmonicRepulsion("A", "A", 10., 2.4);
-        auto [rank, ws] = rkmu::getRankAndWorldSize();
-        Json conf = {{"MPI", {{"dx", 4.9}, {"dy", 4.9}, {"dz", 4.9}, {"rank", rank}, {"worldSize", ws}}}};
+        Json conf = {{"MPI", {{"dx", 4.9}, {"dy", 4.9}, {"dz", 4.9}}}};
         ctx.kernelConfiguration() = conf.get<readdy::conf::Configuration>();
 
         readdy::kernel::mpi::MPIKernel kernel(ctx);
@@ -112,7 +111,7 @@ public:
             require(currentParticles.size() == nParticles);
         }
 
-        Json json = readdy::kernel::mpi::util::Timer::perfToJson();
+        Json json = readdy::kernel::mpi::util::Timer::perfToJsonString();
         readdy::kernel::mpi::util::Timer::clear();
         return json;
     }

@@ -37,8 +37,6 @@
  * @brief Test proper construction of domains and their neighborhood
  * @author chrisfroe
  * @date 17.06.19
- *
- * todo make domain acquire rank and worldSize on its own, thus this becomes a normal mpi test that links against mpi
  */
 
 #include <catch2/catch.hpp>
@@ -49,22 +47,22 @@ using NeighborType = readdy::kernel::mpi::model::MPIDomain::NeighborType;
 TEST_CASE("Test domain decomposition", "[mpi]") {
     readdy::model::Context context;
     context.particleTypes().add("A", 1.0);
-    context.potentials().addHarmonicRepulsion("A", "A", 1.0, 2.3); // cutoff 2.3
+    context.potentials().addHarmonicRepulsion("A", "A", 1.0, 2.3);
 
     SECTION("1D chain of domains") {
         context.boxSize() = {10., 1., 1.};
         context.periodicBoundaryConditions() = {true, false, false};
         // user given values should be at least twice the cutoff
-        context.kernelConfiguration().mpi.dx = 4.6;
-        context.kernelConfiguration().mpi.dy = 4.6;
-        context.kernelConfiguration().mpi.dz = 4.6;
+        context.kernelConfiguration().mpi.dx = 4.61;
+        context.kernelConfiguration().mpi.dy = 0.9;
+        context.kernelConfiguration().mpi.dz = 0.9;
 
         // expecting two workers, boxsize will be split in half, and one master rank -> 3
         int worldSize = 3;
 
         for (int rank = 0; rank < worldSize; ++rank) {
-            context.kernelConfiguration().mpi.rank = rank;
-            context.kernelConfiguration().mpi.worldSize = worldSize;
+            MPIMock::mpiCommWorld.rank = rank;
+            MPIMock::mpiCommWorld.worldSize = worldSize;
             readdy::kernel::mpi::model::MPIDomain domain(context);
             CHECK(domain.worldSize() == 3);
             CHECK(domain.nDomainsPerAxis() == std::array<std::size_t, 3>({2, 1, 1}));
@@ -146,8 +144,8 @@ TEST_CASE("Test domain decomposition", "[mpi]") {
             context.kernelConfiguration().mpi.dx = 2.2;
             context.kernelConfiguration().mpi.dy = 4.6;
             context.kernelConfiguration().mpi.dz = 4.6;
-            context.kernelConfiguration().mpi.rank = 0;
-            context.kernelConfiguration().mpi.worldSize = 4+1;
+            MPIMock::mpiCommWorld.rank = 0;
+            MPIMock::mpiCommWorld.worldSize = 4+1;
             auto ctor = [&]() {
                 readdy::kernel::mpi::model::MPIDomain domain(context);
             };
@@ -160,14 +158,14 @@ TEST_CASE("Test domain decomposition", "[mpi]") {
         context.periodicBoundaryConditions() = {true, true, false};
         context.kernelConfiguration().mpi.dx = 4.6;
         context.kernelConfiguration().mpi.dy = 4.6;
-        context.kernelConfiguration().mpi.dz = 4.6;
+        context.kernelConfiguration().mpi.dz = 0.9;
         int worldSize = 1 + (4 * 2 * 1);
         std::size_t posCount{0};
         readdy::Vec3 pos{-8., -4., 0.49};
         int south, north, west, east, northwest, southwest;
         for (int rank = 0; rank < worldSize; ++rank) {
-            context.kernelConfiguration().mpi.rank = rank;
-            context.kernelConfiguration().mpi.worldSize = worldSize;
+            MPIMock::mpiCommWorld.rank = rank;
+            MPIMock::mpiCommWorld.worldSize = worldSize;
             readdy::kernel::mpi::model::MPIDomain domain(context);
             CHECK(domain.worldSize() == 9);
             CHECK(domain.nDomainsPerAxis() == std::array<std::size_t, 3>({4, 2, 1}));
@@ -200,19 +198,19 @@ TEST_CASE("Test domain decomposition", "[mpi]") {
         }
         CHECK(posCount == 1); // can only be in one domain core
 
-        context.kernelConfiguration().mpi.rank = south;
+        MPIMock::mpiCommWorld.rank = south;
         readdy::kernel::mpi::model::MPIDomain southDomain(context);
         CHECK(southDomain.isInDomainHalo(pos));
-        context.kernelConfiguration().mpi.rank = north;
+        MPIMock::mpiCommWorld.rank = north;
         readdy::kernel::mpi::model::MPIDomain northDomain(context);
         CHECK(northDomain.isInDomainHalo(pos));
-        context.kernelConfiguration().mpi.rank = west;
+        MPIMock::mpiCommWorld.rank = west;
         readdy::kernel::mpi::model::MPIDomain westDomain(context);
         CHECK(westDomain.isInDomainHalo(pos));
-        context.kernelConfiguration().mpi.rank = east;
+        MPIMock::mpiCommWorld.rank = east;
         readdy::kernel::mpi::model::MPIDomain eastDomain(context);
         CHECK_FALSE(eastDomain.isInDomainHalo(pos));
-        context.kernelConfiguration().mpi.rank = northwest;
+        MPIMock::mpiCommWorld.rank = northwest;
         readdy::kernel::mpi::model::MPIDomain nwDomain(context);
         CHECK(nwDomain.isInDomainHalo(pos));
     }
@@ -223,11 +221,11 @@ TEST_CASE("Test domain decomposition", "[mpi]") {
         // user given values should be at least twice the cutoff
         context.kernelConfiguration().mpi.dx = 4.6;
         context.kernelConfiguration().mpi.dy = 4.6;
-        context.kernelConfiguration().mpi.dz = 4.6;
+        context.kernelConfiguration().mpi.dz = 0.9;
         int worldSize = 3;
         for (int rank = 0; rank < worldSize; ++rank) {
-            context.kernelConfiguration().mpi.rank = rank;
-            context.kernelConfiguration().mpi.worldSize = worldSize;
+            MPIMock::mpiCommWorld.rank = rank;
+            MPIMock::mpiCommWorld.worldSize = worldSize;
             readdy::kernel::mpi::model::MPIDomain domain(context);
             CHECK(domain.worldSize() == 3);
             CHECK(domain.nDomainsPerAxis() == std::array<std::size_t, 3>({2, 1, 1}));
@@ -350,8 +348,8 @@ TEST_CASE("Test domain decomposition", "[mpi]") {
                     // position is always at the positive "end" of the box
                     readdy::Vec3 pos{0.45 * box[0], 0.45 * box[1], 0.45 * box[2]};
                     for (int rank = 1; rank < worldSize; ++rank) {
-                        context.kernelConfiguration().mpi.rank = rank;
-                        context.kernelConfiguration().mpi.worldSize = worldSize;
+                        MPIMock::mpiCommWorld.rank = rank;
+                        MPIMock::mpiCommWorld.worldSize = worldSize;
                         readdy::kernel::mpi::model::MPIDomain domain(context);
                         auto wrapped = domain.wrapIntoThisHalo(pos);
                         if (domain.isInDomainCore(pos)) {

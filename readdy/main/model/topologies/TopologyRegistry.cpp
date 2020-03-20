@@ -36,7 +36,7 @@
 /**
  * << detailed description >>
  *
- * @file #.cpp
+ * @file TopologyRegistry.cpp
  * @brief << brief description >>
  * @author clonker
  * @date 24.08.17

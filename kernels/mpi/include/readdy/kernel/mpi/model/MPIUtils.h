@@ -93,6 +93,7 @@ inline std::vector<T> receiveObjects(int senderRank, const MPI_Comm &comm) {
     return objects;
 }
 
+// todo here flatbuffers could be useful
 template<typename T>
 inline void receiveAppendObjects(int senderRank, std::vector<T> &result, const MPI_Comm &comm) {
     MPI_Status status;
@@ -107,7 +108,7 @@ inline void receiveAppendObjects(int senderRank, std::vector<T> &result, const M
 }
 
 template<typename T>
-inline void sendObjects(int targetRank, std::vector<T> objects, const MPI_Comm &comm) {
+inline void sendObjects(int targetRank, const std::vector<T> &objects, const MPI_Comm &comm) {
     MPI_Send((void *) objects.data(), static_cast<int>(objects.size() * sizeof(T)), MPI_BYTE,
              targetRank, tags::transmitObjects, comm);
 }
@@ -183,13 +184,6 @@ inline void evaluateOnContainers(ParticleContainer &&particleContainer,
             }
         }
     }
-}
-
-inline std::pair<int, int> getRankAndWorldSize() {
-    int worldSize, rank;
-    MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    return {rank, worldSize};
 }
 
 }

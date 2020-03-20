@@ -33,12 +33,12 @@
  ********************************************************************/
 
 /**
- * « detailed description »
- *
  * @file MPIObservables.h
  * @brief « brief description »
  * @author chrisfroe
  * @date 03.06.19
+ *
+ * todo: https://support.hdfgroup.org/HDF5/PHDF5/ ?
  */
 
 #pragma once

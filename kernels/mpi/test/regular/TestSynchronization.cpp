@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2020 Noe Group, Freie Universität Berlin (GER)       *
+ * Copyright © 2020 Noé Group, Freie Universität Berlin (GER)       *
  *                                                                  *
  * Redistribution and use in source and binary forms, with or       *
  * without modification, are permitted provided that the            *
@@ -209,8 +209,7 @@ std::pair<ParticlePODSet, ParticlePODPairSet> expectedParticlesAndPairs(
 }
 
 void setupContext(readdy::model::Context &ctx) {
-    auto [rank, ws] = rkmu::getRankAndWorldSize();
-    Json conf = {{"MPI", {{"dx", 4.9}, {"dy", 4.9}, {"dz", 4.9}, {"rank", rank}, {"worldSize", ws}}}};
+    Json conf = {{"MPI", {{"dx", 4.9}, {"dy", 4.9}, {"dz", 4.9}}}};
     ctx.kernelConfiguration() = conf.get<readdy::conf::Configuration>();
     ctx.particleTypes().add("A", 1.);
     ctx.potentials().addHarmonicRepulsion("A", "A", 1., 1.);
@@ -339,7 +338,7 @@ TEST_CASE("Two dimensional synchronization", "[mpi]") {
     synchronizeAndCheck(kernel, expectedPODs, expectedPODPairs, particles);
 }
 
-void randomPosititionsTest(std::array<readdy::scalar, 3> boxSize, std::array<bool, 3> pbc) {
+void randomPositionsTest(std::array<readdy::scalar, 3> boxSize, std::array<bool, 3> pbc) {
     readdy::model::Context ctx;
 
     ctx.boxSize() = boxSize;
@@ -403,7 +402,7 @@ TEST_CASE("Synchronization with random positions (have to be broadcasted) for va
 
     for (auto b : bs) {
         for (auto pbc : pbcs) {
-            randomPosititionsTest(b, pbc);
+            randomPositionsTest(b, pbc);
         }
     }
 }

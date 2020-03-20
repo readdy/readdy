@@ -33,18 +33,17 @@
  ********************************************************************/
 
 /**
- * « detailed description »
- *
  * @file Timer.h
- * @brief « brief description »
+ * @brief RAII timer with static storage and ability to dump results into a json string.
  * @author chrisfroe
+ * @author clonker
  * @date 26.07.19
  */
 
 #pragma once
 
 #include <mutex>
-#include <json.hpp>
+#include <unordered_map>
 
 namespace readdy::kernel::mpi::util {
 
@@ -142,7 +141,7 @@ public:
         }
     }
 
-    static nlohmann::json perfToJson();
+    static std::string perfToJsonString();
 
     static void clear();
 
@@ -153,7 +152,5 @@ private:
     std::chrono::high_resolution_clock::time_point begin;
     static std::unordered_map<std::string, PerformanceData> perf;
 };
-
-void to_json(nlohmann::json &j, const PerformanceData &pd);
 
 }

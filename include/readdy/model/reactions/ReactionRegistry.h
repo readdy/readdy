@@ -270,8 +270,7 @@ public:
     std::string describe() const;
 
 private:
-
-    using OwnReactions = std::vector<std::shared_ptr<Reaction>>; // todo unique pointer and deep copy ctor
+    using OwnReactions = std::vector<std::shared_ptr<Reaction>>;
     using OwnReactionsO1Map = std::unordered_map<ParticleTypeId, OwnReactions>;
     using OwnReactionsO2Map = util::particle_type_pair_unordered_map<OwnReactions>;
 

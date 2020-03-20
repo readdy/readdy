@@ -217,8 +217,6 @@ public:
 
     Context();
 
-    ~Context() = default;
-
     Context(Context &&rhs) noexcept;
 
     Context &operator=(Context &&rhs) noexcept ;
@@ -227,7 +225,14 @@ public:
 
     Context &operator=(const Context &rhs);
 
+    // nothing has to be done to the references upon destruction. Disobeying rule of five here, call the cops.
+    ~Context() = default;
+
 private:
+    // the registries (except particle type registry) hold a reference to the particle type registry,
+    // which has to be reset upon copy/move
+    void resetReferences();
+
     ParticleTypeRegistry _particleTypeRegistry;
     reactions::ReactionRegistry _reactionRegistry;
     potentials::PotentialRegistry _potentialRegistry;
