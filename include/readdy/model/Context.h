@@ -219,7 +219,7 @@ public:
 
     Context(Context &&rhs) noexcept;
 
-    Context &operator=(Context &&rhs) noexcept ;
+    Context &operator=(Context &&rhs) noexcept;
 
     Context(const Context &rhs);
 
@@ -231,7 +231,7 @@ public:
 private:
     // the registries (except particle type registry) hold a reference to the particle type registry,
     // which has to be reset upon copy/move
-    void resetReferences();
+    void setTypeRegistryReferences();
 
     ParticleTypeRegistry _particleTypeRegistry;
     reactions::ReactionRegistry _reactionRegistry;
