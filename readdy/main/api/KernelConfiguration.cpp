@@ -34,10 +34,8 @@
 
 
 /**
- *
- *
  * @file KernelConfiguration.cpp
- * @brief 
+ * @brief Conversions from and to json of KernelConfiguration
  * @author clonker
  * @date 9/13/17
  */
@@ -103,7 +101,8 @@ namespace mpi {
 void to_json(json &j, const Configuration &conf) {
     j = json{{"dx", conf.dx},
              {"dy", conf.dy},
-             {"dz", conf.dz}};
+             {"dz", conf.dz},
+             {"haloThickness"}, conf.haloThickness};
 }
 
 void from_json(const json &j, Configuration &conf) {
@@ -121,6 +120,11 @@ void from_json(const json &j, Configuration &conf) {
         conf.dz = j.at("dz").get<scalar>();
     } else {
         conf.dz = {};
+    }
+    if (j.find("haloThickness") != j.end()) {
+        conf.haloThickness = j.at("haloThickness").get<scalar>();
+    } else {
+        conf.haloThickness = {};
     }
 }
 }

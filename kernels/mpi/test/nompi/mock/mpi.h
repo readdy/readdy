@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2019 Computational Molecular Biology Group,          *
+ * Copyright © 2020 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * Redistribution and use in source and binary forms, with or       *
@@ -33,27 +33,22 @@
  ********************************************************************/
 
 /**
- * Integration tests:
- * - MSD
- * - Stationary distribution in 1D potential
- * - Thermodynamics of LJ suspension
- * - Michaelis-Menten kinetics (see main library tests)
- * -
- *
- * Scale number of processes, measure performance also
- *
- * @file TestIntegration.cpp
- * @brief « brief description »
+ * @file mpi.h
+ * @brief Mock mpi header to allow access to selected mpi functions without linking against a specific mpi impl
  * @author chrisfroe
- * @date 03.06.19
+ * @date 20.03.20
  */
 
-#include <catch2/catch.hpp>
+#pragma once
 
-#include <readdy/model/Kernel.h>
-#include <readdy/plugin/KernelProvider.h>
-#include <readdy/kernel/mpi/MPIKernel.h>
+struct Comm { int worldSize, rank; };
 
-TEST_CASE("Integration test", "[!hide][mpi]") {
-    // there is nothing here
-}
+void MPI_Comm_size(const Comm &comm, int *worldSize);
+
+void MPI_Comm_rank(const Comm &comm, int *rank);
+
+struct MPIMock {
+    static Comm mpiCommWorld;
+};
+
+#define MPI_COMM_WORLD MPIMock::mpiCommWorld

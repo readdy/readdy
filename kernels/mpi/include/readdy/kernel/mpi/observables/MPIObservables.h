@@ -33,24 +33,45 @@
  ********************************************************************/
 
 /**
- * « detailed description »
- *
  * @file MPIObservables.h
  * @brief « brief description »
  * @author chrisfroe
  * @date 03.06.19
+ *
+ * todo: https://support.hdfgroup.org/HDF5/PHDF5/ ?
  */
 
 #pragma once
 
 
 #include <readdy/model/observables/Observables.h>
+#include <readdy/model/observables/io/TimeSeriesWriter.h>
+
+namespace rmou = readdy::model::observables::util;
 
 namespace readdy::kernel::mpi {
 
 class MPIKernel;
 
 namespace observables {
+
+class MPIEnergy : public readdy::model::observables::Energy {
+public:
+    MPIEnergy(MPIKernel *kernel, Stride stride);
+
+    void evaluate() override;
+
+protected:
+    MPIKernel *kernel;
+
+    void append() override;
+
+    void initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) override;
+
+    std::unique_ptr<h5rd::DataSet> ds{nullptr};
+    std::unique_ptr<rmou::TimeSeriesWriter> time{nullptr};
+    io::BloscFilter bloscFilter{};
+};
 
 class MPIVirial : public readdy::model::observables::Virial {
 public:
@@ -60,6 +81,11 @@ public:
 
 protected:
     MPIKernel *kernel;
+
+    // todo
+    //void append() override;
+
+    //void initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) override;
 };
 
 class MPIPositions : public readdy::model::observables::Positions {
@@ -70,6 +96,11 @@ public:
 
 protected:
     MPIKernel *kernel;
+
+    // todo
+    //void append() override;
+
+    //void initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) override;
 };
 
 class MPIParticles : public readdy::model::observables::Particles {
@@ -80,6 +111,11 @@ public:
 
 protected:
     MPIKernel *kernel;
+
+    // todo
+    //void append() override;
+
+    //void initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) override;
 };
 
 class MPIHistogramAlongAxis : public readdy::model::observables::HistogramAlongAxis {
@@ -94,7 +130,11 @@ public:
 
 protected:
     MPIKernel *kernel;
-    size_t size;
+
+    //todo
+    //void append() override;
+
+    //void initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) override;
 };
 
 class MPINParticles : public readdy::model::observables::NParticles {
@@ -107,6 +147,11 @@ public:
 
 protected:
     MPIKernel *kernel;
+
+    //todo
+    //void append() override;
+
+    //void initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) override;
 };
 
 class MPIForces : public readdy::model::observables::Forces {
@@ -120,6 +165,11 @@ public:
 
 protected:
     MPIKernel *kernel;
+
+    // todo
+    //void append() override;
+
+    //void initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) override;
 };
 
 class MPIReactions : public readdy::model::observables::Reactions {
@@ -130,6 +180,11 @@ public:
 
 protected:
     MPIKernel *kernel;
+
+    // todo
+    //void append() override;
+
+    //void initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) override;
 };
 
 class MPIReactionCounts : public readdy::model::observables::ReactionCounts {
@@ -140,6 +195,11 @@ public:
 
 protected:
     MPIKernel *kernel;
+
+    // todo
+    //void append() override;
+
+    //void initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) override;
 };
 
 }

@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2018 Computational Molecular Biology Group,          *
+ * Copyright © 2020 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * Redistribution and use in source and binary forms, with or       *
@@ -32,41 +32,64 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                       *
  ********************************************************************/
 
-
 /**
- * << detailed description >>
+ * Run performance scenarios for the MPI kernel. As these do validate the correctness of readdy but mainly
+ * measure runtime, this does not need the unit test library.
  *
- * @file CompartmentRegistry.cpp
- * @brief << brief description >>
- * @author clonker
- * @date 20.09.17
- * @copyright BSD-3
+ * @file PerformanceMain.cpp
+ * @brief Run performance scenarios for the MPI kernel
+ * @author chrisfroe
+ * @date 28.05.19
  */
 
-#include <readdy/model/compartments/CompartmentRegistry.h>
-#include <readdy/model/compartments/Compartments.h>
-#include <readdy/model/_internal/Util.h>
+#include <readdy/plugin/KernelProvider.h>
+#include <readdy/kernel/mpi/MPISession.h>
+#include <readdy/plugin/Utils.h>
+#include <fstream>
+#include "Scenarios.h"
 
-namespace readdy {
-namespace model {
-namespace compartments {
+using Json = nlohmann::json;
+namespace perf = readdy::kernel::mpi::performance;
 
+int main(int argc, char **argv) {
+    // MPI_Init will modify argc, argv such that they behave ''normal'' again, i.e. without the mpirun arguments
+    MPISession mpiSession(argc, argv);
 
-Compartment::id_type
-CompartmentRegistry::addSphere(const Compartment::conversion_map &conversions, const std::string &uniqueName,
-                               const Vec3 &origin, scalar radius, bool largerOrLess) {
-    _compartments.emplace_back(std::make_shared<Sphere>(conversions, uniqueName, origin, radius, largerOrLess));
-    return _compartments.back()->getId();
-}
+    {
+        const auto dir = readdy::plugin::utils::getPluginsDirectory();
+        readdy::plugin::KernelProvider::getInstance().loadKernelsFromDirectory(dir);
+    }
 
-Compartment::id_type
-CompartmentRegistry::addPlane(const Compartment::conversion_map &conversions, const std::string &uniqueName,
-                              const Vec3 &normalCoefficients, scalar distance, bool largerOrLess) {
-    _compartments.emplace_back(std::make_shared<Plane>(conversions, uniqueName, normalCoefficients, distance,
-                                                       largerOrLess));
-    return _compartments.back()->getId();
-}
+    std::string outDir;
+    if (argc > 1) {
+        outDir = std::string(argv[1]);
+    } else {
+        readdy::log::warn("Using home directory as output");
+        outDir = "~/";
+    }
 
-}
-}
+    std::vector<std::unique_ptr<perf::Scenario>> scenarios;
+    scenarios.push_back(std::make_unique<perf::DistributeParticles>());
+    scenarios.push_back(std::make_unique<perf::DistributeParticles>());
+
+    for (const auto &s : scenarios) {
+        MPI_Barrier(MPI_COMM_WORLD);
+        auto json = s->run(false);
+
+        json["rank"] = mpiSession.rank();
+        json["worldSize"] = mpiSession.worldSize();
+        json["processorName"] = mpiSession.processorName();
+        json["scenarioName"] = s->name();
+        json["scenarioDescription"] = s->description();
+
+        std::string filename{s->name() + "_rank_" + std::to_string(mpiSession.rank())};
+        std::string path = outDir + filename;
+
+        if (not json.empty()) {
+            std::ofstream stream(path, std::ofstream::out |std::ofstream::trunc);
+            stream << json << std::endl;
+        }
+    }
+
+    return 0;
 }

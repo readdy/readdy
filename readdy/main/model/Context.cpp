@@ -55,12 +55,6 @@ namespace readdy::model {
 
 using particle_t = readdy::model::Particle;
 
-Context::Context()
-        : _potentialRegistry(_particleTypeRegistry), _reactionRegistry(_particleTypeRegistry),
-          _topologyRegistry(_particleTypeRegistry), _compartmentRegistry(_particleTypeRegistry),
-          _kernelConfiguration{} {
-}
-
 void Context::setKernelConfiguration(const std::string &s) {
     _kernelConfiguration = nlohmann::json::parse(s);
 }
@@ -147,6 +141,57 @@ scalar Context::calculateMaxCutoff() const {
         }
     }
     return max_cutoff;
+}
+
+void Context::setTypeRegistryReferences() {
+    _reactionRegistry._types = &_particleTypeRegistry;
+    _potentialRegistry._types = &_particleTypeRegistry;
+    _compartmentRegistry._types = &_particleTypeRegistry;
+    _topologyRegistry._types = &_particleTypeRegistry;
+}
+
+Context::Context() {
+    setTypeRegistryReferences();
+}
+
+Context::Context(const Context &rhs) { *this = rhs; }
+
+Context::Context(Context &&rhs) noexcept { *this = std::move(rhs); }
+
+Context &Context::operator=(Context &&rhs) noexcept {
+    _particleTypeRegistry = std::move(rhs._particleTypeRegistry);
+    _reactionRegistry = std::move(rhs._reactionRegistry);
+    _potentialRegistry = std::move(rhs._potentialRegistry);
+    _compartmentRegistry = std::move(rhs._compartmentRegistry);
+    _topologyRegistry = std::move(rhs._topologyRegistry);
+    _kernelConfiguration = rhs._kernelConfiguration;
+    _kBT = rhs._kBT;
+    _box_size = rhs._box_size;
+    _periodic_boundary = rhs._periodic_boundary;
+    _recordReactionsWithPositions = rhs._recordReactionsWithPositions;
+    _recordReactionCounts = rhs._recordReactionCounts;
+    _recordVirial = rhs._recordVirial;
+    setTypeRegistryReferences();
+    return *this;
+}
+
+Context &Context::operator=(const Context &rhs) {
+    if (this != &rhs) {
+        _particleTypeRegistry = rhs._particleTypeRegistry;
+        _reactionRegistry = rhs._reactionRegistry;
+        _potentialRegistry = rhs._potentialRegistry;
+        _compartmentRegistry = rhs._compartmentRegistry;
+        _topologyRegistry = rhs._topologyRegistry;
+        _kernelConfiguration = rhs._kernelConfiguration;
+        _kBT = rhs._kBT;
+        _box_size = rhs._box_size;
+        _periodic_boundary = rhs._periodic_boundary;
+        _recordReactionsWithPositions = rhs._recordReactionsWithPositions;
+        _recordReactionCounts = rhs._recordReactionCounts;
+        _recordVirial = rhs._recordVirial;
+        setTypeRegistryReferences();
+    }
+    return *this;
 }
 
 }

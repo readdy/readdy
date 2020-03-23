@@ -46,7 +46,24 @@
 #include <readdy/model/actions/Actions.h>
 #include <readdy/kernel/mpi/MPIKernel.h>
 
+#include <utility>
+
 namespace readdy::kernel::mpi::actions {
+
+class MPIAddParticles : public readdy::model::actions::AddParticles {
+public:
+    MPIAddParticles(MPIKernel *kernel, const std::vector<readdy::model::Particle> &particles) : AddParticles(kernel, particles), kernel(kernel) {}
+
+    void perform() override {
+        if (kernel) {
+            kernel->getMPIKernelStateModel().distributeParticles(particles);
+        } else {
+            throw std::runtime_error("invalid kernel");
+        }
+    }
+private:
+    MPIKernel *const kernel;
+};
 
 class MPIEulerBDIntegrator : public readdy::model::actions::EulerBDIntegrator {
 public:
@@ -63,11 +80,15 @@ public:
     explicit MPICalculateForces(MPIKernel *kernel) : CalculateForces(), kernel(kernel) {}
 
     void perform() override {
-        const auto &context = kernel->context();
-        if (context.recordVirial()) {
-            performImpl<true>();
+        if (kernel->domain().isWorkerRank()) {
+            const auto &context = kernel->context();
+            if (context.recordVirial()) {
+                performImpl<true>();
+            } else {
+                performImpl<false>();
+            }
         } else {
-            performImpl<false>();
+            readdy::log::trace("MPICalculateForces::perform is noop for non workers");
         }
     }
 
@@ -78,42 +99,46 @@ private:
     void performImpl();
 };
 
-class MPICreateNeighborList : public readdy::model::actions::CreateNeighborList {
-public:
-    MPICreateNeighborList(MPIKernel *kernel, scalar cutoffDistance) : CreateNeighborList(cutoffDistance),
-                                                                      kernel(kernel) {}
-
-    void perform() override {
-        kernel->getMPIKernelStateModel().initializeNeighborList(cutoffDistance());
-    }
-
-private:
-    MPIKernel *const kernel;
-};
+//class MPICreateNeighborList : public readdy::model::actions::CreateNeighborList {
+//public:
+//    MPICreateNeighborList(MPIKernel *kernel, scalar cutoffDistance) : CreateNeighborList(cutoffDistance),
+//                                                                      kernel(kernel) {}
+//
+//    void perform() override {
+//        kernel->getMPIKernelStateModel().initializeNeighborList(cutoffDistance());
+//    }
+//
+//private:
+//    MPIKernel *const kernel;
+//};
 
 class MPIUpdateNeighborList : public readdy::model::actions::UpdateNeighborList {
 public:
     explicit MPIUpdateNeighborList(MPIKernel *kernel) : UpdateNeighborList(), kernel(kernel) {}
 
     void perform() override {
-        kernel->getMPIKernelStateModel().updateNeighborList();
+        if (kernel->domain().isWorkerRank()) {
+            kernel->getMPIKernelStateModel().updateNeighborList();
+        } else {
+            readdy::log::trace("MPIUpdateNeighborList::perform is noop for non workers");
+        }
     }
 
 private:
     MPIKernel *const kernel;
 };
 
-class MPIClearNeighborList : public readdy::model::actions::ClearNeighborList {
-public:
-    explicit MPIClearNeighborList(MPIKernel *kernel) : ClearNeighborList(), kernel(kernel) {}
-
-    void perform() override {
-        kernel->getMPIKernelStateModel().clearNeighborList();
-    }
-
-private:
-    MPIKernel *const kernel;
-};
+//class MPIClearNeighborList : public readdy::model::actions::ClearNeighborList {
+//public:
+//    explicit MPIClearNeighborList(MPIKernel *kernel) : ClearNeighborList(), kernel(kernel) {}
+//
+//    void perform() override {
+//        kernel->getMPIKernelStateModel().clearNeighborList();
+//    }
+//
+//private:
+//    MPIKernel *const kernel;
+//};
 
 class MPIEvaluateCompartments : public readdy::model::actions::EvaluateCompartments {
 public:

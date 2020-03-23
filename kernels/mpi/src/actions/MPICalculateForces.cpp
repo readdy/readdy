@@ -65,7 +65,7 @@ void MPICalculateForces::performImpl() {
     const auto &context = kernel->context();
     auto &stateModel = kernel->getMPIKernelStateModel();
     auto &data = *stateModel.getParticleData();
-    auto &neighborList = *stateModel.getNeighborList();
+    auto &neighborList = stateModel.getNeighborList();
 
     stateModel.energy() = 0;
     stateModel.virial() = Matrix33{{{0, 0, 0, 0, 0, 0, 0, 0, 0}}};
@@ -105,7 +105,8 @@ void MPICalculateForces::performImpl() {
 
     auto noop = [](readdy::model::top::GraphTopology* topology){};
     std::vector<readdy::model::top::GraphTopology*> empty;
-    readdy::algo::evaluateOnContainers(data, order1eval, neighborList, order2eval, empty, noop);
+
+    readdy::kernel::mpi::util::evaluateOnContainers(data, order1eval, neighborList, order2eval, empty, noop);
 }
 
 template void MPICalculateForces::performImpl<true>();

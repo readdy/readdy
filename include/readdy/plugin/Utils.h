@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2018 Computational Molecular Biology Group,          *
+ * Copyright © 2020 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * Redistribution and use in source and binary forms, with or       *
@@ -32,41 +32,43 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                       *
  ********************************************************************/
 
-
 /**
- * << detailed description >>
- *
- * @file CompartmentRegistry.cpp
- * @brief << brief description >>
- * @author clonker
- * @date 20.09.17
- * @copyright BSD-3
+ * @file Utils.h
+ * @brief Utilities like locating plugins, needed in writing readdy executables, e.g. tests
+ * @author clonker, chrisfroe
+ * @date 28.02.20
  */
 
-#include <readdy/model/compartments/CompartmentRegistry.h>
-#include <readdy/model/compartments/Compartments.h>
-#include <readdy/model/_internal/Util.h>
+#pragma once
 
-namespace readdy {
-namespace model {
-namespace compartments {
+#include <readdy/common/Utils.h>
+#include <readdy/common/logging.h>
+#include <readdy/common/string.h>
 
+namespace readdy::plugin::utils {
 
-Compartment::id_type
-CompartmentRegistry::addSphere(const Compartment::conversion_map &conversions, const std::string &uniqueName,
-                               const Vec3 &origin, scalar radius, bool largerOrLess) {
-    _compartments.emplace_back(std::make_shared<Sphere>(conversions, uniqueName, origin, radius, largerOrLess));
-    return _compartments.back()->getId();
+inline std::string getPluginsDirectory() {
+    // test for several environment variables
+    const std::string envs[]{"CONDA_ENV_PATH", "CONDA_PREFIX", "PREFIX"};
+    const char *env = nullptr;
+    for (auto &&key : envs) {
+        env = std::getenv(key.c_str());
+        if (env != nullptr) {
+            log::trace("Using env-variable for plugin dir prefix {}={}", key, env);
+            break;
+        }
+    }
+    std::string pluginDir = "readdy/readdy_plugins";
+    if (env != nullptr) {
+        auto _env = std::string(env);
+        if (!util::str::has_suffix(_env, "/")) {
+            _env = _env.append("/");
+        }
+        pluginDir = _env.append(pluginDir);
+    } else {
+        log::trace("no environment variables found that indicate plugins dir.");
+    }
+    return pluginDir;
 }
 
-Compartment::id_type
-CompartmentRegistry::addPlane(const Compartment::conversion_map &conversions, const std::string &uniqueName,
-                              const Vec3 &normalCoefficients, scalar distance, bool largerOrLess) {
-    _compartments.emplace_back(std::make_shared<Plane>(conversions, uniqueName, normalCoefficients, distance,
-                                                       largerOrLess));
-    return _compartments.back()->getId();
-}
-
-}
-}
 }

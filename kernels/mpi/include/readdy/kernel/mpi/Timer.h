@@ -33,18 +33,17 @@
  ********************************************************************/
 
 /**
- * « detailed description »
- *
  * @file Timer.h
- * @brief « brief description »
+ * @brief RAII timer with static storage and ability to dump results into a json string.
  * @author chrisfroe
+ * @author clonker
  * @date 26.07.19
  */
 
 #pragma once
 
 #include <mutex>
-#include <json.hpp>
+#include <unordered_map>
 
 namespace readdy::kernel::mpi::util {
 
@@ -115,17 +114,8 @@ public:
 
     explicit Timer(const std::string &targetName, bool measure = true) : Timer(perf[targetName], measure) {};
 
-    /**
-     * Destructor of the timer, recording the elapsed lifetime of this object into the given performance datum.
-     */
     ~Timer() {
-        if (measure) {
-            std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
-            long elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
-            auto elapsedSeconds =
-                    static_cast<PerformanceData::time>(1e-6) * static_cast<PerformanceData::time>(elapsed);
-            target.record(elapsedSeconds);
-        }
+        stop();
     }
 
     Timer(const Timer &) = delete;
@@ -136,15 +126,31 @@ public:
 
     Timer &operator=(Timer &&) = delete;
 
-    static void writePerfToFile(const std::string &outFile);
+    /**
+     * Recording the elapsed time since construction of this object into the given performance datum.
+     * In cases where scoped timing is not appropriate stop() can be called manually, otherwise it is called
+     * in the destructor. */
+    void stop() {
+        if (measure and not wasMeasured) {
+            std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+            long elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
+            auto elapsedSeconds =
+                    static_cast<PerformanceData::time>(1e-6) * static_cast<PerformanceData::time>(elapsed);
+            target.record(elapsedSeconds);
+            wasMeasured = true;
+        }
+    }
+
+    static std::string perfToJsonString();
+
+    static void clear();
 
 private:
     bool measure{true};
+    bool wasMeasured{false};
     const PerformanceData &target;
     std::chrono::high_resolution_clock::time_point begin;
     static std::unordered_map<std::string, PerformanceData> perf;
 };
-
-void to_json(nlohmann::json &j, const PerformanceData &pd);
 
 }

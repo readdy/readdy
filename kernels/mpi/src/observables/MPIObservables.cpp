@@ -44,6 +44,8 @@
 #include <readdy/kernel/mpi/observables/MPIObservables.h>
 #include <readdy/kernel/mpi/MPIKernel.h>
 
+#include <utility>
+
 namespace readdy::kernel::mpi::observables {
 
 MPIVirial::MPIVirial(MPIKernel *kernel, Stride stride) : Virial(kernel, stride), kernel(kernel) {
@@ -132,7 +134,7 @@ void MPIHistogramAlongAxis::evaluate() {
 }
 
 MPINParticles::MPINParticles(MPIKernel *kernel, unsigned int stride, std::vector<std::string> typesToCount)
-        : NParticles(kernel, stride, typesToCount), kernel(kernel) {}
+        : NParticles(kernel, stride, std::move(typesToCount)), kernel(kernel) {}
 
 void MPINParticles::evaluate() {
     // @todo MPI gather results, only save on master rank
@@ -162,7 +164,7 @@ void MPINParticles::evaluate() {
 }
 
 MPIForces::MPIForces(MPIKernel *kernel, unsigned int stride, std::vector<std::string> typesToCount)
-        : Forces(kernel, stride, typesToCount), kernel(kernel) {}
+        : Forces(kernel, stride, std::move(typesToCount)), kernel(kernel) {}
 
 void MPIForces::evaluate() {
     // @todo MPI gather results, only save on master rank
@@ -203,16 +205,44 @@ void MPIReactions::evaluate() {
     result = kernel->getMPIKernelStateModel().reactionRecords();
 }
 
-MPIReactionCounts::MPIReactionCounts(MPIKernel *kernel, unsigned int stride) : ReactionCounts(kernel, stride) {}
+MPIReactionCounts::MPIReactionCounts(MPIKernel *kernel, unsigned int stride) : ReactionCounts(kernel, stride), kernel(kernel) {}
 
 void MPIReactionCounts::evaluate() {
     // @todo MPI gather results, only save on master rank
-    std::get<0>(result) = kernel->getMPIKernelStateModel().reactionCounts();
+    if (kernel->domain().isWorkerRank()) {
+        std::get<0>(result) = kernel->getMPIKernelStateModel().reactionCounts();
+    }
 
     // no topologies currently on MPI
     //std::get<1>(result) = kernel->getMPIKernelStateModel().spatialReactionCounts();
     //std::get<2>(result) = kernel->getMPIKernelStateModel().structuralReactionCounts();
 }
 
+MPIEnergy::MPIEnergy(MPIKernel *kernel, Stride stride) : Energy(kernel, stride), kernel(kernel) {}
+
+void MPIEnergy::evaluate() {
+    if (kernel->domain().isWorkerRank()) {
+        Energy::evaluate(); // just saves the value to result, which is ok
+    }
+}
+
+void MPIEnergy::append() {
+    // todo gather
+    if (kernel->domain().isMasterRank()) {
+        ds->append({1}, &result);
+        time->append(t_current);
+    }
+}
+
+void MPIEnergy::initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) {
+    // todo
+//    if (kernel->domain().isMasterRank()) {
+//        h5rd::dimensions fs = {flushStride};
+//        h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
+//        auto group = file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName);
+//        ds = group.createDataSet<scalar>("data", fs, dims, {&bloscFilter});
+//        time = std::make_unique<rmou::TimeSeriesWriter>(group, flushStride);
+//    }
+}
 
 }

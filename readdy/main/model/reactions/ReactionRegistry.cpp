@@ -82,7 +82,7 @@ ReactionId ReactionRegistry::emplaceReaction(const std::shared_ptr<Reaction> &re
 std::string ReactionRegistry::describe() const {
     namespace rus = readdy::util::str;
     std::string description;
-    auto nameOf = [&](ParticleTypeId t) {return _types.get().nameOf(t);};
+    auto nameOf = [&](ParticleTypeId t) {return _types->nameOf(t);};
 
     if (!_o1Reactions.empty()) {
         description += fmt::format(" - unimolecular reactions:\n");

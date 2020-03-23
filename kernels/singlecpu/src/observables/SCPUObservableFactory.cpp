@@ -101,4 +101,9 @@ SCPUObservableFactory::virial(Stride stride) const {
     return {std::make_unique<SCPUVirial>(kernel, stride)};
 }
 
+std::unique_ptr<readdy::model::observables::Energy> SCPUObservableFactory::energy(Stride stride) const {
+    // core library observable does the trick here
+    return {std::make_unique<readdy::model::observables::Energy>(kernel, stride)};
+}
+
 }

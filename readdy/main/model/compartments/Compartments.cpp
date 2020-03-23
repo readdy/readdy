@@ -50,7 +50,7 @@ namespace readdy {
 namespace model {
 namespace compartments {
 
-short Compartment::counter = 0;
+unsigned short Compartment::counter = 0;
 
 Sphere::Sphere(const Compartment::conversion_map &conversions, const std::string &uniqueName, const Vec3 &origin,
                const scalar radius, const bool largerOrLess)

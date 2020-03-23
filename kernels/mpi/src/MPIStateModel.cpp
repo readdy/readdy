@@ -46,24 +46,32 @@
 
 namespace readdy::kernel::mpi {
 
-MPIStateModel::MPIStateModel(Data &data, const readdy::model::Context &context) : _data(data), _context(context) {}
+MPIStateModel::MPIStateModel(Data &data, const readdy::model::Context &context, const model::MPIDomain *domain)
+        : _data(data), _context(context), _domain(domain), _neighborList(data, context, domain) {}
 
-const std::vector<readdy::Vec3> MPIStateModel::getParticlePositions() const {
-    throw std::runtime_error("impl");
+std::vector<readdy::Vec3> MPIStateModel::getParticlePositions() const {
+    const auto data = getParticleData();
+    std::vector<Vec3> target{};
+    target.reserve(data->size());
+    for (const auto &entry : *data) {
+        if (!entry.deactivated) target.push_back(entry.pos);
+    }
+    return target;
 }
 
-// todo procedure to send variable type objects?
-const std::vector<MPIStateModel::Particle>
-MPIStateModel::getParticles() const {
+// encapsulate the following combination of Gather and Gatherv, e.g. for gathering particles or observables
+std::vector<MPIStateModel::Particle>
+MPIStateModel::gatherParticles() const {
     if (_domain->isIdleRank()) {
         return {};
     }
-    util::Timer timer("MPIStateModel::getParticles");
+    util::Timer timer("MPIStateModel::gatherParticles");
+    auto &data = _data.get();
 
     // find out how many particles (and bytes) each worker sends
     int nParticles = 0;
     if (_domain->isWorkerRank()) {
-        nParticles = _data.get().size();
+        nParticles = std::count_if(data.begin(), data.end(), [](const MPIEntry &entry) {return not entry.deactivated and entry.responsible;});
     }
     std::vector<int> numberParticles(_domain->nUsedRanks(), 0);
 
@@ -95,8 +103,10 @@ MPIStateModel::getParticles() const {
     } else {
         // prepare send data
         std::vector<util::ParticlePOD> thinParticles;
-        for (const auto &entry : _data.get()) {
-            thinParticles.push_back({entry.position(), entry.type});
+        for (const MPIEntry &entry : _data.get()) {
+            if (not entry.deactivated and entry.responsible) {
+                thinParticles.emplace_back(entry);
+            }
         }
         MPI_Gatherv((void *) thinParticles.data(), static_cast<int>(thinParticles.size() * sizeof(util::ParticlePOD)), MPI_BYTE, nullptr, nullptr, nullptr, nullptr, 0, _commUsedRanks);
         return {};
@@ -147,61 +157,32 @@ void MPIStateModel::clear() {
     energy() = 0;
 }
 
-void MPIStateModel::addParticle(const Particle &p) {
-    MPI_Barrier(MPI_COMM_WORLD);
+void MPIStateModel::distributeParticle(const Particle &p) {
+    distributeParticles({p});
+}
+
+void MPIStateModel::addParticles(const std::vector<Particle> &particles) {
+    getParticleData()->addParticles(particles);
+}
+
+// todo use MPI_Scatter
+void MPIStateModel::distributeParticles(const std::vector<Particle> &ps) {
     if (_domain->isIdleRank()) {
         return;
     }
-    util::Timer timer("MPIStateModel::addParticle");
-    readdy::log::trace("MPIStateModel::addParticle");
-    MPI_Barrier(_commUsedRanks);
-    if (_domain->rank() == 0) {
-        //MPI_Barrier(*_commUsedRanks);
-        int targetRank = _domain->rankOfPosition(p.pos());
-        // broadcast target
-        MPI_Bcast(&targetRank, 1, MPI_INT, 0, _commUsedRanks);
-        // send
-        std::vector<util::ParticlePOD> thinParticles{{p.pos(), p.type()}};
-        MPI_Send((void *) thinParticles.data(),
-                 static_cast<int>(thinParticles.size() * sizeof(util::ParticlePOD)), MPI_BYTE,
-                 targetRank, util::tags::sendParticles, _commUsedRanks);
-    } else {
-        //MPI_Barrier(_commUsedRanks);
-        // am i the target?
-        int targetRank;
-        MPI_Bcast(&targetRank, 1, MPI_INT, 0, _commUsedRanks);
-        if (_domain->rank() == targetRank) {
-            // receive, ignore argument p here
-            const auto thinParticles = util::receiveParticlesFrom(0, _commUsedRanks);
-            std::vector<Particle> particles;
-            std::for_each(thinParticles.begin(), thinParticles.end(),
-                          [&particles](const util::ParticlePOD &tp) {
-                              particles.emplace_back(tp.position, tp.typeId);
-                          });
-            getParticleData()->addParticles(particles);
-        }
-    }
-}
-
-void MPIStateModel::addParticles(const std::vector<Particle> &p) {
-    if (not util::isRequiredRank(*_domain)) {
-        return;
-    }
-    util::Timer timer("MPIStateModel::addParticles");
-    // todo use MPI_Scatter
-    if (_domain->rank() == 0) {
+    util::Timer timer("MPIStateModel::distributeParticles");
+    if (_domain->isMasterRank()) {
         std::unordered_map<int, std::vector<util::ParticlePOD>> targetParticleMap;
-        for (const auto &particle : p) {
+        for (const auto &particle : ps) {
             int target = _domain->rankOfPosition(particle.pos());
             const auto &find = targetParticleMap.find(target);
             if (find != targetParticleMap.end()) {
-                find->second.push_back({particle.pos(), particle.type()});
+                find->second.emplace_back(particle.pos(), particle.type());
             } else {
                 targetParticleMap.emplace(std::make_pair(
                         target, std::vector<util::ParticlePOD>{{particle.pos(), particle.type()}}
                 ));
             }
-
         }
         std::vector<char> isTarget(_domain->nUsedRanks(), false);
         for (auto&&[target, vec] : targetParticleMap) {
@@ -214,7 +195,7 @@ void MPIStateModel::addParticles(const std::vector<Particle> &p) {
             MPI_Request req;
             MPI_Isend((void *) thinParticles.data(),
                       static_cast<int>(thinParticles.size() * sizeof(util::ParticlePOD)), MPI_BYTE,
-                      target, util::tags::sendParticles, _commUsedRanks, &req);
+                      target, util::tags::transmitObjects, _commUsedRanks, &req);
             MPI_Request_free(&req);
         }
         MPI_Barrier(_commUsedRanks);
@@ -224,16 +205,127 @@ void MPIStateModel::addParticles(const std::vector<Particle> &p) {
         MPI_Bcast(isTarget.data(), isTarget.size(), MPI_CHAR, 0, _commUsedRanks);
         if (isTarget[_domain->rank()]) {
             // receive, ignore argument p here
-            const auto thinParticles = util::receiveParticlesFrom(0, _commUsedRanks);
+            const auto thinParticles = util::receiveObjects<util::ParticlePOD>(0, _commUsedRanks);
             std::vector<Particle> particles;
             std::for_each(thinParticles.begin(), thinParticles.end(),
                           [&particles](const util::ParticlePOD &tp) {
                               particles.emplace_back(tp.position, tp.typeId);
                           });
-            getParticleData()->addParticles(particles);
+            addParticles(particles);
         }
         MPI_Barrier(_commUsedRanks);
     }
+}
+
+std::vector<readdy::model::Particle> MPIStateModel::getParticles() const {
+    const auto *data = getParticleData();
+    std::vector<readdy::model::Particle> result;
+    result.reserve(data->size());
+    for (const auto &entry : *data) {
+        if (!entry.deactivated) {
+            result.push_back(data->toParticle(entry));
+        }
+    }
+    return result;
+}
+
+void MPIStateModel::addParticle(const MPIStateModel::Particle &p) {
+    addParticles({p});
+}
+
+// todo use mpi built in cartesian graph communicator and neighborhood collectives
+// MPI_Neighbor_allgather(const void* sendbuf, int sendcount,
+//                        MPI_Datatype sendtype, void* recvbuf, int recvcount,
+//                        MPI_Datatype recvtype, MPI_Comm comm)
+void MPIStateModel::synchronizeWithNeighbors() {
+    if (domain()->isIdleRank() or domain()->isMasterRank()) {
+        return;
+    }
+    util::Timer timer("MPIStateModel::synchronizeWithNeighbors");
+    auto& data = _data.get();
+    std::vector<util::ParticlePOD> own; // particles that this worker is responsible for
+    std::vector<std::size_t> removedEntries; // particles that this worker is NOT responsible for
+
+    // gather own responsible and prepare data structure
+    // i.e. gather to-be-removed indices,
+    // and re-tag particles that are currently responsible but not in core of domain
+    for (size_t i = 0; i < data.size(); ++i) {
+        MPIEntry& entry = data.entry_at(i);
+        if (not entry.deactivated and entry.responsible) {
+            own.emplace_back(entry);
+            if (domain()->isInDomainHalo(entry.pos)) {
+                entry.responsible = false;
+            }
+        } else if (not entry.deactivated and not entry.responsible) {
+            removedEntries.push_back(i);
+        }
+    }
+
+    const auto &pbc = _context.get().periodicBoundaryConditions();
+    // Plimpton synchronization
+    std::vector<util::ParticlePOD> other; // particles received by other workers
+    for (unsigned int coord=0; coord<3; coord++) { // east-west, north-south, up-down
+        const auto idx = domain()->myIdx()[coord];
+        if (idx % 2 == 0) {
+            // send + then receive +
+            std::array<std::size_t, 3> otherDirection {1,1,1}; // (1,1,1) is self
+            otherDirection.at(coord) += 1;
+            auto received1 = util::sendThenReceive(otherDirection, own, other, *domain(), commUsedRanks());
+
+            // send - then receive -
+            otherDirection = {1,1,1};
+            otherDirection.at(coord) -= 1;
+            std::vector<util::ParticlePOD> received2;
+            if (domain()->nDomainsPerAxis()[coord] == 2 and pbc[coord]) {
+                // skip because we have already communicated with that one
+            } else {
+                received2 = util::sendThenReceive(otherDirection, own, other, *domain(), commUsedRanks());
+            }
+
+            // after data from both directions have been received we can merge them with `other`,
+            // so they will be communicated along other coordinates
+            other.insert(other.end(), received1.begin(), received1.end());
+            other.insert(other.end(), received2.begin(), received2.end());
+        } else {
+            // receive - then send -
+            std::array<std::size_t, 3> otherDirection {1,1,1};
+            otherDirection.at(coord) -= 1;
+            auto received1 = util::receiveThenSend(otherDirection, own, other, *domain(), commUsedRanks());
+
+            // receive + then send +
+            otherDirection = {1,1,1};
+            otherDirection.at(coord) += 1;
+            std::vector<util::ParticlePOD> received2;
+            if (domain()->nDomainsPerAxis()[coord] == 2 and pbc[coord]) {
+                // skip because we have already communicated with that one
+            } else {
+                received2 = util::receiveThenSend(otherDirection, own, other, *domain(), commUsedRanks());
+            }
+
+            other.insert(other.end(), received1.begin(), received1.end());
+            other.insert(other.end(), received2.begin(), received2.end());
+        }
+    }
+
+    // only add new entries if in domain coreOrHalo and additionally set responsible=true if in core
+    std::vector<MPIEntry> newEntries;
+    for (const auto &p : other) {
+        if (domain()->isInDomainCore(p.position)) {
+            // gets added and worker is responsible
+            Particle particle(p.position, p.typeId);
+            MPIEntry entry(particle, true, domain()->rank());
+            newEntries.emplace_back(entry);
+        } else if (domain()->isInDomainCoreOrHalo(p.position)) {
+            // gets added but worker is not responsible
+            Particle particle(p.position, p.typeId);
+            MPIEntry entry(particle, false, domain()->rankOfPosition(p.position));
+            newEntries.emplace_back(entry);
+        } else {
+            // does not get added
+        }
+    }
+    auto update = std::make_pair(std::move(newEntries), std::move(removedEntries));
+    data.update(std::move(update));
 }
 
 }

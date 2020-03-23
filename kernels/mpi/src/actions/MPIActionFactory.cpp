@@ -58,7 +58,7 @@ std::unique_ptr<readdy::model::actions::CalculateForces> MPIActionFactory::calcu
 
 std::unique_ptr<readdy::model::actions::AddParticles>
 MPIActionFactory::addParticles(const std::vector<readdy::model::Particle> &particles) const {
-    return {std::make_unique<readdy::model::actions::AddParticles>(kernel, particles)};
+    return {std::make_unique<MPIAddParticles>(kernel, particles)};
 }
 
 std::unique_ptr<readdy::model::actions::MdgfrdIntegrator> MPIActionFactory::mdgfrdIntegrator(scalar timeStep) const {
@@ -67,7 +67,7 @@ std::unique_ptr<readdy::model::actions::MdgfrdIntegrator> MPIActionFactory::mdgf
 
 std::unique_ptr<readdy::model::actions::CreateNeighborList>
 MPIActionFactory::createNeighborList(scalar interactionDistance) const {
-    return {std::make_unique<MPICreateNeighborList>(kernel, interactionDistance)};
+    return {nullptr};
 }
 
 std::unique_ptr<readdy::model::actions::UpdateNeighborList> MPIActionFactory::updateNeighborList() const {
@@ -75,7 +75,7 @@ std::unique_ptr<readdy::model::actions::UpdateNeighborList> MPIActionFactory::up
 }
 
 std::unique_ptr<readdy::model::actions::ClearNeighborList> MPIActionFactory::clearNeighborList() const {
-    return {std::make_unique<MPIClearNeighborList>(kernel)};
+    return {nullptr};
 }
 
 std::unique_ptr<readdy::model::actions::EvaluateCompartments> MPIActionFactory::evaluateCompartments() const {

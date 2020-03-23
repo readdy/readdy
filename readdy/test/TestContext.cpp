@@ -368,7 +368,107 @@ TEST_CASE("Test context.", "[context]") {
     }
 
     SECTION("Copyability") {
-        Context context;
-        Context copy(context);
+        Context ctx;
+        ctx.particleTypes().add("A", 1.0);
+        ctx.potentials().addHarmonicRepulsion("A", "A", 1.0, 1.0);
+        ctx.reactions().addDecay("decay", "A", 1.0);
+        ctx.topologyRegistry().addType("T");
+        ctx.compartments().addSphere({{"A", "A"}}, "s",{0.,0.,0.}, 2., true);
+        CHECK(ctx.particleTypes().idOf("A") >= 0);
+        CHECK(ctx.particleTypes().nTypes() == 1);
+        CHECK(ctx.potentials().potentialsOrder2().size() == 1);
+        CHECK(ctx.potentials().potentialsOf("A", "A").size() == 1);
+        CHECK(ctx.reactions().nOrder1() == 1);
+        CHECK(ctx.reactions().idOf("decay") >= 0);
+        CHECK(ctx.reactions().order1ByType("A").size() == 1);
+        CHECK(ctx.topologyRegistry().idOf("T") >= 0);
+        CHECK_FALSE(ctx.topologyRegistry().isSpatialReactionType("A"));
+        CHECK(ctx.compartments().get().size() == 1);
+
+        Context ctx2(ctx);
+        CHECK(ctx2.particleTypes().idOf("A") >= 0);
+        CHECK(ctx2.particleTypes().nTypes() == 1);
+        CHECK(ctx2.potentials().potentialsOrder2().size() == 1);
+        CHECK(ctx2.potentials().potentialsOf("A", "A").size() == 1);
+        CHECK(ctx2.reactions().nOrder1() == 1);
+        CHECK(ctx2.reactions().idOf("decay") >= 0);
+        CHECK(ctx2.reactions().order1ByType("A").size() == 1);
+        CHECK(ctx2.topologyRegistry().idOf("T") >= 0);
+        CHECK_FALSE(ctx2.topologyRegistry().isSpatialReactionType("A"));
+        CHECK(ctx2.compartments().get().size() == 1);
+    }
+
+    SECTION("Movability") {
+        Context ctx;
+        ctx.particleTypes().add("A", 1.0);
+        ctx.potentials().addHarmonicRepulsion("A", "A", 1.0, 1.0);
+        ctx.reactions().addDecay("decay", "A", 1.0);
+        ctx.topologyRegistry().addType("T");
+        ctx.compartments().addSphere({{"A", "A"}}, "s",{0.,0.,0.}, 2., true);
+        CHECK(ctx.particleTypes().idOf("A") >= 0);
+        CHECK(ctx.particleTypes().nTypes() == 1);
+        CHECK(ctx.potentials().potentialsOrder2().size() == 1);
+        CHECK(ctx.potentials().potentialsOf("A", "A").size() == 1);
+        CHECK(ctx.reactions().nOrder1() == 1);
+        CHECK(ctx.reactions().idOf("decay") >= 0);
+        CHECK(ctx.reactions().order1ByType("A").size() == 1);
+        CHECK(ctx.topologyRegistry().idOf("T") >= 0);
+        CHECK_FALSE(ctx.topologyRegistry().isSpatialReactionType("A"));
+        CHECK(ctx.compartments().get().size() == 1);
+
+        Context ctx2(std::move(ctx));
+        REQUIRE(&(ctx.particleTypes()) != &(ctx2.particleTypes())); // the reference has indeed been reset
+        CHECK(ctx2.particleTypes().idOf("A") >= 0);
+        CHECK(ctx2.particleTypes().nTypes() == 1);
+        CHECK(ctx2.potentials().potentialsOrder2().size() == 1);
+        CHECK(ctx2.potentials().potentialsOf("A", "A").size() == 1);
+        CHECK(ctx2.reactions().nOrder1() == 1);
+        CHECK(ctx2.reactions().idOf("decay") >= 0);
+        CHECK(ctx2.reactions().order1ByType("A").size() == 1);
+        CHECK(ctx2.topologyRegistry().idOf("T") >= 0);
+        CHECK_FALSE(ctx2.topologyRegistry().isSpatialReactionType("A"));
+        CHECK(ctx2.compartments().get().size() == 1);
+    }
+
+    SECTION("Adding reactions to the copy should not influence the original") {
+        GIVEN("Context with one reaction for A, and a copy of that context") {
+            Context ctx;
+            ctx.particleTypes().add("A", 1.0);
+            ctx.reactions().addDecay("decay", "A", 1.0);
+            Context ctx2(ctx);
+            WHEN("The copy gets another reaction for A") {
+                ctx2.reactions().addFission("fiss", "A", "A", "A", 1.0, 1.0);
+                THEN("The original context still only has one reaction for A") {
+                    CHECK(ctx.reactions().order1ByType("A").size() == 1);
+                }
+            }
+        }
+    }
+
+    SECTION("Modifying reactions of the copy should not influence the original") {
+        Context ctx;
+        ctx.particleTypes().add("A", 1.0);
+        ctx.reactions().addDecay("decay", "A", 1.0);
+        Context ctx2(ctx);
+        WHEN("The copy's reaction's rate is modified") {
+            REQUIRE(ctx2.reactions().order1Flat().size() == 1);
+            ctx2.reactions().order1Flat().at(0)->rate() = 2.0;
+            THEN("The original reaction still has a rate of 1.0") {
+                REQUIRE(ctx.reactions().order1Flat().size() == 1);
+                // todo what is the expected behavior here? deep copy or reference?
+
+                // currently both contexts point to the same reaction due to shared_ptr
+                // hence the following check fails
+                // fixme CHECK(ctx.reactions().order1Flat().at(0)->rate() == 1.0);
+
+                // reactions don't need polymorphism, the semantics are controlled by an enum anyway
+                // i.e. the reaction registry can have vector<Reaction> (instead of vector<shared_ptr<Reaction>>)
+                // then copy/move is trivial
+
+                // potentials (and compartments) on the other hand need polymorphism due to virtual calculate...() functions
+                // but registry could hold unique pointers and potentials implement deep copies
+                // for deep copyability of context
+            }
+        }
     }
 }

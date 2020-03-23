@@ -49,6 +49,8 @@
 #include <readdy/model/_internal/Util.h>
 #include "Compartment.h"
 
+namespace readdy::model { class Context; }
+
 namespace readdy::model::compartments {
 
 class CompartmentRegistry {
@@ -56,14 +58,12 @@ public:
 
     using CompartmentVector = std::vector<std::shared_ptr<readdy::model::compartments::Compartment>>;
 
-    explicit CompartmentRegistry(const ParticleTypeRegistry &types);
-
     Compartment::id_type addSphere(const Compartment::conversion_map &conversions, const std::string &uniqueName,
                                    const Vec3 &origin, scalar radius, bool largerOrLess);
 
     Compartment::id_type addSphere(const Compartment::label_conversion_map &conversions, const std::string &uniqueName,
                                    const Vec3 &origin, scalar radius, bool largerOrLess) {
-        return addSphere(_internal::util::transformTypesMap(conversions, _types.get()), uniqueName, origin, radius,
+        return addSphere(_internal::util::transformTypesMap(conversions, *_types), uniqueName, origin, radius,
                          largerOrLess);
     }
 
@@ -72,12 +72,12 @@ public:
 
     Compartment::id_type addPlane(const Compartment::label_conversion_map &conversions, const std::string &uniqueName,
                                   const Vec3 &normalCoefficients, scalar distance, bool largerOrLess) {
-        return addPlane(_internal::util::transformTypesMap(conversions, _types.get()), uniqueName, normalCoefficients,
+        return addPlane(_internal::util::transformTypesMap(conversions, *_types), uniqueName, normalCoefficients,
                         distance, largerOrLess);
     }
 
 
-    const CompartmentVector &get() const {
+    [[nodiscard]] const CompartmentVector &get() const {
         return _compartments;
     }
 
@@ -88,7 +88,9 @@ public:
 private:
     CompartmentVector _compartments;
 
-    std::reference_wrapper<const ParticleTypeRegistry> _types;
+    const ParticleTypeRegistry *_types;
+
+    friend readdy::model::Context;
 };
 
 }

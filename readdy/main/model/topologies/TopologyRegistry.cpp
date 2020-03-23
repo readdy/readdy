@@ -36,7 +36,7 @@
 /**
  * << detailed description >>
  *
- * @file #.cpp
+ * @file TopologyRegistry.cpp
  * @brief << brief description >>
  * @author clonker
  * @date 24.08.17
@@ -62,8 +62,8 @@ std::string TopologyRegistry::describe() const {
             description += fmt::format("     - bonds ({}):\n", _potentialConfiguration.pairPotentials.size());
             for (const auto &entry : _potentialConfiguration.pairPotentials) {
                 description += fmt::format("         - Bonds for particle types {} and {}:\n",
-                                           _typeRegistry.get().nameOf(std::get<0>(entry.first)),
-                                           _typeRegistry.get().nameOf(std::get<1>(entry.first)));
+                                           _types->nameOf(std::get<0>(entry.first)),
+                                           _types->nameOf(std::get<1>(entry.first)));
                 auto bondToStr = [](const api::Bond &bond) -> std::string {
                     switch (bond.type) {
                         case api::BondType::HARMONIC:
@@ -190,10 +190,6 @@ readdy::TopologyTypeId TopologyRegistry::addType(const std::string &name,
     throw std::invalid_argument(fmt::format("A type with name \"{}\" already existed.", name));
 }
 
-TopologyRegistry::TopologyRegistry(
-        const readdy::model::ParticleTypeRegistry &typeRegistry) : _typeRegistry(typeRegistry) {}
-
-
 void TopologyRegistry::addSpatialReaction(const std::string &name, const readdy::util::particle_type_pair &types,
                                           const topology_type_pair &topology_types,
                                           const readdy::util::particle_type_pair &types_to,
@@ -222,8 +218,8 @@ void TopologyRegistry::addSpatialReaction(const std::string &name, const std::st
                                           const std::string &typeTo2, const std::string &topologyTypeTo1,
                                           const std::string &topologyTypeTo2, scalar rate, scalar radius,
                                           reactions::STRMode mode) {
-    auto type_pair = std::make_tuple(_typeRegistry.get().idOf(typeFrom1), _typeRegistry.get().idOf(typeFrom2));
-    auto type_pair_to = std::make_tuple(_typeRegistry.get().idOf(typeTo1), _typeRegistry.get().idOf(typeTo2));
+    auto type_pair = std::make_tuple(_types->idOf(typeFrom1), _types->idOf(typeFrom2));
+    auto type_pair_to = std::make_tuple(_types->idOf(typeTo1), _types->idOf(typeTo2));
     auto top_pair = std::make_tuple(idOf(topologyTypeFrom1), idOf(topologyTypeFrom2));
     auto top_pair_to = std::make_tuple(idOf(topologyTypeTo1), idOf(topologyTypeTo2));
     addSpatialReaction(name, type_pair, top_pair, type_pair_to, top_pair_to, rate, radius, mode);
@@ -238,10 +234,10 @@ void TopologyRegistry::validateSpatialReaction(const SpatialReaction &reaction) 
         throw std::invalid_argument(fmt::format("The radius of an structural topology reaction({}) "
                                                 "should always be positive", reaction.name()));
     }
-    auto info1 = _typeRegistry.get().infoOf(reaction.type1());
-    auto info2 = _typeRegistry.get().infoOf(reaction.type2());
-    auto infoTo1 = _typeRegistry.get().infoOf(reaction.type_to1());
-    auto infoTo2 = _typeRegistry.get().infoOf(reaction.type_to2());
+    auto info1 = _types->infoOf(reaction.type1());
+    auto info2 = _types->infoOf(reaction.type2());
+    auto infoTo1 = _types->infoOf(reaction.type_to1());
+    auto infoTo2 = _types->infoOf(reaction.type_to2());
 
     if (info1.flavor != particleflavor::TOPOLOGY && info2.flavor != particleflavor::TOPOLOGY) {
         throw std::invalid_argument(
@@ -295,29 +291,29 @@ void TopologyRegistry::validateSpatialReaction(const SpatialReaction &reaction) 
 
 void TopologyRegistry::configureBondPotential(const std::string &type1, const std::string &type2,
                                               const api::Bond &bond) {
-    _potentialConfiguration.pairPotentials[std::make_tuple(_typeRegistry.get().idOf(type1),
-                                                           _typeRegistry.get().idOf(type2))].push_back(bond);
+    _potentialConfiguration.pairPotentials[std::make_tuple(_types->idOf(type1),
+                                                           _types->idOf(type2))].push_back(bond);
 }
 
 void TopologyRegistry::configureAnglePotential(const std::string &type1, const std::string &type2,
                                                const std::string &type3, const api::Angle &angle) {
-    _potentialConfiguration.anglePotentials[std::make_tuple(_typeRegistry.get().idOf(type1),
-                                                            _typeRegistry.get().idOf(type2),
-                                                            _typeRegistry.get().idOf(type3))].push_back(angle);
+    _potentialConfiguration.anglePotentials[std::make_tuple(_types->idOf(type1),
+                                                            _types->idOf(type2),
+                                                            _types->idOf(type3))].push_back(angle);
 }
 
 void TopologyRegistry::configureTorsionPotential(const std::string &type1, const std::string &type2,
                                                  const std::string &type3, const std::string &type4,
                                                  const api::TorsionAngle &torsionAngle) {
-    _potentialConfiguration.torsionPotentials[std::make_tuple(_typeRegistry.get().idOf(type1),
-                                                              _typeRegistry.get().idOf(type2),
-                                                              _typeRegistry.get().idOf(type3),
-                                                              _typeRegistry.get().idOf(type4))].push_back(
+    _potentialConfiguration.torsionPotentials[std::make_tuple(_types->idOf(type1),
+                                                              _types->idOf(type2),
+                                                              _types->idOf(type3),
+                                                              _types->idOf(type4))].push_back(
             torsionAngle);
 }
 
 std::string TopologyRegistry::generateSpatialReactionRepresentation(const SpatialReaction &reaction) const {
-    auto pName = [&](ParticleTypeId t) { return _typeRegistry.get().nameOf(t); };
+    auto pName = [&](ParticleTypeId t) { return _types->nameOf(t); };
     auto tName = [&](TopologyTypeId t) { return nameOf(t); };
 
     std::stringstream ss;

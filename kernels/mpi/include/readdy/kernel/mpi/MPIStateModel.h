@@ -56,13 +56,12 @@ namespace readdy::kernel::mpi {
 class MPIStateModel : public readdy::model::StateModel {
 
 public:
-
     using Data = MPIDataContainer;
     using Particle = readdy::model::Particle;
     using ReactionCountsMap = readdy::model::reactions::ReactionCounts;
     using NeighborList = model::CellLinkedList;
 
-    MPIStateModel(Data &data, const readdy::model::Context &context);
+    MPIStateModel(Data &data, const readdy::model::Context &context, const readdy::kernel::mpi::model::MPIDomain *domain);
 
     ~MPIStateModel() override = default;
 
@@ -74,31 +73,31 @@ public:
 
     MPIStateModel &operator=(MPIStateModel &&) = delete;
 
-    const std::vector<Vec3> getParticlePositions() const override;
+    std::vector<Vec3> getParticlePositions() const override;
 
-    const std::vector<Particle> getParticles() const override;
+    std::vector<Particle> getParticles() const override;
 
     void initializeNeighborList(scalar interactionDistance) override {
-        _neighborList->setUp(interactionDistance, _neighborListCellRadius, domain());
-        _neighborList->update();
-    };
+        /* noop, this neighborlist is initialized by construction */
+    }
 
     void updateNeighborList() override {
-        _neighborList->update();
-    };
+        if (_domain->isWorkerRank()) {
+            _neighborList.update();
+        }
+    }
 
     void addParticle(const Particle &p) override;
 
-    void addParticles(const std::vector<Particle> &p) override;
+    void addParticles(const std::vector<Particle> &ps) override;
 
     void removeParticle(const Particle &p) override {
-        throw std::runtime_error("Not yet implemented on MPI");
-        //getParticleData()->removeParticle(p);
-    };
+        getParticleData()->removeParticle(p);
+    }
 
     void removeAllParticles() override {
         getParticleData()->clear();
-    };
+    }
 
     readdy::kernel::scpu::model::ObservableData &observableData() {
         return _observableData;
@@ -118,66 +117,75 @@ public:
 
     scalar energy() const override {
         return _observableData.energy;
-    };
+    }
 
     scalar &energy() override {
         return _observableData.energy;
-    };
+    }
 
     scalar time() const override {
         return _observableData.time;
-    };
+    }
 
-    scalar &time() override {
-        return _observableData.time;
-    };
+    void setTime(scalar value) override {
+        _observableData.time = value;
+    }
 
     Data const *const getParticleData() const {
         return &_data.get();
-    };
+    }
 
     Data *const getParticleData() {
         return &_data.get();
-    };
+    }
 
-    NeighborList const *const getNeighborList() const {
-        return _neighborList.get();
+    const NeighborList &getNeighborList() const {
+        if (_domain->isWorkerRank()) {
+            return _neighborList;
+        } else {
+            throw std::logic_error("only worker ranks have a neighbor-list");
+        }
+    }
 
-    };
-
-    NeighborList *const getNeighborList() {
-        return _neighborList.get();
-    };
+    NeighborList &getNeighborList() {
+        if (_domain->isWorkerRank()) {
+            return _neighborList;
+        } else {
+            throw std::logic_error("only worker ranks have a neighbor-list");
+        }
+    }
 
     void clearNeighborList() override {
-        _neighborList->clear();
-    };
+        if (_domain->isWorkerRank()) {
+            _neighborList.clear();
+        }
+    }
 
     std::vector<readdy::model::reactions::ReactionRecord> &reactionRecords() {
         return _observableData.reactionRecords;
-    };
+    }
 
     const std::vector<readdy::model::reactions::ReactionRecord> &reactionRecords() const {
         return _observableData.reactionRecords;
-    };
+    }
 
     const ReactionCountsMap &reactionCounts() const {
         return _observableData.reactionCounts;
-    };
+    }
 
     ReactionCountsMap &reactionCounts() {
         return _observableData.reactionCounts;
-    };
+    }
 
     void resetReactionCounts();
 
     Particle getParticleForIndex(std::size_t index) const override {
         return _data.get().getParticle(index);
-    };
+    }
 
     ParticleTypeId getParticleType(std::size_t index) const override {
         return _data.get().entry_at(index).type;
-    };
+    }
 
     void toDenseParticleIndices(std::vector<std::size_t>::iterator begin,
                                 std::vector<std::size_t>::iterator end) const override;
@@ -185,7 +193,7 @@ public:
     void clear() override;
 
     readdy::model::top::GraphTopology *const
-    addTopology(TopologyTypeId type, const std::vector<readdy::model::TopologyParticle> &particles) override {
+    addTopology(TopologyTypeId type, const std::vector<readdy::model::Particle> &particles) override {
         throw std::logic_error("no topologies on MPI kernel");
     }
 
@@ -193,36 +201,55 @@ public:
         throw std::logic_error("no topologies on MPI kernel");
     }
 
-    const readdy::model::top::GraphTopology *
-    getTopologyForParticle(readdy::model::top::Topology::particle_index particle) const override {
-        throw std::logic_error("no topologies on MPI kernel");
-    }
-
-    readdy::model::top::GraphTopology *
-    getTopologyForParticle(readdy::model::top::Topology::particle_index particle) override {
-        throw std::logic_error("no topologies on MPI kernel");
-    }
-
-    const model::MPIDomain * domain() const {
+    const model::MPIDomain *domain() const {
         return _domain;
-    }
-
-    void setDomain(const model::MPIDomain *domain) {
-        _domain = domain;
     }
 
     MPI_Comm &commUsedRanks() {
         return _commUsedRanks;
     }
 
+    /**
+     * Above are individual operations, i.e. each worker/rank, can execute them without side-effects.
+     * Following are MPI collective operations, i.e. behavior is different depending on rank.
+     * They should not be called by user, but are better wrapped in Actions.
+     */
+    void distributeParticle(const Particle &p);
+
+    void distributeParticles(const std::vector<Particle> &ps);
+
+    std::vector<MPIStateModel::Particle> gatherParticles() const;
+
+    /**
+     * 1. fill list `own` of own-responsible particles [to be sent around]
+     * 2. prepare list `other` of other-responsible particles [to be applied to self and send to other directions]
+     * 3. send/receive EW (x direction)
+     *    3.1 send data `own` to east and west
+     *    3.2 receive data from east and west and append to `other`
+     * 4. send/receive NS (y direction)
+     *    4.1 send data `own` and `other` to north and south
+     *    4.2 receive data from north and south and append to `other`
+     * 5. send/receive UP (z direction)
+     *    5.1 send data `own` and `other` to up and down
+     *    5.2 receive data from up and down and append to `other`
+     * --- now `other` contains all particles from all neighbors for which the worker is not responsible for
+     * 6. Delete all particles in particleData that have responsible=false
+     * 7. Add all particles p in `other` to particleData that have domain.isInCoreOrHalo(p.pos)
+     *    and set each p.responsible flag to domain.isInDomainCore(p.pos)
+     *
+     * The amount of actually sent data can be optimized by filtering out particles that will
+     * eventually be dropped by the receiving worker (because they are not in respective CoreOrHalo),
+     * but keep in mind that particles are indirectly transferred several times before arriving at the final worker,
+     * so filtering out the wrong particles might lead to falsely synchronized states.
+     **/
+    void synchronizeWithNeighbors();
+
 private:
     readdy::kernel::scpu::model::ObservableData _observableData;
     std::reference_wrapper<const readdy::model::Context> _context;
     std::reference_wrapper<Data> _data;
-    std::unique_ptr<NeighborList> _neighborList;
-    NeighborList::CellRadius _neighborListCellRadius{1};
-    std::unique_ptr<readdy::signals::scoped_connection> _reorderConnection;
-    const model::MPIDomain* _domain{nullptr};
+    NeighborList _neighborList;
+    const model::MPIDomain* _domain;
     MPI_Comm _commUsedRanks = MPI_COMM_WORLD;
 };
 

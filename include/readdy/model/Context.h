@@ -215,22 +215,24 @@ public:
 
     void setKernelConfiguration(const std::string &jsonStr);
 
-    // ctor and dtor
     Context();
 
+    Context(Context &&rhs) noexcept;
+
+    Context &operator=(Context &&rhs) noexcept;
+
+    Context(const Context &rhs);
+
+    Context &operator=(const Context &rhs);
+
+    // nothing has to be done to the references upon destruction. Disobeying rule of five here, call the cops.
     ~Context() = default;
 
-    // move
-    Context(Context &&rhs) = default;
-
-    Context &operator=(Context &&rhs) = default;
-
-    // copy
-    Context(const Context &rhs) = default;
-
-    Context &operator=(const Context &rhs) = default;
-
 private:
+    // the registries (except particle type registry) hold a reference to the particle type registry,
+    // which has to be reset upon copy/move
+    void setTypeRegistryReferences();
+
     ParticleTypeRegistry _particleTypeRegistry;
     reactions::ReactionRegistry _reactionRegistry;
     potentials::PotentialRegistry _potentialRegistry;

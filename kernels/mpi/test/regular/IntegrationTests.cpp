@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2018 Computational Molecular Biology Group,          *
+ * Copyright © 2019 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * Redistribution and use in source and binary forms, with or       *
@@ -32,41 +32,21 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                       *
  ********************************************************************/
 
-
 /**
- * << detailed description >>
  *
- * @file CompartmentRegistry.cpp
- * @brief << brief description >>
- * @author clonker
- * @date 20.09.17
- * @copyright BSD-3
+ *
+ * @file TestIntegration.cpp
+ * @brief « brief description »
+ * @author chrisfroe
+ * @date 03.06.19
  */
 
-#include <readdy/model/compartments/CompartmentRegistry.h>
-#include <readdy/model/compartments/Compartments.h>
-#include <readdy/model/_internal/Util.h>
+#include <catch2/catch.hpp>
 
-namespace readdy {
-namespace model {
-namespace compartments {
+#include <readdy/model/Kernel.h>
+#include <readdy/plugin/KernelProvider.h>
+#include <readdy/kernel/mpi/MPIKernel.h>
 
-
-Compartment::id_type
-CompartmentRegistry::addSphere(const Compartment::conversion_map &conversions, const std::string &uniqueName,
-                               const Vec3 &origin, scalar radius, bool largerOrLess) {
-    _compartments.emplace_back(std::make_shared<Sphere>(conversions, uniqueName, origin, radius, largerOrLess));
-    return _compartments.back()->getId();
-}
-
-Compartment::id_type
-CompartmentRegistry::addPlane(const Compartment::conversion_map &conversions, const std::string &uniqueName,
-                              const Vec3 &normalCoefficients, scalar distance, bool largerOrLess) {
-    _compartments.emplace_back(std::make_shared<Plane>(conversions, uniqueName, normalCoefficients, distance,
-                                                       largerOrLess));
-    return _compartments.back()->getId();
-}
-
-}
-}
+TEST_CASE("Integration test", "[!hide][mpi]") {
+    // there is nothing here
 }

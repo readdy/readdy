@@ -33,7 +33,25 @@
  ********************************************************************/
 
 /**
- * « detailed description »
+ * Catch sections (induced by SECTION, GIVEN, WHEN, THEN) cannot be used inside diverging program paths.
+ * I.e. if rank 1 and rank 2 perform different branches of programs with matching barriers,
+ * then a section inside that block would cause multiple execution runs.
+ * This eventually results in non-matching barriers, undefined behaviors, and dead-locks.
+ *
+ * BAD: single instruction multiple data (SIMD) model is not valid anymore
+ * if (rank == 0) {
+ *     SECTION("BLUB") {
+ *         REQUIRE(true);
+ *     }
+ * }
+ *
+ * GOOD:
+ * SECTION("BLUB") {
+ *     if (rank == 0) {
+ *         REQUIRE(true);
+ *     }
+ * }
+ *
  *
  * @file TestMain.cpp
  * @brief « brief description »
@@ -45,79 +63,26 @@
 #define CATCH_CONFIG_RUNNER
 
 #include <catch2/catch.hpp>
-#include <mpi.h>
 
-#include <readdy/testing/Utils.h>
 #include <readdy/plugin/KernelProvider.h>
-#include <readdy/kernel/mpi/Timer.h>
+#include <readdy/kernel/mpi/MPISession.h>
+#include <readdy/plugin/Utils.h>
 
-
-/** Tiny RAII wrapper for MPI Init and Finalize, a debugging lock, and writing performance data */
-class MPISession {
-    int worldSize;
-    int rank;
-    int nameLen;
-    char processorName[MPI_MAX_PROCESSOR_NAME];
-
-public:
-    MPISession(int argc, char **argv) {
-        MPI_Init(&argc, &argv);
-
-        MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-        MPI_Get_processor_name(processorName, &nameLen);
-
-        readdy::log::console()->set_level(spdlog::level::info);
-        readdy::log::info("pid {} Rank {} / {} is on {}", static_cast<long>(getpid()), rank, worldSize, processorName);
-        waitForDebugger();
-        readdy::log::console()->set_level(spdlog::level::warn);
-    }
-
-    ~MPISession() {
-        MPI_Finalize();
-    }
-
-    /**
-     * Forces a certain processor with given rank to halt in a while loop and all others to wait at a barrier.
-     * This allows gdb to attach to this pid and change `i`, which will continue the program.
-     *
-     * E.g. do the following on the commandline $ gdb -ex "attach $pid" -ex "set variable i=1" -ex "finish"
-     *
-     * To enable debugging set the environment variable READDY_MPI_DEBUG,
-     * which can be exported to processes via `mpirun`.
-     *
-     * @param rank of the process calling this function
-     * @param processorName name of the process calling this function
-     */
-    static void waitForDebugger() {
-        if (getenv("READDY_MPI_DEBUG") != nullptr) {
-            int rank;
-            char processorName[MPI_MAX_PROCESSOR_NAME];
-            int nameLen;
-            MPI_Get_processor_name(processorName, &nameLen);
-            MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-            static int rankToDebug = 0;
-            if (rank == rankToDebug) {
-                volatile int i = 0;
-                readdy::log::console()->warn("pid {} w/ rank {} on processor {} waiting for debugger",
-                                             static_cast<unsigned long>(getpid()), rank, processorName);
-                while (i == 0) { /* change ’i’ in the debugger */ }
-            }
-        }
-        MPI_Barrier(MPI_COMM_WORLD);
-    }
-};
 
 int main(int argc, char **argv) {
     MPISession mpisession(argc, argv);
+    if (mpisession.rank() == 0) {
+        readdy::log::console()->set_level(spdlog::level::info);
+    } else {
+        readdy::log::console()->set_level(spdlog::level::warn);
+    }
 
     Catch::Session session;
     int returnCode = session.applyCommandLine(argc, argv);
     if (returnCode != 0) return returnCode;
 
     if (!session.config().listTestNamesOnly()) {
-        const auto dir = readdy::testing::getPluginsDirectory();
+        const auto dir = readdy::plugin::utils::getPluginsDirectory();
         readdy::plugin::KernelProvider::getInstance().loadKernelsFromDirectory(dir);
     }
 

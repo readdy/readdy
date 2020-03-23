@@ -152,6 +152,7 @@ struct Configuration {
 namespace mpi {
 struct Configuration {
     scalar dx {-1.}, dy {-1.}, dz {-1.}; // widths of MPI boxes, for domain decomposition
+    scalar haloThickness {-1.}; // thickness of the region which belongs to another domain
 };
 /**
  * Json serialization of Configuration

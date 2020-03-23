@@ -33,10 +33,8 @@
  ********************************************************************/
 
 /**
- * « detailed description »
- *
  * @file MPIEulerBDIntegrator.cpp
- * @brief « brief description »
+ * @brief Propagate positions of particles according to Brownian Dynamics
  * @author chrisfroe
  * @date 03.06.19
  */
@@ -47,22 +45,28 @@
 namespace readdy::kernel::mpi::actions {
 
 void MPIEulerBDIntegrator::perform() {
-    const auto &context = kernel->context();
-    const auto &pbc = context.periodicBoundaryConditions().data();
-    const auto &kbt = context.kBT();
-    const auto &box = context.boxSize().data();
-    auto& stateModel = kernel->getMPIKernelStateModel();
-    const auto pd = stateModel.getParticleData();
-    for(auto& entry : *pd) {
-        if(!entry.is_deactivated()) {
-            const scalar D = context.particleTypes().diffusionConstantOf(entry.type);
-            const auto randomDisplacement = std::sqrt(2. * D * _timeStep) *
-                                            (readdy::model::rnd::normal3<readdy::scalar>());
-            entry.pos += randomDisplacement;
-            const auto deterministicDisplacement = entry.force * _timeStep * D / kbt;
-            entry.pos += deterministicDisplacement;
-            bcs::fixPosition(entry.pos, box, pbc);
+    if (kernel->domain().isWorkerRank()) {
+        const auto &context = kernel->context();
+        const auto &pbc = context.periodicBoundaryConditions().data();
+        const auto &kbt = context.kBT();
+        const auto &box = context.boxSize().data();
+        auto& stateModel = kernel->getMPIKernelStateModel();
+        auto pd = stateModel.getParticleData();
+        for(auto& entry : *pd) {
+            if(!entry.is_deactivated() and entry.responsible) {
+                const scalar D = context.particleTypes().diffusionConstantOf(entry.type);
+                const auto randomDisplacement = std::sqrt(2. * D * _timeStep) *
+                                                (readdy::model::rnd::normal3<readdy::scalar>());
+                entry.pos += randomDisplacement;
+                const auto deterministicDisplacement = entry.force * _timeStep * D / kbt;
+                entry.pos += deterministicDisplacement;
+                bcs::fixPosition(entry.pos, box, pbc);
+            }
         }
+        // do the plimpton
+        stateModel.synchronizeWithNeighbors();
+    } else {
+        readdy::log::trace("MPIEulerBDIntegrator::perform is noop for non workers");
     }
 }
 

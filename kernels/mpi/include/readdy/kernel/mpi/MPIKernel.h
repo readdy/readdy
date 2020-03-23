@@ -34,8 +34,6 @@
 
 
 /**
- * << detailed description >>
- *
  * @file MPIKernel.h
  * @brief Header file for readdy kernel that parallelizes using the message passing interface (MPI)
  * @author chrisfroe
@@ -52,8 +50,13 @@
 #include <readdy/kernel/mpi/model/MPIDomain.h>
 #include <readdy/kernel/mpi/Timer.h>
 
+#include <utility>
+
 namespace readdy::kernel::mpi {
 
+// fixme MPIKernel cannot be constructed as dynamically loaded plugin in a useful way currently
+// because only the ctor with context provides a ready-to-use kernel,
+// the default ctor provides a kernel that is not (/cannot be) initialized
 class MPIKernel : public readdy::model::Kernel {
 public:
     static const std::string name;
@@ -62,7 +65,7 @@ public:
 
     ~MPIKernel() override = default;
 
-    explicit MPIKernel(readdy::model::Context ctx);
+    explicit MPIKernel(const readdy::model::Context &ctx);
 
     MPIKernel(const MPIKernel &) = delete;
 
@@ -77,72 +80,71 @@ public:
 
     const MPIStateModel &getMPIKernelStateModel() const {
         return _stateModel;
-    };
+    }
 
     MPIStateModel &getMPIKernelStateModel() {
         return _stateModel;
-    };
+    }
 
     const readdy::model::StateModel &stateModel() const override {
         return _stateModel;
-    };
+    }
 
     readdy::model::StateModel &stateModel() override {
         return _stateModel;
-    };
+    }
 
     const readdy::model::actions::ActionFactory &actions() const override {
         return _actions;
-    };
+    }
 
     readdy::model::actions::ActionFactory &actions() override {
         return _actions;
-    };
+    }
 
     const readdy::model::observables::ObservableFactory &observe() const override {
         return _observables;
-    };
+    }
 
     readdy::model::observables::ObservableFactory &observe() override {
         return _observables;
-    };
-
-    /**
-     * Set up domain decomposition.
-     * All context and actions must be configured such that cutoffs are known.
-     * Consider using SimulationLoop, which always calls initialize(), for simulations.
-     */
-    void initialize() override;
+    }
 
     const readdy::model::top::TopologyActionFactory *const getTopologyActionFactory() const override {
         return nullptr;
-    };
+    }
 
     readdy::model::top::TopologyActionFactory *const getTopologyActionFactory() override {
         return nullptr;
-    };
+    }
 
     bool supportsGillespie() const override {
         return false;
     }
 
-    const model::MPIDomain* domain() const {
-        return _domain.get();
+    const model::MPIDomain &domain() const {
+        return _domain;
+    }
+
+    const MPI_Comm &commUsedRanks() const {
+        return _commUsedRanks;
     }
 
 protected:
-    int rank;
-    int worldSize;
-    std::string processorName;
-
+    // order here is order of initialization
+    // https://en.cppreference.com/w/cpp/language/initializer_list#Initialization_order
+    // domain needs context
+    // data needs domain
+    // state model needs data and domain
+    model::MPIDomain _domain;
     MPIStateModel::Data _data;
+    MPIStateModel _stateModel;
     actions::MPIActionFactory _actions;
     observables::MPIObservableFactory _observables;
-    MPIStateModel _stateModel;
-    std::unique_ptr<model::MPIDomain> _domain; // construction is delayed until initialize()
 
-    // The communicator for the subgroup of actually used workers, can point to _commIfNotWorld or MPI_COMM_WORLD
-    MPI_Comm commUsedRanks = MPI_COMM_WORLD;
+
+    // The communicator for the subgroup of actually used workers
+    MPI_Comm _commUsedRanks = MPI_COMM_WORLD;
 };
 
 }

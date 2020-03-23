@@ -33,17 +33,16 @@
  ********************************************************************/
 
 /**
- * « detailed description »
- *
  * @file Timer.cpp
- * @brief « brief description »
+ * @brief Implementation of Timer
  * @author chrisfroe
  * @date 26.07.19
  */
 
 #include <readdy/kernel/mpi/Timer.h>
-#include <fstream>
-#include <readdy/common/filesystem.h>
+#include <json.hpp>
+
+using Json = nlohmann::json;
 
 namespace readdy::kernel::mpi::util {
 
@@ -54,16 +53,17 @@ void to_json(nlohmann::json &j, const PerformanceData &pd) {
                        {"count", pd.count()}};
 }
 
-void Timer::writePerfToFile(const std::string &path) {
+std::string Timer::perfToJsonString() {
     nlohmann::json j;
     for (const auto &entry : Timer::perf) {
         nlohmann::json jEntry(entry.second);
         j[entry.first] = jEntry;
     }
-    if (not j.empty()) {
-        std::ofstream stream(path, std::ofstream::out |std::ofstream::trunc);
-        stream << j << std::endl;
-    }
+    return j.dump();
+}
+
+void Timer::clear() {
+    perf.clear();
 }
 
 }

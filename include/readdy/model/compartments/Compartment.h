@@ -53,7 +53,7 @@ namespace readdy::model::compartments {
 
 class Compartment {
 public:
-    using id_type = short;
+    using id_type = unsigned short;
     using label_conversion_map = std::unordered_map<std::string, std::string>;
     using conversion_map = std::unordered_map<ParticleTypeId, ParticleTypeId>;
 
@@ -76,7 +76,7 @@ public:
         return uniqueName;
     }
 
-    const id_type getId() const {
+    id_type getId() const {
         return _id;
     }
 

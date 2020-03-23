@@ -54,6 +54,8 @@ class MPIObservableFactory : public readdy::model::observables::ObservableFactor
 public:
     explicit MPIObservableFactory(MPIKernel* kernel);
 
+    std::unique_ptr<readdy::model::observables::Energy> energy(Stride stride) const override;
+
     std::unique_ptr<readdy::model::observables::Virial> virial(Stride stride) const override;
 
     std::unique_ptr<readdy::model::observables::HistogramAlongAxis>

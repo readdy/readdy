@@ -57,6 +57,8 @@
 #include "Fusion.h"
 #include "Decay.h"
 
+namespace readdy::model { class Context; }
+
 namespace readdy::model::reactions {
 
 class ReactionRegistry {
@@ -64,18 +66,6 @@ public:
     using ReactionsCollection = std::vector<Reaction *>;
     using ReactionsO1Map = std::unordered_map<ParticleTypeId, ReactionsCollection>;
     using ReactionsO2Map = util::particle_type_pair_unordered_map<ReactionsCollection>;
-
-    explicit ReactionRegistry(std::reference_wrapper<const ParticleTypeRegistry> ref) : _types(ref) {};
-
-    ReactionRegistry(const ReactionRegistry &) = default;
-
-    ReactionRegistry &operator=(const ReactionRegistry &) = default;
-
-    ReactionRegistry(ReactionRegistry &&) = default;
-
-    ReactionRegistry &operator=(ReactionRegistry &&) = default;
-
-    ~ReactionRegistry() = default;
 
     const std::size_t &nOrder1() const {
         return _n_order1;
@@ -85,7 +75,7 @@ public:
         return _o1Reactions;
     }
 
-    const ReactionsCollection order1Flat() const {
+    ReactionsCollection order1Flat() const {
         ReactionsO1Map::mapped_type result;
         for (const auto &mapEntry : _o1Reactions) {
             for (const auto reaction : mapEntry.second) {
@@ -125,7 +115,7 @@ public:
         return _o2Reactions;
     }
 
-    const ReactionsCollection order2Flat() const {
+    ReactionsCollection order2Flat() const {
         ReactionsO2Map::mapped_type result;
         for (const auto &mapEntry : _o2Reactions) {
             for (const auto reaction : mapEntry.second) {
@@ -159,11 +149,11 @@ public:
     }
 
     const ReactionsCollection &order1ByType(const std::string &type) const {
-        return order1ByType(_types(type));
+        return order1ByType(_types->idOf(type));
     }
 
     const ReactionsCollection &order2ByType(const std::string &type1, const std::string &type2) const {
-        return order2ByType(_types(type1), _types(type2));
+        return order2ByType(_types->idOf(type1), _types->idOf(type2));
     }
 
     std::string nameOf(ReactionId id) const;
@@ -183,7 +173,7 @@ public:
      * @return a uuid
      */
     ReactionId addConversion(const std::string &name, const std::string &from, const std::string &to, scalar rate) {
-        return addConversion(name, _types(from), _types(to), rate);
+        return addConversion(name, _types->idOf(from), _types->idOf(to), rate);
     }
 
     ReactionId addConversion(const std::string &name, ParticleTypeId from, ParticleTypeId to, scalar rate) {
@@ -202,7 +192,7 @@ public:
      */
     ReactionId addEnzymatic(const std::string &name, const std::string &catalyst, const std::string &from,
                             const std::string &to, scalar rate, scalar eductDistance) {
-        return addEnzymatic(name, _types(catalyst), _types(from), _types(to),
+        return addEnzymatic(name, _types->idOf(catalyst), _types->idOf(from), _types->idOf(to),
                             rate, eductDistance);
     }
 
@@ -226,7 +216,7 @@ public:
     ReactionId addFission(const std::string &name, const std::string &from, const std::string &to1,
                           const std::string &to2, scalar rate, scalar productDistance,
                           scalar weight1 = 0.5, scalar weight2 = 0.5) {
-        return addFission(name, _types(from), _types(to1), _types(to2), rate,
+        return addFission(name, _types->idOf(from), _types->idOf(to1), _types->idOf(to2), rate,
                           productDistance, weight1, weight2);
     }
 
@@ -252,7 +242,7 @@ public:
     ReactionId addFusion(const std::string &name, const std::string &from1, const std::string &from2,
                          const std::string &to, scalar rate, scalar eductDistance,
                          scalar weight1 = 0.5, scalar weight2 = 0.5) {
-        return addFusion(name, _types(from1), _types(from2), _types(to), rate,
+        return addFusion(name, _types->idOf(from1), _types->idOf(from2), _types->idOf(to), rate,
                          eductDistance, weight1, weight2);
     }
 
@@ -270,7 +260,7 @@ public:
      * @return a uuid
      */
     ReactionId addDecay(const std::string &name, const std::string &type, scalar rate) {
-        return addDecay(name, _types(type), rate);
+        return addDecay(name, _types->idOf(type), rate);
     }
 
     ReactionId addDecay(const std::string &name, ParticleTypeId type, scalar rate) {
@@ -280,7 +270,6 @@ public:
     std::string describe() const;
 
 private:
-
     using OwnReactions = std::vector<std::shared_ptr<Reaction>>;
     using OwnReactionsO1Map = std::unordered_map<ParticleTypeId, OwnReactions>;
     using OwnReactionsO2Map = util::particle_type_pair_unordered_map<OwnReactions>;
@@ -292,7 +281,7 @@ private:
     std::size_t _n_order1{0};
     std::size_t _n_order2{0};
 
-    std::reference_wrapper<const ParticleTypeRegistry> _types;
+    const ParticleTypeRegistry *_types;
 
     ReactionsO1Map _o1Reactions{};
     ReactionsO2Map _o2Reactions{};
@@ -301,6 +290,8 @@ private:
     OwnReactionsO2Map _ownO2Reactions{};
 
     static const ReactionsCollection DEFAULT_REACTIONS;
+
+    friend readdy::model::Context;
 };
 
 }
