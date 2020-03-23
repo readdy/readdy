@@ -70,7 +70,7 @@
 
 
 int main(int argc, char **argv) {
-    MPISession mpisession(argc, argv);
+    readdy::kernel::mpi::MPISession mpisession(argc, argv);
     if (mpisession.rank() == 0) {
         readdy::log::console()->set_level(spdlog::level::info);
     } else {

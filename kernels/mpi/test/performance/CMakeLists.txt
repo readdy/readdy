@@ -35,9 +35,9 @@
 
 project(runPerformance_mpi LANGUAGES C CXX)
 
-add_executable(${PROJECT_NAME} PerformanceMain.cpp ${TESTING_INCLUDE_DIR})
+add_executable(${PROJECT_NAME} PerformanceMain.cpp)
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${READDY_INCLUDE_DIRS} ${TESTING_INCLUDE_DIR} ${MPI_INCLUDE_DIR})
+target_include_directories(${PROJECT_NAME} PUBLIC ${READDY_INCLUDE_DIRS} ${MPI_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/examples/scenarios)
 target_link_libraries(${PROJECT_NAME} PUBLIC readdy readdy_kernel_mpi)
 set_target_properties(${PROJECT_NAME} PROPERTIES
         LINK_FLAGS "${EXTRA_LINK_FLAGS}"

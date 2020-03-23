@@ -1,5 +1,5 @@
 ####################################################################
-# Copyright © 2018 Computational Molecular Biology Group,          #
+# Copyright © 2020 Computational Molecular Biology Group,          #
 #                  Freie Universität Berlin (GER)                  #
 #                                                                  #
 # Redistribution and use in source and binary forms, with or       #
@@ -32,27 +32,33 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                       #
 ####################################################################
 
+project(run_readdy_scenarios)
 
-SET(SOURCES_DIR "${READDY_GLOBAL_DIR}/readdy/main/common")
+#include("${READDY_GLOBAL_DIR}/cmake/sources/kernels/cpu.cmake")
 
-SET(SPDLOG_INCLUDE_DIR "${READDY_GLOBAL_DIR}/libraries/spdlog/include")
-SET(JSON_INCLUDE_DIR "${READDY_GLOBAL_DIR}/libraries/json/include")
+list(APPEND SCENARIO_SOURCES "main.cpp")
+list(APPEND SCENARIO_LIBS "readdy")
+#list(APPEND SCENARIO_LIBS "readdy_kernel_cpu")
+list(APPEND SCENARIO_INCLUDE_DIRS "${READDY_INCLUDE_DIRS}")
+list(APPEND SCENARIO_INCLUDE_DIRS "${CPU_INCLUDE_DIR}")
 
-FIND_PACKAGE(Threads REQUIRED)
+#if(READDY_BUILD_MPI_KERNEL)
+#    # ok, will link to mpi indirectly through readdy_kernel_mpi
+#else()
+#    # the MPISession object makes some MPI_* calls that need to be mocked if not running MPI
+#    list(APPEND SCENARIO_SOURCES "${CMAKE_SOURCE_DIR}/readdy_testing/mpimock/mpi.cpp")
+#    list(APPEND SCENARIO_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/readdy_testing/mpimock")
+#endif()
 
-# include dirs
-SET(COMMON_INCLUDE_DIRS "${READDY_GLOBAL_INCLUDE_DIR};${SPDLOG_INCLUDE_DIR};${JSON_INCLUDE_DIR}" CACHE INTERNAL "Common include dirs")
+add_executable(${PROJECT_NAME} ${SCENARIO_SOURCES})
+message(STATUS ${SCENARIO_INCLUDE_DIRS})
+target_include_directories(${PROJECT_NAME} PRIVATE ${SCENARIO_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${SCENARIO_LIBS})
+set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "${EXTRA_LINK_FLAGS}" COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}")
 
-# dependent libraries
-SET(READDY_COMMON_LIBRARIES "graphs;fmt::fmt-header-only" CACHE INTERNAL "Common libraries")
-
-# sources
-LIST(APPEND READDY_COMMON_SOURCES "${SOURCES_DIR}/../api/KernelConfiguration.cpp")
-LIST(APPEND READDY_COMMON_SOURCES "${SOURCES_DIR}/Utils.cpp")
-LIST(APPEND READDY_COMMON_SOURCES "${SOURCES_DIR}/filesystem.cpp")
-LIST(APPEND READDY_COMMON_SOURCES "${SOURCES_DIR}/Config.cpp")
-LIST(APPEND READDY_COMMON_SOURCES "${SOURCES_DIR}/logging.cpp")
-LIST(APPEND READDY_COMMON_SOURCES "${SOURCES_DIR}/Timer.cpp")
-
-# all sources
-LIST(APPEND READDY_ALL_SOURCES ${READDY_COMMON_SOURCES})
+if (READDY_INSTALL_UNIT_TEST_EXECUTABLE)
+    install(TARGETS ${PROJECT_NAME}
+    RUNTIME DESTINATION bin
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib)
+endif (READDY_INSTALL_UNIT_TEST_EXECUTABLE)

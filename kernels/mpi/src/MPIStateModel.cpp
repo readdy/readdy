@@ -42,7 +42,7 @@
  */
 
 #include <readdy/kernel/mpi/MPIStateModel.h>
-#include <readdy/kernel/mpi/Timer.h>
+#include <readdy/common/Timer.h>
 
 namespace readdy::kernel::mpi {
 
@@ -65,7 +65,7 @@ MPIStateModel::gatherParticles() const {
     if (_domain->isIdleRank()) {
         return {};
     }
-    util::Timer timer("MPIStateModel::gatherParticles");
+    readdy::util::Timer timer("MPIStateModel::gatherParticles");
     auto &data = _data.get();
 
     // find out how many particles (and bytes) each worker sends
@@ -170,7 +170,7 @@ void MPIStateModel::distributeParticles(const std::vector<Particle> &ps) {
     if (_domain->isIdleRank()) {
         return;
     }
-    util::Timer timer("MPIStateModel::distributeParticles");
+    readdy::util::Timer timer("MPIStateModel::distributeParticles");
     if (_domain->isMasterRank()) {
         std::unordered_map<int, std::vector<util::ParticlePOD>> targetParticleMap;
         for (const auto &particle : ps) {
@@ -241,7 +241,7 @@ void MPIStateModel::synchronizeWithNeighbors() {
     if (domain()->isIdleRank() or domain()->isMasterRank()) {
         return;
     }
-    util::Timer timer("MPIStateModel::synchronizeWithNeighbors");
+    readdy::util::Timer timer("MPIStateModel::synchronizeWithNeighbors");
     auto& data = _data.get();
     std::vector<util::ParticlePOD> own; // particles that this worker is responsible for
     std::vector<std::size_t> removedEntries; // particles that this worker is NOT responsible for

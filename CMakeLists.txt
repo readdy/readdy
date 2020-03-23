@@ -64,6 +64,9 @@ SET(READDY_LOG_CMAKE_CONFIGURATION OFF CACHE BOOL "If turned on, the status of r
 # build the mpi kernel
 set(READDY_BUILD_MPI_KERNEL OFF CACHE BOOL "Whether to build the MPI kernel or not")
 
+# build the scenarios executables for performance benchmarking
+set(READDY_BUILD_SCENARIOS OFF CACHE BOOL "Whether to build the Scenarios executable or not")
+
 #####################################
 #                                   #
 # Basic setup of the project        #
@@ -377,6 +380,10 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
             ENDIF (NOT VALGRIND_FOUND)
         ENDIF(READDY_CREATE_MEMORY_CHECK_TEST_TARGET)
     ENDIF(READDY_CREATE_TEST_TARGET)
+
+    if(READDY_BUILD_SCENARIOS)
+        add_subdirectory(examples/scenarios)
+    endif()
 ELSE(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
     SET(READDY_GENERATE_DOCUMENTATION_TARGET ON)
 ENDIF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)

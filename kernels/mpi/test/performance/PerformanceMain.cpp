@@ -33,8 +33,8 @@
  ********************************************************************/
 
 /**
- * Run performance scenarios for the MPI kernel. As these do validate the correctness of readdy but mainly
- * measure runtime, this does not need the unit test library.
+ * Run performance scenarios (weak/strong scaling, different systems) for the MPI kernel.
+ * Mainly measure runtime, thus no unit test framework required here.
  *
  * @file PerformanceMain.cpp
  * @brief Run performance scenarios for the MPI kernel
@@ -44,21 +44,15 @@
 
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/kernel/mpi/MPISession.h>
-#include <readdy/plugin/Utils.h>
 #include <fstream>
-#include "Scenarios.h"
+#include "MPIScenarios.h"
 
 using Json = nlohmann::json;
-namespace perf = readdy::kernel::mpi::performance;
+namespace rkm = readdy::kernel::mpi;
 
 int main(int argc, char **argv) {
     // MPI_Init will modify argc, argv such that they behave ''normal'' again, i.e. without the mpirun arguments
-    MPISession mpiSession(argc, argv);
-
-    {
-        const auto dir = readdy::plugin::utils::getPluginsDirectory();
-        readdy::plugin::KernelProvider::getInstance().loadKernelsFromDirectory(dir);
-    }
+    readdy::kernel::mpi::MPISession mpiSession(argc, argv);
 
     std::string outDir;
     if (argc > 1) {
@@ -68,13 +62,12 @@ int main(int argc, char **argv) {
         outDir = "~/";
     }
 
-    std::vector<std::unique_ptr<perf::Scenario>> scenarios;
-    scenarios.push_back(std::make_unique<perf::DistributeParticles>());
-    scenarios.push_back(std::make_unique<perf::DistributeParticles>());
+    std::vector<std::unique_ptr<readdy::benchmark::Scenario<rkm::MPIKernel>>> scenarios;
+    scenarios.push_back(std::make_unique<rkm::benchmark::DistributeParticles>());
 
     for (const auto &s : scenarios) {
-        MPI_Barrier(MPI_COMM_WORLD);
-        auto json = s->run(false);
+        mpiSession.barrier();
+        auto json = s->run();
 
         json["rank"] = mpiSession.rank();
         json["worldSize"] = mpiSession.worldSize();

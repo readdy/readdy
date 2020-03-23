@@ -45,7 +45,7 @@
 #include <mutex>
 #include <unordered_map>
 
-namespace readdy::kernel::mpi::util {
+namespace readdy::util {
 
 struct PerformanceData {
     using time = double;

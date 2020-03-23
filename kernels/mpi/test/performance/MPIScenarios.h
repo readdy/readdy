@@ -1,4 +1,3 @@
-
 /**
  * Scenarios to measure performance, and optionally observables to ensure that the physics is correct
  * Examples to implement with constant density and adaptive volume based on number of workers:
@@ -22,49 +21,22 @@
 #include <readdy/api/KernelConfiguration.h>
 #include <utility>
 #include <readdy/kernel/mpi/model/MPIUtils.h>
+#include <Scenarios.h>
 
-namespace rkmu = readdy::kernel::mpi::util;
-
-namespace readdy::kernel::mpi::performance {
+namespace readdy::kernel::mpi::benchmark {
 
 using Json = nlohmann::json;
 
-// There is no proper testing here, just some sanity requirements
-void require(bool statement, std::string description = "") {
-    if (!statement) {
-        throw std::logic_error("Statement is false, " + description);
-    }
-}
-
-class Scenario {
-    std::string _description{};
-    std::string _name{};
-public:
-    explicit Scenario(std::string name, std::string descr) : _name(std::move(name)), _description(std::move(descr)) {
-
-    }
-
-    const std::string &description() {
-        return _description;
-    };
-
-    const std::string &name() {
-        return _name;
-    }
-
-    // bool decides if observables are calculated, adds to computation time
-    virtual Json run(bool doObserve) = 0;
-};
-
-class DistributeParticles : public Scenario {
+class DistributeParticles : public readdy::benchmark::Scenario<MPIKernel> {
 public:
     DistributeParticles() : Scenario(
             "DistributeParticles",
             "Distribute particles and gather them again") {}
 
-    Json run(bool doObserve) override {
+    Json run() override {
         int worldSize;
         MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
+        // find out before context so we can adjust the load (number of particles) according to weak scaling setup
         std::size_t nWorkers = worldSize - 1;
         std::size_t nParticlesPerWorker = 10000;
 
@@ -79,8 +51,7 @@ public:
 
         readdy::kernel::mpi::MPIKernel kernel(ctx);
 
-        require(kernel.domain().nWorkerRanks() == nWorkers);
-        require(kernel.domain().worldSize() == worldSize);
+        assert(nWorkers == kernel.domain().nWorkerRanks());
 
         auto idA = kernel.context().particleTypes().idOf("A");
         const std::size_t nParticles = nParticlesPerWorker * nWorkers;
@@ -92,28 +63,29 @@ public:
             particles.emplace_back(x, y, z, idA);
         }
 
+        auto addParticles = kernel.actions().addParticles(particles);
         MPI_Barrier(kernel.commUsedRanks());
-        kernel.stateModel().addParticles(particles);
+        addParticles->perform();
 
         if (kernel.domain().isMasterRank()) {
-            require(kernel.getMPIKernelStateModel().getParticleData()->size() == 0); // master data is emtpy
+            assert(kernel.getMPIKernelStateModel().getParticleData()->size() == 0); // master data is emtpy
         } else if (kernel.domain().isWorkerRank()) {
-            require(kernel.getMPIKernelStateModel().getParticleData()->size() >
-                    0); // worker should have gotten one particle
+            assert(kernel.getMPIKernelStateModel().getParticleData()->size() > 0); // worker should have gotten one particle
         } else if (kernel.domain().isIdleRank()) {
-            require(kernel.getMPIKernelStateModel().getParticleData()->size() == 0); // idle workers are idle
+            assert(kernel.getMPIKernelStateModel().getParticleData()->size() == 0); // idle workers are idle
         } else {
             throw std::runtime_error("Must be one of those above");
         }
 
-        const auto currentParticles = kernel.stateModel().getParticles();
+        const auto currentParticles = kernel.getMPIKernelStateModel().gatherParticles();
         if (kernel.domain().isMasterRank()) {
-            require(currentParticles.size() == nParticles);
+            assert(currentParticles.size() == nParticles);
         }
 
-        Json json = readdy::kernel::mpi::util::Timer::perfToJsonString();
-        readdy::kernel::mpi::util::Timer::clear();
-        return json;
+        Json result;
+        result["benchmark"] = Json::parse(readdy::util::Timer::perfToJsonString());
+        readdy::util::Timer::clear();
+        return result;
     }
 };
 
