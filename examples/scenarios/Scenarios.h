@@ -1,8 +1,10 @@
 /**
- * The goal here is _not_ to strictly measure scaling behavior but having fixed, reproducible benchmark cases.
- * ReaDDy focuses on crowded cytosolic environments, diffusion-influenced kinetics and interactions via potentials.
- * Thus ReaDDy should perform optimal for such cases. E.g. it is expected/obvious that an iPRD simulation performs
- * rather poorly when simulating well-mixed kinetics.
+ * The goal here is to implement some reproducible scenarios e.g. for benchmark purpose.
+ *
+ * A note on readdy performance in reaction-diffusion problems:
+ * readdy focuses on crowded cytosolic environments, diffusion-influenced kinetics and interactions via potentials.
+ * Thus readdy should perform optimal for such cases. E.g. it is expected/obvious that an iPRD simulation with Brownian
+ * Dynamics samples rather inefficient when simulating well-mixed kinetics and/or very dilute systems.
  *
  * Benchmark cases:
  * - Free diffusion
@@ -26,12 +28,11 @@
 #include <utility>
 
 using Json = nlohmann::json;
+namespace rnd = readdy::model::rnd;
 
-namespace readdy::benchmark {
+namespace readdy::performance {
 
-using KernelPointer = plugin::KernelProvider::kernel_ptr;
 
-template<typename Kernel>
 class Scenario {
     std::string _description{};
     std::string _name{};
@@ -43,36 +44,67 @@ public:
     const std::string &name() { return _name; }
 
     virtual Json run() = 0;
-
-    // todo if Kernel is a string, ask the KernelProvider to provide a kernel pointer
-    // todo otherwise directly create
-    KernelPointer createKernel() {
-        return {std::make_unique<Kernel, readdy::plugin::KernelDeleter>()};
-    }
 };
 
-template<typename Kernel>
-class FreeDiffusion : public Scenario<Kernel> {
+
+class FreeDiffusion : public Scenario {
+    std::string _kernelName;
+    std::size_t _nSteps = 1000;
 public:
-    FreeDiffusion() : Scenario<Kernel>(
-            "FreeDiffusion",
-            "Particles diffusing freely in periodic box without any interaction") {}
+    explicit FreeDiffusion(std::string kernelName) : Scenario(
+            "FreeDiffusion"+kernelName,
+            "Particles diffusing freely in periodic box without any interaction"),
+            _kernelName(kernelName) {}
 
-    Json run() override {
+    static readdy::model::Context context() {
         readdy::model::Context ctx;
-
         ctx.boxSize() = {20., 20., 20.};
         ctx.particleTypes().add("A", 1.);
-        ctx.particleTypes().add("B", 1.);
+        return ctx;
+    }
 
-        KernelPointer kernel(this->createKernel());
-        readdy::Simulation sim(std::move(kernel), ctx);
+    Json simulate(std::size_t nParticles) {
+        readdy::Simulation sim(_kernelName, context());
+        auto &box = sim.context().boxSize();
+        for (std::size_t i = 0; i < nParticles; ++i) {
+            sim.addParticle("A",
+                    rnd::uniform_real() * box[0] - 0.5 * box[0],
+                    rnd::uniform_real() * box[1] - 0.5 * box[1],
+                    rnd::uniform_real() * box[2] - 0.5 * box[2]);
+        }
 
-        // todo sim
+        {
+            readdy::util::Timer t("totalSimulation");
+            sim.run(_nSteps, 0.01);
+        }
 
-        Json result;
-        result["benchmark"] = Json::parse(readdy::util::Timer::perfToJsonString());
+        auto perf = Json::parse(readdy::util::Timer::perfToJsonString());
         readdy::util::Timer::clear();
+        return perf;
+    }
+
+    Json run() override {
+        std::vector<std::size_t> numbers = {
+                1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000,
+                10000, 20000, 50000, 100000, 200000, 500000, 1000000, 2000000, 5000000, 10000000
+        };
+
+        std::vector<Json> results;
+        for (std::size_t iid = 0; iid < 10; ++iid) {
+            for (auto n : numbers) {
+                Json currentResult;
+                currentResult["performance"] = simulate(n);
+                currentResult["n"] = n;
+                currentResult["iid"] = iid;
+                results.push_back(currentResult);
+            }
+        }
+        Json result = results;
+        result["context"] = context().describe();
+        result["nSteps"] = _nSteps;
+        result["kernelName"] = _kernelName;
+        result["readdy_default_n_threads"] = readdy_default_n_threads();
+
         return result;
     }
 };

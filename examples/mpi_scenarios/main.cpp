@@ -36,53 +36,102 @@
  * Run performance scenarios (weak/strong scaling, different systems) for the MPI kernel.
  * Mainly measure runtime, thus no unit test framework required here.
  *
- * @file PerformanceMain.cpp
+ * @file main.cpp
  * @brief Run performance scenarios for the MPI kernel
  * @author chrisfroe
  * @date 28.05.19
  */
 
-#include <readdy/plugin/KernelProvider.h>
 #include <readdy/kernel/mpi/MPISession.h>
 #include <fstream>
+#include <iomanip>
 #include "MPIScenarios.h"
 
 using Json = nlohmann::json;
 namespace rkm = readdy::kernel::mpi;
 
+std::string datetime() {
+    std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+    std::time_t nowTime = std::chrono::system_clock::to_time_t(now);
+    std::stringstream ss;
+    ss << std::put_time(std::gmtime(&nowTime), "%F-%T");
+    return ss.str();
+}
+
+std::string getOption(int argc, char **argv, const std::string &option, const std::string &defaultValue = "") {
+    std::string value;
+    for (int i = 0; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg.find(option) == 0) { // C++20 has starts_with
+            value = arg.substr(option.size());
+            return value;
+        }
+    }
+    return defaultValue;
+}
+
 int main(int argc, char **argv) {
     // MPI_Init will modify argc, argv such that they behave ''normal'' again, i.e. without the mpirun arguments
     readdy::kernel::mpi::MPISession mpiSession(argc, argv);
 
-    std::string outDir;
-    if (argc > 1) {
-        outDir = std::string(argv[1]);
-    } else {
-        readdy::log::warn("Using home directory as output");
-        outDir = "~/";
+    // parse argument strings
+    auto outdir = getOption(argc, argv, "--outdir=", "/tmp");
+    auto version = getOption(argc, argv, "--version=", "no version info provided");
+    auto cpuinfo = getOption(argc, argv, "--cpu=", "no cpu info provided");
+    auto machine = getOption(argc, argv, "--machine=", "no machine name provided");
+    auto author = getOption(argc, argv, "--author=", "nobody");
+    auto prefix = getOption(argc, argv, "--prefix=", "");
+
+    // necessary argument checking
+    if (not(readdy::util::fs::exists(outdir) and readdy::util::fs::is_directory(outdir))) {
+        throw std::invalid_argument(
+                fmt::format("Target output directory {} does not exist or is no directory.", outdir));
     }
 
-    std::vector<std::unique_ptr<readdy::benchmark::Scenario<rkm::MPIKernel>>> scenarios;
-    scenarios.push_back(std::make_unique<rkm::benchmark::DistributeParticles>());
+    // gather miscellaneous information
+    auto time = datetime();
+    Json info;
+    info["datetime"] = time;
+    info["version"] = version;
+    if (Json::accept(cpuinfo)) {
+        Json cpuJson = Json::parse(cpuinfo);
+        info["cpu"] = cpuJson;
+    } else {
+        info["cpu"] = cpuinfo;
+    }
+    info["machine"] = machine;
+    info["author"] = author;
+    info["prefix"] = prefix;
 
+    info["rank"] = mpiSession.rank();
+    info["worldSize"] = mpiSession.worldSize();
+    info["processorName"] = mpiSession.processorName();
+
+    // which scenarios shall be run
+    std::vector<std::unique_ptr<readdy::performance::Scenario>> scenarios;
+    scenarios.push_back(std::make_unique<rkm::benchmark::MPIDistributeParticles>());
+
+    // run the scenarios, and write output
     for (const auto &s : scenarios) {
+        Json out;
         mpiSession.barrier();
-        auto json = s->run();
+        out["result"] = s->run();
+        out["info"] = info;
 
-        json["rank"] = mpiSession.rank();
-        json["worldSize"] = mpiSession.worldSize();
-        json["processorName"] = mpiSession.processorName();
-        json["scenarioName"] = s->name();
-        json["scenarioDescription"] = s->description();
+        out["scenarioName"] = s->name();
+        out["scenarioDescription"] = s->description();
 
-        std::string filename{s->name() + "_rank_" + std::to_string(mpiSession.rank())};
-        std::string path = outDir + filename;
+        std::string filename = s->name() + "-" + time + "-rank-" + std::to_string(mpiSession.rank());
+        if (!prefix.empty()) {
+            filename.insert(0, prefix + "-");
+        }
 
-        if (not json.empty()) {
-            std::ofstream stream(path, std::ofstream::out |std::ofstream::trunc);
-            stream << json << std::endl;
+        std::string path = outdir + filename + ".json";
+
+        if (not out.empty()) {
+            std::ofstream stream(path, std::ofstream::out | std::ofstream::trunc);
+            stream << out << std::endl;
         }
     }
-
     return 0;
 }

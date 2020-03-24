@@ -34,31 +34,13 @@
 
 project(run_readdy_scenarios)
 
-#include("${READDY_GLOBAL_DIR}/cmake/sources/kernels/cpu.cmake")
-
-list(APPEND SCENARIO_SOURCES "main.cpp")
-list(APPEND SCENARIO_LIBS "readdy")
-#list(APPEND SCENARIO_LIBS "readdy_kernel_cpu")
-list(APPEND SCENARIO_INCLUDE_DIRS "${READDY_INCLUDE_DIRS}")
-list(APPEND SCENARIO_INCLUDE_DIRS "${CPU_INCLUDE_DIR}")
-
-#if(READDY_BUILD_MPI_KERNEL)
-#    # ok, will link to mpi indirectly through readdy_kernel_mpi
-#else()
-#    # the MPISession object makes some MPI_* calls that need to be mocked if not running MPI
-#    list(APPEND SCENARIO_SOURCES "${CMAKE_SOURCE_DIR}/readdy_testing/mpimock/mpi.cpp")
-#    list(APPEND SCENARIO_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/readdy_testing/mpimock")
-#endif()
-
-add_executable(${PROJECT_NAME} ${SCENARIO_SOURCES})
+add_executable(${PROJECT_NAME} main.cpp)
 message(STATUS ${SCENARIO_INCLUDE_DIRS})
-target_include_directories(${PROJECT_NAME} PRIVATE ${SCENARIO_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} PRIVATE ${SCENARIO_LIBS})
+target_include_directories(${PROJECT_NAME} PRIVATE ${READDY_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} PRIVATE readdy)
 set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "${EXTRA_LINK_FLAGS}" COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}")
 
-if (READDY_INSTALL_UNIT_TEST_EXECUTABLE)
-    install(TARGETS ${PROJECT_NAME}
-    RUNTIME DESTINATION bin
-    LIBRARY DESTINATION lib
-    ARCHIVE DESTINATION lib)
-endif (READDY_INSTALL_UNIT_TEST_EXECUTABLE)
+install(TARGETS ${PROJECT_NAME}
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib)

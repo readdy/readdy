@@ -27,11 +27,11 @@ namespace readdy::kernel::mpi::benchmark {
 
 using Json = nlohmann::json;
 
-class DistributeParticles : public readdy::benchmark::Scenario<MPIKernel> {
+class MPIDistributeParticles : public readdy::performance::Scenario {
 public:
-    DistributeParticles() : Scenario(
-            "DistributeParticles",
-            "Distribute particles and gather them again") {}
+    MPIDistributeParticles() : Scenario(
+            "MPIDistributeParticles",
+            "Distribute particles") {}
 
     Json run() override {
         int worldSize;
@@ -65,7 +65,10 @@ public:
 
         auto addParticles = kernel.actions().addParticles(particles);
         MPI_Barrier(kernel.commUsedRanks());
-        addParticles->perform();
+        {
+            readdy::util::Timer t("addParticles");
+            addParticles->perform();
+        }
 
         if (kernel.domain().isMasterRank()) {
             assert(kernel.getMPIKernelStateModel().getParticleData()->size() == 0); // master data is emtpy
@@ -83,7 +86,8 @@ public:
         }
 
         Json result;
-        result["benchmark"] = Json::parse(readdy::util::Timer::perfToJsonString());
+        result["context"] = ctx.describe();
+        result["performance"] = Json::parse(readdy::util::Timer::perfToJsonString());
         readdy::util::Timer::clear();
         return result;
     }
