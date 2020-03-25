@@ -49,38 +49,21 @@
 
 using Json = nlohmann::json;
 namespace rkm = readdy::kernel::mpi;
-
-std::string datetime() {
-    std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
-    std::time_t nowTime = std::chrono::system_clock::to_time_t(now);
-    std::stringstream ss;
-    ss << std::put_time(std::gmtime(&nowTime), "%F-%T");
-    return ss.str();
-}
-
-std::string getOption(int argc, char **argv, const std::string &option, const std::string &defaultValue = "") {
-    std::string value;
-    for (int i = 0; i < argc; ++i) {
-        std::string arg = argv[i];
-        if (arg.find(option) == 0) { // C++20 has starts_with
-            value = arg.substr(option.size());
-            return value;
-        }
-    }
-    return defaultValue;
-}
+namespace perf = readdy::performance;
 
 int main(int argc, char **argv) {
     // MPI_Init will modify argc, argv such that they behave ''normal'' again, i.e. without the mpirun arguments
-    readdy::kernel::mpi::MPISession mpiSession(argc, argv);
+    rkm::MPISession mpiSession(argc, argv);
+
+    readdy::log::set_level(spdlog::level::trace);
 
     // parse argument strings
-    auto outdir = getOption(argc, argv, "--outdir=", "/tmp");
-    auto version = getOption(argc, argv, "--version=", "no version info provided");
-    auto cpuinfo = getOption(argc, argv, "--cpu=", "no cpu info provided");
-    auto machine = getOption(argc, argv, "--machine=", "no machine name provided");
-    auto author = getOption(argc, argv, "--author=", "nobody");
-    auto prefix = getOption(argc, argv, "--prefix=", "");
+    auto outdir = perf::getOption(argc, argv, "--outdir=", "/tmp");
+    auto version = perf::getOption(argc, argv, "--version=", "no version info provided");
+    auto cpuinfo = perf::getOption(argc, argv, "--cpu=", "no cpu info provided");
+    auto machine = perf::getOption(argc, argv, "--machine=", "no machine name provided");
+    auto author = perf::getOption(argc, argv, "--author=", "nobody");
+    auto prefix = perf::getOption(argc, argv, "--prefix=", "");
 
     // necessary argument checking
     if (not(readdy::util::fs::exists(outdir) and readdy::util::fs::is_directory(outdir))) {
@@ -89,7 +72,7 @@ int main(int argc, char **argv) {
     }
 
     // gather miscellaneous information
-    auto time = datetime();
+    auto time = perf::datetime();
     Json info;
     info["datetime"] = time;
     info["version"] = version;
@@ -108,30 +91,34 @@ int main(int argc, char **argv) {
     info["processorName"] = mpiSession.processorName();
 
     // which scenarios shall be run
-    std::vector<std::unique_ptr<readdy::performance::Scenario>> scenarios;
-    scenarios.push_back(std::make_unique<rkm::benchmark::MPIDistributeParticles>());
+    std::vector<std::unique_ptr<perf::Scenario>> scenarios;
+    //scenarios.push_back(std::make_unique<perf::MPIDistributeParticles>());
+    scenarios.push_back(std::make_unique<perf::MPIDiffusionPairPotential>(perf::WeakScalingGeometry::stick));
 
     // run the scenarios, and write output
     for (const auto &s : scenarios) {
+        readdy::log::info("rank={}, Run scenario {} -- {}", mpiSession.rank(), s->name(), s->description());
         Json out;
-        mpiSession.barrier();
+        rkm::MPISession::barrier();
         out["result"] = s->run();
         out["info"] = info;
 
         out["scenarioName"] = s->name();
         out["scenarioDescription"] = s->description();
 
-        std::string filename = s->name() + "-" + time + "-rank-" + std::to_string(mpiSession.rank());
+        std::string filename = fmt::format("{}-{}-rank-{}-ws-{}.json", s->name(), time, mpiSession.rank(), mpiSession.worldSize());
         if (!prefix.empty()) {
             filename.insert(0, prefix + "-");
         }
 
-        std::string path = outdir + filename + ".json";
+        std::string path = outdir + filename;
 
-        if (not out.empty()) {
-            std::ofstream stream(path, std::ofstream::out | std::ofstream::trunc);
-            stream << out << std::endl;
-        }
+//        if (not out.empty()) {
+//            std::ofstream stream(path, std::ofstream::out | std::ofstream::trunc);
+//            stream << out << std::endl;
+//        }
     }
+
+    readdy::log::info("rank={}, Done with scenarios", mpiSession.rank());
     return 0;
 }

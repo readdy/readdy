@@ -46,6 +46,7 @@
 #include <string>
 #include <mpi.h>
 #include <vector>
+#include <readdy/common/Timer.h>
 
 namespace readdy::kernel::mpi::util {
 
@@ -113,20 +114,36 @@ inline void sendObjects(int targetRank, const std::vector<T> &objects, const MPI
              targetRank, tags::transmitObjects, comm);
 }
 
+inline std::ostream &operator<<(std::ostream& os, readdy::kernel::mpi::model::MPIDomain::NeighborType n) {
+    switch(n) {
+        case readdy::kernel::mpi::model::MPIDomain::NeighborType::self: os << "self"; break;
+        case readdy::kernel::mpi::model::MPIDomain::NeighborType::nan: os << "nan"; break;
+        case readdy::kernel::mpi::model::MPIDomain::NeighborType::regular: os << "regular"; break;
+    }
+    return os;
+}
+
 inline std::vector<util::ParticlePOD>
 sendThenReceive(std::array<std::size_t, 3> otherDirection, std::vector<util::ParticlePOD> &own,
                 std::vector<util::ParticlePOD> &other, const model::MPIDomain &domain, const MPI_Comm &comm) {
     const auto otherFlatIndex = domain.neighborIndex.index(otherDirection);
     const auto nType = domain.neighborTypes().at(otherFlatIndex);
+    const auto otherRank = domain.neighborRanks().at(otherFlatIndex);
+    //readdy::log::trace("rank={}, sendThenReceive, otherRank {}, otherType {}", domain.rank(), otherRank, nType);
     if (nType == model::MPIDomain::NeighborType::regular) {
-        const auto otherRank = domain.neighborRanks().at(otherFlatIndex);
         // send
         std::vector<util::ParticlePOD> objects;
         objects.insert(objects.end(), own.begin(), own.end());
         objects.insert(objects.end(), other.begin(), other.end());
+        readdy::util::Timer t1("sendThenReceive.sendObjects");
         util::sendObjects(otherRank, objects, comm);
+        t1.stop();
+        //readdy::log::trace("rank={}, sendThenReceive.sent", domain.rank());
         // receive
+        readdy::util::Timer t2("sendThenReceive.receiveObjects");
         auto received = util::receiveObjects<util::ParticlePOD>(otherRank, comm);
+        t2.stop();
+        //readdy::log::trace("rank={}, sendThenReceive.received", domain.rank());
         return received;
     } else {
         return {};
@@ -138,15 +155,22 @@ receiveThenSend(std::array<std::size_t, 3> otherDirection, std::vector<util::Par
                 std::vector<util::ParticlePOD> &other, const model::MPIDomain &domain, const MPI_Comm &comm) {
     const auto otherFlatIndex = domain.neighborIndex.index(otherDirection);
     const auto nType = domain.neighborTypes().at(otherFlatIndex);
+    const auto otherRank = domain.neighborRanks().at(otherFlatIndex);
+    //readdy::log::trace("rank={}, receiveThenSend, otherRank {}, otherType {}", domain.rank(), otherRank, nType);
     if (nType == model::MPIDomain::NeighborType::regular) {
-        const auto otherRank = domain.neighborRanks().at(otherFlatIndex);
         // receive
+        readdy::util::Timer t1("receiveThenSend.receiveObjects");
         auto received = util::receiveObjects<util::ParticlePOD>(otherRank, comm);
+        t1.stop();
+        //readdy::log::trace("rank={}, receiveThenSend.received", domain.rank());
         // send
         std::vector<util::ParticlePOD> objects;
         objects.insert(objects.end(), own.begin(), own.end());
         objects.insert(objects.end(), other.begin(), other.end());
+        readdy::util::Timer t2("receiveThenSend.sendObjects");
         util::sendObjects(otherRank, objects, comm);
+        t2.stop();
+        //readdy::log::trace("rank={}, receiveThenSend.sent", domain.rank());
         return received;
     } else {
         return {};

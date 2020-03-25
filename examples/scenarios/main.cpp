@@ -12,26 +12,7 @@
 #include "Scenarios.h"
 
 using Json = nlohmann::json;
-
-std::string datetime() {
-    std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
-    std::time_t nowTime = std::chrono::system_clock::to_time_t(now);
-    std::stringstream ss;
-    ss << std::put_time(std::gmtime(&nowTime), "%F-%T");
-    return ss.str();
-}
-
-std::string getOption(int argc, char **argv, const std::string &option, const std::string &defaultValue = "") {
-    std::string value;
-    for (int i = 0; i < argc; ++i) {
-        std::string arg = argv[i];
-        if (arg.find(option) == 0) { // C++20 has starts_with
-            value = arg.substr(option.size());
-            return value;
-        }
-    }
-    return defaultValue;
-}
+namespace perf = readdy::performance;
 
 /**
  * Arguments (all optional):
@@ -59,12 +40,12 @@ std::string getOption(int argc, char **argv, const std::string &option, const st
  */
 int main(int argc, char **argv) {
     // parse argument strings
-    auto outdir = getOption(argc, argv, "--outdir=", "/tmp");
-    auto version = getOption(argc, argv, "--version=", "no version info provided");
-    auto cpuinfo = getOption(argc, argv, "--cpu=", "no cpu info provided");
-    auto machine = getOption(argc, argv, "--machine=", "no machine name provided");
-    auto author = getOption(argc, argv, "--author=", "nobody");
-    auto prefix = getOption(argc, argv, "--prefix=", "");
+    auto outdir = perf::getOption(argc, argv, "--outdir=", "/tmp");
+    auto version = perf::getOption(argc, argv, "--version=", "no version info provided");
+    auto cpuinfo = perf::getOption(argc, argv, "--cpu=", "no cpu info provided");
+    auto machine = perf::getOption(argc, argv, "--machine=", "no machine name provided");
+    auto author = perf::getOption(argc, argv, "--author=", "nobody");
+    auto prefix = perf::getOption(argc, argv, "--prefix=", "");
 
     // necessary argument checking
     if (not(readdy::util::fs::exists(outdir) and readdy::util::fs::is_directory(outdir))) {
@@ -73,7 +54,7 @@ int main(int argc, char **argv) {
     }
 
     // gather miscellaneous information
-    auto time = datetime();
+    auto time = perf::datetime();
     Json info;
     info["datetime"] = time;
     info["version"] = version;

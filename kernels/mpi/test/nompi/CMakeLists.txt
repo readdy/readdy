@@ -38,10 +38,10 @@ project(runUnitTests_mpi_nompi LANGUAGES C CXX)
 add_executable(${PROJECT_NAME}
         TestMain.cpp
         TestMPIDomain.cpp
-        ${CMAKE_SOURCE_DIR}/readdy_testing/mpimock/mpi.cpp
+        mpimock/mpi.cpp
         ${TESTING_INCLUDE_DIR})
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/readdy_testing/mpimock ${READDY_INCLUDE_DIRS} ${TESTING_INCLUDE_DIR} ${MPI_INCLUDE_DIR})
+target_include_directories(${PROJECT_NAME} PUBLIC mpimock ${READDY_INCLUDE_DIRS} ${TESTING_INCLUDE_DIR} ${MPI_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} PUBLIC readdy Catch2::Catch2)
 set_target_properties(${PROJECT_NAME} PROPERTIES
         LINK_FLAGS "${EXTRA_LINK_FLAGS}"

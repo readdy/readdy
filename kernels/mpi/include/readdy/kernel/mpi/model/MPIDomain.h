@@ -290,6 +290,53 @@ public:
                 };
     }
 
+    [[nodiscard]] std::string describe() const {
+        std::string description;
+        description += fmt::format("MPIDomain:\n");
+        description += fmt::format("--------------------------------\n");
+        description += fmt::format(" - rank = {}\n", rank());
+        description += fmt::format(" - worldSize = {}\n", worldSize());
+        description += fmt::format(" - nWorkerRanks = {}\n", nWorkerRanks());
+        description += fmt::format(" - nIdleRanks = {}\n", nIdleRanks());
+        description += fmt::format(" - nUsedRanks = {}\n", nUsedRanks());
+        description += fmt::format(" - haloThickness = {}\n", haloThickness());
+        description += fmt::format(" - idle = {}\n", isIdleRank() ? "true" : "false");
+        description += fmt::format(" - minDomainWidths = ({}, {}, {})\n", _minDomainWidths[0], _minDomainWidths[1], _minDomainWidths[2]);
+        description += fmt::format(" - nDomainsPerAxis = ({}, {}, {})\n", nDomainsPerAxis()[0], nDomainsPerAxis()[1], nDomainsPerAxis()[2]);
+        description += fmt::format(" - Domain widths ({}, {}, {})\n",
+                                   _context.get().boxSize()[0] / nDomainsPerAxis()[0],
+                                   _context.get().boxSize()[1] / nDomainsPerAxis()[1],
+                                   _context.get().boxSize()[2] / nDomainsPerAxis()[2]);
+        if (isWorkerRank()) {
+            // layout of this particular domain
+            description += fmt::format(" - origin = ({}, {}, {})\n", origin()[0], origin()[1], origin()[2]);
+            description += fmt::format(" - originWithHalo = ({}, {}, {})\n", originWithHalo()[0], originWithHalo()[1], originWithHalo()[2]);
+            description += fmt::format(" - extent = ({}, {}, {})\n", extent()[0], extent()[1], extent()[2]);
+            description += fmt::format(" - extentWithHalo = ({}, {}, {})\n", extentWithHalo()[0], extentWithHalo()[1], extentWithHalo()[2]);
+            description += fmt::format(" - myIdx = ({}, {}, {})\n", myIdx()[0], myIdx()[1], myIdx()[2]);
+            auto describe3by3Matrix = [](const auto &lookup, const auto& index) {
+                std::string result;
+                for (int i = 0; i<3; ++i) {
+                    for (int j = 0; j<3; ++j) {
+                        std::string line = "                    ";
+                        for (int k = 0; k<3; ++k) {
+                            auto idx = index(i,j,k);
+                            line += std::to_string(lookup.at(idx)) + " ";
+                        }
+                        result += line + "\n";
+                    }
+                    result += "\n";
+                }
+                return result;
+            };
+            description += fmt::format(" - neighborRanks = \n{}",
+                    describe3by3Matrix(neighborRanks(), neighborIndex));
+            description += fmt::format(" - neighborTypes = (0 - self, 1 - nan (not a neighbor), 2 - regular)\n{}",
+                    describe3by3Matrix(neighborTypes(), neighborIndex));
+        }
+        return description;
+    }
+
 private:
     void validateRankNotMaster() const {
         if (_rank == 0) {
@@ -346,9 +393,10 @@ private:
                 // is never ok
                 throw std::logic_error(fmt::format(
                         "Minimal domain width {width} in direction "
-                        "{direction} must be smaller or equal to boxSize[{direction}]",
+                        "{direction} must be smaller or equal to boxSize[{direction}]={length}",
                         fmt::arg("width", _minDomainWidths[i]),
-                        fmt::arg("direction", i)
+                        fmt::arg("direction", i),
+                        fmt::arg("length", boxSize[i])
                         ));
             }
 

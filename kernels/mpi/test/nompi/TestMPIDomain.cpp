@@ -378,3 +378,24 @@ TEST_CASE("Test domain decomposition", "[mpi]") {
         }
     }
 }
+
+TEST_CASE("Domain descriptor sanity", "[mpi]") {
+    readdy::model::Context context;
+    context.particleTypes().add("A", 1.0);
+    context.potentials().addHarmonicRepulsion("A", "A", 1.0, 2.3);
+
+    context.boxSize() = {10., 1., 1.};
+    context.periodicBoundaryConditions() = {true, false, false};
+    context.kernelConfiguration().mpi.dx = 4.61;
+    context.kernelConfiguration().mpi.dy = 0.9;
+    context.kernelConfiguration().mpi.dz = 0.9;
+
+    int worldSize = 4;
+    for (int rank = 0; rank < worldSize; ++rank) {
+        MPIMock::mpiCommWorld.rank = rank;
+        MPIMock::mpiCommWorld.worldSize = worldSize;
+        readdy::kernel::mpi::model::MPIDomain domain(context);
+        readdy::log::debug(domain.describe());
+    }
+
+}

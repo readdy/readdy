@@ -1,20 +1,14 @@
 /**
- * The goal here is to implement some reproducible scenarios e.g. for benchmark purpose.
+ * The goal here is to implement some reproducible scenarios for performance measurement
+ * Not necessarily benchmark, more profiling, bottleneck identification, AB comparisons.
  *
  * A note on readdy performance in reaction-diffusion problems:
  * readdy focuses on crowded cytosolic environments, diffusion-influenced kinetics and interactions via potentials.
  * Thus readdy should perform optimal for such cases. E.g. it is expected/obvious that an iPRD simulation with Brownian
  * Dynamics samples rather inefficient when simulating well-mixed kinetics and/or very dilute systems.
  *
- * Benchmark cases:
- * - Free diffusion
- * - Stationary distribution in an external potential -> diffusion in double well along one dimension
- * - Thermodynamics of LJ suspension -> diffusion subject to pair-interactions
- * - Michaelis-Menten kinetics -> irreversible reaction-diffusion without forces in the reaction-limit (well-mixed)
- * - A+B<-->C with LJ -> reversible reaction-diffusion with forces, can do diffusion-influenced
- *
  * @file Scenarios.h
- * @brief Generic kernel-independent scenarios to benchmark readdy performance
+ * @brief Generic kernel-independent scenarios to measure readdy performance
  * @author chrisfroe
  * @date 28.02.20
  */
@@ -32,6 +26,25 @@ namespace rnd = readdy::model::rnd;
 
 namespace readdy::performance {
 
+std::string datetime() {
+    std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+    std::time_t nowTime = std::chrono::system_clock::to_time_t(now);
+    std::stringstream ss;
+    ss << std::put_time(std::gmtime(&nowTime), "%F-%T");
+    return ss.str();
+}
+
+std::string getOption(int argc, char **argv, const std::string &option, const std::string &defaultValue = "") {
+    std::string value;
+    for (int i = 0; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg.find(option) == 0) { // C++20 has starts_with
+            value = arg.substr(option.size());
+            return value;
+        }
+    }
+    return defaultValue;
+}
 
 class Scenario {
     std::string _description{};

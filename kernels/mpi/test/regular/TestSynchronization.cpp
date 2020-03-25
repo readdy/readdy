@@ -88,13 +88,13 @@ void check(readdy::kernel::mpi::MPIKernel &kernel,
         // THEN("The number of particles is correct and responsible particles are in the domain core")
         auto n = std::count_if(data->begin(), data->end(),
                                [](const auto &entry) { return !entry.deactivated; });
-        CHECK(n == expectedPODs.size());
+        REQUIRE(n == expectedPODs.size());
         for (const auto &entry : *data) {
             if (!entry.deactivated) {
                 if (entry.responsible) {
-                    CHECK(kernel.domain().isInDomainCore(entry.position()));
+                    REQUIRE(kernel.domain().isInDomainCore(entry.position()));
                 } else {
-                    CHECK(kernel.domain().isInDomainHalo(entry.position()));
+                    REQUIRE(kernel.domain().isInDomainHalo(entry.position()));
                 }
             }
         }
@@ -106,7 +106,7 @@ void check(readdy::kernel::mpi::MPIKernel &kernel,
                     actual.emplace(entry);
                 }
             }
-            CHECK(expectedPODs == actual);
+            REQUIRE(expectedPODs == actual);
         }
         // AND_WHEN("Neighborlist is filled")
         {
@@ -128,46 +128,55 @@ void check(readdy::kernel::mpi::MPIKernel &kernel,
 
                 std::sort(actualVec.begin(), actualVec.end(), ComparePODPair{});
                 std::sort(expectedVec.begin(), expectedVec.end(), ComparePODPair{});
+                if (not(std::includes(actualVec.begin(), actualVec.end(), expectedVec.begin(), expectedVec.end(), ComparePODPair{}))) {
+                    readdy::log::critical("rank={}, actualVec.size() {}", kernel.domain().rank(), actualVec.size());
+                    readdy::log::critical("rank={}, expectedVec.size() {}", kernel.domain().rank(),expectedVec.size());
+
+                    std::vector<std::pair<rkmu::ParticlePOD, rkmu::ParticlePOD>> notInActual;
+                    std::set_difference(expectedVec.begin(), expectedVec.end(), actualVec.begin(), actualVec.end(), std::inserter(notInActual, notInActual.begin()), ComparePODPair{});
+
+                    readdy::log::critical("rank={}, notInActual.size() {}", kernel.domain().rank(), notInActual.size());
+                    for (auto pair : notInActual) {
+                        readdy::log::critical("rank={}, missing pair {} -- {} ", kernel.domain().rank(), pair.first.position, pair.second.position);
+                    }
+
+                }
                 // expected should be a subset of actual
-                CHECK(std::includes(actualVec.begin(), actualVec.end(), expectedVec.begin(), expectedVec.end(), ComparePODPair{}));
+                REQUIRE(std::includes(actualVec.begin(), actualVec.end(), expectedVec.begin(), expectedVec.end(), ComparePODPair{}));
             }
         }
     } else if (kernel.domain().isMasterRank()) {
         // master has no active entries
-        CHECK(data->size() == data->n_deactivated());
+        REQUIRE(data->size() == data->n_deactivated());
     }
 }
 
 void synchronizeAndCheck(readdy::kernel::mpi::MPIKernel &kernel,
                          const ParticlePODSet &expectedPODs, const ParticlePODPairSet &expectedPODPairs,
                          const std::vector<readdy::model::Particle> &allParticles) {
-    WHEN("Particles are gathered") {
+    /// WHEN("Particles are gathered")
+    {
         auto gatheredParticles = kernel.getMPIKernelStateModel().gatherParticles();
-        THEN("All particles are obtained") {
-            if (kernel.domain().isMasterRank()) {
-                CHECK(gatheredParticles.size() == allParticles.size());
-            }
+        /// THEN("All particles are obtained")
+        if (kernel.domain().isMasterRank()) {
+            REQUIRE(gatheredParticles.size() == allParticles.size());
         }
     }
-    WHEN("States are synchronized") {
-        kernel.getMPIKernelStateModel().synchronizeWithNeighbors();
-        THEN("The state is correctly set up") {
-            check(kernel, expectedPODs, expectedPODPairs);
-            AND_WHEN("States are synchronized again") {
-                kernel.getMPIKernelStateModel().synchronizeWithNeighbors();
-                THEN("We see the same result") {
-                    check(kernel, expectedPODs, expectedPODPairs);
-                    AND_WHEN("Particles are gathered again") {
-                        auto gatheredParticles = kernel.getMPIKernelStateModel().gatherParticles();
-                        THEN("All particles are obtained") {
-                            if (kernel.domain().isMasterRank()) {
-                                CHECK(gatheredParticles.size() == allParticles.size());
-                            }
-                        }
-                    }
-                }
-            }
-        }
+    /// WHEN("States are synchronized")
+    kernel.getMPIKernelStateModel().synchronizeWithNeighbors();
+    /// THEN("The state is correctly set up")
+    readdy::log::critical("rank={}, first check", kernel.domain().rank());
+    check(kernel, expectedPODs, expectedPODPairs);
+    /// AND_WHEN("States are synchronized again")
+    kernel.getMPIKernelStateModel().synchronizeWithNeighbors();
+    /// THEN("We see the same result")
+    readdy::log::critical("rank={}, second check", kernel.domain().rank());
+    check(kernel, expectedPODs, expectedPODPairs);
+    /// AND_WHEN("Particles are gathered again")
+    auto gatheredParticles = kernel.getMPIKernelStateModel().gatherParticles();
+    /// THEN("All particles are obtained")
+    if (kernel.domain().isMasterRank()) {
+        REQUIRE(gatheredParticles.size() == allParticles.size());
     }
 }
 
@@ -202,6 +211,13 @@ std::pair<ParticlePODSet, ParticlePODPairSet> expectedParticlesAndPairs(
                 }
             }
         }
+        std::vector<std::pair<rkmu::ParticlePOD, rkmu::ParticlePOD>> expectedVec(minimalExpectedPODPairs.begin(),
+                                                                                 minimalExpectedPODPairs.end());
+        std::sort(expectedVec.begin(), expectedVec.end(), ComparePODPair{});
+        if (not(std::includes(expectedVec.begin(), expectedVec.end(), expectedVec.begin(), expectedVec.end(), ComparePODPair{}))) {
+            readdy::log::critical("rank={}, in setting up expectedVec something went wrong", kernel.domain().rank());
+        }
+        REQUIRE(std::includes(expectedVec.begin(), expectedVec.end(), expectedVec.begin(), expectedVec.end(), ComparePODPair{}));
         return {expectedPODs, minimalExpectedPODPairs};
     } else {
         return {};
@@ -346,6 +362,7 @@ void randomPositionsTest(std::array<readdy::scalar, 3> boxSize, std::array<bool,
 
     setupContext(ctx);
     readdy::kernel::mpi::MPIKernel kernel(ctx);
+    readdy::log::trace("rank={}, randomPositionsTest, domain {}", kernel.domain().rank(), kernel.domain().describe());
     auto idA = kernel.context().particleTypes().idOf("A");
 
     const auto &box = kernel.context().boxSize();
@@ -399,9 +416,9 @@ TEST_CASE("Synchronization with random positions (have to be broadcasted) for va
             {false, false, false},
             {false, true, false},
     };
-
     for (auto b : bs) {
         for (auto pbc : pbcs) {
+            MPI_Barrier(MPI_COMM_WORLD);
             randomPositionsTest(b, pbc);
         }
     }
