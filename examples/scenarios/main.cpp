@@ -30,7 +30,7 @@ namespace perf = readdy::performance;
  * Example for development:
  * run_readdy_scenarios \
  *  --outdir="/tmp" \
- *  --version="$(cd /home/chris/workspace/readdy && git describe --always)" \
+ *  --version="$(cd /path/to/readdy && git describe --always)" \
  *  --cpu="$(lscpu --json | tr -d '\n')" \
  *  --machine="$(hostname)" \
  *  --author="chris" \
@@ -39,8 +39,10 @@ namespace perf = readdy::performance;
  *  Note: MPI Kernel cannot be run here, it needs a MPISession and is called by mpirun.
  */
 int main(int argc, char **argv) {
+    readdy::log::set_level(spdlog::level::info);
+
     // parse argument strings
-    auto outdir = perf::getOption(argc, argv, "--outdir=", "/tmp");
+    auto outdir = perf::getOption(argc, argv, "--outdir=", "/tmp/");
     auto version = perf::getOption(argc, argv, "--version=", "no version info provided");
     auto cpuinfo = perf::getOption(argc, argv, "--cpu=", "no cpu info provided");
     auto machine = perf::getOption(argc, argv, "--machine=", "no machine name provided");
@@ -73,8 +75,19 @@ int main(int argc, char **argv) {
 
     // which scenarios shall be run
     std::vector<std::unique_ptr<readdy::performance::Scenario>> scenarios;
-    scenarios.push_back(std::make_unique<readdy::performance::FreeDiffusion>("SingleCPU"));
-    scenarios.push_back(std::make_unique<readdy::performance::FreeDiffusion>("CPU"));
+    //scenarios.push_back(std::make_unique<readdy::performance::FreeDiffusion>("SingleCPU"));
+    //for (std::size_t load = 1; load <= 8; load++) {
+    //    scenarios.push_back(std::make_unique<readdy::performance::DiffusionPairPotential>(
+    //            "SingleCPU", perf::WeakScalingGeometry::stick, load, 10.));
+    //}
+    std::size_t load = readdy::readdy_default_n_threads();
+    readdy::log::critical("------------------------------- CPU load {}", load);
+    scenarios.push_back(std::make_unique<readdy::performance::DiffusionPairPotential>(
+                "CPU", perf::WeakScalingGeometry::stick, load, 13.));
+
+    /// of course this does not weak scale, but we need singlecpu as baseline
+    scenarios.push_back(std::make_unique<readdy::performance::DiffusionPairPotential>(
+                "SingleCPU", perf::WeakScalingGeometry::stick, load, 13.));
 
     // run the scenarios, and write output
     for (const auto &s : scenarios) {
@@ -85,12 +98,9 @@ int main(int argc, char **argv) {
         out["scenarioName"] = s->name();
         out["scenarioDescription"] = s->description();
 
-        std::string filename = s->name() + "-" + time;
-        if (!prefix.empty()) {
-            filename.insert(0, prefix + "-");
-        }
-
-        std::string path = outdir + filename + ".json";
+        std::string filename = fmt::format("{}{}-{}-{}.json",
+                prefix.empty() ? "" : prefix + "-", s->name(), time, perf::randomString());
+        std::string path = outdir + filename;
 
         if (not out.empty()) {
             std::ofstream stream(path, std::ofstream::out | std::ofstream::trunc);

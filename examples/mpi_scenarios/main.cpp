@@ -55,10 +55,10 @@ int main(int argc, char **argv) {
     // MPI_Init will modify argc, argv such that they behave ''normal'' again, i.e. without the mpirun arguments
     rkm::MPISession mpiSession(argc, argv);
 
-    readdy::log::set_level(spdlog::level::trace);
+    readdy::log::set_level(spdlog::level::info);
 
     // parse argument strings
-    auto outdir = perf::getOption(argc, argv, "--outdir=", "/tmp");
+    auto outdir = perf::getOption(argc, argv, "--outdir=", "/tmp/");
     auto version = perf::getOption(argc, argv, "--version=", "no version info provided");
     auto cpuinfo = perf::getOption(argc, argv, "--cpu=", "no cpu info provided");
     auto machine = perf::getOption(argc, argv, "--machine=", "no machine name provided");
@@ -93,7 +93,8 @@ int main(int argc, char **argv) {
     // which scenarios shall be run
     std::vector<std::unique_ptr<perf::Scenario>> scenarios;
     //scenarios.push_back(std::make_unique<perf::MPIDistributeParticles>());
-    scenarios.push_back(std::make_unique<perf::MPIDiffusionPairPotential>(perf::WeakScalingGeometry::stick));
+    scenarios.push_back(std::make_unique<perf::MPIDiffusionPairPotential>(
+            perf::WeakScalingGeometry::cube, 13.));
 
     // run the scenarios, and write output
     for (const auto &s : scenarios) {
@@ -106,17 +107,17 @@ int main(int argc, char **argv) {
         out["scenarioName"] = s->name();
         out["scenarioDescription"] = s->description();
 
-        std::string filename = fmt::format("{}-{}-rank-{}-ws-{}.json", s->name(), time, mpiSession.rank(), mpiSession.worldSize());
-        if (!prefix.empty()) {
-            filename.insert(0, prefix + "-");
-        }
+        std::string filename = fmt::format(
+                "{}{}-{}-{}-rank-{}-ws-{}.json",
+                prefix.empty() ? "" : prefix + "-", s->name(), time, perf::randomString(),
+                mpiSession.rank(), mpiSession.worldSize());
 
         std::string path = outdir + filename;
 
-//        if (not out.empty()) {
-//            std::ofstream stream(path, std::ofstream::out | std::ofstream::trunc);
-//            stream << out << std::endl;
-//        }
+        if (not out.empty()) {
+            std::ofstream stream(path, std::ofstream::out | std::ofstream::trunc);
+            stream << out << std::endl;
+        }
     }
 
     readdy::log::info("rank={}, Done with scenarios", mpiSession.rank());

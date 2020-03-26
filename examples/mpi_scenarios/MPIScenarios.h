@@ -95,39 +95,54 @@ public:
     }
 };
 
-/** Scale the box based on given workers in different ways */
-enum WeakScalingGeometry {
-    stick, // scale box only in x. Allows for all nWorkers
-    slab, // scale box in x and y. Allows for nWorkers = i**2
-    cube // scale box in x, y and z. Allows for nWorkers = i**3
-};
-
 class MPIDiffusionPairPotential : public Scenario {
     WeakScalingGeometry _mode;
+    // hyperparameter determining the volume and thus the final number of particles
+    // describes the ratio of box length and interaction distance
+    readdy::scalar _edgeLengthOverInteractionDistance;
 public:
-    explicit MPIDiffusionPairPotential(WeakScalingGeometry mode) : Scenario(
+    explicit MPIDiffusionPairPotential(WeakScalingGeometry mode, readdy::scalar edgeLengthOverInteractionDistance = 5.) : Scenario(
             "MPIDiffusionPairPotential",
-            "Diffusion of particles with constant density, scale box according to mode"), _mode(mode) {}
+            "Diffusion of particles with constant density, scale box according to mode"), _mode(mode), _edgeLengthOverInteractionDistance(edgeLengthOverInteractionDistance) {}
 
     Json run() override {
         int rank, worldSize;
         MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
         MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-        std::size_t nWorkers = worldSize - 1;
+        std::size_t nLoad = worldSize; // in weak scaling the load and processors must scale linearly
+        std::size_t nProcessors = worldSize;
+        std::size_t nWorkers = worldSize - 1; // although the
         std::size_t nParticles;
+        std::size_t nParticlesPerLoad;
+        scalar nParticlesPerWorker;
         std::array<readdy::scalar, 3> box{};
-        readdy::scalar halo = 2.;
+        scalar halo = 2.;
         // radius that is used to calculate the volume occupation, if the particles were hard-spheres
-        readdy::scalar assumedRadius = halo / 2.;
+        scalar assumedRadius = halo / 2.;
         if (_mode == stick) {
-            readdy::scalar edgeLengthOverHaloThickness = 5.;
             // will lead to 60% volume occupation when one particle has an associated radius of halo/2.
-            std::size_t nParticlesPerWorker = 0.6 * std::pow(edgeLengthOverHaloThickness,3)
-                    / (4./3. * readdy::util::numeric::pi<scalar>() * std::pow(assumedRadius/halo,3));
-            nParticles = nWorkers * nParticlesPerWorker;
-            readdy::scalar boxLength = edgeLengthOverHaloThickness * halo;
-            box = {nWorkers * boxLength, boxLength, boxLength};
-            readdy::log::info("rank={}, nParticlesPerWorker {}, nParticles {}", rank, nParticlesPerWorker, nParticles);
+            nParticlesPerLoad = 0.6 * std::pow(_edgeLengthOverInteractionDistance, 3)
+                                / (4./3. * readdy::util::numeric::pi<scalar>() * std::pow(assumedRadius/halo,3));
+            nParticles = nLoad * nParticlesPerLoad;
+            nParticlesPerWorker = static_cast<scalar>(nParticles) / static_cast<scalar>(nWorkers);
+            scalar boxLength = _edgeLengthOverInteractionDistance * halo;
+            box = {nLoad * boxLength, boxLength, boxLength};
+            readdy::log::info("rank={}, stick mode, nParticlesPerLoad {}, nParticles {}", rank, nParticlesPerLoad, nParticles);
+        } else if (_mode == cube) {
+            // layman's check if nWorkers is a cubic number
+            auto remainder = fmod(std::cbrt(nWorkers), 1.0f);
+            readdy::log::critical("rank={}, nWorkers={}, remainder={}", rank, nWorkers, remainder);
+            if (std::abs(remainder) > 0.0001) {
+                throw std::invalid_argument("The supplied number of workers will not entirely fill a cubic geometry");
+            }
+            nParticlesPerLoad = 0.6 * std::pow(_edgeLengthOverInteractionDistance, 3)
+                                / (4./3. * readdy::util::numeric::pi<scalar>() * std::pow(assumedRadius/halo,3));
+            nParticles = nLoad * nParticlesPerLoad;
+            nParticlesPerWorker = static_cast<scalar>(nParticles) / static_cast<scalar>(nWorkers);
+            scalar boxLength = _edgeLengthOverInteractionDistance * halo;
+            scalar factor = std::cbrt(static_cast<scalar>(nLoad));
+            box = {factor * boxLength, factor * boxLength, factor * boxLength};
+            readdy::log::info("rank={}, cube mode, nParticlesPerLoad {}, nParticles {}", rank, nParticlesPerLoad, nParticles);
         } else {
             throw std::invalid_argument("only knows stick scaling mode currently");
         }
@@ -140,14 +155,14 @@ public:
 
         readdy::kernel::mpi::MPIKernel kernel(ctx);
 
-        assert(nWorkers == kernel.domain().nWorkerRanks());
+        assert(nLoad == kernel.domain().worldSize());
 
         auto idA = kernel.context().particleTypes().idOf("A");
         std::vector<readdy::model::Particle> particles;
         for (std::size_t i = 0; i < nParticles; ++i) {
             auto x = readdy::model::rnd::uniform_real() * ctx.boxSize()[0] - 0.5 * ctx.boxSize()[0];
-            auto y = readdy::model::rnd::uniform_real() * 5. - 2.5;
-            auto z = readdy::model::rnd::uniform_real() * 5. - 2.5;
+            auto y = readdy::model::rnd::uniform_real() * ctx.boxSize()[1] - 0.5 * ctx.boxSize()[1];
+            auto z = readdy::model::rnd::uniform_real() * ctx.boxSize()[2] - 0.5 * ctx.boxSize()[2];
             particles.emplace_back(x, y, z, idA);
         }
 
@@ -187,6 +202,15 @@ public:
         result["context"] = ctx.describe();
         result["domain"] = kernel.domain().describe();
         result["performance"] = Json::parse(readdy::util::Timer::perfToJsonString());
+        result["nLoad"] = nLoad;
+        result["nProcessors"] = nProcessors;
+        result["nParticles"] = nParticles;
+        result["nParticlesPerProcessor"] = static_cast<scalar>(nParticles) / static_cast<scalar>(nProcessors);
+        result["nParticlesPerLoad"] = nParticlesPerLoad;
+        result["nParticlesPerWorkers"] = nParticlesPerWorker;
+        result["kernelName"] = "MPI";
+        result["mode"] = fmt::format("{}", _mode);
+        result["edgeLengthOverInteractionDistance"] = _edgeLengthOverInteractionDistance;
         readdy::util::Timer::clear();
         return result;
     }

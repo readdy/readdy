@@ -165,12 +165,10 @@ void synchronizeAndCheck(readdy::kernel::mpi::MPIKernel &kernel,
     /// WHEN("States are synchronized")
     kernel.getMPIKernelStateModel().synchronizeWithNeighbors();
     /// THEN("The state is correctly set up")
-    readdy::log::critical("rank={}, first check", kernel.domain().rank());
     check(kernel, expectedPODs, expectedPODPairs);
     /// AND_WHEN("States are synchronized again")
     kernel.getMPIKernelStateModel().synchronizeWithNeighbors();
     /// THEN("We see the same result")
-    readdy::log::critical("rank={}, second check", kernel.domain().rank());
     check(kernel, expectedPODs, expectedPODPairs);
     /// AND_WHEN("Particles are gathered again")
     auto gatheredParticles = kernel.getMPIKernelStateModel().gatherParticles();

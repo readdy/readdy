@@ -46,6 +46,16 @@ std::string getOption(int argc, char **argv, const std::string &option, const st
     return defaultValue;
 }
 
+std::string randomString(std::size_t n = 6) {
+    assert(n > 0);
+    assert(n < 32);
+    std::string result("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
+    std::random_device rd;
+    std::mt19937 generator(rd());
+    std::shuffle(result.begin(), result.end(), generator);
+    return result.substr(0, n);
+}
+
 class Scenario {
     std::string _description{};
     std::string _name{};
@@ -118,6 +128,125 @@ public:
         result["kernelName"] = _kernelName;
         result["readdy_default_n_threads"] = readdy_default_n_threads();
 
+        return result;
+    }
+};
+
+/** Scale the box based on given load in different ways */
+enum WeakScalingGeometry {
+    stick, // scale box only in x. Allows for all integer load values
+    slab, // scale box in x and y. Allows for load values = i**2 with i in [1,infty]
+    cube // scale box in x, y and z. Allows for load values = i**3  with i in [1,infty]
+};
+
+inline std::ostream &operator<<(std::ostream& os, WeakScalingGeometry mode) {
+    switch(mode) {
+        case stick: os << "stick"; break;
+        case slab: os << "slab"; break;
+        case cube: os << "cube"; break;
+    }
+    return os;
+}
+
+class DiffusionPairPotential : public Scenario {
+    std::string _kernelName;
+    WeakScalingGeometry _mode;
+    // scales the amount of particles as well as the volume
+    std::size_t _nLoad;
+    // hyperparameter determining the volume and thus the final number of particles
+    // describes the ratio of box length and interaction distance
+    readdy::scalar _edgeLengthOverInteractionDistance;
+public:
+    DiffusionPairPotential(std::string kernelName, WeakScalingGeometry mode, std::size_t nLoad = 1, readdy::scalar edgeLengthOverInteractionDistance = 5.) : Scenario(
+        "DiffusionPairPotential"+kernelName,
+        "Diffusion of particles with constant density, scale box according to mode"),
+        _mode(mode), _kernelName(kernelName), _nLoad(nLoad), _edgeLengthOverInteractionDistance(edgeLengthOverInteractionDistance) {
+        assert(nLoad > 0);
+        assert(edgeLengthOverInteractionDistance > 0.);
+    }
+
+    Json run() override {
+        std::size_t nParticles;
+        std::size_t nParticlesPerLoad;
+        std::array<readdy::scalar, 3> box{};
+        readdy::scalar interactionDistance = 2.;
+        // radius that is used to calculate the volume occupation, if the particles were hard-spheres
+        readdy::scalar assumedRadius = interactionDistance / 2.;
+        if (_mode == stick) {
+            // will lead to 60% volume occupation when one particle has an associated radius of halo/2.
+            nParticlesPerLoad = 0.6 * std::pow(_edgeLengthOverInteractionDistance, 3)
+                                            / (4./3. * readdy::util::numeric::pi<scalar>() * std::pow(assumedRadius / interactionDistance, 3));
+            nParticles = _nLoad * nParticlesPerLoad;
+            readdy::scalar boxLength = _edgeLengthOverInteractionDistance * interactionDistance;
+            box = {_nLoad * boxLength, boxLength, boxLength};
+            readdy::log::info("nParticlesPerLoad {}, nParticles {}", nParticlesPerLoad, nParticles);
+        } else {
+            throw std::invalid_argument("only knows stick scaling mode currently");
+        }
+
+        readdy::model::Context ctx;
+        ctx.boxSize() = box;
+        ctx.particleTypes().add("A", 1.);
+        ctx.potentials().addHarmonicRepulsion("A", "A", 10., interactionDistance);
+        // default configuration ctx.kernelConfiguration() = conf.get<readdy::conf::Configuration>();
+
+        auto kernel = readdy::plugin::KernelProvider::getInstance().create(_kernelName);
+        kernel->context() = ctx;
+
+        auto idA = kernel->context().particleTypes().idOf("A");
+        std::vector<readdy::model::Particle> particles;
+        for (std::size_t i = 0; i < nParticles; ++i) {
+            auto x = readdy::model::rnd::uniform_real() * ctx.boxSize()[0] - 0.5 * ctx.boxSize()[0];
+            auto y = readdy::model::rnd::uniform_real() * ctx.boxSize()[1] - 0.5 * ctx.boxSize()[1];
+            auto z = readdy::model::rnd::uniform_real() * ctx.boxSize()[2] - 0.5 * ctx.boxSize()[2];
+            particles.emplace_back(x, y, z, idA);
+        }
+
+        auto addParticles = kernel->actions().addParticles(particles);
+        {
+            readdy::util::Timer t("addParticles");
+            addParticles->perform();
+        }
+
+        readdy::scalar timeStep = 0.01;
+        std::size_t nSteps = 1000;
+        auto integrator = kernel->actions().eulerBDIntegrator(timeStep);
+        auto forces = kernel->actions().calculateForces();
+        auto createNL = kernel->actions().createNeighborList(kernel->context().calculateMaxCutoff());
+        auto neighborList = kernel->actions().updateNeighborList();
+
+        createNL->perform();
+        neighborList->perform();
+        forces->perform();
+        for (size_t t = 1; t < nSteps + 1; t++) {
+            readdy::util::Timer tStep("complete timestep");
+            {
+                readdy::util::Timer t1("integrator");
+                integrator->perform();
+            }
+            {
+                readdy::util::Timer t2("neighborList");
+                neighborList->perform();
+            }
+            {
+                readdy::util::Timer t3("forces");
+                forces->perform();
+            }
+        }
+
+        std::size_t nProcessors = _kernelName == "SingleCPU" ? 1 : readdy_default_n_threads();
+        Json result;
+        result["context"] = kernel->context().describe();
+        result["performance"] = Json::parse(readdy::util::Timer::perfToJsonString());
+        result["nLoad"] = _nLoad;
+        result["nParticles"] = nParticles;
+        result["nParticlesPerLoad"] = nParticlesPerLoad;
+        result["nProcessors"] = nProcessors;
+        result["nParticlesPerProcessor"] = static_cast<scalar>(nParticles) / static_cast<scalar>(nProcessors);
+        result["kernelName"] = _kernelName;
+        result["mode"] = fmt::format("{}", _mode);
+        result["edgeLengthOverInteractionDistance"] = _edgeLengthOverInteractionDistance;
+        readdy::util::Timer::clear();
         return result;
     }
 };

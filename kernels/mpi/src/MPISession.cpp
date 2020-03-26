@@ -20,7 +20,7 @@ MPISession::MPISession(int &argc, char **argv) {
     _processorName = std::string(processorName);
 
     readdy::log::info("pid {} Rank {} / {} is on {}", static_cast<long>(getpid()), _rank, _worldSize, _processorName);
-    waitForDebugger();
+    //waitForDebugger();
 }
 
 MPISession::~MPISession() {
