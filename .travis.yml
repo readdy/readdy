@@ -50,9 +50,9 @@ script:
 - conda install conda-verify
 - conda build -c defaults -c conda-forge tools/conda-recipe --python=$CONDA_PY
 
-after_success:
-- tools/ci/travis/upload_conda_package.sh
-- tools/ci/travis/make_docs.sh
+#after_success:
+#- tools/ci/travis/upload_conda_package.sh
+#- tools/ci/travis/make_docs.sh
 
 notifications:
   email: false
