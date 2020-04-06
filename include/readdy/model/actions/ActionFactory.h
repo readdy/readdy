@@ -127,6 +127,8 @@ public:
 
     virtual std::unique_ptr<MakeCheckpoint> makeCheckpoint(std::string base, std::size_t maxNSaves) const = 0;
 
+    virtual std::unique_ptr<InitializeKernel> initializeKernel() const = 0;
+
 };
 
 }

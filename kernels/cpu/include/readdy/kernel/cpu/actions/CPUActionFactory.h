@@ -88,6 +88,8 @@ public:
     std::unique_ptr<model::actions::EvaluateObservables> evaluateObservables() const override;
 
     std::unique_ptr<model::actions::MakeCheckpoint> makeCheckpoint(std::string base, std::size_t maxNSaves) const override;
+
+    std::unique_ptr<model::actions::InitializeKernel> initializeKernel() const override;
 };
 
 }

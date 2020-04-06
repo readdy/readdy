@@ -134,4 +134,8 @@ std::unique_ptr<readdy::model::actions::MakeCheckpoint> SCPUActionFactory::makeC
     return {std::make_unique<SCPUMakeCheckpoint>(kernel, base, maxNSaves)};
 }
 
+std::unique_ptr<readdy::model::actions::InitializeKernel> SCPUActionFactory::initializeKernel() const {
+    return {std::make_unique<SCPUInitializeKernel>(kernel)};
+}
+
 }

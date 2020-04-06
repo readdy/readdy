@@ -127,6 +127,10 @@ CPUActionFactory::makeCheckpoint(std::string base, std::size_t maxNSaves) const 
     return {std::make_unique<CPUMakeCheckpoint>(kernel, base, maxNSaves)};
 }
 
+std::unique_ptr<model::actions::InitializeKernel> CPUActionFactory::initializeKernel() const {
+    return {std::make_unique<CPUInitializeKernel>(kernel)};
+}
+
 }
 }
 }

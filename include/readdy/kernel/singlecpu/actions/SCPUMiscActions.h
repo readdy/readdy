@@ -73,4 +73,15 @@ private:
     readdy::api::Saver saver;
 };
 
+class SCPUInitializeKernel : public readdy::model::actions::InitializeKernel {
+public:
+    SCPUInitializeKernel(SCPUKernel *kernel) : kernel(kernel) {}
+
+    void perform() override {
+        kernel->initialize();
+    }
+private:
+    SCPUKernel *kernel;
+};
+
 }

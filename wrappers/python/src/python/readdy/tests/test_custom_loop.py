@@ -91,6 +91,7 @@ class TestCustomLoop(unittest.TestCase):
             os.makedirs(base_path, exist_ok=True)
             max_n_saves = 2
 
+            init = simulation._actions.initialize_kernel()
             diff = simulation._actions.integrator_euler_brownian_dynamics(dt)
             calc_forces = simulation._actions.calculate_forces()
             create_nl = simulation._actions.create_neighbor_list(rds.calculate_max_cutoff())
@@ -99,6 +100,7 @@ class TestCustomLoop(unittest.TestCase):
             obs = simulation._actions.evaluate_observables()
             check = simulation._actions.make_checkpoint(base_path, max_n_saves)
 
+            init()
             create_nl()
             calc_forces()
             update_nl()
@@ -165,18 +167,21 @@ class TestCustomLoop(unittest.TestCase):
         topology.graph.add_edge(2, 3)
 
         conf = BreakConfig()
-        idA = system._context.particle_types.id_of("A")
-        conf.add_breakable_pair(idA, idA, 1.0, 1.0)
+        id_a = system._context.particle_types.id_of("A")
+        conf.add_breakable_pair(id_a, id_a, 1.0, 1.0)
 
         def loop():
             nonlocal simulation
             nonlocal conf
-            dt = 0.0002
+            dt = 0.0005
             n_steps = 100000
+            # init is needed here to configure topologies
+            init = simulation._actions.initialize_kernel()
             diff = simulation._actions.integrator_euler_brownian_dynamics(dt)
             forces = simulation._actions.calculate_forces()
             break_bonds = simulation._actions.break_bonds(dt, conf)
 
+            init()
             forces()
             for t in tqdm(range(1, n_steps + 1)):
                 diff()
@@ -186,8 +191,6 @@ class TestCustomLoop(unittest.TestCase):
         simulation._run_custom_loop(loop)
 
         tops_after = simulation.current_topologies
-        print("-------------------")
-        print(tops_after)
         if pull:
             self.assertTrue(len(tops_after) == 2)
         else:

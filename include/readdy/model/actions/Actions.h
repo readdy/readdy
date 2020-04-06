@@ -357,6 +357,11 @@ public:
     ~EvaluateCompartments() override = default;
 };
 
+class InitializeKernel : public Action {
+public:
+    InitializeKernel() : Action() {}
+};
+
 /* Not an Action, because perform needs TimeStep t. */
 class EvaluateObservables {
 public:

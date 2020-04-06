@@ -160,7 +160,7 @@ void exportApi(py::module &api) {
             }, "n_steps"_a, "time_step"_a);
     exportObservables(api, simulation);
 
-    // actions and evaluate observables, i.e. things needed to build a custom simulation loop
+    // actions and evaluate observables, i.e. things needed to build a custom simulation loop [experimental]
     {
         using Action = readdy::model::actions::Action;
         using EvalObs = readdy::model::actions::EvaluateObservables;
@@ -175,6 +175,7 @@ void exportApi(py::module &api) {
                 .def("add_breakable_pair", &readdy::model::actions::top::BreakConfig::addBreakablePair);
 
         simulation
+        .def("create_action_initialize_kernel", [](sim &self) -> std::unique_ptr<Action> { return self.actions().initializeKernel(); })
         .def("create_action_euler_bd", [](sim &self, readdy::scalar timeStep) -> std::unique_ptr<Action> { return self.actions().eulerBDIntegrator(timeStep); })
         .def("create_action_calculate_forces", [](sim &self) -> std::unique_ptr<Action> { return self.actions().calculateForces();})
         .def("create_action_create_neighbor_list", [](sim &self, readdy::scalar interactionDistance) -> std::unique_ptr<Action> { return self.actions().createNeighborList(interactionDistance);})

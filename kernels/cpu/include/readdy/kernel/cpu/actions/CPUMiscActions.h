@@ -72,4 +72,15 @@ private:
     readdy::api::Saver saver;
 };
 
+class CPUInitializeKernel : public readdy::model::actions::InitializeKernel {
+public:
+    CPUInitializeKernel(CPUKernel *kernel) : kernel(kernel) {}
+
+    void perform() override {
+        kernel->initialize();
+    }
+private:
+    CPUKernel *kernel;
+};
+
 }
