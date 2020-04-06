@@ -128,6 +128,14 @@ void exportTopologies(py::module &m) {
                 self.get().changeParticlePosition(v.get(), pos);
                 return self;
             }, py::return_value_policy::reference_internal)
+            .def("change_particle_position", [](PyRecipe &self, std::size_t v, readdy::Vec3 pos) {
+                if (v >= self->topology().graph().nVertices()) {
+                    throw std::invalid_argument("vertex index out of bounds (" + std::to_string(v) + " >= "
+                                                + std::to_string(self->topology().graph().nVertices()) + ")");
+                }
+                auto pix = (self->topology().graph().vertices().begin() + v).persistent_index();
+                self.get().changeParticlePosition(pix, pos);
+            })
             .def("add_edge", [](PyRecipe &self, std::size_t v1, std::size_t v2) {
                 auto pix1 = (self.get().topology().graph().begin() + v1).persistent_index();
                 auto pix2 = (self.get().topology().graph().begin() + v2).persistent_index();
@@ -163,6 +171,7 @@ void exportTopologies(py::module &m) {
                 return self;
             })
             .def("remove_edge", [](PyRecipe &self, std::size_t v1, std::size_t v2) -> PyRecipe& {
+                // todo check for valid range of v1, v2?
                 auto ix1 = (self.get().topology().graph().begin() + v1).persistent_index();
                 auto ix2 = (self.get().topology().graph().begin() + v2).persistent_index();
                 self.get().removeEdge(ix1, ix2);

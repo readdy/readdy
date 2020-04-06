@@ -421,7 +421,7 @@ class TestTopLevelAPIObservables(ReaDDyTestCase):
                                                   rate_function=intermediate_rate_function)
 
         def unstable_rate_function(_):
-            return .1
+            return 1000.
 
         def unstable_reaction_function(topology):
             recipe = readdy.StructuralReactionRecipe(topology)

@@ -192,7 +192,7 @@ class GeneralInformation(object):
         with _h5py.File(filename, "r") as f:
             if not dsname in f:
                 raise ValueError("General information was not recorded in the file!")
-            j = json.loads(f[dsname].value)
+            j = json.loads(f[dsname][()])
             self._kbt = j['kbt']
             self._box_volume = j['box_volume']
             self._box_size = _np.array(j['box_size'])

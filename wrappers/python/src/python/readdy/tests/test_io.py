@@ -88,7 +88,7 @@ class TestSchemeApi(ReaDDyTestCase):
                 np.testing.assert_equal(item.t, idx)
                 np.testing.assert_equal(item.position, np.array([.0, .0, .0]))
 
-        with h5py.File(traj_fname) as f:
+        with h5py.File(traj_fname, 'r') as f:
             np.testing.assert_equal("A", f["readdy/config/particle_types"][0]["name"])
 
     def test_write_flat_trajectory(self):
@@ -183,8 +183,8 @@ class TestSchemeApi(ReaDDyTestCase):
 
         with h5py.File(fname, "r") as f2:
             np.testing.assert_equal(f2.get("/my_super_group")["doubleds"], data)
-            np.testing.assert_equal(f2.get("/my_super_group").get("my_super_subgroup")["stringds"].value.decode(), u"jap")
-            np.testing.assert_equal(f2.get("/my_super_group/my_super_subgroup")["stringds"].value.decode(), u"jap")
+            np.testing.assert_equal(f2.get("/my_super_group").get("my_super_subgroup")["stringds"][()].decode(), u"jap")
+            np.testing.assert_equal(f2.get("/my_super_group/my_super_subgroup")["stringds"][()].decode(), u"jap")
 
 
 if __name__ == '__main__':
