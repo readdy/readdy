@@ -137,6 +137,11 @@ void exportTopologies(py::module &m) {
                 self.get().changeParticlePosition(pix, pos);
             })
             .def("add_edge", [](PyRecipe &self, std::size_t v1, std::size_t v2) {
+                if (v1 >= self->topology().graph().nVertices() || v2 >= self->topology().graph().nVertices()) {
+                    throw std::invalid_argument(
+                            fmt::format("At least one vertex index ({}, {}) out of bounds nVertices = {}",
+                                        v1, v2, self->topology().graph().nVertices()));
+                }
                 auto pix1 = (self.get().topology().graph().begin() + v1).persistent_index();
                 auto pix2 = (self.get().topology().graph().begin() + v2).persistent_index();
                 self.get().addEdge(pix1, pix2);
@@ -171,10 +176,14 @@ void exportTopologies(py::module &m) {
                 return self;
             })
             .def("remove_edge", [](PyRecipe &self, std::size_t v1, std::size_t v2) -> PyRecipe& {
-                // todo check for valid range of v1, v2?
-                auto ix1 = (self.get().topology().graph().begin() + v1).persistent_index();
-                auto ix2 = (self.get().topology().graph().begin() + v2).persistent_index();
-                self.get().removeEdge(ix1, ix2);
+                if (v1 >= self->topology().graph().nVertices() || v2 >= self->topology().graph().nVertices()) {
+                    throw std::invalid_argument(
+                            fmt::format("At least one vertex index ({}, {}) out of bounds nVertices = {}",
+                                    v1, v2, self->topology().graph().nVertices()));
+                }
+                auto pix1 = (self.get().topology().graph().begin() + v1).persistent_index();
+                auto pix2 = (self.get().topology().graph().begin() + v2).persistent_index();
+                self.get().removeEdge(pix1, pix2);
                 return self;
             }, R"topdoc(
                 Removes an edge between given vertices. Depending on the configuration of the topology reaction, this
@@ -198,9 +207,13 @@ void exportTopologies(py::module &m) {
                 :param edge: the edge
                 :return: a reference to this recipe to enable a fluent interface
             )topdoc", "edge"_a, py::return_value_policy::reference_internal)
-            .def("separate_vertex", [](PyRecipe &self, const std::size_t index) {
-                auto it = self.get().topology().graph().vertices().begin() + index;
-                self.get().separateVertex(it.persistent_index());
+            .def("separate_vertex", [](PyRecipe &self, const std::size_t v) {
+                if (v >= self->topology().graph().nVertices()) {
+                    throw std::invalid_argument("vertex index out of bounds (" + std::to_string(v) + " >= "
+                                                + std::to_string(self->topology().graph().nVertices()) + ")");
+                }
+                auto pix = (self.get().topology().graph().vertices().begin() + v).persistent_index();
+                self.get().separateVertex(pix);
                 return self;
             }, R"topdoc(
                 Removes all edges from the topology's graph that contain the vertex corresponding to the provided index.

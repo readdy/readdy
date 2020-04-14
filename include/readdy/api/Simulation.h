@@ -58,7 +58,7 @@ namespace readdy {
  * This is where the system is set up and run for a certain number of
  * time steps.
  * Things like temperature, boxsize, reactions and potentials belong to the
- * context and are given to the kernel when run() is called.
+ * Context.
  */
 class Simulation {
 public:
