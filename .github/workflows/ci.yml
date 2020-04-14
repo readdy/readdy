@@ -10,7 +10,7 @@ jobs:
       fail-fast: false
       matrix:
         os: ['ubuntu-latest', 'macos-latest']#, 'windows-latest']
-        python-version: ['3.6', '3.7']#, '3.8']
+        python-version: ['3.6', '3.7', '3.8'] # used to build the conda package (not for miniconda installation)
     steps:
       - uses: actions/checkout@v2
       - run: |
@@ -19,7 +19,7 @@ jobs:
       - uses: goanpeca/setup-miniconda@v1
         with:
           auto-update-conda: true
-          python-version: ${{ matrix.python-version }}
+          python-version: 3.7
       - name: prepare conda
         shell: bash -l {0}
         run: |
@@ -30,7 +30,7 @@ jobs:
           conda install conda-verify
       - name: build readdy conda package
         shell: bash -l {0}
-        run: conda build -c defaults -c conda-forge tools/conda-recipe
+        run: conda build -c defaults -c conda-forge tools/conda-recipe --python=${{ matrix.python-version }}
       - name: upload conda package
         shell: bash -l {0}
         # only upload conda package when origin and on pushes
