@@ -2,13 +2,18 @@
 
 unset MACOSX_DEPLOYMENT_TARGET
 
+echo "conda recipe build.sh ..."
+echo "GIT_DESCRIBE_NUMBER ${GIT_DESCRIBE_NUMBER}"
+echo "PY_VER ${PY_VER}"
+echo "GIT_BUILD_STR ${GIT_BUILD_STR}"
+echo "GIT_STUB ${GIT_STUB}"
+
 #########################################################
 #                                                       #
 # cmake configuration flags                             #
 #                                                       #
 #########################################################
 
-echo ${PREFIX}
 # install prefix
 CMAKE_FLAGS="-DCMAKE_INSTALL_PREFIX=${PREFIX}"
 # prefix path

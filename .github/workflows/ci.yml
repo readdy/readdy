@@ -15,7 +15,9 @@ jobs:
       - uses: actions/checkout@v2
       - run: |
           git fetch --prune --unshallow
-      - run: echo ${{github.ref}}
+      - run: echo GITHUB_REF ${{github.ref}}
+      - run: echo "$(git describe --always)"
+      - run: echo "$(git tag)"
       - uses: goanpeca/setup-miniconda@v1
         with:
           auto-update-conda: true
