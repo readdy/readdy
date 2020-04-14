@@ -352,9 +352,34 @@ protected:
  */
 class EvaluateCompartments : public Action {
 public:
-    explicit EvaluateCompartments() : Action() {}
+    EvaluateCompartments() : Action() {}
 
     ~EvaluateCompartments() override = default;
+};
+
+class InitializeKernel : public Action {
+public:
+    InitializeKernel() : Action() {}
+};
+
+/* Not an Action, because perform needs TimeStep t
+ * todo: should be unified with the Action interface.
+ * todo: this should be independent of a time step, which would require refactoring observables and loop/simulation
+ * todo: e.g. it should just fire when the stateModel.time() has crossed a certain predefined milestone (e.g. linear strides)
+ * */
+class EvaluateObservables {
+public:
+    virtual void perform(TimeStep t) = 0;
+    virtual ~EvaluateObservables() = default;
+};
+
+/* Not an Action, because perform needs TimeStep t.
+ * todo This should just depend on a generic evaluation step, or stateModel.time() with predefined milestones
+ * */
+class MakeCheckpoint {
+public:
+    virtual void perform(TimeStep t) = 0;
+    virtual ~MakeCheckpoint() = default;
 };
 
 template<typename T>

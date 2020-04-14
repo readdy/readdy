@@ -44,9 +44,8 @@
 
 #include <readdy/model/actions/ActionFactory.h>
 
-namespace readdy {
-namespace kernel {
-namespace cpu {
+namespace readdy::kernel::cpu {
+
 class CPUKernel;
 namespace actions {
 class CPUActionFactory : public readdy::model::actions::ActionFactory {
@@ -85,9 +84,13 @@ public:
 
     std::unique_ptr<model::actions::top::BreakBonds>
     breakBonds(scalar timeStep, readdy::model::actions::top::BreakConfig config) const override;
+
+    std::unique_ptr<model::actions::EvaluateObservables> evaluateObservables() const override;
+
+    std::unique_ptr<model::actions::MakeCheckpoint> makeCheckpoint(std::string base, std::size_t maxNSaves) const override;
+
+    std::unique_ptr<model::actions::InitializeKernel> initializeKernel() const override;
 };
 
-}
-}
 }
 }

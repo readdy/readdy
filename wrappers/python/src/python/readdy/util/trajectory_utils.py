@@ -53,7 +53,7 @@ def is_readdy_trajectory_file(h5file):
     :param h5file: the filename
     :return: True if is a readdy trajectory file, otherwise False
     """
-    with h5.File(h5file) as f:
+    with h5.File(h5file, 'r') as f:
         return "readdy" in f.keys() and "trajectory" in f["readdy"].keys()
 
 
@@ -138,7 +138,7 @@ class TrajectoryReader(object):
     def __init__(self, h5file, name=""):
         assert is_readdy_trajectory_file(h5file), "the provided file was no readdy trajectory file!"
         self._name = name
-        with h5.File(h5file) as f:
+        with h5.File(h5file, 'r') as f:
             ds = f[self.data_set_path(name)]
             self.n_frames = len(ds)
             self._flat = "limits" in f[self.group_path(name)].keys()
@@ -146,11 +146,11 @@ class TrajectoryReader(object):
 
     def __getitem__(self, item):
         if not self._flat:
-            with h5.File(self._h5file) as f:
+            with h5.File(self._h5file, 'r') as f:
                 return to_trajectory_entries(f[self.data_set_path(self._name)][item],
                                              f[self.time_information_path(self._name)][item])
         else:
-            with h5.File(self._h5file) as f:
+            with h5.File(self._h5file, 'r') as f:
                 return to_trajectory_entries_flat(f[self.data_set_path(self._name)],
                                                   f[self.time_information_path(self._name)],
                                                   f[self.limits_path(self._name)],

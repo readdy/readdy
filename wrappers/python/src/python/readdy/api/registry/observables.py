@@ -58,6 +58,7 @@ class Observables(object):
     def __init__(self, simulation):
         self._simulation = simulation
         self._sim = self._simulation._simulation
+        # fixme why keep this in py side, the enable_write_to_file logic can be performed by cpp Simulation
         self._observable_handles = []
 
     def rdf(self, stride, bin_borders, types_count_from, types_count_to, particle_to_density,

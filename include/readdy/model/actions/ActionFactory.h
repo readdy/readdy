@@ -34,8 +34,7 @@
 
 
 /**
- * This file contains the declaration of the action factory. Internally, the factory is simply a map of
- * string -> std::function<Action*()>, which then can get called.
+ * This file contains the declaration of the action factory.
  *
  * @file ActionFactory.h
  * @brief Declaration of the action factory.
@@ -123,6 +122,12 @@ public:
     virtual std::unique_ptr<top::EvaluateTopologyReactions> evaluateTopologyReactions(scalar timeStep) const = 0;
 
     virtual std::unique_ptr<top::BreakBonds> breakBonds(scalar timeStep, top::BreakConfig config) const = 0;
+
+    virtual std::unique_ptr<EvaluateObservables> evaluateObservables() const = 0;
+
+    virtual std::unique_ptr<MakeCheckpoint> makeCheckpoint(std::string base, std::size_t maxNSaves) const = 0;
+
+    virtual std::unique_ptr<InitializeKernel> initializeKernel() const = 0;
 
 };
 

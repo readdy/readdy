@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2018 Computational Molecular Biology Group,          *
+ * Copyright © 2020 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * Redistribution and use in source and binary forms, with or       *
@@ -34,48 +34,54 @@
 
 
 /**
- * This file contains the declaration of the base class of all actions. They
- * have a name and potentially a templatized ActionName struct.
+ * << detailed description >>
  *
- * @file Action.h
- * @brief Declaration of the action base class.
- * @author clonker
+ * @file SCPUMiscActions.h
+ * @brief << brief description >>
  * @author chrisfroe
- * @date 08.04.16
+ * @date 17.03.20
  */
 
 #pragma once
 
-#include <memory>
-#include <readdy/common/common.h>
+#include <readdy/model/actions/Actions.h>
+#include <readdy/kernel/singlecpu/SCPUKernel.h>
+#include <readdy/api/Saver.h>
 
-#if READDY_OSX
-#include <string>
-#endif
-
-namespace readdy::model::actions {
-
-class Action {
+namespace readdy::kernel::scpu::actions {
+class SCPUEvaluateObservables : public readdy::model::actions::EvaluateObservables {
 public:
+    explicit SCPUEvaluateObservables(SCPUKernel *kernel) : kernel(kernel) {}
 
-    Action() = default;
+    void perform(TimeStep t) override {
+        kernel->evaluateObservables(t);
+    }
 
-    virtual ~Action() = default;
-
-    virtual void perform() = 0;
-
+private:
+    SCPUKernel *kernel;
 };
 
-class TimeStepDependentAction : public Action {
+class SCPUMakeCheckpoint : public readdy::model::actions::MakeCheckpoint {
 public:
-    explicit TimeStepDependentAction(scalar timeStep) : _timeStep(timeStep) {}
+    SCPUMakeCheckpoint(SCPUKernel *kernel, const std::string& base, std::size_t maxNSaves) : kernel(kernel), saver(base, maxNSaves) {}
 
-    ~TimeStepDependentAction() override = default;
+    void perform(TimeStep t) override {
+        saver.makeCheckpoint(kernel, t);
+    }
+private:
+    SCPUKernel *kernel;
+    readdy::api::Saver saver;
+};
 
-    [[nodiscard]] scalar timeStep() const { return _timeStep; }
+class SCPUInitializeKernel : public readdy::model::actions::InitializeKernel {
+public:
+    SCPUInitializeKernel(SCPUKernel *kernel) : kernel(kernel) {}
 
-protected:
-    scalar _timeStep;
+    void perform() override {
+        kernel->initialize();
+    }
+private:
+    SCPUKernel *kernel;
 };
 
 }

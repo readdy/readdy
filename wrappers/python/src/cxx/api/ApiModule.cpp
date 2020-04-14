@@ -45,6 +45,7 @@
 #include "PyTopology.h"
 
 namespace py = pybind11;
+namespace rma = readdy::model::actions;
 
 using rvp = py::return_value_policy;
 using sim = readdy::Simulation;
@@ -55,7 +56,7 @@ using ctx = readdy::model::Context;
 using kern = readdy::model::Kernel;
 
 void exportTopologies(py::module &);
-void exportLoopApi(py::module &module);
+void exportLoopApi(py::module &);
 void exportKernelContext(py::module &);
 
 std::string getSelectedKernelType(sim &self) { /* discard const reference */ return self.selectedKernelType(); }
@@ -158,6 +159,42 @@ void exportApi(py::module &api) {
                 self.run(steps, timeStep);
             }, "n_steps"_a, "time_step"_a);
     exportObservables(api, simulation);
+
+    // actions and evaluate observables, i.e. things needed to build a custom simulation loop [experimental]
+    {
+        using Action = readdy::model::actions::Action;
+        using EvalObs = readdy::model::actions::EvaluateObservables;
+        using MkCkpt = readdy::model::actions::MakeCheckpoint;
+
+        auto actionsModule = api.def_submodule("actions");
+        py::class_<Action>(actionsModule, "Action")
+                .def("__call__", &Action::perform);
+
+        py::class_<readdy::model::actions::top::BreakConfig>(actionsModule, "BreakConfig")
+                .def(py::init<>())
+                .def("add_breakable_pair", &readdy::model::actions::top::BreakConfig::addBreakablePair);
+
+        simulation
+        .def("create_action_initialize_kernel", [](sim &self) -> std::unique_ptr<Action> { return self.actions().initializeKernel(); })
+        .def("create_action_euler_bd", [](sim &self, readdy::scalar timeStep) -> std::unique_ptr<Action> { return self.actions().eulerBDIntegrator(timeStep); })
+        .def("create_action_calculate_forces", [](sim &self) -> std::unique_ptr<Action> { return self.actions().calculateForces();})
+        .def("create_action_create_neighbor_list", [](sim &self, readdy::scalar interactionDistance) -> std::unique_ptr<Action> { return self.actions().createNeighborList(interactionDistance);})
+        .def("create_action_update_neighbor_list", [](sim &self) -> std::unique_ptr<Action> { return self.actions().updateNeighborList();})
+        .def("create_action_clear_neighbor_list", [](sim &self) -> std::unique_ptr<Action> { return self.actions().clearNeighborList();})
+        .def("create_action_uncontrolled_approximation", [](sim &self, readdy::scalar timeStep) -> std::unique_ptr<Action> { return self.actions().uncontrolledApproximation(timeStep);})
+        .def("create_action_gillespie", [](sim &self, readdy::scalar timeStep) -> std::unique_ptr<Action> { return self.actions().gillespie(timeStep);})
+        .def("create_action_detailed_balance", [](sim &self, readdy::scalar timeStep) -> std::unique_ptr<Action> { return self.actions().detailedBalance(timeStep);})
+        .def("create_action_evaluate_topology_reactions", [](sim &self, readdy::scalar timeStep) -> std::unique_ptr<Action> { return self.actions().evaluateTopologyReactions(timeStep);})
+        .def("create_action_break_bonds", [](sim &self, readdy::scalar timeStep, const readdy::model::actions::top::BreakConfig &breakConfig) -> std::unique_ptr<Action> { return self.actions().breakBonds(timeStep, breakConfig);});
+
+        // strictly not an action
+        py::class_<EvalObs>(actionsModule, "EvaluateObservables").def("__call__", &EvalObs::perform);
+        simulation.def("create_action_evaluate_observables", [](sim &self) -> std::unique_ptr<EvalObs> { return self.actions().evaluateObservables();});
+
+        // strictly not an action
+        py::class_<MkCkpt>(actionsModule, "MakeCheckpoint").def("__call__", &MkCkpt::perform);
+        simulation.def("create_action_make_checkpoint", [](sim &self, const std::string &basePath, std::size_t maxNSaves) -> std::unique_ptr<MkCkpt> { return self.actions().makeCheckpoint(basePath, maxNSaves); });
+    }
 
     struct nodelete {
         void operator()(kp* ptr) const {}

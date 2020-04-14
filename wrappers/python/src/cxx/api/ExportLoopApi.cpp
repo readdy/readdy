@@ -115,7 +115,6 @@ void exportLoopApi(pybind11::module &module) {
                 self.setSaver(saver);
                 self.setCheckpointingStride(stride);
             })
-            .def("calculate_max_cutoff", &Loop::calculateMaxCutoff)
             .def("describe", &Loop::describe)
             .def("validate", &Loop::validate);
 }
