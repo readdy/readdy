@@ -2,7 +2,7 @@
  * Scenarios to measure performance (profiling, scaling),
  * and optionally observables to ensure that the physics is correct.
  *
- * todo weak scaling Scenarios (with constant density and adaptive volume based on number of workers):
+ * Scenarios to ensure correct physics could be e.g.:
  * - MSD -> free diffusion
  * - Stationary distribution in an external potential -> diffusion in double well along one dimension
  * - Thermodynamics of LJ suspension -> diffusion subject to pair-interactions
@@ -97,7 +97,7 @@ public:
 
 class MPIDiffusionPairPotential : public Scenario {
     WeakScalingGeometry _mode;
-    // hyperparameter determining the volume and thus the final number of particles
+    // parameter determining the volume and thus the final number of particles
     // describes the ratio of box length and interaction distance
     readdy::scalar _edgeLengthOverInteractionDistance;
 public:
@@ -111,7 +111,7 @@ public:
         MPI_Comm_rank(MPI_COMM_WORLD, &rank);
         std::size_t nLoad = worldSize; // in weak scaling the load and processors must scale linearly
         std::size_t nProcessors = worldSize;
-        std::size_t nWorkers = worldSize - 1; // although the
+        std::size_t nWorkers = worldSize - 1;
         std::size_t nParticles;
         std::size_t nParticlesPerLoad;
         scalar nParticlesPerWorker;
@@ -144,14 +144,13 @@ public:
             box = {factor * boxLength, factor * boxLength, factor * boxLength};
             readdy::log::info("rank={}, cube mode, nParticlesPerLoad {}, nParticles {}", rank, nParticlesPerLoad, nParticles);
         } else {
-            throw std::invalid_argument("only knows stick scaling mode currently");
+            throw std::invalid_argument(fmt::format("Unknown scaling mode {}", _mode));
         }
 
         readdy::model::Context ctx;
         ctx.boxSize() = box;
         ctx.particleTypes().add("A", 1.);
         ctx.potentials().addHarmonicRepulsion("A", "A", 10., halo);
-        // default configuration ctx.kernelConfiguration() = conf.get<readdy::conf::Configuration>();
 
         readdy::kernel::mpi::MPIKernel kernel(ctx);
 

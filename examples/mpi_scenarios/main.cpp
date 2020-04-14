@@ -34,10 +34,9 @@
 
 /**
  * Run performance scenarios (weak/strong scaling, different systems) for the MPI kernel.
- * Mainly measure runtime, thus no unit test framework required here.
  *
  * @file main.cpp
- * @brief Run performance scenarios for the MPI kernel
+ * @brief Run scenarios for the MPI kernel
  * @author chrisfroe
  * @date 28.05.19
  */
@@ -92,9 +91,12 @@ int main(int argc, char **argv) {
 
     // which scenarios shall be run
     std::vector<std::unique_ptr<perf::Scenario>> scenarios;
-    //scenarios.push_back(std::make_unique<perf::MPIDistributeParticles>());
-    scenarios.push_back(std::make_unique<perf::MPIDiffusionPairPotential>(
-            perf::WeakScalingGeometry::cube, 13.));
+    {
+        scenarios.push_back(std::make_unique<perf::MPIDistributeParticles>());
+        scenarios.push_back(std::make_unique<perf::MPIDiffusionPairPotential>(
+                perf::WeakScalingGeometry::cube, 13.));
+    }
+
 
     // run the scenarios, and write output
     for (const auto &s : scenarios) {

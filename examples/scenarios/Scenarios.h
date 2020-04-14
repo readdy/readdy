@@ -73,70 +73,49 @@ public:
 class FreeDiffusion : public Scenario {
     std::string _kernelName;
     std::size_t _nSteps = 1000;
+    std::size_t _nParticles = 1000;
 public:
-    explicit FreeDiffusion(std::string kernelName) : Scenario(
+    explicit FreeDiffusion(const std::string& kernelName, std::size_t nParticles) : Scenario(
             "FreeDiffusion"+kernelName,
             "Particles diffusing freely in periodic box without any interaction"),
-            _kernelName(kernelName) {}
+            _kernelName(kernelName), _nParticles(nParticles) {}
 
-    static readdy::model::Context context() {
+    Json run() override {
         readdy::model::Context ctx;
         ctx.boxSize() = {20., 20., 20.};
         ctx.particleTypes().add("A", 1.);
-        return ctx;
-    }
-
-    Json simulate(std::size_t nParticles) {
-        readdy::Simulation sim(_kernelName, context());
+        readdy::Simulation sim(_kernelName, ctx);
         auto &box = sim.context().boxSize();
-        for (std::size_t i = 0; i < nParticles; ++i) {
+        for (std::size_t i = 0; i < _nParticles; ++i) {
             sim.addParticle("A",
-                    rnd::uniform_real() * box[0] - 0.5 * box[0],
-                    rnd::uniform_real() * box[1] - 0.5 * box[1],
-                    rnd::uniform_real() * box[2] - 0.5 * box[2]);
+                            rnd::uniform_real() * box[0] - 0.5 * box[0],
+                            rnd::uniform_real() * box[1] - 0.5 * box[1],
+                            rnd::uniform_real() * box[2] - 0.5 * box[2]);
         }
 
+        readdy::util::Timer::clear();
         {
             readdy::util::Timer t("totalSimulation");
             sim.run(_nSteps, 0.01);
         }
 
-        auto perf = Json::parse(readdy::util::Timer::perfToJsonString());
-        readdy::util::Timer::clear();
-        return perf;
-    }
-
-    Json run() override {
-        std::vector<std::size_t> numbers = {
-                1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000,
-                10000, 20000, 50000, 100000, 200000, 500000, 1000000, 2000000, 5000000, 10000000
-        };
-
-        std::vector<Json> results;
-        for (std::size_t iid = 0; iid < 10; ++iid) {
-            for (auto n : numbers) {
-                Json currentResult;
-                currentResult["performance"] = simulate(n);
-                currentResult["n"] = n;
-                currentResult["iid"] = iid;
-                results.push_back(currentResult);
-            }
-        }
-        Json result = results;
-        result["context"] = context().describe();
+        Json result;
+        result["context"] = ctx.describe();
         result["nSteps"] = _nSteps;
+        result["nParticles"] = _nParticles;
         result["kernelName"] = _kernelName;
         result["readdy_default_n_threads"] = readdy_default_n_threads();
-
+        result["performance"] = Json::parse(readdy::util::Timer::perfToJsonString());
+        readdy::util::Timer::clear();
         return result;
     }
 };
 
 /** Scale the box based on given load in different ways */
 enum WeakScalingGeometry {
-    stick, // scale box only in x. Allows for all integer load values
-    slab, // scale box in x and y. Allows for load values = i**2 with i in [1,infty]
-    cube // scale box in x, y and z. Allows for load values = i**3  with i in [1,infty]
+    stick, // scale box only in x.
+    slab, // scale box in x and y.
+    cube // scale box in x, y and z.
 };
 
 inline std::ostream &operator<<(std::ostream& os, WeakScalingGeometry mode) {
@@ -179,16 +158,22 @@ public:
             nParticles = _nLoad * nParticlesPerLoad;
             readdy::scalar boxLength = _edgeLengthOverInteractionDistance * interactionDistance;
             box = {_nLoad * boxLength, boxLength, boxLength};
-            readdy::log::info("nParticlesPerLoad {}, nParticles {}", nParticlesPerLoad, nParticles);
+        } else if (_mode == cube) {
+            nParticlesPerLoad = 0.6 * std::pow(_edgeLengthOverInteractionDistance, 3)
+                                / (4./3. * readdy::util::numeric::pi<scalar>() * std::pow(assumedRadius/interactionDistance,3));
+            nParticles = _nLoad * nParticlesPerLoad;
+            scalar boxLength = _edgeLengthOverInteractionDistance * interactionDistance;
+            scalar factor = std::cbrt(static_cast<scalar>(_nLoad));
+            box = {factor * boxLength, factor * boxLength, factor * boxLength};
         } else {
-            throw std::invalid_argument("only knows stick scaling mode currently");
+            throw std::invalid_argument(fmt::format("Unknown scaling mode {}", _mode));
         }
+        readdy::log::info("nParticlesPerLoad {}, nParticles {}", nParticlesPerLoad, nParticles);
 
         readdy::model::Context ctx;
         ctx.boxSize() = box;
         ctx.particleTypes().add("A", 1.);
         ctx.potentials().addHarmonicRepulsion("A", "A", 10., interactionDistance);
-        // default configuration ctx.kernelConfiguration() = conf.get<readdy::conf::Configuration>();
 
         auto kernel = readdy::plugin::KernelProvider::getInstance().create(_kernelName);
         kernel->context() = ctx;

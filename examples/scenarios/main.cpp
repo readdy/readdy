@@ -70,27 +70,24 @@ int main(int argc, char **argv) {
     info["author"] = author;
     info["prefix"] = prefix;
 
-    auto pluginsdir = readdy::plugin::utils::getPluginsDirectory();
-    readdy::plugin::KernelProvider::getInstance().loadKernelsFromDirectory(pluginsdir);
+    auto pluginsDirectory = readdy::plugin::utils::getPluginsDirectory();
+    readdy::plugin::KernelProvider::getInstance().loadKernelsFromDirectory(pluginsDirectory);
 
     // which scenarios shall be run
     std::vector<std::unique_ptr<readdy::performance::Scenario>> scenarios;
-    //scenarios.push_back(std::make_unique<readdy::performance::FreeDiffusion>("SingleCPU"));
-    //for (std::size_t load = 1; load <= 8; load++) {
-    //    scenarios.push_back(std::make_unique<readdy::performance::DiffusionPairPotential>(
-    //            "SingleCPU", perf::WeakScalingGeometry::stick, load, 10.));
-    //}
-    std::size_t load = readdy::readdy_default_n_threads();
-    readdy::log::critical("------------------------------- CPU load {}", load);
-    scenarios.push_back(std::make_unique<readdy::performance::DiffusionPairPotential>(
+    {
+        scenarios.push_back(std::make_unique<readdy::performance::FreeDiffusion>("SingleCPU", 100000));
+        std::size_t load = readdy::readdy_default_n_threads();
+        scenarios.push_back(std::make_unique<readdy::performance::DiffusionPairPotential>(
                 "CPU", perf::WeakScalingGeometry::stick, load, 13.));
-
-    /// of course this does not weak scale, but we need singlecpu as baseline
-    scenarios.push_back(std::make_unique<readdy::performance::DiffusionPairPotential>(
+        scenarios.push_back(std::make_unique<readdy::performance::DiffusionPairPotential>(
                 "SingleCPU", perf::WeakScalingGeometry::stick, load, 13.));
+    }
 
     // run the scenarios, and write output
     for (const auto &s : scenarios) {
+        readdy::log::info("Run scenario {} -- {}", s->name(), s->description());
+
         Json out;
         out["result"] = s->run();
         out["info"] = info;
