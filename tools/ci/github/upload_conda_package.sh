@@ -25,6 +25,11 @@ function resolve_github_ref() {
 
 # catch the case when there is no tag and the branch is not master
 function validate_this_should_run() {
+    if [ -z ${PYTHON_VERSION+x} ]; then
+    echo "PYTHON_VERSION was not set. Something is wrong."
+    exit 1
+  fi
+
   if [ -z ${BINSTAR_TOKEN+x} ]; then
     echo "BINSTAR_TOKEN was not set, so this is probably a fork. Exit."
     exit 0
@@ -52,7 +57,7 @@ echo "branch is ${branch}"
 
 validate_this_should_run
 
-conda_package_file=$(conda build tools/conda-recipe --output | grep '.tar.bz2' | tail -1)
+conda_package_file=$(conda build tools/conda-recipe --python="${PYTHON_VERSION}" --output | grep '.tar.bz2' | tail -1)
 echo "Found conda package file ${conda_package_file}"
 
 conda install anaconda-client -qy

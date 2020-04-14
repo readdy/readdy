@@ -41,6 +41,7 @@ jobs:
         if: github.repository == 'readdy/readdy' && github.event_name == 'push'
         env:
           BINSTAR_TOKEN: ${{ secrets.BINSTAR_TOKEN }}
+          PYTHON_VERSION: ${{ matrix.python-version }}
         # if GITHUB_REF has tag then package is uploaded to normal anaconda channel
         # if GITHUB_REF points to master then package is uploaded to dev channel
         run: |
