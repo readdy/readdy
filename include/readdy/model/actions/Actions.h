@@ -366,12 +366,14 @@ public:
 class EvaluateObservables {
 public:
     virtual void perform(TimeStep t) = 0;
+    virtual ~EvaluateObservables() = default;
 };
 
 /* Not an Action, because perform needs TimeStep t. */
 class MakeCheckpoint {
 public:
     virtual void perform(TimeStep t) = 0;
+    virtual ~MakeCheckpoint() = default;
 };
 
 template<typename T>
