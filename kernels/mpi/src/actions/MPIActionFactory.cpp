@@ -108,4 +108,17 @@ MPIActionFactory::breakBonds(scalar timeStep, readdy::model::actions::top::Break
     throw std::invalid_argument("BreakBonds not implemented for MPI");
 }
 
+std::unique_ptr<readdy::model::actions::EvaluateObservables> MPIActionFactory::evaluateObservables() const {
+    return {std::make_unique<MPIEvaluateObservables>(kernel)};
+}
+
+std::unique_ptr<readdy::model::actions::MakeCheckpoint>
+MPIActionFactory::makeCheckpoint(std::string base, std::size_t maxNSaves) const {
+    return {std::make_unique<MPIMakeCheckpoint>(kernel, base, maxNSaves)};
+}
+
+std::unique_ptr<readdy::model::actions::InitializeKernel> MPIActionFactory::initializeKernel() const {
+    return {std::make_unique<MPIInitializeKernel>(kernel)};
+}
+
 }

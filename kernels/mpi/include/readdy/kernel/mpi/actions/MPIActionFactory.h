@@ -87,6 +87,13 @@ public:
 
     [[nodiscard]] std::unique_ptr<readdy::model::actions::top::BreakBonds>
     breakBonds(scalar timeStep, readdy::model::actions::top::BreakConfig config) const override;
+
+    [[nodiscard]] std::unique_ptr<readdy::model::actions::EvaluateObservables> evaluateObservables() const override;
+
+    [[nodiscard]] std::unique_ptr<readdy::model::actions::MakeCheckpoint>
+    makeCheckpoint(std::string base, std::size_t maxNSaves) const override;
+
+    [[nodiscard]] std::unique_ptr<readdy::model::actions::InitializeKernel> initializeKernel() const override;
 };
 
 }
