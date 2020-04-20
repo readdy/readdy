@@ -13,9 +13,9 @@ jobs:
         python-version: ['3.6', '3.7', '3.8'] # used to build the conda package (not for miniconda installation)
     steps:
       - uses: actions/checkout@v2
-      - run: |
+      - if: github.repository == 'readdy/readdy' && github.event_name == 'push'
+        run: |
           git fetch --prune --unshallow
-      - run: |
           git fetch --depth=1 origin +refs/tags/*:refs/tags/*
       - run: echo GITHUB_REF ${{github.ref}}
       - run: echo "$(git describe --always)"
