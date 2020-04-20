@@ -52,30 +52,39 @@
 
 namespace readdy::model::rnd {
 
+template<typename Generator = std::mt19937>
+Generator randomlySeededGenerator() {
+    std::random_device r;
+    std::random_device::result_type threadId = std::hash<std::thread::id>()(std::this_thread::get_id());
+    std::random_device::result_type clck = clock();
+    std::seed_seq seed{threadId, r(), r(), clck, r(), r(), r(), r()};
+    return Generator(seed);
+}
+
 template<typename RealType=scalar, typename Generator = std::mt19937>
 RealType normal(const RealType mean = 0.0, const RealType variance = 1.0) {
-    static thread_local Generator generator(clock() + std::hash<std::thread::id>()(std::this_thread::get_id()));
+    static thread_local auto generator = randomlySeededGenerator<Generator>();
     std::normal_distribution<RealType> distribution(mean, variance);
     return distribution(generator);
 }
 
 template<typename RealType=scalar, typename Generator = std::mt19937>
 RealType uniform_real(const RealType a = 0.0, const RealType b = 1.0) {
-    static thread_local Generator generator(clock() + std::hash<std::thread::id>()(std::this_thread::get_id()));
+    static thread_local auto generator = randomlySeededGenerator<Generator>();
     std::uniform_real_distribution<RealType> distribution(a, b);
     return distribution(generator);
 }
 
 template<typename IntType=int, typename Generator = std::mt19937>
 IntType uniform_int(const IntType a, const IntType b) {
-    static thread_local Generator generator(clock() + std::hash<std::thread::id>()(std::this_thread::get_id()));
+    static thread_local auto generator = randomlySeededGenerator<Generator>();
     std::uniform_int_distribution<IntType> distribution(a, b);
     return distribution(generator);
 }
 
 template<typename RealType=scalar, typename Generator = std::mt19937>
 RealType exponential(RealType lambda = 1.0) {
-    static thread_local Generator generator(clock() + std::hash<std::thread::id>()(std::this_thread::get_id()));
+    static thread_local auto generator = randomlySeededGenerator<Generator>();
     std::exponential_distribution<RealType> distribution(lambda);
     return distribution(generator);
 }
