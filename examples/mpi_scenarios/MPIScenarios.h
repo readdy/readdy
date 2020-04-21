@@ -100,10 +100,18 @@ class MPIDiffusionPairPotential : public Scenario {
     // parameter determining the volume and thus the final number of particles
     // describes the ratio of box length and interaction distance
     readdy::scalar _edgeLengthOverInteractionDistance;
+    readdy::scalar _volumeOccupation;
 public:
-    explicit MPIDiffusionPairPotential(WeakScalingGeometry mode, readdy::scalar edgeLengthOverInteractionDistance = 5.) : Scenario(
-            "MPIDiffusionPairPotential",
-            "Diffusion of particles with constant density, scale box according to mode"), _mode(mode), _edgeLengthOverInteractionDistance(edgeLengthOverInteractionDistance) {}
+    explicit MPIDiffusionPairPotential(
+            WeakScalingGeometry mode, readdy::scalar edgeLengthOverInteractionDistance = 5.,
+            readdy::scalar volumeOccupation = 0.6)
+            : Scenario("MPIDiffusionPairPotential",
+                       "Diffusion of particles with constant density, scale box according to mode"),
+              _mode(mode), _edgeLengthOverInteractionDistance(edgeLengthOverInteractionDistance),
+              _volumeOccupation(volumeOccupation) {
+        assert(volumeOccupation > 0.);
+        assert(edgeLengthOverInteractionDistance > 0.);
+    }
 
     Json run() override {
         int rank, worldSize;
@@ -120,8 +128,8 @@ public:
         // radius that is used to calculate the volume occupation, if the particles were hard-spheres
         scalar assumedRadius = halo / 2.;
         if (_mode == stick) {
-            // will lead to 60% volume occupation when one particle has an associated radius of halo/2.
-            nParticlesPerLoad = 0.6 * std::pow(_edgeLengthOverInteractionDistance, 3)
+            // will lead to volume occupation when one particle has an associated radius of halo/2.
+            nParticlesPerLoad = _volumeOccupation * std::pow(_edgeLengthOverInteractionDistance, 3)
                                 / (4./3. * readdy::util::numeric::pi<scalar>() * std::pow(assumedRadius/halo,3));
             nParticles = nLoad * nParticlesPerLoad;
             nParticlesPerWorker = static_cast<scalar>(nParticles) / static_cast<scalar>(nWorkers);
@@ -135,7 +143,7 @@ public:
             if (std::abs(remainder) > 0.0001) {
                 throw std::invalid_argument("The supplied number of workers will not entirely fill a cubic geometry");
             }
-            nParticlesPerLoad = 0.6 * std::pow(_edgeLengthOverInteractionDistance, 3)
+            nParticlesPerLoad = _volumeOccupation * std::pow(_edgeLengthOverInteractionDistance, 3)
                                 / (4./3. * readdy::util::numeric::pi<scalar>() * std::pow(assumedRadius/halo,3));
             nParticles = nLoad * nParticlesPerLoad;
             nParticlesPerWorker = static_cast<scalar>(nParticles) / static_cast<scalar>(nWorkers);

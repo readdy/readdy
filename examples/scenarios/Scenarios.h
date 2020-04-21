@@ -135,13 +135,20 @@ class DiffusionPairPotential : public Scenario {
     // hyperparameter determining the volume and thus the final number of particles
     // describes the ratio of box length and interaction distance
     readdy::scalar _edgeLengthOverInteractionDistance;
+    readdy::scalar _volumeOccupation;
 public:
-    DiffusionPairPotential(std::string kernelName, WeakScalingGeometry mode, std::size_t nLoad = 1, readdy::scalar edgeLengthOverInteractionDistance = 5.) : Scenario(
-        "DiffusionPairPotential"+kernelName,
-        "Diffusion of particles with constant density, scale box according to mode"),
-        _mode(mode), _kernelName(kernelName), _nLoad(nLoad), _edgeLengthOverInteractionDistance(edgeLengthOverInteractionDistance) {
+    DiffusionPairPotential(std::string kernelName, WeakScalingGeometry mode,
+            std::size_t nLoad = 1, readdy::scalar edgeLengthOverInteractionDistance = 5.,
+            readdy::scalar volumeOccupation = 0.6)
+            : Scenario(
+            "DiffusionPairPotential"+kernelName,
+            "Diffusion of particles with constant density, scale box according to mode"),
+            _mode(mode), _kernelName(kernelName), _nLoad(nLoad),
+            _edgeLengthOverInteractionDistance(edgeLengthOverInteractionDistance),
+            _volumeOccupation(volumeOccupation) {
         assert(nLoad > 0);
         assert(edgeLengthOverInteractionDistance > 0.);
+        assert(volumeOccupation > 0.);
     }
 
     Json run() override {
@@ -152,14 +159,14 @@ public:
         // radius that is used to calculate the volume occupation, if the particles were hard-spheres
         readdy::scalar assumedRadius = interactionDistance / 2.;
         if (_mode == stick) {
-            // will lead to 60% volume occupation when one particle has an associated radius of halo/2.
-            nParticlesPerLoad = 0.6 * std::pow(_edgeLengthOverInteractionDistance, 3)
+            // will lead to volume occupation when one particle has an associated radius of halo/2.
+            nParticlesPerLoad = _volumeOccupation * std::pow(_edgeLengthOverInteractionDistance, 3)
                                             / (4./3. * readdy::util::numeric::pi<scalar>() * std::pow(assumedRadius / interactionDistance, 3));
             nParticles = _nLoad * nParticlesPerLoad;
             readdy::scalar boxLength = _edgeLengthOverInteractionDistance * interactionDistance;
             box = {_nLoad * boxLength, boxLength, boxLength};
         } else if (_mode == cube) {
-            nParticlesPerLoad = 0.6 * std::pow(_edgeLengthOverInteractionDistance, 3)
+            nParticlesPerLoad = _volumeOccupation * std::pow(_edgeLengthOverInteractionDistance, 3)
                                 / (4./3. * readdy::util::numeric::pi<scalar>() * std::pow(assumedRadius/interactionDistance,3));
             nParticles = _nLoad * nParticlesPerLoad;
             scalar boxLength = _edgeLengthOverInteractionDistance * interactionDistance;

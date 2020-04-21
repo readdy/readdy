@@ -51,6 +51,7 @@
 #include <readdy/common/common.h>
 #include <readdy/model/Context.h>
 #include <mpi.h>
+#include <fmt/ranges.h>
 
 namespace readdy::kernel::mpi::model {
 
@@ -314,25 +315,22 @@ public:
             description += fmt::format(" - extent = ({}, {}, {})\n", extent()[0], extent()[1], extent()[2]);
             description += fmt::format(" - extentWithHalo = ({}, {}, {})\n", extentWithHalo()[0], extentWithHalo()[1], extentWithHalo()[2]);
             description += fmt::format(" - myIdx = ({}, {}, {})\n", myIdx()[0], myIdx()[1], myIdx()[2]);
-            auto describe3by3Matrix = [](const auto &lookup, const auto& index) {
-                std::string result;
+            auto describe3by3by3Array = [](const auto &lookup, const auto& index) {
+                std::array<std::array<std::array<unsigned int, 3>, 3>, 3> array{};
                 for (int i = 0; i<3; ++i) {
                     for (int j = 0; j<3; ++j) {
-                        std::string line = "                    ";
                         for (int k = 0; k<3; ++k) {
                             auto idx = index(i,j,k);
-                            line += std::to_string(lookup.at(idx)) + " ";
+                            array[i][j][k] = lookup.at(idx);
                         }
-                        result += line + "\n";
                     }
-                    result += "\n";
                 }
-                return result;
+                return fmt::format("[{},\n{},\n{}]\n", array[0], array[1], array[2]);
             };
             description += fmt::format(" - neighborRanks = \n{}",
-                    describe3by3Matrix(neighborRanks(), neighborIndex));
+                                       describe3by3by3Array(neighborRanks(), neighborIndex));
             description += fmt::format(" - neighborTypes = (0 - self, 1 - nan (not a neighbor), 2 - regular)\n{}",
-                    describe3by3Matrix(neighborTypes(), neighborIndex));
+                                       describe3by3by3Array(neighborTypes(), neighborIndex));
         }
         return description;
     }

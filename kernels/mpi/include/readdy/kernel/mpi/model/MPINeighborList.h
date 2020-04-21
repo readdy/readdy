@@ -63,16 +63,23 @@ public:
     using IteratorBounds = std::tuple<std::size_t, std::size_t>;
 
     /**
-    * The resulting neighborhood of cells avoids double neighborliness (neighborhood is a directed acyclic graph)
-    * for core cells with core cells in the usual way i.e. cell1 has cell2 as neighbor if (cellIdx1 > cellIdx2),
-    * for neighborhood of core cells with halo cells the, core cell has the halo cell as neighbor but not vice versa.
-    * todo: consider spanning the cellIndex only over this domain core+halo so that we can use cache-local version
-    * todo: i.e. HEAD as vector and not map. Then upon adding particles to the data structure, they have to be
-    * todo: wrapped into the frame of domain (potentially outside of boxSize) when there are periodic boundaries.
-    */
-    // another todo: if the system has small interaction distance and is sparsely populated,
-    // the HEAD vector is unnecessarily large, in that case the map might be better, but that would have to
-    // switch adaptively ...
+     * The resulting neighborhood of cells avoids double neighborliness (neighborhood is a directed acyclic graph)
+     * for core cells with core cells in the usual way i.e. cell1 has cell2 as neighbor if (cellIdx1 > cellIdx2),
+     * for neighborhood of core cells with halo cells the, core cell has the halo cell as neighbor but not vice versa.
+     *
+     * todo Some notes on this:
+     * - consider spanning the cellIndex only over this domain core+halo so that we can use cache-local version
+     *   i.e. HEAD as vector and not map. Then upon adding particles to the data structure, they have to be
+     *   wrapped into the frame of domain (potentially outside of boxSize) when there are periodic boundaries.
+     *
+     * - if the system has small interaction distance and is sparsely populated,
+     *   the HEAD vector is unnecessarily large, in that case the map might be better, but that would have to
+     *   switch adaptively
+     *
+     * - decision based on populated cell fraction (case study for this?), perhaps factor in number of
+     *   particles as well, then switch if below threshold. After each switch: grace period in which
+     *   it definitely does not switch (couple hundred steps?) because setting up the NL can be costly too I guess.
+     */
     CellLinkedList(Data &data, const readdy::model::Context &context, const model::MPIDomain *domain)
             : _data(data), _context(context), _head{}, _list{}, _domain(domain) {
         if (_domain->isWorkerRank()) {
