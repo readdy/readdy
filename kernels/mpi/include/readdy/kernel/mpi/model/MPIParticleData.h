@@ -41,6 +41,7 @@
 
 #pragma once
 
+#include <readdy/common/logging.h>
 #include <readdy/kernel/singlecpu/model/SCPUParticleData.h>
 #include <readdy/kernel/mpi/model/MPIDomain.h>
 
@@ -104,7 +105,7 @@ struct MPIEntry {
 
 class MPIParticleData : public readdy::kernel::scpu::model::SCPUParticleData<MPIEntry> {
 public:
-    MPIParticleData(const readdy::kernel::mpi::model::MPIDomain *domain) : SCPUParticleData(), _domain(domain) {}
+    explicit MPIParticleData(const readdy::kernel::mpi::model::MPIDomain *domain) : SCPUParticleData(), _domain(domain) {}
 
     // additionally sets the `rank` and `responsible` fields
     void addParticles(const std::vector<Particle> &particles) override {

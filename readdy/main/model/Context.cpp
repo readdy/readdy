@@ -107,7 +107,6 @@ void Context::validate() const {
 }
 
 std::string Context::describe() {
-    namespace rus = readdy::util::str;
     std::string description;
     description += fmt::format("Configured kernel context with:\n");
     description += fmt::format("--------------------------------\n");

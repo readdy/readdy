@@ -35,9 +35,13 @@
 # tests that do not need mpi running, i.e. independent helper components
 project(runUnitTests_mpi_nompi LANGUAGES C CXX)
 
-add_executable(${PROJECT_NAME} TestMain.cpp TestMPIDomain.cpp mock/mpi.cpp ${TESTING_INCLUDE_DIR})
+add_executable(${PROJECT_NAME}
+        TestMain.cpp
+        TestMPIDomain.cpp
+        mpimock/mpi.cpp
+        ${TESTING_INCLUDE_DIR})
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/mock ${READDY_INCLUDE_DIRS} ${TESTING_INCLUDE_DIR} ${MPI_INCLUDE_DIR})
+target_include_directories(${PROJECT_NAME} PUBLIC mpimock ${READDY_INCLUDE_DIRS} ${TESTING_INCLUDE_DIR} ${MPI_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} PUBLIC readdy Catch2::Catch2)
 set_target_properties(${PROJECT_NAME} PROPERTIES
         LINK_FLAGS "${EXTRA_LINK_FLAGS}"

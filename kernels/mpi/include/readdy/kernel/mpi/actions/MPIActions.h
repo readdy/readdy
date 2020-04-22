@@ -47,6 +47,7 @@
 #include <readdy/kernel/mpi/MPIKernel.h>
 
 #include <utility>
+#include <readdy/api/Saver.h>
 
 namespace readdy::kernel::mpi::actions {
 
@@ -99,19 +100,6 @@ private:
     void performImpl();
 };
 
-//class MPICreateNeighborList : public readdy::model::actions::CreateNeighborList {
-//public:
-//    MPICreateNeighborList(MPIKernel *kernel, scalar cutoffDistance) : CreateNeighborList(cutoffDistance),
-//                                                                      kernel(kernel) {}
-//
-//    void perform() override {
-//        kernel->getMPIKernelStateModel().initializeNeighborList(cutoffDistance());
-//    }
-//
-//private:
-//    MPIKernel *const kernel;
-//};
-
 class MPIUpdateNeighborList : public readdy::model::actions::UpdateNeighborList {
 public:
     explicit MPIUpdateNeighborList(MPIKernel *kernel) : UpdateNeighborList(), kernel(kernel) {}
@@ -127,18 +115,6 @@ public:
 private:
     MPIKernel *const kernel;
 };
-
-//class MPIClearNeighborList : public readdy::model::actions::ClearNeighborList {
-//public:
-//    explicit MPIClearNeighborList(MPIKernel *kernel) : ClearNeighborList(), kernel(kernel) {}
-//
-//    void perform() override {
-//        kernel->getMPIKernelStateModel().clearNeighborList();
-//    }
-//
-//private:
-//    MPIKernel *const kernel;
-//};
 
 class MPIEvaluateCompartments : public readdy::model::actions::EvaluateCompartments {
 public:
@@ -179,5 +155,51 @@ protected:
     MPIKernel *const kernel;
 };
 }
+
+class MPIEvaluateObservables : public readdy::model::actions::EvaluateObservables {
+public:
+    explicit MPIEvaluateObservables(MPIKernel *kernel) : kernel(kernel) {}
+
+    void perform(TimeStep t) override {
+        kernel->evaluateObservables(t);
+    }
+
+private:
+    MPIKernel *kernel;
+};
+
+class MPIMakeCheckpoint : public readdy::model::actions::MakeCheckpoint {
+public:
+    MPIMakeCheckpoint(MPIKernel *kernel, const std::string& base, std::size_t maxNSaves) : kernel(kernel), saver(base, maxNSaves) {}
+
+    void perform(TimeStep t) override {
+        // todo sync (MPIGather) the state to master's stateModel, then makeCheckpoint as usual and clear stateModel
+        if (kernel->domain().isMasterRank()) {
+            // todo gather
+            // make checkpoint on master
+            //saver.makeCheckpoint(kernel, t);
+            // clear state model
+            //kernel->getMPIKernelStateModel().clear();
+        } else if (kernel->domain().isWorkerRank()) {
+            // todo gather, send responsible particles
+        } else {
+            // no op for idlers
+        }
+    }
+private:
+    MPIKernel *kernel;
+    readdy::api::Saver saver;
+};
+
+class MPIInitializeKernel : public readdy::model::actions::InitializeKernel {
+public:
+    MPIInitializeKernel(MPIKernel *kernel) : kernel(kernel) {}
+
+    void perform() override {
+        kernel->initialize();
+    }
+private:
+    MPIKernel *kernel;
+};
 
 }

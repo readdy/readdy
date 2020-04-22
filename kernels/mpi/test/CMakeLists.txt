@@ -34,4 +34,3 @@
 
 add_subdirectory(regular)
 add_subdirectory(nompi)
-add_subdirectory(performance)

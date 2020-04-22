@@ -39,12 +39,12 @@
  * @date 26.07.19
  */
 
-#include <readdy/kernel/mpi/Timer.h>
+#include <readdy/common/Timer.h>
 #include <json.hpp>
 
 using Json = nlohmann::json;
 
-namespace readdy::kernel::mpi::util {
+namespace readdy::util {
 
 std::unordered_map<std::string, PerformanceData> Timer::perf {};
 

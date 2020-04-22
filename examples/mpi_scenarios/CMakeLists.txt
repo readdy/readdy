@@ -33,20 +33,15 @@
 ####################################################################
 
 
-project(runPerformance_mpi LANGUAGES C CXX)
+project(run_readdy_scenarios_mpi)
 
-add_executable(${PROJECT_NAME} PerformanceMain.cpp ${TESTING_INCLUDE_DIR})
+add_executable(${PROJECT_NAME} main.cpp)
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${READDY_INCLUDE_DIRS} ${TESTING_INCLUDE_DIR} ${MPI_INCLUDE_DIR})
+target_include_directories(${PROJECT_NAME} PUBLIC ${READDY_INCLUDE_DIRS} ${MPI_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/examples/scenarios)
 target_link_libraries(${PROJECT_NAME} PUBLIC readdy readdy_kernel_mpi)
-set_target_properties(${PROJECT_NAME} PROPERTIES
-        LINK_FLAGS "${EXTRA_LINK_FLAGS}"
-        COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}")
-#catch_discover_tests(${PROJECT_NAME})
+set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "${EXTRA_LINK_FLAGS}" COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}")
 
-if (READDY_INSTALL_UNIT_TEST_EXECUTABLE)
-    install(TARGETS ${PROJECT_NAME}
-            RUNTIME DESTINATION bin
-            LIBRARY DESTINATION lib
-            ARCHIVE DESTINATION lib)
-endif (READDY_INSTALL_UNIT_TEST_EXECUTABLE)
+install(TARGETS ${PROJECT_NAME}
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib)

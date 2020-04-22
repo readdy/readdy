@@ -33,20 +33,33 @@
  ********************************************************************/
 
 /**
- * @file mpi.cpp
- * @brief Mock mpi
+ * @file mpi.h
+ * @brief Mock mpi header to allow access to selected mpi functions without linking against a specific mpi impl
  * @author chrisfroe
  * @date 20.03.20
  */
 
-#include "mpi.h"
+#pragma once
 
-Comm MPIMock::mpiCommWorld {};
+#include <string>
 
-void MPI_Comm_rank(const Comm &comm, int *rank) {
-    *rank = comm.rank;
-}
+struct Comm { int worldSize, rank; };
 
-void MPI_Comm_size(const Comm &comm, int *worldSize) {
-    *worldSize = comm.worldSize;
-}
+struct MPIMock {
+    static Comm mpiCommWorld;
+    static std::string processorName;
+};
+
+#define MPI_COMM_WORLD MPIMock::mpiCommWorld
+
+void MPI_Init(int *argc, char ***argv);
+
+void MPI_Finalize();
+
+void MPI_Comm_size(const Comm &comm, int *worldSize);
+
+void MPI_Comm_rank(const Comm &comm, int *rank);
+
+void MPI_Get_processor_name(char *name, int *resultlen);
+
+void MPI_Barrier(const Comm &comm);

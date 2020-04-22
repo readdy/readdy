@@ -1,5 +1,5 @@
 ####################################################################
-# Copyright © 2018 Computational Molecular Biology Group,          #
+# Copyright © 2020 Computational Molecular Biology Group,          #
 #                  Freie Universität Berlin (GER)                  #
 #                                                                  #
 # Redistribution and use in source and binary forms, with or       #
@@ -32,27 +32,15 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                       #
 ####################################################################
 
+project(run_readdy_scenarios)
 
-SET(SOURCES_DIR "${READDY_GLOBAL_DIR}/readdy/main/common")
+add_executable(${PROJECT_NAME} main.cpp)
+message(STATUS ${SCENARIO_INCLUDE_DIRS})
+target_include_directories(${PROJECT_NAME} PRIVATE ${READDY_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} PRIVATE readdy)
+set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "${EXTRA_LINK_FLAGS}" COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}")
 
-SET(SPDLOG_INCLUDE_DIR "${READDY_GLOBAL_DIR}/libraries/spdlog/include")
-SET(JSON_INCLUDE_DIR "${READDY_GLOBAL_DIR}/libraries/json/include")
-
-FIND_PACKAGE(Threads REQUIRED)
-
-# include dirs
-SET(COMMON_INCLUDE_DIRS "${READDY_GLOBAL_INCLUDE_DIR};${SPDLOG_INCLUDE_DIR};${JSON_INCLUDE_DIR}" CACHE INTERNAL "Common include dirs")
-
-# dependent libraries
-SET(READDY_COMMON_LIBRARIES "graphs;fmt::fmt-header-only" CACHE INTERNAL "Common libraries")
-
-# sources
-LIST(APPEND READDY_COMMON_SOURCES "${SOURCES_DIR}/../api/KernelConfiguration.cpp")
-LIST(APPEND READDY_COMMON_SOURCES "${SOURCES_DIR}/Utils.cpp")
-LIST(APPEND READDY_COMMON_SOURCES "${SOURCES_DIR}/filesystem.cpp")
-LIST(APPEND READDY_COMMON_SOURCES "${SOURCES_DIR}/Config.cpp")
-LIST(APPEND READDY_COMMON_SOURCES "${SOURCES_DIR}/logging.cpp")
-LIST(APPEND READDY_COMMON_SOURCES "${SOURCES_DIR}/Timer.cpp")
-
-# all sources
-LIST(APPEND READDY_ALL_SOURCES ${READDY_COMMON_SOURCES})
+install(TARGETS ${PROJECT_NAME}
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib)

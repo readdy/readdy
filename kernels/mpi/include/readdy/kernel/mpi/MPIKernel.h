@@ -48,7 +48,7 @@
 #include <readdy/kernel/mpi/actions/MPIActionFactory.h>
 #include <readdy/kernel/mpi/observables/MPIObservableFactory.h>
 #include <readdy/kernel/mpi/model/MPIDomain.h>
-#include <readdy/kernel/mpi/Timer.h>
+#include <readdy/common/Timer.h>
 
 #include <utility>
 

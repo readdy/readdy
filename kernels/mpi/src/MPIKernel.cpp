@@ -60,18 +60,7 @@ MPIKernel::MPIKernel(const readdy::model::Context &ctx)
           _stateModel(_data, _context, &_domain) {
     // Description of decomposition
     if (_domain.isMasterRank()) {
-        std::string description;
-        description += fmt::format("MPI Kernel uses domain decomposition:\n");
-        description += fmt::format("--------------------------------\n");
-        description += fmt::format(" - Number of domains on axes (x,y,z) ({},{},{})\n",
-                                   _domain.nDomainsPerAxis()[0], _domain.nDomainsPerAxis()[1], _domain.nDomainsPerAxis()[2]);
-        description += fmt::format(" - Domain widths on axes (x,y,z) ({},{},{})\n",
-                                   _context.boxSize()[0] / _domain.nDomainsPerAxis()[0],
-                                   _context.boxSize()[1] / _domain.nDomainsPerAxis()[1],
-                                   _context.boxSize()[2] / _domain.nDomainsPerAxis()[2]);
-        description += fmt::format(" - Used {} ranks of available worldSize {}\n", _domain.nUsedRanks(),
-                                   _domain.worldSize());
-        readdy::log::info(description);
+        readdy::log::info(_domain.describe());
         if (_domain.nUsedRanks() != _domain.worldSize()) {
             readdy::log::warn("! Number of used workers {} is not equal to what was allocated {} !",
                               _domain.nUsedRanks(), _domain.worldSize());

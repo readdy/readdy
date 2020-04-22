@@ -63,13 +63,23 @@ public:
     using IteratorBounds = std::tuple<std::size_t, std::size_t>;
 
     /**
-    * The resulting neighborhood of cells avoids double neighborliness (neighborhood is a directed graph)
-    * for core cells with core cells in the usual way i.e. cell1 has cell2 as neighbor if (cellIdx1 > cellIdx2),
-    * for neighborhood of core cells with halo cells the, core cell has the halo cell as neighbor but not vice versa.
-    * todo: consider spanning the cellIndex only over this domain core+halo so that we can use cache-local version
-    * todo: i.e. HEAD as vector and not map. Then upon adding particles to the data structure, they have to be
-    * todo: wrapped into the frame of domain (potentially outside of boxSize) when there are periodic boundaries.
-    */
+     * The resulting neighborhood of cells avoids double neighborliness (neighborhood is a directed acyclic graph)
+     * for core cells with core cells in the usual way i.e. cell1 has cell2 as neighbor if (cellIdx1 > cellIdx2),
+     * for neighborhood of core cells with halo cells the, core cell has the halo cell as neighbor but not vice versa.
+     *
+     * todo Some notes on this:
+     * - consider spanning the cellIndex only over this domain core+halo so that we can use cache-local version
+     *   i.e. HEAD as vector and not map. Then upon adding particles to the data structure, they have to be
+     *   wrapped into the frame of domain (potentially outside of boxSize) when there are periodic boundaries.
+     *
+     * - if the system has small interaction distance and is sparsely populated,
+     *   the HEAD vector is unnecessarily large, in that case the map might be better, but that would have to
+     *   switch adaptively
+     *
+     * - decision based on populated cell fraction (case study for this?), perhaps factor in number of
+     *   particles as well, then switch if below threshold. After each switch: grace period in which
+     *   it definitely does not switch (couple hundred steps?) because setting up the NL can be costly too I guess.
+     */
     CellLinkedList(Data &data, const readdy::model::Context &context, const model::MPIDomain *domain)
             : _data(data), _context(context), _head{}, _list{}, _domain(domain) {
         if (_domain->isWorkerRank()) {
@@ -189,15 +199,12 @@ public:
     template<typename Function>
     void forAllPairs(const Function &f);
 
-    // not now, maybe later
-    // template<typename Function>
-    //void forAllCoreCorePairs(const Function &f);
-
     std::size_t nCells() const {
         if (_domain->isWorkerRank()) {
             return _cellIndex.size();
         } else {
-            throw std::logic_error("cannot know cell structure because not a worker rank");
+            throw std::logic_error(fmt::format(
+                    "rank={}, cannot know cell structure because not a worker rank", _domain->rank()));
         }
     }
 
@@ -207,6 +214,7 @@ public:
 
     void update() {
         if (_domain->isWorkerRank()) {
+            readdy::log::trace("rank={}, MPINeighborList::update", _domain->rank());
             auto nParticles = _data.get().size();
             _head.clear(); // head structure will be built lazily upon filling bins
             _list.resize(0);
@@ -217,6 +225,7 @@ public:
 
 protected:
     void fillBins() {
+        readdy::log::trace("rank={}, MPINeighborList::fillBins", _domain->rank());
         const auto &boxSize = _context.get().boxSize();
 
         const auto particleInBox = [&boxSize](const Vec3 &pos) {
@@ -236,7 +245,7 @@ protected:
                     _list[pidx] = _head[cellIndex];
                     _head[cellIndex] = pidx;
                 } else {
-                    readdy::log::warn("Particle not in box, will not be contained in the neighbor-list");
+                    readdy::log::warn("rank={}, Particle not in box, will not be contained in the neighbor-list", _domain->rank());
                 }
             }
             ++pidx;
@@ -293,10 +302,11 @@ private:
         if (isValidCell) {
             assert(std::all_of(otherCell.begin(), otherCell.end(), [](const auto& x){return x>=0;}));
             const auto otherIdx = _cellIndex.index(otherCell);
+            const auto &box = _context.get().boxSize();
             const auto cellCenter = Vec3(
-                    otherCell[0] * _cellSize[0] + 0.5 * _cellSize[0],
-                    otherCell[1] * _cellSize[1] + 0.5 * _cellSize[1],
-                    otherCell[2] * _cellSize[2] + 0.5 * _cellSize[2]);
+                    -0.5 * box[0] + otherCell[0] * _cellSize[0] + 0.5 * _cellSize[0],
+                    -0.5 * box[1] + otherCell[1] * _cellSize[1] + 0.5 * _cellSize[1],
+                    -0.5 * box[2] + otherCell[2] * _cellSize[2] + 0.5 * _cellSize[2]);
             if (_domain->isInDomainCore(cellCenter)) {
                 if (cellIdx < otherIdx) { // avoid double neighborliness for core cells
                     _cellNeighbors[cellIdx].push_back(otherIdx);

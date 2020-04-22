@@ -34,8 +34,6 @@
 
 
 /**
- * << detailed description >>
- *
  * @file MPISession.h
  * @brief RAII wrapper for MPI_Init and MPI_Finalize and some utility
  * @author chrisfroe
@@ -44,35 +42,22 @@
 
 #pragma once
 
-#include <mpi.h>
 #include <readdy/common/logging.h>
 
-/**
- * Tiny RAII wrapper for MPI Init and Finalize
- *  + a debugging lock
- *  + [@todo] and writing performance data
- */
+namespace readdy::kernel::mpi {
+
+/** Tiny RAII wrapper for MPI Init and Finalize, and a debugging lock */
 class MPISession {
     int _worldSize;
     int _rank;
     int nameLen;
-    char _processorName[MPI_MAX_PROCESSOR_NAME];
+    std::string _processorName;
 
 public:
-    /** On most MPI implementations MPI_init */
-    MPISession(int &argc, char **argv) {
-        MPI_Init(&argc, &argv);
+    MPISession(int &argc, char **argv);
 
-        MPI_Comm_size(MPI_COMM_WORLD, &_worldSize);
-        MPI_Comm_rank(MPI_COMM_WORLD, &_rank);
-        MPI_Get_processor_name(_processorName, &nameLen);
-
-        readdy::log::info("pid {} Rank {} / {} is on {}", static_cast<long>(getpid()), _rank, _worldSize, _processorName);
-        waitForDebugger();
-    }
-
-    std::string processorName() {
-        return std::string(_processorName);
+    const std::string &processorName() {
+        return _processorName;
     }
 
     int rank() {
@@ -83,9 +68,18 @@ public:
         return _worldSize;
     }
 
-    ~MPISession() {
-        MPI_Finalize();
-    }
+    ~MPISession();
+
+    MPISession(const MPISession &) = delete;
+
+    MPISession(MPISession &&) = delete;
+
+    MPISession &operator=(const MPISession &) = delete;
+
+    MPISession &operator=(MPISession &&) = delete;
+
+    /* Create a barrier for all processors in the world communicator */
+    static void barrier();
 
     /**
      * Forces a certain processor with given rank to halt in a while loop and all others to wait at a barrier.
@@ -96,22 +90,7 @@ public:
      * To enable debugging set the environment variable READDY_MPI_DEBUG,
      * which can be exported to processes via `mpirun`.
      */
-    static void waitForDebugger() {
-        if (getenv("READDY_MPI_DEBUG") != nullptr) {
-            int rank;
-            char processorName[MPI_MAX_PROCESSOR_NAME];
-            int nameLen;
-            MPI_Get_processor_name(processorName, &nameLen);
-            MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-            static int rankToDebug = 2;
-            if (rank == rankToDebug) {
-                volatile int i = 0;
-                readdy::log::warn("pid {} w/ rank {} on processor {} waiting for debugger",
-                                  static_cast<unsigned long>(getpid()), rank, processorName);
-                while (i == 0) { /* change ’i’ in the debugger, `set variable i=1` */ }
-            }
-        }
-        MPI_Barrier(MPI_COMM_WORLD);
-    }
+    static void waitForDebugger();
 };
+
+}

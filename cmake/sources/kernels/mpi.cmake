@@ -39,7 +39,7 @@ SET(MPI_INCLUDE_DIR "${READDY_GLOBAL_DIR}/kernels/mpi/include")
 # sources
 LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/MPIKernel.cpp")
 LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/MPIStateModel.cpp")
-LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/Timer.cpp")
+LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/MPISession.cpp")
 
 # --- actions ---
 LIST(APPEND MPI_SOURCES "${SOURCES_DIR}/actions/MPIActionFactory.cpp")
