@@ -33,17 +33,14 @@
  ********************************************************************/
 
 /**
- * << detailed description >>
- *
- * @file SingleCPUObservableFactory.cpp
- * @brief << brief description >>
+ * @file SCPUObservableFactory.cpp
+ * @brief Implementation of observable factory of the single cpu kernel
  * @author clonker
  * @date 30.06.16
  */
 
 
 #include <readdy/kernel/singlecpu/SCPUKernel.h>
-
 #include <readdy/kernel/singlecpu/observables/SCPUObservableFactory.h>
 #include <readdy/kernel/singlecpu/observables/SCPUObservables.h>
 
@@ -54,56 +51,83 @@ SCPUObservableFactory::SCPUObservableFactory(readdy::kernel::scpu::SCPUKernel *c
 
 std::unique_ptr<readdy::model::observables::HistogramAlongAxis>
 SCPUObservableFactory::histogramAlongAxis(Stride stride, std::vector<scalar> binBorders,
-                                          std::vector<std::string> typesToCount, unsigned int axis) const {
-    return {std::make_unique<SCPUHistogramAlongAxis>(kernel, stride, binBorders, typesToCount, axis)};
+                                          std::vector<std::string> typesToCount, unsigned int axis,
+                                          ObsCallBack <readdy::model::observables::HistogramAlongAxis> callBack) const {
+    auto obs = std::make_unique<SCPUHistogramAlongAxis>(kernel, stride, binBorders, typesToCount, axis);
+    obs->setCallback(callBack);
+    return std::move(obs);
 }
 
 std::unique_ptr<readdy::model::observables::NParticles>
-SCPUObservableFactory::nParticles(Stride stride, std::vector<std::string> typesToCount) const {
-    return {std::make_unique<SCPUNParticles>(kernel, stride, typesToCount)};
+SCPUObservableFactory::nParticles(Stride stride, std::vector<std::string> typesToCount,
+                                  ObsCallBack <readdy::model::observables::NParticles> callback) const {
+    auto obs = std::make_unique<SCPUNParticles>(kernel, stride, typesToCount);
+    obs->setCallback(callback);
+    return std::move(obs);
 }
 
 std::unique_ptr<readdy::model::observables::Forces>
-SCPUObservableFactory::forces(Stride stride, std::vector<std::string> typesToCount) const {
-    return {std::make_unique<SCPUForces>(kernel, stride, typesToCount)};
+SCPUObservableFactory::forces(Stride stride, std::vector<std::string> typesToCount,
+                              ObsCallBack<readdy::model::observables::Forces> callback) const {
+    auto obs = std::make_unique<SCPUForces>(kernel, stride, typesToCount);
+    obs->setCallback(callback);
+    return std::move(obs);
 }
 
 std::unique_ptr<readdy::model::observables::Positions>
-SCPUObservableFactory::positions(Stride stride, std::vector<std::string> typesToCount) const {
-    return {std::make_unique<SCPUPositions>(kernel, stride, typesToCount)};
+SCPUObservableFactory::positions(Stride stride, std::vector<std::string> typesToCount,
+                                 ObsCallBack<readdy::model::observables::Positions> callback) const {
+    auto obs = std::make_unique<SCPUPositions>(kernel, stride, typesToCount);
+    obs->setCallback(callback);
+    return std::move(obs);
 }
 
 std::unique_ptr<readdy::model::observables::RadialDistribution>
 SCPUObservableFactory::radialDistribution(Stride stride, std::vector<scalar> binBorders,
-                                          std::vector<std::string> typeCountFrom, std::vector<std::string> typeCountTo,
-                                          scalar particleDensity) const {
-    return {std::make_unique<readdy::model::observables::RadialDistribution>(kernel, stride, binBorders, typeCountFrom,
-                                                                             typeCountTo, particleDensity)};
+                                          std::vector<std::string> typeCountFrom,
+                                          std::vector<std::string> typeCountTo, scalar particleDensity,
+                                          ObsCallBack<readdy::model::observables::RadialDistribution> callback) const {
+    auto obs = std::make_unique<readdy::model::observables::RadialDistribution>(
+            kernel, stride, binBorders, typeCountFrom, typeCountTo, particleDensity);
+    obs->setCallback(callback);
+    return std::move(obs);
 }
 
 std::unique_ptr<readdy::model::observables::Particles>
-SCPUObservableFactory::particles(Stride stride) const {
-    return {std::make_unique<SCPUParticles>(kernel, stride)};
+SCPUObservableFactory::particles(Stride stride, ObsCallBack<readdy::model::observables::Particles> callback) const {
+    auto obs = std::make_unique<SCPUParticles>(kernel, stride);
+    obs->setCallback(callback);
+    return std::move(obs);
 }
 
 std::unique_ptr<readdy::model::observables::Reactions>
-SCPUObservableFactory::reactions(Stride stride) const {
-    return {std::make_unique<SCPUReactions>(kernel, stride)};
+SCPUObservableFactory::reactions(Stride stride, ObsCallBack<readdy::model::observables::Reactions> callback) const {
+    auto obs = std::make_unique<SCPUReactions>(kernel, stride);
+    obs->setCallback(callback);
+    kernel->context().recordReactionsWithPositions() = true;
+    return std::move(obs);
 }
 
 std::unique_ptr<readdy::model::observables::ReactionCounts>
-SCPUObservableFactory::reactionCounts(Stride stride) const {
-    return {std::make_unique<SCPUReactionCounts>(kernel, stride)};
+SCPUObservableFactory::reactionCounts(Stride stride, ObsCallBack<readdy::model::observables::ReactionCounts> callback) const {
+    auto obs = std::make_unique<SCPUReactionCounts>(kernel, stride);
+    obs->setCallback(callback);
+    kernel->context().recordReactionCounts() = true;
+    return std::move(obs);
 }
 
 std::unique_ptr<readdy::model::observables::Virial>
-SCPUObservableFactory::virial(Stride stride) const {
-    return {std::make_unique<SCPUVirial>(kernel, stride)};
+SCPUObservableFactory::virial(Stride stride, ObsCallBack<readdy::model::observables::Virial> callBack) const {
+    std::unique_ptr<readdy::model::observables::Virial> obs = std::make_unique<SCPUVirial>(kernel, stride);
+    obs->setCallback(callBack);
+    kernel->context().recordVirial() = true;
+    return std::move(obs);
 }
 
-std::unique_ptr<readdy::model::observables::Energy> SCPUObservableFactory::energy(Stride stride) const {
-    // core library observable does the trick here
-    return {std::make_unique<readdy::model::observables::Energy>(kernel, stride)};
+std::unique_ptr<readdy::model::observables::Energy> SCPUObservableFactory::energy(Stride stride, ObsCallBack<readdy::model::observables::Energy> callBack) const {
+    auto obs = std::make_unique<readdy::model::observables::Energy>(kernel, stride);
+    obs->setCallback(callBack);
+    return std::move(obs);
 }
 
 }

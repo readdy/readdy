@@ -385,8 +385,7 @@ TEMPLATE_TEST_CASE("Detailed balance integration tests.", "[detailed-balance]", 
             const auto idForward = ctx.reactions().idOf("convAB");
             const auto idBackward = ctx.reactions().idOf("convBA");
 
-            auto countsObs = kernel->observe().reactionCounts(1);
-            countsObs->callback() = [&idForward, &idBackward](const readdy::model::observables::ReactionCounts::result_type &result) {
+            auto countsObs = kernel->observe().reactionCounts(1, [&idForward, &idBackward](const readdy::model::observables::ReactionCounts::result_type &result) {
                 const auto& counts = std::get<0>(result);
                 if (counts.empty()) {
                     readdy::log::trace("reaction counts is empty, no reaction handler ran so far, skip test");
@@ -394,15 +393,14 @@ TEMPLATE_TEST_CASE("Detailed balance integration tests.", "[detailed-balance]", 
                 }
                 REQUIRE(counts.at(idBackward) == 0);
                 REQUIRE(counts.at(idForward) == 0);
-            };
+            });
             auto countsConnection = kernel->connectObservable(countsObs.get());
 
             std::vector<std::string> typesToCount = {"A", "B", "D"};
-            auto numbersObs = kernel->observe().nParticles(1, typesToCount);
-            numbersObs->callback() = [](const readdy::model::observables::NParticles::result_type &result) {
+            auto numbersObs = kernel->observe().nParticles(1, typesToCount, [](const readdy::model::observables::NParticles::result_type &result) {
                 REQUIRE(result[0] + result[1] == 1); // conservation of A + B
                 REQUIRE(result[2] == 500); // conservation of D
-            };
+            });
             auto numbersConnection = kernel->connectObservable(numbersObs.get());
 
             const auto ida = ctx.particleTypes().idOf("A");
@@ -428,8 +426,7 @@ TEMPLATE_TEST_CASE("Detailed balance integration tests.", "[detailed-balance]", 
             const auto idForward = ctx.reactions().idOf("convAB");
             const auto idBackward = ctx.reactions().idOf("convBA");
 
-            auto countsObs = kernel->observe().reactionCounts(1);
-            countsObs->callback() = [&idForward, &idBackward](const readdy::model::observables::ReactionCounts::result_type &result) {
+            auto countsObs = kernel->observe().reactionCounts(1,[&idForward, &idBackward](const readdy::model::observables::ReactionCounts::result_type &result) {
                 const auto& counts = std::get<0>(result);
                 if (counts.empty()) {
                     readdy::log::trace("reaction counts is empty, no reaction handler ran so far, skip test");
@@ -437,15 +434,14 @@ TEMPLATE_TEST_CASE("Detailed balance integration tests.", "[detailed-balance]", 
                 }
                 REQUIRE(counts.at(idBackward) == 0);
                 REQUIRE(counts.at(idForward) == 1);
-            };
+            });
             auto countsConnection = kernel->connectObservable(countsObs.get());
 
             std::vector<std::string> typesToCount = {"A", "B", "D"};
-            auto numbersObs = kernel->observe().nParticles(1, typesToCount);
-            numbersObs->callback() = [](const readdy::model::observables::NParticles::result_type &result) {
+            auto numbersObs = kernel->observe().nParticles(1, typesToCount, [](const readdy::model::observables::NParticles::result_type &result) {
                 REQUIRE(result[0] + result[1] == 1); // conservation of A + B
                 REQUIRE(result[2] == 500); // conservation of D
-            };
+            });
             auto numbersConnection = kernel->connectObservable(numbersObs.get());
 
             const auto ida = ctx.particleTypes().idOf("A");
@@ -475,8 +471,7 @@ TEMPLATE_TEST_CASE("Detailed balance integration tests.", "[detailed-balance]", 
             const auto idfus = ctx.reactions().idOf("fusion");
             const auto idfis = ctx.reactions().idOf("fission");
 
-            auto countsObs = kernel->observe().reactionCounts(1);
-            countsObs->callback() = [&idfus, &idfis](const readdy::model::observables::ReactionCounts::result_type &result) {
+            auto countsObs = kernel->observe().reactionCounts(1,[&idfus, &idfis](const readdy::model::observables::ReactionCounts::result_type &result) {
                 const auto& counts = std::get<0>(result);
                 if (counts.empty()) {
                     readdy::log::trace("reaction counts is empty, no reaction handler ran so far, skip test");
@@ -484,19 +479,18 @@ TEMPLATE_TEST_CASE("Detailed balance integration tests.", "[detailed-balance]", 
                 }
                 REQUIRE(counts.at(idfus) == 1); // fusion must occur
                 REQUIRE(counts.at(idfis) == 0); // fission shall not occur
-            };
+            });
             auto countsConnection = kernel->connectObservable(countsObs.get());
 
             std::vector<std::string> typesToCount = {"A", "B", "C", "D"};
-            auto numbersObs = kernel->observe().nParticles(1, typesToCount);
-            numbersObs->callback() = [](const readdy::model::observables::NParticles::result_type &result) {
+            auto numbersObs = kernel->observe().nParticles(1, typesToCount, [](const readdy::model::observables::NParticles::result_type &result) {
                 REQUIRE(result[0] + result[2] == 1); // conservation of A + C
                 REQUIRE(result[1] + result[2] == 1); // conservation of B + C
                 REQUIRE(result[3] == 500); // conservation of D
                 if (result[0] + result[2] != 1) {
                     readdy::log::trace("A {} B {} C {}", result[0], result[1], result[2]);
                 }
-            };
+            });
             auto numbersConnection = kernel->connectObservable(numbersObs.get());
 
             const auto ida = ctx.particleTypes().idOf("A");
@@ -523,8 +517,7 @@ TEMPLATE_TEST_CASE("Detailed balance integration tests.", "[detailed-balance]", 
             const auto idfus = ctx.reactions().idOf("fusion");
             const auto idfis = ctx.reactions().idOf("fission");
 
-            auto countsObs = kernel->observe().reactionCounts(1);
-            countsObs->callback() = [&idfus, &idfis](const readdy::model::observables::ReactionCounts::result_type &result) {
+            auto countsObs = kernel->observe().reactionCounts(1,[&idfus, &idfis](const readdy::model::observables::ReactionCounts::result_type &result) {
                 const auto& counts = std::get<0>(result);
                 if (counts.empty()) {
                     readdy::log::trace("reaction counts is empty, no reaction handler ran so far, skip test");
@@ -534,12 +527,11 @@ TEMPLATE_TEST_CASE("Detailed balance integration tests.", "[detailed-balance]", 
                 REQUIRE(counts.at(idfus) == 0);
                 // fission shall not occur
                 REQUIRE(counts.at(idfis) == 0);
-            };
+            });
             auto countsConnection = kernel->connectObservable(countsObs.get());
 
             std::vector<std::string> typesToCount = {"A", "B", "C", "D"};
-            auto numbersObs = kernel->observe().nParticles(1, typesToCount);
-            numbersObs->callback() = [](const readdy::model::observables::NParticles::result_type &result) {
+            auto numbersObs = kernel->observe().nParticles(1, typesToCount, [](const readdy::model::observables::NParticles::result_type &result) {
                 // conservation of A + C
                 REQUIRE(result[0] + result[2] == 1);
                 // conservation of B + C
@@ -549,7 +541,7 @@ TEMPLATE_TEST_CASE("Detailed balance integration tests.", "[detailed-balance]", 
                 if (result[0] + result[2] != 1) {
                     readdy::log::trace("A {} B {} C {}", result[0], result[1], result[2]);
                 }
-            };
+            });
             auto numbersConnection = kernel->connectObservable(numbersObs.get());
 
             const auto ida = ctx.particleTypes().idOf("A");
@@ -580,8 +572,7 @@ TEMPLATE_TEST_CASE("Detailed balance integration tests.", "[detailed-balance]", 
             const auto idfus = ctx.reactions().idOf("fusion");
             const auto idfis = ctx.reactions().idOf("fission");
 
-            auto countsObs = kernel->observe().reactionCounts(1);
-            countsObs->callback() = [&idfus, &idfis](const readdy::model::observables::ReactionCounts::result_type &result) {
+            auto countsObs = kernel->observe().reactionCounts(1, [&idfus, &idfis](const readdy::model::observables::ReactionCounts::result_type &result) {
                 const auto& counts = std::get<0>(result);
                 if (counts.empty()) {
                     readdy::log::trace("reaction counts is empty, no reaction handler ran so far, skip test");
@@ -589,19 +580,18 @@ TEMPLATE_TEST_CASE("Detailed balance integration tests.", "[detailed-balance]", 
                 }
                 REQUIRE(counts.at(idfis) == 1); // fission must occur
                 REQUIRE(counts.at(idfus) == 0); // fusion shall not occur
-            };
+            });
             auto countsConnection = kernel->connectObservable(countsObs.get());
 
             std::vector<std::string> typesToCount = {"A", "B", "C", "D"};
-            auto numbersObs = kernel->observe().nParticles(1, typesToCount);
-            numbersObs->callback() = [](const readdy::model::observables::NParticles::result_type &result) {
+            auto numbersObs = kernel->observe().nParticles(1, typesToCount, [](const readdy::model::observables::NParticles::result_type &result) {
                 REQUIRE(result[0] + result[2] == 1); // conservation of A + C
                 REQUIRE(result[1] + result[2] == 1); // conservation of B + C
                 REQUIRE(result[3] == 500); // conservation of D
                 if (result[0] + result[2] != 1) {
                     readdy::log::trace("A {} B {} C {}", result[0], result[1], result[2]);
                 }
-            };
+            });
             auto numbersConnection = kernel->connectObservable(numbersObs.get());
 
             const auto idc = ctx.particleTypes().idOf("C");
@@ -627,8 +617,7 @@ TEMPLATE_TEST_CASE("Detailed balance integration tests.", "[detailed-balance]", 
             const auto idfus = ctx.reactions().idOf("fusion");
             const auto idfis = ctx.reactions().idOf("fission");
 
-            auto countsObs = kernel->observe().reactionCounts(1);
-            countsObs->callback() = [&idfus, &idfis](const readdy::model::observables::ReactionCounts::result_type &result) {
+            auto countsObs = kernel->observe().reactionCounts(1,[&idfus, &idfis](const readdy::model::observables::ReactionCounts::result_type &result) {
                 const auto& counts = std::get<0>(result);
                 if (counts.empty()) {
                     readdy::log::trace("reaction counts is empty, no reaction handler ran so far, skip test");
@@ -636,19 +625,18 @@ TEMPLATE_TEST_CASE("Detailed balance integration tests.", "[detailed-balance]", 
                 }
                 REQUIRE(counts.at(idfis) == 0); // fission shall not occur
                 REQUIRE(counts.at(idfus) == 0); // fusion shall not occur
-            };
+            });
             auto countsConnection = kernel->connectObservable(countsObs.get());
 
             std::vector<std::string> typesToCount = {"A", "B", "C", "D"};
-            auto numbersObs = kernel->observe().nParticles(1, typesToCount);
-            numbersObs->callback() = [](const readdy::model::observables::NParticles::result_type &result) {
+            auto numbersObs = kernel->observe().nParticles(1, typesToCount, [](const readdy::model::observables::NParticles::result_type &result) {
                 REQUIRE(result[0] + result[2] == 1); // conservation of A + C
                 REQUIRE(result[1] + result[2] == 1); // conservation of B + C
                 REQUIRE(result[3] == 500); // conservation of D
                 if (result[0] + result[2] != 1) {
                     readdy::log::trace("A {} B {} C {}", result[0], result[1], result[2]);
                 }
-            };
+            });
             auto numbersConnection = kernel->connectObservable(numbersObs.get());
 
             const auto idc = ctx.particleTypes().idOf("C");
@@ -677,8 +665,7 @@ TEMPLATE_TEST_CASE("Detailed balance integration tests.", "[detailed-balance]", 
             const auto idForward = ctx.reactions().idOf("convAB");
             const auto idBackward = ctx.reactions().idOf("convBA");
 
-            auto countsObs = kernel->observe().reactionCounts(1);
-            countsObs->callback() = [&idForward, &idBackward](const readdy::model::observables::ReactionCounts::result_type &result) {
+            auto countsObs = kernel->observe().reactionCounts(1, [&idForward, &idBackward](const readdy::model::observables::ReactionCounts::result_type &result) {
                 const auto& counts = std::get<0>(result);
                 if (counts.empty()) {
                     readdy::log::trace("reaction counts is empty, no reaction handler ran so far, skip test");
@@ -686,16 +673,15 @@ TEMPLATE_TEST_CASE("Detailed balance integration tests.", "[detailed-balance]", 
                 }
                 REQUIRE(counts.at(idBackward) == 0);
                 REQUIRE(counts.at(idForward) == 1);
-            };
+            });
             auto countsConnection = kernel->connectObservable(countsObs.get());
 
             std::vector<std::string> typesToCount = {"A", "B", "C", "D"};
-            auto numbersObs = kernel->observe().nParticles(1, typesToCount);
-            numbersObs->callback() = [](const readdy::model::observables::NParticles::result_type &result) {
+            auto numbersObs = kernel->observe().nParticles(1, typesToCount, [](const readdy::model::observables::NParticles::result_type &result) {
                 REQUIRE(result[0] + result[1] == 1); // conservation of A + B
                 REQUIRE(result[2] == 1); // conservation of C
                 REQUIRE(result[3] == 500); // conservation of D
-            };
+            });
             auto numbersConnection = kernel->connectObservable(numbersObs.get());
 
             const auto ida = ctx.particleTypes().idOf("A");
@@ -722,8 +708,7 @@ TEMPLATE_TEST_CASE("Detailed balance integration tests.", "[detailed-balance]", 
             const auto idForward = ctx.reactions().idOf("convAB");
             const auto idBackward = ctx.reactions().idOf("convBA");
 
-            auto countsObs = kernel->observe().reactionCounts(1);
-            countsObs->callback() = [&idForward, &idBackward](const readdy::model::observables::ReactionCounts::result_type &result) {
+            auto countsObs = kernel->observe().reactionCounts(1,[&idForward, &idBackward](const readdy::model::observables::ReactionCounts::result_type &result) {
                 const auto& counts = std::get<0>(result);
                 if (counts.empty()) {
                     readdy::log::trace("reaction counts is empty, no reaction handler ran so far, skip test");
@@ -731,16 +716,15 @@ TEMPLATE_TEST_CASE("Detailed balance integration tests.", "[detailed-balance]", 
                 }
                 REQUIRE(counts.at(idBackward) == 0);
                 REQUIRE(counts.at(idForward) == 0);
-            };
+            });
             auto countsConnection = kernel->connectObservable(countsObs.get());
 
             std::vector<std::string> typesToCount = {"A", "B", "C", "D"};
-            auto numbersObs = kernel->observe().nParticles(1, typesToCount);
-            numbersObs->callback() = [](const readdy::model::observables::NParticles::result_type &result) {
+            auto numbersObs = kernel->observe().nParticles(1, typesToCount, [](const readdy::model::observables::NParticles::result_type &result) {
                 REQUIRE(result[0] + result[1] == 1); // conservation of A + B
                 REQUIRE(result[2] == 1); // conservation of C
                 REQUIRE(result[3] == 500); // conservation of D
-            };
+            });
             auto numbersConnection = kernel->connectObservable(numbersObs.get());
 
             const auto ida = ctx.particleTypes().idOf("A");
@@ -765,14 +749,13 @@ TEMPLATE_TEST_CASE("Detailed balance integration tests.", "[detailed-balance]", 
         ctx.reactions().addFission("fission", "C", "A", "B", 2, reactionRadius);
 
         std::vector<std::string> typesToCount = {"A", "B", "C"};
-        auto numbersObs = kernel->observe().nParticles(1, typesToCount);
-        numbersObs->callback() = [](const readdy::model::observables::NParticles::result_type &result) {
+        auto numbersObs = kernel->observe().nParticles(1, typesToCount, [](const readdy::model::observables::NParticles::result_type &result) {
             REQUIRE(result[0] + result[2] == 20); // conservation of A + C
             REQUIRE(result[1] + result[2] == 20); // conservation of B + C
             if (result[0] + result[2] != 1) {
                 readdy::log::trace("A {} B {} C {}", result[0], result[1], result[2]);
             }
-        };
+        });
         auto numbersConnection = kernel->connectObservable(numbersObs.get());
 
         const auto ida = ctx.particleTypes().idOf("A");
@@ -799,10 +782,9 @@ TEMPLATE_TEST_CASE("Detailed balance integration tests.", "[detailed-balance]", 
         // A + B + 2*C = const
 
         std::vector<std::string> typesToCount = {"A", "B", "C"};
-        auto numbersObs = kernel->observe().nParticles(1, typesToCount);
-        numbersObs->callback() = [](const readdy::model::observables::NParticles::result_type &result) {
+        auto numbersObs = kernel->observe().nParticles(1, typesToCount, [](const readdy::model::observables::NParticles::result_type &result) {
             REQUIRE(result[0] + result[1] + 2*result[2] == 40); // conservation of A + B + 2C
-        };
+        });
         auto numbersConnection = kernel->connectObservable(numbersObs.get());
 
         const auto ida = ctx.particleTypes().idOf("A");

@@ -106,11 +106,11 @@ TEMPLATE_TEST_CASE("Test topologies.", "[topologies]", SingleCPU, CPU) {
         }
         auto fObs = kernel->observe().forces(1);
         std::vector<readdy::Vec3> collectedForces;
-        fObs->callback() = [&collectedForces](const readdy::model::observables::Forces::result_type &result) {
+        fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_type &result) {
             for (const auto &force : result) {
                 collectedForces.push_back(force);
             }
-        };
+        });
 
         auto conn = kernel->connectObservable(fObs.get());
 
@@ -152,11 +152,11 @@ TEMPLATE_TEST_CASE("Test topologies.", "[topologies]", SingleCPU, CPU) {
         }
         auto fObs = kernel->observe().forces(1);
         std::vector<readdy::Vec3> collectedForces;
-        fObs->callback() = [&collectedForces](const readdy::model::observables::Forces::result_type &result) {
+        fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_type &result) {
             for (const auto &force : result) {
                 collectedForces.push_back(force);
             }
-        };
+        });
 
         auto conn = kernel->connectObservable(fObs.get());
 
@@ -190,11 +190,11 @@ TEMPLATE_TEST_CASE("Test topologies.", "[topologies]", SingleCPU, CPU) {
         }
         auto fObs = kernel->observe().forces(1);
         std::vector<readdy::Vec3> collectedForces;
-        fObs->callback() = [&collectedForces](const readdy::model::observables::Forces::result_type &result) {
+        fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_type &result) {
             for (const auto &force : result) {
                 collectedForces.push_back(force);
             }
-        };
+        });
 
         auto conn = kernel->connectObservable(fObs.get());
 
@@ -248,11 +248,11 @@ TEMPLATE_TEST_CASE("Test topologies.", "[topologies]", SingleCPU, CPU) {
         }
         auto fObs = kernel->observe().forces(1);
         std::vector<readdy::Vec3> collectedForces;
-        fObs->callback() = [&collectedForces](const readdy::model::observables::Forces::result_type &result) {
+        fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_type &result) {
             for (const auto &force : result) {
                 collectedForces.push_back(force);
             }
-        };
+        });
 
         auto conn = kernel->connectObservable(fObs.get());
         auto calculateForces = kernel->actions().calculateForces();
@@ -286,11 +286,11 @@ TEMPLATE_TEST_CASE("Test topologies.", "[topologies]", SingleCPU, CPU) {
         }
         auto fObs = kernel->observe().forces(1);
         std::vector<readdy::Vec3> collectedForces;
-        fObs->callback() = [&collectedForces](const readdy::model::observables::Forces::result_type &result) {
+        fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_type &result) {
             for (const auto &force : result) {
                 collectedForces.push_back(force);
             }
-        };
+        });
 
         auto conn = kernel->connectObservable(fObs.get());
         auto calculateForces = kernel->actions().calculateForces();

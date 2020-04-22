@@ -53,13 +53,15 @@ namespace readdy::kernel::mpi::actions {
 
 class MPIAddParticles : public readdy::model::actions::AddParticles {
 public:
-    MPIAddParticles(MPIKernel *kernel, const std::vector<readdy::model::Particle> &particles) : AddParticles(kernel, particles), kernel(kernel) {}
+    MPIAddParticles(MPIKernel *kernel, const std::vector<readdy::model::Particle> &particles)
+        : AddParticles(kernel, particles), kernel(kernel) {}
 
     void perform() override {
         if (kernel) {
             kernel->getMPIKernelStateModel().distributeParticles(particles);
         } else {
-            throw std::runtime_error("invalid kernel");
+            throw std::runtime_error(
+                    fmt::format("rank={} MPIAddParticles::perform invalid kernel", kernel->domain().rank()));
         }
     }
 private:

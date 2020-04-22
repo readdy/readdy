@@ -209,6 +209,10 @@ public:
         return _commUsedRanks;
     }
 
+    const MPI_Comm &commUsedRanks() const {
+        return _commUsedRanks;
+    }
+
     /**
      * Above are individual operations, i.e. each worker/rank, can execute them without side-effects.
      * Following are MPI collective operations, i.e. behavior is different depending on rank.

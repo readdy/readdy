@@ -69,14 +69,14 @@ public:
 
     std::string_view type() const override;
 
-private:
-    struct Impl;
-    std::unique_ptr<Impl> pimpl;
-
+protected:
     void initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) override;
 
     void append() override;
 
+private:
+    struct Impl;
+    std::unique_ptr<Impl> pimpl;
 };
 
 }

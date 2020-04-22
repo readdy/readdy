@@ -54,11 +54,6 @@ using Json = nlohmann::json;
 namespace rkmu = readdy::kernel::mpi::util;
 
 TEST_CASE("Test sanity simulation api", "[mpi]") {
-    int rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    readdy::log::console()->set_level(spdlog::level::trace);
-
-    readdy::log::trace("rank {} -- 1", rank);
     readdy::model::Context ctx;
 
     ctx.boxSize() = {10., 10., 10.};
@@ -66,22 +61,15 @@ TEST_CASE("Test sanity simulation api", "[mpi]") {
     Json conf = {{"MPI", {{"dx", 4.9}, {"dy", 4.9}, {"dz", 4.9}, {"haloThickness", 1.}}}};
     ctx.kernelConfiguration() = conf.get<readdy::conf::Configuration>();
 
-    readdy::log::trace("rank {} -- 2", rank);
-    // ugly hack to use the simulation interface with the MPI Kernel
-    //readdy::plugin::KernelProvider::kernel_ptr kernelPtr = std::unique_ptr<readdy::model::Kernel, readdy::plugin::KernelDeleter>(
-    //        readdy::kernel::mpi::MPIKernel::create(ctx));
+    // currently the only way to use the simulation interface with the MPI Kernel
     readdy::plugin::KernelProvider::kernel_ptr kernelPtr(readdy::kernel::mpi::MPIKernel::create(ctx));
     readdy::Simulation simulation(std::move(kernelPtr));
 
-    readdy::log::trace("rank {} -- 3", rank);
     REQUIRE(simulation.selectedKernelType() == "MPI");
 
-    auto add = simulation.actions().addParticles({1., 1., 1., simulation.context().particleTypes().idOf("A")});
-    readdy::log::trace("rank {} -- 4", rank);
-    add->perform();
-    readdy::log::trace("rank {} -- 5", rank);
+    readdy::model::Particle p {1., 1., 1., simulation.context().particleTypes().idOf("A")};
+    simulation.actions().addParticles(p)->perform();
     simulation.run(100, 0.01);
-    readdy::log::trace("rank {} -- 6", rank);
 }
 
 TEST_CASE("Test kernel configuration from context", "[mpi]") {

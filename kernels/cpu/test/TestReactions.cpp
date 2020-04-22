@@ -227,9 +227,6 @@ TEST_CASE("Test cpu kernel reaction handling", "[cpu]") {
         auto &&reactions = kernel->actions().gillespie(1);
 
         auto pp_obs = kernel->observe().positions(1);
-        pp_obs->callback() = ([](const readdy::model::observables::Positions::result_type &t) {
-            /* ignore */
-        });
         auto connection = kernel->connectObservable(pp_obs.get());
 
         const int n_particles = 200;

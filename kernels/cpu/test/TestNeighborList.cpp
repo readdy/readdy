@@ -193,9 +193,9 @@ TEST_CASE("Test cpu neighbor list", "[cpu]") {
         }
 
         auto obs = kernel->observe().nParticles(1, std::vector<std::string>({"F", "A"}));
-        obs->callback() = [&](const readdy::model::observables::NParticles::result_type &result) {
+        obs->setCallback([&](const readdy::model::observables::NParticles::result_type &result) {
             REQUIRE(result[0] == 100);
-        };
+        });
         auto connection = kernel->connectObservable(obs.get());
 
         {
@@ -225,7 +225,7 @@ TEST_CASE("Test cpu neighbor list", "[cpu]") {
             kernel->addParticle("A", n3(0., 1.));
         }
         auto obs = kernel->observe().nParticles(1);
-        obs->callback() = (
+        obs->setCallback(
                 [&](const readdy::model::observables::NParticles::result_type &) {
                     const auto neighbor_list = kernel->getCPUKernelStateModel().getNeighborList();
 

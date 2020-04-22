@@ -69,12 +69,12 @@ public:
         {
             model::observables::FlatTrajectory traj(kernel, 1, false);
             traj.enableWriteToFile(*file, "trajectory_ckpt", 1);
-            traj.callback(t);
+            traj.call(t);
         }
         {
             model::observables::Topologies tops(kernel, 1, false);
             tops.enableWriteToFile(*file, "topologies_ckpt", 1);
-            tops.callback(t);
+            tops.call(t);
         }
 
         while (_maxNSaves > 0 && previousCheckpoints.size() > _maxNSaves) {

@@ -33,75 +33,125 @@
  ********************************************************************/
 
 /**
- * « detailed description »
+ * Implementation of observables for the MPI kernel. In most cases during the evaluate(),
+ * the workers collect the results which are then gathered on the master worker.
  *
  * @file MPIObservables.cpp
- * @brief « brief description »
+ * @brief Implementation of observables for the MPI kernel
  * @author chrisfroe
  * @date 03.06.19
  */
 
+#include <utility>
 #include <readdy/kernel/mpi/observables/MPIObservables.h>
 #include <readdy/kernel/mpi/MPIKernel.h>
 
-#include <utility>
-
 namespace readdy::kernel::mpi::observables {
 
-MPIVirial::MPIVirial(MPIKernel *kernel, Stride stride) : Virial(kernel, stride), kernel(kernel) {
-}
+MPIVirial::MPIVirial(MPIKernel *kernel, Stride stride) : Virial(kernel, stride), kernel(kernel) {}
 
 void MPIVirial::evaluate() {
-    // @todo MPI gather results, only save on master rank
-    result = kernel->getMPIKernelStateModel().virial();
+    // todo use MPI reduce with the standard '+' op, MPI_SUM
+    //MPI_Reduce(send_data, recv_data, count, datatype, op, root, communicator);
+    if (not kernel->domain().isIdleRank()) {
+        std::vector<readdy::model::observables::Virial::result_type> results(1);
+        if (kernel->domain().isWorkerRank()) {
+            results[0] = kernel->getMPIKernelStateModel().virial();
+        }
+        results = util::gatherObjects(results, 0, kernel->domain(), kernel->commUsedRanks());
+
+        if (kernel->domain().isMasterRank()) {
+            // add up virial tensors assuming that there was no double counting
+            // which has to be ensured in calculateForces
+            result = std::accumulate(results.begin(), results.end(), _internal::ReaDDyMatrix33<scalar>());
+        }
+    }
+}
+
+void MPIVirial::append() {
+    if (kernel->domain().isMasterRank()) {
+        Virial::append();
+    }
+}
+
+void MPIVirial::initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) {
+    if (kernel->domain().isMasterRank()) {
+        Virial::initializeDataSet(file, dataSetName, flushStride);
+    }
 }
 
 MPIPositions::MPIPositions(MPIKernel *kernel, unsigned int stride, const std::vector<std::string> &typesToCount)
         : Positions(kernel, stride, typesToCount), kernel(kernel) {}
 
 void MPIPositions::evaluate() {
-    // @todo MPI gather results, only save on master rank
-    result.clear();
-    auto &stateModel = kernel->getMPIKernelStateModel();
-    const auto &pd = stateModel.getParticleData();
-    auto it = pd->cbegin();
-    if (typesToCount.empty()) {
-        result = stateModel.getParticlePositions();
-    } else {
-        // only get positions of typesToCount
-        while (it != pd->cend()) {
-            if (!it->is_deactivated()) {
-                if (std::find(typesToCount.begin(), typesToCount.end(), it->type) != typesToCount.end()) {
-                    result.push_back(it->position());
+    if (not kernel->domain().isIdleRank()) {
+        result.clear();
+        if (kernel->domain().isWorkerRank()) {
+            auto &stateModel = kernel->getMPIKernelStateModel();
+            if (typesToCount.empty()) {
+                result = stateModel.getParticlePositions();
+            } else {
+                // only get positions of typesToCount
+                const auto &pd = stateModel.getParticleData();
+                for (const auto &p : *pd) {
+                    if (!p.deactivated) {
+                        if (std::find(typesToCount.begin(), typesToCount.end(), p.type) != typesToCount.end()) {
+                            result.push_back(p.pos);
+                        }
+                    }
                 }
             }
-            ++it;
         }
+        result = util::gatherObjects(result, 0, kernel->domain(), kernel->commUsedRanks());
+    }
+}
+
+void MPIPositions::append() {
+    if (kernel->domain().isMasterRank()) {
+        Positions::append();
+    }
+}
+
+void MPIPositions::initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) {
+    if (kernel->domain().isMasterRank()) {
+        Positions::initializeDataSet(file, dataSetName, flushStride);
     }
 }
 
 MPIParticles::MPIParticles(MPIKernel *kernel, unsigned int stride) : Particles(kernel, stride), kernel(kernel) {}
 
 void MPIParticles::evaluate() {
-    // @todo MPI gather results, only save on master rank
-    auto &resultTypes = std::get<0>(result);
-    auto &resultIds = std::get<1>(result);
-    auto &resultPositions = std::get<2>(result);
-    resultTypes.clear();
-    resultIds.clear();
-    resultPositions.clear();
-    const auto &particleData = kernel->getMPIKernelStateModel().getParticleData();
-    auto it = particleData->cbegin();
-    while (it != particleData->cend()) {
-        if (!it->is_deactivated()) {
-            resultTypes.push_back(it->type);
-            resultIds.push_back(it->id);
-            resultPositions.push_back(it->position());
+    if (not kernel->domain().isIdleRank()) {
+        auto &resultTypes = std::get<0>(result);
+        auto &resultIds = std::get<1>(result);
+        auto &resultPositions = std::get<2>(result);
+        resultTypes.clear();
+        resultIds.clear();
+        resultPositions.clear();
+        auto particles = kernel->getMPIKernelStateModel().gatherParticles();
+        if (kernel->domain().isMasterRank()) {
+            for (const auto &p : particles) {
+                resultTypes.push_back(p.type());
+                resultIds.push_back(p.id());
+                resultPositions.push_back(p.pos());
+            }
         }
-        ++it;
+    } else {
+        // noop for idlers
     }
 }
 
+void MPIParticles::append() {
+    if (kernel->domain().isMasterRank()) {
+        Particles::append();
+    }
+}
+
+void MPIParticles::initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) {
+    if (kernel->domain().isMasterRank()) {
+        Particles::initializeDataSet(file, dataSetName, flushStride);
+    }
+}
 
 MPIHistogramAlongAxis::MPIHistogramAlongAxis(MPIKernel *kernel, unsigned int stride,
                                              const std::vector<scalar> &binBorders,
@@ -109,140 +159,230 @@ MPIHistogramAlongAxis::MPIHistogramAlongAxis(MPIKernel *kernel, unsigned int str
         : HistogramAlongAxis(kernel, stride, binBorders, typesToCount, axis), kernel(kernel) {}
 
 void MPIHistogramAlongAxis::evaluate() {
-    // @todo MPI gather results, only save on master rank
-    std::fill(result.begin(), result.end(), 0);
-
-    const auto &model = kernel->getMPIKernelStateModel();
-    const auto data = model.getParticleData();
-
-    auto it = data->cbegin();
-
-    while (it != data->cend()) {
-        if (!it->is_deactivated() and typesToCount.find(it->type) != typesToCount.end()) {
-            const auto &vec = it->position();
-            auto upperBound = std::upper_bound(binBorders.begin(), binBorders.end(), vec[axis]);
-            if (upperBound != binBorders.end()) {
-                unsigned long binBordersIdx = static_cast<unsigned long>(upperBound - binBorders.begin());
-                if (binBordersIdx > 1) {
-                    ++result[binBordersIdx - 1];
+    if (not kernel->domain().isIdleRank()) {
+        std::fill(result.begin(), result.end(), 0);
+        if (kernel->domain().isWorkerRank()) {
+            const auto data = kernel->getMPIKernelStateModel().getParticleData();
+            for (const auto &p : *data) {
+                if (!p.deactivated and p.responsible and typesToCount.find(p.type) != typesToCount.end()) {
+                    auto upperBound = std::upper_bound(binBorders.begin(), binBorders.end(), p.pos[axis]);
+                    if (upperBound != binBorders.end()) {
+                        auto binBordersIdx = std::distance(binBorders.begin(), upperBound);
+                        if (binBordersIdx > 1) {
+                            ++result[binBordersIdx - 1];
+                        }
+                    }
                 }
             }
         }
-        ++it;
+        // todo variable float type
+        MPI_Reduce(result.data(), result.data(), static_cast<int>(result.size()), MPI_DOUBLE, MPI_SUM, 0, kernel->commUsedRanks());
     }
+}
 
+void MPIHistogramAlongAxis::append() {
+    if (kernel->domain().isMasterRank()) {
+        HistogramAlongAxis::append();
+    }
+}
+
+void MPIHistogramAlongAxis::initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) {
+    if (kernel->domain().isMasterRank()) {
+        HistogramAlongAxis::initializeDataSet(file, dataSetName, flushStride);
+    }
 }
 
 MPINParticles::MPINParticles(MPIKernel *kernel, unsigned int stride, std::vector<std::string> typesToCount)
         : NParticles(kernel, stride, std::move(typesToCount)), kernel(kernel) {}
 
 void MPINParticles::evaluate() {
-    // @todo MPI gather results, only save on master rank
-    std::vector<unsigned long> resultVec = {};
-    const auto &pd = kernel->getMPIKernelStateModel().getParticleData();
-
-    if (typesToCount.empty()) {
-        resultVec.push_back(pd->size() - pd->n_deactivated());
-    } else {
-        resultVec.resize(typesToCount.size());
-        auto it = pd->cbegin();
-        while (it != pd->cend()) {
-            if (!it->is_deactivated()) {
-                unsigned int idx = 0;
-                for (const auto t : typesToCount) {
-                    if (it->type == t) {
-                        resultVec[idx]++;
-                        break;
+    if (not kernel->domain().isIdleRank()) {
+        result.clear();
+        if (kernel->domain().isWorkerRank()) {
+            const auto &pd = kernel->getMPIKernelStateModel().getParticleData();
+            if (typesToCount.empty()) {
+                unsigned long n = std::count_if(pd->begin(), pd->end(),
+                        [](const MPIEntry& entry)->bool{return (not entry.deactivated and entry.responsible);}
+                );
+                result.push_back(n);
+            } else {
+                result.resize(typesToCount.size());
+                for (const auto &p : *pd) {
+                    if (!p.deactivated) {
+                        unsigned int idx = 0;
+                        for (const auto t : typesToCount) {
+                            if (p.type == t) {
+                                result[idx]++;
+                                break;
+                            }
+                            ++idx;
+                        }
                     }
-                    ++idx;
                 }
             }
-            ++it;
+        } else if (kernel->domain().isMasterRank()) {
+            if (typesToCount.empty()) {
+                result.resize(1, 0);
+            } else {
+                result.resize(typesToCount.size(), 0);
+            }
+        } else {
+            throw std::runtime_error("impossible");
         }
+
+        MPI_Reduce(result.data(), result.data(), static_cast<int>(result.size()), MPI_UNSIGNED_LONG, MPI_SUM, 0, kernel->commUsedRanks());
     }
-    result = resultVec;
+}
+
+void MPINParticles::append() {
+    if (kernel->domain().isMasterRank()) {
+        NParticles::append();
+    }
+}
+
+void MPINParticles::initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) {
+    if (kernel->domain().isMasterRank()) {
+        NParticles::initializeDataSet(file, dataSetName, flushStride);
+    }
 }
 
 MPIForces::MPIForces(MPIKernel *kernel, unsigned int stride, std::vector<std::string> typesToCount)
         : Forces(kernel, stride, std::move(typesToCount)), kernel(kernel) {}
 
 void MPIForces::evaluate() {
-    // @todo MPI gather results, only save on master rank
-    result.clear();
-    const auto &pd = kernel->getMPIKernelStateModel().getParticleData();
-
-    auto it = pd->cbegin();
-    if (typesToCount.empty()) {
-        // get all particles' forces
-        for (; it != pd->cend(); ++it) {
-            if (!it->is_deactivated()) {
-                result.push_back(it->force);
-            }
-        }
-    } else {
-        // only get forces of typesToCount
-        while (it != pd->cend()) {
-            if (!it->is_deactivated()) {
-                for (auto countedParticleType : typesToCount) {
-                    if (it->type == countedParticleType) {
-                        result.push_back(it->force);
-                        break;
+    if (not kernel->domain().isIdleRank()) {
+        result.clear();
+        if (kernel->domain().isWorkerRank()) {
+            const auto &pd = kernel->getMPIKernelStateModel().getParticleData();
+            if (typesToCount.empty()) {
+                // get all particles' forces
+                for (const auto &p : *pd) {
+                    if (!p.deactivated) {
+                        result.push_back(p.force);
+                    }
+                }
+            } else {
+                // only get forces of typesToCount
+                for (const auto &p : *pd) {
+                    if (!p.deactivated) {
+                        if (std::find(typesToCount.begin(), typesToCount.end(), p.type) != typesToCount.end()) {
+                            result.push_back(p.force);
+                        }
                     }
                 }
             }
-            ++it;
         }
+        result = util::gatherObjects(result, 0, kernel->domain(), kernel->commUsedRanks());
     }
 }
 
-
-MPIReactions::MPIReactions(MPIKernel *kernel, unsigned int stride) : Reactions(kernel, stride), kernel(kernel) {
-
+void MPIForces::append() {
+    if (kernel->domain().isMasterRank()) {
+        Forces::append();
+    }
 }
 
+void MPIForces::initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) {
+    if (kernel->domain().isMasterRank()) {
+        Forces::initializeDataSet(file, dataSetName, flushStride);
+    }
+}
+
+MPIReactions::MPIReactions(MPIKernel *kernel, unsigned int stride) : Reactions(kernel, stride), kernel(kernel) {}
+
 void MPIReactions::evaluate() {
-    // @todo MPI gather results, only save on master rank
-    result = kernel->getMPIKernelStateModel().reactionRecords();
+    if (not kernel->domain().isIdleRank()) {
+        result.clear();
+        if (kernel->domain().isWorkerRank()) {
+            result = kernel->getMPIKernelStateModel().reactionRecords();
+        }
+        result = util::gatherObjects(result, 0, kernel->domain(), kernel->commUsedRanks());
+    }
+}
+
+void MPIReactions::append() {
+    if (kernel->domain().isMasterRank()) {
+        Reactions::append();
+    }
+}
+
+void MPIReactions::initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) {
+    if (kernel->domain().isMasterRank()) {
+        Reactions::initializeDataSet(file, dataSetName, flushStride);
+    }
 }
 
 MPIReactionCounts::MPIReactionCounts(MPIKernel *kernel, unsigned int stride) : ReactionCounts(kernel, stride), kernel(kernel) {}
 
 void MPIReactionCounts::evaluate() {
-    // @todo MPI gather results, only save on master rank
-    if (kernel->domain().isWorkerRank()) {
-        std::get<0>(result) = kernel->getMPIKernelStateModel().reactionCounts();
-    }
+    // todo this could be nicer with MPI_Reduce: flatten into vec, mpi_reduce, copy into result map
+    if (not kernel->domain().isIdleRank()) {
+        auto &counts = std::get<0>(result);
 
-    // no topologies currently on MPI
-    //std::get<1>(result) = kernel->getMPIKernelStateModel().spatialReactionCounts();
-    //std::get<2>(result) = kernel->getMPIKernelStateModel().structuralReactionCounts();
+        // prepare a vector that mirrors the counts map
+        std::vector<std::pair<readdy::ReactionId, unsigned long>> countsVec;
+        if (kernel->domain().isWorkerRank()) {
+            counts = kernel->getMPIKernelStateModel().reactionCounts();
+            for (const auto &pair : counts) {
+                countsVec.push_back(pair);
+            }
+        }
+
+        // gather all vectors
+        countsVec = util::gatherObjects(countsVec, 0, kernel->domain(), kernel->commUsedRanks());
+
+        // reduce the countsVec on master rank, i.e. aggregate pairs with the same id into the usual map format
+        if (kernel->domain().isMasterRank()) {
+            counts.clear();
+            for (const auto &[id, n] : countsVec) {
+                if (counts.find(id) != counts.end()) {
+                    counts[id] += n;
+                } else {
+                    counts[id] = n;
+                }
+            }
+        }
+
+        // no topologies currently on MPI
+        //std::get<1>(result) = kernel->getMPIKernelStateModel().spatialReactionCounts();
+        //std::get<2>(result) = kernel->getMPIKernelStateModel().structuralReactionCounts();
+    }
+}
+
+void MPIReactionCounts::append() {
+    if (kernel->domain().isMasterRank()) {
+        ReactionCounts::append();
+    }
+}
+
+void MPIReactionCounts::initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) {
+    if (kernel->domain().isMasterRank()) {
+        ReactionCounts::initializeDataSet(file, dataSetName, flushStride);
+    }
 }
 
 MPIEnergy::MPIEnergy(MPIKernel *kernel, Stride stride) : Energy(kernel, stride), kernel(kernel) {}
 
 void MPIEnergy::evaluate() {
-    if (kernel->domain().isWorkerRank()) {
-        Energy::evaluate(); // just saves the value to result, which is ok
+    if (not kernel->domain().isIdleRank()) {
+        result = 0.;
+        if (kernel->domain().isWorkerRank()) {
+            result = kernel->stateModel().energy();
+        }
+        MPI_Reduce(&result, &result, static_cast<int>(1), MPI_DOUBLE, MPI_SUM, 0, kernel->commUsedRanks());
     }
 }
 
 void MPIEnergy::append() {
-    // todo gather
     if (kernel->domain().isMasterRank()) {
-        ds->append({1}, &result);
-        time->append(t_current);
+        Energy::append();
     }
 }
 
 void MPIEnergy::initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) {
-    // todo
-//    if (kernel->domain().isMasterRank()) {
-//        h5rd::dimensions fs = {flushStride};
-//        h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
-//        auto group = file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName);
-//        ds = group.createDataSet<scalar>("data", fs, dims, {&bloscFilter});
-//        time = std::make_unique<rmou::TimeSeriesWriter>(group, flushStride);
-//    }
+    if (kernel->domain().isMasterRank()) {
+        Energy::initializeDataSet(file, dataSetName, flushStride);
+    }
 }
 
 }

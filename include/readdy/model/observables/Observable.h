@@ -126,11 +126,11 @@ public:
     virtual ~ObservableBase() = default;
 
     /**
-     * Method that will trigger a callback with the current results if shouldExecuteCallback() is true.
+     * Method that will trigger a callback with the current results if shouldExecuteCall() is true.
      * @param t
      */
-    virtual void callback(TimeStep t) {
-        if (shouldExecuteCallback(t)) {
+    virtual void call(TimeStep t) {
+        if (shouldExecuteCall(t)) {
             firstCall = false;
             t_current = t;
             evaluate();
@@ -143,12 +143,12 @@ public:
      * @param t the time step
      * @return true, if we haven't been evaluated in the current time step yet and stride is 0 or a divisor of t
      */
-    virtual bool shouldExecuteCallback(TimeStep t) const {
+    virtual bool shouldExecuteCall(TimeStep t) const {
         return (t_current != t || firstCall) && (_stride == 0 || t % _stride == 0);
     }
 
     /**
-     * Will be called automagically when shouldExecuteCallback() is true. Can also be called manually and will then
+     * Will be called automagically when shouldExecuteCall() is true. Can also be called manually and will then
      * place the observable's results into the result member (in case of a readdy::model::Observable),
      * based on the current state of the system.
      */
@@ -238,7 +238,7 @@ public:
     /**
      * type of the callback function
      */
-    using callback_function = std::function<void(const Result &)>;
+    using CallbackFunction = std::function<void(const Result &)>;
     /**
      * result type
      */
@@ -261,23 +261,23 @@ public:
         return result;
     }
 
-    callback_function &callback() {
-        return externalCallback;
+    void setCallback(CallbackFunction cb) {
+        _callback = cb;
     }
 
-    const callback_function &callback() const {
-        return externalCallback;
+    const CallbackFunction &callback() const {
+        return _callback;
     }
 
     /**
-     * Function that will evaluate the observable and trigger a callback if ObservableBase#shouldExecuteCallback()
+     * Function that will evaluate the observable and trigger a callback if ObservableBase#shouldExecuteCall()
      * is true.
      * @param t the time step
      */
-    void callback(TimeStep t) override {
-        if (shouldExecuteCallback(t)) {
-            ObservableBase::callback(t);
-            externalCallback(result);
+    void call(TimeStep t) override {
+        if (shouldExecuteCall(t)) {
+            ObservableBase::call(t);
+            _callback(result);
         }
     }
 
@@ -289,7 +289,7 @@ protected:
     /**
      * the callback function
      */
-    callback_function externalCallback = [](const Result /*unused*/) {};
+    CallbackFunction _callback = [](const Result /*unused*/) {};
 };
 
 /**
@@ -319,14 +319,14 @@ public:
             : Observable<RESULT>(kernel, stride), parentObservables(std::forward<PARENT_OBS *>(parents)...) {}
 
     /**
-     * If ObservableBase#shouldExecuteCallback() is true, this will call the Observable#callback() function
+     * If ObservableBase#shouldExecuteCall() is true, this will call the Observable#callback() function
      * for each of its parents.
      * @param t the current time
      */
     void callback(TimeStep t) override {
-        if (ObservableBase::shouldExecuteCallback(t)) {
+        if (ObservableBase::shouldExecuteCall(t)) {
             readdy::util::for_each_in_tuple(parentObservables, CallbackFunctor(ObservableBase::t_current));
-            ObservableBase::callback(t);
+            ObservableBase::call(t);
         }
     }
 

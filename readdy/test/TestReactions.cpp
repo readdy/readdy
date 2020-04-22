@@ -104,12 +104,12 @@ TEMPLATE_TEST_CASE("Test reaction handlers", "[reactions]", SingleCPU, CPU) {
 
                 auto obs = kernel->observe().nParticles(1, std::vector<std::string>({"A", "B", "AB"}));
                 auto conn = kernel->connectObservable(obs.get());
-                obs->callback() = [&n_A, &n_B](const n_particles_obs::result_type &result) {
+                obs->setCallback([&n_A, &n_B](const n_particles_obs::result_type &result) {
                     if (result.size() == 2) {
                         REQUIRE(n_A == result[0] + result[2]);
                         REQUIRE(n_B == result[1] + result[2]);
                     }
-                };
+                });
 
                 readdy::api::SimulationLoop loop(kernel.get(), 1);
                 loop.useReactionScheduler(handler);
@@ -141,21 +141,20 @@ TEMPLATE_TEST_CASE("Test reaction handlers", "[reactions]", SingleCPU, CPU) {
                 }
 
                 auto obs = kernel->observe().positions(1, std::vector<std::string>({"F"}));
-                obs->callback() =
-                        [&](const readdy::model::observables::Positions::result_type &result) {
-                            std::set<readdy::Vec3, Vec3ProjectedLess> checklist;
-                            for (const auto &pos : result) {
-                                checklist.emplace(pos);
-                            }
-                            REQUIRE(fPositions.size() == checklist.size());
-                            auto itPos = fPositions.begin();
-                            auto itCheck = checklist.begin();
-                            while (itPos != fPositions.end()) {
-                                readdy::testing::vec3eq(*itPos, *itCheck, kernel->doublePrecision() ? 1e-8 : 1e-6);
-                                ++itPos;
-                                ++itCheck;
-                            }
-                        };
+                obs->setCallback([&](const readdy::model::observables::Positions::result_type &result) {
+                    std::set<readdy::Vec3, Vec3ProjectedLess> checklist;
+                    for (const auto &pos : result) {
+                        checklist.emplace(pos);
+                    }
+                    REQUIRE(fPositions.size() == checklist.size());
+                    auto itPos = fPositions.begin();
+                    auto itCheck = checklist.begin();
+                    while (itPos != fPositions.end()) {
+                        readdy::testing::vec3eq(*itPos, *itCheck, kernel->doublePrecision() ? 1e-8 : 1e-6);
+                        ++itPos;
+                        ++itCheck;
+                    }
+                });
                 auto connection = kernel->connectObservable(obs.get());
                 {
                     readdy::api::SimulationLoop loop(kernel.get(), .1);
