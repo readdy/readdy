@@ -380,6 +380,7 @@ class MakeCheckpoint {
 public:
     virtual void perform(TimeStep t) = 0;
     virtual ~MakeCheckpoint() = default;
+    virtual std::string describe() const = 0;
 };
 
 template<typename T>

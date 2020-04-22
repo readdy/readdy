@@ -184,7 +184,9 @@ private:
 
 class MPIMakeCheckpoint : public readdy::model::actions::MakeCheckpoint {
 public:
-    MPIMakeCheckpoint(MPIKernel *kernel, const std::string& base, std::size_t maxNSaves) : kernel(kernel), saver(base, maxNSaves) {}
+    MPIMakeCheckpoint(MPIKernel *kernel, const std::string& base, std::size_t maxNSaves,
+                      const std::string &checkpointFormat)
+            : kernel(kernel), saver(base, maxNSaves, checkpointFormat) {}
 
     void perform(TimeStep t) override {
         // todo sync (MPIGather) the state to master's stateModel, then makeCheckpoint as usual and clear stateModel
@@ -199,6 +201,10 @@ public:
         } else {
             // no op for idlers
         }
+    }
+
+    std::string describe() const override {
+        return saver.describe();
     }
 private:
     MPIKernel *kernel;

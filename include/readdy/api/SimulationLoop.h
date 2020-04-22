@@ -266,9 +266,9 @@ public:
             if (requiresNeighborList) runInitializeNeighborList();
             runForces();
             TimeStep t = _start;
-            if(_saver) {
+            if(_makeCheckpoint) {
                 // this needs to happen before observables because observables can in principle influence the state
-                _saver->makeCheckpoint(_kernel, t);
+                _makeCheckpoint->perform(t);
             }
             runEvaluateObservables(t);
             std::for_each(std::begin(_callbacks), std::end(_callbacks), [t](const auto &callback) {
@@ -281,9 +281,9 @@ public:
                 runTopologyReactions();
                 if (requiresNeighborList) runUpdateNeighborList();
                 runForces();
-                if(_saver && (t + 1) % _checkpointingStride == 0) {
+                if(_makeCheckpoint && (t + 1) % _checkpointingStride == 0) {
                     // this needs to happen before observables because observables can in principle influence the state
-                    _saver->makeCheckpoint(_kernel, t + 1);
+                    _makeCheckpoint->perform(t + 1);
                 }
                 runEvaluateObservables(t + 1);
                 std::for_each(std::begin(_callbacks), std::end(_callbacks), [t](const auto &callback) {
@@ -338,12 +338,9 @@ public:
         _callbacks.emplace_back(std::move(f));
     }
 
-    void setSaver(std::shared_ptr<Saver> saver) {
-        _saver = std::move(saver);
-    }
-
-    std::shared_ptr<Saver> saver() const {
-        return _saver;
+    void makeCheckpoints(std::size_t stride, std::string basePath, std::size_t maxNSaves, std::string checkpointFormat) {
+        _makeCheckpoint = kernel()->actions().makeCheckpoint(basePath, maxNSaves, checkpointFormat);
+        _checkpointingStride = stride;
     }
 
     std::string describe() {
@@ -364,12 +361,10 @@ public:
         description += fmt::format("   * Calculate forces? {}\n", static_cast<bool>(_forces));
         description += fmt::format("   * Handle reactions? {}\n", static_cast<bool>(_reactions));
         description += fmt::format("   * Handle topology reactions? {}\n", static_cast<bool>(_topologyReactions));
-        if (_saver) {
+        if (_makeCheckpoint) {
             description += fmt::format(" - Performing checkpointing:\n");
             description += fmt::format("   * stride: {}\n", _checkpointingStride);
-            description += fmt::format("   * base path: {}\n", _saver->basePath());
-            description += fmt::format("   * checkpoint filename template: {}\n", _saver->checkpointTemplate());
-            description += fmt::format("   * maximal number saves: {}\n", _saver->maxNSaves());
+            description += _makeCheckpoint->describe();
         }
         return description;
     }
@@ -385,7 +380,6 @@ protected:
     std::shared_ptr<model::actions::top::EvaluateTopologyReactions> _topologyReactions{nullptr};
     std::shared_ptr<model::actions::ClearNeighborList> _clearNeighborList{nullptr};
     std::shared_ptr<model::actions::MakeCheckpoint> _makeCheckpoint{nullptr};
-    std::shared_ptr<api::Saver> _saver {nullptr};
     std::shared_ptr<h5rd::Group> configGroup{nullptr};
 
     bool _evaluateObservables = true;

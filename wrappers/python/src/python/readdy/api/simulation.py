@@ -86,8 +86,12 @@ class Simulation(object):
 
         self.output_file = output_file
         self._observables = _Observables(self)
-        self._checkpoint_saver = None
-        self._checkpoint_stride = 0
+        # fixme self._checkpoint_saver = None
+        self._make_checkpoints = False
+        self._checkpoint_format = "checkpoint_{}.h5"
+        self._checkpoint_stride = None
+        self._checkpoint_outdir = None
+        self._checkpoint_max_n_saves = 5
 
         self.integrator = integrator
         self.reaction_handler = reaction_handler
@@ -340,8 +344,11 @@ class Simulation(object):
         import os
         if not os.path.exists(output_directory):
             os.makedirs(output_directory)
-        self._checkpoint_saver = _Saver(str(output_directory), max_n_saves, "checkpoint_{}.h5")
+        self._checkpoint_outdir = output_directory
+        self._checkpoint_max_n_saves = max_n_saves
+        # fixme self._checkpoint_saver = _Saver(str(output_directory), max_n_saves, "checkpoint_{}.h5")
         self._checkpoint_stride = stride
+        self._make_checkpoints = True
 
     @staticmethod
     def list_checkpoints(file_name):
@@ -548,8 +555,9 @@ class Simulation(object):
             loop.neighbor_list_cutoff = max(2. * self._simulation.context.calculate_max_cutoff(), loop.neighbor_list_cutoff)
         if self._skin > 0.:
             loop.neighbor_list_cutoff = loop.neighbor_list_cutoff + self._skin
-        if self._checkpoint_saver is not None:
-            loop.make_checkpoints(self._checkpoint_saver, self._checkpoint_stride)
+        if self._make_checkpoints:
+            loop.make_checkpoints(self._checkpoint_stride, self._checkpoint_outdir,
+                                  self._checkpoint_max_n_saves, self._checkpoint_format)
 
         write_outfile = self.output_file is not None and len(self.output_file) > 0
 

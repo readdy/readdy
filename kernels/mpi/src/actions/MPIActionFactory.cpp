@@ -113,8 +113,8 @@ std::unique_ptr<readdy::model::actions::EvaluateObservables> MPIActionFactory::e
 }
 
 std::unique_ptr<readdy::model::actions::MakeCheckpoint>
-MPIActionFactory::makeCheckpoint(std::string base, std::size_t maxNSaves) const {
-    return {std::make_unique<MPIMakeCheckpoint>(kernel, base, maxNSaves)};
+MPIActionFactory::makeCheckpoint(std::string base, std::size_t maxNSaves, std::string checkpointFormat) const {
+    return {std::make_unique<MPIMakeCheckpoint>(kernel, base, maxNSaves, checkpointFormat)};
 }
 
 std::unique_ptr<readdy::model::actions::InitializeKernel> MPIActionFactory::initializeKernel() const {

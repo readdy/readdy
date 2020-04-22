@@ -103,6 +103,14 @@ public:
         return _checkpointTemplate;
     }
 
+    std::string describe() const {
+        std::string description;
+        description += fmt::format("   * base path: {}\n", basePath());
+        description += fmt::format("   * checkpoint filename template: {}\n", checkpointTemplate());
+        description += fmt::format("   * maximal number saves: {}\n", maxNSaves());
+        return description;
+    }
+
 private:
     std::string _basePath;
     std::size_t _maxNSaves;

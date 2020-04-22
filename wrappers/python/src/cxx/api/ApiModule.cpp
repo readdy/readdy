@@ -193,7 +193,7 @@ void exportApi(py::module &api) {
 
         // strictly not an action
         py::class_<MkCkpt>(actionsModule, "MakeCheckpoint").def("__call__", &MkCkpt::perform);
-        simulation.def("create_action_make_checkpoint", [](sim &self, const std::string &basePath, std::size_t maxNSaves) -> std::unique_ptr<MkCkpt> { return self.actions().makeCheckpoint(basePath, maxNSaves); });
+        simulation.def("create_action_make_checkpoint", [](sim &self, const std::string &basePath, std::size_t maxNSaves, const std::string &checkpointFormat) -> std::unique_ptr<MkCkpt> { return self.actions().makeCheckpoint(basePath, maxNSaves, checkpointFormat); });
     }
 
     struct nodelete {

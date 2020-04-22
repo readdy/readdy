@@ -37,6 +37,7 @@
  * @file TestSimulationLoop.cpp
  * @author clonker
  * @author chrisfro**
+ * @todo test checkpointing https://en.cppreference.com/w/cpp/filesystem/temp_directory_path
  * @date 23.08.16
  */
 
@@ -52,7 +53,6 @@
 namespace api = readdy::api;
 
 using namespace readdytesting::kernel;
-
 
 TEMPLATE_TEST_CASE("Test simulation loop", "[loop]", SingleCPU, CPU) {
     SECTION("Correct number of timesteps") {
