@@ -98,6 +98,7 @@ public:
      */
     explicit SimulationLoop(model::Kernel *const kernel, scalar timeStep)
             : _kernel(kernel), _timeStep(timeStep),
+              _initializeKernel(kernel->actions().initializeKernel().release()),
               _integrator(kernel->actions().eulerBDIntegrator(timeStep).release()),
               _reactions(
                       kernel->supportsGillespie() ?
@@ -138,11 +139,11 @@ public:
     }
 
     std::size_t checkpointingStride() const { return _checkpointingStride; }
+
     void setCheckpointingStride(std::size_t stride) { _checkpointingStride = stride; }
 
-
     void runInitialize() {
-        _kernel->initialize();
+        if (_initializeKernel) _initializeKernel->perform();
         if (configGroup) {
             model::ioutils::writeSimulationSetup(*configGroup, _kernel->context());
         }
@@ -250,7 +251,10 @@ public:
     void run(const continue_fun &continueFun) {
         validate(_timeStep);
         {
-            bool requiresNeighborList = _initNeighborList->cutoffDistance() > 0;
+            bool requiresNeighborList = false;
+            if (_initNeighborList) {
+                requiresNeighborList = _initNeighborList->cutoffDistance() > 0;
+            }
             if (requiresNeighborList) {
                 if (!(_initNeighborList && _updateNeighborList && _clearNeighborList)) {
                     throw std::logic_error("Neighbor list required but set to null!");
@@ -372,6 +376,7 @@ public:
 
 protected:
     model::Kernel *const _kernel;
+    std::shared_ptr<model::actions::InitializeKernel> _initializeKernel{nullptr};
     std::shared_ptr<model::actions::TimeStepDependentAction> _integrator{nullptr};
     std::shared_ptr<model::actions::Action> _forces{nullptr};
     std::shared_ptr<model::actions::TimeStepDependentAction> _reactions{nullptr};
@@ -379,6 +384,7 @@ protected:
     std::shared_ptr<model::actions::UpdateNeighborList> _updateNeighborList{nullptr};
     std::shared_ptr<model::actions::top::EvaluateTopologyReactions> _topologyReactions{nullptr};
     std::shared_ptr<model::actions::ClearNeighborList> _clearNeighborList{nullptr};
+    std::shared_ptr<model::actions::MakeCheckpoint> _makeCheckpoint{nullptr};
     std::shared_ptr<api::Saver> _saver {nullptr};
     std::shared_ptr<h5rd::Group> configGroup{nullptr};
 

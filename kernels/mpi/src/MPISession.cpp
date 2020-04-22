@@ -39,8 +39,8 @@ void MPISession::waitForDebugger() {
         MPI_Get_processor_name(processorName, &nameLen);
         MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-        static int rankToDebug = 2;
-        if (rank == rankToDebug) {
+        static int rankToDebug = 0;
+        if (rank == rankToDebug or rank == 1) {
             volatile int i = 0;
             readdy::log::warn("pid {} w/ rank {} on processor {} waiting for debugger",
                               static_cast<unsigned long>(getpid()), rank, processorName);

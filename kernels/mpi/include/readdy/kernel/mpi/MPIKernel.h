@@ -78,6 +78,9 @@ public:
     // factory method
     static readdy::model::Kernel *create();
 
+    // factory method with context
+    static readdy::model::Kernel *create(const readdy::model::Context &);
+
     const MPIStateModel &getMPIKernelStateModel() const {
         return _stateModel;
     }

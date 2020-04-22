@@ -46,12 +46,6 @@
 
 namespace readdy::kernel::mpi {
 
-const std::string MPIKernel::name = "MPI";
-
-readdy::model::Kernel *MPIKernel::create() {
-    return new MPIKernel();
-}
-
 MPIKernel::MPIKernel() : MPIKernel(readdy::model::Context{}) {}
 
 // pay attention to order of initialization, which is defined by class hierarchy, then by order of declaration
@@ -94,6 +88,16 @@ MPIKernel::MPIKernel(const readdy::model::Context &ctx)
     _stateModel.reactionRecords().clear();
     _stateModel.resetReactionCounts();
     _stateModel.virial() = Matrix33{{{0, 0, 0, 0, 0, 0, 0, 0, 0}}};
+}
+
+const std::string MPIKernel::name = "MPI";
+
+readdy::model::Kernel *MPIKernel::create(const readdy::model::Context &ctx) {
+    return new MPIKernel(ctx);
+}
+
+readdy::model::Kernel *MPIKernel::create() {
+    return new MPIKernel();
 }
 
 }

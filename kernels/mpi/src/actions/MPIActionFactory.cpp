@@ -67,7 +67,7 @@ std::unique_ptr<readdy::model::actions::MdgfrdIntegrator> MPIActionFactory::mdgf
 
 std::unique_ptr<readdy::model::actions::CreateNeighborList>
 MPIActionFactory::createNeighborList(scalar interactionDistance) const {
-    return {nullptr};
+    return {std::make_unique<MPICreateNeighborList>(kernel)};
 }
 
 std::unique_ptr<readdy::model::actions::UpdateNeighborList> MPIActionFactory::updateNeighborList() const {
@@ -75,7 +75,7 @@ std::unique_ptr<readdy::model::actions::UpdateNeighborList> MPIActionFactory::up
 }
 
 std::unique_ptr<readdy::model::actions::ClearNeighborList> MPIActionFactory::clearNeighborList() const {
-    return {nullptr};
+    return {std::make_unique<MPIClearNeighborList>()};
 }
 
 std::unique_ptr<readdy::model::actions::EvaluateCompartments> MPIActionFactory::evaluateCompartments() const {

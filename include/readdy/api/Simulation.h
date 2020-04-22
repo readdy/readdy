@@ -79,6 +79,9 @@ public:
     explicit Simulation(const std::string &kernel, model::Context ctx) : Simulation(
             plugin::KernelProvider::getInstance().create(kernel), std::move(ctx)) {};
 
+    /** Wrap a kernel with a working context in a simulation */
+    explicit Simulation(plugin::KernelProvider::kernel_ptr kernel) : _kernel(std::move(kernel)) {}
+
     /**
      * Creates a topology particle of a certain type at a position without adding it to the simulation box yet.
      * In order to instantiate it in the simulation it has to be used for creating a topology that owns this particular

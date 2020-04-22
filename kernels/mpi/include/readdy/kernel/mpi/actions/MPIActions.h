@@ -100,6 +100,13 @@ private:
     void performImpl();
 };
 
+/** no-op but needed to run the default simulation loop */
+class MPICreateNeighborList : public readdy::model::actions::CreateNeighborList {
+public:
+    MPICreateNeighborList(MPIKernel *kernel) : CreateNeighborList(kernel->context().calculateMaxCutoff()) {}
+    void perform() override {/* no-op, this neighborlist is initialized by construction */}
+};
+
 class MPIUpdateNeighborList : public readdy::model::actions::UpdateNeighborList {
 public:
     explicit MPIUpdateNeighborList(MPIKernel *kernel) : UpdateNeighborList(), kernel(kernel) {}
@@ -114,6 +121,13 @@ public:
 
 private:
     MPIKernel *const kernel;
+};
+
+/** no-op but needed to run the default simulation loop */
+class MPIClearNeighborList : public readdy::model::actions::ClearNeighborList {
+public:
+    explicit MPIClearNeighborList() : ClearNeighborList() {}
+    void perform() override {/* no-op */}
 };
 
 class MPIEvaluateCompartments : public readdy::model::actions::EvaluateCompartments {
