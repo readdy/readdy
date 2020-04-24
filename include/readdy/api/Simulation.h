@@ -153,7 +153,7 @@ public:
      * @return an observable handle that allows for post-hoc modification of the observable
      */
     ObservableHandle registerObservable(std::unique_ptr<readdy::model::observables::ObservableBase> observable) {
-        _kernel->registerObservable(std::move(observable));
+        return _kernel->registerObservable(std::move(observable));
     }
 
     /**
