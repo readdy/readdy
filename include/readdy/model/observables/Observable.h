@@ -126,11 +126,11 @@ public:
     virtual ~ObservableBase() = default;
 
     /**
-     * Method that will trigger a callback with the current results if shouldExecuteCall() is true.
+     * Method that will trigger a callback with the current results if shouldEvaluate() is true.
      * @param t
      */
     virtual void call(TimeStep t) {
-        if (shouldExecuteCall(t)) {
+        if (shouldEvaluate(t)) {
             firstCall = false;
             t_current = t;
             evaluate();
@@ -143,12 +143,12 @@ public:
      * @param t the time step
      * @return true, if we haven't been evaluated in the current time step yet and stride is 0 or a divisor of t
      */
-    virtual bool shouldExecuteCall(TimeStep t) const {
+    virtual bool shouldEvaluate(TimeStep t) const {
         return (t_current != t || firstCall) && (_stride == 0 || t % _stride == 0);
     }
 
     /**
-     * Will be called automagically when shouldExecuteCall() is true. Can also be called manually and will then
+     * Will be called automagically when shouldEvaluate() is true. Can also be called manually and will then
      * place the observable's results into the result member (in case of a readdy::model::Observable),
      * based on the current state of the system.
      */
@@ -270,12 +270,12 @@ public:
     }
 
     /**
-     * Function that will evaluate the observable and trigger a callback if ObservableBase#shouldExecuteCall()
+     * Function that will evaluate the observable and trigger a callback if ObservableBase#shouldEvaluate()
      * is true.
      * @param t the time step
      */
     void call(TimeStep t) override {
-        if (shouldExecuteCall(t)) {
+        if (shouldEvaluate(t)) {
             ObservableBase::call(t);
             _callback(result);
         }
@@ -319,12 +319,12 @@ public:
             : Observable<RESULT>(kernel, stride), parentObservables(std::forward<PARENT_OBS *>(parents)...) {}
 
     /**
-     * If ObservableBase#shouldExecuteCall() is true, this will call the Observable#callback() function
+     * If ObservableBase#shouldEvaluate() is true, this will call the Observable#callback() function
      * for each of its parents.
      * @param t the current time
      */
     void callback(TimeStep t) override {
-        if (ObservableBase::shouldExecuteCall(t)) {
+        if (ObservableBase::shouldEvaluate(t)) {
             readdy::util::for_each_in_tuple(parentObservables, CallbackFunctor(ObservableBase::t_current));
             ObservableBase::call(t);
         }

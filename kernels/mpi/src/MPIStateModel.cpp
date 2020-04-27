@@ -76,7 +76,7 @@ MPIStateModel::gatherParticles() const {
             }
         }
     }
-    thinParticles = util::gatherObjects(thinParticles, _domain->rank(), *_domain, commUsedRanks());
+    thinParticles = util::gatherObjects(thinParticles, 0, *_domain, commUsedRanks());
 
     // convert to particles
     std::vector<Particle> particles;

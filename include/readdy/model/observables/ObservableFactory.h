@@ -59,11 +59,6 @@ template<typename T>
 using is_observable_type = std::enable_if_t<std::is_base_of<model::observables::ObservableBase, T>::value>;
 }
 
-// fixme: adress the following points:
-// 1. Not satisfied with the overloading combinatorial explosion for default arguments, go fully explicit?
-// 2. should callback functions always take a cref as argument.
-//    How does this work with pybind11?
-//    Does the constness go out the window with generic python objects being cast into std::function<void(const auto&)>?
 class ObservableFactory {
 protected:
     struct noop {
@@ -72,18 +67,18 @@ protected:
     };
 
     template<typename T>
-    using ObsCallBack = typename std::function<void(typename T::result_type)>;
+    using ObsCallback = typename std::function<void(const typename T::result_type&)>;
 public:
 
     explicit ObservableFactory(Kernel *const kernel) : kernel(kernel) {};
 
-    [[nodiscard]] virtual std::unique_ptr<Energy> energy(Stride stride, ObsCallBack<Energy> callback) const = 0;
+    [[nodiscard]] virtual std::unique_ptr<Energy> energy(Stride stride, ObsCallback<Energy> callback) const = 0;
 
     [[nodiscard]] std::unique_ptr<Energy> energy(Stride stride) const {
         return std::move(energy(stride, noop{}));
     }
 
-    [[nodiscard]] virtual std::unique_ptr<Virial> virial(Stride stride, ObsCallBack<Virial> callback) const = 0;
+    [[nodiscard]] virtual std::unique_ptr<Virial> virial(Stride stride, ObsCallback<Virial> callback) const = 0;
 
     [[nodiscard]] std::unique_ptr<Virial> virial(Stride stride) const {
         return std::move(virial(stride, noop{}));
@@ -91,7 +86,7 @@ public:
 
     [[nodiscard]] virtual std::unique_ptr<HistogramAlongAxis>
     histogramAlongAxis(Stride stride, std::vector<scalar> binBorders, std::vector<std::string> typesToCount,
-                       unsigned int axis, ObsCallBack<HistogramAlongAxis> callback) const = 0;
+                       unsigned int axis, ObsCallback<HistogramAlongAxis> callback) const = 0;
 
     [[nodiscard]] virtual std::unique_ptr<HistogramAlongAxis>
     histogramAlongAxis(Stride stride, const std::vector<scalar> &binBorders,
@@ -100,7 +95,7 @@ public:
     }
     
     [[nodiscard]] std::unique_ptr<NParticles>
-    nParticles(Stride stride, ObsCallBack<NParticles> callback) const {
+    nParticles(Stride stride, ObsCallback<NParticles> callback) const {
         return std::move(nParticles(stride, {}, callback));
     }
 
@@ -115,7 +110,7 @@ public:
     }
 
     [[nodiscard]] virtual std::unique_ptr<NParticles>
-    nParticles(Stride stride, std::vector<std::string> typesToCount, ObsCallBack<NParticles> callback) const = 0;
+    nParticles(Stride stride, std::vector<std::string> typesToCount, ObsCallback<NParticles> callback) const = 0;
 
     [[nodiscard]] std::unique_ptr<Forces>
     forces(Stride stride) const {
@@ -128,12 +123,12 @@ public:
     }
 
     [[nodiscard]] std::unique_ptr<Forces>
-    forces(Stride stride, const ObsCallBack<Forces> &callback) const {
+    forces(Stride stride, const ObsCallback<Forces> &callback) const {
         return std::move(forces(stride, {}, callback));
     }
 
     [[nodiscard]] virtual std::unique_ptr<Forces>
-    forces(Stride stride, std::vector<std::string> typesToCount, ObsCallBack<Forces> callback) const  = 0;
+    forces(Stride stride, std::vector<std::string> typesToCount, ObsCallback<Forces> callback) const  = 0;
 
     [[nodiscard]] std::unique_ptr<Positions>
     positions(Stride stride) const {
@@ -141,7 +136,7 @@ public:
     }
 
     [[nodiscard]] std::unique_ptr<Positions>
-    positions(Stride stride, ObsCallBack <Positions> callback) const {
+    positions(Stride stride, ObsCallback <Positions> callback) const {
         return std::move(positions(stride, {}, callback));
     }
 
@@ -151,7 +146,7 @@ public:
     }
 
     [[nodiscard]] virtual std::unique_ptr<Positions>
-    positions(Stride stride, std::vector<std::string> typesToCount, ObsCallBack <Positions> callback) const = 0;
+    positions(Stride stride, std::vector<std::string> typesToCount, ObsCallback <Positions> callback) const = 0;
 
     [[nodiscard]] std::unique_ptr<RadialDistribution>
     radialDistribution(Stride stride, const std::vector<scalar> &binBorders, const std::vector<std::string> &typeCountFrom,
@@ -162,39 +157,39 @@ public:
     [[nodiscard]] virtual std::unique_ptr<RadialDistribution>
     radialDistribution(Stride stride, std::vector<scalar> binBorders, std::vector<std::string> typeCountFrom,
                        std::vector<std::string> typeCountTo, scalar particleDensity,
-                       ObsCallBack<RadialDistribution> callback) const = 0;
+                       ObsCallback<RadialDistribution> callback) const = 0;
 
     [[nodiscard]] std::unique_ptr<Particles> particles(Stride stride) const {
         return std::move(particles(stride, noop{}));
     }
 
-    [[nodiscard]] virtual std::unique_ptr<Particles> particles(Stride stride, ObsCallBack<Particles> callback) const = 0;
+    [[nodiscard]] virtual std::unique_ptr<Particles> particles(Stride stride, ObsCallback<Particles> callback) const = 0;
 
     [[nodiscard]] std::unique_ptr<Reactions> reactions(Stride stride) const {
         return std::move(reactions(stride, noop{}));
     }
 
-    [[nodiscard]] virtual std::unique_ptr<Reactions> reactions(Stride stride, ObsCallBack<Reactions> callback) const = 0;
+    [[nodiscard]] virtual std::unique_ptr<Reactions> reactions(Stride stride, ObsCallback<Reactions> callback) const = 0;
 
     [[nodiscard]] std::unique_ptr<ReactionCounts> reactionCounts(Stride stride) const {
         return std::move(reactionCounts(stride, noop{}));
     }
 
-    [[nodiscard]] virtual std::unique_ptr<ReactionCounts> reactionCounts(Stride stride, ObsCallBack<ReactionCounts> callback) const = 0;
+    [[nodiscard]] virtual std::unique_ptr<ReactionCounts> reactionCounts(Stride stride, ObsCallback<ReactionCounts> callback) const = 0;
 
-    [[nodiscard]] std::unique_ptr<Trajectory> trajectory(Stride stride, ObsCallBack<Trajectory> callback = [](const Trajectory::result_type&){}) const {
+    [[nodiscard]] std::unique_ptr<Trajectory> trajectory(Stride stride, ObsCallback<Trajectory> callback = [](const Trajectory::result_type&){}) const {
         auto obs = std::make_unique<Trajectory>(kernel, stride);
         obs->setCallback(callback);
         return std::move(obs);
     }
 
-    [[nodiscard]] std::unique_ptr<FlatTrajectory> flatTrajectory(Stride stride, ObsCallBack<FlatTrajectory> callback = [](const FlatTrajectory::result_type&){}) const {
+    [[nodiscard]] std::unique_ptr<FlatTrajectory> flatTrajectory(Stride stride, ObsCallback<FlatTrajectory> callback = [](const FlatTrajectory::result_type&){}) const {
         auto obs = std::make_unique<FlatTrajectory>(kernel, stride);
         obs->setCallback(callback);
         return std::move(obs);
     }
 
-    [[nodiscard]] std::unique_ptr<Topologies> topologies(Stride stride, ObsCallBack<Topologies> callback = [](const Topologies::result_type&){}) const {
+    [[nodiscard]] std::unique_ptr<Topologies> topologies(Stride stride, ObsCallback<Topologies> callback = [](const Topologies::result_type&){}) const {
         auto obs = std::make_unique<Topologies>(kernel, stride);
         obs->setCallback(callback);
         return std::move(obs);

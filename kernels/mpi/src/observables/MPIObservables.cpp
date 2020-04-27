@@ -53,18 +53,16 @@ MPIVirial::MPIVirial(MPIKernel *kernel, Stride stride) : Virial(kernel, stride),
 void MPIVirial::evaluate() {
     // todo use MPI reduce with the standard '+' op, MPI_SUM
     //MPI_Reduce(send_data, recv_data, count, datatype, op, root, communicator);
-    if (not kernel->domain().isIdleRank()) {
-        std::vector<readdy::model::observables::Virial::result_type> results(1);
-        if (kernel->domain().isWorkerRank()) {
-            results[0] = kernel->getMPIKernelStateModel().virial();
-        }
-        results = util::gatherObjects(results, 0, kernel->domain(), kernel->commUsedRanks());
+    std::vector<readdy::model::observables::Virial::result_type> results(1);
+    if (kernel->domain().isWorkerRank()) {
+        results[0] = kernel->getMPIKernelStateModel().virial();
+    }
+    results = util::gatherObjects(results, 0, kernel->domain(), kernel->commUsedRanks());
 
-        if (kernel->domain().isMasterRank()) {
-            // add up virial tensors assuming that there was no double counting
-            // which has to be ensured in calculateForces
-            result = std::accumulate(results.begin(), results.end(), _internal::ReaDDyMatrix33<scalar>());
-        }
+    if (kernel->domain().isMasterRank()) {
+        // add up virial tensors assuming that there was no double counting
+        // which has to be ensured in calculateForces
+        result = std::accumulate(results.begin(), results.end(), _internal::ReaDDyMatrix33<scalar>());
     }
 }
 
@@ -84,26 +82,24 @@ MPIPositions::MPIPositions(MPIKernel *kernel, unsigned int stride, const std::ve
         : Positions(kernel, stride, typesToCount), kernel(kernel) {}
 
 void MPIPositions::evaluate() {
-    if (not kernel->domain().isIdleRank()) {
-        result.clear();
-        if (kernel->domain().isWorkerRank()) {
-            auto &stateModel = kernel->getMPIKernelStateModel();
-            if (typesToCount.empty()) {
-                result = stateModel.getParticlePositions();
-            } else {
-                // only get positions of typesToCount
-                const auto &pd = stateModel.getParticleData();
-                for (const auto &p : *pd) {
-                    if (!p.deactivated) {
-                        if (std::find(typesToCount.begin(), typesToCount.end(), p.type) != typesToCount.end()) {
-                            result.push_back(p.pos);
-                        }
+    result.clear();
+    if (kernel->domain().isWorkerRank()) {
+        auto &stateModel = kernel->getMPIKernelStateModel();
+        if (typesToCount.empty()) {
+            result = stateModel.getParticlePositions();
+        } else {
+            // only get positions of typesToCount
+            const auto &pd = stateModel.getParticleData();
+            for (const auto &p : *pd) {
+                if (!p.deactivated) {
+                    if (std::find(typesToCount.begin(), typesToCount.end(), p.type) != typesToCount.end()) {
+                        result.push_back(p.pos);
                     }
                 }
             }
         }
-        result = util::gatherObjects(result, 0, kernel->domain(), kernel->commUsedRanks());
     }
+    result = util::gatherObjects(result, 0, kernel->domain(), kernel->commUsedRanks());
 }
 
 void MPIPositions::append() {
@@ -121,23 +117,19 @@ void MPIPositions::initializeDataSet(File &file, const std::string &dataSetName,
 MPIParticles::MPIParticles(MPIKernel *kernel, unsigned int stride) : Particles(kernel, stride), kernel(kernel) {}
 
 void MPIParticles::evaluate() {
-    if (not kernel->domain().isIdleRank()) {
-        auto &resultTypes = std::get<0>(result);
-        auto &resultIds = std::get<1>(result);
-        auto &resultPositions = std::get<2>(result);
-        resultTypes.clear();
-        resultIds.clear();
-        resultPositions.clear();
-        auto particles = kernel->getMPIKernelStateModel().gatherParticles();
-        if (kernel->domain().isMasterRank()) {
-            for (const auto &p : particles) {
-                resultTypes.push_back(p.type());
-                resultIds.push_back(p.id());
-                resultPositions.push_back(p.pos());
-            }
+    auto &resultTypes = std::get<0>(result);
+    auto &resultIds = std::get<1>(result);
+    auto &resultPositions = std::get<2>(result);
+    resultTypes.clear();
+    resultIds.clear();
+    resultPositions.clear();
+    auto particles = kernel->getMPIKernelStateModel().gatherParticles();
+    if (kernel->domain().isMasterRank()) {
+        for (const auto &p : particles) {
+            resultTypes.push_back(p.type());
+            resultIds.push_back(p.id());
+            resultPositions.push_back(p.pos());
         }
-    } else {
-        // noop for idlers
     }
 }
 
@@ -159,25 +151,23 @@ MPIHistogramAlongAxis::MPIHistogramAlongAxis(MPIKernel *kernel, unsigned int str
         : HistogramAlongAxis(kernel, stride, binBorders, typesToCount, axis), kernel(kernel) {}
 
 void MPIHistogramAlongAxis::evaluate() {
-    if (not kernel->domain().isIdleRank()) {
-        std::fill(result.begin(), result.end(), 0);
-        if (kernel->domain().isWorkerRank()) {
-            const auto data = kernel->getMPIKernelStateModel().getParticleData();
-            for (const auto &p : *data) {
-                if (!p.deactivated and p.responsible and typesToCount.find(p.type) != typesToCount.end()) {
-                    auto upperBound = std::upper_bound(binBorders.begin(), binBorders.end(), p.pos[axis]);
-                    if (upperBound != binBorders.end()) {
-                        auto binBordersIdx = std::distance(binBorders.begin(), upperBound);
-                        if (binBordersIdx > 1) {
-                            ++result[binBordersIdx - 1];
-                        }
+    std::fill(result.begin(), result.end(), 0);
+    if (kernel->domain().isWorkerRank()) {
+        const auto data = kernel->getMPIKernelStateModel().getParticleData();
+        for (const auto &p : *data) {
+            if (!p.deactivated and p.responsible and typesToCount.find(p.type) != typesToCount.end()) {
+                auto upperBound = std::upper_bound(binBorders.begin(), binBorders.end(), p.pos[axis]);
+                if (upperBound != binBorders.end()) {
+                    auto binBordersIdx = std::distance(binBorders.begin(), upperBound);
+                    if (binBordersIdx > 1) {
+                        ++result[binBordersIdx - 1];
                     }
                 }
             }
         }
-        // todo variable float type
-        MPI_Reduce(result.data(), result.data(), static_cast<int>(result.size()), MPI_DOUBLE, MPI_SUM, 0, kernel->commUsedRanks());
     }
+    // todo variable float type
+    MPI_Reduce(result.data(), result.data(), static_cast<int>(result.size()), MPI_DOUBLE, MPI_SUM, 0, kernel->commUsedRanks());
 }
 
 void MPIHistogramAlongAxis::append() {
@@ -196,42 +186,40 @@ MPINParticles::MPINParticles(MPIKernel *kernel, unsigned int stride, std::vector
         : NParticles(kernel, stride, std::move(typesToCount)), kernel(kernel) {}
 
 void MPINParticles::evaluate() {
-    if (not kernel->domain().isIdleRank()) {
-        result.clear();
-        if (kernel->domain().isWorkerRank()) {
-            const auto &pd = kernel->getMPIKernelStateModel().getParticleData();
-            if (typesToCount.empty()) {
-                unsigned long n = std::count_if(pd->begin(), pd->end(),
-                        [](const MPIEntry& entry)->bool{return (not entry.deactivated and entry.responsible);}
-                );
-                result.push_back(n);
-            } else {
-                result.resize(typesToCount.size());
-                for (const auto &p : *pd) {
-                    if (!p.deactivated) {
-                        unsigned int idx = 0;
-                        for (const auto t : typesToCount) {
-                            if (p.type == t) {
-                                result[idx]++;
-                                break;
-                            }
-                            ++idx;
+    result.clear();
+    if (kernel->domain().isWorkerRank()) {
+        const auto &pd = kernel->getMPIKernelStateModel().getParticleData();
+        if (typesToCount.empty()) {
+            unsigned long n = std::count_if(pd->begin(), pd->end(),
+                    [](const MPIEntry& entry)->bool{return (not entry.deactivated and entry.responsible);}
+            );
+            result.push_back(n);
+        } else {
+            result.resize(typesToCount.size());
+            for (const auto &p : *pd) {
+                if (!p.deactivated) {
+                    unsigned int idx = 0;
+                    for (const auto t : typesToCount) {
+                        if (p.type == t) {
+                            result[idx]++;
+                            break;
                         }
+                        ++idx;
                     }
                 }
             }
-        } else if (kernel->domain().isMasterRank()) {
-            if (typesToCount.empty()) {
-                result.resize(1, 0);
-            } else {
-                result.resize(typesToCount.size(), 0);
-            }
-        } else {
-            throw std::runtime_error("impossible");
         }
-
-        MPI_Reduce(result.data(), result.data(), static_cast<int>(result.size()), MPI_UNSIGNED_LONG, MPI_SUM, 0, kernel->commUsedRanks());
+    } else if (kernel->domain().isMasterRank()) {
+        if (typesToCount.empty()) {
+            result.resize(1, 0);
+        } else {
+            result.resize(typesToCount.size(), 0);
+        }
+    } else {
+        throw std::runtime_error("impossible");
     }
+
+    MPI_Reduce(result.data(), result.data(), static_cast<int>(result.size()), MPI_UNSIGNED_LONG, MPI_SUM, 0, kernel->commUsedRanks());
 }
 
 void MPINParticles::append() {
@@ -250,30 +238,28 @@ MPIForces::MPIForces(MPIKernel *kernel, unsigned int stride, std::vector<std::st
         : Forces(kernel, stride, std::move(typesToCount)), kernel(kernel) {}
 
 void MPIForces::evaluate() {
-    if (not kernel->domain().isIdleRank()) {
-        result.clear();
-        if (kernel->domain().isWorkerRank()) {
-            const auto &pd = kernel->getMPIKernelStateModel().getParticleData();
-            if (typesToCount.empty()) {
-                // get all particles' forces
-                for (const auto &p : *pd) {
-                    if (!p.deactivated) {
-                        result.push_back(p.force);
-                    }
+    result.clear();
+    if (kernel->domain().isWorkerRank()) {
+        const auto &pd = kernel->getMPIKernelStateModel().getParticleData();
+        if (typesToCount.empty()) {
+            // get all particles' forces
+            for (const auto &p : *pd) {
+                if (!p.deactivated) {
+                    result.push_back(p.force);
                 }
-            } else {
-                // only get forces of typesToCount
-                for (const auto &p : *pd) {
-                    if (!p.deactivated) {
-                        if (std::find(typesToCount.begin(), typesToCount.end(), p.type) != typesToCount.end()) {
-                            result.push_back(p.force);
-                        }
+            }
+        } else {
+            // only get forces of typesToCount
+            for (const auto &p : *pd) {
+                if (!p.deactivated) {
+                    if (std::find(typesToCount.begin(), typesToCount.end(), p.type) != typesToCount.end()) {
+                        result.push_back(p.force);
                     }
                 }
             }
         }
-        result = util::gatherObjects(result, 0, kernel->domain(), kernel->commUsedRanks());
     }
+    result = util::gatherObjects(result, 0, kernel->domain(), kernel->commUsedRanks());
 }
 
 void MPIForces::append() {
@@ -291,13 +277,11 @@ void MPIForces::initializeDataSet(File &file, const std::string &dataSetName, St
 MPIReactions::MPIReactions(MPIKernel *kernel, unsigned int stride) : Reactions(kernel, stride), kernel(kernel) {}
 
 void MPIReactions::evaluate() {
-    if (not kernel->domain().isIdleRank()) {
-        result.clear();
-        if (kernel->domain().isWorkerRank()) {
-            result = kernel->getMPIKernelStateModel().reactionRecords();
-        }
-        result = util::gatherObjects(result, 0, kernel->domain(), kernel->commUsedRanks());
+    result.clear();
+    if (kernel->domain().isWorkerRank()) {
+        result = kernel->getMPIKernelStateModel().reactionRecords();
     }
+    result = util::gatherObjects(result, 0, kernel->domain(), kernel->commUsedRanks());
 }
 
 void MPIReactions::append() {
@@ -316,37 +300,35 @@ MPIReactionCounts::MPIReactionCounts(MPIKernel *kernel, unsigned int stride) : R
 
 void MPIReactionCounts::evaluate() {
     // todo this could be nicer with MPI_Reduce: flatten into vec, mpi_reduce, copy into result map
-    if (not kernel->domain().isIdleRank()) {
-        auto &counts = std::get<0>(result);
+    auto &counts = std::get<0>(result);
 
-        // prepare a vector that mirrors the counts map
-        std::vector<std::pair<readdy::ReactionId, unsigned long>> countsVec;
-        if (kernel->domain().isWorkerRank()) {
-            counts = kernel->getMPIKernelStateModel().reactionCounts();
-            for (const auto &pair : counts) {
-                countsVec.push_back(pair);
-            }
+    // prepare a vector that mirrors the counts map
+    std::vector<std::pair<readdy::ReactionId, unsigned long>> countsVec;
+    if (kernel->domain().isWorkerRank()) {
+        counts = kernel->getMPIKernelStateModel().reactionCounts();
+        for (const auto &pair : counts) {
+            countsVec.push_back(pair);
         }
-
-        // gather all vectors
-        countsVec = util::gatherObjects(countsVec, 0, kernel->domain(), kernel->commUsedRanks());
-
-        // reduce the countsVec on master rank, i.e. aggregate pairs with the same id into the usual map format
-        if (kernel->domain().isMasterRank()) {
-            counts.clear();
-            for (const auto &[id, n] : countsVec) {
-                if (counts.find(id) != counts.end()) {
-                    counts[id] += n;
-                } else {
-                    counts[id] = n;
-                }
-            }
-        }
-
-        // no topologies currently on MPI
-        //std::get<1>(result) = kernel->getMPIKernelStateModel().spatialReactionCounts();
-        //std::get<2>(result) = kernel->getMPIKernelStateModel().structuralReactionCounts();
     }
+
+    // gather all vectors
+    countsVec = util::gatherObjects(countsVec, 0, kernel->domain(), kernel->commUsedRanks());
+
+    // reduce the countsVec on master rank, i.e. aggregate pairs with the same id into the usual map format
+    if (kernel->domain().isMasterRank()) {
+        counts.clear();
+        for (const auto &[id, n] : countsVec) {
+            if (counts.find(id) != counts.end()) {
+                counts[id] += n;
+            } else {
+                counts[id] = n;
+            }
+        }
+    }
+
+    // no topologies currently on MPI
+    //std::get<1>(result) = kernel->getMPIKernelStateModel().spatialReactionCounts();
+    //std::get<2>(result) = kernel->getMPIKernelStateModel().structuralReactionCounts();
 }
 
 void MPIReactionCounts::append() {
@@ -364,13 +346,11 @@ void MPIReactionCounts::initializeDataSet(File &file, const std::string &dataSet
 MPIEnergy::MPIEnergy(MPIKernel *kernel, Stride stride) : Energy(kernel, stride), kernel(kernel) {}
 
 void MPIEnergy::evaluate() {
-    if (not kernel->domain().isIdleRank()) {
-        result = 0.;
-        if (kernel->domain().isWorkerRank()) {
-            result = kernel->stateModel().energy();
-        }
-        MPI_Reduce(&result, &result, static_cast<int>(1), MPI_DOUBLE, MPI_SUM, 0, kernel->commUsedRanks());
+    result = 0.;
+    if (kernel->domain().isWorkerRank()) {
+        result = kernel->stateModel().energy();
     }
+    MPI_Reduce(&result, &result, static_cast<int>(1), MPI_DOUBLE, MPI_SUM, 0, kernel->commUsedRanks());
 }
 
 void MPIEnergy::append() {

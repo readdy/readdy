@@ -228,7 +228,7 @@ inline std::vector<T> gatherObjects(const std::vector<T> &objects, int root, con
     /// (1) find out how many each one sends. In principle the root can also send objects.
     int number = objects.size();
     std::vector<int> nPerRank(domain.nUsedRanks(), 0);
-    MPI_Gather(&number, 1, MPI_INT, nPerRank.data(), 1, MPI_INT, 0, comm);
+    MPI_Gather(&number, 1, MPI_INT, nPerRank.data(), 1, MPI_INT, root, comm);
 
     std::vector<int> nPerRankBytes;
     std::vector<int> displacements;
@@ -254,7 +254,7 @@ inline std::vector<T> gatherObjects(const std::vector<T> &objects, int root, con
 
     /// (3) gather results
     MPI_Gatherv((void *) objects.data(), static_cast<int>(objects.size() * sizeof(T)), MPI_BYTE, results.data(),
-                nPerRankBytes.data(), displacements.data(), MPI_BYTE, 0, comm);
+                nPerRankBytes.data(), displacements.data(), MPI_BYTE, root, comm);
     return results;
 }
 

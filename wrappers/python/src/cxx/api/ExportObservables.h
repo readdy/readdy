@@ -142,7 +142,7 @@ registerObservable_Positions(sim &self, readdy::Stride stride,
         auto obs = self.observe().positions(stride, types);
         return self.registerObservable(std::move(obs));
     } else {
-        auto pyFun = readdy::rpy::PyFunction<void(readdy::model::observables::Positions::result_type)>(callbackFun);
+        auto pyFun = readdy::rpy::PyFunction<void(const readdy::model::observables::Positions::result_type&)>(callbackFun);
         auto obs = self.observe().positions(stride, types, pyFun);
         return self.registerObservable(std::move(obs));
     }
@@ -192,7 +192,7 @@ registerObservable_RadialDistribution(sim &self, readdy::Stride stride, py::arra
         auto obs = self.observe().radialDistribution(stride, binBordersVec, typeCountFrom, typeCountTo, particleToDensity);
         return self.registerObservable(std::move(obs));
     } else {
-        auto pyFun = readdy::rpy::PyFunction<void(readdy::model::observables::RadialDistribution::result_type)>(
+        auto pyFun = readdy::rpy::PyFunction<void(const readdy::model::observables::RadialDistribution::result_type&)>(
                 callbackFun);
         auto obs = self.observe().radialDistribution(stride, binBordersVec, typeCountFrom, typeCountTo, particleToDensity, pyFun);
         return self.registerObservable(std::move(obs));
@@ -215,7 +215,7 @@ registerObservable_HistogramAlongAxisObservable(sim &self, readdy::Stride stride
         auto obs = self.observe().histogramAlongAxis(stride, binBordersVec, std::move(types), axis);
         return self.registerObservable(std::move(obs));
     } else {
-        auto pyFun = readdy::rpy::PyFunction<void(readdy::model::observables::HistogramAlongAxis::result_type)>(callbackFun);
+        auto pyFun = readdy::rpy::PyFunction<void(const readdy::model::observables::HistogramAlongAxis::result_type&)>(callbackFun);
         auto obs = self.observe().histogramAlongAxis(stride, binBordersVec, std::move(types), axis, pyFun);
         return self.registerObservable(std::move(obs));
     }
@@ -228,7 +228,7 @@ registerObservable_NParticles(sim &self, readdy::Stride stride, std::vector<std:
         auto obs = self.observe().nParticles(stride, std::move(types));
         return self.registerObservable(std::move(obs));
     } else {
-        auto pyFun = readdy::rpy::PyFunction<void(readdy::model::observables::NParticles::result_type)>(callbackFun);
+        auto pyFun = readdy::rpy::PyFunction<void(const readdy::model::observables::NParticles::result_type&)>(callbackFun);
         auto obs = self.observe().nParticles(stride, std::move(types), pyFun);
         return self.registerObservable(std::move(obs));
     }
@@ -240,7 +240,7 @@ inline obs_handle_t registerObservable_ForcesObservable(sim &self, readdy::Strid
         auto obs = self.observe().forces(stride, std::move(types));
         return self.registerObservable(std::move(obs));
     } else {
-        auto pyFun = readdy::rpy::PyFunction<void(readdy::model::observables::Forces::result_type)>(callbackFun);
+        auto pyFun = readdy::rpy::PyFunction<void(const readdy::model::observables::Forces::result_type&)>(callbackFun);
         auto obs = self.observe().forces(stride, std::move(types), pyFun);
         return self.registerObservable(std::move(obs));
     }
@@ -251,7 +251,7 @@ inline obs_handle_t registerObservable_Energy(sim &self, readdy::Stride stride, 
         auto obs = self.observe().energy(stride);
         return self.registerObservable(std::move(obs));
     } else {
-        auto pyFun = readdy::rpy::PyFunction<void(readdy::model::observables::Energy::result_type)>(callbackFun);
+        auto pyFun = readdy::rpy::PyFunction<void(const readdy::model::observables::Energy::result_type&)>(callbackFun);
         auto obs = self.observe().energy(stride, pyFun);
         return self.registerObservable(std::move(obs));
     }
@@ -263,7 +263,7 @@ inline obs_handle_t registerObservable_Virial(sim &self, readdy::Stride stride,
         auto obs = self.observe().virial(stride);
         return self.registerObservable(std::move(obs));
     } else {
-        auto pyFun = readdy::rpy::PyFunction<void(readdy::model::observables::Virial::result_type)>(callback);
+        auto pyFun = readdy::rpy::PyFunction<void(const readdy::model::observables::Virial::result_type&)>(callback);
         auto obs = self.observe().virial(stride, pyFun);
         return self.registerObservable(std::move(obs));
     }

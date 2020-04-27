@@ -133,6 +133,12 @@ public:
         return _commUsedRanks;
     }
 
+    virtual void evaluateObservables(TimeStep t) override {
+        if (not _domain.isIdleRank()) {
+            _signal(t);
+        }
+    }
+
 protected:
     // order here is order of initialization
     // https://en.cppreference.com/w/cpp/language/initializer_list#Initialization_order

@@ -51,7 +51,7 @@ MPIObservableFactory::MPIObservableFactory(MPIKernel *kernel) : readdy::model::o
 std::unique_ptr<readdy::model::observables::HistogramAlongAxis>
 MPIObservableFactory::histogramAlongAxis(Stride stride, std::vector<scalar> binBorders,
                                          std::vector<std::string> typesToCount, unsigned int axis,
-                                         ObsCallBack<readdy::model::observables::HistogramAlongAxis> callback) const {
+                                         ObsCallback<readdy::model::observables::HistogramAlongAxis> callback) const {
     auto obs = std::make_unique<MPIHistogramAlongAxis>(kernel, stride, binBorders, typesToCount, axis);
     if (kernel->domain().isMasterRank()) {
         obs->setCallback(callback);
@@ -61,7 +61,7 @@ MPIObservableFactory::histogramAlongAxis(Stride stride, std::vector<scalar> binB
 
 std::unique_ptr<readdy::model::observables::NParticles>
 MPIObservableFactory::nParticles(Stride stride, std::vector<std::string> typesToCount,
-                                 ObsCallBack<readdy::model::observables::NParticles> callback) const {
+                                 ObsCallback<readdy::model::observables::NParticles> callback) const {
     auto obs = std::make_unique<MPINParticles>(kernel, stride, typesToCount);
     if (kernel->domain().isMasterRank()) {
         obs->setCallback(callback);
@@ -71,7 +71,7 @@ MPIObservableFactory::nParticles(Stride stride, std::vector<std::string> typesTo
 
 std::unique_ptr<readdy::model::observables::Forces>
 MPIObservableFactory::forces(Stride stride, std::vector<std::string> typesToCount,
-                             ObsCallBack<readdy::model::observables::Forces> callback) const {
+                             ObsCallback<readdy::model::observables::Forces> callback) const {
     auto obs = std::make_unique<MPIForces>(kernel, stride, typesToCount);
     if (kernel->domain().isMasterRank()) {
         obs->setCallback(callback);
@@ -81,7 +81,7 @@ MPIObservableFactory::forces(Stride stride, std::vector<std::string> typesToCoun
 
 std::unique_ptr<readdy::model::observables::Positions>
 MPIObservableFactory::positions(Stride stride, std::vector<std::string> typesToCount,
-                                ObsCallBack<readdy::model::observables::Positions> callback) const {
+                                ObsCallback<readdy::model::observables::Positions> callback) const {
     auto obs = std::make_unique<MPIPositions>(kernel, stride, typesToCount);
     if (kernel->domain().isMasterRank()) {
         obs->setCallback(callback);
@@ -93,7 +93,7 @@ std::unique_ptr<readdy::model::observables::RadialDistribution>
 MPIObservableFactory::radialDistribution(Stride stride, std::vector<scalar> binBorders,
                                          std::vector<std::string> typeCountFrom,
                                          std::vector<std::string> typeCountTo, scalar particleDensity,
-                                         ObsCallBack<readdy::model::observables::RadialDistribution> callback) const {
+                                         ObsCallback<readdy::model::observables::RadialDistribution> callback) const {
     auto obs = std::make_unique<readdy::model::observables::RadialDistribution>(
             kernel, stride, binBorders, typeCountFrom, typeCountTo, particleDensity
     );
@@ -104,7 +104,7 @@ MPIObservableFactory::radialDistribution(Stride stride, std::vector<scalar> binB
 }
 
 std::unique_ptr<readdy::model::observables::Particles>
-MPIObservableFactory::particles(Stride stride, ObsCallBack<readdy::model::observables::Particles> callback) const {
+MPIObservableFactory::particles(Stride stride, ObsCallback<readdy::model::observables::Particles> callback) const {
     auto obs = std::make_unique<MPIParticles>(kernel, stride);
     if (kernel->domain().isMasterRank()) {
         obs->setCallback(callback);
@@ -113,7 +113,7 @@ MPIObservableFactory::particles(Stride stride, ObsCallBack<readdy::model::observ
 }
 
 std::unique_ptr<readdy::model::observables::Reactions>
-MPIObservableFactory::reactions(Stride stride, ObsCallBack<readdy::model::observables::Reactions> callback) const {
+MPIObservableFactory::reactions(Stride stride, ObsCallback<readdy::model::observables::Reactions> callback) const {
     auto obs = std::make_unique<MPIReactions>(kernel, stride);
     if (kernel->domain().isMasterRank()) {
         obs->setCallback(callback);
@@ -123,7 +123,7 @@ MPIObservableFactory::reactions(Stride stride, ObsCallBack<readdy::model::observ
 }
 
 std::unique_ptr<readdy::model::observables::ReactionCounts>
-MPIObservableFactory::reactionCounts(Stride stride, ObsCallBack<readdy::model::observables::ReactionCounts> callback) const {
+MPIObservableFactory::reactionCounts(Stride stride, ObsCallback<readdy::model::observables::ReactionCounts> callback) const {
     auto obs = std::make_unique<MPIReactionCounts>(kernel, stride);
     if (kernel->domain().isMasterRank()) {
         obs->setCallback(callback);
@@ -132,7 +132,7 @@ MPIObservableFactory::reactionCounts(Stride stride, ObsCallBack<readdy::model::o
     return std::move(obs);
 }
 
-std::unique_ptr<readdy::model::observables::Virial> MPIObservableFactory::virial(Stride stride, ObsCallBack<readdy::model::observables::Virial> callback) const {
+std::unique_ptr<readdy::model::observables::Virial> MPIObservableFactory::virial(Stride stride, ObsCallback<readdy::model::observables::Virial> callback) const {
     auto obs = std::make_unique<MPIVirial>(kernel, stride);
     if (kernel->domain().isMasterRank()) {
         obs->setCallback(callback);
@@ -141,7 +141,7 @@ std::unique_ptr<readdy::model::observables::Virial> MPIObservableFactory::virial
     return std::move(obs);
 }
 
-std::unique_ptr<readdy::model::observables::Energy> MPIObservableFactory::energy(Stride stride, ObsCallBack<readdy::model::observables::Energy> callback) const {
+std::unique_ptr<readdy::model::observables::Energy> MPIObservableFactory::energy(Stride stride, ObsCallback<readdy::model::observables::Energy> callback) const {
     auto obs = std::make_unique<MPIEnergy>(kernel, stride);
     if (kernel->domain().isMasterRank()) {
         obs->setCallback(callback);
