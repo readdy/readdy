@@ -99,7 +99,15 @@ void MPICalculateForces::performImpl() {
             }
             entry.force += forceVec;
             neighborEntry.force -= forceVec;
-            detail::computeVirial<COMPUTE_VIRIAL>(x_ij, forceVec, stateModel.virial());
+
+            // avoid double counting of pairs across boundaries (these will be seen by two workers)
+            // and don't count pairs where both are outside this domain
+            bool evalVirial = (entry.responsible and neighborEntry.responsible) or (
+                    (entry.responsible or neighborEntry.responsible) and (entry.rank < neighborEntry.rank)
+            );
+            if (evalVirial) {
+                detail::computeVirial<COMPUTE_VIRIAL>(x_ij, forceVec, stateModel.virial());
+            }
         }
     };
 

@@ -45,51 +45,31 @@
  */
 
 #include <catch2/catch.hpp>
-
 #include <readdy/model/Kernel.h>
 #include <readdy/kernel/mpi/MPIKernel.h>
-#include <readdy/api/Simulation.h>
 #include <readdy/api/KernelConfiguration.h>
+#include <readdy/api/Simulation.h>
 
 using Json = nlohmann::json;
 namespace rkmu = readdy::kernel::mpi::util;
 
-TEST_CASE("Test mpi kernel observe particle number", "[mpi]") {
-    MPI_Barrier(MPI_COMM_WORLD);
-    if (false) {
-        readdy::model::Context ctx;
-        readdy::Simulation simulation("MPI", ctx);
+TEST_CASE("Test sanity simulation api", "[mpi]") {
+    readdy::model::Context ctx;
 
-        REQUIRE(simulation.selectedKernelType() == "MPI");
+    ctx.boxSize() = {10., 10., 10.};
+    ctx.particleTypes().add("A", 1.);
+    Json conf = {{"MPI", {{"dx", 4.9}, {"dy", 4.9}, {"dz", 4.9}, {"haloThickness", 1.}}}};
+    ctx.kernelConfiguration() = conf.get<readdy::conf::Configuration>();
 
-        SECTION("In and out types and positions") {
-            ctx.boxSize() = {10., 10., 10.};
-            ctx.particleTypes().add("A", 1.);
-            ctx.particleTypes().add("B", 1.);
-            //ctx.reactions().add("fusili: A +(1.) A -> B", 0.1);
-            ctx.potentials().addHarmonicRepulsion("A", "A", 10., 2.3);
-            Json conf = {{"MPI", {{"dx", 4.9}, {"dy", 4.9}, {"dz", 4.9}}}};
-            ctx.kernelConfiguration() = conf.get<readdy::conf::Configuration>();
-            const std::size_t nParticles = 100;
-            for (std::size_t i = 0; i < nParticles; ++i) {
-                auto x = readdy::model::rnd::uniform_real() * 10. - 5.;
-                auto y = readdy::model::rnd::uniform_real() * 10. - 5.;
-                auto z = readdy::model::rnd::uniform_real() * 10. - 5.;
-                simulation.addParticle("A", x, y, z);
-            }
-            if (false) {
-                const auto idA = ctx.particleTypes().idOf("A");
-                auto check = [&nParticles, &idA](readdy::model::observables::Particles::result_type result) {
-                    const auto &types = std::get<0>(result);
-                    const auto &ids = std::get<1>(result);
-                    const auto &positions = std::get<2>(result);
-                    CHECK(std::count(types.begin(), types.end(), idA));
-                };
-                auto obsHandle = simulation.registerObservable(simulation.observe().particles(1), check);
-                simulation.run(100, 0.01);
-            }
-        }
-    }
+    // currently the only way to use the simulation interface with the MPI Kernel
+    readdy::plugin::KernelProvider::kernel_ptr kernelPtr(readdy::kernel::mpi::MPIKernel::create(ctx));
+    readdy::Simulation simulation(std::move(kernelPtr));
+
+    REQUIRE(simulation.selectedKernelType() == "MPI");
+
+    readdy::model::Particle p {1., 1., 1., simulation.context().particleTypes().idOf("A")};
+    simulation.actions().addParticles(p)->perform();
+    simulation.run(100, 0.01);
 }
 
 TEST_CASE("Test kernel configuration from context", "[mpi]") {

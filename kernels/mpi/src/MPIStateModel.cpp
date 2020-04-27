@@ -66,51 +66,25 @@ MPIStateModel::gatherParticles() const {
         return {};
     }
     readdy::util::Timer timer("MPIStateModel::gatherParticles");
-    auto &data = _data.get();
 
-    // find out how many particles (and bytes) each worker sends
-    int nParticles = 0;
+    std::vector<util::ParticlePOD> thinParticles;
     if (_domain->isWorkerRank()) {
-        nParticles = std::count_if(data.begin(), data.end(), [](const MPIEntry &entry) {return not entry.deactivated and entry.responsible;});
-    }
-    std::vector<int> numberParticles(_domain->nUsedRanks(), 0);
-
-    MPI_Gather(&nParticles, 1, MPI_INT, numberParticles.data(), 1, MPI_INT, 0, _commUsedRanks);
-
-    std::vector<int> numberBytes(_domain->nUsedRanks(), 0);
-    // convert number of particles to number of bytes from each rank
-    for (std::size_t i = 0; i<numberParticles.size(); ++i) {
-        numberBytes[i] = static_cast<int>(numberParticles[i] * sizeof(util::ParticlePOD));
-    }
-
-    // now send and receive thin particles
-    if (_domain->isMasterRank()) {
-        std::size_t totalNumberParticles = std::accumulate(numberParticles.begin(), numberParticles.end(), 0);
-        std::vector<util::ParticlePOD> thinParticles(totalNumberParticles, {{0., 0., 0.}, 0}); // receive buffer
-        std::vector<int> displacements(_domain->nUsedRanks(), 0);
-        displacements[0] = 0;
-        for (int i = 1; i<displacements.size(); ++i) {
-            displacements[i] = displacements[i-1] + numberBytes[i-1];
-        }
-        MPI_Gatherv(nullptr, 0, MPI_BYTE, thinParticles.data(), numberBytes.data(), displacements.data(), MPI_BYTE, 0, _commUsedRanks);
-        // convert to particles
-        std::vector<Particle> particles;
-        std::for_each(thinParticles.begin(), thinParticles.end(),
-                      [&particles](const util::ParticlePOD &tp) {
-                          particles.emplace_back(tp.position, tp.typeId);
-                      });
-        return particles;
-    } else {
         // prepare send data
-        std::vector<util::ParticlePOD> thinParticles;
         for (const MPIEntry &entry : _data.get()) {
             if (not entry.deactivated and entry.responsible) {
                 thinParticles.emplace_back(entry);
             }
         }
-        MPI_Gatherv((void *) thinParticles.data(), static_cast<int>(thinParticles.size() * sizeof(util::ParticlePOD)), MPI_BYTE, nullptr, nullptr, nullptr, nullptr, 0, _commUsedRanks);
-        return {};
     }
+    thinParticles = util::gatherObjects(thinParticles, 0, *_domain, commUsedRanks());
+
+    // convert to particles
+    std::vector<Particle> particles;
+    std::for_each(thinParticles.begin(), thinParticles.end(),
+                  [&particles](const util::ParticlePOD &tp) {
+                      particles.emplace_back(tp.position, tp.typeId);
+                  });
+    return particles;
 }
 
 void MPIStateModel::resetReactionCounts() {

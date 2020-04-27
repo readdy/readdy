@@ -471,4 +471,25 @@ TEST_CASE("Test context.", "[context]") {
             }
         }
     }
+
+    SECTION("Test set kernel configuration") {
+        Context ctx;
+        WHEN("string is not valid json string (has missing braces)") {
+            std::string invalid = R"({"MPI":{"dx":4.9,"dy":4.9,"dz":4.9,"haloThickness":1.0})";
+            THEN("there must be an error") {
+                REQUIRE_THROWS(ctx.setKernelConfiguration(invalid));
+            }
+        }
+        WHEN("string is valid") {
+            std::string valid = R"({"MPI":{"dx":4.9,"dy":5.9,"dz":6.9,"haloThickness":1.0}})";
+            THEN("everything's OK and the appropriate values are set") {
+                ctx.setKernelConfiguration(valid);
+                auto& cfg = ctx.kernelConfiguration();
+                REQUIRE(cfg.mpi.dx == Approx(4.9));
+                REQUIRE(cfg.mpi.dy == Approx(5.9));
+                REQUIRE(cfg.mpi.dz == Approx(6.9));
+                REQUIRE(cfg.mpi.haloThickness == Approx(1.0));
+            }
+        }
+    }
 }

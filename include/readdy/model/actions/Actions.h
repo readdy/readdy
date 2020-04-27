@@ -70,6 +70,7 @@
 #include <readdy/common/index_persistent_vector.h>
 #include "Utils.h"
 #include <readdy/model/topologies/GraphTopology.h>
+#include <readdy/api/ObservableHandle.h>
 
 #if READDY_OSX || READDY_WINDOWS
 #include <functional>
@@ -380,6 +381,7 @@ class MakeCheckpoint {
 public:
     virtual void perform(TimeStep t) = 0;
     virtual ~MakeCheckpoint() = default;
+    virtual std::string describe() const = 0;
 };
 
 template<typename T>

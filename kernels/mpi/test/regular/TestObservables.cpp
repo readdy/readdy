@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2018 Computational Molecular Biology Group,          *
+ * Copyright © 2020 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * Redistribution and use in source and binary forms, with or       *
@@ -34,49 +34,51 @@
 
 
 /**
- * @file Energy.h
- * @brief Definitions of the energy observable
- * @author clonker
- * @date 12/21/17
+ * @file TestObservables.cpp
+ * @brief Test observables for the MPI kernel
+ * @author chrisfroe
+ * @date 22.04.20
  */
 
+#include <catch2/catch.hpp>
+#include <readdy/kernel/mpi/MPIKernel.h>
+#include <readdy/api/Simulation.h>
 
-#pragma once
+using Json = nlohmann::json;
 
+TEST_CASE("Test particles observable", "[mpi]") {
+    readdy::model::Context ctx;
 
-#include <readdy/common/common.h>
-#include "Observable.h"
+    /// In and out types and positions
+    ctx.boxSize() = {10., 10., 10.};
+    ctx.particleTypes().add("A", 1.);
+    ctx.particleTypes().add("B", 1.);
+    //ctx.reactions().add("fusili: A +(1.) A -> B", 0.1);
+    ctx.potentials().addHarmonicRepulsion("A", "A", 10., 2.3);
+    Json conf = {{"MPI", {{"dx", 4.9}, {"dy", 4.9}, {"dz", 4.9}}}};
+    ctx.kernelConfiguration() = conf.get<readdy::conf::Configuration>();
 
-namespace readdy::model::observables {
+    readdy::plugin::KernelProvider::kernel_ptr kernelPtr(readdy::kernel::mpi::MPIKernel::create(ctx));
+    readdy::Simulation simulation(std::move(kernelPtr));
 
-class Energy : public Observable<scalar> {
-public:
-    Energy(Kernel *kernel, Stride stride);
+    REQUIRE(simulation.selectedKernelType() == "MPI");
 
-    Energy(const Energy &) = delete;
-
-    Energy &operator=(const Energy &) = delete;
-
-    Energy(Energy &&) = delete;
-
-    Energy &operator=(Energy &&) = delete;
-
-    ~Energy() override;
-
-    void flush() override;
-
-    void evaluate() override;
-
-    std::string_view type() const override;
-
-protected:
-    void initializeDataSet(File &file, const std::string &dataSetName, Stride flushStride) override;
-
-    void append() override;
-
-private:
-    struct Impl;
-    std::unique_ptr<Impl> pimpl;
-};
-
+    const std::size_t nParticles = 10;
+    for (std::size_t i = 0; i < nParticles; ++i) {
+        auto x = readdy::model::rnd::uniform_real() * 10. - 5.;
+        auto y = readdy::model::rnd::uniform_real() * 10. - 5.;
+        auto z = readdy::model::rnd::uniform_real() * 10. - 5.;
+        simulation.addParticle("A", x, y, z);
+    }
+    const auto idA = ctx.particleTypes().idOf("A");
+    auto check = [&nParticles, &idA](const readdy::model::observables::Particles::result_type &result) {
+        const auto &types = std::get<0>(result);
+        const auto &ids = std::get<1>(result);
+        const auto &positions = std::get<2>(result);
+        CHECK(std::count(types.begin(), types.end(), idA) == 10);
+    };
+    simulation.registerObservable(simulation.observe().particles(1, check));
+    simulation.run(3, 0.01);
 }
+
+// todo more tests!

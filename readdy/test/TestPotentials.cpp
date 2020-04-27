@@ -109,7 +109,7 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
             readdy::Vec3 lowerBound{static_cast<readdy::scalar>(-2.5), static_cast<readdy::scalar>(-2.5),
                                     static_cast<readdy::scalar>(-2.5)},
                     upperBound{2.5, 2.5, 2.5};
-            ppObs->callback() = [lowerBound, upperBound](readdy::model::observables::Positions::result_type currentResult) {
+            ppObs->setCallback([lowerBound, upperBound](readdy::model::observables::Positions::result_type currentResult) {
                 readdy::Vec3 avg{0, 0, 0};
                 bool allWithinBounds = true;
                 for (auto &&v : currentResult) {
@@ -119,7 +119,7 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
                 avg /= currentResult.size();
                 if (!allWithinBounds) readdy::log::debug("Average position: {}", avg);
                 REQUIRE(allWithinBounds);
-            };
+            });
             auto connection = kernel->connectObservable(ppObs.get());
             run(*kernel, timeStep);
         }
@@ -150,7 +150,7 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
             auto ppObs = kernel->observe().positions(1);
             const readdy::scalar maxDistFromOrigin = 4.0; // at kbt=1 and force_const=20 the RMSD in a well potential would be ~0.2
             const readdy::scalar maxDistFromOriginSquared = maxDistFromOrigin * maxDistFromOrigin;
-            ppObs->callback() = [maxDistFromOriginSquared](readdy::model::observables::Positions::result_type currentResult) {
+            ppObs->setCallback([maxDistFromOriginSquared](readdy::model::observables::Positions::result_type currentResult) {
                 readdy::Vec3 avg{0, 0, 0};
                 bool allWithinBounds = true;
                 for (auto &&v : currentResult) {
@@ -161,7 +161,7 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
                 avg /= currentResult.size();
                 if (!allWithinBounds) readdy::log::debug("Average position: {}", avg);
                 REQUIRE(allWithinBounds);
-            };
+            });
             auto connection = kernel->connectObservable(ppObs.get());
             run(*kernel, timeStep);
         }
@@ -181,17 +181,17 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
             // record ids to get data-structure-indexes of the two particles later on
             auto pObs = kernel->observe().particles(1);
             std::vector<readdy::ParticleId> ids;
-            pObs->callback() = [&ids](const readdy::model::observables::Particles::result_type &result) {
+            pObs->setCallback([&ids](const readdy::model::observables::Particles::result_type &result) {
                 const auto &recordedIds = std::get<1>(result);
                 ids.insert(ids.end(), recordedIds.begin(), recordedIds.end());
-            };
+            });
             auto connParticles = kernel->connectObservable(pObs.get());
             // also record forces
             auto fObs = kernel->observe().forces(1);
             std::vector<readdy::Vec3> collectedForces;
-            fObs->callback() = [&collectedForces](const readdy::model::observables::Forces::result_type &result) {
+            fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_type &result) {
                 collectedForces.insert(collectedForces.end(), result.begin(), result.end());
-            };
+            });
             auto conn = kernel->connectObservable(fObs.get());
 
             // calc forces
@@ -228,17 +228,17 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
             // record ids to get data-structure-indexes of the two particles later on
             auto pObs = kernel->observe().particles(1);
             std::vector<readdy::ParticleId> ids;
-            pObs->callback() = [&ids](const readdy::model::observables::Particles::result_type &result) {
+            pObs->setCallback([&ids](const readdy::model::observables::Particles::result_type &result) {
                 const auto &recordedIds = std::get<1>(result);
                 ids.insert(ids.end(), recordedIds.begin(), recordedIds.end());
-            };
+            });
             auto connParticles = kernel->connectObservable(pObs.get());
             // also record forces
             auto fObs = kernel->observe().forces(1);
             std::vector<readdy::Vec3> collectedForces;
-            fObs->callback() = [&collectedForces](const readdy::model::observables::Forces::result_type &result) {
+            fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_type &result) {
                 collectedForces.insert(collectedForces.end(), result.begin(), result.end());
-            };
+            });
             auto connForces = kernel->connectObservable(fObs.get());
 
             kernel->initialize();
@@ -275,17 +275,17 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
             // record ids to get data-structure-indexes of the two particles later on
             auto pObs = kernel->observe().particles(1);
             std::vector<readdy::ParticleId> ids;
-            pObs->callback() = [&ids](const readdy::model::observables::Particles::result_type &result) {
+            pObs->setCallback([&ids](const readdy::model::observables::Particles::result_type &result) {
                 const auto &recordedIds = std::get<1>(result);
                 ids.insert(ids.end(), recordedIds.begin(), recordedIds.end());
-            };
+            });
             auto connParticles = kernel->connectObservable(pObs.get());
             // also record forces
             auto fObs = kernel->observe().forces(1);
             std::vector<readdy::Vec3> collectedForces;
-            fObs->callback() = [&collectedForces](const readdy::model::observables::Forces::result_type &result) {
+            fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_type &result) {
                 collectedForces.insert(collectedForces.end(), result.begin(), result.end());
-            };
+            });
             auto connForces = kernel->connectObservable(fObs.get());
 
             kernel->initialize();
@@ -333,17 +333,17 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
             // record ids to get data-structure-indexes of the two particles later on
             auto pObs = kernel->observe().particles(1);
             std::vector<readdy::ParticleId> ids;
-            pObs->callback() = [&ids](const readdy::model::observables::Particles::result_type &result) {
+            pObs->setCallback([&ids](const readdy::model::observables::Particles::result_type &result) {
                 const auto &recordedIds = std::get<1>(result);
                 ids.insert(ids.end(), recordedIds.begin(), recordedIds.end());
-            };
+            });
             auto connParticles = kernel->connectObservable(pObs.get());
             // also record forces
             auto fObs = kernel->observe().forces(1);
             std::vector<readdy::Vec3> collectedForces;
-            fObs->callback() = [&collectedForces](const readdy::model::observables::Forces::result_type &result) {
+            fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_type &result) {
                 collectedForces.insert(collectedForces.end(), result.begin(), result.end());
-            };
+            });
             auto connForces = kernel->connectObservable(fObs.get());
 
             kernel->initialize();
@@ -398,17 +398,17 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
             // record ids
             auto pObs = kernel->observe().particles(1);
             std::vector<readdy::ParticleId> ids;
-            pObs->callback() = [&ids](const readdy::model::observables::Particles::result_type& result) {
+            pObs->setCallback([&ids](const readdy::model::observables::Particles::result_type& result) {
                 const auto& recordedIds = std::get<1>(result);
                 ids.insert(ids.end(), recordedIds.begin(), recordedIds.end());
-            };
+            });
             auto connParticles = kernel->connectObservable(pObs.get());
             // also record forces
             auto fObs = kernel->observe().forces(1);
             std::vector<readdy::Vec3> collectedForces;
-            fObs->callback() = [&collectedForces](const readdy::model::observables::Forces::result_type& result) {
+            fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_type& result) {
                 collectedForces.insert(collectedForces.end(), result.begin(), result.end());
-            };
+            });
             auto conn = kernel->connectObservable(fObs.get());
 
             // we need to update the neighbor list as this is a pair potential
@@ -465,17 +465,17 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
             // record ids to get data-structure-indexes of the two particles later on
             auto pObs = kernel->observe().particles(1);
             std::vector<readdy::ParticleId> ids;
-            pObs->callback() = [&ids](const readdy::model::observables::Particles::result_type &result) {
+            pObs->setCallback([&ids](const readdy::model::observables::Particles::result_type &result) {
                 const auto &recordedIds = std::get<1>(result);
                 ids.insert(ids.end(), recordedIds.begin(), recordedIds.end());
-            };
+            });
             auto connParticles = kernel->connectObservable(pObs.get());
             // also record forces
             auto fObs = kernel->observe().forces(1);
             std::vector<readdy::Vec3> collectedForces;
-            fObs->callback() = [&collectedForces](const readdy::model::observables::Forces::result_type &result) {
+            fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_type &result) {
                 collectedForces.insert(collectedForces.end(), result.begin(), result.end());
-            };
+            });
             auto conn = kernel->connectObservable(fObs.get());
 
             // we need to update the neighbor list as this is a pair potential

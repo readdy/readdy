@@ -41,6 +41,7 @@ add_executable(${PROJECT_NAME}
         IntegrationTests.cpp
         TestSynchronization.cpp
         TestDiffusion.cpp
+        TestObservables.cpp
         ${TESTING_INCLUDE_DIR})
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${READDY_INCLUDE_DIRS} ${TESTING_INCLUDE_DIR} ${MPI_INCLUDE_DIR})

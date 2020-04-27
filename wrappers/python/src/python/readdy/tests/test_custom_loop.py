@@ -98,7 +98,7 @@ class TestCustomLoop(unittest.TestCase):
             update_nl = simulation._actions.update_neighbor_list()
             reac = simulation._actions.reaction_handler_uncontrolled_approximation(dt)
             obs = simulation._actions.evaluate_observables()
-            check = simulation._actions.make_checkpoint(base_path, max_n_saves)
+            check = simulation._actions.make_checkpoint(base_path, max_n_saves, "checkpoint_{}.h5")
 
             init()
             create_nl()

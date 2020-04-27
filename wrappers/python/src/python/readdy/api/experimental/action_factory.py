@@ -81,8 +81,8 @@ class ActionFactory(object):
     def evaluate_observables(self):
         return self._sim.create_action_evaluate_observables()
 
-    def make_checkpoint(self, base_path, max_n_saves):
-        return self._sim.create_action_make_checkpoint(base_path, max_n_saves)
+    def make_checkpoint(self, base_path, max_n_saves, checkpoint_format):
+        return self._sim.create_action_make_checkpoint(base_path, max_n_saves, checkpoint_format)
 
     def initialize_kernel(self):
         return self._sim.create_action_initialize_kernel()

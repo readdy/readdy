@@ -111,9 +111,8 @@ void exportLoopApi(pybind11::module &module) {
             .def("evaluate_observables", &Loop::evaluateObservables, "evaluate"_a)
             .def_property("neighbor_list_cutoff", [](const Loop &self) { return self.neighborListCutoff(); },
                           [](Loop &self, readdy::scalar distance) { self.neighborListCutoff() = distance; })
-            .def("make_checkpoints", [](Loop &self, std::shared_ptr<Saver> saver, std::size_t stride) {
-                self.setSaver(saver);
-                self.setCheckpointingStride(stride);
+            .def("make_checkpoints", [](Loop &self, std::size_t stride, std::string basePath, std::size_t maxNSaves, std::string checkpointFormat) {
+                self.makeCheckpoints(stride, basePath, maxNSaves, checkpointFormat);
             })
             .def("describe", &Loop::describe)
             .def("validate", &Loop::validate);

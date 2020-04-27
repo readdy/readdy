@@ -79,6 +79,7 @@ struct MPIEntry {
      * Usually is determined by position but not necessarily, it states which rank is responsible for this.
      * In evaluating forces and reactions it helps to know the rank without parsing the domain object (more deref).
      * Also the compound (rank, id) might provide a unique identifier if necessary (not planning to).
+     * Helpful when avoiding double counting of pair-interaction observables e.g. virial across domain boundaries.
      */
     int rank;
     /**

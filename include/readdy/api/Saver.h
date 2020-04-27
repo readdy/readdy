@@ -69,12 +69,12 @@ public:
         {
             model::observables::FlatTrajectory traj(kernel, 1, false);
             traj.enableWriteToFile(*file, "trajectory_ckpt", 1);
-            traj.callback(t);
+            traj.call(t);
         }
         {
             model::observables::Topologies tops(kernel, 1, false);
             tops.enableWriteToFile(*file, "topologies_ckpt", 1);
-            tops.callback(t);
+            tops.call(t);
         }
 
         while (_maxNSaves > 0 && previousCheckpoints.size() > _maxNSaves) {
@@ -101,6 +101,14 @@ public:
 
     [[nodiscard]] std::string checkpointTemplate() const {
         return _checkpointTemplate;
+    }
+
+    std::string describe() const {
+        std::string description;
+        description += fmt::format("   * base path: {}\n", basePath());
+        description += fmt::format("   * checkpoint filename template: {}\n", checkpointTemplate());
+        description += fmt::format("   * maximal number saves: {}\n", maxNSaves());
+        return description;
     }
 
 private:

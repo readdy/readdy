@@ -178,7 +178,7 @@ TEMPLATE_TEST_CASE("Test observables", "[observables]", SingleCPU, CPU) {
             std::size_t n_time_steps = 500;
 
             auto obs = kernel->observe().topologies(1);
-            obs->callback() = ([&](const readdy::model::observables::Topologies::result_type &value) {
+            obs->setCallback([&](const readdy::model::observables::Topologies::result_type &value) {
                 auto tops = kernel->stateModel().getTopologies();
                 REQUIRE(value.size() == tops.size());
                 for (auto its = std::make_pair(tops.begin(), value.begin());

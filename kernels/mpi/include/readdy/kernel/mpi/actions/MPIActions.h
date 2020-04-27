@@ -53,13 +53,15 @@ namespace readdy::kernel::mpi::actions {
 
 class MPIAddParticles : public readdy::model::actions::AddParticles {
 public:
-    MPIAddParticles(MPIKernel *kernel, const std::vector<readdy::model::Particle> &particles) : AddParticles(kernel, particles), kernel(kernel) {}
+    MPIAddParticles(MPIKernel *kernel, const std::vector<readdy::model::Particle> &particles)
+        : AddParticles(kernel, particles), kernel(kernel) {}
 
     void perform() override {
         if (kernel) {
             kernel->getMPIKernelStateModel().distributeParticles(particles);
         } else {
-            throw std::runtime_error("invalid kernel");
+            throw std::runtime_error(
+                    fmt::format("rank={} MPIAddParticles::perform invalid kernel", kernel->domain().rank()));
         }
     }
 private:
@@ -100,6 +102,13 @@ private:
     void performImpl();
 };
 
+/** no-op but needed to run the default simulation loop */
+class MPICreateNeighborList : public readdy::model::actions::CreateNeighborList {
+public:
+    MPICreateNeighborList(MPIKernel *kernel) : CreateNeighborList(kernel->context().calculateMaxCutoff()) {}
+    void perform() override {/* no-op, this neighborlist is initialized by construction */}
+};
+
 class MPIUpdateNeighborList : public readdy::model::actions::UpdateNeighborList {
 public:
     explicit MPIUpdateNeighborList(MPIKernel *kernel) : UpdateNeighborList(), kernel(kernel) {}
@@ -114,6 +123,13 @@ public:
 
 private:
     MPIKernel *const kernel;
+};
+
+/** no-op but needed to run the default simulation loop */
+class MPIClearNeighborList : public readdy::model::actions::ClearNeighborList {
+public:
+    explicit MPIClearNeighborList() : ClearNeighborList() {}
+    void perform() override {/* no-op */}
 };
 
 class MPIEvaluateCompartments : public readdy::model::actions::EvaluateCompartments {
@@ -170,7 +186,9 @@ private:
 
 class MPIMakeCheckpoint : public readdy::model::actions::MakeCheckpoint {
 public:
-    MPIMakeCheckpoint(MPIKernel *kernel, const std::string& base, std::size_t maxNSaves) : kernel(kernel), saver(base, maxNSaves) {}
+    MPIMakeCheckpoint(MPIKernel *kernel, const std::string& base, std::size_t maxNSaves,
+                      const std::string &checkpointFormat)
+            : kernel(kernel), saver(base, maxNSaves, checkpointFormat) {}
 
     void perform(TimeStep t) override {
         // todo sync (MPIGather) the state to master's stateModel, then makeCheckpoint as usual and clear stateModel
@@ -185,6 +203,10 @@ public:
         } else {
             // no op for idlers
         }
+    }
+
+    std::string describe() const override {
+        return saver.describe();
     }
 private:
     MPIKernel *kernel;

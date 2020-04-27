@@ -210,4 +210,52 @@ inline void evaluateOnContainers(ParticleContainer &&particleContainer,
     }
 }
 
+/**
+ * Wrapper around two calls Gather and Gatherv,
+ * to find out how many objects each one sends (1),
+ * then set the appropriate displacements (2),
+ * and then gather all variable length data (3).
+ *
+ * @tparam T, the type of sent objects
+ * @param objects, the vector of sent objects
+ * @param root, the rank of the worker which will end up with the union of all sent objects
+ * @param domain, domain object with rank information of current worker
+ * @param comm, communicator for the set of workers
+ * @return the union of all sent objects if on root worker, else an empty vector
+ */
+template<typename T>
+inline std::vector<T> gatherObjects(const std::vector<T> &objects, int root, const model::MPIDomain &domain, const MPI_Comm &comm) {
+    /// (1) find out how many each one sends. In principle the root can also send objects.
+    int number = objects.size();
+    std::vector<int> nPerRank(domain.nUsedRanks(), 0);
+    MPI_Gather(&number, 1, MPI_INT, nPerRank.data(), 1, MPI_INT, root, comm);
+
+    std::vector<int> nPerRankBytes;
+    std::vector<int> displacements;
+    std::vector<T> results;
+
+    if (domain.rank() == root) {
+        /// (2) find out number of bytes and displacements
+        nPerRankBytes.resize(domain.nUsedRanks());
+        // convert number of objects to number of bytes from each rank
+        for (std::size_t i = 0; i<nPerRank.size(); ++i) {
+            nPerRankBytes[i] = static_cast<int>(nPerRank[i] * sizeof(T));
+        }
+
+        // prepare receive buffer and displacements
+        std::size_t totalNumber = std::accumulate(nPerRank.begin(), nPerRank.end(), 0);
+        results.resize(totalNumber);
+        displacements.resize(domain.nUsedRanks());
+        displacements[0] = 0;
+        for (int i = 1; i<displacements.size(); ++i) {
+            displacements[i] = displacements[i-1] + nPerRankBytes[i-1];
+        }
+    }
+
+    /// (3) gather results
+    MPI_Gatherv((void *) objects.data(), static_cast<int>(objects.size() * sizeof(T)), MPI_BYTE, results.data(),
+                nPerRankBytes.data(), displacements.data(), MPI_BYTE, root, comm);
+    return results;
+}
+
 }

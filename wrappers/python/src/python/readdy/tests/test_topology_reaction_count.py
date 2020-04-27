@@ -19,7 +19,7 @@ class TestTopologyReactionCount(unittest.TestCase):
 
     def _test_kernel(self, kernel):
 
-        system = readdy.ReactionDiffusionSystem(box_size=[10, 10, 10])
+        system = readdy.ReactionDiffusionSystem(box_size=[20, 20, 20])
         system.topologies.add_type("T1")
         system.topologies.add_type("T2")
         system.add_species("A")

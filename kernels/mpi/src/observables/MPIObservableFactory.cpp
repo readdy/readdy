@@ -33,10 +33,8 @@
  ********************************************************************/
 
 /**
- * « detailed description »
- *
  * @file MPIObservableFactory.cpp
- * @brief « brief description »
+ * @brief Implementation of the observable factor for the MPI kernel
  * @author chrisfroe
  * @date 28.05.19
  */
@@ -52,52 +50,103 @@ MPIObservableFactory::MPIObservableFactory(MPIKernel *kernel) : readdy::model::o
 
 std::unique_ptr<readdy::model::observables::HistogramAlongAxis>
 MPIObservableFactory::histogramAlongAxis(Stride stride, std::vector<scalar> binBorders,
-                                         std::vector<std::string> typesToCount, unsigned int axis) const {
-    return {std::make_unique<MPIHistogramAlongAxis>(kernel, stride, binBorders, typesToCount, axis)};
+                                         std::vector<std::string> typesToCount, unsigned int axis,
+                                         ObsCallback<readdy::model::observables::HistogramAlongAxis> callback) const {
+    auto obs = std::make_unique<MPIHistogramAlongAxis>(kernel, stride, binBorders, typesToCount, axis);
+    if (kernel->domain().isMasterRank()) {
+        obs->setCallback(callback);
+    }
+    return std::move(obs);
 }
 
 std::unique_ptr<readdy::model::observables::NParticles>
-MPIObservableFactory::nParticles(Stride stride, std::vector<std::string> typesToCount) const {
-    return {std::make_unique<MPINParticles>(kernel, stride, typesToCount)};
+MPIObservableFactory::nParticles(Stride stride, std::vector<std::string> typesToCount,
+                                 ObsCallback<readdy::model::observables::NParticles> callback) const {
+    auto obs = std::make_unique<MPINParticles>(kernel, stride, typesToCount);
+    if (kernel->domain().isMasterRank()) {
+        obs->setCallback(callback);
+    }
+    return std::move(obs);
 }
 
 std::unique_ptr<readdy::model::observables::Forces>
-MPIObservableFactory::forces(Stride stride, std::vector<std::string> typesToCount) const {
-    return {std::make_unique<MPIForces>(kernel, stride, typesToCount)};
+MPIObservableFactory::forces(Stride stride, std::vector<std::string> typesToCount,
+                             ObsCallback<readdy::model::observables::Forces> callback) const {
+    auto obs = std::make_unique<MPIForces>(kernel, stride, typesToCount);
+    if (kernel->domain().isMasterRank()) {
+        obs->setCallback(callback);
+    }
+    return std::move(obs);
 }
 
 std::unique_ptr<readdy::model::observables::Positions>
-MPIObservableFactory::positions(Stride stride, std::vector<std::string> typesToCount) const {
-    return {std::make_unique<MPIPositions>(kernel, stride, typesToCount)};
+MPIObservableFactory::positions(Stride stride, std::vector<std::string> typesToCount,
+                                ObsCallback<readdy::model::observables::Positions> callback) const {
+    auto obs = std::make_unique<MPIPositions>(kernel, stride, typesToCount);
+    if (kernel->domain().isMasterRank()) {
+        obs->setCallback(callback);
+    }
+    return std::move(obs);
 }
 
 std::unique_ptr<readdy::model::observables::RadialDistribution>
 MPIObservableFactory::radialDistribution(Stride stride, std::vector<scalar> binBorders,
-                                         std::vector<std::string> typeCountFrom, std::vector<std::string> typeCountTo,
-                                         scalar particleDensity) const {
-    return {std::make_unique<readdy::model::observables::RadialDistribution>(
+                                         std::vector<std::string> typeCountFrom,
+                                         std::vector<std::string> typeCountTo, scalar particleDensity,
+                                         ObsCallback<readdy::model::observables::RadialDistribution> callback) const {
+    auto obs = std::make_unique<readdy::model::observables::RadialDistribution>(
             kernel, stride, binBorders, typeCountFrom, typeCountTo, particleDensity
-    )};
+    );
+    if (kernel->domain().isMasterRank()) {
+        obs->setCallback(callback);
+    }
+    return std::move(obs);
 }
 
-std::unique_ptr<readdy::model::observables::Particles> MPIObservableFactory::particles(Stride stride) const {
-    return {std::make_unique<MPIParticles>(kernel, stride)};
+std::unique_ptr<readdy::model::observables::Particles>
+MPIObservableFactory::particles(Stride stride, ObsCallback<readdy::model::observables::Particles> callback) const {
+    auto obs = std::make_unique<MPIParticles>(kernel, stride);
+    if (kernel->domain().isMasterRank()) {
+        obs->setCallback(callback);
+    }
+    return std::move(obs);
 }
 
-std::unique_ptr<readdy::model::observables::Reactions> MPIObservableFactory::reactions(Stride stride) const {
-    return {std::make_unique<MPIReactions>(kernel, stride)};
+std::unique_ptr<readdy::model::observables::Reactions>
+MPIObservableFactory::reactions(Stride stride, ObsCallback<readdy::model::observables::Reactions> callback) const {
+    auto obs = std::make_unique<MPIReactions>(kernel, stride);
+    if (kernel->domain().isMasterRank()) {
+        obs->setCallback(callback);
+    }
+    kernel->context().recordReactionsWithPositions() = true;
+    return std::move(obs);
 }
 
-std::unique_ptr<readdy::model::observables::ReactionCounts> MPIObservableFactory::reactionCounts(Stride stride) const {
-    return {std::make_unique<MPIReactionCounts>(kernel, stride)};
+std::unique_ptr<readdy::model::observables::ReactionCounts>
+MPIObservableFactory::reactionCounts(Stride stride, ObsCallback<readdy::model::observables::ReactionCounts> callback) const {
+    auto obs = std::make_unique<MPIReactionCounts>(kernel, stride);
+    if (kernel->domain().isMasterRank()) {
+        obs->setCallback(callback);
+    }
+    kernel->context().recordReactionCounts() = true;
+    return std::move(obs);
 }
 
-std::unique_ptr<readdy::model::observables::Virial> MPIObservableFactory::virial(Stride stride) const {
-    return {std::make_unique<MPIVirial>(kernel, stride)};
+std::unique_ptr<readdy::model::observables::Virial> MPIObservableFactory::virial(Stride stride, ObsCallback<readdy::model::observables::Virial> callback) const {
+    auto obs = std::make_unique<MPIVirial>(kernel, stride);
+    if (kernel->domain().isMasterRank()) {
+        obs->setCallback(callback);
+    }
+    kernel->context().recordVirial() = true;
+    return std::move(obs);
 }
 
-std::unique_ptr<readdy::model::observables::Energy> MPIObservableFactory::energy(Stride stride) const {
-    return {std::make_unique<MPIEnergy>(kernel, stride)};
+std::unique_ptr<readdy::model::observables::Energy> MPIObservableFactory::energy(Stride stride, ObsCallback<readdy::model::observables::Energy> callback) const {
+    auto obs = std::make_unique<MPIEnergy>(kernel, stride);
+    if (kernel->domain().isMasterRank()) {
+        obs->setCallback(callback);
+    }
+    return std::move(obs);
 }
 
 }
