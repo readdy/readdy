@@ -34,9 +34,9 @@
 
 
 /**
- * This header file contains the definition of the ObservableFactory. Its purpose is to create observable of different
- * types in the form of unique_ptrs. The actual implementation of an observable can be changed by specializing the
- * dispatcher for its type and invoking a virtual (and then: overridden) method within the factory.
+ * This header file contains the definition of the ObservableFactory. Its purpose is to create observables of different
+ * types in the form of unique_ptrs. The actual implementation of an observable is determined by the derived
+ * observable factories, which override the factory methods.
  *
  * @file ObservableFactory.h
  * @brief This header file contains the definition of the ObservableFactory.
@@ -95,7 +95,7 @@ public:
     }
     
     [[nodiscard]] std::unique_ptr<NParticles>
-    nParticles(Stride stride, ObsCallback<NParticles> callback) const {
+    nParticles(Stride stride, const ObsCallback<NParticles> &callback) const {
         return std::move(nParticles(stride, {}, callback));
     }
 
