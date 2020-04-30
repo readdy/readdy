@@ -28,6 +28,7 @@
 namespace readdy::performance {
 
 using Json = nlohmann::json;
+namespace rmo = readdy::model::observables;
 
 class MPIDistributeParticles : public Scenario {
 public:
@@ -218,6 +219,199 @@ public:
         result["kernelName"] = "MPI";
         result["mode"] = fmt::format("{}", _mode);
         result["edgeLengthOverInteractionDistance"] = _edgeLengthOverInteractionDistance;
+        readdy::util::Timer::clear();
+        return result;
+    }
+};
+
+struct LJResult {
+    /// P = N * kBT / V + (virial[0][0] + virial[1][1] + virial[2][2]) / 3 / V
+    std::vector<readdy::scalar> pressure;
+    /// <P>
+    readdy::scalar meanPressure{};
+    /// u = U / N / kBT
+    std::vector<rmo::Energy::result_type> energyPerParticle;
+    /// <u>
+    readdy::scalar meanEnergyPerParticle{};
+    rmo::Positions::result_type lastPositions;
+    Json performance;
+};
+
+void to_json(nlohmann::json &j, const LJResult &res) {
+    std::vector<std::array<readdy::scalar,3>> pos;
+    std::transform(res.lastPositions.begin(), res.lastPositions.end(),
+            std::back_inserter(pos), [](auto x){ return x.data;});
+    j = nlohmann::json{{"pressure",  res.pressure},
+                       {"meanPressure", res.meanPressure},
+                       {"energyPerParticle", res.energyPerParticle},
+                       {"meanEnergyPerParticle", res.meanEnergyPerParticle},
+                       {"lastPositions", pos},
+                       {"performance", res.performance}
+                       };
+}
+
+class MPILennardJonesSuspension : public Scenario {
+    readdy::scalar _rescaledDensity;
+    readdy::scalar _edgeLength;
+    std::size_t _numberParticles;
+public:
+    explicit MPILennardJonesSuspension(std::size_t numberParticles = 2000, readdy::scalar rescaledDensity = 0.3)
+        : Scenario("MPILennardJonesSuspension", "Diffusion of Lennard Jones particles to sample energy and pressure"),
+        _rescaledDensity(rescaledDensity), _numberParticles(numberParticles) {
+        assert(rescaledDensity > 0.);
+        assert(numberParticles > 1728); // otherwise box is too small
+        _edgeLength = std::cbrt(static_cast<readdy::scalar>(numberParticles) / rescaledDensity);
+        readdy::log::info("MPILennardJones with density={}, numberParticles={}, edgeLength={}",
+                rescaledDensity, numberParticles, _edgeLength);
+        readdy::log::info("Will have the following context\n{}", getContext(false).describe());
+    }
+
+    Json run() override {
+        int rank, worldSize;
+        MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        std::size_t nLoad = worldSize;
+        std::size_t nProcessors = worldSize;
+        std::size_t nWorkers = worldSize - 1;
+        std::size_t nParticles = _numberParticles;
+        scalar nParticlesPerWorker = static_cast<scalar>(nParticles) / static_cast<scalar>(nWorkers);
+
+        std::vector<readdy::Vec3> initPos;
+        for (std::size_t i = 0; i<_numberParticles; ++i) {
+            auto x = readdy::model::rnd::uniform_real() * _edgeLength - 0.5 * _edgeLength;
+            auto y = readdy::model::rnd::uniform_real() * _edgeLength - 0.5 * _edgeLength;
+            auto z = readdy::model::rnd::uniform_real() * _edgeLength - 0.5 * _edgeLength;
+            initPos.emplace_back(x, y, z);
+        }
+
+        LJResult equilibrationSoft = simulate(initPos, true, 5000);
+        readdy::log::info(equilibrationSoft.lastPositions.size());
+        assert(equilibrationSoft.lastPositions.size() == _numberParticles);
+
+        LJResult equilibrationLJ = simulate(equilibrationSoft.lastPositions, false, 4000);
+
+        LJResult measureLJ = simulate(equilibrationLJ.lastPositions, false, 1000);
+
+        Json result;
+        result["equilibrationSoft"] = equilibrationSoft;
+        result["equilibrationLJ"] = equilibrationLJ;
+        result["measureLJ"] = measureLJ;
+        result["context"] = getContext(false).describe();
+
+        result["nLoad"] = nLoad;
+        result["nProcessors"] = nProcessors;
+        result["nParticles"] = nParticles;
+        result["nParticlesPerProcessor"] = static_cast<scalar>(nParticles) / static_cast<scalar>(nProcessors);
+        result["nParticlesPerWorkers"] = nParticlesPerWorker;
+        result["kernelName"] = "MPI";
+        return result;
+    }
+
+private:
+    readdy::model::Context getContext(bool soft) {
+        readdy::model::Context ctx;
+        ctx.boxSize() = {_edgeLength, _edgeLength, _edgeLength};
+        ctx.periodicBoundaryConditions() = {true, true, true};
+        ctx.kBT() = 3.;
+        ctx.particleTypes().add("A", 1.);
+        if (soft) {
+            ctx.potentials().addHarmonicRepulsion("A", "A", 500., 1.5);
+        } else {
+            ctx.potentials().addLennardJones("A", "A", 12, 6, 4., true, 1., 1.);
+        }
+        return ctx;
+    }
+
+    LJResult simulate(const std::vector<readdy::Vec3> &initPos, bool soft, std::size_t nSteps = 10000) {
+        LJResult result;
+        readdy::kernel::mpi::MPIKernel kernel(getContext(soft));
+        if (kernel.domain().isIdleRank()) {
+            return {};
+        }
+        const auto &ctx = kernel.context();
+        const auto volume = ctx.boxVolume();
+        const auto kbt = ctx.kBT();
+
+        std::vector<readdy::model::Particle> initParticles;
+        initParticles.reserve(initPos.size());
+        for (const auto &p : initPos) {
+            initParticles.emplace_back(p.x, p.y, p.z, ctx.particleTypes().idOf("A"));
+        }
+
+        auto virial = kernel.observe().virial(50, [&result, this, &volume, &kbt](const auto& v){
+            result.pressure.push_back(_numberParticles * kbt / volume + (v.at(0,0) + v.at(1,1) + v.at(2,2)) / 3. / volume);
+        });
+        auto energy = kernel.observe().energy(50, [&result, this](const auto& e) {
+            result.energyPerParticle.push_back(e / _numberParticles);
+        });
+        auto positions = kernel.observe().positions(50, [&result](const auto& p) {
+            result.lastPositions = p;
+        });
+
+        auto eval = [&virial, &energy, &positions, &kernel](const readdy::TimeStep &t) {
+            virial->call(t);
+            energy->call(t);
+            positions->call(t);
+        };
+
+        kernel.actions().addParticles(initParticles)->perform();
+        kernel.actions().initializeKernel()->perform();
+        kernel.actions().createNeighborList(kernel.context().calculateMaxCutoff())->perform();
+
+
+        readdy::scalar timeStep = 0.0001;
+        auto integrator = kernel.actions().eulerBDIntegrator(timeStep);
+        auto forces = kernel.actions().calculateForces();
+        auto neighborList = kernel.actions().updateNeighborList();
+
+
+        neighborList->perform();
+        forces->perform();
+        eval(0);
+        MPI_Barrier(kernel.commUsedRanks());
+        ProgressBar progress(nSteps+1, 80, not kernel.domain().isMasterRank());
+        for (size_t t = 1; t < nSteps + 1; t++) {
+
+            readdy::util::Timer tStep("complete timestep");
+            {
+                readdy::util::Timer t1("integrator");
+                integrator->perform();
+            }
+            {
+                readdy::util::Timer t2("neighborList");
+                neighborList->perform();
+            }
+            {
+                readdy::util::Timer t3("forces");
+                forces->perform();
+            }
+            {
+                readdy::util::Timer t4("evaluateObs");
+                eval(t);
+            }
+            if (t % 10 == 0) {
+                MPI_Barrier(kernel.commUsedRanks());
+                if (kernel.domain().isMasterRank()) {
+                    progress.increment(10);
+                    progress.display();
+                }
+            }
+            if (t % 50 == 0) {
+                if (kernel.domain().isMasterRank()){
+                    readdy::log::info("rank-{} -- step {}, energy {}", kernel.domain().rank(), t, energy->getResult());
+                }
+            }
+        }
+        progress.done();
+        if (kernel.domain().isMasterRank()) {
+            result.meanPressure = std::accumulate(result.pressure.begin(), result.pressure.end(), 0.);
+            result.meanPressure /= result.pressure.size();
+
+            result.meanEnergyPerParticle = std::accumulate(
+                    result.energyPerParticle.begin(), result.energyPerParticle.end(), 0.);
+            result.meanEnergyPerParticle /= result.energyPerParticle.size();
+        }
+        result.performance = Json::parse(readdy::util::Timer::perfToJsonString());
         readdy::util::Timer::clear();
         return result;
     }
