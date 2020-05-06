@@ -84,14 +84,17 @@ MPIPositions::MPIPositions(MPIKernel *kernel, unsigned int stride, const std::ve
 void MPIPositions::evaluate() {
     result.clear();
     if (kernel->domain().isWorkerRank()) {
-        auto &stateModel = kernel->getMPIKernelStateModel();
+        const auto &data = kernel->getMPIKernelStateModel().getParticleData();
         if (typesToCount.empty()) {
-            result = stateModel.getParticlePositions();
+            for (const auto &p : *data) {
+                if (!p.deactivated and p.responsible) {
+                    result.push_back(p.pos);
+                }
+            }
         } else {
             // only get positions of typesToCount
-            const auto &pd = stateModel.getParticleData();
-            for (const auto &p : *pd) {
-                if (!p.deactivated) {
+            for (const auto &p : *data) {
+                if (!p.deactivated and p.responsible) {
                     if (std::find(typesToCount.begin(), typesToCount.end(), p.type) != typesToCount.end()) {
                         result.push_back(p.pos);
                     }
@@ -167,7 +170,10 @@ void MPIHistogramAlongAxis::evaluate() {
         }
     }
     // todo variable float type
-    MPI_Reduce(result.data(), result.data(), static_cast<int>(result.size()), MPI_DOUBLE, MPI_SUM, 0, kernel->commUsedRanks());
+    HistogramAlongAxis::result_type tmp;
+    tmp.resize(result.size());
+    MPI_Reduce(result.data(), tmp.data(), static_cast<int>(result.size()), MPI_DOUBLE, MPI_SUM, 0, kernel->commUsedRanks());
+    result = tmp;
 }
 
 void MPIHistogramAlongAxis::append() {
@@ -219,7 +225,10 @@ void MPINParticles::evaluate() {
         throw std::runtime_error("impossible");
     }
 
-    MPI_Reduce(result.data(), result.data(), static_cast<int>(result.size()), MPI_UNSIGNED_LONG, MPI_SUM, 0, kernel->commUsedRanks());
+    NParticles::result_type tmp;
+    tmp.resize(result.size());
+    MPI_Reduce(result.data(), tmp.data(), static_cast<int>(result.size()), MPI_UNSIGNED_LONG, MPI_SUM, 0, kernel->commUsedRanks());
+    result = tmp;
 }
 
 void MPINParticles::append() {
@@ -242,16 +251,16 @@ void MPIForces::evaluate() {
     if (kernel->domain().isWorkerRank()) {
         const auto &pd = kernel->getMPIKernelStateModel().getParticleData();
         if (typesToCount.empty()) {
-            // get all particles' forces
+            // get all responsible particles' forces
             for (const auto &p : *pd) {
-                if (!p.deactivated) {
+                if (!p.deactivated and p.responsible) {
                     result.push_back(p.force);
                 }
             }
         } else {
             // only get forces of typesToCount
             for (const auto &p : *pd) {
-                if (!p.deactivated) {
+                if (!p.deactivated and p.responsible) {
                     if (std::find(typesToCount.begin(), typesToCount.end(), p.type) != typesToCount.end()) {
                         result.push_back(p.force);
                     }
@@ -350,7 +359,9 @@ void MPIEnergy::evaluate() {
     if (kernel->domain().isWorkerRank()) {
         result = kernel->stateModel().energy();
     }
-    MPI_Reduce(&result, &result, static_cast<int>(1), MPI_DOUBLE, MPI_SUM, 0, kernel->commUsedRanks());
+    readdy::scalar tmp;
+    MPI_Reduce(&result, &tmp, static_cast<int>(1), MPI_DOUBLE, MPI_SUM, 0, kernel->commUsedRanks());
+    result = tmp;
 }
 
 void MPIEnergy::append() {

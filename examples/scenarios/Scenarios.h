@@ -56,6 +56,69 @@ std::string randomString(std::size_t n = 6) {
     return result.substr(0, n);
 }
 
+class ProgressBar {
+public:
+    ProgressBar(std::size_t total, std::size_t width, bool quiet = false)
+            : _nTicks(total), _width(width), _startTime(std::chrono::steady_clock::now()), _quiet(quiet) {}
+
+    std::size_t operator++() {
+        return increment(1);
+    }
+
+    std::size_t increment(std::size_t deltaTick) {
+        _ticks += deltaTick;
+        return _ticks;
+    }
+
+    std::size_t update(std::size_t newTick) {
+        _ticks = newTick;
+        return _ticks;
+    }
+
+    void display() const {
+        if (_quiet) {
+            return;
+        }
+        std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - _startTime).count();
+
+        auto progress = static_cast<readdy::scalar>(_ticks) / static_cast<readdy::scalar>(_nTicks);
+        auto pos = static_cast<std::size_t>(_width * progress);
+
+        auto percentage = static_cast<std::size_t>(progress * 100.0);
+        auto elapsed = static_cast<readdy::scalar>(duration) / 1000.0;
+        auto prediction = elapsed / progress;
+
+        std::cout << "[";
+        for (std::size_t i = 0; i < _width; ++i) {
+            if (i < pos) {
+                std::cout << _complete;
+            } else if (i == pos) {
+                std::cout << _current;
+            } else {
+                std::cout << _incomplete;
+            }
+        }
+        std::cout << "] " << percentage << "% " << elapsed << "s /" << prediction <<"s\r";
+        std::cout.flush();
+    }
+
+    void done() const {
+        display();
+        std::cout << std::endl;
+    }
+
+private:
+    bool _quiet{false};
+    std::size_t _ticks{0};
+    std::size_t _nTicks;
+    std::size_t _width;
+    char _complete = '=';
+    char _incomplete = ' ';
+    char _current = '>';
+    std::chrono::steady_clock::time_point _startTime;
+};
+
 class Scenario {
     std::string _description{};
     std::string _name{};

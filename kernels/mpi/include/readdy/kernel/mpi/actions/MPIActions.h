@@ -102,11 +102,25 @@ private:
     void performImpl();
 };
 
-/** no-op but needed to run the default simulation loop */
+/**
+ * Here used to synchronize the initial state, to be used with the default simulation loop.
+ * Note that for MPI the neighborlist is correctly initialized upon construction.
+ */
 class MPICreateNeighborList : public readdy::model::actions::CreateNeighborList {
 public:
-    MPICreateNeighborList(MPIKernel *kernel) : CreateNeighborList(kernel->context().calculateMaxCutoff()) {}
-    void perform() override {/* no-op, this neighborlist is initialized by construction */}
+    MPICreateNeighborList(MPIKernel *kernel)
+        : CreateNeighborList(kernel->context().calculateMaxCutoff()), kernel(kernel) {}
+
+    void perform() override {
+        if (kernel->domain().isWorkerRank()) {
+            // synchronize with neighbors, do the plimpton
+            kernel->getMPIKernelStateModel().synchronizeWithNeighbors();
+            // fill neighborlist bins
+            kernel->getMPIKernelStateModel().updateNeighborList();
+        }
+    }
+private:
+    MPIKernel *const kernel;
 };
 
 class MPIUpdateNeighborList : public readdy::model::actions::UpdateNeighborList {
@@ -115,9 +129,10 @@ public:
 
     void perform() override {
         if (kernel->domain().isWorkerRank()) {
+            // synchronize with neighbors, do the plimpton
+            kernel->getMPIKernelStateModel().synchronizeWithNeighbors();
+            // fill neighborlist bins
             kernel->getMPIKernelStateModel().updateNeighborList();
-        } else {
-            readdy::log::trace("MPIUpdateNeighborList::perform is noop for non workers");
         }
     }
 

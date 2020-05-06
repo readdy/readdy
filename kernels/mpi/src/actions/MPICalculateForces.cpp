@@ -42,7 +42,6 @@
  */
 
 #include <readdy/kernel/mpi/actions/MPIActions.h>
-#include <readdy/common/algorithm.h>
 #include <readdy/common/boundary_condition_operations.h>
 
 namespace readdy::kernel::mpi::actions {
@@ -78,9 +77,11 @@ void MPICalculateForces::performImpl() {
         });
     }
 
-    auto order1eval = [&](auto &entry){
-        for (const auto &po1 : potentials.potentialsOf(entry.type)) {
-            po1->calculateForceAndEnergy(entry.force, stateModel.energy(), entry.position());
+    auto order1eval = [&](MPIEntry &entry){
+        if (entry.responsible) {
+            for (const auto &po1 : potentials.potentialsOf(entry.type)) {
+                po1->calculateForceAndEnergy(entry.force, stateModel.energy(), entry.position());
+            }
         }
     };
 
@@ -88,25 +89,47 @@ void MPICalculateForces::performImpl() {
     const auto &box = context.boxSize().data();
     const auto &pbc = context.periodicBoundaryConditions().data();
 
-    auto order2eval = [&](auto &entry, auto &neighborEntry) {
+    auto order2eval = [&](MPIEntry &entry, MPIEntry &neighborEntry) {
         const auto &pots = potentials.potentialsOrder2(entry.type);
         auto itPot = pots.find(neighborEntry.type);
         if (itPot != std::end(pots)) {
             Vec3 forceVec{0, 0, 0};
             auto x_ij = bcs::shortestDifference(entry.position(), neighborEntry.position(), box, pbc);
+
+            bool bothResponsible = (entry.responsible and neighborEntry.responsible);
+            bool oneResponsible = (entry.responsible xor neighborEntry.responsible);
+            bool noResponsible = ((not entry.responsible) and (not neighborEntry.responsible));
+
+            scalar energyUpdate{0.};
             for (const auto &potential : itPot->second) {
-                potential->calculateForceAndEnergy(forceVec, stateModel.energy(), x_ij);
+                potential->calculateForceAndEnergy(forceVec, energyUpdate, x_ij);
             }
             entry.force += forceVec;
             neighborEntry.force -= forceVec;
 
-            // avoid double counting of pairs across boundaries (these will be seen by two workers)
-            // and don't count pairs where both are outside this domain
-            bool evalVirial = (entry.responsible and neighborEntry.responsible) or (
-                    (entry.responsible or neighborEntry.responsible) and (entry.rank < neighborEntry.rank)
-            );
-            if (evalVirial) {
-                detail::computeVirial<COMPUTE_VIRIAL>(x_ij, forceVec, stateModel.virial());
+            if (bothResponsible) {
+                stateModel.energy() += energyUpdate;
+            } else if (oneResponsible) {
+                stateModel.energy() += 0.5 * energyUpdate;
+            } else if (noResponsible) {
+                // noop
+            } else {
+                throw std::runtime_error("impossible");
+            }
+
+            if constexpr(COMPUTE_VIRIAL) {
+                Matrix33 virialUpdate{{{0, 0, 0, 0, 0, 0, 0, 0, 0}}};
+                detail::computeVirial<COMPUTE_VIRIAL>(x_ij, forceVec, virialUpdate);
+
+                if (bothResponsible) {
+                    stateModel.virial() += virialUpdate;
+                } else if (oneResponsible) {
+                    stateModel.virial() += 0.5 * virialUpdate;
+                } else if (noResponsible) {
+                    // noop
+                } else {
+                    throw std::runtime_error("impossible");
+                }
             }
         }
     };

@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
     // MPI_Init will modify argc, argv such that they behave ''normal'' again, i.e. without the mpirun arguments
     rkm::MPISession mpiSession(argc, argv);
 
-    readdy::log::set_level(spdlog::level::info);
+    readdy::log::set_level(spdlog::level::debug);
 
     // parse argument strings
     auto outdir = perf::getOption(argc, argv, "--outdir=", "/tmp/");
@@ -95,6 +95,7 @@ int main(int argc, char **argv) {
         scenarios.push_back(std::make_unique<perf::MPIDistributeParticles>());
         scenarios.push_back(std::make_unique<perf::MPIDiffusionPairPotential>(
                 perf::WeakScalingGeometry::cube, 13.));
+        scenarios.push_back(std::make_unique<perf::MPILennardJonesSuspension>());
     }
 
 

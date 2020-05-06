@@ -63,8 +63,6 @@ void MPIEulerBDIntegrator::perform() {
                 bcs::fixPosition(entry.pos, box, pbc);
             }
         }
-        // do the plimpton
-        stateModel.synchronizeWithNeighbors();
     } else {
         readdy::log::trace("MPIEulerBDIntegrator::perform is noop for non workers");
     }
