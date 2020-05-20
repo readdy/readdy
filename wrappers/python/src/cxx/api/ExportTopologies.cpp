@@ -228,7 +228,8 @@ void exportTopologies(py::module &m) {
                 :return: a reference to this recipe to enable a fluent interface
             )topdoc", "index"_a, py::return_value_policy::reference_internal)
             .def("separate_vertex", [](PyRecipe &self, const PyVertex &v) {
-                return self.get().separateVertex(v.get());
+                self.get().separateVertex(v.get());
+                return self;
             }, py::return_value_policy::reference_internal)
             .def("change_topology_type", [](PyRecipe &self, std::string type) {
                 self.get().changeTopologyType(type);
