@@ -47,6 +47,7 @@
 
 #include <functional>
 #include <utility>
+#include <ostream>
 
 namespace readdy::util {
 
