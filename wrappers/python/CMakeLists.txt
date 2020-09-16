@@ -32,16 +32,12 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                       #
 ####################################################################
 
+cmake_minimum_required(VERSION 3.11)
+
+project(readdy_python_wrapper C CXX)
 
 # import python
 MESSAGE(STATUS "Python library set: ${PYTHON_LIBRARY}")
-
-# set output directory variable for modules
-IF(READDY_DEBUG_PYTHON_MODULES)
-    SET(PYTHON_CPP_MODULES_OUTPUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/python/readdy/_internal")
-ELSE()
-    SET(PYTHON_CPP_MODULES_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/readdy/_internal")
-ENDIF()
 
 # add modules
 ADD_SUBDIRECTORY(src/cxx)

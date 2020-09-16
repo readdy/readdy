@@ -32,9 +32,6 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                       #
 ####################################################################
 
-# add READDY_WITH_PYTHON define
-ADD_DEFINITIONS(-DREADDY_WITH_PYTHON)
-
 set(SOURCE_FILES
         ReaddyBinding.cpp
         common/common.h
