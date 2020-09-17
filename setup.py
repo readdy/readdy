@@ -10,6 +10,8 @@ import setuptools
 from numpy.distutils.command.build_ext import build_ext
 from setuptools._distutils.version import LooseVersion
 
+import versioneer
+
 srcdir = str(Path('.').resolve())
 
 version = '2.3.0'
@@ -74,15 +76,18 @@ class ReaDDyBindingBuild(build_ext):
 
 package_path = Path('.') / 'wrappers' / 'python' / 'src' / 'python'
 
+cmdclass = versioneer.get_cmdclass()
+cmdclass['build_ext'] = ReaDDyBindingBuild
+
 metadata = dict(name='readdy',
-                version=f"{version}-{build_num}",
+                version=versioneer.get_version(),
                 author='Moritz Hoffmann',
                 author_email='clonker@gmail.com',
                 description='An iPRD simulator.',
                 long_description='',
                 url='https://readdy.github.io',
                 install_requires=['numpy', 'cmake', 'pint', 'tqdm', 'h5py'],
-                cmdclass=dict(build_ext=ReaDDyBindingBuild),
+                cmdclass=cmdclass,
                 zip_safe=False, )
 
 

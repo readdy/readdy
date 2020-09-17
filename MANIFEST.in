@@ -1,0 +1,2 @@
+include versioneer.py
+include wrappers/python/src/python/readdy/_version.py

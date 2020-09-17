@@ -40,6 +40,8 @@ from setuptools import setup, find_packages
 from setuptools.command.install import install
 from distutils.command.build import build
 
+import versioneer
+
 dyn_lib_extensions = [".so", ".dll", ".lib", ".dylib"]
 print_sep = "***" * 15
 
@@ -99,13 +101,17 @@ def get_package_dir():
     return os.path.join('@CMAKE_CURRENT_SOURCE_DIR@', "src", "python")
 
 
+cmdclass = versioneer.get_cmdclass()
+cmdclass['build'] = ReaDDyBuild
+cmdclass['install'] = ReaDDyInstall
+
 metadata = dict(
     name='ReaDDy',
-    version=__version__[1:] if __version__.startswith("v") else __version__,
+    version=versioneer.get_version(),
     package_dir={'': get_package_dir()},
     package_data={'readdy._internal': ["*"]},
     packages=find_packages(where=get_package_dir()),
-    cmdclass={'build': ReaDDyBuild, 'install': ReaDDyInstall}
+    cmdclass=cmdclass
 )
 
 if __name__ == '__main__':

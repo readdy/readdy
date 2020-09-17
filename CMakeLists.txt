@@ -293,11 +293,6 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
 
         # also add binding sources
         include(cmake/sources/sources_readdybinding.cmake)
-
-        # the version
-        set(VERSION_IN  "${CMAKE_CURRENT_SOURCE_DIR}/wrappers/python/src/python/readdy/_version.py.in")
-        set(VERSION_OUT "${CMAKE_CURRENT_SOURCE_DIR}/wrappers/python/src/python/readdy/_version.py")
-        configure_file(${VERSION_IN} ${VERSION_OUT})
         
     	# create library
         message(STATUS "Libraries ReaDDy depends on: ${READDY_DEPENDENT_LIBRARIES}")

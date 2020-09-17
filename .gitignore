@@ -53,9 +53,6 @@ docs/sphinx/build
 
 cmake-build-*
 
-# ignore configured version file
-wrappers/python/src/python/readdy/_version.py
-
 # ignore local emacs files
 *.dir-locals.el
 *#.*

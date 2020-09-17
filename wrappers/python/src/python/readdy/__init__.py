@@ -43,3 +43,7 @@ from readdy._version import __version__ as __version__
 from .api.topology_reactions import StructuralReactionRecipe
 
 __all__ = ['api', 'util']
+
+from ._version import get_versions
+__version__ = get_versions()['version']
+del get_versions

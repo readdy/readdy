@@ -1,3 +1,0 @@
-"""Version information."""
-
-__version__ = "@READDY_VERSION@-@READDY_BUILD_STRING@"
