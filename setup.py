@@ -12,6 +12,8 @@ from setuptools._distutils.version import LooseVersion
 
 srcdir = str(Path('.').resolve())
 
+version = '2.3.0'
+build_num = '0'
 
 class ReaDDyBindingBuild(build_ext):
     """ from https://github.com/pybind/cmake_example/blob/master/setup.py """
@@ -43,7 +45,9 @@ class ReaDDyBindingBuild(build_ext):
         cmake_args = ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + os.path.abspath(os.path.dirname(ext_filename)),
                       '-DPYTHON_EXECUTABLE=' + sys.executable,
                       '-DREADDY_BUILD_PYPI_EXT:BOOL=ON',
-                      '-DREADDY_BUILD_PYTHON_WRAPPER:BOOL=OFF']
+                      '-DREADDY_BUILD_PYTHON_WRAPPER:BOOL=OFF',
+                      f'-DREADDY_VERSION={version}',
+                      f'-DREADDY_BUILD_STRING={build_num}']
 
         cfg = 'Debug' if self.debug else 'Release'
         build_args = ['--config', cfg]
@@ -71,7 +75,7 @@ class ReaDDyBindingBuild(build_ext):
 package_path = Path('.') / 'wrappers' / 'python' / 'src' / 'python'
 
 metadata = dict(name='readdy',
-                version='2.0.3',
+                version=f"{version}-{build_num}",
                 author='Moritz Hoffmann',
                 author_email='clonker@gmail.com',
                 description='An iPRD simulator.',
