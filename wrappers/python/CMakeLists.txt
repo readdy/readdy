@@ -39,6 +39,13 @@ project(readdy_python_wrapper C CXX)
 # import python
 MESSAGE(STATUS "Python library set: ${PYTHON_LIBRARY}")
 
+# set output directory variable for modules
+if(READDY_DEBUG_PYTHON_MODULES)
+    SET(PYTHON_CPP_MODULES_OUTPUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/python/readdy/_internal")
+else()
+    SET(PYTHON_CPP_MODULES_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/readdy/_internal")
+endif()
+
 # add modules
 ADD_SUBDIRECTORY(src/cxx)
 
