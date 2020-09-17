@@ -57,6 +57,7 @@ if (PYTHON)
     set(OUTPUT      "${CMAKE_CURRENT_BINARY_DIR}/build/timestamp")
 
     configure_file(${SETUP_PY_IN} ${SETUP_PY})
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/python/setup.cfg ${CMAKE_CURRENT_BINARY_DIR}/setup.cfg)
 
     add_custom_command(OUTPUT ${OUTPUT}
             COMMAND ${PYTHON} ${SETUP_PY} build

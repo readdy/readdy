@@ -41,13 +41,13 @@ from setuptools import setup, find_packages
 from setuptools.command.install import install
 from distutils.command.build import build
 
+sys.path.insert(0, '@CMAKE_SOURCE_DIR@')
 import versioneer
 
 dyn_lib_extensions = [".so", ".dll", ".lib", ".dylib"]
 print_sep = "***" * 15
 
 __version__ = '@READDY_VERSION@'
-sys.path.insert(0, '@CMAKE_SOURCE_DIR@')
 
 
 class ReaDDyBuild(build):
