@@ -33,6 +33,7 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
+import sys
 from pprint import pprint
 
 from setuptools import setup, find_packages
@@ -46,6 +47,7 @@ dyn_lib_extensions = [".so", ".dll", ".lib", ".dylib"]
 print_sep = "***" * 15
 
 __version__ = '@READDY_VERSION@'
+sys.path.insert(0, '@CMAKE_SOURCE_DIR@')
 
 
 class ReaDDyBuild(build):
