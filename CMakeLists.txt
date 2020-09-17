@@ -63,8 +63,13 @@ SET(READDY_BUILD_PYPI_EXT OFF CACHE BOOL "Whether to generate the pypi target (m
 if (READDY_BUILD_PYPI_EXT)
     set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
     set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)
-    set(CMAKE_BUILD_RPATH $ORIGIN)
-    set(CMAKE_INSTALL_RPATH $ORIGIN)
+    if(APPLE)
+        set(CMAKE_INSTALL_RPATH @loader_path)
+        set(CMAKE_BUILD_RPATH @loader_path)
+    else()
+        set(CMAKE_INSTALL_RPATH $ORIGIN)
+        set(CMAKE_BUILD_RPATH $ORIGIN)
+    endif()
 endif()
 
 # log configuration variables of interest
