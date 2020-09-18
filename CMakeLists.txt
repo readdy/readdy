@@ -300,10 +300,6 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
         include(cmake/sources/sources_readdybinding.cmake)
 
         configure_file(
-                "wrappers/python/src/python/readdy/_version_pypi.py.in"
-                "wrappers/python/src/python/readdy/_version.py"
-        )
-        configure_file(
                 "wrappers/python/src/python/setup_pypi.py"
                 "${CMAKE_CURRENT_BINARY_DIR}/wrappers/python/src/python/setup.py")
         

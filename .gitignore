@@ -61,5 +61,3 @@ cmake-build-*
 GPATH
 GRTAGS
 GTAGS
-
-wrappers/python/src/python/readdy/_version.py
