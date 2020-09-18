@@ -54,10 +54,17 @@ FIND_PROGRAM(PYTHON "python")
 if (PYTHON)
     set(SETUP_PY_IN "${CMAKE_CURRENT_SOURCE_DIR}/src/python/setup.py")
     set(SETUP_PY    "${CMAKE_CURRENT_BINARY_DIR}/setup.py")
+    set(VERSION_IN  "${CMAKE_CURRENT_SOURCE_DIR}/src/python/readdy/_version.py.in")
+    set(VERSION_PYPI_IN  "${CMAKE_CURRENT_SOURCE_DIR}/src/python/readdy/_version_pypi.py.in")
+    set(VERSION_OUT "${CMAKE_CURRENT_SOURCE_DIR}/src/python/readdy/_version.py")
     set(OUTPUT      "${CMAKE_CURRENT_BINARY_DIR}/build/timestamp")
 
     configure_file(${SETUP_PY_IN} ${SETUP_PY})
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/python/setup.cfg ${CMAKE_CURRENT_BINARY_DIR}/setup.cfg)
+    if(READDY_BUILD_PYPI_EXT)
+        configure_file(${VERSION_PYPI_IN} ${VERSION_OUT})
+    else()
+        configure_file(${VERSION_IN} ${VERSION_OUT})
+    endif()
 
     add_custom_command(OUTPUT ${OUTPUT}
             COMMAND ${PYTHON} ${SETUP_PY} build
