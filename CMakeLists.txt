@@ -58,6 +58,20 @@ SET(READDY_DEBUG_CONDA_ROOT_DIR "" CACHE PATH "This only does something, if READ
 SET(READDY_GENERATE_DOCUMENTATION_TARGET OFF CACHE BOOL "Should generate target for documentation or not.")
 SET(READDY_GENERATE_DOCUMENTATION_TARGET_ONLY OFF CACHE BOOL "If set to true, this only generates the documentation target.")
 
+# pypi target
+SET(READDY_BUILD_PYPI_EXT OFF CACHE BOOL "Whether to generate the pypi target (monolithic target, skips all tests).")
+if (READDY_BUILD_PYPI_EXT)
+    set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+    set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)
+    if(APPLE)
+        set(CMAKE_INSTALL_RPATH @loader_path)
+        set(CMAKE_BUILD_RPATH @loader_path)
+    else()
+        set(CMAKE_INSTALL_RPATH $ORIGIN)
+        set(CMAKE_BUILD_RPATH $ORIGIN)
+    endif()
+endif()
+
 # log configuration variables of interest
 SET(READDY_LOG_CMAKE_CONFIGURATION OFF CACHE BOOL "If turned on, the status of relevant cmake variables is logged at configuration time.")
 
@@ -74,7 +88,7 @@ set(READDY_BUILD_SCENARIOS OFF CACHE BOOL "Whether to build the Scenarios execut
 #####################################
 
 # minimum cmake version
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.14)
 
 # extend cmake module path to include readdy custom modules
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
@@ -121,7 +135,6 @@ endfunction()
 #enable_cxx_compiler_flag_if_supported("-pedantic")
 #enable_cxx_compiler_flag_if_supported("-fms-extensions")
 
-
 IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
     # Compile in debug mode by default
     IF (NOT CMAKE_BUILD_TYPE)
@@ -145,7 +158,9 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
         SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${READDY_DEBUG_CONDA_ROOT_DIR}/lib)
         SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${READDY_DEBUG_CONDA_ROOT_DIR}/bin)
         SET(READDY_PLUGIN_OUTPUT_DIRECTORY ${READDY_DEBUG_CONDA_ROOT_DIR}/readdy/readdy_plugins)
-    ELSE()
+    elseif(READDY_BUILD_PYPI_EXT)
+        # no op
+    else()
         SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
         SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
         SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -172,8 +187,6 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
         SET(CMAKE_MACOSX_RPATH 1)
         IF (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
             SET(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
-            # SET(EXTRA_COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS} -stdlib=libc++")
-            # SET(EXTRA_LINK_FLAGS "${EXTRA_LINK_FLAGS} -v -stdlib=libc++ -lc++abi")
             if (CMAKE_BUILD_TYPE STREQUAL "Release")
                 SET(EXTRA_COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}")
             endif()
@@ -273,7 +286,31 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
         SET_TARGET_PROPERTIES(${READDY_PROJECT_NAME} PROPERTIES
                 LINK_FLAGS "${EXTRA_LINK_FLAGS}"
                 COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}")
-    ELSE(READDY_BUILD_SHARED_COMBINED)
+    ELSEIF(READDY_BUILD_PYPI_EXT)
+        add_subdirectory(libraries/pybind11)
+
+        include(cmake/sources/sources_common.cmake)
+        include(cmake/sources/sources_io.cmake)
+        include(cmake/sources/sources_model.cmake)
+        include(cmake/sources/sources_plugin.cmake)
+        include(cmake/sources/kernels/singlecpu.cmake)
+        include(cmake/sources/sources_readdy.cmake)
+
+        # also add binding sources
+        include(cmake/sources/sources_readdybinding.cmake)
+
+        configure_file(
+                "wrappers/python/src/python/setup_pypi.py"
+                "${CMAKE_CURRENT_BINARY_DIR}/wrappers/python/src/python/setup.py")
+        
+    	# create library
+        message(STATUS "Libraries ReaDDy depends on: ${READDY_DEPENDENT_LIBRARIES}")
+        message(STATUS "Include directories: ${READDY_INCLUDE_DIRS}")
+        pybind11_add_module(readdybinding ${READDY_ALL_SOURCES} ${READDY_GLOBAL_INCLUDE_DIR})
+        target_include_directories(readdybinding PUBLIC "${READDY_INCLUDE_DIRS}")
+        target_link_libraries(readdybinding PUBLIC ${READDY_COMMON_LIBRARIES} ${READDY_DEPENDENT_LIBRARIES})
+        set_target_properties(readdybinding PROPERTIES INSTALL_RPATH "$ORIGIN/")
+    ELSE()
         # include directories from least dependent to most dependent
         # i.e.: A depends on B -> add subdirectory of B first
         ADD_SUBDIRECTORY(readdy/main/common)
@@ -282,7 +319,7 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
         ADD_SUBDIRECTORY(readdy/main/plugin)
         ADD_SUBDIRECTORY(kernels/singlecpu)
         ADD_SUBDIRECTORY(readdy/main)
-    ENDIF(READDY_BUILD_SHARED_COMBINED)
+    ENDIF()
 
     #####################################
     #                                   #
@@ -387,9 +424,9 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
             add_subdirectory(examples/mpi_scenarios)
         endif()
     endif()
-ELSE(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
+ELSE()
     SET(READDY_GENERATE_DOCUMENTATION_TARGET ON)
-ENDIF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
+ENDIF()
 
 
 #####################################
@@ -415,14 +452,3 @@ IF(READDY_GENERATE_DOCUMENTATION_TARGET)
                 WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/docs")
     ENDIF()
 ENDIF(READDY_GENERATE_DOCUMENTATION_TARGET)
-
-if(${false})
-    INCLUDE(cmake/sources/sources_common.cmake)
-    INCLUDE(cmake/sources/sources_io.cmake)
-    INCLUDE(cmake/sources/sources_model.cmake)
-    INCLUDE(cmake/sources/sources_plugin.cmake)
-    INCLUDE(cmake/sources/kernels/singlecpu.cmake)
-    INCLUDE(cmake/sources/sources_readdy.cmake)
-    include(cmake/Modules/clang-tidy.cmake)
-    add_clang_tidy_target(clang-tidy "${READDY_ALL_SOURCES}" "${READDY_INCLUDE_DIRS}")
-endif()

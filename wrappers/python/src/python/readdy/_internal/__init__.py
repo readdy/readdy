@@ -32,7 +32,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# load kernels automagically
+import pathlib
 import readdy.util.platform_utils as putils
 from .readdybinding.api import *
 from .readdybinding.common import *
@@ -42,4 +42,5 @@ from .readdybinding.common.util import *
 register_blosc_hdf5_plugin()
 
 kernel_provider = KernelProvider.get()
-kernel_provider.load_from_dir(putils.get_readdy_plugin_dir())
+if pathlib.Path(putils.get_readdy_plugin_dir()).exists():
+    kernel_provider.load_from_dir(putils.get_readdy_plugin_dir())

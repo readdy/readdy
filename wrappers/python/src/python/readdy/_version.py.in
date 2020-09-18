@@ -1,3 +1,2 @@
-"""Version information."""
-
-__version__ = "@READDY_VERSION@-@READDY_BUILD_STRING@"
+def get_versions():
+    return {'version': '@READDY_VERSION@-@READDY_BUILD_STRING@'}
