@@ -201,4 +201,4 @@ class TopologyRegistry(object):
             edge = edges[_np.random.randint(0, len(edges))]
             return _Recipe(topology).remove_edge(edge)
 
-        self.add_structural_reaction(name, topology_type, reaction_function, rate_function, False, False)
+        self.add_structural_reaction(name, topology_type, reaction_function, rate_function, False)
