@@ -176,7 +176,7 @@ class TopologyRegistry(object):
         :param expect_connected: can trigger a raise if set to true and the topology's connectivity graph decayed into
                                  two or more independent components.
         """
-        fun1, fun2 = _top.ReactionFunction(lambda x: reaction_function(x)._get()), _top.RateFunction(rate_function)
+        fun1, fun2 = _top.ReactionFunction(lambda x: reaction_function(x)), _top.RateFunction(rate_function)
         reaction = _top.StructuralTopologyReaction(name, fun1, fun2)
         if expect_connected:
             reaction.expect_connected_after_reaction()
@@ -201,4 +201,4 @@ class TopologyRegistry(object):
             edge = edges[_np.random.randint(0, len(edges))]
             return _Recipe(topology).remove_edge(edge)
 
-        self.add_structural_reaction(name, topology_type, reaction_function, rate_function, False, False)
+        self.add_structural_reaction(name, topology_type, reaction_function, rate_function, False)
