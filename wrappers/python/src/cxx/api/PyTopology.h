@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <pybind11/stl.h>
+#include <readdy/model/topologies/GraphTopology.h>
 
 class PyTopology {
         public:
@@ -70,3 +72,20 @@ class PyRecipe {
         std::shared_ptr<readdy::model::top::reactions::Recipe> recipe;
 };
 
+struct spatial_rate_function_sink {
+    std::shared_ptr<pybind11::function> f;
+    explicit spatial_rate_function_sink(const pybind11::function& f) : f(std::make_shared<pybind11::function>(f)) {};
+
+    inline readdy::model::top::reactions::SpatialTopologyReaction::rate_function::result_type operator()(
+            const readdy::model::top::GraphTopology& top1,
+            const readdy::model::top::GraphTopology& top2
+    ) {
+        pybind11::gil_scoped_acquire gil;
+        PyTopology pyTop1 (&const_cast<readdy::model::top::GraphTopology&>(top1));
+        PyTopology pyTop2 (&const_cast<readdy::model::top::GraphTopology&>(top2));
+        auto t1 = pybind11::cast(&pyTop1, pybind11::return_value_policy::automatic_reference);
+        auto t2 = pybind11::cast(&pyTop2, pybind11::return_value_policy::automatic_reference);
+        auto rv = (*f)(*(t1.cast<PyTopology*>()), *(t2.cast<PyTopology*>()));
+        return rv.cast<readdy::model::top::reactions::SpatialTopologyReaction::rate_function::result_type>();
+    }
+};

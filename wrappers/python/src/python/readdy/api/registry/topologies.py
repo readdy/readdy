@@ -152,9 +152,15 @@ class TopologyRegistry(object):
         :param rate: a fixed rate [1/time]
         :param radius: the radius [length]
         """
-        rate = self._units.convert(rate, 1 / self._units.time_unit)
         radius = self._units.convert(radius, self._units.length_unit)
-        self._registry.add_spatial_reaction(descriptor, rate, radius)
+        if isinstance(rate, int) or isinstance(rate, float):
+            rate = self._units.convert(rate, 1 / self._units.time_unit)
+            self._registry.add_spatial_reaction(descriptor, rate, radius)
+        else:
+            self._registry.add_spatial_reaction_with_rate_function(
+                descriptor, _top.SpatialRateFunction(rate), radius
+            )
+
 
     def add_structural_reaction(self, name, topology_type, reaction_function, rate_function, expect_connected=False):
         """

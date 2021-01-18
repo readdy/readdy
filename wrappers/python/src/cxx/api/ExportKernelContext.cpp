@@ -47,7 +47,13 @@
 #include <readdy/model/Context.h>
 #include <readdy/common/boundary_condition_operations.h>
 
+#include <utility>
+
+#include "PyTopology.h"
+
 namespace py = pybind11;
+namespace top = readdy::model::top;
+namespace reactions = readdy::model::top::reactions;
 
 using rvp = py::return_value_policy;
 
@@ -179,6 +185,13 @@ void exportKernelContext(py::module &module) {
                  [](TopologyRegistry &self, const std::string &descriptor, scalar rate, scalar radius) {
                      self.addSpatialReaction(descriptor, rate, radius);
                  })
+            .def("add_spatial_reaction_with_rate_function",
+                 [](TopologyRegistry &self, const std::string &descriptor,
+                    spatial_rate_function_sink rate_function,
+                    scalar radius) {
+                     self.addSpatialReaction(descriptor, rate_function, radius);
+                 }
+            )
             .def("configure_bond_potential", &TopologyRegistry::configureBondPotential)
             .def("configure_angle_potential", &TopologyRegistry::configureAnglePotential)
             .def("configure_torsion_potential", &TopologyRegistry::configureTorsionPotential);

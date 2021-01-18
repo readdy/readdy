@@ -37,6 +37,7 @@ libraries/external
 build
 bin/*
 docs/sphinx/build
+build_for*
 
 # python build temporaries
 *.egg-info

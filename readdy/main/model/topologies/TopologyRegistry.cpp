@@ -46,6 +46,8 @@
 #include <readdy/model/topologies/TopologyRegistry.h>
 #include <readdy/model/Utils.h>
 
+#include <utility>
+
 namespace readdy::model::top {
 TopologyTypeId TopologyRegistry::counter = 0;
 
@@ -204,6 +206,14 @@ void TopologyRegistry::addSpatialReaction(const std::string &descriptor, scalar 
     addSpatialReaction(parser.parse(descriptor, rate, radius));
 }
 
+void TopologyRegistry::addSpatialReaction(const std::string &descriptor,
+                                          std::function<scalar(const GraphTopology &,
+                                                               const GraphTopology &)> rate_function,
+                                          scalar radius) {
+    reactions::STRParser parser(*this);
+    addSpatialReaction(parser.parse(descriptor, std::move(rate_function), radius));
+}
+
 void TopologyRegistry::addSpatialReaction(reactions::SpatialTopologyReaction &&reaction) {
     validateSpatialReaction(reaction);
     auto key = std::make_tuple(reaction.type1(), reaction.top_type1(), reaction.type2(), reaction.top_type2());
@@ -226,10 +236,6 @@ void TopologyRegistry::addSpatialReaction(const std::string &name, const std::st
 }
 
 void TopologyRegistry::validateSpatialReaction(const SpatialReaction &reaction) const {
-    if (reaction.rate() <= 0) {
-        throw std::invalid_argument(fmt::format("The rate of an structural topology reaction ({}) "
-                                                "should always be positive", reaction.name()));
-    }
     if (reaction.radius() <= 0) {
         throw std::invalid_argument(fmt::format("The radius of an structural topology reaction({}) "
                                                 "should always be positive", reaction.name()));
@@ -356,5 +362,6 @@ std::string TopologyRegistry::generateSpatialReactionRepresentation(const Spatia
     }
     return ss.str();
 }
+
 
 }

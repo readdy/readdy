@@ -137,6 +137,15 @@ public:
         });
     }
 
+    void updateSpatialReactionRates(const TopologyRegistry::SpatialReactionCollection &reactions,
+                                    std::unique_ptr<GraphTopology> &other) {
+        _spatial_reaction_rates.resize(reactions.size());
+        std::transform(reactions.begin(), reactions.end(), _spatial_reaction_rates.begin(), [&](const auto &reaction) {
+            const auto rate = reaction.rate(*this, *other);
+            return rate;
+        });
+    }
+
     void validate() {
         if (!graph().isConnected()) {
             throw std::invalid_argument(fmt::format("The graph is not connected! (GEXF representation: {})", _graph.gexf()));
@@ -237,6 +246,7 @@ protected:
     const model::StateModel *_stateModel;
     ReactionRates _reaction_rates;
     ReactionRate _cumulativeRate{};
+    ReactionRates _spatial_reaction_rates;
     TopologyTypeId _topology_type;
     bool deactivated{false};
 };

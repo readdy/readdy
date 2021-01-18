@@ -198,6 +198,7 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
             const auto &stateModel = kernel->getSCPUKernelStateModel();
             const auto &data = *stateModel.getParticleData();
             const auto &nl = *stateModel.getNeighborList();
+            auto &topologies = stateModel.topologies();
 
             for(auto cell = 0_z; cell < nl.nCells(); ++cell) {
                 for(auto it = nl.particlesBegin(cell); it != nl.particlesEnd(cell); ++it) {
@@ -228,8 +229,6 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
                                 if (distSquared < reaction.radius() * reaction.radius()) {
                                     TREvent event{};
                                     event.reactionId = reaction.id();
-                                    event.rate = reaction.rate();
-                                    event.cumulativeRate = event.rate + current_cumulative_rate;
                                     current_cumulative_rate = event.cumulativeRate;
                                     switch (reaction.mode()) {
                                         case readdy::model::top::reactions::STRMode::TT_FUSION:
@@ -242,6 +241,12 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
                                                 event.idx2 = neighborIdx;
                                                 event.reaction_idx = reaction_index;
                                                 event.spatial = true;
+                                                event.rate = reaction.rate(
+                                                        *topologies.at(event.topology_idx),
+                                                        *topologies.at(event.topology_idx2)
+                                                );
+                                                event.cumulativeRate = event.rate + current_cumulative_rate;
+
 
                                                 events.push_back(event);
                                             }
@@ -256,37 +261,49 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
                                                 event.idx2 = neighborIdx;
                                                 event.reaction_idx = reaction_index;
                                                 event.spatial = true;
+                                                event.rate = reaction.rate(
+                                                        *topologies.at(event.topology_idx),
+                                                        *topologies.at(event.topology_idx2)
+                                                );
+                                                event.cumulativeRate = event.rate + current_cumulative_rate;
 
                                                 events.push_back(event);
                                             }
                                             break;
-				    case readdy::model::top::reactions::STRMode::TT_FUSION_ALLOW_SELF:
-				      if (tidx1 >= 0 && tidx2 >= 0) {
-					const SCPUStateModel::topologies_vec& topologies = stateModel.topologies();
-					if (tidx1 == tidx2) {
-					  const std::unique_ptr<readdy::model::top::GraphTopology> &t1 = topologies.at(static_cast<std::size_t>(tidx1));
-					  const auto& gr = t1->graph();
-					  const auto& v1 = t1->vertexIteratorForParticle(pidx);
-					  const auto& v2 = t1->vertexIteratorForParticle(neighborIdx);
-					  auto d = gr.graphDistance(v1, v2);
-					  if (d != -1 && d <= reaction.min_graph_distance()) {
-					    break;
-					  }				       
-					}
-					event.topology_idx = static_cast<std::size_t>(tidx1);
-					event.topology_idx2 = tidx2;
-					event.t1 = entry.type;
-					event.t2 = neighbor.type;
-					event.idx1 = pidx;
-					event.idx2 = neighborIdx;
-					event.reaction_idx = reaction_index;
-					event.spatial = true;
-					
-					events.push_back(event);
-				      }
-				      break;
-				        case readdy::model::top::reactions::STRMode::TP_ENZYMATIC: // fall through
+                                        case readdy::model::top::reactions::STRMode::TT_FUSION_ALLOW_SELF:
+                                            if (tidx1 >= 0 && tidx2 >= 0) {
+                                                const SCPUStateModel::topologies_vec& topologies = stateModel.topologies();
+                                                if (tidx1 == tidx2) {
+                                                    const std::unique_ptr<readdy::model::top::GraphTopology> &t1 = topologies.at(static_cast<std::size_t>(tidx1));
+                                                    const auto& gr = t1->graph();
+                                                    const auto& v1 = t1->vertexIteratorForParticle(pidx);
+                                                    const auto& v2 = t1->vertexIteratorForParticle(neighborIdx);
+                                                    auto d = gr.graphDistance(v1, v2);
+                                                    if (d != -1 && d <= reaction.min_graph_distance()) {
+                                                        break;
+                                                    }
+                                                }
+                                                event.topology_idx = static_cast<std::size_t>(tidx1);
+                                                event.topology_idx2 = tidx2;
+                                                event.t1 = entry.type;
+                                                event.t2 = neighbor.type;
+                                                event.idx1 = pidx;
+                                                event.idx2 = neighborIdx;
+                                                event.reaction_idx = reaction_index;
+                                                event.spatial = true;
+                                                event.rate = reaction.rate(
+                                                        *topologies.at(event.topology_idx),
+                                                        *topologies.at(event.topology_idx2)
+                                                );
+                                                event.cumulativeRate = event.rate + current_cumulative_rate;
+
+                                                events.push_back(event);
+                                            }
+                                            break;
+                                        case readdy::model::top::reactions::STRMode::TP_ENZYMATIC: // fall through
                                         case readdy::model::top::reactions::STRMode::TP_FUSION:
+                                            event.rate = reaction.rate();
+                                            event.cumulativeRate = event.rate + current_cumulative_rate;
                                             if (tidx1 >= 0 && tidx2 < 0) {
                                                 event.topology_idx = static_cast<std::size_t>(tidx1);
                                                 event.t1 = entry.type;
@@ -384,9 +401,19 @@ void SCPUEvaluateTopologyReactions::handleTopologyTopologyReaction(SCPUStateMode
         t2->type() = top_type_to2;
 
         t2->updateReactionRates(context.topologyRegistry().structuralReactionsOf(t2->type()));
+        t2->updateSpatialReactionRates(
+                context.topologyRegistry().spatialReactionsByType(event.t2, t2->type(),
+                                                                  event.t1, t1->type()),
+                t1
+        );
         t2->configure();
     }
     t1->updateReactionRates(context.topologyRegistry().structuralReactionsOf(t1->type()));
+    t1->updateSpatialReactionRates(
+            context.topologyRegistry().spatialReactionsByType(event.t1, t1->type(),
+                                                              event.t2, t2->type()),
+            t2
+    );
     t1->configure();
 }
 

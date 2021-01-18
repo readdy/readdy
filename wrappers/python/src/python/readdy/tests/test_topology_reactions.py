@@ -166,6 +166,98 @@ class TestTopologyReactions(ReaDDyTestCase):
 
         dissociation_reaction_function(top)
 
+    def test_spatial_reaction_rate_function_SingleCPU(self):
+        self.spatial_reaction_rate_function("SingleCPU")
+
+    def test_spatial_reaction_rate_function_CPU(self):
+        self.spatial_reaction_rate_function("CPU")
+
+    @staticmethod
+    def spatial_reaction_rate_function(kernel):
+        """
+        Create a small simulation of 4 polymers that
+        form arranged as a square. Heads of the polymers
+        are close, such that they could bind.
+        The rate function should allow only two
+        of the polymers to bind, so that we end up with
+        2 pairs of two connected polymers.
+        """
+        def rate_function(top1, top2):
+            vert1 = top1.get_graph().get_vertices()
+            vert2 = top2.get_graph().get_vertices()
+            if len(vert1) + len(vert2) > 12:
+                return 0.0
+            return 1e10
+
+        system = readdy.ReactionDiffusionSystem(box_size=[30., 30., 30.])
+        system.topologies.add_type("Polymer")
+        system.add_topology_species("Head", 0.002)
+        system.add_topology_species("Core", 0.002)
+
+        system.topologies.configure_harmonic_bond("Head", "Core", force_constant=50, length=1.)
+        system.topologies.configure_harmonic_bond("Core", "Core", force_constant=50, length=1.)
+
+        system.topologies.add_spatial_reaction(
+            "Association: Polymer(Head) + Polymer(Head) -> Polymer(Core--Core)",
+            rate=rate_function, radius=2.0
+        )
+
+        simulation = system.simulation(kernel=kernel)
+        types_and_positions = TestTopologyReactions._get_polymer_types_and_positions()
+        for t, p in types_and_positions:
+            top = simulation.add_topology("Polymer", t, p)
+            for i in range(5):
+                top.get_graph().add_edge(i, i+1)
+
+        simulation.run(10, 1.)
+
+        np.testing.assert_equal(2, len(simulation.current_topologies))
+
+    @staticmethod
+    def _get_polymer_types_and_positions():
+        """
+        Construct a square of 4 polymers.
+        """
+        types_and_positions = [TestTopologyReactions._get_types_and_positions_polymer_1(),
+                               TestTopologyReactions._get_types_and_positions_polymer_2(),
+                               TestTopologyReactions._get_types_and_positions_polymer_3(),
+                               TestTopologyReactions._get_types_and_positions_polymer_4()]
+
+        return types_and_positions
+
+    @staticmethod
+    def _get_types_and_positions_polymer_1():
+        types = ["Head"] + ["Core"]*4 + ["Head"]
+        positions = np.zeros((6, 3))
+        positions[:, 0] = np.arange(6)
+        return types, positions
+
+    @staticmethod
+    def _get_types_and_positions_polymer_2():
+        types = ["Head"] + ["Core"]*4 + ["Head"]
+        positions = np.zeros((6, 3))
+        positions[:, 0] = 5
+        positions[:, 1] = np.arange(0, -6, -1)
+        positions[:, 2] = 1
+        return types,positions
+
+    @staticmethod
+    def _get_types_and_positions_polymer_3():
+        types = ["Head"] + ["Core"]*4 + ["Head"]
+        positions = np.zeros((6, 3))
+        positions[:, 0] = np.arange(5, -1, -1)
+        positions[:, 1] = -5
+        return types, positions
+
+    @staticmethod
+    def _get_types_and_positions_polymer_4():
+        types = ["Head"] + ["Core"]*4 + ["Head"]
+        positions = np.zeros((6, 3))
+        positions[:, 1] = np.arange(6) - 5
+        positions[:, 2] = 1
+        return types, positions
+
+
 
 if __name__ == '__main__':
     unittest.main()

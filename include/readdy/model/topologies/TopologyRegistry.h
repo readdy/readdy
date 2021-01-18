@@ -268,6 +268,10 @@ public:
      */
     void addSpatialReaction(const std::string &descriptor, scalar rate, scalar radius);
 
+    void addSpatialReaction(const std::string &descriptor,
+                            std::function<scalar(const GraphTopology &, const GraphTopology &)> rate_function,
+                            scalar radius);
+
     void validateSpatialReaction(const SpatialReaction &reaction) const;
 
     const SpatialReactionMap &spatialReactionRegistry() const {
