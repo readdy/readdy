@@ -98,7 +98,13 @@ public:
             : _name(std::move(name)), _types(std::move(types)), _types_to(std::move(types_to)),
               _rate_function(std::move(rate_func)),
               _radius(radius), _mode(mode), _top_types(std::move(top_types)), _top_types_to(std::move(top_types_to)),
-              _rate_is_const(false) {};
+              _rate_is_const(false)
+    {
+        if (std::get<1>(_top_types) == EmptyTopologyId) {
+            throw std::invalid_argument("Dynamic rate functions are only implemented for topology-topology "
+                                        "reactions. For topology-particle reactions use a constant rate.");
+        }
+    };
 
     ~SpatialTopologyReaction() = default;
 

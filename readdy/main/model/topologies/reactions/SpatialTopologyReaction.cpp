@@ -71,6 +71,10 @@ namespace readdy::model::top::reactions {
       reaction._radius = radius;
 
       parse_descriptor(descriptor, reaction);
+      if (reaction.is_topology_particle_reaction()) {
+          throw std::invalid_argument("Dynamic rate functions are only implemented for topology-topology "
+                                      "reactions. For topology-particle reactions use a constant rate.");
+      }
       return reaction;
   }
 
