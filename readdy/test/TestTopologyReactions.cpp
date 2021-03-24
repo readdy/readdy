@@ -505,7 +505,7 @@ TEMPLATE_TEST_CASE("Test topology reactions.", "[topologies]", SingleCPU, CPU) {
             t->addEdge({0}, {1});
             t->addEdge({1}, {2});
 
-            sim.run(1, 1e-3);
+            sim.run(10, 1e-3);
 
             auto topologies = sim.currentTopologies();
 
