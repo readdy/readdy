@@ -741,7 +741,7 @@ TEMPLATE_TEST_CASE("Particles form complexes with predetermined number of bonds"
 
     readdy::Simulation simulation(create<TestType>(), ctx);
 
-    auto nParticles = 2000;
+    auto nParticles = 1000;
     for (auto i = 0U; i < nParticles; ++i) {
         readdy::Vec3 pos {readdy::model::rnd::uniform_real(-25./2., 25./2.),
                           readdy::model::rnd::uniform_real(-25./2., 25./2.),

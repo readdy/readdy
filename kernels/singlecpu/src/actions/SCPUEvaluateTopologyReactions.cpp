@@ -277,13 +277,13 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
                                         case readdy::model::top::reactions::STRMode::TT_FUSION_ALLOW_SELF:
                                             if (tidx1 >= 0 && tidx2 >= 0) {
                                                 if (tidx1 == tidx2) {
-                                                    const std::unique_ptr<readdy::model::top::GraphTopology> &t1 = topologies.at(
-                                                            static_cast<std::size_t>(tidx1));
+                                                    const auto &t1 = topologies.at(static_cast<std::size_t>(tidx1));
                                                     const auto &gr = t1->graph();
-                                                    const auto &v1 = t1->vertexIteratorForParticle(pidx);
-                                                    const auto &v2 = t1->vertexIteratorForParticle(neighborIdx);
+                                                    auto v1 = t1->vertexIteratorForParticle(pidx);
+                                                    auto v2 = t1->vertexIteratorForParticle(neighborIdx);
                                                     auto d = gr.graphDistance(v1, v2);
-                                                    if (d != -1 && d <= reaction.min_graph_distance()) {
+                                                    if ((d != -1 && d <= reaction.min_graph_distance())
+                                                         || (!context.legacyTopologySelfFusion() && d == 1)) {
                                                         break;
                                                     }
                                                 }
@@ -378,19 +378,17 @@ void SCPUEvaluateTopologyReactions::handleTopologyTopologyReaction(SCPUStateMode
         auto ix1 = t1->vertexIndexForParticle(event.idx1);
         auto ix2 = t2->vertexIndexForParticle(event.idx2);
 
-        auto containsEdge = t1->containsEdge(ix1, ix2);
-        if (!containsEdge || context.legacyTopologySelfFusion()) {
-            if (!containsEdge) t1->addEdge(ix1, ix2);
+        if(!t1->containsEdge(ix1, ix2)) {
+            t1->addEdge(ix1, ix2);
+        }
+        t1->type() = reaction.top_type_to1();
 
-            t1->type() = reaction.top_type_to1();
-
-            if (entry1Type == reaction.type1()) {
-                entry1Type = reaction.type_to1();
-                entry2Type = reaction.type_to2();
-            } else {
-                entry1Type = reaction.type_to2();
-                entry2Type = reaction.type_to1();
-            }
+        if (entry1Type == reaction.type1()) {
+            entry1Type = reaction.type_to1();
+            entry2Type = reaction.type_to2();
+        } else {
+            entry1Type = reaction.type_to2();
+            entry2Type = reaction.type_to1();
         }
     } else {
         if (entry1Type == reaction.type1() && t1->type() == reaction.top_type1()) {
