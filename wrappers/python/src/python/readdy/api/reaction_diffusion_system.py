@@ -356,6 +356,18 @@ class ReactionDiffusionSystem(object):
     def potentials(self):
         return self._potential_registry
 
+    @property
+    def legacy_topology_self_fusion(self):
+        r""" The behavior changed to use no-op reactions in case an edge is already present during a topology
+        self-fusion. Set this property to `True` to get the old behavior in which particle type and topology type
+        still were changed.
+        """
+        return self._context.legacy_topology_self_fusion
+
+    @legacy_topology_self_fusion.setter
+    def legacy_topology_self_fusion(self, value):
+        self._context.legacy_topology_self_fusion = value
+
     def simulation(self, kernel="SingleCPU", output_file="", integrator="EulerBDIntegrator",
                    reaction_handler="Gillespie", evaluate_topology_reactions=True, evaluate_forces=True,
                    evaluate_observables=True, skin=0):
