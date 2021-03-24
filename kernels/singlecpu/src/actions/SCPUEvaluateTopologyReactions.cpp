@@ -378,8 +378,10 @@ void SCPUEvaluateTopologyReactions::handleTopologyTopologyReaction(SCPUStateMode
         auto ix1 = t1->vertexIndexForParticle(event.idx1);
         auto ix2 = t2->vertexIndexForParticle(event.idx2);
 
-        if (!t1->containsEdge(ix1, ix2)) {
-            t1->addEdge(ix1, ix2);
+        auto containsEdge = t1->containsEdge(ix1, ix2);
+        if (!containsEdge || context.legacyTopologySelfFusion()) {
+            if (!containsEdge) t1->addEdge(ix1, ix2);
+
             t1->type() = reaction.top_type_to1();
 
             if (entry1Type == reaction.type1()) {

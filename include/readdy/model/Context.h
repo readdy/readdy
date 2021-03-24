@@ -92,6 +92,14 @@ public:
         return _box_size;
     }
 
+    auto legacyTopologySelfFusion() const {
+        return _legacyTopologySelfFusion;
+    }
+
+    void setLegacyTopologySelfFusion(bool val) {
+        _legacyTopologySelfFusion = val;
+    }
+
     const PeriodicBoundaryConditions &periodicBoundaryConditions() const {
         return _periodic_boundary;
     }
@@ -249,6 +257,7 @@ private:
     bool _recordReactionsWithPositions{false};
     bool _recordReactionCounts{false};
     bool _recordVirial{false};
+    bool _legacyTopologySelfFusion {false};
 };
 
 }

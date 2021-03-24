@@ -221,6 +221,8 @@ void exportKernelContext(py::module &module) {
                           [](KernelContext &self, KernelContext::PeriodicBoundaryConditions pbc) {
                               self.periodicBoundaryConditions() = pbc;
                           })
+            .def_property("legacy_topology_self_fusion", &KernelContext::legacyTopologySelfFusion,
+                          &KernelContext::setKernelConfiguration)
             .def("describe", &KernelContext::describe)
             .def("validate", &KernelContext::validate)
             .def("bounding_box_vertices", &KernelContext::getBoxBoundingVertices)
