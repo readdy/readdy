@@ -166,10 +166,10 @@ void CPUEvaluateTopologyReactions::perform() {
                     } else {
                         // if we have a single particle that is not of flavor topology, remove from topology structure!
                         auto it = top.graph().vertices().begin();
-                        while(it != top.graph().vertices().end() && !it->deactivated()) {
+                        while (it != top.graph().vertices().end() && !it->deactivated()) {
                             ++it;
                         }
-                        if(it == top.graph().vertices().end()) {
+                        if (it == top.graph().vertices().end()) {
                             throw std::logic_error("Graph had size 1 but no active vertex!");
                         }
                         model.getParticleData()->entry_at((*it)->particleIndex).topology_index = -1;
@@ -296,7 +296,8 @@ CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReacti
                                         event.t1 = entry.type;
                                         event.t2 = neighbor.type;
                                         event.idx1 = *itParticle;
-                                        event.idx2 = neighborIndex;event.rate = reaction.rate(
+                                        event.idx2 = neighborIndex;
+                                        event.rate = reaction.rate(
                                                 *topologies.at(event.topology_idx),
                                                 *topologies.at(event.topology_idx2)
                                         );
@@ -390,46 +391,66 @@ void CPUEvaluateTopologyReactions::handleTopologyTopologyReaction(CPUStateModel:
     auto &entry2 = data.entry_at(event.idx2);
     auto &entry1Type = entry1.type;
     auto &entry2Type = entry2.type;
-
     auto top_type_to1 = reaction.top_type_to1();
     auto top_type_to2 = reaction.top_type_to2();
-    if (entry1Type == reaction.type1() && t1->type() == reaction.top_type1()) {
-        entry1Type = reaction.type_to1();
-        entry2Type = reaction.type_to2();
-    } else {
-        std::swap(top_type_to1, top_type_to2);
-        entry1Type = reaction.type_to2();
-        entry2Type = reaction.type_to1();
-    }
 
-    // topology - topology fusion
-    if (reaction.is_fusion()) {
-        //topology->appendTopology(otherTopology, ...)
-        if (event.topology_idx == event.topology_idx2) {
-            // introduce edge if not already present
-            auto v1 = t1->vertexIndexForParticle(event.idx1);
-            auto v2 = t1->vertexIndexForParticle(event.idx2);
-            if (!t1->graph().containsEdge(v1, v2)) {
-                t1->addEdge(v1, v2);
-            }
+    if (reaction.is_fusion() && event.topology_idx == event.topology_idx2) {
+        // self-fusion
+
+        // introduce edge if not already present
+        auto ix1 = t1->vertexIndexForParticle(event.idx1);
+        auto ix2 = t2->vertexIndexForParticle(event.idx2);
+
+        if (!t1->containsEdge(ix1, ix2)) {
+            t1->addEdge(ix1, ix2);
             t1->type() = reaction.top_type_to1();
-        } else {
-            // merge topologies
-            for (auto particleIndex : t2->particleIndices()) {
-                data.entry_at(particleIndex).topology_index = event.topology_idx;
+
+            if (entry1Type == reaction.type1()) {
+                entry1Type = reaction.type_to1();
+                entry2Type = reaction.type_to2();
+            } else {
+                entry1Type = reaction.type_to2();
+                entry2Type = reaction.type_to1();
             }
-            auto &topologies = kernel->getCPUKernelStateModel().topologies();
-            t1->appendTopology(*t2, event.idx2, event.idx1, reaction.top_type_to1());
-            topologies.erase(topologies.begin() + event.topology_idx2);
         }
     } else {
-        t1->type() = top_type_to1;
-        t2->type() = top_type_to2;
+        if (entry1Type == reaction.type1() && t1->type() == reaction.top_type1()) {
+            entry1Type = reaction.type_to1();
+            entry2Type = reaction.type_to2();
+        } else {
+            std::swap(top_type_to1, top_type_to2);
+            entry1Type = reaction.type_to2();
+            entry2Type = reaction.type_to1();
+        }
 
-        t2->updateReactionRates(context.topologyRegistry().structuralReactionsOf(t2->type()));
-        t2->configure();
+        // topology - topology fusion
+        if (reaction.is_fusion()) {
+            // merge topologies
+            for (auto pidx : t2->particleIndices()) {
+                data.entry_at(pidx).topology_index = event.topology_idx;
+            }
+            auto &topologies = model.topologies();
+            t1->appendTopology(*t2, event.idx2, event.idx1, reaction.top_type_to1());
+            topologies.erase(topologies.begin() + event.topology_idx2);
+        } else {
+            t1->type() = top_type_to1;
+            t2->type() = top_type_to2;
+
+            t2->updateReactionRates(context.topologyRegistry().structuralReactionsOf(t2->type()));
+            t2->updateSpatialReactionRates(
+                    context.topologyRegistry().spatialReactionsByType(event.t2, t2->type(),
+                                                                      event.t1, t1->type()),
+                    t1
+            );
+            t2->configure();
+        }
     }
     t1->updateReactionRates(context.topologyRegistry().structuralReactionsOf(t1->type()));
+    t1->updateSpatialReactionRates(
+            context.topologyRegistry().spatialReactionsByType(event.t1, t1->type(),
+                                                              event.t2, t2->type()),
+            t2
+    );
     t1->configure();
 }
 

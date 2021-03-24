@@ -714,3 +714,83 @@ TEMPLATE_TEST_CASE("Helix grows by structural topology reactions", "[!hide][inte
         }
     }
 }
+
+TEMPLATE_TEST_CASE("Particles form complexes with predetermined number of bonds", "[!hide][integration]", SingleCPU, CPU) {
+    /* Credits go to Moritz FP Becker for this test case. */
+    readdy::model::Context ctx;
+    ctx.boxSize() = {25, 25, 25};
+    ctx.topologyRegistry().addType("Complex");
+    ctx.particleTypes().add("A", 1., readdy::model::particleflavor::TOPOLOGY);
+    ctx.particleTypes().add("Aa", 1., readdy::model::particleflavor::TOPOLOGY);
+    ctx.particleTypes().add("Aaa", 1., readdy::model::particleflavor::TOPOLOGY);
+    ctx.particleTypes().add("Aaaa", 1., readdy::model::particleflavor::TOPOLOGY);
+
+    ctx.topologyRegistry().configureBondPotential("Aa", "Aa", {.forceConstant = 0., .length = 1.});
+    ctx.topologyRegistry().configureBondPotential("Aa", "Aaa", {.forceConstant = 0., .length = 1.});
+    ctx.topologyRegistry().configureBondPotential("Aa", "Aaaa", {.forceConstant = 0., .length = 1.});
+    ctx.topologyRegistry().configureBondPotential("Aaa", "Aaa", {.forceConstant = 0., .length = 1.});
+    ctx.topologyRegistry().configureBondPotential("Aaa", "Aaaa", {.forceConstant = 0., .length = 1.});
+    ctx.topologyRegistry().configureBondPotential("Aaaa", "Aaaa", {.forceConstant = 0., .length = 1.});
+
+    ctx.topologyRegistry().addSpatialReaction("bind_1: Complex(A) + Complex(A) -> Complex(Aa--Aa) [self=true]", 1., 1.);
+    ctx.topologyRegistry().addSpatialReaction("bind_2: Complex(A) + Complex(Aa) -> Complex(Aa--Aaa) [self=true]", 1., 1.);
+    ctx.topologyRegistry().addSpatialReaction("bind_3: Complex(A) + Complex(Aaa) -> Complex(Aa--Aaaa) [self=true]", 1., 1.);
+    ctx.topologyRegistry().addSpatialReaction("bind_4: Complex(Aa) + Complex(Aa) -> Complex(Aaa--Aaa) [self=true]", 1., 1.);
+    ctx.topologyRegistry().addSpatialReaction("bind_5: Complex(Aa) + Complex(Aaa) -> Complex(Aaa--Aaaa) [self=true]", 1., 1.);
+    ctx.topologyRegistry().addSpatialReaction("bind_6: Complex(Aaa) + Complex(Aaa) -> Complex(Aaaa--Aaaa) [self=true]", 1., 1.);
+
+    readdy::Simulation simulation(create<TestType>(), ctx);
+
+    auto nParticles = 2000;
+    for (auto i = 0U; i < nParticles; ++i) {
+        readdy::Vec3 pos {readdy::model::rnd::uniform_real(-25./2., 25./2.),
+                          readdy::model::rnd::uniform_real(-25./2., 25./2.),
+                          readdy::model::rnd::uniform_real(-25./2., 25./2.)};
+        readdy::model::Particle A {pos, ctx.particleTypes().idOf("A")};
+        simulation.addTopology("Complex", {A});
+    }
+    simulation.run(10000, 1e-2);
+    auto topologies = simulation.currentTopologies();
+
+    std::map<std::size_t, std::tuple<std::string, std::size_t, std::size_t>> edgeCounts;
+    std::size_t tix = 0;
+    for(auto top : topologies) {
+        for(const auto & edge : top->graph().edges()) {
+            const auto &[pix1, pix2] = edge;
+
+            {
+                auto p1 = top->particleForVertex(pix1);
+                auto c1 = std::get<1>(edgeCounts[p1.id()]);
+                edgeCounts[p1.id()] = std::make_tuple(ctx.particleTypes().nameOf(p1.type()), c1 + 1, tix);
+            }
+            {
+                auto p2 = top->particleForVertex(pix2);
+                auto c2 = std::get<1>(edgeCounts[p2.id()]);
+                edgeCounts[p2.id()] = std::make_tuple(ctx.particleTypes().nameOf(p2.type()), c2 + 1, tix);
+            }
+        }
+        ++tix;
+    }
+
+    auto particles = simulation.stateModel().getParticles();
+    REQUIRE(particles.size() == nParticles);
+    int singleParticles = 0;
+    for (const auto& p : particles) {
+        if(edgeCounts.find(p.id()) == edgeCounts.end()) {
+            REQUIRE(ctx.particleTypes().nameOf(p.type()) == "A");
+            ++singleParticles;
+        }
+    }
+
+    for(auto top : simulation.currentTopologies()) {
+        for(auto v : top->graph().vertices()) {
+            auto p = top->particleForVertex(v);
+            REQUIRE(v.neighbors().size() == ctx.particleTypes().nameOf(p.type()).size() - 1);
+        }
+    }
+
+    REQUIRE(edgeCounts.size() + singleParticles == nParticles);
+    for (auto entry : edgeCounts) {
+        REQUIRE(std::get<0>(entry.second).size() - 1 == std::get<1>(entry.second));
+    }
+}

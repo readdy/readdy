@@ -67,8 +67,8 @@ struct SCPUEvaluateTopologyReactions::TREvent {
     ParticleTypeId t1{0}, t2{0};
     // idx1 is always the particle that belongs to a topology
     index_type idx1{0}, idx2{0};
-    bool spatial {false};
-    readdy::ReactionId reactionId {0};
+    bool spatial{false};
+    readdy::ReactionId reactionId{0};
 
 };
 
@@ -88,11 +88,11 @@ void SCPUEvaluateTopologyReactions::perform() {
     auto &model = kernel->getSCPUKernelStateModel();
     const auto &context = kernel->context();
     auto &topologies = model.topologies();
-    
-    if(context.recordReactionCounts()) {
+
+    if (context.recordReactionCounts()) {
         model.resetTopologyReactionCounts();
     }
-    
+
     if (!topologies.empty()) {
 
         auto events = gatherEvents();
@@ -117,7 +117,7 @@ void SCPUEvaluateTopologyReactions::perform() {
                 assert(!topology->isDeactivated());
                 if (!event.spatial) {
                     handleStructuralReactionEvent(topologies, new_topologies, event, topology);
-                    if(context.recordReactionCounts()) {
+                    if (context.recordReactionCounts()) {
                         kernel->getSCPUKernelStateModel().structuralReactionCounts()[event.reactionId] += 1;
                     }
                 } else {
@@ -132,7 +132,7 @@ void SCPUEvaluateTopologyReactions::perform() {
                     } else {
                         handleTopologyParticleReaction(topology, event);
                     }
-                    if(context.recordReactionCounts()) {
+                    if (context.recordReactionCounts()) {
                         kernel->getSCPUKernelStateModel().spatialReactionCounts()[event.reactionId] += 1;
                     }
                 }
@@ -150,10 +150,10 @@ void SCPUEvaluateTopologyReactions::perform() {
                     } else {
                         // if we have a single particle that is not of flavor topology, remove from topology structure!
                         auto it = top.graph().vertices().begin();
-                        while(it != top.graph().vertices().end() && !it->deactivated()) {
+                        while (it != top.graph().vertices().end() && !it->deactivated()) {
                             ++it;
                         }
-                        if(it == top.graph().vertices().end()) {
+                        if (it == top.graph().vertices().end()) {
                             throw std::logic_error("Graph had size 1 but no active vertex!");
                         }
                         model.getParticleData()->entry_at((*it)->particleIndex).topology_index = -1;
@@ -166,8 +166,8 @@ void SCPUEvaluateTopologyReactions::perform() {
 }
 
 SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReactions::gatherEvents() {
-    const auto& context = kernel->context();
-    const auto& topology_registry = context.topologyRegistry();
+    const auto &context = kernel->context();
+    const auto &topology_registry = context.topologyRegistry();
     topology_reaction_events events;
     {
         rate_t current_cumulative_rate = 0;
@@ -200,27 +200,31 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
             const auto &nl = *stateModel.getNeighborList();
             auto &topologies = stateModel.topologies();
 
-            for(auto cell = 0_z; cell < nl.nCells(); ++cell) {
-                for(auto it = nl.particlesBegin(cell); it != nl.particlesEnd(cell); ++it) {
+            for (auto cell = 0_z; cell < nl.nCells(); ++cell) {
+                for (auto it = nl.particlesBegin(cell); it != nl.particlesEnd(cell); ++it) {
                     auto pidx = *it;
                     auto &entry = data.entry_at(pidx);
                     const auto tidx1 = entry.topology_index;
-                    if(entry.deactivated || (tidx1 >= 0 && topologyDeactivated(static_cast<std::size_t>(tidx1)))) {
+                    if (entry.deactivated || (tidx1 >= 0 && topologyDeactivated(static_cast<std::size_t>(tidx1)))) {
                         continue;
                     }
-                    TopologyTypeId tt1 = tidx1 >= 0 ? stateModel.topologies().at(static_cast<std::size_t>(tidx1))->type() : static_cast<TopologyTypeId>(-1);
+                    TopologyTypeId tt1 =
+                            tidx1 >= 0 ? stateModel.topologies().at(static_cast<std::size_t>(tidx1))->type()
+                                       : static_cast<TopologyTypeId>(-1);
 
                     nl.forEachNeighbor(it, cell, [&](std::size_t neighborIdx) {
                         auto &neighbor = data.entry_at(neighborIdx);
                         if (!neighbor.deactivated) {
                             const auto tidx2 = neighbor.topology_index;
 
-                            if(tidx2 >= 0 && topologyDeactivated(static_cast<std::size_t>(tidx2))) {
+                            if (tidx2 >= 0 && topologyDeactivated(static_cast<std::size_t>(tidx2))) {
                                 return;
                             }
 
-                            TopologyTypeId tt2 = tidx2 >= 0 ? stateModel.topologies().at(static_cast<std::size_t>(tidx2))->type() : static_cast<TopologyTypeId>(-1);
-                            if(tt1 == -1 && tt2 == -1) return;
+                            TopologyTypeId tt2 =
+                                    tidx2 >= 0 ? stateModel.topologies().at(static_cast<std::size_t>(tidx2))->type()
+                                               : static_cast<TopologyTypeId>(-1);
+                            if (tt1 == -1 && tt2 == -1) return;
                             const auto &reactions = topology_registry.spatialReactionsByType(entry.type, tt1,
                                                                                              neighbor.type, tt2);
                             const auto distSquared = bcs::distSquared(entry.pos, neighbor.pos, box, pbc);
@@ -232,7 +236,7 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
                                     current_cumulative_rate = event.cumulativeRate;
                                     switch (reaction.mode()) {
                                         case readdy::model::top::reactions::STRMode::TT_FUSION:
-                                            if(tidx1 >= 0 && tidx2 >= 0 && tidx1 != tidx2) {
+                                            if (tidx1 >= 0 && tidx2 >= 0 && tidx1 != tidx2) {
                                                 event.topology_idx = static_cast<std::size_t>(tidx1);
                                                 event.topology_idx2 = tidx2;
                                                 event.t1 = entry.type;
@@ -252,7 +256,7 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
                                             }
                                             break;
                                         case readdy::model::top::reactions::STRMode::TT_ENZYMATIC:
-                                            if(tidx1 >= 0 && tidx2 >= 0) {
+                                            if (tidx1 >= 0 && tidx2 >= 0) {
                                                 event.topology_idx = static_cast<std::size_t>(tidx1);
                                                 event.topology_idx2 = tidx2;
                                                 event.t1 = entry.type;
@@ -272,12 +276,12 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
                                             break;
                                         case readdy::model::top::reactions::STRMode::TT_FUSION_ALLOW_SELF:
                                             if (tidx1 >= 0 && tidx2 >= 0) {
-                                                const SCPUStateModel::topologies_vec& topologies = stateModel.topologies();
                                                 if (tidx1 == tidx2) {
-                                                    const std::unique_ptr<readdy::model::top::GraphTopology> &t1 = topologies.at(static_cast<std::size_t>(tidx1));
-                                                    const auto& gr = t1->graph();
-                                                    const auto& v1 = t1->vertexIteratorForParticle(pidx);
-                                                    const auto& v2 = t1->vertexIteratorForParticle(neighborIdx);
+                                                    const std::unique_ptr<readdy::model::top::GraphTopology> &t1 = topologies.at(
+                                                            static_cast<std::size_t>(tidx1));
+                                                    const auto &gr = t1->graph();
+                                                    const auto &v1 = t1->vertexIteratorForParticle(pidx);
+                                                    const auto &v2 = t1->vertexIteratorForParticle(neighborIdx);
                                                     auto d = gr.graphDistance(v1, v2);
                                                     if (d != -1 && d <= reaction.min_graph_distance()) {
                                                         break;
@@ -296,7 +300,6 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
                                                         *topologies.at(event.topology_idx2)
                                                 );
                                                 event.cumulativeRate = event.rate + current_cumulative_rate;
-
                                                 events.push_back(event);
                                             }
                                             break;
@@ -341,72 +344,83 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
 
 bool SCPUEvaluateTopologyReactions::eventsDependent(const SCPUEvaluateTopologyReactions::TREvent &evt1,
                                                     const SCPUEvaluateTopologyReactions::TREvent &evt2) const {
-    if(evt1.topology_idx == evt2.topology_idx || evt1.topology_idx == evt2.topology_idx2) {
+    if (evt1.topology_idx == evt2.topology_idx || evt1.topology_idx == evt2.topology_idx2) {
         return true;
     }
     auto tpWithSameP = evt1.topology_idx2 < 0 && evt2.topology_idx2 < 0 && evt1.idx2 == evt2.idx2;
-    if(tpWithSameP) return true;
-    return evt1.topology_idx2 >= 0 && (evt1.topology_idx2 == evt2.topology_idx || evt1.topology_idx2 == evt2.topology_idx2);
+    if (tpWithSameP) return true;
+    return evt1.topology_idx2 >= 0 &&
+           (evt1.topology_idx2 == evt2.topology_idx || evt1.topology_idx2 == evt2.topology_idx2);
 }
 
 void SCPUEvaluateTopologyReactions::handleTopologyTopologyReaction(SCPUStateModel::topology_ref &t1,
                                                                    SCPUStateModel::topology_ref &t2,
                                                                    const SCPUEvaluateTopologyReactions::TREvent &event) {
-    const auto& context = kernel->context();
-    const auto& top_registry = context.topologyRegistry();
-    const auto& reaction = top_registry.spatialReactionsByType(event.t1, t1->type(), event.t2, t2->type()).at(event.reaction_idx);
+    const auto &context = kernel->context();
+    const auto &top_registry = context.topologyRegistry();
+    const auto &reaction = top_registry.spatialReactionsByType(event.t1, t1->type(), event.t2, t2->type()).at(
+            event.reaction_idx);
 
-    auto& model = kernel->getSCPUKernelStateModel();
-    auto& data = *model.getParticleData();
+    auto &model = kernel->getSCPUKernelStateModel();
+    auto &data = *model.getParticleData();
 
-    auto& entry1 = data.entry_at(event.idx1);
-    auto& entry2 = data.entry_at(event.idx2);
-    auto& entry1Type = entry1.type;
-    auto& entry2Type = entry2.type;
+    auto &entry1 = data.entry_at(event.idx1);
+    auto &entry2 = data.entry_at(event.idx2);
+    auto &entry1Type = entry1.type;
+    auto &entry2Type = entry2.type;
     auto top_type_to1 = reaction.top_type_to1();
     auto top_type_to2 = reaction.top_type_to2();
-    if(entry1Type == reaction.type1() && t1->type() == reaction.top_type1()) {
-        entry1Type = reaction.type_to1();
-        entry2Type = reaction.type_to2();
-    } else {
-        std::swap(top_type_to1, top_type_to2);
-        entry1Type = reaction.type_to2();
-        entry2Type = reaction.type_to1();
-    }
 
-    // topology - topology fusion
-    if(reaction.is_fusion()) {
-        //topology->appendTopology(otherTopology, ...)
-        if(event.topology_idx == event.topology_idx2) {
-            // introduce edge if not already present
-            auto ix1 = t1->vertexIndexForParticle(event.idx1);
-            auto ix2 = t2->vertexIndexForParticle(event.idx2);
+    if (reaction.is_fusion() && event.topology_idx == event.topology_idx2) {
+        // self-fusion
 
-            if(!t1->containsEdge(ix1, ix2)) {
-                t1->addEdge(ix1, ix2);
-            }
+        // introduce edge if not already present
+        auto ix1 = t1->vertexIndexForParticle(event.idx1);
+        auto ix2 = t2->vertexIndexForParticle(event.idx2);
+
+        if (!t1->containsEdge(ix1, ix2)) {
+            t1->addEdge(ix1, ix2);
             t1->type() = reaction.top_type_to1();
 
+            if (entry1Type == reaction.type1()) {
+                entry1Type = reaction.type_to1();
+                entry2Type = reaction.type_to2();
+            } else {
+                entry1Type = reaction.type_to2();
+                entry2Type = reaction.type_to1();
+            }
+        }
+    } else {
+        if (entry1Type == reaction.type1() && t1->type() == reaction.top_type1()) {
+            entry1Type = reaction.type_to1();
+            entry2Type = reaction.type_to2();
         } else {
+            std::swap(top_type_to1, top_type_to2);
+            entry1Type = reaction.type_to2();
+            entry2Type = reaction.type_to1();
+        }
+
+        // topology - topology fusion
+        if (reaction.is_fusion()) {
             // merge topologies
-            for(auto pidx : t2->particleIndices()) {
+            for (auto pidx : t2->particleIndices()) {
                 data.entry_at(pidx).topology_index = event.topology_idx;
             }
             auto &topologies = model.topologies();
             t1->appendTopology(*t2, event.idx2, event.idx1, reaction.top_type_to1());
             topologies.erase(topologies.begin() + event.topology_idx2);
-        }
-    } else {
-        t1->type() = top_type_to1;
-        t2->type() = top_type_to2;
+        } else {
+            t1->type() = top_type_to1;
+            t2->type() = top_type_to2;
 
-        t2->updateReactionRates(context.topologyRegistry().structuralReactionsOf(t2->type()));
-        t2->updateSpatialReactionRates(
-                context.topologyRegistry().spatialReactionsByType(event.t2, t2->type(),
-                                                                  event.t1, t1->type()),
-                t1
-        );
-        t2->configure();
+            t2->updateReactionRates(context.topologyRegistry().structuralReactionsOf(t2->type()));
+            t2->updateSpatialReactionRates(
+                    context.topologyRegistry().spatialReactionsByType(event.t2, t2->type(),
+                                                                      event.t1, t1->type()),
+                    t1
+            );
+            t2->configure();
+        }
     }
     t1->updateReactionRates(context.topologyRegistry().structuralReactionsOf(t1->type()));
     t1->updateSpatialReactionRates(
@@ -419,37 +433,37 @@ void SCPUEvaluateTopologyReactions::handleTopologyTopologyReaction(SCPUStateMode
 
 void SCPUEvaluateTopologyReactions::handleTopologyParticleReaction(SCPUStateModel::topology_ref &topology,
                                                                    const SCPUEvaluateTopologyReactions::TREvent &event) {
-    const auto& context = kernel->context();
-    const auto& top_registry = context.topologyRegistry();
-    const auto& reaction = top_registry.spatialReactionsByType(event.t1, topology->type(), event.t2,
+    const auto &context = kernel->context();
+    const auto &top_registry = context.topologyRegistry();
+    const auto &reaction = top_registry.spatialReactionsByType(event.t1, topology->type(), event.t2,
                                                                EmptyTopologyId).at(event.reaction_idx);
 
-    auto& model = kernel->getSCPUKernelStateModel();
-    auto& data = *model.getParticleData();
+    auto &model = kernel->getSCPUKernelStateModel();
+    auto &data = *model.getParticleData();
 
-    auto& entry1 = data.entry_at(event.idx1);
-    auto& entry2 = data.entry_at(event.idx2);
-    auto& entry1Type = entry1.type;
-    auto& entry2Type = entry2.type;
-    if(entry1Type == reaction.type1()) {
+    auto &entry1 = data.entry_at(event.idx1);
+    auto &entry2 = data.entry_at(event.idx2);
+    auto &entry1Type = entry1.type;
+    auto &entry2Type = entry2.type;
+    if (entry1Type == reaction.type1()) {
         entry1Type = reaction.type_to1();
         entry2Type = reaction.type_to2();
     } else {
         entry1Type = reaction.type_to2();
         entry2Type = reaction.type_to1();
     }
-    if(event.topology_idx2 < 0) {
+    if (event.topology_idx2 < 0) {
         entry1.topology_index = event.topology_idx;
         entry2.topology_index = event.topology_idx;
 
-        if(reaction.is_fusion()) {
+        if (reaction.is_fusion()) {
             topology->appendParticle(event.idx2, event.idx1);
         }
     } else {
         throw std::logic_error("this branch should never be reached as topology-topology reactions are "
-                                       "handeled in a different method");
+                               "handeled in a different method");
     }
-    if(topology->type() == reaction.top_type1()) {
+    if (topology->type() == reaction.top_type1()) {
         topology->type() = reaction.top_type_to1();
     } else {
         topology->type() = reaction.top_type_to2();
