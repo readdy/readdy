@@ -41,7 +41,7 @@ class PyGraph {
 };
 
 class PyVertex {
-        public:
+    public:
         using VertexRef = readdy::model::top::Graph::PersistentVertexIndex;
         PyVertex() : parent(nullptr), vertex({0}) {}
         PyVertex(PyTopology* parent, VertexRef vertex) : parent(parent), vertex(vertex) {}
@@ -50,7 +50,50 @@ class PyVertex {
         PyTopology* top() { return parent; }
 
         const PyTopology* top() const {return parent;}
-        private:
+
+        bool operator==(const PyVertex &other) const {
+            if (parent != nullptr && other.parent != nullptr) {
+                return parent == other.parent && vertex == other.vertex;
+            }
+            return false;
+        }
+
+        bool operator!=(const PyVertex &other) const {
+            if (parent != nullptr && other.parent != nullptr) {
+                return !operator==(other);
+            }
+            return false;
+        }
+
+        bool operator<(const PyVertex &other) const {
+            if (parent != nullptr && other.parent != nullptr) {
+                return parent == other.parent && vertex < other.vertex;
+            }
+            return false;
+        }
+
+        bool operator>=(const PyVertex &other) const {
+            if (parent != nullptr && other.parent != nullptr) {
+                return !(*this < other);
+            }
+            return false;
+        }
+
+        bool operator>(const PyVertex &other) const {
+            if (parent != nullptr && other.parent != nullptr) {
+                return *this >= other && *this != other;
+            }
+            return false;
+        }
+
+        bool operator<=(const PyVertex &other) const {
+            if (parent != nullptr && other.parent != nullptr) {
+                return !(*this > other);
+            }
+            return false;
+        }
+
+    private:
         PyTopology* parent;
         VertexRef vertex;
 };

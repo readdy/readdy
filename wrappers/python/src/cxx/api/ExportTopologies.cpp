@@ -41,6 +41,8 @@
  */
 
 #include <pybind11/stl.h>
+#include <pybind11/operators.h>
+
 #include <readdy/model/Particle.h>
 #include <readdy/model/topologies/GraphTopology.h>
 #include <readdy/model/_internal/Util.h>
@@ -437,6 +439,12 @@ void exportTopologies(py::module &m) {
             .def("get", [](PyVertex &v) {
                 return PyVertex(v);
             })
+            .def(py::self == py::self)
+            .def(py::self != py::self)
+            .def(py::self < py::self)
+            .def(py::self <= py::self)
+            .def(py::self > py::self)
+            .def(py::self >= py::self)
             .def("__repr__", [](const PyVertex &v) {
                 const auto &vertex = v.top()->get()->graph().vertices().at(v.get());
                 std::stringstream ss;
