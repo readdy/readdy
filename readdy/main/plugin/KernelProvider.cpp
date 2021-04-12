@@ -133,15 +133,18 @@ const std::string readdy::plugin::KernelProvider::loadKernelName(const std::stri
     if(it != pimpl->libs.end() && !it->second.expired()) {
         return it->second.lock()->load<const char *()>("name")();
     }
-
-    dll::shared_library lib {sharedLib, RTLD_LAZY | RTLD_GLOBAL};
-    if(!lib.has_symbol("name")) {
-        throw std::invalid_argument("library " + sharedLib + " had no \"name\" symbol");
-    } else {
-        if(!lib.has_symbol("createKernel")) {
-            throw std::invalid_argument("library " + sharedLib + " had no \"createKernel\" symbol");
+    try {
+        dll::shared_library lib{sharedLib, RTLD_LAZY | RTLD_GLOBAL};
+        if (!lib.has_symbol("name")) {
+            throw std::invalid_argument("library " + sharedLib + " had no \"name\" symbol");
+        } else {
+            if (!lib.has_symbol("createKernel")) {
+                throw std::invalid_argument("library " + sharedLib + " had no \"createKernel\" symbol");
+            }
+            return lib.load<const char *()>("name")();
         }
-        return lib.load<const char*()>("name")();
+    } catch(...) {
+        throw std::runtime_error(fmt::format("Could not load {}", sharedLib));
     }
 }
 

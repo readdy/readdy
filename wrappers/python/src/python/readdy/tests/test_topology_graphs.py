@@ -74,7 +74,9 @@ class TestTopologyGraphs(ReaDDyTestCase):
             if v.particle_index == 0:
                 np.testing.assert_equal(top.position_of_vertex(v), common.Vec(0, 0, 0))
                 np.testing.assert_equal(len(v.neighbors()), 1)
-                np.testing.assert_equal(1 in [vv.get().particle_index for vv in v], True)
+                neigh = v.neighbors()[0]
+                np.testing.assert_(neigh in graph.vertices)
+                np.testing.assert_equal(1 in [vv.particle_index for vv in v], True)
             if v.particle_index == 1:
                 np.testing.assert_equal(top.position_of_vertex(v), common.Vec(1, 0, 0))
                 np.testing.assert_equal(len(v.neighbors()), 2)
