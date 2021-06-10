@@ -56,7 +56,7 @@ import readdy.util.io_utils as _io_utils
 class ReactionInfo:
     def __init__(self, name, uuid, n_educts, n_products, rate, educt_distance, product_distance, educt_types,
                  product_types, inverse_types_map):
-        self._name = str(name)
+        self._name = name[()].decode()
         self._id = uuid
         self._n_educts = n_educts
         self._n_products = n_products
@@ -183,7 +183,7 @@ class ReactionInfo:
     __repr__ = __str__
 
 
-class GeneralInformation(object):
+class GeneralInformation:
 
     def __init__(self, filename):
         import json

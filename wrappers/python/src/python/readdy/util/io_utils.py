@@ -59,9 +59,9 @@ def get_particle_types(filename, dset_path="readdy/config/particle_types"):
         if dset_path in f:
             p_types = f[dset_path]
             for p_type in p_types:
-                result[p_type["name"]] = {
+                result[p_type["name"].decode()] = {
                     "type_id": p_type["type_id"],
-                    "flavor": p_type["flavor"]
+                    "flavor": p_type["flavor"].decode()
                 }
     return result
 
@@ -115,7 +115,7 @@ def get_diffusion_constants(filename, dset_path="readdy/config/particle_types"):
         if dset_path in f:
             p_types = f[dset_path]
             for p_type in p_types:
-                result[p_type["name"]] = p_type["diffusion_constant"]
+                result[p_type["name"].decode()] = p_type["diffusion_constant"]
     return result
 
 
@@ -131,7 +131,7 @@ def get_reactions(filename, dset_path="readdy/config/registered_reactions"):
         if dset_path in f:
             reactions = f[dset_path]
             for r in reactions:
-                result[r["name"]] = np.copy(r)
+                result[r["name"].decode()] = np.copy(r)
     return result
 
 
@@ -148,7 +148,7 @@ def get_spatial_topology_reactions(filename, dset_path="readdy/config/spatial_to
         if dset_path in f:
             spatial_reactions = f[dset_path]
             for r in spatial_reactions:
-                result[r["id"]] = r["descriptor"]
+                result[r["id"]] = r["descriptor"].decode()
     return result
 
 
@@ -165,5 +165,5 @@ def get_structural_topology_reactions(filename, dset_path="readdy/config/structu
         if dset_path in f:
             structural_reactions = f[dset_path]
             for r in structural_reactions:
-                result[r["id"]] = r["name"]
+                result[r["id"]] = r["name"].decode()
     return result

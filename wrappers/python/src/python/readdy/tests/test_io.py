@@ -89,7 +89,7 @@ class TestSchemeApi(ReaDDyTestCase):
                 np.testing.assert_equal(item.position, np.array([.0, .0, .0]))
 
         with h5py.File(traj_fname, 'r') as f:
-            np.testing.assert_equal("A", f["readdy/config/particle_types"][0]["name"])
+            np.testing.assert_equal(b"A", f["readdy/config/particle_types"][0]["name"])
 
     def test_write_flat_trajectory(self):
         import readdy
@@ -166,11 +166,9 @@ class TestSchemeApi(ReaDDyTestCase):
         data = np.array([[2.222, 3, 4, 5], [3.3, 3, 3, 3]], dtype=np.float64)
         with closing(io.File.create(fname)) as f:
             f.write_double("/sowas", data)
-            f.write_string("/maeh", u"hierstehtwas")
 
         with h5py.File(fname, "r") as f2:
             np.testing.assert_equal(f2.get('/sowas'), data)
-            np.testing.assert_equal(f2.get("/maeh").value.decode(), u"hierstehtwas")
 
     def test_groups_readwrite(self):
         fname = os.path.join(self.dir, "test_groups_readwrite.h5")

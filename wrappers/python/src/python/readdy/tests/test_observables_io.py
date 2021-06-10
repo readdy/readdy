@@ -355,20 +355,20 @@ class TestObservablesIO(ReaDDyTestCase):
             import readdy.util.io_utils as io_utils
             reactions = io_utils.get_reactions(fname)
 
-            mylabel_reaction = get_item("mylabel", reactions.values())
+            mylabel_reaction = get_item(b"mylabel", reactions.values())
             np.testing.assert_allclose(mylabel_reaction["rate"], .00001)
             np.testing.assert_equal(mylabel_reaction["n_educts"], 1)
             np.testing.assert_equal(mylabel_reaction["n_products"], 1)
             np.testing.assert_equal(mylabel_reaction["educt_types"], [type_str_to_id["A"], 0])
             np.testing.assert_equal(mylabel_reaction["product_types"], [type_str_to_id["B"], 0])
-            atob_reaction = get_item("A->B", reactions.values())
+            atob_reaction = get_item(b"A->B", reactions.values())
             np.testing.assert_equal(atob_reaction["rate"], 1.)
             np.testing.assert_equal(atob_reaction["n_educts"], 1)
             np.testing.assert_equal(atob_reaction["n_products"], 1)
             np.testing.assert_equal(mylabel_reaction["educt_types"], [type_str_to_id["A"], 0])
             np.testing.assert_equal(mylabel_reaction["product_types"], [type_str_to_id["B"], 0])
 
-            fusion_reaction = get_item("B+C->A", reactions.values())
+            fusion_reaction = get_item(b"B+C->A", reactions.values())
             np.testing.assert_equal(fusion_reaction["rate"], 1.)
             np.testing.assert_equal(fusion_reaction["educt_distance"], 1.)
             np.testing.assert_equal(fusion_reaction["n_educts"], 2)
@@ -424,9 +424,9 @@ class TestObservablesIO(ReaDDyTestCase):
             def get_item(name, collection):
                 return next(x for x in collection if x["name"] == name)
 
-            mylabel_id = get_item("mylabel", reactions.values())["id"]
-            atob_id = get_item("A->B", reactions.values())["id"]
-            fusion_id = get_item("B+C->A", reactions.values())["id"]
+            mylabel_id = get_item(b"mylabel", reactions.values())["id"]
+            atob_id = get_item(b"A->B", reactions.values())["id"]
+            fusion_id = get_item(b"B+C->A", reactions.values())["id"]
 
             # counts of first time step, time is first index
             np.testing.assert_equal(data["counts/"+str(mylabel_id)][0], np.array([0]))
