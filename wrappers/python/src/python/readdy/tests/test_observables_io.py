@@ -49,6 +49,8 @@ import readdy._internal.readdybinding.common.io as io
 from readdy._internal.readdybinding.api import Simulation
 from readdy._internal.readdybinding.api import Context
 from readdy._internal.readdybinding.api import KernelProvider
+
+import readdy
 from readdy.util import platform_utils
 import readdy.util.io_utils as ioutils
 
@@ -344,6 +346,8 @@ class TestObservablesIO(ReaDDyTestCase):
 
         type_str_to_id = {k: x["type_id"] for k, x in ioutils.get_particle_types(fname).items()}
 
+        traj = readdy.Trajectory(fname)
+        reac = traj.read_observable_reactions()
         with h5py.File(fname, "r") as f2:
             data = f2["readdy/observables/reactions"]
             time_series = f2["readdy/observables/reactions/time"]
@@ -376,18 +380,18 @@ class TestObservablesIO(ReaDDyTestCase):
             np.testing.assert_equal(fusion_reaction["educt_types"], [type_str_to_id["B"], type_str_to_id["C"]])
             np.testing.assert_equal(fusion_reaction["product_types"], [type_str_to_id["A"], 0])
 
-            records = data["records"][:]
-            np.testing.assert_equal(len(records), 2)
-            # records of 1st time step
-            for record in records[1]:
-                np.testing.assert_equal(record["reaction_type"] == 0 or record["reaction_type"] == 1, True)
-                if record["reaction_type"] == 0:
-                    np.testing.assert_equal(record["position"], np.array([.0, .0, .0]))
-                    np.testing.assert_equal(record["reaction_id"], atob_reaction["id"])
-                elif record["reaction_type"] == 1:
-                    # fusion
-                    np.testing.assert_allclose(record["position"], np.array([1.05, 1.0, 1.0]))
-                    np.testing.assert_equal(record["reaction_id"], fusion_reaction["id"])
+        _, records = reac
+        np.testing.assert_equal(len(records), 2)
+        # records of 1st time step
+        for record in records[1]:
+            np.testing.assert_(record.type in ('conversion', 'fusion'))
+            if record.type == 'conversion':
+                np.testing.assert_equal(record.position, np.array([.0, .0, .0]))
+                np.testing.assert_equal(record.reaction_label, 'A->B')
+            else:
+                # fusion
+                np.testing.assert_allclose(record.position, np.array([1.05, 1.0, 1.0]))
+                np.testing.assert_equal(record.reaction_label, 'B+C->A')
 
     def test_reaction_counts_observable(self):
         fname = os.path.join(self.dir, "test_observables_particle_reaction_counts.h5")
