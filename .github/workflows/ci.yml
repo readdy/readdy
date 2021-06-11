@@ -9,8 +9,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ['ubuntu-latest', 'macos-latest']#, 'windows-latest']
-        python-version: ['3.6', '3.7', '3.8'] # used to build the conda package (not for miniconda installation)
+        os: ['ubuntu-2004', 'macos-10.15']
+        python-version: ['3.7', '3.8', '3.9'] # used to build the conda package (not for miniconda installation)
     steps:
       - uses: actions/checkout@v2
       - if: github.repository == 'readdy/readdy' && github.event_name == 'push'
@@ -30,10 +30,10 @@ jobs:
           conda config --set always_yes true
           conda config --add channels conda-forge
           conda config --set quiet true
-          conda install conda-build conda-verify pip cmake
+          conda install conda-build conda-verify pip
       - name: build readdy conda package
         shell: bash -l {0}
-        run: conda build -c defaults -c conda-forge tools/conda-recipe --python=${{ matrix.python-version }}
+        run: conda build tools/conda-recipe --python=${{ matrix.python-version }}
       - name: upload conda package
         shell: bash -l {0}
         # only upload conda package when origin and on pushes
