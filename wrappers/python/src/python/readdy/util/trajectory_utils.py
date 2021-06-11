@@ -147,8 +147,9 @@ class TrajectoryReader(object):
     def __getitem__(self, item):
         if not self._flat:
             with h5.File(self._h5file, 'r') as f:
-                return to_trajectory_entries(f[self.data_set_path(self._name)][item],
-                                             f[self.time_information_path(self._name)][item])
+                data = f[self.data_set_path(self._name)][item]
+                time = f[self.time_information_path(self._name)][item]
+                return to_trajectory_entries(data, time)
         else:
             with h5.File(self._h5file, 'r') as f:
                 return to_trajectory_entries_flat(f[self.data_set_path(self._name)],

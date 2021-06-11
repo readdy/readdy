@@ -49,6 +49,8 @@ import readdy._internal.readdybinding.common.io as io
 from readdy._internal.readdybinding.api import Simulation
 from readdy._internal.readdybinding.api import Context
 from readdy._internal.readdybinding.api import KernelProvider
+
+import readdy
 from readdy.util import platform_utils
 import readdy.util.io_utils as ioutils
 
@@ -344,6 +346,8 @@ class TestObservablesIO(ReaDDyTestCase):
 
         type_str_to_id = {k: x["type_id"] for k, x in ioutils.get_particle_types(fname).items()}
 
+        traj = readdy.Trajectory(fname)
+        reac = traj.read_observable_reactions()
         with h5py.File(fname, "r") as f2:
             data = f2["readdy/observables/reactions"]
             time_series = f2["readdy/observables/reactions/time"]
@@ -355,20 +359,20 @@ class TestObservablesIO(ReaDDyTestCase):
             import readdy.util.io_utils as io_utils
             reactions = io_utils.get_reactions(fname)
 
-            mylabel_reaction = get_item("mylabel", reactions.values())
+            mylabel_reaction = get_item(b"mylabel", reactions.values())
             np.testing.assert_allclose(mylabel_reaction["rate"], .00001)
             np.testing.assert_equal(mylabel_reaction["n_educts"], 1)
             np.testing.assert_equal(mylabel_reaction["n_products"], 1)
             np.testing.assert_equal(mylabel_reaction["educt_types"], [type_str_to_id["A"], 0])
             np.testing.assert_equal(mylabel_reaction["product_types"], [type_str_to_id["B"], 0])
-            atob_reaction = get_item("A->B", reactions.values())
+            atob_reaction = get_item(b"A->B", reactions.values())
             np.testing.assert_equal(atob_reaction["rate"], 1.)
             np.testing.assert_equal(atob_reaction["n_educts"], 1)
             np.testing.assert_equal(atob_reaction["n_products"], 1)
             np.testing.assert_equal(mylabel_reaction["educt_types"], [type_str_to_id["A"], 0])
             np.testing.assert_equal(mylabel_reaction["product_types"], [type_str_to_id["B"], 0])
 
-            fusion_reaction = get_item("B+C->A", reactions.values())
+            fusion_reaction = get_item(b"B+C->A", reactions.values())
             np.testing.assert_equal(fusion_reaction["rate"], 1.)
             np.testing.assert_equal(fusion_reaction["educt_distance"], 1.)
             np.testing.assert_equal(fusion_reaction["n_educts"], 2)
@@ -376,18 +380,18 @@ class TestObservablesIO(ReaDDyTestCase):
             np.testing.assert_equal(fusion_reaction["educt_types"], [type_str_to_id["B"], type_str_to_id["C"]])
             np.testing.assert_equal(fusion_reaction["product_types"], [type_str_to_id["A"], 0])
 
-            records = data["records"][:]
-            np.testing.assert_equal(len(records), 2)
-            # records of 1st time step
-            for record in records[1]:
-                np.testing.assert_equal(record["reaction_type"] == 0 or record["reaction_type"] == 1, True)
-                if record["reaction_type"] == 0:
-                    np.testing.assert_equal(record["position"], np.array([.0, .0, .0]))
-                    np.testing.assert_equal(record["reaction_id"], atob_reaction["id"])
-                elif record["reaction_type"] == 1:
-                    # fusion
-                    np.testing.assert_allclose(record["position"], np.array([1.05, 1.0, 1.0]))
-                    np.testing.assert_equal(record["reaction_id"], fusion_reaction["id"])
+        _, records = reac
+        np.testing.assert_equal(len(records), 2)
+        # records of 1st time step
+        for record in records[1]:
+            np.testing.assert_(record.type in ('conversion', 'fusion'))
+            if record.type == 'conversion':
+                np.testing.assert_equal(record.position, np.array([.0, .0, .0]))
+                np.testing.assert_equal(record.reaction_label, 'A->B')
+            else:
+                # fusion
+                np.testing.assert_allclose(record.position, np.array([1.05, 1.0, 1.0]))
+                np.testing.assert_equal(record.reaction_label, 'B+C->A')
 
     def test_reaction_counts_observable(self):
         fname = os.path.join(self.dir, "test_observables_particle_reaction_counts.h5")
@@ -424,9 +428,9 @@ class TestObservablesIO(ReaDDyTestCase):
             def get_item(name, collection):
                 return next(x for x in collection if x["name"] == name)
 
-            mylabel_id = get_item("mylabel", reactions.values())["id"]
-            atob_id = get_item("A->B", reactions.values())["id"]
-            fusion_id = get_item("B+C->A", reactions.values())["id"]
+            mylabel_id = get_item(b"mylabel", reactions.values())["id"]
+            atob_id = get_item(b"A->B", reactions.values())["id"]
+            fusion_id = get_item(b"B+C->A", reactions.values())["id"]
 
             # counts of first time step, time is first index
             np.testing.assert_equal(data["counts/"+str(mylabel_id)][0], np.array([0]))

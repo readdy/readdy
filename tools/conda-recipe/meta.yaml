@@ -20,16 +20,14 @@ requirements:
     - bzip2
     - numpy
     - zlib 1.2.*
-    - clangxx # [osx]
-    - libcxx # [osx]
-    - vs2015_runtime  # [win]
 
   build:
-    - {{ compiler('c') }} # [not osx]
-    - {{ compiler('cxx') }} # [not osx]
-    - cmake # [not win]
+    - {{ compiler('c') }}
+    - {{ compiler('cxx') }}
+    - cmake
 
   run:
+    - intel-openmp # [osx]
     - python
     - numpy
     - h5py
@@ -37,10 +35,6 @@ requirements:
     - tqdm
     - hdf5
     - zlib 1.2.*
-    - libgcc # [linux]
-    - clangxx # [osx]
-    - libcxx # [osx]
-    - vs2015_runtime  # [win]
 
 test:
   imports:
