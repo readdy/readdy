@@ -28,10 +28,9 @@ jobs:
         shell: bash -l {0}
         run: |
           conda config --set always_yes true
-          conda update --all
-          conda install -q conda-build=3.16.2
-          conda clean --all -y
-          conda install conda-verify
+          conda config --add channels conda-forge
+          conda config --set quiet true
+          conda install conda-build conda-verify pip cmake
       - name: build readdy conda package
         shell: bash -l {0}
         run: conda build -c defaults -c conda-forge tools/conda-recipe --python=${{ matrix.python-version }}
