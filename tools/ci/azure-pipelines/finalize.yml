@@ -1,0 +1,3 @@
+- task: Bash@3
+  inputs:
+    filePath: '$(System.DefaultWorkingDirectory)/tools/github/upload_conda_package.sh'
