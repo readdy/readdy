@@ -28,3 +28,5 @@ jobs:
       - script: env
 
       - template: conda-setup+build.yml
+        env:
+          BINSTAR_TOKEN: $(BINSTAR_TOKEN)
