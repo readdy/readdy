@@ -1,7 +1,7 @@
 steps:
   - task: Bash@3
     inputs:
-      filePath: 'tools/github/upload_conda_package.sh'
+      filePath: 'readdy/tools/github/upload_conda_package.sh'
     env:
       BINSTAR_TOKEN: $(BINSTAR_TOKEN)
     displayName: Upload package
