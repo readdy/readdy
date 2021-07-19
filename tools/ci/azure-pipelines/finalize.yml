@@ -1,6 +1,4 @@
 steps:
-  - bash: echo $(pwd)
-  - bash: ls -lah
   - task: Bash@3
     inputs:
       filePath: 'tools/ci/github/upload_conda_package.sh'
