@@ -1,7 +1,7 @@
 steps:
   - task: Bash@3
     inputs:
-      filePath: '$(System.DefaultWorkingDirectory)/tools/github/upload_conda_package.sh'
+      filePath: 'tools/github/upload_conda_package.sh'
     env:
       BINSTAR_TOKEN: $(BINSTAR_TOKEN)
     displayName: Upload package
