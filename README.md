@@ -1,7 +1,6 @@
 # ![ReaDDy](https://readdy.github.io/assets/readdy_black_150px.png "ReaDDy logo") #
 
-![readdy_ci](https://github.com/readdy/readdy/workflows/readdy_ci/badge.svg)
-[![Build Status](https://travis-ci.org/readdy/readdy.svg?branch=master)](https://travis-ci.org/readdy/readdy)
+[![Build Status](https://dev.azure.com/clonker/readdy/_apis/build/status/readdy.readdy?branchName=master)](https://dev.azure.com/clonker/readdy/_build/latest?definitionId=5&branchName=master)
 
 ReaDDy (**Rea**ction **D**iffusion **Dy**namics) is an open source particle based reaction-diffusion simulator that can be configured and run via Python.
 Currently supported platforms are Mac and Linux.
