@@ -4,4 +4,6 @@ steps:
       filePath: 'tools/ci/github/upload_conda_package.sh'
     env:
       BINSTAR_TOKEN: $(BINSTAR_TOKEN)
+      BUILD_REASON: $(Build.Reason)
+      BUILD_SOURCE_VERSION: $(Build.SourceVersion)
     displayName: Upload package

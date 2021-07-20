@@ -62,8 +62,8 @@ echo "Found conda package file ${conda_package_file}"
 
 conda install anaconda-client -qy
 
-if [ "${Build.Reason}" == "IndividualCI" ]; then
-  output=$(git describe --tags --exact-match "${Build.SourceVersion}")
+if [ "${BUILD_REASON}" == "IndividualCI" ]; then
+  output=$(git describe --tags --exact-match "${BUILD_SOURCE_VERSION}")
   echo "Git describe output: ${output}"
   status=$?
   if [ ${status} == 128 ]; then
@@ -76,7 +76,7 @@ if [ "${Build.Reason}" == "IndividualCI" ]; then
     anaconda -t "${BINSTAR_TOKEN}" upload -u readdy "${conda_package_file}" > /dev/null 2>&1
   fi
 else
-  echo "Skipping upload because the build reason was ${Build.Reason} and not 'IndividualCI'"
+  echo "Skipping upload because the build reason was ${BUILD_REASON} and not 'IndividualCI'"
 fi
 
 echo "Uploaded. Done."
