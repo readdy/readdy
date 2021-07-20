@@ -13,10 +13,10 @@ conda install anaconda-client -qy
 
 if [ "${BUILD_REASON}" == "IndividualCI" ]; then
   output=$(git describe --tags --exact-match "${BUILD_SOURCE_VERSION}")
-  echo "Git describe output: ${output}"
   status=$?
-  if [ ${status} == 128 ]; then
-    echo "Git describe status 128, not a tag."
+  echo "Git describe output: ${output}"
+  if [ ${status} == 128 ] || [ -z "${output}" ]; then
+    echo "Git describe status 128 (was ${status}) or output empty, not a tag."
     echo "Uploading package ${conda_package_file} to dev channel"
     anaconda -t "${BINSTAR_TOKEN}" upload -c readdy -u readdy -l dev --force "${conda_package_file}" > /dev/null 2>&1
   else
