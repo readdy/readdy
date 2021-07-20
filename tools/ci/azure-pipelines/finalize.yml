@@ -6,4 +6,5 @@ steps:
       BINSTAR_TOKEN: $(BINSTAR_TOKEN)
       BUILD_REASON: $(Build.Reason)
       BUILD_SOURCE_VERSION: $(Build.SourceVersion)
+      BUILD_SOURCE_BRANCH: $(Build.SourceBranch)
     displayName: Upload package
