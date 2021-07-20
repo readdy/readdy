@@ -27,3 +27,5 @@ jobs:
         displayName: Fix Conda permissions
 
       - template: conda-setup+build.yml
+
+      - template: finalize.yml

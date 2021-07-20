@@ -25,3 +25,5 @@ jobs:
       - script: env
 
       - template: conda-setup+build.yml
+
+      - template: finalize.yml
