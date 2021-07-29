@@ -34,8 +34,7 @@
 
 project(runUnitTests_singlecpu)
 
-add_executable(${PROJECT_NAME} TestMain.cpp TestNeighborList.cpp TestReactions.cpp TestFirstPassageTimeIntegrator.cpp
-        ${READDY_INCLUDE_DIRS} ${TESTING_INCLUDE_DIR})
+add_executable(${PROJECT_NAME} TestMain.cpp TestNeighborList.cpp TestReactions.cpp ${READDY_INCLUDE_DIRS} ${TESTING_INCLUDE_DIR})
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${READDY_INCLUDE_DIRS} ${TESTING_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} PUBLIC readdy Catch2::Catch2)

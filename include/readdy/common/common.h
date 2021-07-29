@@ -45,6 +45,7 @@
 
 #pragma once
 
+#include <variant>
 #include "logging.h"
 #include "ReaDDyVec3.h"
 
@@ -61,6 +62,7 @@ using scalar = double;
 using Stride = std::uint32_t;
 using Vec3 = _internal::ReaDDyVec3<scalar>;
 using Matrix33 = _internal::ReaDDyMatrix33<scalar>;
+using DiffusionConstant = std::variant<scalar, Vec3>;
 using TimeStep = unsigned long;
 using ParticleTypeId = unsigned short;
 using ParticleId = unsigned long;

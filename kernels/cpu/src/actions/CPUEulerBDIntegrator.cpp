@@ -44,10 +44,7 @@
 
 #include <readdy/kernel/cpu/actions/CPUEulerBDIntegrator.h>
 
-namespace readdy {
-namespace kernel {
-namespace cpu {
-namespace actions {
+namespace readdy::kernel::cpu::actions {
 
 namespace rnd = readdy::model::rnd;
 
@@ -60,16 +57,27 @@ void CPUEulerBDIntegrator::perform() {
 
     const auto dt = timeStep();
 
-    auto worker = [&context, data, dt](std::size_t, std::size_t beginIdx, iter_t entry_begin, iter_t entry_end)  {
+    auto worker = [&context, dt](std::size_t, std::size_t beginIdx, iter_t entry_begin, iter_t entry_end)  {
         const auto kbt = context.kBT();
         std::size_t idx = beginIdx;
         const auto &box = context.boxSize().data();
         const auto &pbc = context.periodicBoundaryConditions().data();
         for (auto it = entry_begin; it != entry_end; ++it, ++idx) {
             if(!it->deactivated) {
-                const scalar D = context.particleTypes().diffusionConstantOf(it->type);
-                const auto randomDisplacement = std::sqrt(2. * D * dt) * rnd::normal3<readdy::scalar>(0, 1);
-                const auto deterministicDisplacement = it->force * dt * D / kbt;
+
+                const auto &D = context.particleTypes().diffusionConstantOf(it->type);
+                auto randomDisplacement = readdy::model::rnd::normal3<scalar>();
+                auto deterministicDisplacement = it->force * dt / kbt;
+                if (std::holds_alternative<scalar>(D)) {
+                    randomDisplacement *= sqrt(2. * std::get<scalar>(D) * dt);
+                    deterministicDisplacement *= std::get<0>(D);
+                } else {
+                    auto components = sqrt(2. * std::get<Vec3>(D) * dt);
+                    for(int d = 0; d < 3; ++d) {
+                        randomDisplacement[d] *= components[d];
+                        deterministicDisplacement *= std::get<Vec3>(D)[d];
+                    }
+                }
                 it->pos += randomDisplacement + deterministicDisplacement;
                 bcs::fixPosition(it->pos, box, pbc);
             }
@@ -85,7 +93,7 @@ void CPUEulerBDIntegrator::perform() {
         executables.reserve(kernel->getNThreads());
 
         auto granularity = kernel->getNThreads();
-        const std::size_t grainSize = size / granularity;
+        const decltype(it)::difference_type grainSize = size / granularity;
 
         std::size_t idx = 0;
         for (auto i = 0_z; i < granularity-1; ++i) {
@@ -106,7 +114,4 @@ void CPUEulerBDIntegrator::perform() {
 CPUEulerBDIntegrator::CPUEulerBDIntegrator(CPUKernel *kernel, scalar timeStep)
         : readdy::model::actions::EulerBDIntegrator(timeStep), kernel(kernel) {}
 
-}
-}
-}
 }

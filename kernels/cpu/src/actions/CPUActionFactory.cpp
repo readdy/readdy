@@ -68,10 +68,6 @@ std::unique_ptr<model::actions::EulerBDIntegrator> CPUActionFactory::eulerBDInte
     return {std::make_unique<CPUEulerBDIntegrator>(kernel, timeStep)};
 }
 
-std::unique_ptr<readdy::model::actions::MdgfrdIntegrator> CPUActionFactory::mdgfrdIntegrator(scalar timeStep) const {
-    throw std::invalid_argument("Mdgfrd integrator not implemented for CPU");
-}
-
 std::unique_ptr<readdy::model::actions::CalculateForces> CPUActionFactory::calculateForces() const {
     return {std::make_unique<CPUCalculateForces>(kernel)};
 }

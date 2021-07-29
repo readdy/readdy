@@ -62,7 +62,7 @@ public:
                 getActionName<CreateNeighborList>(), getActionName<UpdateNeighborList>(),
                 getActionName<ClearNeighborList>(), getActionName<reactions::UncontrolledApproximation>(),
                 getActionName<reactions::Gillespie>(), getActionName<reactions::DetailedBalance>(),
-                getActionName<top::EvaluateTopologyReactions>(), getActionName<MdgfrdIntegrator>(),
+                getActionName<top::EvaluateTopologyReactions>(),
                 getActionName<top::BreakBonds>()
         };
     }
@@ -97,8 +97,6 @@ public:
     }
 
     virtual std::unique_ptr<EulerBDIntegrator> eulerBDIntegrator(scalar timeStep) const = 0;
-
-    virtual std::unique_ptr<MdgfrdIntegrator> mdgfrdIntegrator(scalar timeStep) const = 0;
 
     virtual std::unique_ptr<readdy::model::actions::CalculateForces> calculateForces() const = 0;
 
