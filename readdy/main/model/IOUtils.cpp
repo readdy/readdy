@@ -92,6 +92,18 @@ void writeGeneralContextInformation(h5rd::Group &group, const Context &context) 
 void writeParticleTypeInformation(h5rd::Group &group, const Context &context) {
     auto h5types = getParticleTypeInfoType(group.parentFile());
 
+    auto convertDiffusionConstant = [](const DiffusionConstant &D) -> std::array<scalar, 3>{
+        std::array<scalar, 3> result {};
+        if (std::holds_alternative<scalar>(D)) {
+            std::fill(result.begin(), result.end(), std::get<scalar>(D));
+        } else {
+            result[0] = std::get<1>(D).x;
+            result[1] = std::get<1>(D).y;
+            result[2] = std::get<1>(D).z;
+        }
+        return result;
+    };
+
     const auto &types = context.particleTypes().typeMapping();
     std::vector<ParticleTypeInfo> typeInfoVec;
     for (const auto &p_type : types) {
@@ -99,7 +111,7 @@ void writeParticleTypeInformation(h5rd::Group &group, const Context &context) {
         typeInfoVec.push_back(ParticleTypeInfo{
                 .name = info.name.c_str(),
                 .type_id = info.typeId,
-                .diffusion_constant = info.diffusionConstant,
+                .diffusion_constant = convertDiffusionConstant(info.diffusionConstant),
                 .flavor = [](ParticleFlavor v) -> const char * {
                     if (v == particleflavor::NORMAL) return "NORMAL";
                     if (v == particleflavor::TOPOLOGY) return "TOPOLOGY";
@@ -193,11 +205,12 @@ void writeTopologyReactionInformation(h5rd::Group &group, const Context &context
 
 CompoundType getParticleTypeInfoType(h5rd::Object::ParentFileRef ref) {
     using namespace h5rd;
+    using Dtype = decltype(std::declval<ParticleTypeInfo>().diffusion_constant);
     NativeCompoundType nct = NativeCompoundTypeBuilder(sizeof(ParticleTypeInfo), std::move(ref))
             .insertString("name", offsetof(ParticleTypeInfo, name))
             .insertString("flavor", offsetof(ParticleTypeInfo, flavor))
             .insert<decltype(std::declval<ParticleTypeInfo>().type_id)>("type_id", offsetof(ParticleTypeInfo, type_id))
-            .insert<decltype(std::declval<ParticleTypeInfo>().diffusion_constant)>("diffusion_constant", offsetof(ParticleTypeInfo, diffusion_constant))
+            .insertArray<Dtype::value_type, std::tuple_size_v<Dtype>>("diffusion_constant", offsetof(ParticleTypeInfo, diffusion_constant))
             .build();
     return std::make_tuple(nct, STDCompoundType(nct));
 }

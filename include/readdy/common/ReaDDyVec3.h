@@ -336,6 +336,10 @@ public:
         return lhs;
     }
 
+    friend ReaDDyVec3 sqrt(const ReaDDyVec3 &v) {
+        return {sqrt(v.x), sqrt(v.y), sqrt(v.z)};
+    }
+
 };
 
 }

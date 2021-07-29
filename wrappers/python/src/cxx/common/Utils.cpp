@@ -193,7 +193,8 @@ convert_xyz(const std::string &h5name, const std::string &trajName, const std::s
     std::unordered_map<readdy::ParticleTypeId, std::size_t> maxCounts;
     for (const auto &type : types) {
         maxCounts[type.type_id] = 0;
-        readdy::log::debug("got type {} with id {} and D {}", type.name, type.type_id, type.diffusion_constant);
+        readdy::log::debug("got type {} with id {} and D ({}, {}, {})", type.name, type.type_id,
+                           type.diffusion_constant[0], type.diffusion_constant[1], type.diffusion_constant[2]);
     }
 
     auto traj = f->getSubgroup("readdy/trajectory/" + trajName);

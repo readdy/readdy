@@ -46,11 +46,7 @@
 #include <readdy/kernel/singlecpu/SCPUKernel.h>
 #include <readdy/common/boundary_condition_operations.h>
 
-namespace readdy {
-namespace kernel {
-namespace scpu {
-
-namespace actions {
+namespace readdy::kernel::scpu::actions {
 class SCPUEulerBDIntegrator : public readdy::model::actions::EulerBDIntegrator {
 
 public:
@@ -66,12 +62,20 @@ public:
         const auto pd = stateModel.getParticleData();
         for(auto& entry : *pd) {
             if(!entry.is_deactivated()) {
-                const scalar D = context.particleTypes().diffusionConstantOf(entry.type);
-                const auto randomDisplacement = std::sqrt(2. * D * _timeStep) *
-                                                (readdy::model::rnd::normal3<readdy::scalar>());
-                entry.pos += randomDisplacement;
-                const auto deterministicDisplacement = entry.force * _timeStep * D / kbt;
-                entry.pos += deterministicDisplacement;
+                const auto &D = context.particleTypes().diffusionConstantOf(entry.type);
+                auto randomDisplacement = readdy::model::rnd::normal3<scalar>();
+                auto deterministicDisplacement = entry.force * _timeStep / kbt;
+                if (std::holds_alternative<scalar>(D)) {
+                    randomDisplacement *= sqrt(2. * std::get<0>(D) * _timeStep);
+                    deterministicDisplacement *= std::get<0>(D);
+                } else {
+                    auto components = sqrt(2. * std::get<1>(D) * _timeStep);
+                    for(int d = 0; d < 3; ++d) {
+                        randomDisplacement[d] *= components[d];
+                        deterministicDisplacement *= std::get<1>(D)[d];
+                    }
+                }
+                entry.pos += randomDisplacement + deterministicDisplacement;
                 bcs::fixPosition(entry.pos, box, pbc);
             }
         }
@@ -80,7 +84,4 @@ public:
 private:
     SCPUKernel *kernel;
 };
-}
-}
-}
 }

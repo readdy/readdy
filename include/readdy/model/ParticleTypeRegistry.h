@@ -49,6 +49,7 @@
 
 #pragma once
 
+#include <variant>
 #include <readdy/common/common.h>
 
 #include "Particle.h"
@@ -77,11 +78,11 @@ inline static std::string particleFlavorToString(ParticleFlavor flavor) {
 
 struct ParticleTypeInfo {
     std::string name;
-    scalar diffusionConstant;
+    DiffusionConstant diffusionConstant;
     ParticleFlavor flavor;
     ParticleTypeId typeId;
 
-    ParticleTypeInfo(std::string name, scalar diffusionConstant,
+    ParticleTypeInfo(std::string name, DiffusionConstant diffusionConstant,
                      ParticleFlavor flavor, ParticleTypeId typeId);
 };
 
@@ -110,10 +111,25 @@ public:
         return idOf(name);
     }
 
-    void add(const std::string &name, scalar diffusionConst, ParticleFlavor flavor = particleflavor::NORMAL);
+    void add(const std::string &name, scalar diffusionConst, ParticleFlavor flavor = particleflavor::NORMAL) {
+        add(name, DiffusionConstant{diffusionConst}, flavor);
+    }
+
+    void add(const std::string &name, Vec3 diffusionConst, ParticleFlavor flavor = particleflavor::NORMAL) {
+        add(name, DiffusionConstant{diffusionConst}, flavor);
+    }
+
+    void add(const std::string &name, DiffusionConstant diffusionConst, ParticleFlavor flavor = particleflavor::NORMAL);
+
+    void addTopologyType(const std::string &name, DiffusionConstant diffusionConst) {
+        add(name, diffusionConst, particleflavor::TOPOLOGY);
+    }
 
     void addTopologyType(const std::string &name, scalar diffusionConst) {
-        add(name, diffusionConst, particleflavor::TOPOLOGY);
+        addTopologyType(name, DiffusionConstant{diffusionConst});
+    }
+    void addTopologyType(const std::string &name, Vec3 diffusionConst) {
+        add(name, DiffusionConstant{diffusionConst});
     }
 
     const ParticleTypeInfo &infoOf(const std::string &name) const {
@@ -124,19 +140,19 @@ public:
         return particle_info_.at(type);
     }
 
-    scalar diffusionConstantOf(const std::string &particleType) const {
+    DiffusionConstant diffusionConstantOf(const std::string &particleType) const {
         return diffusionConstantOf(idOf(particleType));
     }
 
-    scalar &diffusionConstantOf(const std::string &particleType) {
+    DiffusionConstant &diffusionConstantOf(const std::string &particleType) {
         return diffusionConstantOf(idOf(particleType));
     }
 
-    scalar diffusionConstantOf(ParticleTypeId particleType) const {
+    DiffusionConstant diffusionConstantOf(ParticleTypeId particleType) const {
         return particle_info_.at(particleType).diffusionConstant;
     }
 
-    scalar &diffusionConstantOf(ParticleTypeId particleType) {
+    DiffusionConstant &diffusionConstantOf(ParticleTypeId particleType) {
         return particle_info_.at(particleType).diffusionConstant;
     }
 
