@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e -u
+
 conda_package_file=$(conda build tools/conda-recipe --python="${CONDA_PY}" --output | grep '.tar.bz2' | tail -1)
 echo "Found conda package file ${conda_package_file}"
 

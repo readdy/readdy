@@ -51,8 +51,7 @@
 #include <spdlog/sinks/base_sink.h>
 #include <iostream>
 
-namespace readdy {
-namespace rpy {
+namespace readdy::rpy {
 
 class pysink : public spdlog::sinks::base_sink<std::mutex> {
 
@@ -63,7 +62,7 @@ protected:
     void sink_it_(const spdlog::details::log_msg &msg) override {
         if(should_log(msg.level)) {
 
-            fmt::memory_buffer formatted;
+            spdlog::memory_buf_t formatted;
             formatter_->format(msg, formatted);
             auto message = fmt::to_string(formatted);
             {
@@ -100,11 +99,11 @@ protected:
                     break;
                 }
                 case spdlog::level::off:
+                case spdlog::level::n_levels:
                     break;
             }
         }
     }
 };
 
-}
 }
