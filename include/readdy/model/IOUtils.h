@@ -89,10 +89,6 @@ struct StructuralTopologyReactionInfo {
 
 using CompoundType = std::tuple<h5rd::NativeCompoundType, h5rd::STDCompoundType>;
 
-CompoundType getReactionInfoMemoryType(h5rd::Object::ParentFileRef ref);
-
-CompoundType getParticleTypeInfoType(h5rd::Object::ParentFileRef ref);
-
 CompoundType getTopologyTypeInfoType(h5rd::Object::ParentFileRef ref);
 
 CompoundType getSpatialTopologyReactionInfoType(h5rd::Object::ParentFileRef ref);
@@ -111,4 +107,6 @@ void writeTopologyTypeInformation(h5rd::Group &group, const Context &context);
 
 void writeTopologyReactionInformation(h5rd::Group &group, const Context &context);
 
+std::vector<ParticleTypeInfo> readParticleTypeInfo(h5rd::File* file);
+std::vector<ReactionInfo> readReactionInfo(h5rd::File* file);
 }
