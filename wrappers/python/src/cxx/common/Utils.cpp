@@ -75,15 +75,8 @@ py::tuple convert_readdy_viewer(const std::string &h5name, const std::string &tr
 
     auto f = h5rd::File::open(h5name, h5rd::File::Flag::READ_ONLY);
 
-    auto particleInfoH5Type = readdy::model::ioutils::getParticleTypeInfoType(f->ref());
-
     // get particle types from config
-    std::vector<readdy::model::ioutils::ParticleTypeInfo> types;
-    {
-        auto config = f->getSubgroup("readdy/config");
-        config.read("particle_types", types, &std::get<0>(particleInfoH5Type), &std::get<1>(particleInfoH5Type));
-    }
-
+    auto types = readdy::model::ioutils::readParticleTypeInfo(f.get());
     auto traj = f->getSubgroup("readdy/trajectory/" + trajName);
 
     // limits
@@ -180,15 +173,7 @@ convert_xyz(const std::string &h5name, const std::string &trajName, const std::s
 
     auto f = h5rd::File::open(h5name, h5rd::File::Flag::READ_ONLY);
 
-    auto particleInfoH5Type = readdy::model::ioutils::getParticleTypeInfoType(f->ref());
-
-    // get particle types from config
-    std::vector<readdy::model::ioutils::ParticleTypeInfo> types;
-    {
-        auto config = f->getSubgroup("readdy/config");
-        config.read("particle_types", types, &std::get<0>(particleInfoH5Type), &std::get<1>(particleInfoH5Type));
-    }
-
+    auto types = readdy::model::ioutils::readParticleTypeInfo(f.get());
     // map from type name to max number of particles in traj
     std::unordered_map<readdy::ParticleTypeId, std::size_t> maxCounts;
     for (const auto &type : types) {
@@ -384,15 +369,10 @@ read_reactions_obs(const std::string &filename, const std::string &name) {
 
     auto f = h5rd::File::open(filename, h5rd::File::Flag::READ_ONLY);
 
-    auto reactionInfoH5Type = readdy::model::ioutils::getReactionInfoMemoryType(f->ref());
-
     // get reaction info from config
     std::unordered_map<readdy::ReactionId, readdy::model::ioutils::ReactionInfo> reactionsMap;
     {
-        std::vector<readdy::model::ioutils::ReactionInfo> reactionInfo;
-        auto config = f->getSubgroup("readdy/config/");
-        config.read("registered_reactions", reactionInfo, &std::get<0>(reactionInfoH5Type),
-                    &std::get<1>(reactionInfoH5Type));
+        auto reactionInfo = readdy::model::ioutils::readReactionInfo(f.get());
         for (const auto &info : reactionInfo) {
             reactionsMap[info.id] = info;
         }
@@ -594,14 +574,8 @@ std::vector<std::vector<TrajectoryParticle>> read_trajectory(const std::string &
 
     auto f = h5rd::File::open(filename, h5rd::File::Flag::READ_ONLY);
 
-    auto particleInfoH5Type = readdy::model::ioutils::getParticleTypeInfoType(f->ref());
+    auto types = readdy::model::ioutils::readParticleTypeInfo(f.get());
 
-    // get particle types from config
-    std::vector<readdy::model::ioutils::ParticleTypeInfo> types;
-    {
-        auto config = f->getSubgroup("readdy/config");
-        config.read("particle_types", types, &std::get<0>(particleInfoH5Type), &std::get<1>(particleInfoH5Type));
-    }
     std::unordered_map<std::size_t, std::string> typeMapping;
     for (const auto &type : types) {
         typeMapping[type.type_id] = std::string(type.name);
