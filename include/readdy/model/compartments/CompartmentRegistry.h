@@ -58,6 +58,17 @@ public:
 
     using CompartmentVector = std::vector<std::shared_ptr<readdy::model::compartments::Compartment>>;
 
+    Compartment::id_type add(const std::shared_ptr<Compartment> &compartment);
+
+    Compartment::id_type addCapsule(const Compartment::conversion_map &conversions, const std::string &uniqueName,
+                                    Vec3 center, Vec3 direction, scalar length, scalar radius, bool inside);
+
+    Compartment::id_type addCapsule(const Compartment::label_conversion_map &conversions, const std::string &uniqueName,
+                                    Vec3 center, Vec3 direction, scalar length, scalar radius, bool inside) {
+        return addCapsule(_internal::util::transformTypesMap(conversions, *_types), uniqueName, center,
+                          direction, length, radius, inside);
+    }
+
     Compartment::id_type addSphere(const Compartment::conversion_map &conversions, const std::string &uniqueName,
                                    const Vec3 &origin, scalar radius, bool largerOrLess);
 

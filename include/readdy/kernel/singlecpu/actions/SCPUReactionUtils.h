@@ -59,8 +59,6 @@ template<typename Reaction>
 void performReaction(
         scpu_data &data, scpu_data::EntryIndex idx1, scpu_data::EntryIndex idx2, scpu_data::NewEntries &newEntries,
         std::vector<scpu_data::EntryIndex> &decayedEntries, Reaction *reaction, const readdy::model::Context& context, reaction_record* record) {
-    //const auto& fixPos = context.fixPositionFun();
-    //const auto& shortestDifferenceFun = context.shortestDifferenceFun();
     const auto &box = context.boxSize().data();
     const auto &pbc = context.periodicBoundaryConditions().data();
     auto& entry1 = data.entry_at(idx1);

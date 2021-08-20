@@ -51,10 +51,10 @@ namespace readdy::model::compartments {
 
 class Sphere : public Compartment {
 public:
-    Sphere(const Compartment::conversion_map &conversions, const std::string &uniqueName, const Vec3 &origin,
-           const scalar radius, const bool largerOrLess);
+    Sphere(const conversion_map &conversions, const std::string &uniqueName, const Vec3 &origin,
+           scalar radius, bool largerOrLess);
 
-    virtual const bool isContained(const Vec3 &position) const override {
+    bool isContained(const Vec3 &position) const override {
         const auto delta = position - origin;
         const auto distanceSquared = delta * delta;
         if (largerOrLess) {
@@ -73,10 +73,10 @@ protected:
 
 class Plane : public Compartment {
 public:
-    Plane(const Compartment::conversion_map &conversions, const std::string &uniqueName, const Vec3 &normalCoefficients,
+    Plane(const conversion_map &conversions, const std::string &uniqueName, const Vec3 &normalCoefficients,
           scalar distance, bool largerOrLess);
 
-    const bool isContained(const Vec3 &position) const override {
+    bool isContained(const Vec3 &position) const override {
         const scalar distanceFromPlane = position * normalCoefficients - distanceFromOrigin;
         if (largerOrLess) {
             return distanceFromPlane > 0;
@@ -90,13 +90,67 @@ protected:
     const bool largerOrLess;
 };
 
+class Capsule : public Compartment {
+public:
+    Capsule(const conversion_map &conversions, const std::string &uniqueName, Vec3 center, Vec3 direction,
+            scalar length, scalar radius, bool inside)
+        : Compartment(conversions, "Capsule", uniqueName), _center(center),
+          _direction(direction / direction.norm()), _radius(radius), _length(length), _inside(inside) {
+
+    }
+
+    template<typename T>
+    auto differentSign(T t1, T t2) const {
+        return (t1 >= 0 && t2 < 0) || (t1 < 0 && t2 >= 0);
+    }
+
+    auto closestCircleCenter(const Vec3 &position) const {
+        // we define the line x(l) = x_0 + l*v, where v is the normalized direction vector
+        // then for given position the lambda is (x_0 - p)*v*v:
+        auto v = (((position - _center) * _direction) * _direction);
+        auto lambda = v.norm();
+        // check if any of the signs in v differ from direction:
+        if (differentSign(v.x, _direction.x) || differentSign(v.y, _direction.y) || differentSign(v.z, _direction.z)) {
+            lambda = -lambda;
+        }
+        // clamp lambda to half length of capsule
+        lambda = std::clamp(lambda, -_length / 2, _length / 2);
+        // now we obtain point corresponding to lambda
+        auto circleCenter = _center + lambda * _direction;
+        return circleCenter;
+    }
+
+    auto distToCapsuleSquared(const Vec3 &position) const {
+        auto cc = closestCircleCenter(position);
+        // and check if point is inside circle
+        auto distToCCSquared = (cc - position).normSquared();
+        return distToCCSquared;
+    }
+
+    bool isContained(const Vec3 &position) const override {
+        auto insideSphere = distToCapsuleSquared(position) <= _radius*_radius;
+        return _inside == insideSphere;
+    }
+
+    const auto &center() const { return _center; }
+    const auto &direction() const { return _direction; }
+    auto radius() const { return _radius; }
+    auto length() const { return _length; }
+    auto inside() const { return _inside; }
+
+protected:
+    Vec3 _center, _direction;
+    scalar _radius, _length;
+    bool _inside;
+};
+
 template<typename T>
-const std::string getCompartmentTypeName(typename std::enable_if<std::is_base_of<Sphere, T>::value>::type * = 0) {
+std::string getCompartmentTypeName(typename std::enable_if<std::is_base_of<Sphere, T>::value>::type * = 0) {
     return "Sphere";
 }
 
 template<typename T>
-const std::string getCompartmentTypeName(typename std::enable_if<std::is_base_of<Plane, T>::value>::type * = 0) {
+std::string getCompartmentTypeName(typename std::enable_if<std::is_base_of<Plane, T>::value>::type * = 0) {
     return "Plane";
 }
 
