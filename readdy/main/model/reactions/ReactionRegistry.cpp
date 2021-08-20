@@ -93,25 +93,26 @@ std::string ReactionRegistry::describe() const {
 
                 switch (reaction->type()) {
                     case ReactionType::Conversion: {
-                        description += fmt::format("     * Conversion {} -> {} with a rate of {}\n",
-                                                   nameOf(educts[0]), nameOf(products[0]), reaction->rate());
+                        description += fmt::format("     * Conversion \"{}\": {} -> {} with a rate of {}\n",
+                                                   reaction->name(), nameOf(educts[0]), nameOf(products[0]),
+                                                   reaction->rate());
                         break;
                     }
                     case ReactionType::Fission: {
-                        description += fmt::format("     * Fission {} -> {} + {} with a rate of {}, a product distance of {}, and weights {} and {}\n",
-                                                   nameOf(educts[0]), nameOf(products[0]), nameOf(products[1]),
-                                                   reaction->rate(), reaction->productDistance(),
+                        description += fmt::format("     * Fission \"{}\": {} -> {} + {} with a rate of {}, a product distance of {}, and weights {} and {}\n",
+                                                   reaction->name(), nameOf(educts[0]), nameOf(products[0]),
+                                                   nameOf(products[1]), reaction->rate(), reaction->productDistance(),
                                                    reaction->weight1(), reaction->weight2());
                         break;
                     }
                     case ReactionType::Decay: {
-                        description += fmt::format("     * Decay {} -> ø with a rate of {}\n",
-                                                   nameOf(educts[0]), reaction->rate());
+                        description += fmt::format("     * Decay \"{}\": {} -> ø with a rate of {}\n",
+                                                   reaction->name(), nameOf(educts[0]), reaction->rate());
                         break;
                     }
                     default: {
-                        throw std::logic_error(fmt::format("unimolecular reaction in registry that was of type {}", 
-                                                           reaction->type()));
+                        throw std::logic_error(fmt::format("unknown unimolecular reaction in registry that "
+                                                           "was of type {}", reaction->type()));
                     }
                 }
             }
@@ -127,23 +128,23 @@ std::string ReactionRegistry::describe() const {
                 switch(reaction->type()) {
                     case ReactionType::Enzymatic: {
                         auto enzymatic = dynamic_cast<const Enzymatic*>(reaction);
-                        description += fmt::format("     * Enzymatic {} + {} -> {} + {} with a rate of {} and an educt distance of {}\n",
-                                                   nameOf(enzymatic->getFrom()), nameOf(enzymatic->getCatalyst()),
+                        description += fmt::format("     * Enzymatic \"{}\": {} + {} -> {} + {} with a rate of {} and an educt distance of {}\n",
+                                                   enzymatic->name(), nameOf(enzymatic->getFrom()), nameOf(enzymatic->getCatalyst()),
                                                    nameOf(enzymatic->getTo()), nameOf(enzymatic->getCatalyst()),
                                                    enzymatic->rate(), enzymatic->eductDistance());
                         break;
                     }
                     case ReactionType::Fusion: {
                         auto fusion = dynamic_cast<const Fusion*>(reaction);
-                        description += fmt::format("     * Fusion {} + {} -> {} with a rate of {}, an educt distance of {}, and weights {} and {}\n",
-                                                   nameOf(fusion->getFrom1()), nameOf(fusion->getFrom2()),
+                        description += fmt::format("     * Fusion \"{}\": {} + {} -> {} with a rate of {}, an educt distance of {}, and weights {} and {}\n",
+                                                   fusion->name(), nameOf(fusion->getFrom1()), nameOf(fusion->getFrom2()),
                                                    nameOf(fusion->getTo()), fusion->rate(), fusion->eductDistance(),
                                                    fusion->weight1(), fusion->weight2());
                         break;
                     }
                     default: {
-                        throw std::logic_error(fmt::format("bimolecular reaction in registry that was of type {}",
-                                                           reaction->type()));
+                        throw std::logic_error(fmt::format("unknown bimolecular reaction in registry that "
+                                                           "was of type {}", reaction->type()));
                     }
                 }
             }

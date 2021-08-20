@@ -62,7 +62,7 @@ public:
             : typeName(std::move(typeName)), uniqueName(std::move(uniqueName)),
               conversions(std::move(conversions)), _id(counter++) {}
 
-    virtual const bool isContained(const Vec3 &position) const = 0;
+    virtual bool isContained(const Vec3 &position) const = 0;
 
     const conversion_map &getConversions() const {
         return conversions;

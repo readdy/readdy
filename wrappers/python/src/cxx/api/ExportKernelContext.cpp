@@ -210,6 +210,11 @@ void exportKernelContext(py::module &module) {
                                  const std::string &uniqueName,
                                  const Vec3 &normalCoefficients, scalar distance, bool largerOrLess) {
                 return self.addPlane(conversions, uniqueName, normalCoefficients, distance, largerOrLess);
+            })
+            .def("add_capsule", [](CompartmentRegistry &self, const readdy::model::compartments::Compartment::label_conversion_map &conversions,
+                    const std::string &uniqueName, Vec3 center, Vec3 direction,
+                    scalar length, scalar radius, bool inside) {
+                return self.addCapsule(conversions, uniqueName, center, direction, length, radius, inside);
             });
 
     py::class_<KernelContext>(module, "Context")

@@ -51,10 +51,10 @@ namespace readdy::model::compartments {
 
 class Sphere : public Compartment {
 public:
-    Sphere(const Compartment::conversion_map &conversions, const std::string &uniqueName, const Vec3 &origin,
-           const scalar radius, const bool largerOrLess);
+    Sphere(const conversion_map &conversions, const std::string &uniqueName, const Vec3 &origin,
+           scalar radius, bool largerOrLess);
 
-    virtual const bool isContained(const Vec3 &position) const override {
+    bool isContained(const Vec3 &position) const override {
         const auto delta = position - origin;
         const auto distanceSquared = delta * delta;
         if (largerOrLess) {
@@ -73,10 +73,10 @@ protected:
 
 class Plane : public Compartment {
 public:
-    Plane(const Compartment::conversion_map &conversions, const std::string &uniqueName, const Vec3 &normalCoefficients,
+    Plane(const conversion_map &conversions, const std::string &uniqueName, const Vec3 &normalCoefficients,
           scalar distance, bool largerOrLess);
 
-    const bool isContained(const Vec3 &position) const override {
+    bool isContained(const Vec3 &position) const override {
         const scalar distanceFromPlane = position * normalCoefficients - distanceFromOrigin;
         if (largerOrLess) {
             return distanceFromPlane > 0;
@@ -90,13 +90,52 @@ protected:
     const bool largerOrLess;
 };
 
+class Capsule : public Compartment {
+public:
+    Capsule(const conversion_map &conversions, const std::string &uniqueName, Vec3 center, Vec3 direction,
+            scalar length, scalar radius, bool inside)
+        : Compartment(conversions, "Capsule", uniqueName), center(center),
+          direction(direction / direction.norm()), radius(radius), length(length), inside(inside) {
+
+    }
+
+    template<typename T>
+    auto differentSign(T t1, T t2) const {
+        return (t1 >= 0 && t2 < 0) || (t1 < 0 && t2 >= 0);
+    }
+
+    bool isContained(const Vec3 &position) const override {
+        // we define the line x(l) = x_0 + l*v, where v is the normalized direction vector
+        // then for given position the lambda is (x_0 - p)*v*v:
+        auto v = (((position - center) * direction) * direction);
+        auto lambda = v.norm();
+        // check if any of the signs in v differ from direction:
+        if (differentSign(v.x, direction.x) || differentSign(v.y, direction.y) || differentSign(v.z, direction.z)) {
+            lambda = -lambda;
+        }
+        // clamp lambda to half length of capsule
+        lambda = std::clamp(lambda, -length / 2, length / 2);
+        // now we obtain point corresponding to lambda
+        auto circleCenter = center + lambda * direction;
+        // and check if point is inside circle
+        auto distToCCSquared = (circleCenter - position).normSquared();
+        auto insideSphere = distToCCSquared <= radius*radius;
+        return inside == insideSphere;
+    }
+
+protected:
+    Vec3 center, direction;
+    scalar radius, length;
+    bool inside;
+};
+
 template<typename T>
-const std::string getCompartmentTypeName(typename std::enable_if<std::is_base_of<Sphere, T>::value>::type * = 0) {
+std::string getCompartmentTypeName(typename std::enable_if<std::is_base_of<Sphere, T>::value>::type * = 0) {
     return "Sphere";
 }
 
 template<typename T>
-const std::string getCompartmentTypeName(typename std::enable_if<std::is_base_of<Plane, T>::value>::type * = 0) {
+std::string getCompartmentTypeName(typename std::enable_if<std::is_base_of<Plane, T>::value>::type * = 0) {
     return "Plane";
 }
 

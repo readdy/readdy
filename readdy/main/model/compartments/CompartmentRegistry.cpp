@@ -67,6 +67,19 @@ CompartmentRegistry::addPlane(const Compartment::conversion_map &conversions, co
     return _compartments.back()->getId();
 }
 
+Compartment::id_type CompartmentRegistry::addCapsule(
+        const Compartment::conversion_map &conversions, const std::string &uniqueName,
+        Vec3 center, Vec3 direction, scalar length, scalar radius, bool inside
+) {
+    _compartments.emplace_back(std::make_shared<Capsule>(conversions, uniqueName, center, direction, length, radius, inside));
+    return _compartments.back()->getId();
+}
+
+Compartment::id_type CompartmentRegistry::add(const std::shared_ptr<Compartment> &compartment) {
+    _compartments.push_back(compartment);
+    return _compartments.back()->getId();
+}
+
 }
 }
 }

@@ -92,17 +92,17 @@ public:
 
     virtual ~Reaction() = default;
 
-    virtual const ReactionType type() const = 0;
+    [[nodiscard]] virtual const ReactionType type() const = 0;
 
-    const std::string &name() const {
+    [[nodiscard]] const std::string &name() const {
         return _name;
     }
 
-    const ReactionId id() const {
+    [[nodiscard]] ReactionId id() const {
         return _id;
     }
 
-    const scalar rate() const {
+    [[nodiscard]] scalar rate() const {
         return _rate;
     }
 
@@ -110,23 +110,23 @@ public:
         return _rate;
     }
 
-    std::uint8_t nEducts() const {
+    [[nodiscard]] std::uint8_t nEducts() const {
         return _nEducts;
     }
 
-    std::uint8_t nProducts() const {
+    [[nodiscard]] std::uint8_t nProducts() const {
         return _nProducts;
     }
 
-    const scalar eductDistance() const {
+    [[nodiscard]] scalar eductDistance() const {
         return _eductDistance;
     }
 
-    const scalar eductDistanceSquared() const {
+    [[nodiscard]] scalar eductDistanceSquared() const {
         return _eductDistanceSquared;
     }
 
-    const scalar productDistance() const {
+    [[nodiscard]] scalar productDistance() const {
         return _productDistance;
     }
 
@@ -147,19 +147,19 @@ public:
         return os;
     }
 
-    const std::array<ParticleTypeId, 2> &educts() const {
+    [[nodiscard]] const std::array<ParticleTypeId, 2> &educts() const {
         return _educts;
     };
 
-    const std::array<ParticleTypeId, 2> &products() const {
+    [[nodiscard]] const std::array<ParticleTypeId, 2> &products() const {
         return _products;
     };
 
-    const scalar weight1() const {
+    [[nodiscard]] scalar weight1() const {
         return _weight1;
     }
 
-    const scalar weight2() const {
+    [[nodiscard]] scalar weight2() const {
         return _weight2;
     }
 
