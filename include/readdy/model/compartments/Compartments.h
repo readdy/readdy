@@ -94,8 +94,8 @@ class Capsule : public Compartment {
 public:
     Capsule(const conversion_map &conversions, const std::string &uniqueName, Vec3 center, Vec3 direction,
             scalar length, scalar radius, bool inside)
-        : Compartment(conversions, "Capsule", uniqueName), center(center),
-          direction(direction / direction.norm()), radius(radius), length(length), inside(inside) {
+        : Compartment(conversions, "Capsule", uniqueName), _center(center),
+          _direction(direction / direction.norm()), _radius(radius), _length(length), _inside(inside) {
 
     }
 
@@ -104,29 +104,44 @@ public:
         return (t1 >= 0 && t2 < 0) || (t1 < 0 && t2 >= 0);
     }
 
-    bool isContained(const Vec3 &position) const override {
+    auto closestCircleCenter(const Vec3 &position) const {
         // we define the line x(l) = x_0 + l*v, where v is the normalized direction vector
         // then for given position the lambda is (x_0 - p)*v*v:
-        auto v = (((position - center) * direction) * direction);
+        auto v = (((position - _center) * _direction) * _direction);
         auto lambda = v.norm();
         // check if any of the signs in v differ from direction:
-        if (differentSign(v.x, direction.x) || differentSign(v.y, direction.y) || differentSign(v.z, direction.z)) {
+        if (differentSign(v.x, _direction.x) || differentSign(v.y, _direction.y) || differentSign(v.z, _direction.z)) {
             lambda = -lambda;
         }
         // clamp lambda to half length of capsule
-        lambda = std::clamp(lambda, -length / 2, length / 2);
+        lambda = std::clamp(lambda, -_length / 2, _length / 2);
         // now we obtain point corresponding to lambda
-        auto circleCenter = center + lambda * direction;
-        // and check if point is inside circle
-        auto distToCCSquared = (circleCenter - position).normSquared();
-        auto insideSphere = distToCCSquared <= radius*radius;
-        return inside == insideSphere;
+        auto circleCenter = _center + lambda * _direction;
+        return circleCenter;
     }
 
+    auto distToCapsuleSquared(const Vec3 &position) const {
+        auto cc = closestCircleCenter(position);
+        // and check if point is inside circle
+        auto distToCCSquared = (cc - position).normSquared();
+        return distToCCSquared;
+    }
+
+    bool isContained(const Vec3 &position) const override {
+        auto insideSphere = distToCapsuleSquared(position) <= _radius*_radius;
+        return _inside == insideSphere;
+    }
+
+    const auto &center() const { return _center; }
+    const auto &direction() const { return _direction; }
+    auto radius() const { return _radius; }
+    auto length() const { return _length; }
+    auto inside() const { return _inside; }
+
 protected:
-    Vec3 center, direction;
-    scalar radius, length;
-    bool inside;
+    Vec3 _center, _direction;
+    scalar _radius, _length;
+    bool _inside;
 };
 
 template<typename T>

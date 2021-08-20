@@ -131,6 +131,10 @@ void exportKernelContext(py::module &module) {
                     scalar radius, bool inclusion) {
                      return self.addSphere(particleType, forceConstant, origin, radius, inclusion);
                  })
+             .def("add_capsule", [](PotentialRegistry &self, const std::string &particleType, scalar forceConstant,
+                                    Vec3 center, Vec3 direction, scalar length, scalar radius) {
+                 self.addCapsule(particleType, forceConstant, center, direction, length, radius);
+             })
             .def("add_spherical_barrier",
                  [](PotentialRegistry &self, const std::string &particleType, scalar height, scalar width,
                     const Vec3 &origin, scalar radius) {

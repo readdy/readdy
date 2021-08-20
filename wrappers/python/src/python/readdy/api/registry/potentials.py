@@ -164,6 +164,14 @@ class PotentialRegistry(object):
         assert radius > 0, "radius has to be positive"
         self._registry.add_sphere(particle_type, force_constant, _v3_of(origin), radius, inclusion)
 
+    def add_capsule(self, particle_type, force_constant, center, direction, length, radius):
+        force_constant = self._units.convert(force_constant, self._units.force_constant_unit)
+        center = self._units.convert(center, self._units.length_unit)
+        direction = self._units.convert(direction, self._units.length_unit)
+        length = self._units.convert(length, self._units.length_unit)
+        radius = self._units.convert(radius, self._units.length_unit)
+        self._registry.add_capsule(particle_type, force_constant, _v3_of(center), _v3_of(direction), length, radius)
+
     def add_spherical_barrier(self, particle_type, height, width, origin, radius):
         """
         A potential that forms a concentric barrier at a certain radius around a given origin. It is given a height

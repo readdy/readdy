@@ -48,6 +48,7 @@
 #pragma once
 
 #include <ostream>
+#include <readdy/model/compartments/Compartments.h>
 #include "PotentialOrder1.h"
 
 namespace readdy::model::potentials {
@@ -145,17 +146,58 @@ public:
         }
     }
 
-    std::string describe() const override {
+    [[nodiscard]] std::string describe() const override {
         std::string inOrOut = inclusion ? "inclusion" : "exclusion";
         return fmt::format("Spherical {} potential with origin={}, radius={}, and Force constant k={}",
                            inOrOut, origin, radius, forceConstant);
     }
 
-    std::string type() const override;
+    [[nodiscard]] std::string type() const override;
 
 protected:
     const Vec3 origin;
     const scalar radius, forceConstant;
+};
+
+class Capsule : public PotentialOrder1 {
+    using super = PotentialOrder1;
+public:
+
+    Capsule(ParticleTypeId particleType, scalar forceConstant, Vec3 center, Vec3 direction,
+            scalar length, scalar radius) : super(particleType), capsuleCompartment({}, "", center, direction, length, radius, true),
+            forceConstant(forceConstant) {
+    }
+
+    scalar calculateEnergy(const Vec3 &position) const override {
+        scalar distanceFromOrigin = std::sqrt(capsuleCompartment.distToCapsuleSquared(position));
+        scalar distanceFromSphere = distanceFromOrigin - capsuleCompartment.radius();
+        if (distanceFromSphere > 0) {
+            return static_cast<scalar>(0.5) * forceConstant * distanceFromSphere * distanceFromSphere;
+        }
+        return static_cast<scalar>(0.);
+    }
+
+    void calculateForce(Vec3 &force, const Vec3 &position) const override {
+        auto cc = capsuleCompartment.closestCircleCenter(position);
+        auto difference = position - cc;
+        scalar distanceFromOrigin = difference.norm();
+        scalar distanceFromSphere = distanceFromOrigin - capsuleCompartment.radius();
+        if (distanceFromSphere > 0) {
+            force += -1 * forceConstant * distanceFromSphere * difference / distanceFromOrigin;
+        }
+    }
+
+    [[nodiscard]] std::string describe() const override {
+        return fmt::format("Capsule potential with origin={}, direction={}, length={}, radius={}, and force "
+                           "constant k={}", capsuleCompartment.center(), capsuleCompartment.direction(),
+                           capsuleCompartment.length(), capsuleCompartment.radius(), forceConstant);
+    }
+
+    [[nodiscard]] std::string type() const override { return "Capsule"; };
+
+private:
+    model::compartments::Capsule capsuleCompartment;
+    scalar forceConstant;
 };
 
 /**

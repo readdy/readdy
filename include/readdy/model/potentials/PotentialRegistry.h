@@ -261,6 +261,18 @@ public:
         _registerO1(pots.back().get());
     }
 
+    void addCapsule(ParticleTypeId particleType, scalar forceConstant, Vec3 center, Vec3 direction,
+                    scalar length, scalar radius) {
+        auto &pots = _ownPotentialsO1[particleType];
+        pots.emplace_back(std::make_shared<Capsule>(particleType, forceConstant, center, direction, length, radius));
+        _registerO1(pots.back().get());
+    }
+
+    void addCapsule(const std::string &particleType, scalar forceConstant, Vec3 center, Vec3 direction,
+                    scalar length, scalar radius) {
+        addCapsule(_types->idOf(particleType), forceConstant, center, direction, length, radius);
+    }
+
     /**
     * Register a spherical barrier potential. For positive height it represents a concentric barrier around the point origin
     * with a certain radius. The potential consists of multiple harmonic snippets.
