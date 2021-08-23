@@ -47,6 +47,18 @@ class PotentialRegistry(object):
         self._types = context_type_registry
         self._units = units
 
+    def add_harmonic_geometry(self, particle_type, force_constant, geometry, inclusion):
+        r"""
+        Adds harmonic inclusion or exclusion based on geometry (accessible via `system.geometry`).
+
+        :param particle_type: The particle type.
+        :param force_constant: The force constant.
+        :param geometry: Geometry.
+        :param inclusion: Whether inclusion (True) or exclusion (False).
+        """
+        force_constant = self._units.convert(force_constant, self._units.force_constant_unit)
+        self._registry.add_harmonic_geometry(particle_type, force_constant, geometry, inclusion)
+
     def add_box(self, particle_type, force_constant, origin, extent):
         """
         Adds a box potential acting with a harmonic force on particles of the given type once they leave the area

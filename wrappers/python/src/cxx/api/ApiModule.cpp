@@ -58,6 +58,7 @@ using kern = readdy::model::Kernel;
 void exportTopologies(py::module &);
 void exportLoopApi(py::module &);
 void exportKernelContext(py::module &);
+void exportGeometries(py::module &);
 
 std::string getSelectedKernelType(sim &self) { /* discard const reference */ return self.selectedKernelType(); }
 
@@ -75,6 +76,8 @@ void exportApi(py::module &api) {
     auto topologyModule = api.def_submodule("top");
     exportTopologies(topologyModule);
     exportKernelContext(api);
+    auto geometryModule = api.def_submodule("geom");
+    exportGeometries(geometryModule);
 
     py::enum_<ParticleTypeFlavor>(api, "ParticleTypeFlavor")
             .value("NORMAL", ParticleTypeFlavor::NORMAL)
