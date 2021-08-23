@@ -46,6 +46,7 @@ set(SOURCE_FILES
         api/PyTopology.h
         api/ExportLoopApi.cpp
         api/ExportTopologies.cpp
+        api/ExportGeometry.cpp
         api/ExportKernelContext.cpp
         api/PyFunction.h
         api/ApiModule.cpp)

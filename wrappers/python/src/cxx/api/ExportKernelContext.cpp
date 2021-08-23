@@ -47,8 +47,6 @@
 #include <readdy/model/Context.h>
 #include <readdy/common/boundary_condition_operations.h>
 
-#include <utility>
-
 #include "PyTopology.h"
 
 namespace py = pybind11;
@@ -144,6 +142,9 @@ void exportKernelContext(py::module &module) {
                     const Vec3 &origin, const Vec3 &normal, scalar radius, bool inclusion) {
                      return self.addCylinder(particleType, forceConstant, origin, normal, radius, inclusion);
             })
+            .def("add_harmonic_geometry", &PotentialRegistry::addHarmonicGeometry<model::geometry::Capsule<scalar>>)
+            .def("add_harmonic_geometry", &PotentialRegistry::addHarmonicGeometry<model::geometry::Sphere<scalar>>)
+            .def("add_harmonic_geometry", &PotentialRegistry::addHarmonicGeometry<model::geometry::Box<scalar>>)
             .def("add_external_order1", [](PotentialRegistry& self, readdy::model::potentials::PotentialOrder1* pot) {
                 return self.addUserDefined(pot);
             }, py::keep_alive<1, 2>())
@@ -203,6 +204,9 @@ void exportKernelContext(py::module &module) {
             .def("configure_torsion_potential", &TopologyRegistry::configureTorsionPotential);
 
     py::class_<CompartmentRegistry>(module, "CompartmentRegistry")
+            .def("add_geometry", &CompartmentRegistry::addGeometryCompartmentWithLabels<model::geometry::Capsule<scalar>>)
+            .def("add_geometry", &CompartmentRegistry::addGeometryCompartmentWithLabels<model::geometry::Sphere<scalar>>)
+            .def("add_geometry", &CompartmentRegistry::addGeometryCompartmentWithLabels<model::geometry::Box<scalar>>)
             .def("add_sphere", [](CompartmentRegistry &self,
                                   const readdy::model::compartments::Compartment::label_conversion_map &conversions,
                                   const std::string &uniqueName,

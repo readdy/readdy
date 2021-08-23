@@ -82,7 +82,7 @@ bool boxPotentialValid(const Context &self, potentials::Box<true> *potential) {
 void Context::validate() const {
     auto periodic = std::accumulate(periodicBoundaryConditions().begin(),
                                     periodicBoundaryConditions().end(), true, std::logical_and<>());
-    if(!periodic) {
+    /*if(!periodic) {
         // check if there are box potentials for each particle type and that these box potentials are valid
         for(const auto &entry : particleTypes().typeMapping()) {
             auto ptype = entry.second;
@@ -104,7 +104,7 @@ void Context::validate() const {
                                                            "of the non-periodic boundaries configured.", entry.first));
             }
         }
-    }
+    }*/
 }
 
 std::string Context::describe() {

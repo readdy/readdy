@@ -53,6 +53,7 @@ from readdy.api.registry.compartments import CompartmentRegistry as _Compartment
 from readdy.api.registry.topologies import TopologyRegistry as _TopologyRegistry
 from readdy.api.registry.potentials import PotentialRegistry as _PotentialRegistry
 from readdy.api.registry.reactions import ReactionRegistry as _ReactionRegistry
+from readdy.api.registry.geometry import Geometries as _Geometries
 from readdy.api.simulation import Simulation as _Simulation
 
 __all__ = ['ReactionDiffusionSystem']
@@ -91,6 +92,7 @@ class ReactionDiffusionSystem(object):
         self._potential_registry = _PotentialRegistry(self._context.potentials, self._context.particle_types,
                                                       self._unit_conf)
         self._reaction_registry = _ReactionRegistry(self._context.reactions, self._unit_conf)
+        self._geometries = _Geometries(self._unit_conf)
 
         self._room_temperature_diffusion = room_temperature_diffusion
         if self._room_temperature_diffusion and not self.temperature_unit != 1.:
@@ -358,6 +360,10 @@ class ReactionDiffusionSystem(object):
     @property
     def potentials(self):
         return self._potential_registry
+
+    @property
+    def geometry(self):
+        return self._geometries
 
     @property
     def legacy_topology_self_fusion(self):

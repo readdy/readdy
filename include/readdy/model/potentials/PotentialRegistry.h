@@ -318,6 +318,18 @@ public:
         addCylinder(_types->idOf(particleType), forceConstant, origin, normal, radius, inclusion);
     }
 
+    template<typename Geometry>
+    void addHarmonicGeometry(const std::string &particleType, scalar forceConstant, Geometry geometry, bool inclusion) {
+        auto typeId = _types->idOf(particleType);
+        auto &pots = _ownPotentialsO1[typeId];
+        if(inclusion) {
+            pots.emplace_back(std::make_shared<HarmonicGeometryPotential<Geometry, true>>(typeId, forceConstant, geometry));
+        } else {
+            pots.emplace_back(std::make_shared<HarmonicGeometryPotential<Geometry, false>>(typeId, forceConstant, geometry));
+        }
+        _registerO1(pots.back().get());
+    }
+
     void addCylinder(ParticleTypeId particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &normal,
                      scalar radius, bool inclusion) {
         auto &pots = _ownPotentialsO1[particleType];

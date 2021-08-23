@@ -60,7 +60,6 @@ PYBIND11_MODULE (readdybinding, m) {
 
     auto common = m.def_submodule("common", "module containing common utilities and utility classes");
     auto api = m.def_submodule("api", "ReaDDy c++-api python module");
-    auto prototyping = m.def_submodule("prototyping", "ReaDDy prototyping python module");
     exportCommon(common);
     exportApi(api);
 }

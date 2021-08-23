@@ -41,10 +41,22 @@ Created on 26.09.17
 
 from readdy.api.utils import vec3_of as _v3_of
 
-class CompartmentRegistry(object):
+
+class CompartmentRegistry:
     def __init__(self, context_compartments, units):
         self._compartments = context_compartments
         self._units = units
+
+    def add_geometry(self, conversions, name, geometry, inside=True):
+        r"""
+        Registers a compartment based on a geometry (accessible via `system.geometry`).
+
+        :param conversions: The conversions.
+        :param name: Unique name for this compartment.
+        :param geometry: The geometry.
+        :param inside: Whether conversions are applied inside or outside of geometry.
+        """
+        self._compartments.add_geometry(conversions, name, geometry, inside)
 
     def add_sphere(self, conversions, name, origin, radius, larger_or_less=False):
         """
