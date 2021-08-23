@@ -87,29 +87,7 @@ std::string PotentialRegistry::describe() const {
  * Box potential
  */
 
-Vec3 getMinExtent(const Vec3 &origin, const Vec3 &extent) {
-    Vec3 result{0, 0, 0};
-    for (auto i = 0; i < 3; i++) {
-        if (extent[i] > 0) {
-            result[i] = origin[i];
-        } else {
-            result[i] = origin[i] + extent[i];
-        }
-    }
-    return result;
-}
-
-Vec3 getMaxExtent(const Vec3 &origin, const Vec3 &extent) {
-    Vec3 result{0, 0, 0};
-    for (auto i = 0; i < 3; i++) {
-        if (extent[i] > 0) {
-            result[i] = origin[i] + extent[i];
-        } else {
-            result[i] = origin[i];
-        }
-    }
-    return result;
-}
+/*
 
 Box::Box(ParticleTypeId particleType, scalar forceConstant, const Vec3 &origin,
                              const Vec3 &extent)
@@ -124,7 +102,7 @@ std::string Box::describe() const {
 std::string Box::type() const {
     return getPotentialName<Box>();
 }
-
+*/
 /*
  * Sphere Potentials
  */

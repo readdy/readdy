@@ -47,15 +47,13 @@
 #include <readdy/model/compartments/Compartments.h>
 #include <readdy/model/_internal/Util.h>
 
-namespace readdy {
-namespace model {
-namespace compartments {
-
+namespace readdy::model::compartments {
 
 Compartment::id_type
 CompartmentRegistry::addSphere(const Compartment::conversion_map &conversions, const std::string &uniqueName,
                                const Vec3 &origin, scalar radius, bool largerOrLess) {
-    _compartments.emplace_back(std::make_shared<Sphere>(conversions, uniqueName, origin, radius, largerOrLess));
+    geometry::Sphere<scalar> geom {.origin=origin, .radius=radius};
+    _compartments.emplace_back(std::make_shared<Sphere>(conversions, uniqueName, geom, largerOrLess));
     return _compartments.back()->getId();
 }
 
@@ -71,7 +69,8 @@ Compartment::id_type CompartmentRegistry::addCapsule(
         const Compartment::conversion_map &conversions, const std::string &uniqueName,
         Vec3 center, Vec3 direction, scalar length, scalar radius, bool inside
 ) {
-    _compartments.emplace_back(std::make_shared<Capsule>(conversions, uniqueName, center, direction, length, radius, inside));
+    geometry::Capsule<scalar> geom {.center=center, .direction=direction, .radius=radius, .length=length};
+    _compartments.emplace_back(std::make_shared<Capsule>(conversions, uniqueName, geom, inside));
     return _compartments.back()->getId();
 }
 
@@ -80,6 +79,4 @@ Compartment::id_type CompartmentRegistry::add(const std::shared_ptr<Compartment>
     return _compartments.back()->getId();
 }
 
-}
-}
 }

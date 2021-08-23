@@ -50,7 +50,6 @@
 #include <spdlog/fmt/ostr.h>
 
 #include <readdy/common/common.h>
-#include "readdy/common/ReaDDyVec3.h"
 
 namespace readdy::model {
 

@@ -53,60 +53,38 @@
 
 namespace readdy::model::potentials {
 
-// @todo allow box exclusion
-class Box : public PotentialOrder1 {
-    using super = PotentialOrder1;
+template<typename Geometry, bool inclusion>
+class HarmonicGeometryPotential : public PotentialOrder1 {
 public:
-    Box(ParticleTypeId particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &extent);
-
-    const Vec3 &getOrigin() const {
-        return origin;
+    HarmonicGeometryPotential(ParticleTypeId particleType, scalar forceConstant, const Geometry &geometry)
+        : PotentialOrder1(particleType), _forceConstant(forceConstant), _geometry(geometry) {
     }
 
-    const Vec3 &getExtent() const {
-        return extent;
-    }
-
-    scalar getForceConstant() const {
-        return forceConstant;
-    }
-
-    scalar calculateEnergy(const Vec3 &position) const override {
-        scalar energy = 0;
-
-        for (auto i = 0; i < 3; ++i) {
-            if (position[i] < min[i] || position[i] > max[i]) {
-                if (position[i] < min[i]) {
-                    energy += 0.5 * forceConstant * (position[i] - min[i]) * (position[i] - min[i]);
-                } else {
-                    energy += 0.5 * forceConstant * (position[i] - max[i]) * (position[i] - max[i]);
-                }
-            }
-        }
-
-        return energy;
+    [[nodiscard]] scalar calculateEnergy(const Vec3 &position) const override {
+        Vec3 shortestDiff = _geometry.template smallestDifference<inclusion>(position);
+        return 0.5 * _forceConstant * shortestDiff.normSquared();
     }
 
     void calculateForce(Vec3 &force, const Vec3 &position) const override {
-        for (auto i = 0; i < 3; i++) {
-            if (position[i] < min[i] || position[i] > max[i]) {
-                if (position[i] < min[i]) {
-                    force[i] += -1 * forceConstant * (position[i] - min[i]);
-                } else {
-                    force[i] += -1 * forceConstant * (position[i] - max[i]);
-                }
-            }
-        }
+        force += -1 * _forceConstant * _geometry.template smallestDifference<inclusion>(position);
     }
 
-    std::string describe() const override;
-
-    std::string type() const override;
-
-protected:
-    const Vec3 origin, extent, min, max;
-    const scalar forceConstant;
+    [[nodiscard]] std::string type() const override { return std::string(Geometry::name); }
+    [[nodiscard]] const Geometry &geometry() const { return _geometry; }
+    [[nodiscard]] scalar forceConstant() const { return _forceConstant; }
+    [[nodiscard]] std::string describe() const override {
+        return fmt::format("Harmonic {} potential with force constant {} and parameters {}.",
+                           Geometry::name, _forceConstant, _geometry.describe());
+    }
+private:
+    scalar _forceConstant;
+    Geometry _geometry;
 };
+
+template<bool inclusion>
+using Box = HarmonicGeometryPotential<geometry::Box<scalar>, inclusion>;
+template<bool inclusion>
+using Capsule = HarmonicGeometryPotential<geometry::Capsule<scalar>, inclusion>;
 
 template<bool inclusion>
 class Sphere : public PotentialOrder1 {
@@ -157,47 +135,6 @@ public:
 protected:
     const Vec3 origin;
     const scalar radius, forceConstant;
-};
-
-class Capsule : public PotentialOrder1 {
-    using super = PotentialOrder1;
-public:
-
-    Capsule(ParticleTypeId particleType, scalar forceConstant, Vec3 center, Vec3 direction,
-            scalar length, scalar radius) : super(particleType), capsuleCompartment({}, "", center, direction, length, radius, true),
-            forceConstant(forceConstant) {
-    }
-
-    scalar calculateEnergy(const Vec3 &position) const override {
-        scalar distanceFromOrigin = std::sqrt(capsuleCompartment.distToCapsuleSquared(position));
-        scalar distanceFromSphere = distanceFromOrigin - capsuleCompartment.radius();
-        if (distanceFromSphere > 0) {
-            return static_cast<scalar>(0.5) * forceConstant * distanceFromSphere * distanceFromSphere;
-        }
-        return static_cast<scalar>(0.);
-    }
-
-    void calculateForce(Vec3 &force, const Vec3 &position) const override {
-        auto cc = capsuleCompartment.closestCircleCenter(position);
-        auto difference = position - cc;
-        scalar distanceFromOrigin = difference.norm();
-        scalar distanceFromSphere = distanceFromOrigin - capsuleCompartment.radius();
-        if (distanceFromSphere > 0) {
-            force += -1 * forceConstant * distanceFromSphere * difference / distanceFromOrigin;
-        }
-    }
-
-    [[nodiscard]] std::string describe() const override {
-        return fmt::format("Capsule potential with origin={}, direction={}, length={}, radius={}, and force "
-                           "constant k={}", capsuleCompartment.center(), capsuleCompartment.direction(),
-                           capsuleCompartment.length(), capsuleCompartment.radius(), forceConstant);
-    }
-
-    [[nodiscard]] std::string type() const override { return "Capsule"; };
-
-private:
-    model::compartments::Capsule capsuleCompartment;
-    scalar forceConstant;
 };
 
 /**
@@ -315,12 +252,12 @@ protected:
     const Vec3 normal;
     const scalar forceConstant, radius;
 };
-
+/*
 template<typename T>
 const std::string getPotentialName(typename std::enable_if<std::is_base_of<Box, T>::value>::type * = 0) {
     return "Box";
 }
-
+*/
 template<typename T>
 const std::string getPotentialName(typename std::enable_if<std::is_base_of<Sphere<true>, T>::value>::type * = 0) {
     return "SphereInclusion";

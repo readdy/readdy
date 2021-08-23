@@ -46,20 +46,13 @@
 #include <readdy/model/compartments/Compartments.h>
 #include <readdy/common/logging.h>
 
-namespace readdy {
-namespace model {
-namespace compartments {
+namespace readdy::model::compartments {
 
 unsigned short Compartment::counter = 0;
 
-Sphere::Sphere(const Compartment::conversion_map &conversions, const std::string &uniqueName, const Vec3 &origin,
-               const scalar radius, const bool largerOrLess)
-        : Compartment(conversions, getCompartmentTypeName<Sphere>(), uniqueName), radius(radius), radiusSquared(radius * radius),
-          largerOrLess(largerOrLess), origin(origin) {}
-
 Plane::Plane(const Compartment::conversion_map &conversions, const std::string &uniqueName, const Vec3 &normalCoefficients,
              const scalar distance, const bool largerOrLess)
-        : Compartment(conversions, getCompartmentTypeName<Plane>(), uniqueName), normalCoefficients(normalCoefficients), distanceFromOrigin(distance),
+        : Compartment(conversions, "Plane", uniqueName), normalCoefficients(normalCoefficients), distanceFromOrigin(distance),
           largerOrLess(largerOrLess) {
     const auto normSquared = normalCoefficients * normalCoefficients;
     if (std::abs(normSquared - 1) > 0.0001) {
@@ -68,6 +61,4 @@ Plane::Plane(const Compartment::conversion_map &conversions, const std::string &
     }
 }
 
-}
-}
 }
