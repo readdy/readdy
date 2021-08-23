@@ -101,38 +101,8 @@ public:
     }
 
     void addBox(ParticleTypeId particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &extent) {
-        auto getMinExtent = [](Vec3 origin, Vec3 extent) {
-            Vec3 result{0, 0, 0};
-            #pragma unroll
-            for (auto i = 0; i < 3; i++) {
-                if (extent[i] > 0) {
-                    result[i] = origin[i];
-                } else {
-                    result[i] = origin[i] + extent[i];
-                }
-            }
-            return result;
-        };
-        auto getMaxExtent = [](Vec3 origin, Vec3 extent) {
-            Vec3 result{0, 0, 0};
-            #pragma unroll
-            for (auto i = 0; i < 3; i++) {
-                if (extent[i] > 0) {
-                    result[i] = origin[i] + extent[i];
-                } else {
-                    result[i] = origin[i];
-                }
-            }
-            return result;
-        };
-
         auto &pots = _ownPotentialsO1[particleType];
-        /*geometry::Box<scalar> boxGeometry {
-            .v0 = getMinExtent(origin, extent), .v1 = getMaxExtent(origin, extent)
-        };*/
-        geometry::Box<scalar> boxGeometry {
-            .v0 = origin, .v1 = origin + extent
-        };
+        geometry::Box<scalar> boxGeometry {.v0 = origin, .v1 = origin + extent};
         pots.emplace_back(std::make_shared<Box<true>>(particleType, forceConstant, boxGeometry));
         _registerO1(pots.back().get());
     }
@@ -284,10 +254,11 @@ public:
     void
     addSphere(ParticleTypeId particleType, scalar forceConstant, const Vec3 &origin, scalar radius, bool inclusion) {
         auto &pots = _ownPotentialsO1[particleType];
+        geometry::Sphere<scalar> geom {.center=origin, .radius=radius};
         if (inclusion) {
-            pots.emplace_back(std::make_shared<Sphere<true>>(particleType, forceConstant, origin, radius));
+            pots.emplace_back(std::make_shared<Sphere<true>>(particleType, forceConstant, geom));
         } else {
-            pots.emplace_back(std::make_shared<Sphere<false>>(particleType, forceConstant, origin, radius));
+            pots.emplace_back(std::make_shared<Sphere<false>>(particleType, forceConstant, geom));
         }
         _registerO1(pots.back().get());
     }

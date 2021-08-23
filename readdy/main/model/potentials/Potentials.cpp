@@ -83,40 +83,6 @@ std::string PotentialRegistry::describe() const {
 //
 /////////////////////////////////////////////////////////////////////////////
 
-/**
- * Box potential
- */
-
-/*
-
-Box::Box(ParticleTypeId particleType, scalar forceConstant, const Vec3 &origin,
-                             const Vec3 &extent)
-        : super(particleType), origin(origin), extent(extent), forceConstant(forceConstant),
-          min(getMinExtent(origin, extent)), max(getMaxExtent(origin, extent)) {}
-
-std::string Box::describe() const {
-    return fmt::format("Box potential with origin={}, extent={}, and Force constant k={}",
-                       origin, extent, forceConstant);
-}
-
-std::string Box::type() const {
-    return getPotentialName<Box>();
-}
-*/
-/*
- * Sphere Potentials
- */
-
-template<>
-std::string Sphere<true>::type() const {
-    return getPotentialName<Sphere<true>>();
-}
-
-template<>
-std::string Sphere<false>::type() const {
-    return getPotentialName<Sphere<false>>();
-}
-
 SphericalBarrier::SphericalBarrier(ParticleTypeId particleType, scalar height, scalar width, const Vec3 &origin, scalar radius)
         : super(particleType), origin(origin), radius(radius), height(height), width(width), r1(radius - width), r2(radius - width / static_cast<scalar>(2.)),
           r3(radius + width / static_cast<scalar>(2.)), r4(radius + width), effectiveForceConstant(static_cast<scalar>(4.) * height / width / width) {

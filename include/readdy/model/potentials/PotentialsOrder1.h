@@ -73,8 +73,8 @@ public:
     [[nodiscard]] const Geometry &geometry() const { return _geometry; }
     [[nodiscard]] scalar forceConstant() const { return _forceConstant; }
     [[nodiscard]] std::string describe() const override {
-        return fmt::format("Harmonic {} potential with force constant {} and parameters {}.",
-                           Geometry::name, _forceConstant, _geometry.describe());
+        return fmt::format("Harmonic {} {} potential with force constant {} and parameters {}.",
+                           Geometry::name, inclusion ? "inclusion" : "exclusion", _forceConstant, _geometry.describe());
     }
 private:
     scalar _forceConstant;
@@ -85,57 +85,8 @@ template<bool inclusion>
 using Box = HarmonicGeometryPotential<geometry::Box<scalar>, inclusion>;
 template<bool inclusion>
 using Capsule = HarmonicGeometryPotential<geometry::Capsule<scalar>, inclusion>;
-
 template<bool inclusion>
-class Sphere : public PotentialOrder1 {
-    using super = PotentialOrder1;
-public:
-    Sphere(ParticleTypeId particleType, scalar forceConstant, const Vec3 &origin, scalar radius)
-            : super(particleType), origin(origin), radius(radius), forceConstant(forceConstant) {}
-
-    scalar calculateEnergy(const Vec3 &position) const override {
-        auto difference = position - origin;
-        scalar distanceFromOrigin = difference.norm();
-        scalar distanceFromSphere = distanceFromOrigin - radius;
-        if constexpr (inclusion) {
-            if (distanceFromSphere > 0) {
-                return static_cast<scalar>(0.5) * forceConstant * distanceFromSphere * distanceFromSphere;
-            }
-        } else if constexpr (!inclusion) {
-            if (distanceFromSphere < 0) {
-                return static_cast<scalar>(0.5) * forceConstant * distanceFromSphere * distanceFromSphere;
-            }
-        }
-        return static_cast<scalar>(0.);
-    }
-
-    void calculateForce(Vec3 &force, const Vec3 &position) const override {
-        auto difference = position - origin;
-        scalar distanceFromOrigin = difference.norm();
-        scalar distanceFromSphere = distanceFromOrigin - radius;
-        if constexpr (inclusion) {
-            if (distanceFromSphere > 0) {
-                force += -1 * forceConstant * distanceFromSphere * difference / distanceFromOrigin;
-            }
-        } else if constexpr (!inclusion) {
-            if (distanceFromSphere < 0) {
-                force += -1 * forceConstant * distanceFromSphere * difference / distanceFromOrigin;
-            }
-        }
-    }
-
-    [[nodiscard]] std::string describe() const override {
-        std::string inOrOut = inclusion ? "inclusion" : "exclusion";
-        return fmt::format("Spherical {} potential with origin={}, radius={}, and Force constant k={}",
-                           inOrOut, origin, radius, forceConstant);
-    }
-
-    [[nodiscard]] std::string type() const override;
-
-protected:
-    const Vec3 origin;
-    const scalar radius, forceConstant;
-};
+using Sphere = HarmonicGeometryPotential<geometry::Sphere<scalar>, inclusion>;
 
 /**
  * A potential that forms a concentric barrier at a certain radius around a given origin. It is given a height (in terms of energy)
@@ -252,21 +203,6 @@ protected:
     const Vec3 normal;
     const scalar forceConstant, radius;
 };
-/*
-template<typename T>
-const std::string getPotentialName(typename std::enable_if<std::is_base_of<Box, T>::value>::type * = 0) {
-    return "Box";
-}
-*/
-template<typename T>
-const std::string getPotentialName(typename std::enable_if<std::is_base_of<Sphere<true>, T>::value>::type * = 0) {
-    return "SphereInclusion";
-}
-
-template<typename T>
-const std::string getPotentialName(typename std::enable_if<std::is_base_of<Sphere<false>, T>::value>::type * = 0) {
-    return "SphereExclusion";
-}
 
 template<typename T>
 const std::string getPotentialName(typename std::enable_if<std::is_base_of<SphericalBarrier, T>::value>::type * = 0) {

@@ -75,7 +75,7 @@ public:
     Compartment::id_type addSphere(const Compartment::label_conversion_map &conversions, const std::string &uniqueName,
                                    const Vec3 &origin, scalar radius, bool largerOrLess) {
         return addSphere(_internal::util::transformTypesMap(conversions, *_types), uniqueName, origin, radius,
-                         largerOrLess);
+                         !largerOrLess);
     }
 
     Compartment::id_type addPlane(const Compartment::conversion_map &conversions, const std::string &uniqueName,

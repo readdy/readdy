@@ -52,7 +52,7 @@ namespace readdy::model::compartments {
 Compartment::id_type
 CompartmentRegistry::addSphere(const Compartment::conversion_map &conversions, const std::string &uniqueName,
                                const Vec3 &origin, scalar radius, bool largerOrLess) {
-    geometry::Sphere<scalar> geom {.origin=origin, .radius=radius};
+    geometry::Sphere<scalar> geom {.center=origin, .radius=radius};
     _compartments.emplace_back(std::make_shared<Sphere>(conversions, uniqueName, geom, largerOrLess));
     return _compartments.back()->getId();
 }

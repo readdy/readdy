@@ -16,15 +16,15 @@ struct Sphere {
     template<bool inclusion>
     [[nodiscard]] bool contains(Vec3 position) const {
         if constexpr(inclusion) {
-            return (position - origin).normSquared() < radius*radius;
+            return (position - center).normSquared() < radius * radius;
         } else {
-            return (position - origin).normSquared() > radius*radius;
+            return (position - center).normSquared() > radius * radius;
         }
     }
 
     template<bool inclusion>
     [[nodiscard]] Vec3 smallestDifference(Vec3 position) const {
-        auto delta = position - origin;
+        auto delta = position - center;
         auto distToOriginSquared = delta.normSquared();
         if constexpr(inclusion) {
             if (distToOriginSquared < radius * radius) {
@@ -43,8 +43,12 @@ struct Sphere {
         }
     }
 
-    Vec3 origin {};
-    scalar radius {1.};
+    [[nodiscard]] std::string describe() const {
+        return fmt::format("center={}, radius={}", center, radius);
+    }
+
+    Vec3 center {};
+    dtype radius {1.};
 };
 
 template<typename dtype=scalar>
@@ -122,7 +126,7 @@ struct Capsule {
         lambda = std::clamp(lambda, -length / 2, length / 2);
         // now we obtain point corresponding to lambda
         auto circleCenter = center + lambda * normalizedDirection;
-        return {.origin = circleCenter, .radius = radius};
+        return {.center = circleCenter, .radius = radius};
     }
 
     template<bool inclusion>
@@ -140,7 +144,7 @@ struct Capsule {
     }
 
     Vec3 center {}, direction {};
-    scalar radius {1.}, length {1.};
+    dtype radius {1.}, length {1.};
 };
 
 }
