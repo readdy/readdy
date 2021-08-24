@@ -43,10 +43,12 @@
  * @copyright BSD-3
  */
 
+#include <utility>
+#include <variant>
+#include <tuple>
+
 #include <readdy/model/ParticleTypeRegistry.h>
 #include <readdy/model/Utils.h>
-
-#include <utility>
 
 namespace readdy::model {
 
