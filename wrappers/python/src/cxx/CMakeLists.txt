@@ -54,7 +54,9 @@ pybind11_add_module(readdybinding ${SOURCE_FILES})
 target_include_directories(readdybinding PUBLIC "${READDY_INCLUDE_DIRS}")
 target_link_libraries(readdybinding PUBLIC ${READDY_DEPENDENT_LIBRARIES} readdy)
 
-SET_TARGET_PROPERTIES(readdybinding
+set_target_properties(readdybinding
         PROPERTIES
         ARCHIVE_OUTPUT_DIRECTORY "${PYTHON_CPP_MODULES_OUTPUT_DIR}"
         LIBRARY_OUTPUT_DIRECTORY "${PYTHON_CPP_MODULES_OUTPUT_DIR}")
+
+install(TARGETS readdybinding LIBRARY DESTINATION ${INSTALL_DIR}/_internal)

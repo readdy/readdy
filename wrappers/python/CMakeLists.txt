@@ -50,7 +50,7 @@ endif()
 ADD_SUBDIRECTORY(src/cxx)
 
 install (
-        DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/src/python/readdy
+        DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/src/python/readdy/
         DESTINATION ${INSTALL_DIR}
         FILES_MATCHING PATTERN "*.py"
 )
@@ -59,27 +59,3 @@ configure_file(${CMAKE_CURRENT_LIST_DIR}/src/python/readdy/_version.py.in ${CMAK
 install (FILES ${CMAKE_CURRENT_BINARY_DIR}/src/python/readdy/_version.py
          DESTINATION ${INSTALL_DIR}
 )
-
-# install via setup.py
-# FIND_PROGRAM(PYTHON "python")
-# if (PYTHON)
-#     set(SETUP_PY_IN "${CMAKE_CURRENT_SOURCE_DIR}/src/python/setup.py")
-#     set(SETUP_PY    "${CMAKE_CURRENT_BINARY_DIR}/setup.py")
-#     set(VERSION_IN  "${CMAKE_CURRENT_SOURCE_DIR}/src/python/readdy/_version.py.in")
-#     set(VERSION_OUT "${CMAKE_CURRENT_SOURCE_DIR}/src/python/readdy/_version.py")
-#     set(OUTPUT      "${CMAKE_CURRENT_BINARY_DIR}/build/timestamp")
-#
-#     configure_file(${SETUP_PY_IN} ${SETUP_PY})
-#     configure_file(${VERSION_IN} ${VERSION_OUT})
-#
-#     add_custom_command(OUTPUT ${OUTPUT}
-#             COMMAND ${PYTHON} ${SETUP_PY} build
-#             COMMAND ${CMAKE_COMMAND} -E touch ${OUTPUT}
-#             DEPENDS readdybinding)
-#
-#     add_custom_target(target ALL DEPENDS ${OUTPUT})
-#
-#     install(CODE "execute_process(COMMAND ${PYTHON} ${SETUP_PY} install --prefix=${CMAKE_INSTALL_PREFIX})")
-# ELSE()
-#     MESSAGE(FATAL_ERROR "No python executable was found!")
-# endif()
