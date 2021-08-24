@@ -10,6 +10,11 @@ echo "PY_VER ${PY_VER}"
 echo "GIT_BUILD_STR ${GIT_BUILD_STR}"
 echo "Install prefix ${SP_DIR}"
 
+if [[ "$target_platform" == osx-* ]]; then
+    # Workarounds for missing C++17 features.
+    export CXXFLAGS="$CXXFLAGS -DCATCH_CONFIG_NO_CPP17_UNCAUGHT_EXCEPTIONS -fno-aligned-allocation"
+fi
+
 export HDF5_ROOT=${PREFIX}
 
 cmake .. \
