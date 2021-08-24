@@ -106,6 +106,10 @@ message(STATUS "====================================================")
 # we use c++17
 SET(CMAKE_CXX_STANDARD 17)
 SET(CMAKE_CXX_STANDARD_REQUIRED ON)
+if(APPLE)
+add_definitions(-DCATCH_CONFIG_NO_CPP17_UNCAUGHT_EXCEPTIONS)  # workaround for macos which chokes on some cpp17 stuff
+set(CMAKE_MACOSX_RPATH TRUE)  # any shared lib being built has rpath enabled
+endif()
 
 # always build readdy as shared lib
 SET(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libs" FORCE)
@@ -146,15 +150,6 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
 
     SET(EXTRA_COMPILE_FLAGS "")
     SET(EXTRA_LINK_FLAGS ${EXTRA_COMPILE_FLAGS})
-    IF(APPLE)
-        SET(CMAKE_MACOSX_RPATH 1)
-        IF (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-            SET(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
-            if (CMAKE_BUILD_TYPE STREQUAL "Release")
-                SET(EXTRA_COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}")
-            endif()
-        ENDIF (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    ENDIF(APPLE)
     IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
         IF (NOT ANDROID)
             if (CMAKE_BUILD_TYPE STREQUAL "Release")
