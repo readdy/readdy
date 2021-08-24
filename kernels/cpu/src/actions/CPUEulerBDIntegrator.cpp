@@ -69,13 +69,14 @@ void CPUEulerBDIntegrator::perform() {
                 auto randomDisplacement = readdy::model::rnd::normal3<scalar>();
                 auto deterministicDisplacement = it->force * dt / kbt;
                 if (std::holds_alternative<scalar>(D)) {
-                    randomDisplacement *= sqrt(2. * std::get<scalar>(D) * dt);
-                    deterministicDisplacement *= std::get<0>(D);
+                    randomDisplacement *= sqrt(2. * (*std::get_if<scalar>(&D)) * dt);
+                    deterministicDisplacement *= (*std::get_if<scalar>(&D));
                 } else {
-                    auto components = sqrt(2. * std::get<Vec3>(D) * dt);
+                    auto components = sqrt(2. * (*std::get_if<Vec3>(&D)) * dt);
+                    #pragma unroll
                     for(int d = 0; d < 3; ++d) {
                         randomDisplacement[d] *= components[d];
-                        deterministicDisplacement *= std::get<Vec3>(D)[d];
+                        deterministicDisplacement *= (*std::get_if<Vec3>(&D))[d];
                     }
                 }
                 it->pos += randomDisplacement + deterministicDisplacement;

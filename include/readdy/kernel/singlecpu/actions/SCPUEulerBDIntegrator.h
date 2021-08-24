@@ -66,13 +66,14 @@ public:
                 auto randomDisplacement = readdy::model::rnd::normal3<scalar>();
                 auto deterministicDisplacement = entry.force * _timeStep / kbt;
                 if (std::holds_alternative<scalar>(D)) {
-                    randomDisplacement *= sqrt(2. * std::get<0>(D) * _timeStep);
-                    deterministicDisplacement *= std::get<0>(D);
+                    randomDisplacement *= sqrt(2. * (*std::get_if<scalar>(&D)) * _timeStep);
+                    deterministicDisplacement *= (*std::get_if<scalar>(&D));
                 } else {
-                    auto components = sqrt(2. * std::get<1>(D) * _timeStep);
+                    auto components = sqrt(2. * (*std::get_if<Vec3>(&D)) * _timeStep);
+                    #pragma unroll
                     for(int d = 0; d < 3; ++d) {
                         randomDisplacement[d] *= components[d];
-                        deterministicDisplacement *= std::get<1>(D)[d];
+                        deterministicDisplacement *= (*std::get_if<Vec3>(&D))[d];
                     }
                 }
                 entry.pos += randomDisplacement + deterministicDisplacement;

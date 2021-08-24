@@ -31,13 +31,13 @@ ninja ${MAKEFLAGS}
 ninja install
 
 export READDY_N_CORES=2
-export READDY_PLUGIN_DIR=${SP_DIR}/readdy/readdy_plugins
+export READDY_PLUGIN_DIR="${SP_DIR}/readdy/readdy_plugins"
 
 err_code=0
 ret_code=0
 
 echo "calling c++ core unit tests"
-CONDA_ENV_PATH=${PREFIX} bin/runUnitTests --durations yes
+./readdy/test/runUnitTests --durations yes
 err_code=$?
 if [ ${err_code} -ne 0 ]; then
    ret_code=${err_code}
@@ -45,7 +45,7 @@ if [ ${err_code} -ne 0 ]; then
 fi
 
 echo "calling c++ integration tests"
-CONDA_ENV_PATH=${PREFIX} bin/runUnitTests --durations yes [integration]
+./readdy/test/runUnitTests --durations yes [integration]
 err_code=$?
 if [ ${err_code} -ne 0 ]; then
    ret_code=${err_code}
@@ -53,7 +53,7 @@ if [ ${err_code} -ne 0 ]; then
 fi
 
 echo "calling c++ singlecpu unit tests"
-CONDA_ENV_PATH=${PREFIX} bin/runUnitTests_singlecpu --durations yes
+./kernels/singlecpu/test/runUnitTests_singlecpu --durations yes
 err_code=$?
 if [ ${err_code} -ne 0 ]; then
    ret_code=${err_code}
@@ -61,7 +61,7 @@ if [ ${err_code} -ne 0 ]; then
 fi
 
 echo "calling c++ cpu unit tests"
-CONDA_ENV_PATH=${PREFIX} bin/runUnitTests_cpu --durations yes
+./kernels/cpu/test/runUnitTests_cpu --durations yes
 err_code=$?
 if [ ${err_code} -ne 0 ]; then
    ret_code=${err_code}
