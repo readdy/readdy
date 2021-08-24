@@ -63,17 +63,17 @@ void ParticleTypeRegistry::add(const std::string &name, DiffusionConstant diffus
     util::validateTypeName(name);
     {
         if(std::holds_alternative<scalar>(diffusionConst)) {
-            if(std::get<scalar>(diffusionConst) < 0) {
+            if(*std::get_if<scalar>(&diffusionConst) < 0) {
                 throw std::invalid_argument("The diffusion constant must not be negative");
             }
         } else {
-            const auto &darr = std::get<Vec3>(diffusionConst).data;
+            const auto &darr = (*std::get_if<Vec3>(&diffusionConst)).data;
             if(std::any_of(darr.begin(), darr.end(), [](auto x) {return x < 0;})) {
                 throw std::invalid_argument("The diffusion constant must not be negative");
             }
         }
         if (std::holds_alternative<Vec3>(diffusionConst)) {
-            auto dvec = std::get<Vec3>(diffusionConst);
+            auto dvec = *std::get_if<Vec3>(&diffusionConst);
             auto fpx = fp::FloatingPoint<scalar>(dvec[0]);
             auto fpy = fp::FloatingPoint<scalar>(dvec[1]);
             auto fpz = fp::FloatingPoint<scalar>(dvec[2]);
@@ -117,10 +117,10 @@ std::string ParticleTypeRegistry::describe() const {
     for (const auto &entry : particle_info_) {
         if (std::holds_alternative<scalar>(entry.second.diffusionConstant)) {
             description += fmt::format("     * {} particle type \"{}\" with D={}\n", flavorName(entry.second.flavor),
-                                       entry.second.name, std::get<scalar>(entry.second.diffusionConstant));
+                                       entry.second.name, *std::get_if<scalar>(&entry.second.diffusionConstant));
         } else {
             description += fmt::format("     * {} particle type \"{}\" with D={}\n", flavorName(entry.second.flavor),
-                                       entry.second.name, std::get<Vec3>(entry.second.diffusionConstant));
+                                       entry.second.name, *std::get_if<Vec3>(&entry.second.diffusionConstant));
         }
     }
     return description;

@@ -162,11 +162,11 @@ void writeParticleTypeInformation(h5rd::Group &group, const Context &context) {
     auto convertDiffusionConstant = [](const DiffusionConstant &D) -> std::array<scalar, 3>{
         std::array<scalar, 3> result {};
         if (std::holds_alternative<scalar>(D)) {
-            std::fill(result.begin(), result.end(), std::get<scalar>(D));
+            std::fill(result.begin(), result.end(), *std::get_if<scalar>(&D));
         } else {
-            result[0] = std::get<Vec3>(D).x;
-            result[1] = std::get<Vec3>(D).y;
-            result[2] = std::get<Vec3>(D).z;
+            result[0] = (*std::get_if<Vec3>(&D)).x;
+            result[1] = (*std::get_if<Vec3>(&D)).y;
+            result[2] = (*std::get_if<Vec3>(&D)).z;
         }
         return result;
     };
