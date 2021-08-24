@@ -49,7 +49,7 @@ namespace readdy::plugin::utils {
 
 inline std::string getPluginsDirectory() {
     if(getenv("READDY_PLUGIN_DIR") != nullptr) {
-        return {"READDY_PLUGIN_DIR"};
+        return {getenv("READDY_PLUGIN_DIR")};
     }
     // test for several environment variables
     const std::string envs[]{"CONDA_ENV_PATH", "CONDA_PREFIX", "PREFIX"};
