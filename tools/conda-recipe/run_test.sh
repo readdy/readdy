@@ -7,8 +7,6 @@ ret_code=0
 # current return code
 err_code=0
 
-# cd $BUILD_PREFIX
-
 export READDY_N_CORES=2
 
 echo "calling python unit tests"
