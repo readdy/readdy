@@ -1,23 +1,27 @@
 #!/bin/bash
 
 mkdir -p build
-cd build || exit 1
+cd build || true
 rm -rf ./*
 
 echo "conda recipe build.sh ..."
 echo "GIT_DESCRIBE_NUMBER ${GIT_DESCRIBE_NUMBER}"
 echo "PY_VER ${PY_VER}"
 echo "GIT_BUILD_STR ${GIT_BUILD_STR}"
-echo "GIT_STUB ${GIT_STUB}"
+echo "Install prefix ${SP_DIR}"
 
-cmake ../ \
-        -DCMAKE_INSTALL_PREFIX=${SP_DIR} \
-        -DPYTHON_EXECUTABLE=${PYTHON} \
-        -DREADDY_BUILD_SHARED_COMBINED=on \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DREADDY_VERSION=${PKG_VERSION} \
-        -DREADDY_BUILD_STRING=${PKG_BUILDNUM} \
-        -GNinja
+export HDF5_ROOT=${PREFIX}
+
+cmake .. \
+  -DCMAKE_INSTALL_PREFIX=${SP_DIR} \
+  -DPYTHON_EXECUTABLE=${PYTHON} \
+  -DPYTHON_PREFIX=${PREFIX} \
+  -DREADDY_BUILD_SHARED_COMBINED:BOOL=ON \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DREADDY_VERSION=${PKG_VERSION} \
+  -DHDF5_INCLUDE_DIRS="${PREFIX}/include" \
+  -DREADDY_BUILD_STRING=${PKG_BUILDNUM} \
+  -GNinja
 
 ninja ${MAKEFLAGS}
 ninja install
