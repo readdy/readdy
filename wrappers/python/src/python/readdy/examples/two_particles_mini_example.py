@@ -49,7 +49,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 class TwoParticlesMiniExample(object):
     def __init__(self):
-        KernelProvider.get().load_from_dir(platform_utils.get_readdy_plugin_dir())
+        KernelProvider.get().load_from_dir(str(platform_utils.get_readdy_plugin_dir()))
         self.simulation = Simulation()
         self.simulation.set_kernel("CPU")
 
