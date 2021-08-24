@@ -80,7 +80,7 @@ set(READDY_BUILD_SCENARIOS OFF CACHE BOOL "Whether to build the Scenarios execut
 #####################################
 
 # minimum cmake version
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.16)
 
 # extend cmake module path to include readdy custom modules
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
@@ -118,19 +118,6 @@ SET(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libs" FORCE)
 SET(READDY_GLOBAL_DIR "${PROJECT_SOURCE_DIR}")
 SET(READDY_GLOBAL_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include")
 
-INCLUDE(CheckCXXCompilerFlag)
-function(enable_cxx_compiler_flag_if_supported flag)
-    string(FIND "${CMAKE_CXX_FLAGS}" "${flag}" flag_already_set)
-    if(flag_already_set EQUAL -1)
-        check_cxx_compiler_flag("${flag}" flag_supported)
-        if(flag_supported)
-            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${flag}" PARENT_SCOPE)
-        endif()
-    endif()
-endfunction()
-#enable_cxx_compiler_flag_if_supported("-pedantic")
-#enable_cxx_compiler_flag_if_supported("-fms-extensions")
-
 IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
     # Compile in debug mode by default
     IF (NOT CMAKE_BUILD_TYPE)
@@ -140,20 +127,12 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
         MESSAGE(STATUS "Using specified '${CMAKE_BUILD_TYPE}' build type.")
     ENDIF (NOT CMAKE_BUILD_TYPE)
 
-    string(TOLOWER "${CMAKE_BUILD_TYPE}" BUILD_TYPE_LOWER)
-    if (BUILD_TYPE_LOWER STREQUAL "release")
-        message(STATUS "--- release build type ---")
-    else()
-        message(STATUS "--- debug build type, specifying debug flag ---")
-        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DREADDY_DEBUG")
-    endif()
-
     SET(EXTRA_COMPILE_FLAGS "")
     SET(EXTRA_LINK_FLAGS ${EXTRA_COMPILE_FLAGS})
     IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
         IF (NOT ANDROID)
             if (CMAKE_BUILD_TYPE STREQUAL "Release")
-                SET(EXTRA_COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}") # -ffast-math
+                SET(EXTRA_COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}")
             endif()
             SET(EXTRA_LINK_FLAGS "${EXTRA_LINK_FLAGS} -Wl,--no-as-needed -lrt")
         ENDIF (NOT ANDROID)
@@ -162,9 +141,9 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
     # main project name
     SET(READDY_PROJECT_NAME "readdy")
 
-    IF (READDY_LOG_CMAKE_CONFIGURATION)
-        INCLUDE(LogConfiguration)
-    ENDIF (READDY_LOG_CMAKE_CONFIGURATION)
+    if (READDY_LOG_CMAKE_CONFIGURATION)
+        include(LogConfiguration)
+    endif (READDY_LOG_CMAKE_CONFIGURATION)
 
     #####################################
     #                                   #
