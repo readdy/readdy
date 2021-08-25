@@ -62,9 +62,9 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
         LINKER_LANGUAGE CXX)
 
 install(TARGETS ${PROJECT_NAME}
-        RUNTIME DESTINATION readdy/readdy_plugins
-        LIBRARY DESTINATION readdy/readdy_plugins
-        ARCHIVE DESTINATION readdy/readdy_plugins
+        RUNTIME DESTINATION ${INSTALL_DIR}/readdy_plugins
+        LIBRARY DESTINATION ${INSTALL_DIR}/readdy_plugins
+        ARCHIVE DESTINATION ${INSTALL_DIR}/readdy_plugins
         )
 
 if (READDY_CREATE_TEST_TARGET)

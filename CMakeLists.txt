@@ -32,13 +32,19 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                       #
 ####################################################################
 
-PROJECT(readdy_main C CXX)
+if (POLICY CMP0048)
+    cmake_policy(SET CMP0048 NEW)
+endif (POLICY CMP0048)
+PROJECT(readdy_main VERSION 0.0 LANGUAGES C CXX)
 
 #####################################
 #                                   #
 # User configurable cache variables #
 #                                   #
 #####################################
+
+set(INSTALL_DIR "readdy" CACHE PATH "Installation directory relative to python site-packages
+                                     if provided via CMAKE_INSTALL_PREFIX")
 
 # test configuration
 SET(READDY_CREATE_TEST_TARGET ON CACHE BOOL "Determines if the test target should be added.")
@@ -58,20 +64,6 @@ SET(READDY_DEBUG_CONDA_ROOT_DIR "" CACHE PATH "This only does something, if READ
 SET(READDY_GENERATE_DOCUMENTATION_TARGET OFF CACHE BOOL "Should generate target for documentation or not.")
 SET(READDY_GENERATE_DOCUMENTATION_TARGET_ONLY OFF CACHE BOOL "If set to true, this only generates the documentation target.")
 
-# pypi target
-SET(READDY_BUILD_PYPI_EXT OFF CACHE BOOL "Whether to generate the pypi target (monolithic target, skips all tests).")
-if (READDY_BUILD_PYPI_EXT)
-    set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-    set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)
-    if(APPLE)
-        set(CMAKE_INSTALL_RPATH @loader_path)
-        set(CMAKE_BUILD_RPATH @loader_path)
-    else()
-        set(CMAKE_INSTALL_RPATH $ORIGIN)
-        set(CMAKE_BUILD_RPATH $ORIGIN)
-    endif()
-endif()
-
 # log configuration variables of interest
 SET(READDY_LOG_CMAKE_CONFIGURATION OFF CACHE BOOL "If turned on, the status of relevant cmake variables is logged at configuration time.")
 
@@ -88,7 +80,7 @@ set(READDY_BUILD_SCENARIOS OFF CACHE BOOL "Whether to build the Scenarios execut
 #####################################
 
 # minimum cmake version
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.16)
 
 # extend cmake module path to include readdy custom modules
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
@@ -114,6 +106,10 @@ message(STATUS "====================================================")
 # we use c++17
 SET(CMAKE_CXX_STANDARD 17)
 SET(CMAKE_CXX_STANDARD_REQUIRED ON)
+if(APPLE)
+add_definitions(-DCATCH_CONFIG_NO_CPP17_UNCAUGHT_EXCEPTIONS)  # workaround for macos which chokes on some cpp17 stuff
+set(CMAKE_MACOSX_RPATH TRUE)  # any shared lib being built has rpath enabled
+endif()
 
 # always build readdy as shared lib
 SET(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libs" FORCE)
@@ -121,19 +117,6 @@ SET(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libs" FORCE)
 # dir vars
 SET(READDY_GLOBAL_DIR "${PROJECT_SOURCE_DIR}")
 SET(READDY_GLOBAL_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include")
-
-INCLUDE(CheckCXXCompilerFlag)
-function(enable_cxx_compiler_flag_if_supported flag)
-    string(FIND "${CMAKE_CXX_FLAGS}" "${flag}" flag_already_set)
-    if(flag_already_set EQUAL -1)
-        check_cxx_compiler_flag("${flag}" flag_supported)
-        if(flag_supported)
-            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${flag}" PARENT_SCOPE)
-        endif()
-    endif()
-endfunction()
-#enable_cxx_compiler_flag_if_supported("-pedantic")
-#enable_cxx_compiler_flag_if_supported("-fms-extensions")
 
 IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
     # Compile in debug mode by default
@@ -144,58 +127,12 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
         MESSAGE(STATUS "Using specified '${CMAKE_BUILD_TYPE}' build type.")
     ENDIF (NOT CMAKE_BUILD_TYPE)
 
-    string(TOLOWER "${CMAKE_BUILD_TYPE}" BUILD_TYPE_LOWER)
-    if (BUILD_TYPE_LOWER STREQUAL "release")
-        message(STATUS "--- release build type ---")
-    else()
-        message(STATUS "--- debug build type, specifying debug flag ---")
-        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DREADDY_DEBUG")
-    endif()
-
-    # output directories
-    IF(READDY_DEBUG_PYTHON_MODULES)
-        SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${READDY_DEBUG_CONDA_ROOT_DIR}/lib)
-        SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${READDY_DEBUG_CONDA_ROOT_DIR}/lib)
-        SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${READDY_DEBUG_CONDA_ROOT_DIR}/bin)
-        SET(READDY_PLUGIN_OUTPUT_DIRECTORY ${READDY_DEBUG_CONDA_ROOT_DIR}/readdy/readdy_plugins)
-    elseif(READDY_BUILD_PYPI_EXT)
-        # no op
-    else()
-        SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-        SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-        SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-        SET(READDY_PLUGIN_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/readdy/readdy_plugins)
-    ENDIF()
-
-    # where to install
-    IF(WIN32)
-        IF(NOT READDY_INSTALL_PREFIX)
-            SET(READDY_INSTALL_PREFIX "$ENV{ProgramFiles}/readdy")
-        ENDIF(NOT READDY_INSTALL_PREFIX)
-    ELSE(WIN32)
-        IF(NOT READDY_INSTALL_PREFIX)
-            SET(READDY_INSTALL_PREFIX "/usr/local/readdy")
-        ENDIF(NOT READDY_INSTALL_PREFIX)
-    ENDIF(WIN32)
-    IF(${CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT})
-        SET(CMAKE_INSTALL_PREFIX ${READDY_INSTALL_PREFIX} CACHE PATH "Where to install readdy" FORCE)
-    ENDIF(${CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT})
-
     SET(EXTRA_COMPILE_FLAGS "")
     SET(EXTRA_LINK_FLAGS ${EXTRA_COMPILE_FLAGS})
-    IF(APPLE)
-        SET(CMAKE_MACOSX_RPATH 1)
-        IF (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-            SET(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
-            if (CMAKE_BUILD_TYPE STREQUAL "Release")
-                SET(EXTRA_COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}")
-            endif()
-        ENDIF (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    ENDIF(APPLE)
     IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
         IF (NOT ANDROID)
             if (CMAKE_BUILD_TYPE STREQUAL "Release")
-                SET(EXTRA_COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}") # -ffast-math
+                SET(EXTRA_COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}")
             endif()
             SET(EXTRA_LINK_FLAGS "${EXTRA_LINK_FLAGS} -Wl,--no-as-needed -lrt")
         ENDIF (NOT ANDROID)
@@ -204,9 +141,9 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
     # main project name
     SET(READDY_PROJECT_NAME "readdy")
 
-    IF (READDY_LOG_CMAKE_CONFIGURATION)
-        INCLUDE(LogConfiguration)
-    ENDIF (READDY_LOG_CMAKE_CONFIGURATION)
+    if (READDY_LOG_CMAKE_CONFIGURATION)
+        include(LogConfiguration)
+    endif (READDY_LOG_CMAKE_CONFIGURATION)
 
     #####################################
     #                                   #
@@ -260,15 +197,16 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
     add_definitions(-DSPDLOG_FMT_EXTERNAL)
 
     # include blosc
-    SET(DEACTIVATE_SNAPPY ON CACHE BOOL "")
-    SET(DEACTIVATE_ZSTD OFF CACHE BOOL "")
-    SET(DEACTIVATE_ZLIB ON CACHE BOOL "")
-    SET(BLOSC_INSTALL ON CACHE BOOL "")
-    SET(BUILD_SHARED ON CACHE BOOL "")
-    SET(BUILD_STATIC OFF CACHE BOOL "")
-    SET(BUILD_TESTS OFF CACHE BOOL "")
-    SET(BUILD_BENCHMARKS OFF CACHE BOOL "")
-    ADD_SUBDIRECTORY(libraries/c-blosc)
+    set(DEACTIVATE_SNAPPY ON CACHE BOOL "")
+    set(DEACTIVATE_ZSTD OFF CACHE BOOL "")
+    set(DEACTIVATE_ZLIB ON CACHE BOOL "")
+    set(BLOSC_INSTALL OFF CACHE BOOL "")
+    set(BUILD_SHARED ON CACHE BOOL "")
+    set(BUILD_STATIC OFF CACHE BOOL "")
+    set(BUILD_TESTS OFF CACHE BOOL "")
+    set(BUILD_BENCHMARKS OFF CACHE BOOL "")
+    add_subdirectory(libraries/c-blosc)
+    install(TARGETS blosc_shared LIBRARY DESTINATION ${INSTALL_DIR})
 
     IF(READDY_BUILD_SHARED_COMBINED)
         INCLUDE(cmake/sources/sources_common.cmake)
@@ -286,30 +224,6 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
         SET_TARGET_PROPERTIES(${READDY_PROJECT_NAME} PROPERTIES
                 LINK_FLAGS "${EXTRA_LINK_FLAGS}"
                 COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}")
-    ELSEIF(READDY_BUILD_PYPI_EXT)
-        add_subdirectory(libraries/pybind11)
-
-        include(cmake/sources/sources_common.cmake)
-        include(cmake/sources/sources_io.cmake)
-        include(cmake/sources/sources_model.cmake)
-        include(cmake/sources/sources_plugin.cmake)
-        include(cmake/sources/kernels/singlecpu.cmake)
-        include(cmake/sources/sources_readdy.cmake)
-
-        # also add binding sources
-        include(cmake/sources/sources_readdybinding.cmake)
-
-        configure_file(
-                "wrappers/python/src/python/setup_pypi.py"
-                "${CMAKE_CURRENT_BINARY_DIR}/wrappers/python/src/python/setup.py")
-        
-    	# create library
-        message(STATUS "Libraries ReaDDy depends on: ${READDY_DEPENDENT_LIBRARIES}")
-        message(STATUS "Include directories: ${READDY_INCLUDE_DIRS}")
-        pybind11_add_module(readdybinding ${READDY_ALL_SOURCES} ${READDY_GLOBAL_INCLUDE_DIR})
-        target_include_directories(readdybinding PUBLIC "${READDY_INCLUDE_DIRS}")
-        target_link_libraries(readdybinding PUBLIC ${READDY_COMMON_LIBRARIES} ${READDY_DEPENDENT_LIBRARIES})
-        set_target_properties(readdybinding PROPERTIES INSTALL_RPATH "$ORIGIN/")
     ELSE()
         # include directories from least dependent to most dependent
         # i.e.: A depends on B -> add subdirectory of B first
@@ -336,39 +250,36 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
     #                                   #
     #####################################
     IF(READDY_BUILD_SHARED_COMBINED)
-        INSTALL (
+        install (
                 DIRECTORY ${CMAKE_SOURCE_DIR}/include/
-                DESTINATION include
+                DESTINATION ${INSTALL_DIR}/include
                 FILES_MATCHING PATTERN "*.h*")
-        INSTALL (
+        install (
                 DIRECTORY ${CMAKE_SOURCE_DIR}/kernels/cpu/include/
-                DESTINATION include
+                DESTINATION ${INSTALL_DIR}/include
                 FILES_MATCHING PATTERN "*.h*"
         )
-        INSTALL (
+        install (
                 DIRECTORY ${CMAKE_SOURCE_DIR}/libraries/h5rd/include/
-                DESTINATION include
+                DESTINATION ${INSTALL_DIR}/include
                 FILES_MATCHING PATTERN "*.h*")
-        INSTALL (
+        install (
                 DIRECTORY ${CMAKE_SOURCE_DIR}/libraries/json/include/
-                DESTINATION include
+                DESTINATION ${INSTALL_DIR}/include
                 FILES_MATCHING PATTERN "*.h*"
         )
-        INSTALL (
+        install (
                 DIRECTORY ${CMAKE_SOURCE_DIR}/libraries/spdlog/include/
-                DESTINATION include
+                DESTINATION ${INSTALL_DIR}/include
                 FILES_MATCHING PATTERN "*.h*"
         )
-        INSTALL (
+        install (
                 DIRECTORY ${CMAKE_SOURCE_DIR}/libraries/spdlog/include/
-                DESTINATION include
+                DESTINATION ${INSTALL_DIR}/include
                 FILES_MATCHING PATTERN "*.cc*"
         )
-        INSTALL(TARGETS ${READDY_PROJECT_NAME}
-                RUNTIME DESTINATION bin
-                LIBRARY DESTINATION lib
-                ARCHIVE DESTINATION lib)
-        INSTALL_TARGETS(/lib RUNTIME_DIRECTORY /lib ${READDY_PROJECT_NAME})
+        install(TARGETS ${READDY_PROJECT_NAME} LIBRARY DESTINATION ${INSTALL_DIR})
+
     ENDIF(READDY_BUILD_SHARED_COMBINED)
 
     #####################################

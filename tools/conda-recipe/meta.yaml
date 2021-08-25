@@ -1,8 +1,10 @@
+{% set name = "readdy" %}
+
 package:
-  name: readdy
+  name: {{ name }}
   version: {{ environ.get('GIT_DESCRIBE_TAG', 'dev') }}
 source:
-  git_url: ../..
+  path: ../..
 
 build:
   number: {{ environ.get('GIT_DESCRIBE_NUMBER', 0) }}
@@ -10,7 +12,14 @@ build:
   {% else %}string: py{{ environ.get('PY_VER').replace('.', '') }}_{{ environ.get('GIT_BUILD_STR', 'GIT_STUB') }}{% endif %}
   rpaths:
     - lib/
-    - readdy/readdy_plugins/
+    - lib/python3.9/site-packages/{{ name }}  # [py==39]
+    - lib/python3.9/site-packages/{{ name }}/readdy_plugins  # [py==39]
+    - lib/python3.8/site-packages/{{ name }}  # [py==38]
+    - lib/python3.8/site-packages/{{ name }}/readdy_plugins  # [py==38]
+    - lib/python3.7/site-packages/{{ name }}  # [py==37]
+    - lib/python3.7/site-packages/{{ name }}/readdy_plugins  # [py==37]
+    - lib/python3.6/site-packages/{{ name }}  # [py==36]
+    - lib/python3.6/site-packages/{{ name }}/readdy_plugins  # [py==36]
 
 requirements:
   host:
@@ -25,6 +34,7 @@ requirements:
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
     - cmake
+    - ninja
 
   run:
     - intel-openmp # [osx]
@@ -35,6 +45,7 @@ requirements:
     - tqdm
     - hdf5
     - zlib 1.2.*
+    # - __osx >={{ MACOSX_DEPLOYMENT_TARGET|default("10.9") }}  # [osx and x86_64]
 
 test:
   imports:
