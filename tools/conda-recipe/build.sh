@@ -10,17 +10,12 @@ echo "PY_VER ${PY_VER}"
 echo "GIT_BUILD_STR ${GIT_BUILD_STR}"
 echo "Install prefix ${SP_DIR}"
 
-if [[ "$target_platform" == osx-* ]]; then
-    # Workarounds for missing C++17 features.
-    export CXXFLAGS="$CXXFLAGS -DCATCH_CONFIG_NO_CPP17_UNCAUGHT_EXCEPTIONS -fno-aligned-allocation"
-fi
-
 export HDF5_ROOT=${PREFIX}
 
 cmake .. \
   -DCMAKE_INSTALL_PREFIX=${SP_DIR} \
   -DCMAKE_PREFIX_PATH=${PREFIX} \
-  -DCMAKE_CXX_STANDARD=17 \
+  -DCMAKE_OSX_SYSROOT=${CONDA_BUILD_SYSROOT} \
   -DCMAKE_BUILD_TYPE=Release \
   -DPYTHON_EXECUTABLE=${PYTHON} \
   -DPYTHON_PREFIX=${PREFIX} \
@@ -32,8 +27,6 @@ cmake .. \
   -DREADDY_VERSION=${PKG_VERSION} \
   -DREADDY_BUILD_STRING=${PKG_BUILDNUM} \
   -GNinja
-
-# -DCMAKE_OSX_SYSROOT=${CONDA_BUILD_SYSROOT} \
 
 ninja ${MAKEFLAGS}
 ninja install
