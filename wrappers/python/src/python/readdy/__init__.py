@@ -37,9 +37,12 @@ from .api.simulation import *
 from .api.trajectory import Trajectory
 from .api.conf import ureg as units
 
-from ._version import get_versions
-__version__ = get_versions()['version']
-del get_versions
+try:
+    from ._version import get_versions
+    __version__ = get_versions()['version']
+    del get_versions
+except:
+    __version__ = 'dev'
 
 # elevate reaction recipe
 from .api.topology_reactions import StructuralReactionRecipe

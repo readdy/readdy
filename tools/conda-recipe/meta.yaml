@@ -27,7 +27,7 @@ requirements:
     - h5py
     - hdf5
     - bzip2
-    - numpy
+    - numpy >=1.14
     - zlib 1.2.*
 
   build:
@@ -39,13 +39,12 @@ requirements:
   run:
     - intel-openmp # [osx]
     - python
-    - numpy
+    - {{ pin_compatible('numpy') }}
     - h5py
     - pint
     - tqdm
     - hdf5
     - zlib 1.2.*
-    # - __osx >={{ MACOSX_DEPLOYMENT_TARGET|default("10.9") }}  # [osx and x86_64]
 
 test:
   imports:
