@@ -279,7 +279,7 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
                 FILES_MATCHING PATTERN "*.cc*"
         )
         install (
-                DIRECTORY ${CMAKE_SOURCE_DIR}/libraries/graph/include/
+                DIRECTORY ${CMAKE_SOURCE_DIR}/libraries/graph/
                 DESTINATION ${INSTALL_DIR}/include
                 FILES_MATCHING PATTERN "*.h*"
         )
