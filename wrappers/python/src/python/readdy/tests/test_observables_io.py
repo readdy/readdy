@@ -64,7 +64,7 @@ class TestObservablesIO(ReaDDyTestCase):
     @classmethod
     def setUpClass(cls):
         cls.kernel_provider = KernelProvider.get()
-        cls.kernel_provider.load_from_dir(platform_utils.get_readdy_plugin_dir())
+        cls.kernel_provider.load_from_dir(str(platform_utils.get_readdy_plugin_dir()))
         cls.dir = tempfile.mkdtemp("test-observables-io")
 
     @classmethod

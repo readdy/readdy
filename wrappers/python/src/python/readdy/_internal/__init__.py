@@ -42,5 +42,5 @@ from .readdybinding.common.util import *
 register_blosc_hdf5_plugin()
 
 kernel_provider = KernelProvider.get()
-if pathlib.Path(putils.get_readdy_plugin_dir()).exists():
-    kernel_provider.load_from_dir(putils.get_readdy_plugin_dir())
+if putils.get_readdy_plugin_dir().exists():
+    kernel_provider.load_from_dir(str(putils.get_readdy_plugin_dir()))
