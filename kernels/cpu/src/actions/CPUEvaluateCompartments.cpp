@@ -50,16 +50,18 @@ namespace actions {
 CPUEvaluateCompartments::CPUEvaluateCompartments(CPUKernel *const kernel) : kernel(kernel) {}
 
 void CPUEvaluateCompartments::perform() {
-    const auto &ctx = kernel->context();
-    const auto &compartments = ctx.compartments().get();
-    for(auto& e : *kernel->getCPUKernelStateModel().getParticleData()) {
-        if(!e.deactivated) {
-            for (const auto &compartment : compartments) {
-                if (compartment->isContained(e.pos)) {
-                    const auto &conversions = compartment->getConversions();
-                    const auto convIt = conversions.find(e.type);
-                    if (convIt != conversions.end()) {
-                        e.type = (*convIt).second;
+    if (!kernel->context().compartments().empty()) {
+        const auto &ctx = kernel->context();
+        const auto &compartments = ctx.compartments().get();
+        for (auto &e: *kernel->getCPUKernelStateModel().getParticleData()) {
+            if (!e.deactivated) {
+                for (const auto &compartment: compartments) {
+                    if (compartment->isContained(e.pos)) {
+                        const auto &conversions = compartment->getConversions();
+                        const auto convIt = conversions.find(e.type);
+                        if (convIt != conversions.end()) {
+                            e.type = (*convIt).second;
+                        }
                     }
                 }
             }

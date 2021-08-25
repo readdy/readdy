@@ -100,6 +100,7 @@ public:
             : _kernel(kernel), _timeStep(timeStep),
               _initializeKernel(kernel->actions().initializeKernel().release()),
               _integrator(kernel->actions().eulerBDIntegrator(timeStep).release()),
+              _compartments(kernel->actions().evaluateCompartments().release()),
               _reactions(
                       kernel->supportsGillespie() ?
                       static_cast<readdy::model::actions::TimeStepDependentAction *>(
@@ -122,11 +123,11 @@ public:
         return _progressCallback;
     }
 
-    const std::function<void(TimeStep)> &progressCallback() const {
+    [[nodiscard]] const std::function<void(TimeStep)> &progressCallback() const {
         return _progressCallback;
     }
 
-    const std::size_t &progressOutputStride() const {
+    [[nodiscard]] std::size_t progressOutputStride() const {
         return _progressOutputStride;
     }
 
@@ -138,7 +139,7 @@ public:
         return _progressOutputStride;
     }
 
-    std::size_t checkpointingStride() const { return _checkpointingStride; }
+    [[nodiscard]] std::size_t checkpointingStride() const { return _checkpointingStride; }
 
     void setCheckpointingStride(std::size_t stride) { _checkpointingStride = stride; }
 
@@ -173,6 +174,10 @@ public:
         if (_integrator) _integrator->perform();
     }
 
+    void runCompartments() {
+        if (_compartments) _compartments->perform();
+    }
+
     void runReactions() {
         if (_reactions) _reactions->perform();
     }
@@ -185,7 +190,7 @@ public:
 
     TimeStepActionPtr &integrator() { return _integrator; }
 
-    const TimeStepActionPtr &integrator() const { return _integrator; }
+    [[nodiscard]] const TimeStepActionPtr &integrator() const { return _integrator; }
 
     void useIntegrator(const std::string &name, scalar timeStep = -1) {
         _integrator = _kernel->actions().createIntegrator(name, timeStep > 0 ? timeStep : _timeStep);
@@ -193,7 +198,7 @@ public:
 
     TimeStepActionPtr &reactionScheduler() { return _reactions; }
 
-    const TimeStepActionPtr &reactionScheduler() const { return _reactions; }
+    [[nodiscard]] const TimeStepActionPtr &reactionScheduler() const { return _reactions; }
 
     void useReactionScheduler(const std::string &name, scalar timeStep = -1) {
         _reactions = _kernel->actions().createReactionScheduler(name, timeStep > 0 ? timeStep : _timeStep);
@@ -275,6 +280,7 @@ public:
                 callback(t);
             });
             while (continueFun(t)) {
+                runCompartments();
                 runIntegrator();
                 if (requiresNeighborList) runUpdateNeighborList();
                 runReactions();
@@ -373,6 +379,7 @@ protected:
     model::Kernel *const _kernel;
     std::shared_ptr<model::actions::InitializeKernel> _initializeKernel{nullptr};
     std::shared_ptr<model::actions::TimeStepDependentAction> _integrator{nullptr};
+    std::shared_ptr<model::actions::EvaluateCompartments> _compartments{nullptr};
     std::shared_ptr<model::actions::Action> _forces{nullptr};
     std::shared_ptr<model::actions::TimeStepDependentAction> _reactions{nullptr};
     std::shared_ptr<model::actions::CreateNeighborList> _initNeighborList{nullptr};

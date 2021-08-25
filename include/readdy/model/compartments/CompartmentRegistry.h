@@ -108,6 +108,8 @@ public:
         return _compartments;
     }
 
+    [[nodiscard]] bool empty() const noexcept { return _compartments.empty(); }
+
 private:
     CompartmentVector _compartments;
 
