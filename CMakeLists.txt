@@ -278,6 +278,11 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
                 DESTINATION ${INSTALL_DIR}/include
                 FILES_MATCHING PATTERN "*.cc*"
         )
+        install (
+                DIRECTORY ${CMAKE_SOURCE_DIR}/libraries/graph/include/
+                DESTINATION ${INSTALL_DIR}/include
+                FILES_MATCHING PATTERN "*.h*"
+        )
         install(TARGETS ${READDY_PROJECT_NAME} LIBRARY DESTINATION ${INSTALL_DIR})
 
     ENDIF(READDY_BUILD_SHARED_COMBINED)
