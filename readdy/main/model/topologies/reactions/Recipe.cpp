@@ -54,7 +54,7 @@ Recipe &Recipe::changeParticleType(Graph::PersistentVertexIndex ref, const std::
 
 Recipe &Recipe::separateVertex(Graph::PersistentVertexIndex vertex) {
     const auto &v = _topology.get().graph().vertices().at(vertex);
-    std::for_each(v.neighbors().begin(), v.neighbors().end(), [=](auto neighbor) {
+    std::for_each(v.neighbors().begin(), v.neighbors().end(), [this, vertex](auto neighbor) {
         this->removeEdge(std::make_tuple(vertex, neighbor));
     });
     return *this;

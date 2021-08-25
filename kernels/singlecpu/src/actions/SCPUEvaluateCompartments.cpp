@@ -50,17 +50,19 @@ namespace actions {
 SCPUEvaluateCompartments::SCPUEvaluateCompartments(SCPUKernel *const kernel) : kernel(kernel) {}
 
 void SCPUEvaluateCompartments::perform() {
-    const auto &ctx = kernel->context();
-    const auto &compartments = ctx.compartments().get();
-    auto data = kernel->getSCPUKernelStateModel().getParticleData();
-    for(auto& entry : *data) {
-        if(!entry.is_deactivated()) {
-            for (const auto &compartment : compartments) {
-                if (compartment->isContained(entry.position())) {
-                    const auto& conversions = compartment->getConversions();
-                    auto it = conversions.find(entry.type);
-                    if (it != conversions.end()) {
-                        entry.type = it->second;
+    if (!kernel->context().compartments().empty()) {
+        const auto &ctx = kernel->context();
+        const auto &compartments = ctx.compartments().get();
+        auto data = kernel->getSCPUKernelStateModel().getParticleData();
+        for (auto &entry: *data) {
+            if (!entry.is_deactivated()) {
+                for (const auto &compartment: compartments) {
+                    if (compartment->isContained(entry.position())) {
+                        const auto &conversions = compartment->getConversions();
+                        auto it = conversions.find(entry.type);
+                        if (it != conversions.end()) {
+                            entry.type = it->second;
+                        }
                     }
                 }
             }
