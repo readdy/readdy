@@ -48,7 +48,7 @@
 
 namespace readdy::model::actions {
 
-class UserDefinedAction : public TimeStepDependentAction {
+class __attribute__ ((visibility("default"))) UserDefinedAction : public TimeStepDependentAction {
 public:
     explicit UserDefinedAction(scalar timeStep) : TimeStepDependentAction(timeStep) {}
 
@@ -56,7 +56,7 @@ public:
         return _kernel;
     }
     
-    model::Kernel* const& kernel() const {
+    [[nodiscard]] model::Kernel* const& kernel() const {
         return _kernel;
     }
     
