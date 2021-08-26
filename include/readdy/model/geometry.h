@@ -37,8 +37,13 @@ struct Sphere {
             if (distToOriginSquared > radius * radius) {
                 return {0, 0, 0};  // zero vector
             } else {
-                auto distToOrigin = std::sqrt(distToOriginSquared);
-                return delta * (distToOrigin - radius) / distToOrigin;
+                auto norm = std::sqrt(distToOriginSquared);
+                if (norm < 1e-5) {
+                    // almost in the center so it doesn't matter which direction we go
+                    return {-radius, 0, 0};
+                } else {
+                    return (norm - radius) * delta / delta.norm();
+                }
             }
         }
     }
@@ -61,37 +66,53 @@ struct Box {
         bool result = true;
         #pragma unroll
         for(std::uint8_t d = 0; d < 3; ++d) {
-            if constexpr(inclusion) {
-                result &= position[d] > v0[d] && position[d] < v1[d];
-            } else {
-                result &= position[d] < v0[d] && position[d] > v1[d];
-            }
+            result &= position[d] > v0[d] && position[d] < v1[d];
+        }
+        if constexpr(!inclusion) {
+            result = !result;
         }
         return result;
     }
 
     template<bool inclusion>
     [[nodiscard]] Vec3 smallestDifference(Vec3 position) const {
-        Vec3 difference {0, 0, 0};
-
-        #pragma unroll
-        for(std::uint8_t d = 0; d < 3; ++d) {
-            if constexpr(inclusion) {
+        if constexpr(inclusion) {
+            Vec3 difference {0, 0, 0};
+            #pragma unroll
+            for(std::uint8_t d = 0; d < 3; ++d) {
                 if (position[d] < v0[d]) {
                     difference[d] = position[d] - v0[d];
                 } else if (position[d] > v1[d]) {
                     difference[d] = position[d] - v1[d];
                 }
-            } else {
-                if (position[d] > v0[d]) {
-                    difference[d] = position[d] - v0[d];
-                } else if (position[d] < v1[d]) {
-                    difference[d] = position[d] - v1[d];
+            }
+
+            return difference;
+        } else {
+            if(contains<true>(position)) {
+                Vec3 difference {0, 0, 0};
+                // All components of position are within range of (v0[d], v1[d]]. Find minimum.
+                std::array<dtype, 6> diffs;
+                #pragma unroll
+                for(std::uint8_t d = 0; d < 3; ++d) {
+                    diffs[2*d] = std::abs(position[d] - v0[d]);
+                    diffs[2*d+1] = std::abs(position[d] - v1[d]);
                 }
+                auto it = std::min_element(begin(diffs), end(diffs));
+                auto ix = std::distance(begin(diffs), it);
+                auto vix = ix % 2;
+
+                if (vix == 0) {
+                    difference[ix / 2] = position[ix / 2] - v0[ix / 2];
+                } else {
+                    difference[ix / 2] = position[ix / 2] - v1[ix / 2];
+                }
+
+                return difference;
+            } else {
+                return {0, 0, 0};
             }
         }
-
-        return difference;
     }
 
     [[nodiscard]] std::string describe() const {
