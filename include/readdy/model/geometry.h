@@ -37,8 +37,13 @@ struct Sphere {
             if (distToOriginSquared > radius * radius) {
                 return {0, 0, 0};  // zero vector
             } else {
-                auto distToOrigin = std::sqrt(distToOriginSquared);
-                return delta * (distToOrigin - radius) / distToOrigin;
+                auto norm = std::sqrt(distToOriginSquared);
+                if (norm < 1e-5) {
+                    // almost in the center so it doesn't matter which direction we go
+                    return {-radius, 0, 0};
+                } else {
+                    return (norm - radius) * delta / delta.norm();
+                }
             }
         }
     }
