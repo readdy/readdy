@@ -13,12 +13,12 @@ echo "Install prefix ${SP_DIR}"
 export HDF5_ROOT=${PREFIX}
 
 cmake .. \
-  -DCMAKE_INSTALL_PREFIX=${SP_DIR} \
-  -DCMAKE_PREFIX_PATH=${PREFIX} \
-  -DCMAKE_OSX_SYSROOT=${CONDA_BUILD_SYSROOT} \
+  -DCMAKE_INSTALL_PREFIX="${PREFIX}" \
+  -DCMAKE_PREFIX_PATH="${PREFIX}" \
+  -DCMAKE_OSX_SYSROOT="${CONDA_BUILD_SYSROOT}" \
   -DCMAKE_BUILD_TYPE=Release \
-  -DPYTHON_EXECUTABLE=${PYTHON} \
-  -DPYTHON_PREFIX=${PREFIX} \
+  -DPYTHON_EXECUTABLE="${PYTHON}" \
+  -DPYTHON_PREFIX="${PREFIX}" \
   -DHDF5_INCLUDE_DIRS="${PREFIX}/include" \
   -DREADDY_BUILD_SHARED_COMBINED:BOOL=ON \
   -DREADDY_LOG_CMAKE_CONFIGURATION:BOOL=ON \
@@ -26,9 +26,10 @@ cmake .. \
   -DREADDY_INSTALL_UNIT_TEST_EXECUTABLE:BOOL=OFF \
   -DREADDY_VERSION=${PKG_VERSION} \
   -DREADDY_BUILD_STRING=${PKG_BUILDNUM} \
+  -DSP_DIR="${SP_DIR}" \
   -GNinja
 
-ninja ${MAKEFLAGS}
+ninja "${MAKEFLAGS}"
 ninja install
 
 export READDY_N_CORES=2
@@ -45,13 +46,13 @@ if [ ${err_code} -ne 0 ]; then
    echo "core unit tests failed with ${ret_code}"
 fi
 
-echo "calling c++ integration tests"
-./readdy/test/runUnitTests --durations yes [integration]
-err_code=$?
-if [ ${err_code} -ne 0 ]; then
-   ret_code=${err_code}
-   echo "core unit tests failed with ${ret_code}"
-fi
+# echo "calling c++ integration tests"
+# ./readdy/test/runUnitTests --durations yes [integration]
+# err_code=$?
+# if [ ${err_code} -ne 0 ]; then
+#    ret_code=${err_code}
+#    echo "core unit tests failed with ${ret_code}"
+# fi
 
 echo "calling c++ singlecpu unit tests"
 ./kernels/singlecpu/test/runUnitTests_singlecpu --durations yes

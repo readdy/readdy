@@ -53,11 +53,11 @@ ADD_SUBDIRECTORY(src/cxx)
 
 install (
         DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/src/python/readdy/
-        DESTINATION ${INSTALL_DIR}
+        DESTINATION ${PYTHON_INSTALL_DIR}
         FILES_MATCHING PATTERN "*.py"
 )
 configure_file(${CMAKE_CURRENT_LIST_DIR}/src/python/readdy/_version.py.in ${CMAKE_CURRENT_BINARY_DIR}/src/python/readdy/_version.py)
 
 install (FILES ${CMAKE_CURRENT_BINARY_DIR}/src/python/readdy/_version.py
-         DESTINATION ${INSTALL_DIR}
+         DESTINATION ${PYTHON_INSTALL_DIR}
 )

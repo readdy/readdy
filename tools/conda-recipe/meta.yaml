@@ -12,14 +12,7 @@ build:
   {% else %}string: py{{ environ.get('PY_VER').replace('.', '') }}_{{ environ.get('GIT_BUILD_STR', 'GIT_STUB') }}{% endif %}
   rpaths:
     - lib/
-    - lib/python3.9/site-packages/{{ name }}  # [py==39]
-    - lib/python3.9/site-packages/{{ name }}/readdy_plugins  # [py==39]
-    - lib/python3.8/site-packages/{{ name }}  # [py==38]
-    - lib/python3.8/site-packages/{{ name }}/readdy_plugins  # [py==38]
-    - lib/python3.7/site-packages/{{ name }}  # [py==37]
-    - lib/python3.7/site-packages/{{ name }}/readdy_plugins  # [py==37]
-    - lib/python3.6/site-packages/{{ name }}  # [py==36]
-    - lib/python3.6/site-packages/{{ name }}/readdy_plugins  # [py==36]
+    - lib/readdy_plugins
 
 requirements:
   host:

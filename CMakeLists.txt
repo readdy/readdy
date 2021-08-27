@@ -42,9 +42,8 @@ PROJECT(readdy_main VERSION 0.0 LANGUAGES C CXX)
 # User configurable cache variables #
 #                                   #
 #####################################
-
-set(INSTALL_DIR "readdy" CACHE PATH "Installation directory relative to python site-packages
-                                     if provided via CMAKE_INSTALL_PREFIX")
+set(INSTALL_DIR "${CMAKE_INSTALL_PREFIX}" CACHE PATH "Installation root for anything but python bindings and files")
+set(PYTHON_INSTALL_DIR "${SP_DIR}/readdy" CACHE PATH "Installation directory relative to SP_DIR (python/site-packages)")
 
 # test configuration
 SET(READDY_CREATE_TEST_TARGET ON CACHE BOOL "Determines if the test target should be added.")
