@@ -46,6 +46,8 @@ else()
     SET(PYTHON_CPP_MODULES_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/readdy/_internal")
 endif()
 
+add_custom_target(CopyPythonSources
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_LIST_DIR}/src/python/readdy ${CMAKE_CURRENT_BINARY_DIR}/readdy)
 # add modules
 ADD_SUBDIRECTORY(src/cxx)
 
