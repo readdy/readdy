@@ -33,7 +33,7 @@ ninja "${MAKEFLAGS}"
 ninja install
 
 export READDY_N_CORES=2
-export READDY_PLUGIN_DIR="${SP_DIR}/readdy/readdy_plugins"
+export READDY_PLUGIN_DIR="${PREFIX}/lib/readdy_plugins"
 
 err_code=0
 ret_code=0
