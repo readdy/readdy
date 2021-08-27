@@ -31,7 +31,7 @@ cmake .. \
   -GNinja
 
 echo "Running ninja with makeflags ${MAKEFLAGS}"
-ninja "${MAKEFLAGS}"
+ninja ${MAKEFLAGS}
 echo "Running ninja install"
 ninja install
 
