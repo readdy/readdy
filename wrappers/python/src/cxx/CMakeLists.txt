@@ -60,4 +60,4 @@ set_target_properties(readdybinding
         ARCHIVE_OUTPUT_DIRECTORY "${PYTHON_CPP_MODULES_OUTPUT_DIR}"
         LIBRARY_OUTPUT_DIRECTORY "${PYTHON_CPP_MODULES_OUTPUT_DIR}")
 
-install(TARGETS readdybinding LIBRARY DESTINATION ${INSTALL_DIR}/_internal)
+install(TARGETS readdybinding LIBRARY DESTINATION ${PYTHON_INSTALL_DIR}/_internal)

@@ -1,3 +1,4 @@
 def get_readdy_plugin_dir():
+    import os
     from pathlib import Path
-    return (Path(__file__).parent / '..' / 'readdy_plugins').resolve()
+    return (Path(os.environ["CONDA_PREFIX"]) / 'lib' / 'readdy_plugins').resolve()
