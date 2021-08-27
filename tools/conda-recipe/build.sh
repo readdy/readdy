@@ -12,6 +12,7 @@ echo "Install prefix ${SP_DIR}"
 
 export HDF5_ROOT=${PREFIX}
 
+echo "Running cmake"
 cmake .. \
   -DCMAKE_INSTALL_PREFIX="${PREFIX}" \
   -DCMAKE_PREFIX_PATH="${PREFIX}" \
@@ -29,7 +30,9 @@ cmake .. \
   -DSP_DIR="${SP_DIR}" \
   -GNinja
 
+echo "Running ninja with makeflags ${MAKEFLAGS}"
 ninja "${MAKEFLAGS}"
+echo "Running ninja install"
 ninja install
 
 export READDY_N_CORES=2
