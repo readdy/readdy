@@ -84,9 +84,6 @@ void exportKernelContext(py::module &module) {
             .def("add", [](ParticleTypeRegistry &self, const std::string& name, readdy::scalar D, readdy::model::ParticleFlavor flavor) {
                 self.add(name, D, flavor);
                 }, "name"_a, "diffusion_constant"_a, "flavor"_a = readdy::model::particleflavor::NORMAL)
-            .def("add", [](ParticleTypeRegistry &self, const std::string& name, readdy::Vec3 D, readdy::model::ParticleFlavor flavor) {
-                self.add(name, D, flavor);
-                }, "name"_a, "diffusion_constant"_a, "flavor"_a = readdy::model::particleflavor::NORMAL)
             .def("diffusion_constant_of", [](const ParticleTypeRegistry &self, const std::string &type) -> readdy::scalar {
                 return self.diffusionConstantOf(type);
             })
