@@ -67,18 +67,8 @@ void CPUEulerBDIntegrator::perform() {
 
                 const auto &D = context.particleTypes().diffusionConstantOf(it->type);
                 auto randomDisplacement = readdy::model::rnd::normal3<scalar>();
-                auto deterministicDisplacement = it->force * dt / kbt;
-                if (std::holds_alternative<scalar>(D)) {
-                    randomDisplacement *= sqrt(2. * (*std::get_if<scalar>(&D)) * dt);
-                    deterministicDisplacement *= (*std::get_if<scalar>(&D));
-                } else {
-                    auto components = sqrt(2. * (*std::get_if<Vec3>(&D)) * dt);
-                    #pragma unroll
-                    for(int d = 0; d < 3; ++d) {
-                        randomDisplacement[d] *= components[d];
-                        deterministicDisplacement *= (*std::get_if<Vec3>(&D))[d];
-                    }
-                }
+                auto deterministicDisplacement = it->force * D * dt / kbt;
+                randomDisplacement *= sqrt(2. * D * dt);
                 it->pos += randomDisplacement + deterministicDisplacement;
                 bcs::fixPosition(it->pos, box, pbc);
             }

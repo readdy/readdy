@@ -84,21 +84,10 @@ void exportKernelContext(py::module &module) {
             .def("add", [](ParticleTypeRegistry &self, const std::string& name, readdy::scalar D, readdy::model::ParticleFlavor flavor) {
                 self.add(name, D, flavor);
                 }, "name"_a, "diffusion_constant"_a, "flavor"_a = readdy::model::particleflavor::NORMAL)
-            .def("add", [](ParticleTypeRegistry &self, const std::string& name, readdy::Vec3 D, readdy::model::ParticleFlavor flavor) {
-                self.add(name, D, flavor);
-                }, "name"_a, "diffusion_constant"_a, "flavor"_a = readdy::model::particleflavor::NORMAL)
-            .def("diffusion_constant_of", [](const ParticleTypeRegistry &self, const std::string &type) -> py::object {
-                auto D = self.diffusionConstantOf(type);
-                if (std::holds_alternative<scalar>(D)) {
-                    return py::cast(*std::get_if<scalar>(&D));
-                } else {
-                    return py::cast(*std::get_if<Vec3>(&D));
-                }
+            .def("diffusion_constant_of", [](const ParticleTypeRegistry &self, const std::string &type) -> readdy::scalar {
+                return self.diffusionConstantOf(type);
             })
             .def("set_diffusion_constant_of", [](ParticleTypeRegistry &self, const std::string &type, scalar value){
-                self.diffusionConstantOf(type) = value;
-            })
-            .def("set_diffusion_constant_of", [](ParticleTypeRegistry &self, const std::string &type, Vec3 value){
                 self.diffusionConstantOf(type) = value;
             })
             .def("n_types", &ParticleTypeRegistry::nTypes)

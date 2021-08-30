@@ -64,18 +64,8 @@ public:
             if(!entry.is_deactivated()) {
                 const auto &D = context.particleTypes().diffusionConstantOf(entry.type);
                 auto randomDisplacement = readdy::model::rnd::normal3<scalar>();
-                auto deterministicDisplacement = entry.force * _timeStep / kbt;
-                if (std::holds_alternative<scalar>(D)) {
-                    randomDisplacement *= sqrt(2. * (*std::get_if<scalar>(&D)) * _timeStep);
-                    deterministicDisplacement *= (*std::get_if<scalar>(&D));
-                } else {
-                    auto components = sqrt(2. * (*std::get_if<Vec3>(&D)) * _timeStep);
-                    #pragma unroll
-                    for(int d = 0; d < 3; ++d) {
-                        randomDisplacement[d] *= components[d];
-                        deterministicDisplacement *= (*std::get_if<Vec3>(&D))[d];
-                    }
-                }
+                auto deterministicDisplacement = entry.force * D * _timeStep / kbt;
+                randomDisplacement *= sqrt(2. * D * _timeStep);
                 entry.pos += randomDisplacement + deterministicDisplacement;
                 bcs::fixPosition(entry.pos, box, pbc);
             }
