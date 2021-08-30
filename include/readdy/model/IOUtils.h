@@ -71,7 +71,7 @@ struct ReactionInfo {
 struct ParticleTypeInfo {
     const char *name;
     std::size_t type_id;
-    std::array<scalar, 3> diffusion_constant;
+    scalar diffusion_constant;
     const char *flavor;
 };
 struct TopologyTypeInfo {

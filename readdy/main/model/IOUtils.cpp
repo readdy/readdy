@@ -62,13 +62,7 @@ CompoundType getParticleTypeInfoType(h5rd::Object::ParentFileRef ref, int versio
     builder->insertString("name", offsetof(ParticleTypeInfo, name));
     builder->insertString("flavor", offsetof(ParticleTypeInfo, flavor));
     builder->insert<decltype(std::declval<ParticleTypeInfo>().type_id)>("type_id", offsetof(ParticleTypeInfo, type_id));
-    if (version == 0) {
-        // scalar value
-        builder->insert<Dtype::value_type>("diffusion_constant", offsetof(ParticleTypeInfo, diffusion_constant));
-    } else {
-        // in newer version: vector
-        builder->insertArray<Dtype::value_type, std::tuple_size_v<Dtype>>("diffusion_constant", offsetof(ParticleTypeInfo, diffusion_constant));
-    }
+    builder->insert<decltype(std::declval<ParticleTypeInfo>().diffusion_constant)>("diffusion_constant", offsetof(ParticleTypeInfo, diffusion_constant));
     auto nct = builder->build();
     return std::make_tuple(nct, STDCompoundType(nct));
 }
@@ -159,18 +153,6 @@ void writeGeneralContextInformation(h5rd::Group &group, const Context &context) 
 }
 
 void writeParticleTypeInformation(h5rd::Group &group, const Context &context) {
-    auto convertDiffusionConstant = [](const DiffusionConstant &D) -> std::array<scalar, 3>{
-        std::array<scalar, 3> result {};
-        if (std::holds_alternative<scalar>(D)) {
-            std::fill(result.begin(), result.end(), *std::get_if<scalar>(&D));
-        } else {
-            result[0] = (*std::get_if<Vec3>(&D)).x;
-            result[1] = (*std::get_if<Vec3>(&D)).y;
-            result[2] = (*std::get_if<Vec3>(&D)).z;
-        }
-        return result;
-    };
-
     const auto &types = context.particleTypes().typeMapping();
     std::vector<ParticleTypeInfo> typeInfoVec;
 
@@ -180,7 +162,7 @@ void writeParticleTypeInformation(h5rd::Group &group, const Context &context) {
         typeInfoVec.push_back(ParticleTypeInfo{
                 .name = info.name.c_str(),
                 .type_id = info.typeId,
-                .diffusion_constant = convertDiffusionConstant(info.diffusionConstant),
+                .diffusion_constant = info.diffusionConstant,
                 .flavor = [](ParticleFlavor v) -> const char * {
                     if (v == particleflavor::NORMAL) return "NORMAL";
                     if (v == particleflavor::TOPOLOGY) return "TOPOLOGY";

@@ -325,9 +325,6 @@ class ReactionDiffusionSystem(object):
         :param diffusion_constant: The species' diffusion constant [length**2/time]
         """
         diffusion_constant = self._convert_diffusion_constant_to_internal(diffusion_constant)
-        if isinstance(diffusion_constant, (list, tuple, _np.ndarray)):
-            assert len(diffusion_constant) == 3, "needs either scalar or three-dimensional quantity."
-            diffusion_constant = _v3_of(diffusion_constant)
         self._context.particle_types.add(name, diffusion_constant, _ParticleTypeFlavor.NORMAL)
 
     def add_topology_species(self, name, diffusion_constant=1.):

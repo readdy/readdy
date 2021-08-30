@@ -111,25 +111,10 @@ public:
         return idOf(name);
     }
 
-    void add(const std::string &name, scalar diffusionConst, ParticleFlavor flavor = particleflavor::NORMAL) {
-        add(name, DiffusionConstant{diffusionConst}, flavor);
-    }
-
-    void add(const std::string &name, Vec3 diffusionConst, ParticleFlavor flavor = particleflavor::NORMAL) {
-        add(name, DiffusionConstant{diffusionConst}, flavor);
-    }
-
     void add(const std::string &name, DiffusionConstant diffusionConst, ParticleFlavor flavor = particleflavor::NORMAL);
 
     void addTopologyType(const std::string &name, DiffusionConstant diffusionConst) {
         add(name, diffusionConst, particleflavor::TOPOLOGY);
-    }
-
-    void addTopologyType(const std::string &name, scalar diffusionConst) {
-        addTopologyType(name, DiffusionConstant{diffusionConst});
-    }
-    void addTopologyType(const std::string &name, Vec3 diffusionConst) {
-        add(name, DiffusionConstant{diffusionConst});
     }
 
     const ParticleTypeInfo &infoOf(const std::string &name) const {
