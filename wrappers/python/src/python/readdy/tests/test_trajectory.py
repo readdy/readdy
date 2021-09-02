@@ -23,4 +23,4 @@ class TestTrajectory(unittest.TestCase):
         shutil.rmtree(cls.dir, ignore_errors=True)
 
     def test_trajectory_length(self):
-        self.assertEqual(len(self.traj), 123)
+        self.assertEqual(len(self.traj), 124)
