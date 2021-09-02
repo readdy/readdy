@@ -575,13 +575,8 @@ std::size_t trajectoryLength(const std::string &filename, const std::string &nam
     if (f->exists("readdy/trajectory/" + name)) {
         auto trajGroup = f->getSubgroup("readdy/trajectory/" + name);
 
-        auto hid = H5Dopen(trajGroup.id(), name.data(), H5P_DEFAULT);
-        {
-            h5rd::DataSpace fileSpace(trajGroup.parentFile(), H5Dget_space(hid));
-            return fileSpace.dims()[0] / 2;
-        }
-        H5Dclose(hid);
-
+        auto limitsDs = trajGroup.getDataset<std::size_t>("limits");
+        return limitsDs->getFileSpace()->dims()[0] / 2;
     } else {
         return 0;
     }
