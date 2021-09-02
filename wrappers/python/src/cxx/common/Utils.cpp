@@ -576,7 +576,7 @@ std::size_t trajectoryLength(const std::string &filename, const std::string &nam
         auto trajGroup = f->getSubgroup("readdy/trajectory/" + name);
 
         auto limitsDs = trajGroup.getDataset<std::size_t>("limits");
-        return limitsDs->getFileSpace()->dims()[0] / 2;
+        return limitsDs->getFileSpace()->dims()[0];
     } else {
         return 0;
     }
