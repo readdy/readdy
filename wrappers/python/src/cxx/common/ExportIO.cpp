@@ -52,17 +52,6 @@ namespace py = pybind11;
 using rvp = py::return_value_policy;
 namespace io = h5rd;
 
-template<typename T>
-void exportDataSet(py::module &io, const std::string &name) {
-    using group_t = io::Group;
-    using dataset_t = io::DataSet  ;
-    std::string base_name = "DataSet_";
-    py::class_<dataset_t>(io, (base_name + name).c_str())
-            .def("append", [](dataset_t &self, const py::array_t <T> &arr) {
-                self.append(io::dimensions(arr.shape(), arr.shape() + arr.ndim()), arr.data());
-            });
-}
-
 void exportIO(py::module &io) {
     using namespace pybind11::literals;
     using file_t = io::File;

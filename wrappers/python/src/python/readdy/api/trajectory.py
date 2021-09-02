@@ -46,6 +46,7 @@ import numpy as _np
 
 from readdy._internal.readdybinding.common.util import read_reaction_observable as _read_reaction_observable
 from readdy._internal.readdybinding.common.util import read_trajectory as _read_trajectory
+from readdy._internal.readdybinding.common.util import trajectory_length as _trajectory_length
 from readdy._internal.readdybinding.common.util import TrajectoryParticle
 from readdy._internal.readdybinding.common.util import read_topologies_observable as _read_topologies
 from readdy.util.observable_utils import calculate_pressure as _calculate_pressure
@@ -356,6 +357,9 @@ class Trajectory(object):
         :return: the trajectory
         """
         return _read_trajectory(self._filename, self._name)
+
+    def __len__(self):
+        return _trajectory_length(self._filename, self._name)
 
     def read_observable_particle_positions(self, data_set_name=""):
         """
