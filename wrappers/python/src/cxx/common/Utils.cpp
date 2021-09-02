@@ -567,6 +567,26 @@ readTopologies(const std::string &filename, const std::string &groupName, std::s
     return std::make_tuple(time, result);
 }
 
+std::size_t trajectoryLength(const std::string &filename, const std::string &name) {
+    readdy::io::BloscFilter bloscFilter;
+    bloscFilter.registerFilter();
+
+    auto f = h5rd::File::open(filename, h5rd::File::Flag::READ_ONLY);
+    if (f->exists("readdy/trajectory/" + name)) {
+        auto trajGroup = f->getSubgroup("readdy/trajectory/" + name);
+
+        auto hid = H5Dopen(trajGroup.id(), name.data(), H5P_DEFAULT);
+        {
+            h5rd::DataSpace fileSpace(trajGroup.parentFile(), H5Dget_space(hid));
+            return fileSpace.dims()[0] / 2;
+        }
+        H5Dclose(hid);
+
+    } else {
+        return 0;
+    }
+}
+
 std::vector<std::vector<TrajectoryParticle>> read_trajectory(const std::string &filename, const std::string &name) {
     readdy::io::BloscFilter bloscFilter;
     bloscFilter.registerFilter();
@@ -704,5 +724,6 @@ void exportUtils(py::module &m) {
     m.def("read_topologies_observable", &readTopologies, "filename"_a, "groupname"_a,
           "begin"_a = 0, "end"_a = std::numeric_limits<int>::max(), "stride"_a = 1);
     m.def("read_reaction_observable", &read_reactions_obs, "filename"_a, "name"_a);
+    m.def("trajectory_length", &trajectoryLength, "filename"_a, "name"_a);
     py::add_ostream_redirect(m, "ostream_redirect");
 }
