@@ -159,6 +159,19 @@ void writeParticleTypeInformation(h5rd::Group &group, const Context &context) {
     #pragma unroll (4)
     for (const auto &p_type : types) {
         const auto &info = context.particleTypes().infoOf(p_type.second);
+#ifdef WIN32
+        typeInfoVec.push_back(ParticleTypeInfo{
+                info.name.c_str(),
+                info.typeId,
+                info.diffusionConstant,
+                [](ParticleFlavor v) -> const char * {
+                    if (v == particleflavor::NORMAL) return "NORMAL";
+                    if (v == particleflavor::TOPOLOGY) return "TOPOLOGY";
+                    if (v == particleflavor::MEMBRANE) return "MEMBRANE";
+                    return "UNKNOWN";
+                }(info.flavor)
+        });
+#else
         typeInfoVec.push_back(ParticleTypeInfo{
                 .name = info.name.c_str(),
                 .type_id = info.typeId,
@@ -170,6 +183,7 @@ void writeParticleTypeInformation(h5rd::Group &group, const Context &context) {
                     return "UNKNOWN";
                 }(info.flavor)
         });
+#endif
     }
     if (!typeInfoVec.empty()) {
         h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
@@ -190,8 +204,8 @@ void writeTopologyTypeInformation(h5rd::Group &group, const Context &context) {
     #pragma unroll (4)
     for (const auto &t : types) {
         TopologyTypeInfo info{
-            .name = t.name.data(),
-            .type_id = static_cast<std::size_t>(t.type)
+            t.name.data(),
+            static_cast<std::size_t>(t.type)
         };
         infoVec.push_back(info);
     }

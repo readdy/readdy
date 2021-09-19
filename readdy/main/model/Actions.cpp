@@ -49,8 +49,12 @@
 
 #include <utility>
 
+#ifdef WIN32
+#define and &&
+#define not !
+#define or ||
+#endif
 namespace readdy::model::actions {
-
 
 CreateNeighborList::CreateNeighborList(scalar cutoffDistance) : _cutoffDistance(cutoffDistance) {}
 

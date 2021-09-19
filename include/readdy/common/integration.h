@@ -473,7 +473,7 @@ inline auto integrateAdaptive(Func f, ScalarType lowerLimit, ScalarType upperLim
 
     ScalarType totalIntegral = panels.front().integral;
     ScalarType totalAbsoluteError = panels.front().absoluteErrorEstimate;
-    if (totalIntegral==0 and totalAbsoluteError==0) {
+    if (totalIntegral==0 && totalAbsoluteError==0) {
         return std::make_pair(totalIntegral, totalAbsoluteError);
     }
     ScalarType totalRelativeError = totalAbsoluteError / totalIntegral;

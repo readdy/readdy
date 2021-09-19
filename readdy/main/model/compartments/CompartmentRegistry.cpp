@@ -52,7 +52,7 @@ namespace readdy::model::compartments {
 Compartment::id_type
 CompartmentRegistry::addSphere(const Compartment::conversion_map &conversions, const std::string &uniqueName,
                                const Vec3 &origin, scalar radius, bool largerOrLess) {
-    geometry::Sphere<scalar> geom {.center=origin, .radius=radius};
+    geometry::Sphere<scalar> geom {origin, radius};
     _compartments.emplace_back(std::make_shared<Sphere>(conversions, uniqueName, geom, largerOrLess));
     return _compartments.back()->getId();
 }
@@ -69,7 +69,7 @@ Compartment::id_type CompartmentRegistry::addCapsule(
         const Compartment::conversion_map &conversions, const std::string &uniqueName,
         Vec3 center, Vec3 direction, scalar length, scalar radius, bool inside
 ) {
-    geometry::Capsule<scalar> geom {.center=center, .direction=direction, .radius=radius, .length=length};
+    geometry::Capsule<scalar> geom {center, direction, radius, length};
     _compartments.emplace_back(std::make_shared<Capsule>(conversions, uniqueName, geom, inside));
     return _compartments.back()->getId();
 }

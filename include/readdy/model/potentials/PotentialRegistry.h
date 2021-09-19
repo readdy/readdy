@@ -102,7 +102,11 @@ public:
 
     void addBox(ParticleTypeId particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &extent) {
         auto &pots = _ownPotentialsO1[particleType];
+#ifdef WIN32
+        geometry::Box<scalar> boxGeometry {origin, origin + extent};
+#else
         geometry::Box<scalar> boxGeometry {.v0 = origin, .v1 = origin + extent};
+#endif
         pots.emplace_back(std::make_shared<Box<true>>(particleType, forceConstant, boxGeometry));
         _registerO1(pots.back().get());
     }
@@ -254,7 +258,11 @@ public:
     void
     addSphere(ParticleTypeId particleType, scalar forceConstant, const Vec3 &origin, scalar radius, bool inclusion) {
         auto &pots = _ownPotentialsO1[particleType];
+#ifdef WIN32
+        geometry::Sphere<scalar> geom {origin, radius};
+#else
         geometry::Sphere<scalar> geom {.center=origin, .radius=radius};
+#endif
         if (inclusion) {
             pots.emplace_back(std::make_shared<Sphere<true>>(particleType, forceConstant, geom));
         } else {
@@ -266,9 +274,15 @@ public:
     void addCapsule(ParticleTypeId particleType, scalar forceConstant, Vec3 center, Vec3 direction,
                     scalar length, scalar radius) {
         auto &pots = _ownPotentialsO1[particleType];
+#ifdef WIN32
+        geometry::Capsule<scalar> geometry {
+                center, direction, radius, length
+        };
+#else
         geometry::Capsule<scalar> geometry {
             .center=center, .direction = direction, .radius = radius, .length=length
         };
+#endif
         pots.emplace_back(std::make_shared<Capsule<true>>(particleType, forceConstant, geometry));
         _registerO1(pots.back().get());
     }

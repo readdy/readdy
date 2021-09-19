@@ -340,7 +340,7 @@ struct FindReactionById {
     template<typename T>
     void operator()(const T &r) {
         if (r->id() == id) {
-            if (not _found) {
+            if (!_found) {
                 _found = true;
                 assign(r);
             } else {

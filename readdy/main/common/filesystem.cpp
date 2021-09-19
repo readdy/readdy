@@ -43,17 +43,16 @@
 
 #include <cstdio>
 
-#ifdef WINDOWS
+#ifdef WIN32
 #include <direct.h>
 #define GetCurrentDir _getcwd
 #else
 #include <unistd.h>
 #include <system_error>
-#include <readdy/common/logging.h>
-
 #define GetCurrentDir getcwd
 #endif
 
+#include <readdy/common/logging.h>
 #include "readdy/common/filesystem.h"
 #include "readdy/common/tinydir.h"
 
@@ -71,7 +70,8 @@ std::string current_path()  {
 }
 
 bool exists(const std::string& path) {
-    return access( path.c_str(), F_OK ) != -1;
+    tinydir_file file;
+    return tinydir_file_open(&file, path.c_str()) != -1;
 }
 
 bool is_file(const std::string &path) {
