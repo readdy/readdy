@@ -66,7 +66,7 @@
 
 namespace readdy::model {
 
-class Context {
+class READDY_API Context {
 public:
     using BoxSize = std::array<scalar, 3>;
     using PeriodicBoundaryConditions = std::array<bool, 3>;

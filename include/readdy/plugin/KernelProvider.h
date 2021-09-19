@@ -55,7 +55,7 @@ class shared_library;
 }
 namespace plugin {
 
-class KernelDeleter {
+class READDY_API KernelDeleter {
     std::shared_ptr<readdy::util::dll::shared_library> ptr;
 public:
     /**
@@ -82,7 +82,7 @@ public:
  * specified directory will be scanned for shared libraries with the required
  * symbols, i.e., with an implementation of the Kernel class.
  */
-class KernelProvider {
+class READDY_API KernelProvider {
 protected:
     /**
      * The constructor of KernelProvider. As it is a singleton, it is protected.

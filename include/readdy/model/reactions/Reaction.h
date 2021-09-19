@@ -82,7 +82,7 @@ inline std::ostream &operator<<(std::ostream &os, const ReactionType &reactionTy
     return os;
 }
 
-class Reaction {
+class READDY_API Reaction {
 public:
     Reaction(std::string name, scalar rate, scalar eductDistance, scalar productDistance, std::uint8_t nEducts,
              std::uint8_t nProducts)

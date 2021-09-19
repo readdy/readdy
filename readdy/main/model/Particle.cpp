@@ -42,8 +42,11 @@
  * @date 19.04.16
  */
 
-namespace readdy::model {
+namespace readdy::model::detail {
 
-std::atomic<ParticleId> Particle::idCounter{0};
+std::atomic<ParticleId> *particleIdCounter (){
+    static auto counter = std::atomic<ParticleId>{0};
+    return &counter;
+}
 
 }

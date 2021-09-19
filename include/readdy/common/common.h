@@ -46,6 +46,7 @@
 #pragma once
 
 #include <variant>
+#include "macros.h"
 #include "logging.h"
 #include "ReaDDyVec3.h"
 

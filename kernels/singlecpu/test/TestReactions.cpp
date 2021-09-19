@@ -64,9 +64,8 @@ TEST_CASE("Test single cpu decay reactions", "[scpu]") {
     });
     auto connection = kernel->connectObservable(pp_obs.get());
 
-    const int n_particles = 200;
-    const auto typeId = kernel->context().particleTypes().idOf("X");
-    std::vector<readdy::model::Particle> particlesToBeginWith{n_particles, {0, 0, 0, typeId}};
+    auto typeId = kernel->context().particleTypes().idOf("X");
+    std::vector<readdy::model::Particle> particlesToBeginWith{200, {0, 0, 0, typeId}};
     kernel->stateModel().addParticles(particlesToBeginWith);
     for (size_t t = 0; t < 20; t++) {
         forces->perform();

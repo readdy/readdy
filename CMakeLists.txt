@@ -188,6 +188,8 @@ endif()
 # external spdlog
 add_definitions(-DSPDLOG_FMT_EXTERNAL)
 
+set(WINDOWS_EXPORT_ALL_SYMBOLS ON)
+
 # include blosc
 set(DEACTIVATE_SNAPPY ON CACHE BOOL "")
 set(DEACTIVATE_ZSTD OFF CACHE BOOL "")
@@ -215,6 +217,7 @@ target_link_libraries(${READDY_PROJECT_NAME} PUBLIC ${READDY_DEPENDENT_LIBRARIES
 set_target_properties(${READDY_PROJECT_NAME} PROPERTIES
         LINK_FLAGS "${EXTRA_LINK_FLAGS}"
         COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}")
+target_compile_definitions(${READDY_PROJECT_NAME} PUBLIC LIBRARY_EXPORTS=1)
 
 #####################################
 #                                   #

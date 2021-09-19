@@ -61,7 +61,7 @@ namespace readdy::model { class Context; }
 
 namespace readdy::model::reactions {
 
-class ReactionRegistry {
+class READDY_API ReactionRegistry {
 public:
     using ReactionsCollection = std::vector<Reaction *>;
     using ReactionsO1Map = std::unordered_map<ParticleTypeId, ReactionsCollection>;
