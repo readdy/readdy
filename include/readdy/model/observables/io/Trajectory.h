@@ -92,8 +92,6 @@ public:
 
     ~FlatTrajectory() override;
 
-    FlatTrajectory(FlatTrajectory &&) noexcept;
-
     void evaluate() override;
 
     void flush() override;
