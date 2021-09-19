@@ -88,18 +88,6 @@ public:
 
     using TypeCollection = std::vector<TopologyType>;
 
-//    explicit TopologyRegistry(const ParticleTypeRegistry &typeRegistry);
-//
-//    TopologyRegistry(const TopologyRegistry &) = default;
-//
-//    TopologyRegistry &operator=(const TopologyRegistry &) = default;
-//
-//    TopologyRegistry(TopologyRegistry &&) = default;
-//
-//    TopologyRegistry &operator=(TopologyRegistry &&) = default;
-//
-//    ~TopologyRegistry() = default;
-
     TopologyTypeId addType(const std::string &name, const StructuralReactionCollection &reactions = {});
 
     void addStructuralReaction(TopologyTypeId typeId, reactions::StructuralTopologyReaction reaction) {

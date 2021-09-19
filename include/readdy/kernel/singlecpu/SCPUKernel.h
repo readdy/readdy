@@ -48,7 +48,7 @@
 
 namespace readdy::kernel::scpu {
 
-class SCPUKernel : public readdy::model::Kernel {
+class READDY_API SCPUKernel : public readdy::model::Kernel {
 public:
 
     static const std::string name;
