@@ -48,7 +48,7 @@
 
 namespace readdy::model::actions {
 
-class __attribute__ ((visibility("default"))) UserDefinedAction : public TimeStepDependentAction {
+class UserDefinedAction : public TimeStepDependentAction {
 public:
     explicit UserDefinedAction(scalar timeStep) : TimeStepDependentAction(timeStep) {}
 
