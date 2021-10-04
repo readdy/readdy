@@ -22,6 +22,10 @@ requirements:
     - bzip2
     - numpy >=1.14
     - zlib 1.2.*
+    - spdlog
+    - nlohmann_json
+    - pybind11
+    - blosc
 
   build:
     - {{ compiler('c') }}
@@ -38,6 +42,7 @@ requirements:
     - tqdm
     - hdf5
     - zlib 1.2.*
+    - blosc
 
 test:
   imports:

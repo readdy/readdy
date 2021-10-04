@@ -78,10 +78,10 @@ set(READDY_BUILD_SCENARIOS OFF CACHE BOOL "Whether to build the Scenarios execut
 cmake_minimum_required(VERSION 3.16)
 
 # extend cmake module path to include readdy custom modules
-SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
 
 # ensure that the build directory is not the source directory
-INCLUDE(MacroOutOfSourceBuild)
+include(MacroOutOfSourceBuild)
 MACRO_ENSURE_OUT_OF_SOURCE_BUILD("${PROJECT_NAME} requires an out source build.")
 
 # makefile settings
@@ -185,22 +185,15 @@ endif()
 # readdy core                       #
 #                                   #
 #####################################
+find_package(spdlog REQUIRED)
+find_package(pybind11 REQUIRED)
+find_package(nlohmann_json REQUIRED)
+find_package(blosc REQUIRED)
+
 # external spdlog
 add_definitions(-DSPDLOG_FMT_EXTERNAL)
 
 set(WINDOWS_EXPORT_ALL_SYMBOLS ON)
-
-# include blosc
-set(DEACTIVATE_SNAPPY ON CACHE BOOL "")
-set(DEACTIVATE_ZSTD OFF CACHE BOOL "")
-set(DEACTIVATE_ZLIB ON CACHE BOOL "")
-set(BLOSC_INSTALL OFF CACHE BOOL "")
-set(BUILD_SHARED ON CACHE BOOL "")
-set(BUILD_STATIC OFF CACHE BOOL "")
-set(BUILD_TESTS OFF CACHE BOOL "")
-set(BUILD_BENCHMARKS OFF CACHE BOOL "")
-add_subdirectory(libraries/c-blosc)
-install(TARGETS blosc_shared LIBRARY DESTINATION "${INSTALL_DIR}/lib")
 
 include(cmake/sources/sources_common.cmake)
 include(cmake/sources/sources_io.cmake)
@@ -276,8 +269,7 @@ install(TARGETS ${READDY_PROJECT_NAME} LIBRARY DESTINATION "${INSTALL_DIR}/lib")
 #                                   #
 #####################################
 IF (READDY_BUILD_PYTHON_WRAPPER)
-    ADD_SUBDIRECTORY(libraries/pybind11)
-    ADD_SUBDIRECTORY(wrappers)
+    add_subdirectory(wrappers)
 ENDIF (READDY_BUILD_PYTHON_WRAPPER)
 
 #####################################
