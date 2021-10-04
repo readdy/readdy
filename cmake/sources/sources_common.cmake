@@ -3,10 +3,10 @@ set(SOURCES_DIR "${READDY_GLOBAL_DIR}/readdy/main/common")
 find_package(Threads REQUIRED)
 
 # include dirs
-set(COMMON_INCLUDE_DIRS "${READDY_GLOBAL_INCLUDE_DIR}" CACHE INTERNAL "Common include dirs")
+set(COMMON_INCLUDE_DIRS "${READDY_GLOBAL_INCLUDE_DIR};${blosc_INCLUDE_DIR}" CACHE INTERNAL "Common include dirs")
 
 # dependent libraries
-set(READDY_COMMON_LIBRARIES "graphs;fmt::fmt-header-only;nlohmann_json::nlohmann_json;spdlog;blosc" CACHE INTERNAL "Common libraries")
+set(READDY_COMMON_LIBRARIES "graphs;nlohmann_json::nlohmann_json;spdlog::spdlog_header_only;blosc::blosc" CACHE INTERNAL "Common libraries")
 
 # sources
 list(APPEND READDY_COMMON_SOURCES "${SOURCES_DIR}/../api/KernelConfiguration.cpp")
