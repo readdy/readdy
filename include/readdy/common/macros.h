@@ -10,6 +10,6 @@
 #    else
 #        define READDY_API __declspec(dllimport)
 #    endif
-#elif
+#else
 #    define READDY_API
 #endif
