@@ -54,7 +54,7 @@ namespace model::top {
 
 namespace top = readdy::model::top;
 
-class SCPUTopologyActionFactory : public top::TopologyActionFactory {
+class READDY_API SCPUTopologyActionFactory : public top::TopologyActionFactory {
     SCPUKernel *const kernel;
 public:
     explicit SCPUTopologyActionFactory(SCPUKernel *kernel);

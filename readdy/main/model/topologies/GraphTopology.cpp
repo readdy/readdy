@@ -175,7 +175,7 @@ bool GraphTopology::isNormalParticle(const Kernel &k) const {
 typename Graph::PersistentVertexIndex GraphTopology::appendParticle(VertexData::ParticleIndex newParticle,
                                                                     Graph::PersistentVertexIndex counterPart) {
     auto itNew = _graph.addVertex(VertexData{
-            .particleIndex = newParticle,
+            newParticle,
     });
     _graph.addEdge(counterPart, itNew);
     return itNew;

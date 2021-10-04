@@ -131,7 +131,7 @@ public:
      * In cases where scoped timing is not appropriate stop() can be called manually, otherwise it is called
      * in the destructor. */
     void stop() {
-        if (measure and not wasMeasured) {
+        if (measure && !wasMeasured) {
             std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
             long elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
             auto elapsedSeconds =

@@ -161,8 +161,6 @@ std::string_view FlatTrajectory::type() const {
     return tFlatTraj;
 }
 
-FlatTrajectory::FlatTrajectory(FlatTrajectory &&) noexcept = default;
-
 FlatTrajectory::~FlatTrajectory() {
     flush();
 };

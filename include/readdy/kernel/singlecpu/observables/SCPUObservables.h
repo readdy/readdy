@@ -131,7 +131,7 @@ public:
         auto it = data->cbegin();
 
         while (it != data->cend()) {
-            if (!it->is_deactivated() and typesToCount.find(it->type) != typesToCount.end()) {
+            if (!it->is_deactivated() && typesToCount.find(it->type) != typesToCount.end()) {
                 const auto &vec = it->position();
                 auto upperBound = std::upper_bound(binBorders.begin(), binBorders.end(), vec[axis]);
                 if (upperBound != binBorders.end()) {

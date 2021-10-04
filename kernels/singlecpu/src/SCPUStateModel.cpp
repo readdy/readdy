@@ -80,7 +80,7 @@ readdy::model::top::GraphTopology *const SCPUStateModel::addTopology(TopologyTyp
     std::vector<std::size_t> indices = particleData.addTopologyParticles(particles);
     readdy::model::top::Graph graph;
     for(auto index : indices) {
-        graph.addVertex(readdy::model::top::VertexData{.particleIndex=index});
+        graph.addVertex(readdy::model::top::VertexData{index});
     }
 
     auto it = _topologies.emplace_back(

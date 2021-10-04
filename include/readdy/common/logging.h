@@ -45,10 +45,10 @@
 #pragma once
 
 #include "spdlog/spdlog.h"
-
+#include "macros.h"
 namespace readdy::log {
 
-std::shared_ptr<spdlog::logger> console();
+READDY_API std::shared_ptr<spdlog::logger> console();
 
 template<typename... Args>
 void trace(Args &&... args) {

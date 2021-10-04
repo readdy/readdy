@@ -53,7 +53,7 @@
 
 namespace readdy::io {
 
-class BloscFilter : public h5rd::Filter {
+class READDY_API BloscFilter : public h5rd::Filter {
 public:
 
     /**

@@ -86,7 +86,7 @@ struct ParticleTypeInfo {
                      ParticleFlavor flavor, ParticleTypeId typeId);
 };
 
-class ParticleTypeRegistry {
+class READDY_API ParticleTypeRegistry {
 public:
 
     using type_map = std::unordered_map<std::string, ParticleTypeId>;

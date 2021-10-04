@@ -414,10 +414,10 @@ void exportTopologies(py::module &m) {
             )topdoc", rvp::copy)
             .def("__iter__", [](PyVertex &self) {
                 return NeighborIteratorState{
-                    .top = self.top(),
-                    .it = self.top()->get()->graph().vertices().at(self.get()).neighbors().begin(),
-                    .end = self.top()->get()->graph().vertices().at(self.get()).neighbors().end(),
-                    .first_or_done = true
+                    self.top(),
+                    self.top()->get()->graph().vertices().at(self.get()).neighbors().begin(),
+                    self.top()->get()->graph().vertices().at(self.get()).neighbors().end(),
+                    true
                 };
             }, R"topdoc(
                 Yields an iterator over this vertex' neighbors.

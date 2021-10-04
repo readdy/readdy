@@ -46,7 +46,12 @@
 #pragma once
 
 #include <string>
+#ifndef WIN32
 #include <dlfcn.h>
+#else
+#define RTLD_LAZY 0
+#define RTLD_GLOBAL 0
+#endif
 
 namespace readdy::util::dll {
 
@@ -55,7 +60,9 @@ struct shared_library {
     void *handle = nullptr;
 
     shared_library(const std::string &path, int mode) {
+#ifndef WIN32
         handle = dlopen(path.c_str(), mode);
+#endif
     }
 
     shared_library(const shared_library &) = delete;
@@ -63,21 +70,26 @@ struct shared_library {
     shared_library &operator=(const shared_library &) = delete;
 
     bool has_symbol(const std::string &symbol) {
+#ifndef WIN32
         if (handle) {
             return dlsym(handle, symbol.c_str()) != nullptr;
         }
+#endif
         return false;
     }
 
     virtual ~shared_library() {
+#ifndef WIN32
         if (handle) {
             dlclose(handle);
             handle = 0;
         }
+#endif
     }
 
     template<typename Signature>
     std::function<Signature> load(const std::string &symbol) {
+#ifndef WIN32
         dlerror();
         const auto result = dlsym(handle, symbol.c_str());
         if (!result) {
@@ -87,6 +99,9 @@ struct shared_library {
             }
         }
         return reinterpret_cast<Signature *>(result);
+#else
+        return {};
+#endif
     }
 
 };

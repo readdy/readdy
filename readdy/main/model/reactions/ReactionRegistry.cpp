@@ -58,8 +58,6 @@
 
 namespace readdy::model::reactions {
 
-const ReactionRegistry::ReactionsCollection ReactionRegistry::DEFAULT_REACTIONS = {};
-
 ReactionId ReactionRegistry::emplaceReaction(const std::shared_ptr<Reaction> &reaction) {
     if (reactionNameExists(reaction->name())) {
         throw std::invalid_argument(fmt::format("A reaction with the name {} exists already", reaction->name()));
@@ -340,7 +338,7 @@ struct FindReactionById {
     template<typename T>
     void operator()(const T &r) {
         if (r->id() == id) {
-            if (not _found) {
+            if (!_found) {
                 _found = true;
                 assign(r);
             } else {

@@ -61,7 +61,7 @@ namespace readdy::model { class Context; }
 
 namespace readdy::model::reactions {
 
-class ReactionRegistry {
+class READDY_API ReactionRegistry {
 public:
     using ReactionsCollection = std::vector<Reaction *>;
     using ReactionsO1Map = std::unordered_map<ParticleTypeId, ReactionsCollection>;
@@ -104,7 +104,8 @@ public:
     }
 
     const ReactionsCollection &order1ByType(const ParticleTypeId type) const {
-        return readdy::util::collections::getOrDefault(_o1Reactions, type, DEFAULT_REACTIONS);
+        static thread_local ReactionsCollection defaultReactions {};
+        return readdy::util::collections::getOrDefault(_o1Reactions, type, defaultReactions);
     }
 
     const std::size_t &nOrder2() const {
@@ -144,8 +145,9 @@ public:
     }
 
     const ReactionsCollection &order2ByType(const ParticleTypeId type1, const ParticleTypeId type2) const {
+        static thread_local ReactionsCollection defaultReactions {};
         auto it = _o2Reactions.find(std::tie(type1, type2));
-        return it != _o2Reactions.end() ? it->second : DEFAULT_REACTIONS;
+        return it != _o2Reactions.end() ? it->second : defaultReactions;
     }
 
     const ReactionsCollection &order1ByType(const std::string &type) const {
@@ -288,8 +290,6 @@ private:
 
     OwnReactionsO1Map _ownO1Reactions{};
     OwnReactionsO2Map _ownO2Reactions{};
-
-    static const ReactionsCollection DEFAULT_REACTIONS;
 
     friend readdy::model::Context;
 };

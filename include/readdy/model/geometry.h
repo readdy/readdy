@@ -147,7 +147,7 @@ struct Capsule {
         lambda = std::clamp(lambda, -length / 2, length / 2);
         // now we obtain point corresponding to lambda
         auto circleCenter = center + lambda * normalizedDirection;
-        return {.center = circleCenter, .radius = radius};
+        return {circleCenter, radius};
     }
 
     template<bool inclusion>

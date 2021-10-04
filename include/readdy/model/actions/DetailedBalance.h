@@ -142,8 +142,8 @@ struct ReversibleReactionConfig {
  */
 inline const bool
 equivalentReversibleReactions(const ReversibleReactionConfig &rev1, const ReversibleReactionConfig &rev2) {
-    return (rev1.lhsTypes == rev2.lhsTypes and rev1.rhsTypes == rev2.rhsTypes) or
-           (rev1.lhsTypes == rev2.rhsTypes and rev1.rhsTypes == rev2.lhsTypes);
+    return (rev1.lhsTypes == rev2.lhsTypes && rev1.rhsTypes == rev2.rhsTypes) ||
+           (rev1.lhsTypes == rev2.rhsTypes && rev1.rhsTypes == rev2.lhsTypes);
 };
 
 }

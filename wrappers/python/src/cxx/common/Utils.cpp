@@ -327,7 +327,7 @@ convert_xyz(const std::string &h5name, const std::string &trajName, const std::s
         fs << "color Display Background white" << std::endl;
         fs << "molinfo top set {center_matrix} {{{1 0 0 0}{0 1 0 0}{0 0 1 0}{0 0 0 1}}}" << std::endl;
 
-        if (not (boxSize.at(0) == 0. and boxSize.at(1) == 0. and boxSize.at(2) == 0.)) {
+        if (!(boxSize.at(0) == 0. && boxSize.at(1) == 0. && boxSize.at(2) == 0.)) {
             readdy::log::debug("drawing simulation box of size [{} {} {}]", boxSize.at(0), boxSize.at(1), boxSize.at(2));
 
             fs << "set x " << - boxSize.at(0) / 2. << std::endl;

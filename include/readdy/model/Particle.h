@@ -53,15 +53,19 @@
 
 namespace readdy::model {
 
-class Particle {
+namespace detail {
+    READDY_API std::atomic<ParticleId>* particleIdCounter();
+}
+
+class READDY_API Particle {
 public:
 
     using Position = Vec3;
 
     Particle(scalar x, scalar y, scalar z, ParticleTypeId type)
-            : _id(std::atomic_fetch_add<unsigned long>(&idCounter, 1L)), _pos(x, y, z), _type(type) {};
+            : _id(std::atomic_fetch_add<unsigned long>(detail::particleIdCounter(), 1L)), _pos(x, y, z), _type(type) {};
 
-    Particle(Vec3 pos, ParticleTypeId type) : _pos(pos), _type(type), _id(std::atomic_fetch_add<ParticleId>(&idCounter, 1)) {}
+    Particle(Vec3 pos, ParticleTypeId type) : _pos(pos), _type(type), _id(std::atomic_fetch_add<ParticleId>(detail::particleIdCounter(), 1)) {}
 
     Particle(Vec3 pos, ParticleTypeId type, ParticleId id) : _pos(pos), _type(type), _id(id) {}
 
@@ -105,15 +109,13 @@ public:
     }
 
     static ParticleId nextId() {
-        return std::atomic_fetch_add<ParticleId>(&idCounter, 1);
+        return std::atomic_fetch_add<ParticleId>(detail::particleIdCounter(), 1);
     }
 
 protected:
     Vec3 _pos;
     ParticleTypeId _type;
     ParticleId _id;
-
-    static std::atomic<ParticleId> idCounter;
 };
 
 }

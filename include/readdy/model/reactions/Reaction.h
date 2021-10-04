@@ -57,7 +57,7 @@
 
 namespace readdy::model::reactions {
 
-enum class ReactionType {
+enum class READDY_API ReactionType {
     Conversion, Fusion, Fission, Enzymatic, Decay
 };
 
@@ -82,11 +82,15 @@ inline std::ostream &operator<<(std::ostream &os, const ReactionType &reactionTy
     return os;
 }
 
-class Reaction {
+namespace detail {
+    READDY_API ReactionId& reactionIdCounter();
+}
+
+class READDY_API Reaction {
 public:
     Reaction(std::string name, scalar rate, scalar eductDistance, scalar productDistance, std::uint8_t nEducts,
              std::uint8_t nProducts)
-            : _name(std::move(name)), _id(counter++), _rate(rate), _eductDistance(eductDistance),
+            : _name(std::move(name)), _id(detail::reactionIdCounter()++), _rate(rate), _eductDistance(eductDistance),
               _eductDistanceSquared(eductDistance * eductDistance), _productDistance(productDistance),
               _nEducts(nEducts), _nProducts(nProducts) {};
 
@@ -165,7 +169,6 @@ public:
 
 
 protected:
-    static ReactionId counter;
 
     std::uint8_t _nEducts;
     std::uint8_t _nProducts;
