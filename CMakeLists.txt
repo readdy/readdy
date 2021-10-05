@@ -147,9 +147,6 @@ endif (READDY_LOG_CMAKE_CONFIGURATION)
 
 MESSAGE(STATUS "Initializing and updating submodules")
 EXECUTE_PROCESS(COMMAND git submodule update --recursive --init WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-add_subdirectory(libraries/h5rd)
-set(graphs_BUILD_TESTING OFF)
-add_subdirectory(libraries/graph)
 
 #####################################
 #                                   #
@@ -158,21 +155,8 @@ add_subdirectory(libraries/graph)
 #####################################
 
 if (READDY_CREATE_TEST_TARGET)
-
-    if (EXISTS ${CMAKE_CURRENT_LIST_DIR}/libraries/Catch2/CMakeLists.txt)
-        add_subdirectory(libraries/Catch2)
-        include(${CMAKE_CURRENT_LIST_DIR}/libraries/Catch2/contrib/Catch.cmake)
-    elseif (NOT TARGET Catch2::Catch2)
-        find_package(Catch2 QUIET)
-        if (CATCH2_FOUND)
-            include(Catch)
-        else()
-            message(SEND_ERROR "Catch2 not found.")
-        endif()
-    endif ()
-
+    find_package(Catch2 REQUIRED)
     add_subdirectory(readdy_testing)
-
 else()
     # disable testing if there was no submodule
     SET(READDY_CREATE_TEST_TARGET OFF)
@@ -189,8 +173,9 @@ find_package(spdlog REQUIRED)
 find_package(pybind11 REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(blosc REQUIRED)
+find_package(fmt REQUIRED)
 
-# external spdlog
+# external fmt for spdlog
 add_definitions(-DSPDLOG_FMT_EXTERNAL)
 
 set(WINDOWS_EXPORT_ALL_SYMBOLS ON)

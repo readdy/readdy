@@ -40,7 +40,7 @@ add_executable(${PROJECT_NAME}
         TestMatrix33.cpp TestObservables.cpp TestPlugins.cpp TestPotentials.cpp TestReactions.cpp
         TestSignals.cpp TestSimulationLoop.cpp TestStateModel.cpp TestTopologies.cpp TestTopologyGraphs.cpp
         TestTopologyReactions.cpp TestTopologyReactionsExternal.cpp TestVec3.cpp TestBreakingBonds.cpp IntegrationTests.cpp
-        TestGeometries.cpp Graph.cpp IndexPersistentVector.cpp Vertex.cpp
+        TestGeometries.cpp Graph.cpp IndexPersistentVector.cpp Vertex.cpp H5RD.cpp
         ${TESTING_INCLUDE_DIR})
 
 if (READDY_BUILD_MPI_KERNEL)
