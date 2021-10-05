@@ -24,7 +24,7 @@ TEST_CASE("Test Vertex class", "[vertex]") {
         A a {
             .x = 20
         };
-        graphs::Vertex v (a);
+        graphs::Vertex<A> v (a);
         REQUIRE(v->x == 20);
         v->x = 10;
         REQUIRE(v->x == 10);
