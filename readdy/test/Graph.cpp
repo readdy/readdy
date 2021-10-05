@@ -88,7 +88,7 @@ auto quadruplesFullyConnectedPrimitive() {
         for(std::size_t j = 0; j < K; ++j){
             for(std::size_t k = 0; k < K; ++k){
                 for(std::size_t l = 0; l < K; ++l){
-                    std::array<std::size_t, 4> arr {i, j, k, l};
+                    std::array<std::size_t, 4> arr {{i, j, k, l}};
                     std::sort(std::begin(arr), std::end(arr));
                     auto pos = std::adjacent_find(std::begin(arr), std::end(arr));
                     if( pos == std::end(arr) ) {
