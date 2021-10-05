@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2019 Computational Molecular Biology Group,          *
+ * Copyright © 2018 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * Redistribution and use in source and binary forms, with or       *
@@ -32,36 +32,79 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                       *
  ********************************************************************/
 
+
 /**
- * @file Timer.cpp
- * @brief Implementation of Timer
- * @author chrisfroe
- * @date 26.07.19
+ * << detailed description >>
+ *
+ * @file PropretySet.h
+ * @brief << brief description >>
+ * @author clonker
+ * @date 05.09.17
+ * @copyright BSD-3
  */
 
-#include <readdy/common/Timer.h>
-#include <nlohmann/json.hpp>
+#pragma once
 
-namespace readdy::util {
+#include "Object.h"
 
-std::unordered_map<std::string, PerformanceData> Timer::perf {};
+namespace h5rd {
 
-void to_json(nlohmann::json &j, const PerformanceData &pd) {
-    j = nlohmann::json{{"time",  pd.cumulativeTime()},
-                       {"count", pd.count()}};
+class PropertyList : public SubObject {
+    using super = SubObject;
+public:
+    explicit PropertyList(handle_id cls_id, ParentFileRef parentFile);
+
+    PropertyList(const PropertyList &) = delete;
+
+    PropertyList(PropertyList &&) noexcept = delete;
+
+    PropertyList &operator=(const PropertyList &) = delete;
+
+    PropertyList &operator=(PropertyList &&) noexcept = delete;
+
+    ~PropertyList() override;
+
+    void close() override;
+};
+
+class LinkCreatePropertyList : public PropertyList {
+public:
+    explicit LinkCreatePropertyList(ParentFileRef parentFile);
+
+    void set_create_intermediate_group();
+};
+
+class FileAccessPropertyList : public PropertyList {
+public:
+    explicit FileAccessPropertyList(ParentFileRef parentFile);
+
+    void set_close_degree_weak();
+
+    void set_close_degree_semi();
+
+    void set_close_degree_strong();
+
+    void set_close_degree_default();
+
+    void set_use_latest_libver();
+};
+
+class DataSetCreatePropertyList : public PropertyList {
+public:
+    explicit DataSetCreatePropertyList(ParentFileRef parentFile);
+
+    void set_layout_compact();
+
+    void set_layout_contiguous();
+
+    void set_layout_chunked();
+
+    void set_chunk(const dimensions &chunk_dims);
+
+    void activate_filter(Filter *filter);
+
+};
+
 }
 
-std::string Timer::perfToJsonString() {
-    nlohmann::json j;
-    for (const auto &entry : Timer::perf) {
-        nlohmann::json jEntry(entry.second);
-        j[entry.first] = jEntry;
-    }
-    return j.dump();
-}
-
-void Timer::clear() {
-    perf.clear();
-}
-
-}
+#include "detail/PropertyList_detail.h"

@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2019 Computational Molecular Biology Group,          *
+ * Copyright © 2018 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * Redistribution and use in source and binary forms, with or       *
@@ -32,36 +32,54 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                       *
  ********************************************************************/
 
+
 /**
- * @file Timer.cpp
- * @brief Implementation of Timer
- * @author chrisfroe
- * @date 26.07.19
+ * << detailed description >>
+ *
+ * @file Object_detail.h
+ * @brief << brief description >>
+ * @author clonker
+ * @date 05.09.17
+ * @copyright BSD-3
  */
 
-#include <readdy/common/Timer.h>
-#include <nlohmann/json.hpp>
+#pragma once
 
-namespace readdy::util {
+#include "../Object.h"
 
-std::unordered_map<std::string, PerformanceData> Timer::perf {};
-
-void to_json(nlohmann::json &j, const PerformanceData &pd) {
-    j = nlohmann::json{{"time",  pd.cumulativeTime()},
-                       {"count", pd.count()}};
+inline const h5rd::Object::ParentFileRef &h5rd::Object::parentFile() const {
+    return _parentFile;
 }
 
-std::string Timer::perfToJsonString() {
-    nlohmann::json j;
-    for (const auto &entry : Timer::perf) {
-        nlohmann::json jEntry(entry.second);
-        j[entry.first] = jEntry;
+inline bool h5rd::Object::closed() const {
+    return _closed;
+}
+
+inline bool h5rd::Object::valid() const {
+    auto pf = _parentFile.lock();
+    if(pf) {
+        return !pf->closed() && _hid != H5I_INVALID_HID && H5Iis_valid(_hid) > 0;
     }
-    return j.dump();
+    return false;
 }
 
-void Timer::clear() {
-    perf.clear();
+inline h5rd::handle_id h5rd::Object::id() const {
+    return _hid;
 }
 
+inline h5rd::Object::Object(h5rd::Object &&rhs) noexcept
+        : _hid(std::move(rhs._hid)), _parentFile(std::move(rhs._parentFile)), _closed(std::move(rhs._closed)) {
+    rhs._closed = true;
+}
+
+inline h5rd::Object &h5rd::Object::operator=(h5rd::Object &&rhs) noexcept {
+    _hid = rhs._hid;
+    _parentFile = std::move(rhs._parentFile);
+    _closed = rhs._closed;
+    rhs._closed = true;
+    return *this;
+}
+
+inline h5rd::SubObject::SubObject(ParentFileRef parentFile) : Object() {
+    _parentFile = std::move(parentFile);
 }

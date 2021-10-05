@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2019 Computational Molecular Biology Group,          *
+ * Copyright © 2018 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * Redistribution and use in source and binary forms, with or       *
@@ -32,36 +32,66 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                       *
  ********************************************************************/
 
+
 /**
- * @file Timer.cpp
- * @brief Implementation of Timer
- * @author chrisfroe
- * @date 26.07.19
+ * << detailed description >>
+ *
+ * @file Object.h
+ * @brief << brief description >>
+ * @author clonker
+ * @date 05.09.17
+ * @copyright BSD-3
  */
 
-#include <readdy/common/Timer.h>
-#include <nlohmann/json.hpp>
+#pragma once
 
-namespace readdy::util {
+#include "common.h"
+#include "Exception.h"
 
-std::unordered_map<std::string, PerformanceData> Timer::perf {};
+namespace h5rd {
 
-void to_json(nlohmann::json &j, const PerformanceData &pd) {
-    j = nlohmann::json{{"time",  pd.cumulativeTime()},
-                       {"count", pd.count()}};
+class Object {
+public:
+
+    using ParentFileRef = std::weak_ptr<Object>;
+
+    Object() = default;
+
+    bool valid() const;
+
+    handle_id id() const;
+
+    Object(const Object &) = delete;
+
+    Object &operator=(const Object &) = delete;
+
+    Object(Object &&rhs) noexcept;
+
+    Object &operator=(Object &&rhs) noexcept;
+
+    virtual ~Object() = default;
+
+    virtual void close() = 0;
+
+    bool closed() const;
+
+    const ParentFileRef &parentFile() const;
+
+protected:
+    handle_id _hid{H5I_INVALID_HID};
+    ParentFileRef _parentFile;
+    bool _closed{false};
+
+private:
+    template<typename Container> friend
+    class Node;
+};
+
+class SubObject : public Object {
+public:
+    explicit SubObject(ParentFileRef parentFile);
+};
+
 }
 
-std::string Timer::perfToJsonString() {
-    nlohmann::json j;
-    for (const auto &entry : Timer::perf) {
-        nlohmann::json jEntry(entry.second);
-        j[entry.first] = jEntry;
-    }
-    return j.dump();
-}
-
-void Timer::clear() {
-    perf.clear();
-}
-
-}
+#include "detail/Object_detail.h"

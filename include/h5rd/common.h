@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2019 Computational Molecular Biology Group,          *
+ * Copyright © 2018 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * Redistribution and use in source and binary forms, with or       *
@@ -32,36 +32,127 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                       *
  ********************************************************************/
 
+
 /**
- * @file Timer.cpp
- * @brief Implementation of Timer
- * @author chrisfroe
- * @date 26.07.19
+ * << detailed description >>
+ *
+ * @file traits.h
+ * @brief << brief description >>
+ * @author clonker
+ * @date 04.09.17
+ * @copyright BSD-3
  */
 
-#include <readdy/common/Timer.h>
-#include <nlohmann/json.hpp>
+#pragma once
 
-namespace readdy::util {
+#include <string>
+#include <array>
+#include <vector>
+#include <memory>
 
-std::unordered_map<std::string, PerformanceData> Timer::perf {};
+#include <H5Gpublic.h>
+#include <H5Spublic.h>
+#include <hdf5.h>
 
-void to_json(nlohmann::json &j, const PerformanceData &pd) {
-    j = nlohmann::json{{"time",  pd.cumulativeTime()},
-                       {"count", pd.count()}};
+namespace h5rd {
+
+class File;
+
+class Filter;
+
+class Group;
+
+class DataSet;
+
+class VLENDataSet;
+
+template<typename T>
+class STDDataSetType;
+
+template<typename T>
+class NativeDataSetType;
+
+template<typename Container>
+class Node;
+
+class DataSpace;
+
+class DataSetType;
+
+
+using handle_id = hid_t;
+using dimension = hsize_t;
+using dimensions = std::vector<dimension>;
+using group_info = H5G_info_t;
+const static unsigned long long UNLIMITED_DIMS = H5S_UNLIMITED;
+
+namespace util {
+
+inline bool groupExists(hid_t hid, const std::string &name) {
+    H5E_BEGIN_TRY
+        {
+            hid = H5Gopen(hid, name.c_str(), H5P_DEFAULT);
+            if (hid > 0) {
+                H5Gclose(hid);
+            }
+        }
+    H5E_END_TRY
+    return (hid > 0);
 }
 
-std::string Timer::perfToJsonString() {
-    nlohmann::json j;
-    for (const auto &entry : Timer::perf) {
-        nlohmann::json jEntry(entry.second);
-        j[entry.first] = jEntry;
-    }
-    return j.dump();
-}
+template<typename T>
+struct n_dims {
+    static constexpr std::size_t value = 0;
+};
 
-void Timer::clear() {
-    perf.clear();
-}
+template<typename T>
+struct n_dims<std::vector<T>> {
+    static constexpr std::size_t value = 1 + n_dims<T>::value;
+};
 
+template<typename T>
+struct n_dims<T *> {
+    static constexpr std::size_t value = 1 + n_dims<T>::value;
+};
+
+template<typename T, std::size_t N>
+struct n_dims<T[N]> {
+    static constexpr std::size_t value = 1 + n_dims<T>::value;
+};
+
+template<typename T>
+struct inner_type {
+    using type = T;
+};
+
+template<typename T>
+struct inner_type<std::vector<T>> {
+    using type = typename inner_type<T>::type;
+};
+
+template<typename T>
+struct inner_type<T *> {
+    using type = typename inner_type<T>::type;
+};
+
+template<typename T, std::size_t N>
+struct inner_type<T[N]> {
+    using type = typename inner_type<T>::type;
+};
+
+template<typename T>
+struct is_std_array : public std::false_type {
+};
+
+template<typename T, std::size_t N>
+struct is_std_array<std::array<T, N>> : public std::true_type {
+};
+
+template<typename... Ts>
+struct make_void {
+    typedef void type;
+};
+template<typename... Ts> using void_t = typename make_void<Ts...>::type;
+
+}
 }

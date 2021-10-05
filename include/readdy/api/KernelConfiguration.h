@@ -45,7 +45,7 @@
 #pragma once
 
 #include <string>
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 #include <readdy/common/thread/Config.h>
 
 namespace readdy::conf {

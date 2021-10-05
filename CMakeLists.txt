@@ -78,10 +78,10 @@ set(READDY_BUILD_SCENARIOS OFF CACHE BOOL "Whether to build the Scenarios execut
 cmake_minimum_required(VERSION 3.16)
 
 # extend cmake module path to include readdy custom modules
-SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
 
 # ensure that the build directory is not the source directory
-INCLUDE(MacroOutOfSourceBuild)
+include(MacroOutOfSourceBuild)
 MACRO_ENSURE_OUT_OF_SOURCE_BUILD("${PROJECT_NAME} requires an out source build.")
 
 # makefile settings
@@ -141,38 +141,13 @@ endif (READDY_LOG_CMAKE_CONFIGURATION)
 
 #####################################
 #                                   #
-# setup submodules                  #
-#                                   #
-#####################################
-
-MESSAGE(STATUS "Initializing and updating submodules")
-EXECUTE_PROCESS(COMMAND git submodule update --recursive --init WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-add_subdirectory(libraries/h5rd)
-set(graphs_BUILD_TESTING OFF)
-add_subdirectory(libraries/graph)
-
-#####################################
-#                                   #
 # setup testing                     #
 #                                   #
 #####################################
 
 if (READDY_CREATE_TEST_TARGET)
-
-    if (EXISTS ${CMAKE_CURRENT_LIST_DIR}/libraries/Catch2/CMakeLists.txt)
-        add_subdirectory(libraries/Catch2)
-        include(${CMAKE_CURRENT_LIST_DIR}/libraries/Catch2/contrib/Catch.cmake)
-    elseif (NOT TARGET Catch2::Catch2)
-        find_package(Catch2 QUIET)
-        if (CATCH2_FOUND)
-            include(Catch)
-        else()
-            message(SEND_ERROR "Catch2 not found.")
-        endif()
-    endif ()
-
+    find_package(Catch2 REQUIRED)
     add_subdirectory(readdy_testing)
-
 else()
     # disable testing if there was no submodule
     SET(READDY_CREATE_TEST_TARGET OFF)
@@ -185,22 +160,16 @@ endif()
 # readdy core                       #
 #                                   #
 #####################################
-# external spdlog
+find_package(spdlog REQUIRED)
+find_package(pybind11 REQUIRED)
+find_package(nlohmann_json REQUIRED)
+find_package(blosc REQUIRED)
+find_package(fmt REQUIRED)
+
+# external fmt for spdlog
 add_definitions(-DSPDLOG_FMT_EXTERNAL)
 
 set(WINDOWS_EXPORT_ALL_SYMBOLS ON)
-
-# include blosc
-set(DEACTIVATE_SNAPPY ON CACHE BOOL "")
-set(DEACTIVATE_ZSTD OFF CACHE BOOL "")
-set(DEACTIVATE_ZLIB ON CACHE BOOL "")
-set(BLOSC_INSTALL OFF CACHE BOOL "")
-set(BUILD_SHARED ON CACHE BOOL "")
-set(BUILD_STATIC OFF CACHE BOOL "")
-set(BUILD_TESTS OFF CACHE BOOL "")
-set(BUILD_BENCHMARKS OFF CACHE BOOL "")
-add_subdirectory(libraries/c-blosc)
-install(TARGETS blosc_shared LIBRARY DESTINATION "${INSTALL_DIR}/lib")
 
 include(cmake/sources/sources_common.cmake)
 include(cmake/sources/sources_io.cmake)
@@ -276,8 +245,7 @@ install(TARGETS ${READDY_PROJECT_NAME} LIBRARY DESTINATION "${INSTALL_DIR}/lib")
 #                                   #
 #####################################
 IF (READDY_BUILD_PYTHON_WRAPPER)
-    ADD_SUBDIRECTORY(libraries/pybind11)
-    ADD_SUBDIRECTORY(wrappers)
+    add_subdirectory(wrappers)
 ENDIF (READDY_BUILD_PYTHON_WRAPPER)
 
 #####################################
