@@ -45,7 +45,7 @@
  * @copyright BSD-3
  */
 
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 #include <readdy/model/IOUtils.h>
 
 using json = nlohmann::json;

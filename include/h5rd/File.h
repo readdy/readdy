@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2019 Computational Molecular Biology Group,          *
+ * Copyright © 2018 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * Redistribution and use in source and binary forms, with or       *
@@ -33,35 +33,74 @@
  ********************************************************************/
 
 /**
- * @file Timer.cpp
- * @brief Implementation of Timer
- * @author chrisfroe
- * @date 26.07.19
+ * << detailed description >>
+ *
+ * @file File.h
+ * @brief << brief description >>
+ * @author clonker
+ * @date 05.09.17
+ * @copyright BSD-3
  */
 
-#include <readdy/common/Timer.h>
-#include <nlohmann/json.hpp>
+#pragma once
 
-namespace readdy::util {
+#include "Node.h"
+#include "Object.h"
 
-std::unordered_map<std::string, PerformanceData> Timer::perf {};
+namespace h5rd {
 
-void to_json(nlohmann::json &j, const PerformanceData &pd) {
-    j = nlohmann::json{{"time",  pd.cumulativeTime()},
-                       {"count", pd.count()}};
+class File : public Object, public Node<File>, public std::enable_shared_from_this<Object> {
+public:
+
+    enum class Action {
+        CREATE, OPEN
+    };
+
+    enum class Flag {
+        READ_ONLY = 0, READ_WRITE, OVERWRITE, FAIL_IF_EXISTS, CREATE_NON_EXISTING, DEFAULT /* = rw, create, truncate */
+    };
+
+    using Flags = std::vector<Flag>;
+
+    static std::shared_ptr<File> open(const std::string &path, const Flag &flag);
+
+    static std::shared_ptr<File> open(const std::string &path, const Flags &flags);
+
+    static std::shared_ptr<File> create(const std::string &path, const Flag &flag);
+
+    static std::shared_ptr<File> create(const std::string &path, const Flags &flags);
+
+    File(const File &) = delete;
+
+    File &operator=(const File &) = delete;
+
+    File(File &&) = default;
+
+    File &operator=(File &&) = default;
+
+    ~File() override;
+
+    void flush();
+
+    void close() override;
+
+    ParentFileRef ref() const;
+
+protected:
+
+    std::shared_ptr<Object> getptr();
+
+    static void setUp(std::shared_ptr<File> file);
+
+    File(const std::string &path, const Action &action, const Flags &flags);
+
+    File(const std::string &path, const Action &action, const Flag &flag = Flag::OVERWRITE);
+
+    std::string path;
+    Action action;
+    Flags flags;
+};
+
 }
 
-std::string Timer::perfToJsonString() {
-    nlohmann::json j;
-    for (const auto &entry : Timer::perf) {
-        nlohmann::json jEntry(entry.second);
-        j[entry.first] = jEntry;
-    }
-    return j.dump();
-}
-
-void Timer::clear() {
-    perf.clear();
-}
-
-}
+#include "detail/File_detail.h"

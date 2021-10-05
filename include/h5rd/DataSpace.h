@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2019 Computational Molecular Biology Group,          *
+ * Copyright © 2018 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * Redistribution and use in source and binary forms, with or       *
@@ -32,36 +32,43 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                       *
  ********************************************************************/
 
+
 /**
- * @file Timer.cpp
- * @brief Implementation of Timer
- * @author chrisfroe
- * @date 26.07.19
+ * << detailed description >>
+ *
+ * @file DataSpace.h
+ * @brief << brief description >>
+ * @author clonker
+ * @date 05.09.17
+ * @copyright BSD-3
  */
 
-#include <readdy/common/Timer.h>
-#include <nlohmann/json.hpp>
+#pragma once
 
-namespace readdy::util {
+#include "Object.h"
 
-std::unordered_map<std::string, PerformanceData> Timer::perf {};
+namespace h5rd {
 
-void to_json(nlohmann::json &j, const PerformanceData &pd) {
-    j = nlohmann::json{{"time",  pd.cumulativeTime()},
-                       {"count", pd.count()}};
+class DataSpace : public SubObject {
+public:
+
+    // DataSpace();
+
+    DataSpace(ParentFileRef parentFile, handle_id handle);
+
+    DataSpace(ParentFileRef parentFile, const dimensions &dims, const dimensions &maxDims = {});
+
+    ~DataSpace() override;
+
+    std::size_t ndim() const;
+
+    dimensions dims() const;
+
+    dimensions maxDims() const;
+
+    void close() override;
+};
+
 }
 
-std::string Timer::perfToJsonString() {
-    nlohmann::json j;
-    for (const auto &entry : Timer::perf) {
-        nlohmann::json jEntry(entry.second);
-        j[entry.first] = jEntry;
-    }
-    return j.dump();
-}
-
-void Timer::clear() {
-    perf.clear();
-}
-
-}
+#include "detail/DataSpace_detail.h"

@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2019 Computational Molecular Biology Group,          *
+ * Copyright © 2018 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * Redistribution and use in source and binary forms, with or       *
@@ -32,36 +32,60 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                       *
  ********************************************************************/
 
+
 /**
- * @file Timer.cpp
- * @brief Implementation of Timer
- * @author chrisfroe
- * @date 26.07.19
+ * << detailed description >>
+ *
+ * @file Exception.h
+ * @brief << brief description >>
+ * @author clonker
+ * @date 05.09.17
+ * @copyright BSD-3
  */
 
-#include <readdy/common/Timer.h>
-#include <nlohmann/json.hpp>
+#pragma once
 
-namespace readdy::util {
+#include <utility>
+#include <sstream>
+#include <exception>
+#include <H5Epublic.h>
+#include "common.h"
 
-std::unordered_map<std::string, PerformanceData> Timer::perf {};
+namespace h5rd {
 
-void to_json(nlohmann::json &j, const PerformanceData &pd) {
-    j = nlohmann::json{{"time",  pd.cumulativeTime()},
-                       {"count", pd.count()}};
-}
 
-std::string Timer::perfToJsonString() {
-    nlohmann::json j;
-    for (const auto &entry : Timer::perf) {
-        nlohmann::json jEntry(entry.second);
-        j[entry.first] = jEntry;
+class Exception : public std::runtime_error {
+public:
+    explicit Exception(const std::string &msg) : std::runtime_error(h5stack(msg)) {}
+
+    static std::string h5stack(const std::string &msg) {
+        handle_id stackId = H5Eget_current_stack();
+        if (stackId >= 0) {
+
+            H5E_walk2_t walker = [](unsigned int n, const H5E_error2_t *desc, void *clientData) -> herr_t {
+
+                auto *ss = static_cast<std::stringstream *>(clientData);
+
+                char *major_err = H5Eget_major(desc->maj_num);
+                char *minor_err = H5Eget_minor(desc->min_num);
+
+                std::string err_string("(");
+                err_string += major_err;
+                err_string += ") ";
+                err_string += minor_err;
+
+                free(major_err);
+                free(minor_err);
+
+                *ss << err_string << std::endl;
+                return 0;
+            };
+
+            std::stringstream ss;
+            H5Ewalk2(stackId, H5E_WALK_UPWARD, walker, &ss);
+            return msg + ": " + ss.str();
+        }
+        return msg + ": Unknown hdf5 error!";
     }
-    return j.dump();
-}
-
-void Timer::clear() {
-    perf.clear();
-}
-
+};
 }

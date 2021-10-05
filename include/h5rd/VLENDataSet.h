@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2019 Computational Molecular Biology Group,          *
+ * Copyright © 2018 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * Redistribution and use in source and binary forms, with or       *
@@ -33,35 +33,51 @@
  ********************************************************************/
 
 /**
- * @file Timer.cpp
- * @brief Implementation of Timer
- * @author chrisfroe
- * @date 26.07.19
+ * << detailed description >>
+ *
+ * @file VLENDataSet.h
+ * @brief << brief description >>
+ * @author clonker
+ * @date 06.09.17
+ * @copyright BSD-3
  */
 
-#include <readdy/common/Timer.h>
-#include <nlohmann/json.hpp>
+#pragma once
 
-namespace readdy::util {
+#include "Object.h"
+#include "DataSetType.h"
 
-std::unordered_map<std::string, PerformanceData> Timer::perf {};
+namespace h5rd {
 
-void to_json(nlohmann::json &j, const PerformanceData &pd) {
-    j = nlohmann::json{{"time",  pd.cumulativeTime()},
-                       {"count", pd.count()}};
+class VLENDataSet : public SubObject {
+public:
+    VLENDataSet(ParentFileRef parentFile, const DataSetType &memoryType, const DataSetType &fileType);
+
+    template<typename T>
+    void append(std::vector<std::vector<T>> &data);
+
+    template<typename T>
+    void append(const dimensions &dims, std::vector<T> *data);
+
+    ~VLENDataSet() override;
+
+    void close() override;
+
+    void flush();
+
+    std::shared_ptr<DataSpace> getFileSpace() const;
+
+    dimension &extensionDim();
+
+    const dimension &extensionDim() const;
+
+private:
+    dimension _extensionDim;
+    std::unique_ptr<DataSpace> _memorySpace{nullptr};
+    DataSetType _memoryType;
+    DataSetType _fileType;
+};
+
 }
 
-std::string Timer::perfToJsonString() {
-    nlohmann::json j;
-    for (const auto &entry : Timer::perf) {
-        nlohmann::json jEntry(entry.second);
-        j[entry.first] = jEntry;
-    }
-    return j.dump();
-}
-
-void Timer::clear() {
-    perf.clear();
-}
-
-}
+#include "detail/VLENDataSet_detail.h"

@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2019 Computational Molecular Biology Group,          *
+ * Copyright © 2018 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * Redistribution and use in source and binary forms, with or       *
@@ -32,36 +32,38 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                       *
  ********************************************************************/
 
+
 /**
- * @file Timer.cpp
- * @brief Implementation of Timer
- * @author chrisfroe
- * @date 26.07.19
+ * << detailed description >>
+ *
+ * @file Group_detail.h
+ * @brief << brief description >>
+ * @author clonker
+ * @date 05.09.17
+ * @copyright BSD-3
  */
 
-#include <readdy/common/Timer.h>
-#include <nlohmann/json.hpp>
+#pragma once
 
-namespace readdy::util {
+#include "../Group.h"
+#include "../Node.h"
 
-std::unordered_map<std::string, PerformanceData> Timer::perf {};
+inline h5rd::Group::Group(std::string path, ParentFileRef parentFile) : SubObject(std::move(parentFile)),
+                                                                        path(std::move(path)) {}
 
-void to_json(nlohmann::json &j, const PerformanceData &pd) {
-    j = nlohmann::json{{"time",  pd.cumulativeTime()},
-                       {"count", pd.count()}};
-}
-
-std::string Timer::perfToJsonString() {
-    nlohmann::json j;
-    for (const auto &entry : Timer::perf) {
-        nlohmann::json jEntry(entry.second);
-        j[entry.first] = jEntry;
+inline h5rd::Group::~Group() {
+    try {
+        close();
+    } catch (const Exception &e) {
+        std::cerr << "Unable to close hdf5 group: " << e.what() << std::endl;
     }
-    return j.dump();
 }
 
-void Timer::clear() {
-    perf.clear();
-}
-
+inline void h5rd::Group::close() {
+    auto pf = _parentFile.lock();
+    if (pf) {
+        if (!pf->closed() && valid() && H5Gclose(id()) < 0) {
+            throw Exception("Error on closing HDF5 group");
+        }
+    }
 }

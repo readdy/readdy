@@ -36,7 +36,7 @@
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
 
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 
 #include <readdy/api/Simulation.h>
 #include <readdy/model/actions/UserDefinedAction.h>
