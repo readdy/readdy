@@ -6,14 +6,11 @@
 #include <tuple>
 #include <utility>
 #include <vector>
+#include <array>
 
 #include <catch2/catch.hpp>
 
 #include <graphs/graphs.h>
-
-auto debug = [](const std::string &str) {
-    std::cerr << "DEBUG: " << str << std::endl;
-};
 
 template<typename T, size_t... I>
 auto reverse_impl(T t, std::index_sequence<I...>) {
