@@ -26,6 +26,8 @@ requirements:
     - nlohmann_json
     - pybind11
     - blosc
+    - fmt
+    - catch2
 
   build:
     - {{ compiler('c') }}

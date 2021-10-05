@@ -141,15 +141,6 @@ endif (READDY_LOG_CMAKE_CONFIGURATION)
 
 #####################################
 #                                   #
-# setup submodules                  #
-#                                   #
-#####################################
-
-MESSAGE(STATUS "Initializing and updating submodules")
-EXECUTE_PROCESS(COMMAND git submodule update --recursive --init WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-
-#####################################
-#                                   #
 # setup testing                     #
 #                                   #
 #####################################
