@@ -167,7 +167,7 @@ find_package(blosc REQUIRED)
 find_package(fmt REQUIRED)
 
 # external fmt for spdlog
-add_definitions(-DSPDLOG_FMT_EXTERNAL)
+# add_definitions(-DSPDLOG_FMT_EXTERNAL)
 
 set(WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
