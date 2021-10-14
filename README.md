@@ -8,15 +8,15 @@ Currently supported platforms are Mac and Linux.
 # Installation
 The preferred way of installing the software is by using the conda package manager:
 ```bash
-# add conda-forge channel
-conda config --add channels conda-forge
-
 # optional: create environment for readdy, switch to that environment
-conda create -n readdy python=3
-source activate readdy
+conda create -n readdy
+conda activate readdy
 
-# install readdy
-conda install -c readdy readdy
+# add conda-forge channel
+conda config --env --add channels conda-forge
+
+# install readdy with a specified Python version
+conda install python=3.9 readdy
 ```
 
 # Documentation
