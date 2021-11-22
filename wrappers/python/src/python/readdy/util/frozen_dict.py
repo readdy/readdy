@@ -2,10 +2,10 @@
 
 # taken from https://stackoverflow.com/a/2704866/2871028
 
-import collections
+from collections.abc import Mapping
 
 
-class FrozenDict(collections.Mapping):
+class FrozenDict(Mapping):
     """Don't forget the docstrings!!"""
 
     def __init__(self, *args, **kwargs):
