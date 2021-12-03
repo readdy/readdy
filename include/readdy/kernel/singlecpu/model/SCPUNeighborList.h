@@ -88,7 +88,7 @@ public:
                 _cellSize[i] = size[i] / static_cast<scalar>(dims[i]);
             }
 
-            _cellIndex = util::Index3D(dims[0], dims[1], dims[2]);
+            _cellIndex = util::Index3D(dims);
 
             {
                 // set up cell adjacency list
@@ -97,7 +97,7 @@ public:
                     nNeighbors[i] = std::min(nNeighbors[i], static_cast<std::size_t>(2 * radius + 1));
                 }
                 auto nAdjacentCells = nNeighbors[0] * nNeighbors[1] * nNeighbors[2];
-                _cellNeighbors = util::Index2D(_cellIndex.size(), 1 + nAdjacentCells);
+                _cellNeighbors = util::Index2D(std::array<std::size_t, 2>{_cellIndex.size(), static_cast<std::size_t>(1u + nAdjacentCells)});
                 _cellNeighborsContent.resize(_cellNeighbors.size());
                 {
                     auto pbc = _context.get().periodicBoundaryConditions();

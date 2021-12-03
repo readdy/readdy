@@ -44,7 +44,7 @@
 
 #pragma once
 
-#include "spdlog/spdlog.h"
+#include <spdlog/spdlog.h>
 #include "macros.h"
 namespace readdy::log {
 

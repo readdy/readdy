@@ -59,9 +59,9 @@ void ContiguousCellLinkedList::fillBins() {
 
     auto maxParticlesPerCell = getMaxCounts();
     if(maxParticlesPerCell == 0) {
-        _binsIndex = util::Index2D(nCells, 0_z);
+        _binsIndex = util::Index2D(std::array<std::size_t, 2>{nCells, 0_z});
     }
-    _binsIndex = util::Index2D(nCells, maxParticlesPerCell);
+    _binsIndex = util::Index2D(std::array<std::size_t, 2>{nCells, maxParticlesPerCell});
     _bins.resize(0);
     _bins.resize(_binsIndex.size());
 

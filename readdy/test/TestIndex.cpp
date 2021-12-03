@@ -52,7 +52,7 @@ using namespace readdy;
 
 TEST_CASE("Test the multidim-index class.", "[index]") {
     SECTION("1D") {
-        util::Index1D index (5_z);
+        util::Index1D index (std::array<std::size_t, 1>{5_z});
         CHECK(index[0] == 5);
         CHECK(index.get<0>() == 5);
         CHECK(index.nElements() == 5);
@@ -62,7 +62,7 @@ TEST_CASE("Test the multidim-index class.", "[index]") {
     SECTION("2D") {
         auto nrows = 5_z;
         auto ncols = 6_z;
-        util::Index2D index (nrows, ncols);
+        util::Index2D index (std::array<std::size_t, 2>{nrows, ncols});
         CHECK(index[0] == nrows);
         CHECK(index[1] == ncols);
         CHECK(index.get<0>() == nrows);
@@ -82,7 +82,7 @@ TEST_CASE("Test the multidim-index class.", "[index]") {
         auto width = 6_z;
         auto height = 5_z;
         auto depth = 6_z;
-        util::Index3D index (width, height, depth);
+        util::Index3D index (std::array<std::size_t, 3>{width, height, depth});
         CHECK(index[0] == index.get<0>());
         CHECK(index[1] == index.get<1>());
         CHECK(index[2] == index.get<2>());
@@ -100,7 +100,7 @@ TEST_CASE("Test the multidim-index class.", "[index]") {
         auto height = 13_z;
         auto depth = 5_z;
 
-        util::Index3D index (width, height, depth);
+        util::Index3D index (std::array<std::size_t, 3>{width, height, depth});
 
         int n = 0;
         for(int i = 0; i < width; ++i) {
@@ -125,7 +125,7 @@ TEST_CASE("Test the multidim-index class.", "[index]") {
         auto d4 = 11_z;
         auto d5 = 23_z;
 
-        util::Index<5> index (d1, d2, d3, d4, d5);
+        util::Index<5> index (std::array<std::size_t, 5>{d1, d2, d3, d4, d5});
 
         int n = 0;
         for(int i1 = 0; i1 < d1; ++i1) {
