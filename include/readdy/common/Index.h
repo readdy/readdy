@@ -106,7 +106,7 @@ struct ComputeIndex {
 
     template<typename Arr, std::size_t... I>
     static constexpr auto compute(const Arr &strides, const std::tuple<Ix...> &tup, std::index_sequence<I...>) {
-        return (0 + ... + (strides[I] * std::get<I>(tup)));;
+        return (0 + ... + (strides[I] * std::get<I>(tup)));
     }
 };
 
@@ -117,26 +117,6 @@ class Index {
     static_assert(Dims > 0, "Dims has to be > 0");
 public:
     using GridDims = T;
-
-    template<typename Container>
-    static auto make_index(const Container& container) {
-        return make_index(begin(container), end(container));
-    }
-
-    template<typename It>
-    static auto make_index(It shapeBegin, It shapeEnd) {
-        GridDims dims;
-        std::copy(shapeBegin, shapeEnd, begin(dims));
-        auto n_elems = std::accumulate(begin(dims), end(dims), 1u, std::multiplies<value_type>());
-
-        GridDims strides;
-        strides[0] = n_elems / dims[0];
-        for (std::size_t d = 0; d < Dims - 1; ++d) {
-            strides[d + 1] = strides[d] / dims[d + 1];
-        }
-
-        return Index<Dims, GridDims>{dims, strides, n_elems};
-    }
 
     /**
      * The value type, inherited from GridDims::value_type
@@ -212,7 +192,7 @@ public:
      * @param ix the d-dimensional index
      * @return the 1D index
      */
-    template<typename... Ix, typename Indices = std::make_index_sequence<Dims>>
+    template<typename... Ix>
     constexpr value_type operator()(Ix &&... ix) const {
         static_assert(std::size_t(sizeof...(ix)) == Dims, "wrong input dim");
         return detail::ComputeIndex<Ix...>::compute(_cum_size, std::forward<Ix>(ix)...);
