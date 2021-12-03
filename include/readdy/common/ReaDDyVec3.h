@@ -158,7 +158,7 @@ public:
 
 private:
     data_arr _data;
-    util::Index2D _index{static_cast<std::size_t>(N), static_cast<std::size_t>(M)};
+    util::Index2D _index{std::array<std::size_t, 2>{static_cast<std::size_t>(N), static_cast<std::size_t>(M)}};
 };
 
 template<typename scalar>

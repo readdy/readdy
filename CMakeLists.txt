@@ -102,9 +102,8 @@ message(STATUS "====================================================")
 SET(CMAKE_CXX_STANDARD 17)
 SET(CMAKE_CXX_STANDARD_REQUIRED ON)
 if(APPLE)
-add_definitions(-DCATCH_CONFIG_NO_CPP17_UNCAUGHT_EXCEPTIONS)  # workaround for macos which chokes on some cpp17 stuff
-set(CMAKE_MACOSX_RPATH TRUE)  # any shared lib being built has rpath enabled
-add_compile_options(-mmacosx-version-min=10.15) # support for standard library features
+    add_definitions(-DCATCH_CONFIG_NO_CPP17_UNCAUGHT_EXCEPTIONS)  # workaround for macos which chokes on some cpp17 stuff
+    set(CMAKE_MACOSX_RPATH TRUE)  # any shared lib being built has rpath enabled
 endif()
 
 # always build readdy as shared lib

@@ -23,7 +23,7 @@ requirements:
     - numpy >=1.14
     - zlib 1.2.*
     - spdlog
-    - nlohmann_json
+    - nlohmann_json <=3.10.3
     - pybind11
     - blosc
     - fmt
