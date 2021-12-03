@@ -5,15 +5,15 @@ steps:
       conda config --set quiet true
     displayName: Configure conda
   - bash: |
-      python -m pip install --upgrade pip
       conda install mamba
       mamba update --all
+      python -m pip install --upgrade pip
     displayName: Update conda
   - bash: |
-      mamba install conda-build conda-verify pip
+      mamba install boa conda-build conda-verify pip
     displayName: 'Install dependencies'
     continueOnError: false
   - bash: |
-      conda build tools/conda-recipe
+      conda mambabuild tools/conda-recipe
     displayName: 'Build and test'
     continueOnError: false
