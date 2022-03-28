@@ -64,12 +64,12 @@ if [ ${err_code} -ne 0 ]; then
    echo "singlecpu unit tests failed with ${ret_code}"
 fi
 
-echo "calling c++ cpu unit tests"
-./kernels/cpu/test/runUnitTests_cpu --durations yes
-err_code=$?
-if [ ${err_code} -ne 0 ]; then
-   ret_code=${err_code}
-   echo "cpu unit tests failed with ${ret_code}"
-fi
+# echo "calling c++ cpu unit tests"
+# ./kernels/cpu/test/runUnitTests_cpu --durations yes
+# err_code=$?
+# if [ ${err_code} -ne 0 ]; then
+#    ret_code=${err_code}
+#    echo "cpu unit tests failed with ${ret_code}"
+# fi
 
 exit ${ret_code}
