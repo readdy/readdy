@@ -6,6 +6,7 @@ steps:
     displayName: Configure conda
   - bash: |
       conda install mamba
+      mamba clean --all
       mamba update --all
       python -m pip install --upgrade pip
     displayName: Update conda
