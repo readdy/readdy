@@ -33,7 +33,7 @@
 ####################################################################
 
 if (NOT WIN32)
-add_subdirectory(cpu)
+# add_subdirectory(cpu)
 
 if (READDY_BUILD_MPI_KERNEL)
     add_subdirectory(mpi)

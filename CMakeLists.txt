@@ -176,6 +176,7 @@ include(cmake/sources/sources_io.cmake)
 include(cmake/sources/sources_model.cmake)
 include(cmake/sources/sources_plugin.cmake)
 include(cmake/sources/kernels/singlecpu.cmake)
+include(cmake/sources/kernels/cpu.cmake)
 include(cmake/sources/sources_readdy.cmake)
 # create library
 message(STATUS "Libraries ReaDDy depends on: ${READDY_DEPENDENT_LIBRARIES}")
