@@ -26,7 +26,7 @@ requirements:
     - nlohmann_json <=3.10.3
     - pybind11
     - blosc
-    - fmt
+    - fmt ==8.0.1
     - catch2
 
   build:
