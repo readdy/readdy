@@ -258,6 +258,7 @@ if (READDY_CREATE_TEST_TARGET)
     add_subdirectory(readdy/test)
     add_test(NAME readdy-tests COMMAND runUnitTests)
     add_subdirectory(kernels/singlecpu/test)
+    add_subdirectory(kernels/cpu/test)
 endif ()
 
 if(READDY_BUILD_SCENARIOS)
