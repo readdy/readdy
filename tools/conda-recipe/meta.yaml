@@ -22,11 +22,11 @@ requirements:
     - bzip2
     - numpy >=1.14
     - zlib 1.2.*
-    - spdlog
+    - spdlog ==1.10.0
     - nlohmann_json <=3.10.3
     - pybind11
     - blosc
-    - fmt ==8.0.1
+    - fmt ==8.1.1
     - catch2
 
   build:
