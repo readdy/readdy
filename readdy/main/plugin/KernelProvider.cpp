@@ -45,6 +45,7 @@
 #include <readdy/model/Kernel.h>
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/kernel/singlecpu/SCPUKernel.h>
+#include <readdy/kernel/cpu/CPUKernel.h>
 #include <readdy/common/dll.h>
 
 namespace utl = readdy::util;
@@ -69,6 +70,9 @@ KernelProvider::KernelProvider() : pimpl(std::make_unique<Impl>()){
     log::debug("current path is {}", path);
     add(readdy::kernel::scpu::SCPUKernel::name, [] {
         return new readdy::kernel::scpu::SCPUKernel();
+    });
+    add(readdy::kernel::cpu::CPUKernel::name, [] {
+        return new readdy::kernel::cpu::CPUKernel();
     });
 }
 
