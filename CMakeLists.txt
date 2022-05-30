@@ -98,8 +98,8 @@ message(STATUS "====================================================")
 message(STATUS "CMake configure for readdy version ${READDY_VERSION}-${READDY_BUILD_STRING}")
 message(STATUS "====================================================")
 
-# we use c++17
-SET(CMAKE_CXX_STANDARD 17)
+# we use c++20
+SET(CMAKE_CXX_STANDARD 20)
 SET(CMAKE_CXX_STANDARD_REQUIRED ON)
 if(APPLE)
     add_definitions(-DCATCH_CONFIG_NO_CPP17_UNCAUGHT_EXCEPTIONS)  # workaround for macos which chokes on some cpp17 stuff
