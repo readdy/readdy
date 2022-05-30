@@ -40,7 +40,8 @@
  * @date 6/25/18
  */
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 
 #include <readdy/model/Context.h>
 #include <readdy/model/reactions/Reaction.h>
@@ -485,10 +486,10 @@ TEST_CASE("Test context.", "[context]") {
             THEN("everything's OK and the appropriate values are set") {
                 ctx.setKernelConfiguration(valid);
                 auto& cfg = ctx.kernelConfiguration();
-                REQUIRE(cfg.mpi.dx == Approx(4.9));
-                REQUIRE(cfg.mpi.dy == Approx(5.9));
-                REQUIRE(cfg.mpi.dz == Approx(6.9));
-                REQUIRE(cfg.mpi.haloThickness == Approx(1.0));
+                REQUIRE(cfg.mpi.dx == Catch::Approx(4.9));
+                REQUIRE(cfg.mpi.dy == Catch::Approx(5.9));
+                REQUIRE(cfg.mpi.dz == Catch::Approx(6.9));
+                REQUIRE(cfg.mpi.haloThickness == Catch::Approx(1.0));
             }
         }
     }

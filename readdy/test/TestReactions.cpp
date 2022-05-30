@@ -42,7 +42,7 @@
  * @date 21.06.16
  */
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_template_test_macros.hpp>
 
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/api/SimulationLoop.h>
@@ -183,9 +183,9 @@ TEMPLATE_TEST_CASE("Test reaction handlers", "[reactions]", SingleCPU, CPU) {
                 const auto particles = kernel->stateModel().getParticles();
                 REQUIRE(particles.size() == 1);
                 const auto &pos = particles[0].pos();
-                REQUIRE(pos.x == Approx(4.9));
-                REQUIRE(pos.y == Approx(4.9));
-                REQUIRE(pos.z == Approx(4.9));
+                REQUIRE(pos.x == Catch::Approx(4.9));
+                REQUIRE(pos.y == Catch::Approx(4.9));
+                REQUIRE(pos.z == Catch::Approx(4.9));
             }
 
             SECTION("Fission near boundary") {

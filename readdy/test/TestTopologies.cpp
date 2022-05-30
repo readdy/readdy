@@ -61,7 +61,8 @@
  * @copyright BSD-3
  */
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_template_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 
 #include <readdy/testing/Utils.h>
 #include <readdy/testing/KernelTest.h>
@@ -165,7 +166,7 @@ TEMPLATE_TEST_CASE("Test topologies.", "[topologies]", SingleCPU, CPU) {
         kernel->evaluateObservables(1);
 
         REQUIRE(collectedForces.size() == 3);
-        REQUIRE(kernel->stateModel().energy() == Approx(2.4674011002723395));
+        REQUIRE(kernel->stateModel().energy() == Catch::Approx(2.4674011002723395));
 
         readdy::Vec3 force_x_i{0, -3.14159265, 0};
         readdy::Vec3 force_x_j{-3.14159265, 3.14159265, 0};
@@ -203,7 +204,7 @@ TEMPLATE_TEST_CASE("Test topologies.", "[topologies]", SingleCPU, CPU) {
         kernel->evaluateObservables(1);
 
         REQUIRE(collectedForces.size() == 3);
-        REQUIRE(kernel->stateModel().energy() == Approx(2.5871244540347655));
+        REQUIRE(kernel->stateModel().energy() == Catch::Approx(2.5871244540347655));
         readdy::Vec3 force_x_i{-0.13142034, -3.01536661, 1.83258358};
         readdy::Vec3 force_x_j{-5.32252362, 3.44312692, -1.11964973};
         readdy::Vec3 force_x_k{5.45394396, -0.42776031, -0.71293385};
@@ -260,7 +261,7 @@ TEMPLATE_TEST_CASE("Test topologies.", "[topologies]", SingleCPU, CPU) {
         kernel->evaluateObservables(1);
 
         REQUIRE(collectedForces.size() == 4);
-        REQUIRE(kernel->stateModel().energy() == Approx(0.044370223263673791));
+        REQUIRE(kernel->stateModel().energy() == Catch::Approx(0.044370223263673791));
         readdy::Vec3 force_x_i{0., -0.88371125, 0.};
         readdy::Vec3 force_x_j{0., 0.88371125, 0.};
         readdy::Vec3 force_x_k{-0.08749616, 0.87496163, 0.};
@@ -298,7 +299,7 @@ TEMPLATE_TEST_CASE("Test topologies.", "[topologies]", SingleCPU, CPU) {
         kernel->evaluateObservables(1);
 
         REQUIRE(collectedForces.size() == 4);
-        REQUIRE(kernel->stateModel().energy() == Approx(1.8221921916437787));
+        REQUIRE(kernel->stateModel().energy() == Catch::Approx(1.8221921916437787));
         readdy::Vec3 force_x_i{0., 1.70762994, 0.};
         readdy::Vec3 force_x_j{0., -1.70762994, 0.};
         readdy::Vec3 force_x_k{0.51228898, -0.17076299, 0.};

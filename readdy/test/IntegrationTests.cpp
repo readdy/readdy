@@ -2,7 +2,7 @@
 // Created by mho on 6/17/19.
 //
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_template_test_macros.hpp>
 
 #include <readdy/readdy.h>
 #include <readdy/common/FloatingPoints.h>

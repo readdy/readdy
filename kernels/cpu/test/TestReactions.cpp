@@ -42,7 +42,8 @@
  * @date 01.09.16
  */
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 
 #include <readdy/model/Kernel.h>
 #include <readdy/plugin/KernelProvider.h>
@@ -154,7 +155,7 @@ TEST_CASE("Test cpu kernel reaction handling", "[cpu]") {
             auto p_12_nondirect = data.pos(1) - data.pos(0);
             REQUIRE(p_12_nondirect == p_12);
             auto distance = std::sqrt(p_12 * p_12);
-            REQUIRE(productDistance == Approx(distance));
+            REQUIRE(productDistance == Catch::Approx(distance));
         }
 
         // enzymatic 1
