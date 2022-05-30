@@ -17,7 +17,7 @@ static constexpr const char *const REACTION_HANDLERS[] = {
         "UncontrolledApproximation", "Gillespie", "DetailedBalance"
 };
 
-TEMPLATE_TEST_CASE("Reaction handlers integration.", "[!hide][integration]", SingleCPU, CPU) {
+TEMPLATE_TEST_CASE("Reaction handlers integration.", "[.integration]", SingleCPU, CPU) {
     auto kernel = create<TestType>();
     auto &ctx = kernel->context();
     for (const auto &handler : REACTION_HANDLERS) {
@@ -109,7 +109,7 @@ TEMPLATE_TEST_CASE("Reaction handlers integration.", "[!hide][integration]", Sin
     }
 }
 
-TEMPLATE_TEST_CASE("Chain-decay integration test", "[!hide][integration]", SingleCPU, CPU) {
+TEMPLATE_TEST_CASE("Chain-decay integration test", "[.integration]", SingleCPU, CPU) {
     auto kernel = create<TestType>();
     auto &ctx = kernel->context();
     ctx.boxSize() = {{150, 150, 150}};
@@ -256,7 +256,7 @@ TEMPLATE_TEST_CASE("Chain-decay integration test", "[!hide][integration]", Singl
     }
 }
 
-TEMPLATE_TEST_CASE("Attach particle to topology", "[!hide][integration]", SingleCPU, CPU) {
+TEMPLATE_TEST_CASE("Attach particle to topology", "[.integration]", SingleCPU, CPU) {
     readdy::model::Context ctx;
 
     ctx.periodicBoundaryConditions() = {{true, true, true}};
@@ -390,7 +390,7 @@ TEMPLATE_TEST_CASE("Attach particle to topology", "[!hide][integration]", Single
     REQUIRE(foundEndVertex);
 }
 
-TEMPLATE_TEST_CASE("Break bonds due to pulling", "[!hide][breakbonds][integration]", SingleCPU, CPU) {
+TEMPLATE_TEST_CASE("Break bonds due to pulling", "[.][breakbonds][integration]", SingleCPU, CPU) {
     GIVEN("A linear polymer with breakable bonds") {
         // bond force constants are adjusted such that spontaneous breaking is unlikely,
         // i.e. RMSD of bond when fluctuating is smaller than required when breaking threshold
@@ -497,7 +497,7 @@ TEMPLATE_TEST_CASE("Break bonds due to pulling", "[!hide][breakbonds][integratio
     }
 }
 
-TEMPLATE_TEST_CASE("Helix grows by spatial topology reactions", "[!hide][integration]", SingleCPU, CPU) {
+TEMPLATE_TEST_CASE("Helix grows by spatial topology reactions", "[.integration]", SingleCPU, CPU) {
     GIVEN("An initial polymer B-A-A-...-A-C with helical structure") {
         std::vector<readdy::Vec3> initPos23 =
                 {{-1.75373831, -2.14809599, 3.09407703},
@@ -602,7 +602,7 @@ TEMPLATE_TEST_CASE("Helix grows by spatial topology reactions", "[!hide][integra
     }
 }
 
-TEMPLATE_TEST_CASE("Helix grows by structural topology reactions", "[!hide][integration]", SingleCPU, CPU) {
+TEMPLATE_TEST_CASE("Helix grows by structural topology reactions", "[.integration]", SingleCPU, CPU) {
     GIVEN("An initial polymer B-A-A-...-A-C with helical structure") {
         std::vector<readdy::Vec3> initPos23 = {{-1.75373831, -2.14809599, 3.09407703},
                                        {-0.75373831, -2.14809599, 3.09407703},
@@ -715,7 +715,7 @@ TEMPLATE_TEST_CASE("Helix grows by structural topology reactions", "[!hide][inte
     }
 }
 
-TEMPLATE_TEST_CASE("Particles form complexes with predetermined number of bonds", "[!hide][integration]", SingleCPU, CPU) {
+TEMPLATE_TEST_CASE("Particles form complexes with predetermined number of bonds", "[.integration]", SingleCPU, CPU) {
     /* Credits go to Moritz FP Becker for this test case. */
     readdy::model::Context ctx;
     ctx.boxSize() = {25, 25, 25};
