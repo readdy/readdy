@@ -42,7 +42,7 @@
  * @date 3/1/18
  */
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 
 #include <unordered_set>
 #include <readdy/api/SimulationLoop.h>
