@@ -41,7 +41,7 @@ add_executable(${PROJECT_NAME} TestMain.cpp TestCellLinkedList.cpp TestNeighborL
         TestNeighborListIterator.cpp TestReactions.cpp ${TESTING_INCLUDE_DIR})
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${READDY_INCLUDE_DIRS} ${TESTING_INCLUDE_DIR} ${CPU_INCLUDE_DIR})
-target_link_libraries(${PROJECT_NAME} PUBLIC readdy readdy_kernel_cpu Catch2::Catch2)
+target_link_libraries(${PROJECT_NAME} PUBLIC readdy Catch2::Catch2)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
         LINK_FLAGS "${EXTRA_LINK_FLAGS}"
