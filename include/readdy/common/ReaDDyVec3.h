@@ -343,3 +343,27 @@ public:
 };
 
 }
+
+namespace fmt {
+template<>
+struct formatter<readdy::_internal::ReaDDyVec3<float>> {
+    template <typename ParseContext>
+    constexpr auto parse(ParseContext &ctx) { return ctx.begin(); }
+
+    template <typename FormatContext>
+    auto format(const readdy::_internal::ReaDDyVec3<float> &v, FormatContext &ctx) {
+        return format_to(ctx.out(), "Vec3[{},{},{}]", v.x, v.y, v.z);
+    }
+};
+
+template<>
+struct formatter<readdy::_internal::ReaDDyVec3<double>> {
+    template <typename ParseContext>
+    constexpr auto parse(ParseContext &ctx) { return ctx.begin(); }
+
+    template <typename FormatContext>
+    auto format(const readdy::_internal::ReaDDyVec3<double> &v, FormatContext &ctx) {
+        return format_to(ctx.out(), "Vec3[{},{},{}]", v.x, v.y, v.z);
+    }
+};
+}
