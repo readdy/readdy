@@ -347,7 +347,7 @@ public:
 
 }
 
-namespace fmt {
+/*namespace fmt {
 template<>
 struct formatter<readdy::_internal::ReaDDyVec3<float>> {
     template <typename ParseContext>
@@ -369,4 +369,4 @@ struct formatter<readdy::_internal::ReaDDyVec3<double>> {
         return format_to(ctx.out(), "Vec3[{},{},{}]", v.x, v.y, v.z);
     }
 };
-}
+}*/
