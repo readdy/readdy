@@ -51,6 +51,9 @@
 #include <type_traits>
 #include <sstream>
 #include <ostream>
+
+#include <fmt/format.h>
+
 #include "Index.h"
 #include "FloatingPoints.h"
 
