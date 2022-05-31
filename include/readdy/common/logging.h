@@ -43,41 +43,42 @@
  */
 
 #pragma once
-
+#include <iostream>
 #include <spdlog/spdlog.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
 #include "macros.h"
 namespace readdy::log {
 
 READDY_API std::shared_ptr<spdlog::logger> console();
 
 template<typename... Args>
-void trace(Args &&... args) {
-    console()->trace(std::forward<Args>(args)...);
+void trace(spdlog::format_string_t<Args...> fmt, Args &&... args) {
+    console()->trace(fmt, std::forward<Args>(args)...);
 }
 
 template<typename... Args>
-void debug(Args &&... args) {
-    console()->debug(std::forward<Args>(args)...);
+void debug(spdlog::format_string_t<Args...> fmt, Args &&... args) {
+    console()->debug(fmt, std::forward<Args>(args)...);
 }
 
 template<typename... Args>
-void critical(Args &&... args) {
-    console()->critical(std::forward<Args>(args)...);
+void critical(spdlog::format_string_t<Args...> fmt, Args &&... args) {
+    console()->critical(fmt, std::forward<Args>(args)...);
 }
 
 template<typename... Args>
-void warn(Args &&... args) {
-    console()->warn(std::forward<Args>(args)...);
+void warn(spdlog::format_string_t<Args...> fmt, Args &&... args) {
+    console()->warn(fmt, std::forward<Args>(args)...);
 }
 
 template<typename... Args>
-void error(Args &&... args) {
-    console()->error(std::forward<Args>(args)...);
+constexpr void error(spdlog::format_string_t<Args...> fmt, Args &&... args) {
+    console()->error(fmt, std::forward<Args>(args)...);
 }
 
 template<typename... Args>
-void info(Args &&... args) {
-    console()->info(std::forward<Args>(args)...);
+void info(spdlog::format_string_t<Args...> fmt, Args &&... args) {
+    console()->info(fmt, std::forward<Args>(args)...);
 }
 
 inline void set_level(spdlog::level::level_enum level) {

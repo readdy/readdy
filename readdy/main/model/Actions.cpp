@@ -515,7 +515,7 @@ void reactions::DetailedBalance::searchReversibleReactions(const Context &ctx) {
         _reversibleReactionsMap.emplace(std::make_pair(rev->backwardId, rev));
     }
 
-    readdy::log::info(describe());
+    readdy::log::info("{}", describe());
 }
 
 std::string reactions::DetailedBalance::describe() const {

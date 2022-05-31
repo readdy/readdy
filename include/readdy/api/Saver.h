@@ -32,7 +32,7 @@ public:
           : _basePath(std::move(base)), _maxNSaves(maxNSaves), _checkpointTemplate(std::move(checkpointTemplate)) {
         {
             // if template is invalid this will raise
-            auto testFormat = fmt::format(checkpointTemplate, 123);
+            auto testFormat = fmt::format("{:{}}", checkpointTemplate, 123);
         }
         if(fs::exists(_basePath)) {
             // basePath exists, make sure it is a directory
@@ -53,7 +53,7 @@ public:
     }
 
     void makeCheckpoint(model::Kernel *const kernel, TimeStep t) {
-        auto fileName = fmt::format(_checkpointTemplate, t);
+        auto fileName = fmt::format("{:{}}", _checkpointTemplate, t);
         auto filePath = _basePath + "/" + fileName;
 
         if (_maxNSaves > 0) {

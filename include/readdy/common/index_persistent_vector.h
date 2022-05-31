@@ -209,7 +209,7 @@ public:
         } else {
             const auto idx = _blanks.back();
             _blanks.pop_back();
-            _backing_vector.get_allocator().construct(&*_backing_vector.begin() + idx, std::forward<Args>(args)...);
+            _backing_vector[idx] = {std::forward<Args>(args)...};
             return _backing_vector.begin() + idx;
         }
     }
