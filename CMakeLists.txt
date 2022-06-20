@@ -166,9 +166,6 @@ find_package(nlohmann_json REQUIRED)
 find_package(blosc REQUIRED)
 find_package(fmt REQUIRED)
 
-# external fmt for spdlog
-# add_definitions(-DSPDLOG_FMT_EXTERNAL)
-
 set(WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
 include(cmake/sources/sources_common.cmake)
