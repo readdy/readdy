@@ -27,13 +27,13 @@ requirements:
     - pybind11
     - blosc
     - fmt ==8.1.1
-    - catch2
 
   build:
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
     - cmake
     - ninja
+    - conan
 
   run:
     - intel-openmp # [osx]

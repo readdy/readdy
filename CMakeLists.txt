@@ -102,7 +102,7 @@ message(STATUS "====================================================")
 SET(CMAKE_CXX_STANDARD 20)
 SET(CMAKE_CXX_STANDARD_REQUIRED ON)
 if(APPLE)
-    add_definitions(-DCATCH_CONFIG_NO_CPP17_UNCAUGHT_EXCEPTIONS)  # workaround for macos which chokes on some cpp17 stuff
+    # add_definitions(-DCATCH_CONFIG_NO_CPP17_UNCAUGHT_EXCEPTIONS)  # workaround for macos which chokes on some cpp17 stuff
     set(CMAKE_MACOSX_RPATH TRUE)  # any shared lib being built has rpath enabled
 endif()
 
@@ -146,7 +146,12 @@ endif (READDY_LOG_CMAKE_CONFIGURATION)
 #####################################
 
 if (READDY_CREATE_TEST_TARGET)
-    find_package(Catch2 REQUIRED)
+    include(${CMAKE_SOURCE_DIR}/cmake/Conan.cmake)
+    run_conan()
+    include(${CMAKE_CURRENT_BINARY_DIR}/conanbuildinfo.cmake)
+    conan_basic_setup(TARGETS)
+
+    find_package(Catch2 3 REQUIRED)
     add_subdirectory(readdy_testing)
 else()
     # disable testing if there was no submodule
