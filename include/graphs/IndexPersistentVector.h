@@ -12,6 +12,8 @@
 
 #pragma once
 
+#include <functional>
+
 #include "bits/IndexPersistentVector_detail.h"
 
 namespace graphs {
