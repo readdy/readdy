@@ -12,7 +12,6 @@ class ReaDDyTests(ConanFile):
 
     def build(self):
         cmake = CMake(self)
-        cmake.definitions['CATCH_CONFIG_NO_CPP17_UNCAUGHT_EXCEPTIONS'] = ''
         if self.settings.os == 'Macos':
-            cmake.definitions["CONAN_LIBCXX"] = ""
+            cmake.definitions["CONAN_CMAKE_CXX_STANDARD"] = "17"
         cmake.build()
