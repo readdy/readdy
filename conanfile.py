@@ -10,12 +10,10 @@ class ReaDDyTests(ConanFile):
     )
     generators = "cmake", "gcc", "txt", "cmake_find_package"
 
-    def configure(self):
-        self.settings.compiler.cppstd = 17
-
     def build(self):
         cmake = CMake(self)
-        cmake.definitions["CONAN_CMAKE_CXX_STANDARD"] = "17"
+        cmake.definitions["CATCH_CONFIG_NO_CPP17_UNCAUGHT_EXCEPTIONS"] = ""
+        cmake.definitions["-DCATCH_CONFIG_NO_CPP17_UNCAUGHT_EXCEPTIONS"] = ""
         cmake.configure()
         cmake.build()
         cmake.install()
