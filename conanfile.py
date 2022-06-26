@@ -10,8 +10,12 @@ class ReaDDyTests(ConanFile):
     )
     generators = "cmake", "gcc", "txt", "cmake_find_package"
 
+    def configure(self):
+        self.settings.compiler.cppstd = 17
+
     def build(self):
         cmake = CMake(self)
-        if self.settings.os == 'Macos':
-            cmake.definitions["CONAN_CMAKE_CXX_STANDARD"] = "17"
+        cmake.definitions["CONAN_CMAKE_CXX_STANDARD"] = "17"
+        cmake.configure()
         cmake.build()
+        cmake.install()
