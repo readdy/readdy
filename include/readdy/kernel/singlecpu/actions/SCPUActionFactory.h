@@ -93,7 +93,7 @@ public:
     std::unique_ptr<readdy::model::actions::EvaluateObservables> evaluateObservables() const override;
 
     std::unique_ptr<readdy::model::actions::MakeCheckpoint>
-    makeCheckpoint(std::string base, std::size_t maxNSaves, std::string checkpointFormat) const override;
+    makeCheckpoint(std::string base, std::size_t maxNSaves) const override;
 
     std::unique_ptr<readdy::model::actions::InitializeKernel> initializeKernel() const override;
 

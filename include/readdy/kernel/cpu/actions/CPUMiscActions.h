@@ -62,9 +62,8 @@ private:
 
 class CPUMakeCheckpoint : public readdy::model::actions::MakeCheckpoint {
 public:
-    CPUMakeCheckpoint(CPUKernel *kernel, const std::string &base, std::size_t maxNSaves,
-                      const std::string &checkpointFormat)
-                      : kernel(kernel), saver(base, maxNSaves, checkpointFormat) {}
+    CPUMakeCheckpoint(CPUKernel *kernel, const std::string &base, std::size_t maxNSaves)
+                      : kernel(kernel), saver(base, maxNSaves) {}
 
     void perform(TimeStep t) override {
         saver.makeCheckpoint(kernel, t);

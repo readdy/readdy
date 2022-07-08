@@ -88,7 +88,6 @@ class Simulation(object):
         self._observables = _Observables(self)
         # fixme self._checkpoint_saver = None
         self._make_checkpoints = False
-        self._checkpoint_format = "checkpoint_{}.h5"
         self._checkpoint_stride = None
         self._checkpoint_outdir = None
         self._checkpoint_max_n_saves = 5
@@ -557,7 +556,7 @@ class Simulation(object):
             loop.neighbor_list_cutoff = loop.neighbor_list_cutoff + self._skin
         if self._make_checkpoints:
             loop.make_checkpoints(self._checkpoint_stride, self._checkpoint_outdir,
-                                  self._checkpoint_max_n_saves, self._checkpoint_format)
+                                  self._checkpoint_max_n_saves)
 
         write_outfile = self.output_file is not None and len(self.output_file) > 0
 

@@ -124,8 +124,8 @@ std::unique_ptr<readdy::model::actions::EvaluateObservables> SCPUActionFactory::
     return {std::make_unique<SCPUEvaluateObservables>(kernel)};
 }
 
-std::unique_ptr<readdy::model::actions::MakeCheckpoint> SCPUActionFactory::makeCheckpoint(std::string base, std::size_t maxNSaves, std::string checkpointFormat) const {
-    return {std::make_unique<SCPUMakeCheckpoint>(kernel, base, maxNSaves, checkpointFormat)};
+std::unique_ptr<readdy::model::actions::MakeCheckpoint> SCPUActionFactory::makeCheckpoint(std::string base, std::size_t maxNSaves) const {
+    return {std::make_unique<SCPUMakeCheckpoint>(kernel, base, maxNSaves)};
 }
 
 std::unique_ptr<readdy::model::actions::InitializeKernel> SCPUActionFactory::initializeKernel() const {

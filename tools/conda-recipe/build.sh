@@ -41,7 +41,7 @@ err_code=0
 ret_code=0
 
 echo "calling c++ core unit tests"
-./readdy/test/runUnitTests --durations yes
+./bin/runUnitTests --durations yes
 err_code=$?
 if [ ${err_code} -ne 0 ]; then
    ret_code=${err_code}
@@ -57,19 +57,19 @@ fi
 # fi
 
 echo "calling c++ singlecpu unit tests"
-./kernels/singlecpu/test/runUnitTests_singlecpu --durations yes
+./bin/runUnitTests_singlecpu --durations yes
 err_code=$?
 if [ ${err_code} -ne 0 ]; then
    ret_code=${err_code}
    echo "singlecpu unit tests failed with ${ret_code}"
 fi
 
-# echo "calling c++ cpu unit tests"
-# ./kernels/cpu/test/runUnitTests_cpu --durations yes
-# err_code=$?
-# if [ ${err_code} -ne 0 ]; then
-#    ret_code=${err_code}
-#    echo "cpu unit tests failed with ${ret_code}"
-# fi
+echo "calling c++ cpu unit tests"
+./bin/runUnitTests_cpu --durations yes
+err_code=$?
+if [ ${err_code} -ne 0 ]; then
+  ret_code=${err_code}
+  echo "cpu unit tests failed with ${ret_code}"
+fi
 
 exit ${ret_code}

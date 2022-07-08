@@ -26,14 +26,13 @@ namespace fs = readdy::util::fs;
 
 namespace readdy::api {
 
+namespace detail {
+static constexpr const char* checkpointTemplate = "checkpoint_{}.h5";
+}
+
 class Saver {
 public:
-    Saver(std::string base, std::size_t maxNSaves, std::string checkpointTemplate = "checkpoint_{}.h5")
-          : _basePath(std::move(base)), _maxNSaves(maxNSaves), _checkpointTemplate(std::move(checkpointTemplate)) {
-        {
-            // if template is invalid this will raise
-            auto testFormat = fmt::format("{:{}}", checkpointTemplate, 123);
-        }
+    Saver(std::string base, std::size_t maxNSaves) : _basePath(std::move(base)), _maxNSaves(maxNSaves) {
         if(fs::exists(_basePath)) {
             // basePath exists, make sure it is a directory
             if(!fs::is_directory(_basePath)) {
@@ -53,7 +52,7 @@ public:
     }
 
     void makeCheckpoint(model::Kernel *const kernel, TimeStep t) {
-        auto fileName = fmt::format("{:{}}", _checkpointTemplate, t);
+        auto fileName = fmt::format(detail::checkpointTemplate, t);
         auto filePath = _basePath + "/" + fileName;
 
         if (_maxNSaves > 0) {
@@ -99,8 +98,8 @@ public:
         return _maxNSaves;
     }
 
-    [[nodiscard]] std::string checkpointTemplate() const {
-        return _checkpointTemplate;
+    [[nodiscard]] static std::string checkpointTemplate() {
+        return detail::checkpointTemplate;
     }
 
     std::string describe() const {
@@ -114,7 +113,6 @@ public:
 private:
     std::string _basePath;
     std::size_t _maxNSaves;
-    std::string _checkpointTemplate;
     std::queue<std::string> previousCheckpoints {};
 };
 
