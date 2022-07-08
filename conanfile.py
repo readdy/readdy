@@ -8,7 +8,6 @@ class ReaDDyTests(ConanFile):
     requires = (
         "pybind11/2.9.2",
         "nlohmann_json/3.10.3",
-        "c-blosc/1.21.1",
         "spdlog/1.10.0",
         "fmt/8.1.1"
     )
