@@ -57,12 +57,12 @@ void exportLoopApi(pybind11::module &module) {
 
     py::class_<UserAction, std::shared_ptr<UserAction>> userAction (module, "UserDefinedAction");
 
-    /*py::class_<Saver, std::shared_ptr<Saver>> (module, "Saver")
+    py::class_<Saver, std::shared_ptr<Saver>> (module, "Saver")
             .def(py::init<std::string, std::size_t>())
             .def("make_checkpoint", &Saver::makeCheckpoint)
             .def_property_readonly("base_path", &Saver::basePath)
             .def_property_readonly("max_n_saves", &Saver::maxNSaves)
-            .def_property_readonly("checkpoint_template", &Saver::checkpointTemplate);*/
+            .def_property_readonly("checkpoint_template", &Saver::checkpointTemplate);
 
     py::class_<Loop>(module, "SimulationLoop")
             .def_property("progress_callback", [](const Loop& self) { return self.progressCallback(); },
