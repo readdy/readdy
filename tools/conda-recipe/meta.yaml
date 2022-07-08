@@ -21,6 +21,7 @@ requirements:
     - bzip2
     - numpy >=1.14
     - zlib 1.2.*
+    - blosc 1.21.1
 
   build:
     - {{ compiler('c') }}
