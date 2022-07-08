@@ -6,13 +6,15 @@ class ReaDDyTests(ConanFile):
     name = "ReaDDyTests"
     version = "0.1"
     requires = (
-        "catch2/3.0.1"
+        "pybind11/2.9.2",
+        "nlohmann_json/3.10.3",
+        "c-blosc/1.21.1",
+        "spdlog/1.10.0",
+        "fmt/8.1.1"
     )
     generators = "cmake", "gcc", "txt", "cmake_find_package"
 
-    def build(self):
-        cmake = CMake(self)
-        cmake.definitions['CATCH_CONFIG_NO_CPP17_UNCAUGHT_EXCEPTIONS'] = ''
-        if self.settings.os == 'Macos':
-            cmake.definitions["CONAN_LIBCXX"] = ""
-        cmake.build()
+    def configure(self):
+        self.options["spdlog"].header_only = True
+        self.options["fmt"].header_only = True
+        super().configure()

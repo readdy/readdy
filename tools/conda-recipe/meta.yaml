@@ -12,7 +12,6 @@ build:
   {% else %}string: py{{ environ.get('PY_VER').replace('.', '') }}_{{ environ.get('GIT_BUILD_STR', 'GIT_STUB') }}{% endif %}
   rpaths:
     - lib/
-    - lib/readdy_plugins
 
 requirements:
   host:
@@ -22,11 +21,6 @@ requirements:
     - bzip2
     - numpy >=1.14
     - zlib 1.2.*
-    - spdlog ==1.10.0
-    - nlohmann_json <=3.10.3
-    - pybind11
-    - blosc
-    - fmt ==8.1.1
 
   build:
     - {{ compiler('c') }}
@@ -44,7 +38,6 @@ requirements:
     - tqdm
     - hdf5
     - zlib 1.2.*
-    - blosc
 
 test:
   imports:
