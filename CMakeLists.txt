@@ -172,8 +172,11 @@ endif()
 # readdy core                       #
 #                                   #
 #####################################
-add_subdirectory(contrib/pybind11)
-find_package(pybind11 REQUIRED)
+if (EXISTS ${CMAKE_CURRENT_LIST_DIR}/contrib/pybind11/CMakeLists.txt)
+    add_subdirectory(contrib/pybind11)
+else()
+    find_package(pybind11 REQUIRED)
+endif()
 
 find_package(spdlog REQUIRED)
 find_package(nlohmann_json REQUIRED)
