@@ -1,18 +1,6 @@
-[submodule "libraries/pybind11"]
-	path = libraries/pybind11
-	url = https://github.com/pybind/pybind11.git
-[submodule "libraries/spdlog"]
-	path = libraries/spdlog
-	url = https://github.com/gabime/spdlog
-[submodule "libraries/c-blosc"]
-	path = libraries/c-blosc
-	url = https://github.com/Blosc/c-blosc.git
-[submodule "libraries/h5rd"]
-	path = libraries/h5rd
-	url = https://github.com/readdy/h5rd
-[submodule "libraries/Catch2"]
-	path = libraries/Catch2
-	url = https://github.com/catchorg/Catch2.git
-[submodule "libraries/graph"]
-	path = libraries/graph
-	url = https://github.com/readdy/graph.git
+[submodule "contrib/Catch2"]
+	path = contrib/Catch2
+	url = https://github.com/catchorg/Catch2
+[submodule "contrib/pybind11"]
+	path = contrib/pybind11
+	url = https://github.com/pybind/pybind11

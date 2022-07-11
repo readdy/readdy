@@ -39,7 +39,7 @@
  * @date 03.06.19
  */
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 #include <readdy/model/Kernel.h>
 #include <readdy/kernel/mpi/MPIKernel.h>
 #include <readdy/kernel/singlecpu/SCPUKernel.h>

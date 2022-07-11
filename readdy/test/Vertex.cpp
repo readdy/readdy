@@ -2,7 +2,7 @@
 // Created by mho on 11/4/19.
 //
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 #include <graphs/Vertex.h>
 
 TEST_CASE("Test Vertex class", "[vertex]") {

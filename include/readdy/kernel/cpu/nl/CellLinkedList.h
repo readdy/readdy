@@ -233,8 +233,8 @@ public:
 
     using difference_type = typename alloc::difference_type;
     using value_type = typename alloc::value_type;
-    using reference = typename alloc::const_reference;
-    using pointer = typename alloc::const_pointer;
+    using reference = const value_type&;
+    using pointer = std::allocator_traits<alloc>::const_pointer;
     using iterator_category = std::forward_iterator_tag;
     using size_type = CompactCellLinkedList::LIST::size_type;
 

@@ -55,9 +55,8 @@ void CellLinkedList::setUp(scalar cutoff, cell_radius_type radius) {
             throw std::logic_error("The cutoff distance for setting up a neighbor list must be > 0");
         }
         if (cutoff < _context.get().calculateMaxCutoff()) {
-            log::warn(fmt::format(
-                    "The requested interaction distance {} for neighbor-list set-up was smaller than the largest cutoff {}",
-                    cutoff, _context.get().calculateMaxCutoff()));
+            log::warn("The requested interaction distance {} for neighbor-list set-up was smaller than the largest cutoff {}",
+                      cutoff, _context.get().calculateMaxCutoff());
         }
         _radius = radius;
         _cutoff = cutoff;

@@ -42,7 +42,7 @@
  * @date 27.10.16
  */
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 #include <readdy/common/common.h>
 
 using vec = readdy::Vec3;

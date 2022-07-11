@@ -39,7 +39,7 @@
  * @date 07.03.16
  */
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/testing/KernelMock.h>

@@ -73,9 +73,8 @@ public:
                 throw std::logic_error("The cutoff distance for setting up a neighbor list must be > 0");
             }
             if (cutoff < _context.get().calculateMaxCutoff()) {
-                log::warn(fmt::format(
-                        "The requested cutoff {} for neighbor-list set-up was smaller than the largest cutoff {}",
-                        cutoff, _context.get().calculateMaxCutoff()));
+                log::warn("The requested cutoff {} for neighbor-list set-up was smaller than the largest cutoff {}",
+                          cutoff, _context.get().calculateMaxCutoff());
             }
             _radius = radius;
             _cutoff = cutoff;
@@ -351,10 +350,10 @@ class BoxIterator {
 
 public:
 
-    using difference_type = typename alloc::difference_type;
-    using value_type = typename alloc::value_type;
-    using reference = typename alloc::const_reference;
-    using pointer = typename alloc::const_pointer;
+    using difference_type = std::allocator_traits<alloc>::difference_type;
+    using value_type = std::allocator_traits<alloc>::value_type;
+    using reference = const value_type&;
+    using pointer = std::allocator_traits<alloc>::const_pointer;
     using iterator_category = std::forward_iterator_tag;
     using size_type = CellLinkedList::LIST::size_type;
 

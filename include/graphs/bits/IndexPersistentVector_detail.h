@@ -22,6 +22,23 @@ struct PersistentIndex {
     bool operator <= (const PersistentIndex& rvi) const { return !(*this > rvi); }
 };
 
+}
+
+namespace fmt {
+template<>
+struct formatter<graphs::PersistentIndex> {
+    template <typename ParseContext>
+    constexpr auto parse(ParseContext &ctx) { return ctx.begin(); }
+
+    template <typename FormatContext>
+    auto format(const graphs::PersistentIndex &v, FormatContext &ctx) {
+        return format_to(ctx.out(), "PersistentIndex[{}]", v.value);
+    }
+};
+}
+
+namespace graphs {
+
 namespace detail {
 
 template<typename T, typename = void>
@@ -689,17 +706,4 @@ private:
 };
 
 }
-}
-
-namespace fmt {
-template<>
-struct formatter<graphs::PersistentIndex> {
-    template <typename ParseContext>
-    constexpr auto parse(ParseContext &ctx) { return ctx.begin(); }
-
-    template <typename FormatContext>
-    auto format(const graphs::PersistentIndex &v, FormatContext &ctx) {
-        return format_to(ctx.out(), "PersistentIndex[{}]", v.value);
-    }
-};
 }

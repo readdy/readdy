@@ -58,7 +58,7 @@ void exportLoopApi(pybind11::module &module) {
     py::class_<UserAction, std::shared_ptr<UserAction>> userAction (module, "UserDefinedAction");
 
     py::class_<Saver, std::shared_ptr<Saver>> (module, "Saver")
-            .def(py::init<std::string, std::size_t, std::string>())
+            .def(py::init<std::string, std::size_t>())
             .def("make_checkpoint", &Saver::makeCheckpoint)
             .def_property_readonly("base_path", &Saver::basePath)
             .def_property_readonly("max_n_saves", &Saver::maxNSaves)
@@ -111,8 +111,8 @@ void exportLoopApi(pybind11::module &module) {
             .def("evaluate_observables", &Loop::evaluateObservables, "evaluate"_a)
             .def_property("neighbor_list_cutoff", [](const Loop &self) { return self.neighborListCutoff(); },
                           [](Loop &self, readdy::scalar distance) { self.neighborListCutoff() = distance; })
-            .def("make_checkpoints", [](Loop &self, std::size_t stride, std::string basePath, std::size_t maxNSaves, std::string checkpointFormat) {
-                self.makeCheckpoints(stride, basePath, maxNSaves, checkpointFormat);
+            .def("make_checkpoints", [](Loop &self, std::size_t stride, std::string basePath, std::size_t maxNSaves) {
+                self.makeCheckpoints(stride, basePath, maxNSaves);
             })
             .def("describe", &Loop::describe)
             .def("validate", &Loop::validate);

@@ -43,7 +43,7 @@
  * @copyright BSD-3
  */
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_template_test_macros.hpp>
 
 #include <readdy/common/index_persistent_vector.h>
 #include <readdy/common/range.h>

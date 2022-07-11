@@ -41,7 +41,9 @@
  * @copyright BSD-3
  */
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_template_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 
 #include <readdy/common/common.h>
 #include <readdy/testing/KernelTest.h>
@@ -52,7 +54,6 @@ namespace m = readdy::model;
 namespace r = m::actions::reactions;
 
 using namespace readdytesting::kernel;
-using namespace Catch::Floating;
 
 TEST_CASE("Test detailed balance config.", "[detailed-balance]") {
     m::Context ctx;
@@ -71,7 +72,7 @@ TEST_CASE("Test detailed balance config.", "[detailed-balance]") {
         auto idFusion = ctx.reactions().idOf("fusion");
         auto idFission = ctx.reactions().idOf("fission");
         r::ReversibleReactionConfig conf(idFusion, idFission, ctx);
-        REQUIRE(conf.totalVolume == Approx(10000).epsilon(1e-4));
+        REQUIRE(conf.totalVolume == Catch::Approx(10000).epsilon(1e-4));
         REQUIRE(conf.kbt == 1.);
         REQUIRE(conf.lhsInteractionRadius == 3.);
         REQUIRE(conf.reactionRadius == 5.);
@@ -80,12 +81,12 @@ TEST_CASE("Test detailed balance config.", "[detailed-balance]") {
         REQUIRE(conf.rhsTypes[0] == ctx.particleTypes().idOf("C"));
         REQUIRE(conf.lhsTypes[0] == ctx.particleTypes().idOf("A"));
         REQUIRE(conf.lhsTypes[1] == ctx.particleTypes().idOf("B"));
-        REQUIRE(conf.lhsInteractionVolume == Approx(113.09733).epsilon(1e-4));
-        REQUIRE(conf.effectiveLhsInteractionVolume == Approx(68.09910).epsilon(1e-4));
-        REQUIRE(conf.effectiveLhsReactionVolume == Approx(478.60057).epsilon(1e-4));
-        REQUIRE(conf.equilibriumConstant == Approx(41.60045).epsilon(1e-4));
-        REQUIRE(conf.macroBackwardRate == Approx(2.));
-        REQUIRE(conf.macroForwardRate == Approx(480.76392).epsilon(1e-4));
+        REQUIRE(conf.lhsInteractionVolume == Catch::Approx(113.09733).epsilon(1e-4));
+        REQUIRE(conf.effectiveLhsInteractionVolume == Catch::Approx(68.09910).epsilon(1e-4));
+        REQUIRE(conf.effectiveLhsReactionVolume == Catch::Approx(478.60057).epsilon(1e-4));
+        REQUIRE(conf.equilibriumConstant == Catch::Approx(41.60045).epsilon(1e-4));
+        REQUIRE(conf.macroBackwardRate == Catch::Approx(2.));
+        REQUIRE(conf.macroForwardRate == Catch::Approx(480.76392).epsilon(1e-4));
         REQUIRE(conf.acceptancePrefactor == 1.);
     }
 
@@ -98,7 +99,7 @@ TEST_CASE("Test detailed balance config.", "[detailed-balance]") {
         auto idBackward = ctx.reactions().idOf("backward");
 
         r::ReversibleReactionConfig conf(idForward, idBackward, ctx);
-        REQUIRE(conf.totalVolume == Approx(1000).epsilon(1e-4));
+        REQUIRE(conf.totalVolume == Catch::Approx(1000).epsilon(1e-4));
         REQUIRE(conf.numberLhsTypes == 1);
         REQUIRE(conf.numberRhsTypes == 1);
         REQUIRE(conf.lhsTypes[0] == ctx.particleTypes().idOf("A"));
@@ -130,7 +131,7 @@ TEST_CASE("Test detailed balance config.", "[detailed-balance]") {
         auto idForward = ctx.reactions().idOf("forward");
         auto idBackward = ctx.reactions().idOf("backward");
         r::ReversibleReactionConfig conf(idForward, idBackward, ctx);
-        REQUIRE(conf.totalVolume == Approx(1000).epsilon(1e-4));
+        REQUIRE(conf.totalVolume == Catch::Approx(1000).epsilon(1e-4));
         REQUIRE(conf.numberLhsTypes == 2);
         REQUIRE(conf.numberRhsTypes == 2);
         REQUIRE(conf.lhsTypes[0] == ctx.particleTypes().idOf("A"));
@@ -140,19 +141,19 @@ TEST_CASE("Test detailed balance config.", "[detailed-balance]") {
         REQUIRE(conf.lhsInteractionRadius == 3.);
         REQUIRE(conf.rhsInteractionRadius == 3.);
         auto expectedVolume = 4. / 3. * readdy::util::numeric::pi<readdy::scalar>() * std::pow(3., 3);
-        REQUIRE(conf.lhsInteractionVolume == Approx(expectedVolume));
-        REQUIRE(conf.rhsInteractionVolume == Approx(expectedVolume));
+        REQUIRE(conf.lhsInteractionVolume == Catch::Approx(expectedVolume));
+        REQUIRE(conf.rhsInteractionVolume == Catch::Approx(expectedVolume));
 
-        REQUIRE(conf.effectiveLhsInteractionVolume == Approx(68.09910).epsilon(1e-4));
-        REQUIRE(conf.effectiveLhsReactionVolume == Approx(478.60057).epsilon(1e-4));
-        REQUIRE(conf.effectiveRhsInteractionVolume == Approx(68.09910).epsilon(1e-4));
-        REQUIRE(conf.effectiveRhsReactionVolume == Approx(478.60057).epsilon(1e-4));
+        REQUIRE(conf.effectiveLhsInteractionVolume == Catch::Approx(68.09910).epsilon(1e-4));
+        REQUIRE(conf.effectiveLhsReactionVolume == Catch::Approx(478.60057).epsilon(1e-4));
+        REQUIRE(conf.effectiveRhsInteractionVolume == Catch::Approx(68.09910).epsilon(1e-4));
+        REQUIRE(conf.effectiveRhsReactionVolume == Catch::Approx(478.60057).epsilon(1e-4));
 
         INFO(fmt::format("ratio of effective reaction volumina is expected to be 1., got {}", conf.acceptancePrefactor));
-        REQUIRE(conf.acceptancePrefactor == Approx(1.).epsilon(1e-4));
+        REQUIRE(conf.acceptancePrefactor == Catch::Approx(1.).epsilon(1e-4));
 
-        REQUIRE(conf.macroForwardRate == Approx(501.15150).epsilon(1e-4));
-        REQUIRE(conf.macroBackwardRate == Approx(1002.30300).epsilon(1e-4));
+        REQUIRE(conf.macroForwardRate == Catch::Approx(501.15150).epsilon(1e-4));
+        REQUIRE(conf.macroBackwardRate == Catch::Approx(1002.30300).epsilon(1e-4));
         REQUIRE(conf.equilibriumConstant == 2.);
     }
 

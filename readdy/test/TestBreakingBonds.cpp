@@ -40,7 +40,7 @@
  * @date 27.05.19
  */
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_template_test_macros.hpp>
 
 #include <readdy/testing/KernelTest.h>
 #include <readdy/testing/Utils.h>

@@ -2,9 +2,10 @@
 // Created by mho on 11/20/19.
 //
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 #include <graphs/IndexPersistentVector.h>
 #include <set>
+#include <random>
 
 class A {
 public:
