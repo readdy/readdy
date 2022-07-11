@@ -80,8 +80,13 @@ cmake_minimum_required(VERSION 3.16)
 # run conan
 include(${CMAKE_SOURCE_DIR}/cmake/Conan.cmake)
 run_conan()
-include(${CMAKE_CURRENT_BINARY_DIR}/conanbuildinfo.cmake)
-conan_basic_setup(TARGETS)
+if (EXISTS "${CMAKE_CURRENT_BINARY_DIR}/conanbuildinfo.cmake")
+    include(${CMAKE_CURRENT_BINARY_DIR}/conanbuildinfo.cmake)
+    conan_basic_setup(TARGETS)
+else()
+    message(STATUS "no conanbuildinfo.cmake was generated, continue and see if packages can be found
+                    using find_package regardless")
+endif()
 
 # extend cmake module path to include readdy custom modules
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
@@ -167,7 +172,11 @@ endif()
 # readdy core                       #
 #                                   #
 #####################################
-add_subdirectory(contrib/pybind11)
+if (EXISTS ${CMAKE_CURRENT_LIST_DIR}/contrib/pybind11/CMakeLists.txt)
+    add_subdirectory(contrib/pybind11)
+else()
+    find_package(pybind11 REQUIRED)
+endif()
 
 find_package(spdlog REQUIRED)
 find_package(nlohmann_json REQUIRED)
