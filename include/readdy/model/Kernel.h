@@ -199,7 +199,7 @@ public:
     virtual readdy::model::top::TopologyActionFactory *const getTopologyActionFactory() = 0;
 
     virtual void initialize() {
-        log::debug(context().describe());
+        log::debug("{}", context().describe());
     }
 
     bool singlePrecision() const noexcept {

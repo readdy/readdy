@@ -39,7 +39,7 @@
  * @date 17.06.19
  */
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 #include <readdy/kernel/mpi/model/MPIDomain.h>
 
 using NeighborType = readdy::kernel::mpi::model::MPIDomain::NeighborType;

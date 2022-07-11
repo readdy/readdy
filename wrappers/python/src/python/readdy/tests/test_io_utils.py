@@ -57,8 +57,6 @@ def get_item(name, collection):
 class TestIOUtils(ReaDDyTestCase):
     @classmethod
     def setUpClass(cls):
-        cls.kernel_provider = api.KernelProvider.get()
-        cls.kernel_provider.load_from_dir(str(putils.get_readdy_plugin_dir()))
         cls.dir = tempfile.mkdtemp("test-config-io")
         cls.fname = os.path.join(cls.dir, "test_io_utils.h5")
 

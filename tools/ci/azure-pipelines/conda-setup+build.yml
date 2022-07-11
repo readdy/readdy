@@ -6,6 +6,7 @@ steps:
     displayName: Configure conda
   - bash: |
       conda install mamba
+      mamba clean --all
       mamba update --all
       python -m pip install --upgrade pip
     displayName: Update conda
@@ -14,6 +15,7 @@ steps:
     displayName: 'Install dependencies'
     continueOnError: false
   - bash: |
+      export PYTHONUNBUFFERED=1
       conda mambabuild tools/conda-recipe
     displayName: 'Build and test'
     continueOnError: false

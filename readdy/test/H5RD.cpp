@@ -33,7 +33,7 @@
 #include <iostream>
 
 #include <h5rd/h5rd.h>
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 
 TEST_CASE("Sanity checks", "[sanity]") {
     using namespace h5rd;

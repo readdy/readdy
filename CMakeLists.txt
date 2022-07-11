@@ -77,6 +77,12 @@ set(READDY_BUILD_SCENARIOS OFF CACHE BOOL "Whether to build the Scenarios execut
 # minimum cmake version
 cmake_minimum_required(VERSION 3.16)
 
+# run conan
+include(${CMAKE_SOURCE_DIR}/cmake/Conan.cmake)
+run_conan()
+include(${CMAKE_CURRENT_BINARY_DIR}/conanbuildinfo.cmake)
+conan_basic_setup(TARGETS)
+
 # extend cmake module path to include readdy custom modules
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
 
@@ -98,11 +104,10 @@ message(STATUS "====================================================")
 message(STATUS "CMake configure for readdy version ${READDY_VERSION}-${READDY_BUILD_STRING}")
 message(STATUS "====================================================")
 
-# we use c++17
-SET(CMAKE_CXX_STANDARD 17)
+# we use c++20
+SET(CMAKE_CXX_STANDARD 20)
 SET(CMAKE_CXX_STANDARD_REQUIRED ON)
 if(APPLE)
-    add_definitions(-DCATCH_CONFIG_NO_CPP17_UNCAUGHT_EXCEPTIONS)  # workaround for macos which chokes on some cpp17 stuff
     set(CMAKE_MACOSX_RPATH TRUE)  # any shared lib being built has rpath enabled
 endif()
 
@@ -146,7 +151,9 @@ endif (READDY_LOG_CMAKE_CONFIGURATION)
 #####################################
 
 if (READDY_CREATE_TEST_TARGET)
-    find_package(Catch2 REQUIRED)
+    add_definitions(-DCATCH_CONFIG_NO_CPP17_UNCAUGHT_EXCEPTIONS)  # workaround for macos which chokes on some cpp17 stuff
+    add_subdirectory(contrib/Catch2)
+    include(${CMAKE_CURRENT_LIST_DIR}/contrib/Catch2/extras/Catch.cmake)
     add_subdirectory(readdy_testing)
 else()
     # disable testing if there was no submodule
@@ -160,14 +167,12 @@ endif()
 # readdy core                       #
 #                                   #
 #####################################
+add_subdirectory(contrib/pybind11)
+
 find_package(spdlog REQUIRED)
-find_package(pybind11 REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(blosc REQUIRED)
 find_package(fmt REQUIRED)
-
-# external fmt for spdlog
-# add_definitions(-DSPDLOG_FMT_EXTERNAL)
 
 set(WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
@@ -176,6 +181,7 @@ include(cmake/sources/sources_io.cmake)
 include(cmake/sources/sources_model.cmake)
 include(cmake/sources/sources_plugin.cmake)
 include(cmake/sources/kernels/singlecpu.cmake)
+include(cmake/sources/kernels/cpu.cmake)
 include(cmake/sources/sources_readdy.cmake)
 # create library
 message(STATUS "Libraries ReaDDy depends on: ${READDY_DEPENDENT_LIBRARIES}")
@@ -257,6 +263,7 @@ if (READDY_CREATE_TEST_TARGET)
     add_subdirectory(readdy/test)
     add_test(NAME readdy-tests COMMAND runUnitTests)
     add_subdirectory(kernels/singlecpu/test)
+    add_subdirectory(kernels/cpu/test)
 endif ()
 
 if(READDY_BUILD_SCENARIOS)

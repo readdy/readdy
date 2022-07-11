@@ -46,7 +46,7 @@
 
 #define CATCH_CONFIG_RUNNER
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_session.hpp>
 
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/plugin/Utils.h>

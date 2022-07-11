@@ -44,13 +44,13 @@
  * @date 27.06.16
  */
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_template_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/testing/KernelTest.h>
 #include <readdy/testing/Utils.h>
 
-using namespace Catch::Floating;
 using namespace readdytesting::kernel;
 
 void run(readdy::model::Kernel &kernel, readdy::scalar timeStep) {
@@ -201,7 +201,7 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
             kernel->evaluateObservables(1);
 
             // the reference values were calculated numerically
-            REQUIRE(stateModel.energy() == Approx(0.803847577293 + 2.41154273188));
+            REQUIRE(stateModel.energy() == Catch::Approx(0.803847577293 + 2.41154273188));
             ptrdiff_t id0Idx = std::find(ids.begin(), ids.end(), id0) - ids.begin();
             ptrdiff_t id1Idx = std::find(ids.begin(), ids.end(), id1) - ids.begin();
             readdy::Vec3 forceOnParticle0{static_cast<readdy::scalar>(0.73205081),
@@ -247,7 +247,7 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
             kernel->evaluateObservables(1);
 
             // the reference values were calculated numerically
-            REQUIRE(stateModel.energy() == Approx(1.51432015278));
+            REQUIRE(stateModel.energy() == Catch::Approx(1.51432015278));
             auto id0Idx = std::find(ids.begin(), ids.end(), id0) - ids.begin();
             auto id1Idx = std::find(ids.begin(), ids.end(), id1) - ids.begin();
             readdy::Vec3 forceOnParticle0{static_cast<readdy::scalar>(9.2539372), static_cast<readdy::scalar>(0.84126702),
@@ -294,7 +294,7 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
             kernel->evaluateObservables(1);
 
             // the reference values were calculated by hand and evaluated numerically
-            REQUIRE(stateModel.energy() == Approx(3.37258300203048));
+            REQUIRE(stateModel.energy() == Catch::Approx(3.37258300203048));
             auto id0Idx = std::find(ids.begin(), ids.end(), id0) - ids.begin();
             auto id1Idx = std::find(ids.begin(), ids.end(), id1) - ids.begin();
             auto id2Idx = std::find(ids.begin(), ids.end(), id2) - ids.begin();
@@ -352,7 +352,7 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
             kernel->evaluateObservables(1);
 
             // the reference values were calculated by hand and evaluated numerically
-            REQUIRE(stateModel.energy() == Approx(2.2420195910160805));
+            REQUIRE(stateModel.energy() == Catch::Approx(2.2420195910160805));
             auto id0Idx = std::find(ids.begin(), ids.end(), id0) - ids.begin();
             auto id1Idx = std::find(ids.begin(), ids.end(), id1) - ids.begin();
             auto id2Idx = std::find(ids.begin(), ids.end(), id2) - ids.begin();
@@ -423,7 +423,7 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
             kernel->evaluateObservables(1);
 
             // the reference values were calculated numerically
-            REQUIRE(stateModel.energy() == Approx(2.0 * 0.925925925926).epsilon(1e-6));
+            REQUIRE(stateModel.energy() == Catch::Approx(2.0 * 0.925925925926).epsilon(1e-6));
             auto id0Idx = std::find(ids.begin(), ids.end(), id0) - ids.begin();
             auto id1Idx = std::find(ids.begin(), ids.end(), id1) - ids.begin();
             auto id2Idx = std::find(ids.begin(), ids.end(), id2) - ids.begin();
@@ -491,9 +491,9 @@ TEMPLATE_TEST_CASE("Test potentials", "[potentials]", SingleCPU, CPU) {
 
             // the reference values were calculated numerically
             if(kernel->singlePrecision()) {
-                REQUIRE(stateModel.energy() == Approx(-0.0264715664281));
+                REQUIRE(stateModel.energy() == Catch::Approx(-0.0264715664281));
             } else {
-                REQUIRE(stateModel.energy() == Approx(-0.0264715664281));
+                REQUIRE(stateModel.energy() == Catch::Approx(-0.0264715664281));
             }
             ptrdiff_t id0Idx = std::find(ids.begin(), ids.end(), id0) - ids.begin();
             ptrdiff_t id1Idx = std::find(ids.begin(), ids.end(), id1) - ids.begin();

@@ -43,7 +43,7 @@
  */
 #define CATCH_CONFIG_RUNNER
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_session.hpp>
 
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/plugin/Utils.h>
@@ -54,10 +54,10 @@ int main(int argc, char **argv) {
     int returnCode = session.applyCommandLine(argc, argv);
     if (returnCode != 0) return returnCode;
 
-    if (!session.config().listTestNamesOnly()) {
+    /*if (!session.config().listTestNamesOnly()) {
         const auto dir = readdy::plugin::utils::getPluginsDirectory();
         readdy::plugin::KernelProvider::getInstance().loadKernelsFromDirectory(dir);
-    }
+    }*/
 
     return session.run();
 }

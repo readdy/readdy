@@ -119,8 +119,8 @@ std::unique_ptr<model::actions::EvaluateObservables> CPUActionFactory::evaluateO
 }
 
 std::unique_ptr<model::actions::MakeCheckpoint>
-CPUActionFactory::makeCheckpoint(std::string base, std::size_t maxNSaves, std::string checkpointFormat) const {
-    return {std::make_unique<CPUMakeCheckpoint>(kernel, base, maxNSaves, checkpointFormat)};
+CPUActionFactory::makeCheckpoint(std::string base, std::size_t maxNSaves) const {
+    return {std::make_unique<CPUMakeCheckpoint>(kernel, base, maxNSaves)};
 }
 
 std::unique_ptr<model::actions::InitializeKernel> CPUActionFactory::initializeKernel() const {

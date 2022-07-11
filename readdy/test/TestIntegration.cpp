@@ -42,13 +42,13 @@
  */
 
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 
 #include <readdy/common/common.h>
 #include <readdy/common/integration.h>
 #include <readdy/common/numeric.h>
 
-using namespace Catch::Floating;
 
 TEST_CASE("Test numerical integration package.", "[integration]") {
     SECTION("Integrate polynomial exact") {
@@ -118,7 +118,7 @@ TEST_CASE("Test numerical integration package.", "[integration]") {
         auto result = readdy::util::integration::integrateAdaptive(
                 integrand, 0., readdy::util::numeric::pi<readdy::scalar>(), desiredRelativeError, 2000);
         readdy::scalar trueIntegral = 2.409156679836905734596964251490166243591343837595845857659;
-        REQUIRE(result.first == Approx(trueIntegral).epsilon(desiredRelativeError*trueIntegral));
+        REQUIRE(result.first == Catch::Approx(trueIntegral).epsilon(desiredRelativeError*trueIntegral));
         REQUIRE(result.second/result.first <= desiredRelativeError);
     }
 

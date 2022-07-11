@@ -39,7 +39,7 @@
  * @date 1/17/18
  */
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 
 #include <readdy/common/numeric.h>
 #include <readdy/common/common.h>

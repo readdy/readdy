@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2020 Computational Molecular Biology Group,          *
+ * Copyright © 2018 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * Redistribution and use in source and binary forms, with or       *
@@ -32,61 +32,64 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                       *
  ********************************************************************/
 
+
 /**
- * << detailed description >>
- *
- * @file CPUMiscActions.h
- * @brief << brief description >>
- * @author chrisfroe
- * @date 17.03.20
+ * @file CPUActionFactory.h
+ * @brief Declaration of CPU action factory
+ * @author clonker
+ * @date 23.06.16
  */
 
 #pragma once
 
-#include <readdy/model/actions/Actions.h>
-#include <readdy/api/Saver.h>
-#include "../CPUKernel.h"
+#include <readdy/model/actions/ActionFactory.h>
 
-namespace readdy::kernel::cpu::actions {
-class CPUEvaluateObservables : public readdy::model::actions::EvaluateObservables {
+namespace readdy::kernel::cpu {
+
+class CPUKernel;
+namespace actions {
+class CPUActionFactory : public readdy::model::actions::ActionFactory {
+    CPUKernel *const kernel;
 public:
-    explicit CPUEvaluateObservables(CPUKernel *kernel) : kernel(kernel) {}
+    explicit CPUActionFactory(CPUKernel *kernel);
 
-    void perform(TimeStep t) override {
-        kernel->evaluateObservables(t);
-    }
+    std::unique_ptr<model::actions::AddParticles>
+    addParticles(const std::vector<model::Particle> &particles) const override;
 
-private:
-    CPUKernel *kernel;
+    std::unique_ptr<model::actions::EulerBDIntegrator> eulerBDIntegrator(scalar timeStep) const override;
+
+    std::unique_ptr<readdy::model::actions::CalculateForces> calculateForces() const override;
+
+    std::unique_ptr<model::actions::CreateNeighborList> createNeighborList(scalar interactionDistance) const override;
+
+    std::unique_ptr<model::actions::UpdateNeighborList> updateNeighborList() const override;
+
+    std::unique_ptr<model::actions::ClearNeighborList> clearNeighborList() const override;
+
+    std::unique_ptr<model::actions::EvaluateCompartments> evaluateCompartments() const override;
+
+    std::unique_ptr<model::actions::reactions::UncontrolledApproximation>
+    uncontrolledApproximation(scalar timeStep) const override;
+
+    std::unique_ptr<model::actions::reactions::Gillespie>
+    gillespie(scalar timeStep) const override;
+
+    std::unique_ptr<model::actions::reactions::DetailedBalance>
+    detailedBalance(scalar timeStep) const override;
+
+    std::unique_ptr<model::actions::top::EvaluateTopologyReactions>
+    evaluateTopologyReactions(scalar timeStep) const override;
+
+    std::unique_ptr<model::actions::top::BreakBonds>
+    breakBonds(scalar timeStep, readdy::model::actions::top::BreakConfig config) const override;
+
+    std::unique_ptr<model::actions::EvaluateObservables> evaluateObservables() const override;
+
+    std::unique_ptr<model::actions::MakeCheckpoint>
+    makeCheckpoint(std::string base, std::size_t maxNSaves) const override;
+
+    std::unique_ptr<model::actions::InitializeKernel> initializeKernel() const override;
 };
 
-class CPUMakeCheckpoint : public readdy::model::actions::MakeCheckpoint {
-public:
-    CPUMakeCheckpoint(CPUKernel *kernel, const std::string &base, std::size_t maxNSaves,
-                      const std::string &checkpointFormat)
-                      : kernel(kernel), saver(base, maxNSaves, checkpointFormat) {}
-
-    void perform(TimeStep t) override {
-        saver.makeCheckpoint(kernel, t);
-    }
-
-    std::string describe() const override {
-        return saver.describe();
-    }
-private:
-    CPUKernel *kernel;
-    readdy::api::Saver saver;
-};
-
-class CPUInitializeKernel : public readdy::model::actions::InitializeKernel {
-public:
-    CPUInitializeKernel(CPUKernel *kernel) : kernel(kernel) {}
-
-    void perform() override {
-        kernel->initialize();
-    }
-private:
-    CPUKernel *kernel;
-};
-
+}
 }

@@ -42,7 +42,8 @@
  * @todo check force calculation through periodic boundary
  */
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_template_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 
 #include <readdy/testing/Utils.h>
 #include <readdy/testing/KernelTest.h>
@@ -94,7 +95,7 @@ TEMPLATE_TEST_CASE("Test state model", "[state-model]", SingleCPU, CPU) {
         } else {
             readdy::testing::vec3eq(*forcesIt, readdy::Vec3(0, 0, 0.2));
         }
-        REQUIRE(stateModel.energy() == Approx(0.02));
+        REQUIRE(stateModel.energy() == Catch::Approx(0.02));
     }
 
     SECTION("Calculate repulsion forces") {
@@ -178,7 +179,7 @@ TEMPLATE_TEST_CASE("Test state model", "[state-model]", SingleCPU, CPU) {
         }
 
         const readdy::scalar totalEnergy = energy03 + energy05 + energy13 + energy15 + energy23 + energy25;
-        REQUIRE(stateModel.energy() == Approx(totalEnergy));
+        REQUIRE(stateModel.energy() == Catch::Approx(totalEnergy));
     }
 
     SECTION("Calculate no forces") {

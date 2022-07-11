@@ -40,7 +40,7 @@
  * @date 22.06.16
  */
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 
 #include <readdy/model/Kernel.h>
 #include <readdy/plugin/KernelProvider.h>

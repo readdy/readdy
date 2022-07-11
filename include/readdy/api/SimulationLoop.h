@@ -344,8 +344,8 @@ public:
         _callbacks.emplace_back(std::move(f));
     }
 
-    void makeCheckpoints(std::size_t stride, std::string basePath, std::size_t maxNSaves, std::string checkpointFormat) {
-        _makeCheckpoint = kernel()->actions().makeCheckpoint(basePath, maxNSaves, checkpointFormat);
+    void makeCheckpoints(std::size_t stride, std::string basePath, std::size_t maxNSaves) {
+        _makeCheckpoint = kernel()->actions().makeCheckpoint(basePath, maxNSaves);
         _checkpointingStride = stride;
     }
 

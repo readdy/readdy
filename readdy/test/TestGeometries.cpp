@@ -2,7 +2,9 @@
 // Created by mho on 8/25/21.
 //
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
+
 #include <readdy/model/geometry.h>
 #include <readdy/model/Context.h>
 #include <readdy/api/Simulation.h>
@@ -69,8 +71,8 @@ TEST_CASE("Sphere geometry", "[geometries]") {
     REQUIRE(sphere.smallestDifference<true>({0, 0, 0}) == Vec3{0, 0, 0});
     REQUIRE(sphere.smallestDifference<false>({0, 0, 0}) == (std::sqrt(3) - 5) * Vec3{-1, -1, -1} / std::sqrt(3));
     auto delta = sphere.smallestDifference<false>({0, 0, 0});
-    REQUIRE((Vec3{0, 0, 0} - delta - sphere.center).norm() == Approx(sphere.radius));
-    REQUIRE((Vec3{2, -1, .3} - sphere.smallestDifference<false>({2, -1, .3}) - sphere.center).norm() == Approx(sphere.radius));
+    REQUIRE((Vec3{0, 0, 0} - delta - sphere.center).norm() == Catch::Approx(sphere.radius));
+    REQUIRE((Vec3{2, -1, .3} - sphere.smallestDifference<false>({2, -1, .3}) - sphere.center).norm() == Catch::Approx(sphere.radius));
 
     REQUIRE(sphere.smallestDifference<true>({7, 1, 1}) == Vec3{1, 0, 0});
     REQUIRE(sphere.smallestDifference<true>({1, 7, 1}) == Vec3{0, 1, 0});

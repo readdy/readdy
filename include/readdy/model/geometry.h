@@ -116,7 +116,8 @@ struct Box {
     }
 
     [[nodiscard]] std::string describe() const {
-        return fmt::format("minimum vertex v0={} and maximum vertex v1={}", v0, v1);
+        return fmt::format("minimum vertex v0=({},{},{}) and maximum vertex v1=({},{},{})",
+                           v0.x, v0.y, v0.z, v1.x, v1.y, v1.z);
     }
 
     // lower left vertex and upper right vertex
