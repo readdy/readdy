@@ -167,8 +167,9 @@ endif()
 # readdy core                       #
 #                                   #
 #####################################
+add_subdirectory(contrib/pybind11)
+
 find_package(spdlog REQUIRED)
-find_package(pybind11 REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(blosc REQUIRED)
 find_package(fmt REQUIRED)

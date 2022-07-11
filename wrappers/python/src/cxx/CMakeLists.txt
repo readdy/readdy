@@ -50,11 +50,9 @@ set(SOURCE_FILES
         api/ExportKernelContext.cpp
         api/PyFunction.h
         api/ApiModule.cpp)
-add_library(readdybinding SHARED ${SOURCE_FILES})
-# pybind11_add_module(readdybinding ${SOURCE_FILES})
+pybind11_add_module(readdybinding ${SOURCE_FILES})
 target_include_directories(readdybinding PUBLIC "${READDY_INCLUDE_DIRS}")
 target_link_libraries(readdybinding PUBLIC ${READDY_DEPENDENT_LIBRARIES} readdy)
-target_link_libraries(readdybinding PRIVATE pybind11::module)
 add_dependencies(CopyPythonSources readdybinding)
 
 set_target_properties(readdybinding
@@ -63,4 +61,3 @@ set_target_properties(readdybinding
         LIBRARY_OUTPUT_DIRECTORY "${PYTHON_CPP_MODULES_OUTPUT_DIR}")
 
 install(TARGETS readdybinding LIBRARY DESTINATION ${PYTHON_INSTALL_DIR}/_internal)
-pybind11_extension(readdybinding)
