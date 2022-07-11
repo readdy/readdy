@@ -168,6 +168,7 @@ endif()
 #                                   #
 #####################################
 add_subdirectory(contrib/pybind11)
+find_package(pybind11 REQUIRED)
 
 find_package(spdlog REQUIRED)
 find_package(nlohmann_json REQUIRED)
