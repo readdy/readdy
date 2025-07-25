@@ -176,7 +176,7 @@ ContiguousCellLinkedList::count_type ContiguousCellLinkedList::getMaxCounts() {
 
     auto maxCounts = *std::max_element(blockNParticles.begin(), blockNParticles.end(),
                                        [](const auto& n1, const auto &n2) -> bool { return *n1 < *n2; });
-    log::debug("found cell with {} particles", *maxCounts);
+    log::debug("found cell with {} particles", maxCounts->load());
     return *maxCounts;
 }
 

@@ -50,6 +50,9 @@
 #include <ostream>
 #include <readdy/model/compartments/Compartments.h>
 #include "PotentialOrder1.h"
+#include <readdy/common/ReaDDyVec3.h>
+
+#include <fmt/format.h>
 
 namespace readdy::model::potentials {
 

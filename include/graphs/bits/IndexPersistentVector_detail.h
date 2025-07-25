@@ -31,7 +31,7 @@ struct formatter<graphs::PersistentIndex> {
     constexpr auto parse(ParseContext &ctx) { return ctx.begin(); }
 
     template <typename FormatContext>
-    auto format(const graphs::PersistentIndex &v, FormatContext &ctx) {
+    auto format(const graphs::PersistentIndex &v, FormatContext &ctx) const {
         return format_to(ctx.out(), "PersistentIndex[{}]", v.value);
     }
 };

@@ -42,6 +42,7 @@
 
 #pragma once
 
+#include <string>
 #include <mutex>
 #include <unordered_map>
 

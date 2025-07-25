@@ -58,6 +58,7 @@
 #include <readdy/model/reactions/Reaction.h>
 #include <readdy/model/potentials/PotentialOrder2.h>
 #include <readdy/model/Context.h>
+#include <fmt/ostream.h>
 
 namespace readdy {
 namespace model {
@@ -150,3 +151,16 @@ equivalentReversibleReactions(const ReversibleReactionConfig &rev1, const Revers
 }
 }
 }
+
+template<>
+struct fmt::formatter<readdy::model::actions::reactions::ReversibleType> {
+    template <typename ParseContext>
+    constexpr auto parse(ParseContext &ctx) { return ctx.begin(); }
+
+    template <typename FormatContext>
+    auto format(const readdy::model::actions::reactions::ReversibleType &rt, FormatContext &ctx) const {
+        std::ostringstream oss;
+        oss << rt;
+        return format_to(ctx.out(), "{}", oss.str());
+    }
+};
