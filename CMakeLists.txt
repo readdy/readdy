@@ -77,17 +77,6 @@ set(READDY_BUILD_SCENARIOS OFF CACHE BOOL "Whether to build the Scenarios execut
 # minimum cmake version
 cmake_minimum_required(VERSION 3.16)
 
-# run conan
-include(${CMAKE_SOURCE_DIR}/cmake/Conan.cmake)
-run_conan()
-if (EXISTS "${CMAKE_CURRENT_BINARY_DIR}/conanbuildinfo.cmake")
-    include(${CMAKE_CURRENT_BINARY_DIR}/conanbuildinfo.cmake)
-    conan_basic_setup(TARGETS)
-else()
-    message(STATUS "no conanbuildinfo.cmake was generated, continue and see if packages can be found
-                    using find_package regardless")
-endif()
-
 # extend cmake module path to include readdy custom modules
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
 
