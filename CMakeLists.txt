@@ -178,6 +178,7 @@ else()
     find_package(pybind11 REQUIRED)
 endif()
 
+set(SPDLOG_FMT_EXTERNAL_HO ON)
 if (NOT IGNORE_VENDORED_DEPENDENCIES)
     set(FMT_SYSTEM_HEADERS ON)
     add_subdirectory(

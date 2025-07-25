@@ -41,6 +41,7 @@ requirements:
     - pint
     - tqdm
     - hdf5
+    - fmt >=11.2.0
     - zlib 1.2.*
 
 test:
