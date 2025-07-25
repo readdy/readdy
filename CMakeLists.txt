@@ -68,6 +68,14 @@ set(READDY_BUILD_MPI_KERNEL OFF CACHE BOOL "Whether to build the MPI kernel or n
 # build the scenarios executables for performance benchmarking
 set(READDY_BUILD_SCENARIOS OFF CACHE BOOL "Whether to build the Scenarios executable or not")
 
+option(
+        IGNORE_VENDORED_DEPENDENCIES
+        "Ignore libraries provided as submodules of the repository"
+        OFF
+)
+mark_as_advanced(IGNORE_VENDORED_DEPENDENCIES)
+
+
 #####################################
 #                                   #
 # Basic setup of the project        #
@@ -167,10 +175,24 @@ else()
     find_package(pybind11 REQUIRED)
 endif()
 
-find_package(spdlog REQUIRED)
-find_package(nlohmann_json REQUIRED)
+if (NOT IGNORE_VENDORED_DEPENDENCIES)
+    set(FMT_SYSTEM_HEADERS ON)
+    add_subdirectory(
+            ${CMAKE_SOURCE_DIR}/contrib/fmt
+            EXCLUDE_FROM_ALL
+    )
+    set(JSON_Install OFF CACHE INTERNAL "")
+    add_subdirectory(
+            ${CMAKE_SOURCE_DIR}/contrib/json
+            EXCLUDE_FROM_ALL
+    )
+    add_subdirectory(${CMAKE_SOURCE_DIR}/contrib/spdlog)
+else()
+    find_package(fmt REQUIRED)
+    find_package(spdlog REQUIRED)
+    find_package(nlohmann_json REQUIRED)
+endif()
 find_package(blosc REQUIRED)
-find_package(fmt REQUIRED)
 
 set(WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
