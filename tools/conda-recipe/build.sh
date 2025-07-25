@@ -17,6 +17,7 @@ echo "Running cmake"
 # On macOS, force C++17 to avoid C++20/SDK compatibility issues
 if [[ "$OSTYPE" == "darwin"* ]]; then
   CXX_STANDARD="-DCMAKE_CXX_STANDARD=17"
+  export CXXFLAGS="$CXXFLAGS -std=c++17"
 else
   CXX_STANDARD=""
 fi
