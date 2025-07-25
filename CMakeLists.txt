@@ -68,6 +68,14 @@ set(READDY_BUILD_MPI_KERNEL OFF CACHE BOOL "Whether to build the MPI kernel or n
 # build the scenarios executables for performance benchmarking
 set(READDY_BUILD_SCENARIOS OFF CACHE BOOL "Whether to build the Scenarios executable or not")
 
+option(
+        IGNORE_VENDORED_DEPENDENCIES
+        "Ignore libraries provided as submodules of the repository"
+        OFF
+)
+mark_as_advanced(IGNORE_VENDORED_DEPENDENCIES)
+
+
 #####################################
 #                                   #
 # Basic setup of the project        #
@@ -76,17 +84,6 @@ set(READDY_BUILD_SCENARIOS OFF CACHE BOOL "Whether to build the Scenarios execut
 
 # minimum cmake version
 cmake_minimum_required(VERSION 3.16)
-
-# run conan
-include(${CMAKE_SOURCE_DIR}/cmake/Conan.cmake)
-run_conan()
-if (EXISTS "${CMAKE_CURRENT_BINARY_DIR}/conanbuildinfo.cmake")
-    include(${CMAKE_CURRENT_BINARY_DIR}/conanbuildinfo.cmake)
-    conan_basic_setup(TARGETS)
-else()
-    message(STATUS "no conanbuildinfo.cmake was generated, continue and see if packages can be found
-                    using find_package regardless")
-endif()
 
 # extend cmake module path to include readdy custom modules
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
@@ -109,11 +106,14 @@ message(STATUS "====================================================")
 message(STATUS "CMake configure for readdy version ${READDY_VERSION}-${READDY_BUILD_STRING}")
 message(STATUS "====================================================")
 
-# we use c++20
+# we use c++20, but c++17 on macOS to avoid SDK compatibility issues
 SET(CMAKE_CXX_STANDARD 20)
 SET(CMAKE_CXX_STANDARD_REQUIRED ON)
 if(APPLE)
     set(CMAKE_MACOSX_RPATH TRUE)  # any shared lib being built has rpath enabled
+    # Force C++17 on macOS to avoid C++20/SDK compatibility issues with Catch2 and other dependencies
+    SET(CMAKE_CXX_STANDARD 17)
+    SET(CMAKE_CXX_STANDARD_REQUIRED OFF)
 endif()
 
 # always build readdy as shared lib
@@ -178,10 +178,25 @@ else()
     find_package(pybind11 REQUIRED)
 endif()
 
-find_package(spdlog REQUIRED)
-find_package(nlohmann_json REQUIRED)
+set(SPDLOG_FMT_EXTERNAL_HO ON)
+if (NOT IGNORE_VENDORED_DEPENDENCIES)
+    set(FMT_SYSTEM_HEADERS ON)
+    add_subdirectory(
+            ${CMAKE_SOURCE_DIR}/contrib/fmt
+            EXCLUDE_FROM_ALL
+    )
+    set(JSON_Install OFF CACHE INTERNAL "")
+    add_subdirectory(
+            ${CMAKE_SOURCE_DIR}/contrib/json
+            EXCLUDE_FROM_ALL
+    )
+    add_subdirectory(${CMAKE_SOURCE_DIR}/contrib/spdlog)
+else()
+    find_package(fmt REQUIRED)
+    find_package(spdlog REQUIRED)
+    find_package(nlohmann_json REQUIRED)
+endif()
 find_package(blosc REQUIRED)
-find_package(fmt REQUIRED)
 
 set(WINDOWS_EXPORT_ALL_SYMBOLS ON)
 

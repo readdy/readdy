@@ -308,13 +308,13 @@ class TestTopLevelAPI(ReaDDyTestCase):
         rds = readdy.ReactionDiffusionSystem([10.,10.,10.])
         rds.add_species("A")
         rds.potentials.add_harmonic_repulsion("A", "A", 1., 1.)
-        self.assertEquals(rds.calculate_max_cutoff().magnitude, 1.)
+        self.assertEqual(rds.calculate_max_cutoff().magnitude, 1.)
 
     def test_calculate_max_cutoff_no_units(self):
         rds = readdy.ReactionDiffusionSystem([10.,10.,10.], unit_system=None)
         rds.add_species("A")
         rds.potentials.add_harmonic_repulsion("A", "A", 1., 1.)
-        self.assertEquals(rds.calculate_max_cutoff(), 1.)
+        self.assertEqual(rds.calculate_max_cutoff(), 1.)
 
 
 class TestTopLevelAPIObservables(ReaDDyTestCase):

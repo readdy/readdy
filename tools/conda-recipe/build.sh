@@ -13,6 +13,16 @@ echo "Install prefix ${SP_DIR}"
 export HDF5_ROOT=${PREFIX}
 
 echo "Running cmake"
+
+# On macOS, force C++17 to avoid C++20/SDK compatibility issues
+if [[ "$OSTYPE" == "darwin"* ]] || [[ "$(uname)" == "Darwin" ]]; then
+  CXX_STANDARD="-DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_STANDARD_REQUIRED=OFF"
+  export CXXFLAGS="$CXXFLAGS -std=c++17"
+  export CPPFLAGS="$CPPFLAGS -std=c++17"
+else
+  CXX_STANDARD=""
+fi
+
 cmake .. \
   -DCMAKE_INSTALL_PREFIX="${PREFIX}" \
   -DCMAKE_PREFIX_PATH="${PREFIX}" \
@@ -20,6 +30,9 @@ cmake .. \
   -DCMAKE_BUILD_TYPE=Release \
   -DPYTHON_EXECUTABLE="${PYTHON}" \
   -DPYTHON_PREFIX="${PREFIX}" \
+  -DPython_EXECUTABLE="${PYTHON}" \
+  -DPython_ROOT_DIR="${PREFIX}" \
+  -DPYBIND11_FINDPYTHON=ON \
   -DHDF5_INCLUDE_DIRS="${PREFIX}/include" \
   -DREADDY_LOG_CMAKE_CONFIGURATION:BOOL=ON \
   -DREADDY_CREATE_TEST_TARGET:BOOL=ON \
@@ -27,6 +40,8 @@ cmake .. \
   -DREADDY_VERSION=${PKG_VERSION} \
   -DREADDY_BUILD_STRING=${PKG_BUILDNUM} \
   -DSP_DIR="${SP_DIR}" \
+  -DIGNORE_VENDORED_DEPENDENCIES:BOOL=ON \
+  ${CXX_STANDARD} \
   -GNinja
 
 echo "Running ninja with makeflags ${MAKEFLAGS}"
@@ -41,7 +56,7 @@ err_code=0
 ret_code=0
 
 echo "calling c++ core unit tests"
-./bin/runUnitTests --durations yes
+./readdy/test/runUnitTests --durations yes
 err_code=$?
 if [ ${err_code} -ne 0 ]; then
    ret_code=${err_code}
@@ -49,15 +64,15 @@ if [ ${err_code} -ne 0 ]; then
 fi
 
 # echo "calling c++ integration tests"
-# ./readdy/test/runUnitTests --durations yes [integration]
+# ./readdy/test/runUnitTests --durations yes [integration] 
 # err_code=$?
 # if [ ${err_code} -ne 0 ]; then
 #    ret_code=${err_code}
-#    echo "core unit tests failed with ${ret_code}"
+#    echo "integration tests failed with ${ret_code}"
 # fi
 
 echo "calling c++ singlecpu unit tests"
-./bin/runUnitTests_singlecpu --durations yes
+./kernels/singlecpu/test/runUnitTests_singlecpu --durations yes
 err_code=$?
 if [ ${err_code} -ne 0 ]; then
    ret_code=${err_code}
@@ -65,7 +80,7 @@ if [ ${err_code} -ne 0 ]; then
 fi
 
 echo "calling c++ cpu unit tests"
-./bin/runUnitTests_cpu --durations yes
+./kernels/cpu/test/runUnitTests_cpu --durations yes
 err_code=$?
 if [ ${err_code} -ne 0 ]; then
   ret_code=${err_code}

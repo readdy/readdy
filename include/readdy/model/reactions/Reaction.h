@@ -52,6 +52,7 @@
 #include <utility>
 #include <memory>
 #include <spdlog/fmt/ostr.h>
+#include <fmt/ostream.h>
 #include <readdy/model/Particle.h>
 #include <readdy/model/RandomProvider.h>
 
@@ -184,3 +185,29 @@ protected:
 };
 
 }
+
+template<>
+struct fmt::formatter<readdy::model::reactions::ReactionType> {
+    template <typename ParseContext>
+    constexpr auto parse(ParseContext &ctx) { return ctx.begin(); }
+
+    template <typename FormatContext>
+    auto format(const readdy::model::reactions::ReactionType &rt, FormatContext &ctx) const {
+        std::ostringstream oss;
+        oss << rt;
+        return format_to(ctx.out(), "{}", oss.str());
+    }
+};
+
+template<>
+struct fmt::formatter<readdy::model::reactions::Reaction> {
+    template <typename ParseContext>
+    constexpr auto parse(ParseContext &ctx) { return ctx.begin(); }
+
+    template <typename FormatContext>
+    auto format(const readdy::model::reactions::Reaction &r, FormatContext &ctx) const {
+        std::ostringstream oss;
+        oss << r;
+        return format_to(ctx.out(), "{}", oss.str());
+    }
+};

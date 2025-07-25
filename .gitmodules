@@ -4,3 +4,12 @@
 [submodule "contrib/pybind11"]
 	path = contrib/pybind11
 	url = https://github.com/pybind/pybind11
+[submodule "contrib/spdlog"]
+	path = contrib/spdlog
+	url = https://github.com/gabime/spdlog
+[submodule "contrib/json"]
+	path = contrib/json
+	url = https://github.com/nlohmann/json
+[submodule "contrib/fmt"]
+	path = contrib/fmt
+	url = https://github.com/fmtlib/fmt

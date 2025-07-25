@@ -347,14 +347,14 @@ public:
 
 }
 
-/*namespace fmt {
+namespace fmt {
 template<>
 struct formatter<readdy::_internal::ReaDDyVec3<float>> {
     template <typename ParseContext>
     constexpr auto parse(ParseContext &ctx) { return ctx.begin(); }
 
     template <typename FormatContext>
-    auto format(const readdy::_internal::ReaDDyVec3<float> &v, FormatContext &ctx) {
+    auto format(const readdy::_internal::ReaDDyVec3<float> &v, FormatContext &ctx) const {
         return format_to(ctx.out(), "Vec3[{},{},{}]", v.x, v.y, v.z);
     }
 };
@@ -365,8 +365,8 @@ struct formatter<readdy::_internal::ReaDDyVec3<double>> {
     constexpr auto parse(ParseContext &ctx) { return ctx.begin(); }
 
     template <typename FormatContext>
-    auto format(const readdy::_internal::ReaDDyVec3<double> &v, FormatContext &ctx) {
+    auto format(const readdy::_internal::ReaDDyVec3<double> &v, FormatContext &ctx) const {
         return format_to(ctx.out(), "Vec3[{},{},{}]", v.x, v.y, v.z);
     }
 };
-}*/
+}

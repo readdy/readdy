@@ -48,6 +48,7 @@
 #include <string>
 #include <atomic>
 #include <spdlog/fmt/ostr.h>
+#include <fmt/ostream.h>
 
 #include <readdy/common/common.h>
 
@@ -119,3 +120,16 @@ protected:
 };
 
 }
+
+template<>
+struct fmt::formatter<readdy::model::Particle> {
+    template <typename ParseContext>
+    constexpr auto parse(ParseContext &ctx) { return ctx.begin(); }
+
+    template <typename FormatContext>
+    auto format(const readdy::model::Particle &p, FormatContext &ctx) const {
+        std::ostringstream oss;
+        oss << p;
+        return format_to(ctx.out(), "{}", oss.str());
+    }
+};
