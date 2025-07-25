@@ -28,7 +28,10 @@ requirements:
     - {{ compiler('cxx') }}
     - cmake
     - ninja
-    - conan
+    - spdlog >=1.15.0
+    - nlohmann_json >=3.12.0
+    - fmt >=11.2.0
+    - pybind11 >=3.0.0
 
   run:
     - intel-openmp # [osx]

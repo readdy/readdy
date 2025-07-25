@@ -13,6 +13,14 @@ echo "Install prefix ${SP_DIR}"
 export HDF5_ROOT=${PREFIX}
 
 echo "Running cmake"
+
+# On macOS, force C++17 to avoid C++20/SDK compatibility issues
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  CXX_STANDARD="-DCMAKE_CXX_STANDARD=17"
+else
+  CXX_STANDARD=""
+fi
+
 cmake .. \
   -DCMAKE_INSTALL_PREFIX="${PREFIX}" \
   -DCMAKE_PREFIX_PATH="${PREFIX}" \
@@ -27,6 +35,8 @@ cmake .. \
   -DREADDY_VERSION=${PKG_VERSION} \
   -DREADDY_BUILD_STRING=${PKG_BUILDNUM} \
   -DSP_DIR="${SP_DIR}" \
+  -DIGNORE_VENDORED_DEPENDENCIES:BOOL=ON \
+  ${CXX_STANDARD} \
   -GNinja
 
 echo "Running ninja with makeflags ${MAKEFLAGS}"

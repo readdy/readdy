@@ -1,21 +1,18 @@
 steps:
-  - bash: |
+  - script: |
       conda config --add channels conda-forge
       conda config --set always_yes true
       conda config --set quiet true
     displayName: Configure conda
-  - bash: |
-      conda install mamba
-      mamba clean --all
-      mamba update --all
+  
+  - script: |
+      conda install conda-build conda-verify pip
+      conda clean --all
       python -m pip install --upgrade pip
-    displayName: Update conda
-  - bash: |
-      mamba install boa conda-build conda-verify pip
-    displayName: 'Install dependencies'
-    continueOnError: false
-  - bash: |
+      conda build --version
+    displayName: Install conda-build dependencies
+    
+  - script: |
       export PYTHONUNBUFFERED=1
-      conda mambabuild tools/conda-recipe
+      conda build tools/conda-recipe
     displayName: 'Build and test'
-    continueOnError: false
