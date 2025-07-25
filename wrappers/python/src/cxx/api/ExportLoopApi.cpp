@@ -76,7 +76,6 @@ void exportLoopApi(pybind11::module &module) {
                 self.run(steps);
             }, "n_steps"_a)
             .def("run_with_criterion", [](Loop& self, pybind11::object continuingCriterion) {
-                py::gil_scoped_release release;
                 auto pyFun = readdy::rpy::PyFunction<bool(const readdy::TimeStep current)>(continuingCriterion);
                 self.run(pyFun);
             }, "continuing_criterion"_a, py::keep_alive<0, 1>())

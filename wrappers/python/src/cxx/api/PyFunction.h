@@ -67,8 +67,13 @@ struct PyFunction<R(Args...)> {
 
     R operator()(Args &&... args) {
         pybind11::gil_scoped_acquire lock;
-        pybind11::object res = (*py_obj)(std::forward<Args>(args)...);
-        return res.cast<R>();
+        try {
+            pybind11::object res = (*py_obj)(std::forward<Args>(args)...);
+            return res.cast<R>();
+        } catch (const std::exception& e) {
+            // Re-throw with more context for debugging
+            throw std::runtime_error(std::string("PyFunction call failed: ") + e.what());
+        }
     }
 
 protected:
@@ -88,7 +93,12 @@ struct PyFunction<void(Args...)> {
 
     void operator()(Args &&... args) {
         pybind11::gil_scoped_acquire lock;
-        (*py_obj)(std::forward<Args>(args)...);
+        try {
+            (*py_obj)(std::forward<Args>(args)...);
+        } catch (const std::exception& e) {
+            // Re-throw with more context for debugging
+            throw std::runtime_error(std::string("PyFunction call failed: ") + e.what());
+        }
     }
 
 protected:
