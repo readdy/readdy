@@ -47,4 +47,4 @@ test:
   imports:
     - readdy
   requires:
-    - nose
+    - pytest

@@ -10,7 +10,7 @@ err_code=0
 export READDY_N_CORES=2
 
 echo "calling python unit tests"
-nosetests readdy -s -vv --with-doctest --doctest-options=+NORMALIZE_WHITESPACE,+ELLIPSIS
+pytest readdy -v
 err_code=$?
 if [ ${err_code} -ne 0 ]; then
     ret_code=${err_code}
