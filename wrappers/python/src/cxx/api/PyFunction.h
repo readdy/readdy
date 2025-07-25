@@ -47,9 +47,13 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/functional.h>
+#include <mutex>
 
 namespace readdy {
 namespace rpy {
+
+// Global mutex to serialize Python callback execution from multiple threads
+static std::mutex python_callback_mutex;
 
 template<typename Signature>
 struct PyFunction;
@@ -66,6 +70,7 @@ struct PyFunction<R(Args...)> {
     PyFunction& operator=(const PyFunction&) = default;
 
     R operator()(Args &&... args) {
+        std::lock_guard<std::mutex> callback_lock(python_callback_mutex);
         pybind11::gil_scoped_acquire lock;
         try {
             pybind11::object res = (*py_obj)(std::forward<Args>(args)...);
@@ -92,6 +97,7 @@ struct PyFunction<void(Args...)> {
     PyFunction& operator=(const PyFunction&) = default;
 
     void operator()(Args &&... args) {
+        std::lock_guard<std::mutex> callback_lock(python_callback_mutex);
         pybind11::gil_scoped_acquire lock;
         try {
             (*py_obj)(std::forward<Args>(args)...);
