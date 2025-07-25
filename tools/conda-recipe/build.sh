@@ -15,9 +15,10 @@ export HDF5_ROOT=${PREFIX}
 echo "Running cmake"
 
 # On macOS, force C++17 to avoid C++20/SDK compatibility issues
-if [[ "$OSTYPE" == "darwin"* ]]; then
-  CXX_STANDARD="-DCMAKE_CXX_STANDARD=17"
+if [[ "$OSTYPE" == "darwin"* ]] || [[ "$(uname)" == "Darwin" ]]; then
+  CXX_STANDARD="-DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_STANDARD_REQUIRED=OFF"
   export CXXFLAGS="$CXXFLAGS -std=c++17"
+  export CPPFLAGS="$CPPFLAGS -std=c++17"
 else
   CXX_STANDARD=""
 fi

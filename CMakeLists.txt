@@ -106,11 +106,14 @@ message(STATUS "====================================================")
 message(STATUS "CMake configure for readdy version ${READDY_VERSION}-${READDY_BUILD_STRING}")
 message(STATUS "====================================================")
 
-# we use c++20
+# we use c++20, but c++17 on macOS to avoid SDK compatibility issues
 SET(CMAKE_CXX_STANDARD 20)
 SET(CMAKE_CXX_STANDARD_REQUIRED ON)
 if(APPLE)
     set(CMAKE_MACOSX_RPATH TRUE)  # any shared lib being built has rpath enabled
+    # Force C++17 on macOS to avoid C++20/SDK compatibility issues with Catch2 and other dependencies
+    SET(CMAKE_CXX_STANDARD 17)
+    SET(CMAKE_CXX_STANDARD_REQUIRED OFF)
 endif()
 
 # always build readdy as shared lib
