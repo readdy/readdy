@@ -51,13 +51,24 @@ add_custom_target(CopyPythonSources
 # add modules
 ADD_SUBDIRECTORY(src/cxx)
 
+# For scikit-build-core wheel builds, install into the wheel platlib dir;
+# otherwise use the conda/system PYTHON_INSTALL_DIR
+if(DEFINED SKBUILD_PLATLIB_DIR)
+    set(_py_install_dir "${SKBUILD_PLATLIB_DIR}/readdy")
+else()
+    set(_py_install_dir "${PYTHON_INSTALL_DIR}")
+endif()
+
 install (
         DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/src/python/readdy/
-        DESTINATION ${PYTHON_INSTALL_DIR}
+        DESTINATION ${_py_install_dir}
         FILES_MATCHING PATTERN "*.py"
 )
-configure_file(${CMAKE_CURRENT_LIST_DIR}/src/python/readdy/_version.py.in ${CMAKE_CURRENT_BINARY_DIR}/src/python/readdy/_version.py)
 
-install (FILES ${CMAKE_CURRENT_BINARY_DIR}/src/python/readdy/_version.py
-         DESTINATION ${PYTHON_INSTALL_DIR}
-)
+if(NOT DEFINED SKBUILD_PLATLIB_DIR)
+    # For conda builds, generate _version.py from template
+    configure_file(${CMAKE_CURRENT_LIST_DIR}/src/python/readdy/_version.py.in ${CMAKE_CURRENT_BINARY_DIR}/src/python/readdy/_version.py)
+    install (FILES ${CMAKE_CURRENT_BINARY_DIR}/src/python/readdy/_version.py
+             DESTINATION ${_py_install_dir}
+    )
+endif()
