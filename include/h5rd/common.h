@@ -91,7 +91,7 @@ namespace util {
 inline bool groupExists(hid_t hid, const std::string &name) {
     H5E_BEGIN_TRY
         {
-            hid = H5Gopen(hid, name.c_str(), H5P_DEFAULT);
+            hid = H5Gopen2(hid, name.c_str(), H5P_DEFAULT);
             if (hid > 0) {
                 H5Gclose(hid);
             }

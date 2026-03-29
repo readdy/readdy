@@ -95,7 +95,7 @@ inline void writeVector(hid_t group, const std::string &dsName, std::vector<std:
     hid_t datatype = H5Tcopy(H5T_C_S1);
     H5Tset_size(datatype, H5T_VARIABLE);
 
-    hid_t dataset = H5Dcreate1(group, dsName.c_str(), datatype, dataspace, H5P_DEFAULT);
+    hid_t dataset = H5Dcreate2(group, dsName.c_str(), datatype, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 
     //
     // Select the "memory" to be written out - just 1 record.

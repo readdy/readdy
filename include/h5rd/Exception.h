@@ -66,16 +66,24 @@ public:
 
                 auto *ss = static_cast<std::stringstream *>(clientData);
 
-                char *major_err = H5Eget_major(desc->maj_num);
-                char *minor_err = H5Eget_minor(desc->min_num);
+#if H5_VERSION_GE(2,0,0)
+                char major_buf[256], minor_buf[256];
+                H5Eget_msg(desc->maj_num, nullptr, major_buf, sizeof(major_buf));
+                H5Eget_msg(desc->min_num, nullptr, minor_buf, sizeof(minor_buf));
+#else
+                char *major_buf = H5Eget_major(desc->maj_num);
+                char *minor_buf = H5Eget_minor(desc->min_num);
+#endif
 
                 std::string err_string("(");
-                err_string += major_err;
+                err_string += major_buf;
                 err_string += ") ";
-                err_string += minor_err;
+                err_string += minor_buf;
 
-                free(major_err);
-                free(minor_err);
+#if !H5_VERSION_GE(2,0,0)
+                free(major_buf);
+                free(minor_buf);
+#endif
 
                 *ss << err_string << std::endl;
                 return 0;

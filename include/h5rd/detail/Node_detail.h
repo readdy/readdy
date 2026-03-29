@@ -67,7 +67,7 @@ inline bool h5rd::Node<Container>::exists(const std::string &name) const {
 template<typename Container>
 inline h5rd::Group h5rd::Node<Container>::getSubgroup(const std::string &name) {
     auto id = me()->id();
-    auto gid = H5Gopen(id, name.data(), H5P_DEFAULT);
+    auto gid = H5Gopen2(id, name.data(), H5P_DEFAULT);
     if (gid < 0) {
         throw Exception("Could not open subgroup " + name + "!");
     }
@@ -88,7 +88,7 @@ inline h5rd::group_info h5rd::Node<Container>::info() const {
 
 template<typename Container>
 inline std::shared_ptr<h5rd::DataSet> h5rd::Node<Container>::getDataset(const std::string &name, const DataSetType &memoryType, const DataSetType &fileType) {
-    auto dsId = H5Dopen(me()->id(), name.data(), H5P_DEFAULT);
+    auto dsId = H5Dopen2(me()->id(), name.data(), H5P_DEFAULT);
     if (dsId < 0) {
         throw Exception("Could not open dataset " + name + "! (error code " + std::to_string(dsId) + ")");
     }
@@ -114,7 +114,7 @@ inline std::vector<std::string> h5rd::Node<Container>::subElements(H5O_type_t ty
     for (std::size_t i = 0; i < group_info.nlinks; ++i) {
         H5O_info_t oinfo{};
         herr_t errorCode;
-        # if H5_VERS_MAJOR >= 1 && H5_VERS_MINOR >= 12
+        # if H5_VERSION_GE(1,12,0)
         errorCode = H5Oget_info_by_idx(id, ".", H5_INDEX_NAME, H5_ITER_INC, i, &oinfo, H5O_INFO_BASIC, H5P_DEFAULT);
         # else
         errorCode = H5Oget_info_by_idx(id, ".", H5_INDEX_NAME, H5_ITER_INC, i, &oinfo, H5P_DEFAULT);
@@ -155,14 +155,14 @@ inline h5rd::Group h5rd::Node<Container>::createGroup(const std::string &path) {
     auto id = me()->id();
     Group group(path, me()->parentFile());
     if (util::groupExists(id, path)) {
-        if ((group._hid = H5Gopen(id, path.c_str(), H5P_DEFAULT)) < 0) {
+        if ((group._hid = H5Gopen2(id, path.c_str(), H5P_DEFAULT)) < 0) {
             throw Exception("Failed to open group (" + path + ")");
         }
         return group;
     } else {
         LinkCreatePropertyList plist(me()->parentFile());
         plist.set_create_intermediate_group();
-        if ((group._hid = H5Gcreate(id, path.c_str(), plist.id(), H5P_DEFAULT, H5P_DEFAULT)) < 0) {
+        if ((group._hid = H5Gcreate2(id, path.c_str(), plist.id(), H5P_DEFAULT, H5P_DEFAULT)) < 0) {
             throw Exception("Failed to create group with intermediates (" + path + ")");
         }
         return group;
@@ -278,8 +278,8 @@ h5rd::Node<Container>::createDataSet(const std::string &name, const h5rd::dimens
             propertyList.activate_filter(f);
         }
 
-        auto _hid = H5Dcreate(me()->id(), name.c_str(), fileType.id(),
-                              fileSpace.id(), H5P_DEFAULT, propertyList.id(), H5P_DEFAULT);
+        auto _hid = H5Dcreate2(me()->id(), name.c_str(), fileType.id(),
+                               fileSpace.id(), H5P_DEFAULT, propertyList.id(), H5P_DEFAULT);
         if (_hid < 0) {
             throw Exception("Error on creating data set " + std::to_string(_hid));
         } else {
@@ -332,8 +332,8 @@ h5rd::Node<Container>::createVLENDataSet(const std::string &name, const h5rd::di
             propertyList.activate_filter(f);
         }
 
-        hid = H5Dcreate(me()->id(), name.c_str(), vlenFileType.id(),
-                        fileSpace.id(), H5P_DEFAULT, propertyList.id(), H5P_DEFAULT);
+        hid = H5Dcreate2(me()->id(), name.c_str(), vlenFileType.id(),
+                         fileSpace.id(), H5P_DEFAULT, propertyList.id(), H5P_DEFAULT);
         if (hid < 0) {
             throw Exception("Error on creating vlen data set " + std::to_string(hid));
         }
@@ -371,7 +371,7 @@ h5rd::Node<Container>::readSelection(const std::string &dataSetName, std::vector
                                      DataSetType *fileType,
                                      dimensions offsets, dimensions stride, dimensions count, dimensions block) {
 
-    auto hid = H5Dopen(me()->id(), dataSetName.data(), H5P_DEFAULT);
+    auto hid = H5Dopen2(me()->id(), dataSetName.data(), H5P_DEFAULT);
     DataSpace fileSpace(me()->parentFile(), H5Dget_space(hid));
 
     if (count.empty()) {
@@ -419,7 +419,7 @@ inline void h5rd::Node<Container>::read(const std::string &dataSetName, std::vec
     //blosc_compression::initialize();
 
     const auto n_array_dims = 1 + util::n_dims<T>::value;
-    auto hid = H5Dopen(me()->id(), dataSetName.data(), H5P_DEFAULT);
+    auto hid = H5Dopen2(me()->id(), dataSetName.data(), H5P_DEFAULT);
 
     DataSpace fileSpace(me()->parentFile(), H5Dget_space(hid));
 
@@ -545,7 +545,11 @@ inline void h5rd::Node<Container>::readVLENSelection(const std::string &dataSetN
                 auto ptr = static_cast<T *>(container.p);
                 array.emplace_back(ptr, ptr + container.len);
             }
+#if H5_VERSION_GE(1,12,0)
+            H5Treclaim(vlenMemoryType.id(), memorySpace.id(), H5P_DEFAULT, rawData.get());
+#else
             H5Dvlen_reclaim(vlenMemoryType.id(), memorySpace.id(), H5P_DEFAULT, rawData.get());
+#endif
         }
     }
     H5Dclose(hid);
@@ -593,7 +597,11 @@ inline void h5rd::Node<Container>::readVLEN(const std::string &dataSetName, std:
             auto ptr = static_cast<T *>(container.p);
             *arrayIt = std::vector<T>(ptr, ptr + container.len);
         }
+#if H5_VERSION_GE(1,12,0)
+        H5Treclaim(vlenMemoryType.id(), memorySpace.id(), H5P_DEFAULT, rawData.get());
+#else
         H5Dvlen_reclaim(vlenMemoryType.id(), memorySpace.id(), H5P_DEFAULT, rawData.get());
+#endif
     }
 
 
