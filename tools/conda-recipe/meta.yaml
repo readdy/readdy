@@ -19,9 +19,9 @@ requirements:
     - h5py
     - hdf5
     - bzip2
-    - numpy >=1.14
-    - zlib 1.2.*
-    - blosc 1.21.1
+    - numpy >=1.21
+    - zlib
+    - blosc >=1.21
 
   build:
     - {{ compiler('c') }}
@@ -36,13 +36,13 @@ requirements:
   run:
     - intel-openmp # [osx]
     - python
-    - numpy >=1.14
+    - numpy >=1.21
     - h5py
     - pint
     - tqdm
     - hdf5
     - fmt >=11.2.0
-    - zlib 1.2.*
+    - zlib
 
 test:
   imports:

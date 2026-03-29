@@ -102,6 +102,12 @@ mark_as_advanced(READDY_VERSION)
 set(READDY_BUILD_STRING "dev" CACHE STRING "Build string")
 mark_as_advanced(READDY_BUILD_STRING)
 
+# scikit-build-core passes the version from pyproject.toml
+if(DEFINED SKBUILD_PROJECT_VERSION)
+    set(READDY_VERSION "${SKBUILD_PROJECT_VERSION}" CACHE STRING "The version" FORCE)
+    set(READDY_BUILD_STRING "" CACHE STRING "Build string" FORCE)
+endif()
+
 message(STATUS "====================================================")
 message(STATUS "CMake configure for readdy version ${READDY_VERSION}-${READDY_BUILD_STRING}")
 message(STATUS "====================================================")
@@ -116,8 +122,14 @@ if(APPLE)
     SET(CMAKE_CXX_STANDARD_REQUIRED OFF)
 endif()
 
-# always build readdy as shared lib
-SET(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libs" FORCE)
+# Build readdy as shared lib by default; static for wheel builds
+# (the static lib gets linked into the pybind11 module)
+if(DEFINED SKBUILD_PLATLIB_DIR)
+    SET(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libs" FORCE)
+    SET(CMAKE_POSITION_INDEPENDENT_CODE ON)
+else()
+    SET(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libs" FORCE)
+endif()
 
 # dir vars
 SET(READDY_GLOBAL_DIR "${PROJECT_SOURCE_DIR}")
@@ -267,7 +279,10 @@ if(READDY_INSTALL_HEADERS)
             FILES_MATCHING PATTERN "*.h*"
     )
 endif()
-install(TARGETS ${READDY_PROJECT_NAME} LIBRARY DESTINATION "${INSTALL_DIR}/lib")
+# For non-wheel builds, install the shared library
+if(NOT DEFINED SKBUILD_PLATLIB_DIR)
+    install(TARGETS ${READDY_PROJECT_NAME} LIBRARY DESTINATION "${INSTALL_DIR}/lib")
+endif()
 
 #####################################
 #                                   #

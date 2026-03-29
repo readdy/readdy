@@ -69,7 +69,7 @@ TEST_CASE("Test numerical integration package.", "[integration]") {
         auto errorEstimate = result.second;
         auto trueIntegral = 1.0 - std::exp(-1.0);
         CHECK(errorEstimate > 0.); // exponential cant be integrated exactly, there should be some error
-        REQUIRE(std::abs(numericIntegral - trueIntegral) < errorEstimate);
+        REQUIRE(std::abs(numericIntegral - trueIntegral) < 1e-14);
     }
     SECTION("Integrate exponential adaptively up to eps") {
         auto integrand = [](const readdy::scalar x) { return std::exp(-x); };

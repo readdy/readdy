@@ -38,11 +38,14 @@ from .api.trajectory import Trajectory
 from .api.conf import ureg as units
 
 try:
-    from ._version import get_versions
-    __version__ = get_versions()['version']
-    del get_versions
-except:
-    __version__ = 'dev'
+    from importlib.metadata import version
+    __version__ = version("readdy")
+except Exception:
+    try:
+        from ._version import get_versions
+        __version__ = get_versions()['version']
+    except Exception:
+        __version__ = "dev"
 
 # elevate reaction recipe
 from .api.topology_reactions import StructuralReactionRecipe
