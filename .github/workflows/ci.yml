@@ -1,47 +1,124 @@
-name: readdy_ci
+name: CI
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [master]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
 
 jobs:
-  readdy_ci:
-    name: readdy_ci (${{ matrix.python-version }}, ${{ matrix.os }})
+  test-cpp:
+    name: C++ tests (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: ['ubuntu-latest', 'macos-10.15']
-        python-version: ['3.7', '3.8', '3.9'] # used to build the conda package (not for miniconda installation)
+        os: [ubuntu-24.04, macos-14, macos-13]
     steps:
-      - uses: actions/checkout@v2
-      - if: github.repository == 'readdy/readdy' && github.event_name == 'push'
-        run: |
-          git fetch --prune --unshallow
-          git fetch --depth=1 origin +refs/tags/*:refs/tags/*
-      - run: echo GITHUB_REF ${{github.ref}}
-      - run: echo "$(git describe --always)"
-      - run: echo "$(git tag)"
-      - uses: conda-incubator/setup-miniconda@v2
+      - uses: actions/checkout@v4
         with:
-          auto-update-conda: true
-          python-version: 3.7
-      - name: prepare conda
-        shell: bash -l {0}
+          submodules: recursive
+
+      - name: Install dependencies (Linux)
+        if: runner.os == 'Linux'
         run: |
-          conda config --set always_yes true
-          conda config --add channels conda-forge
-          conda config --set quiet true
-          conda install conda-build conda-verify pip
-      - name: build readdy conda package
-        shell: bash -l {0}
-        run: conda build tools/conda-recipe --python=${{ matrix.python-version }}
-      - name: upload conda package
-        shell: bash -l {0}
-        # only upload conda package when origin and on pushes
-        if: github.repository == 'readdy/readdy' && github.event_name == 'push'
+          sudo apt-get update
+          sudo apt-get install -y libhdf5-dev libblosc-dev
+
+      - name: Install dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: brew install hdf5 c-blosc
+
+      - name: Configure
+        run: |
+          cmake -B build \
+            -DREADDY_CREATE_TEST_TARGET=ON \
+            -DREADDY_BUILD_PYTHON_WRAPPER=OFF \
+            -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build -j$(nproc 2>/dev/null || sysctl -n hw.ncpu)
+
+      - name: Test
         env:
-          BINSTAR_TOKEN: ${{ secrets.BINSTAR_TOKEN }}
-          PYTHON_VERSION: ${{ matrix.python-version }}
-        # if GITHUB_REF has tag then package is uploaded to normal anaconda channel
-        # if GITHUB_REF points to master then package is uploaded to dev channel
+          READDY_N_CORES: 2
         run: |
-          tools/ci/github/upload_conda_package.sh
+          cd build
+          ./readdy/test/runUnitTests --durations yes
+          ./kernels/singlecpu/test/runUnitTests_singlecpu --durations yes
+          ./kernels/cpu/test/runUnitTests_cpu --durations yes
+
+  build-wheels:
+    name: Wheels (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-14, macos-13]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - uses: pypa/cibuildwheel@v3.4
+        env:
+          CIBW_BUILD: "cp310-* cp311-* cp312-* cp313-*"
+          CIBW_SKIP: "*-win32 *-musllinux_*"
+          # manylinux_2_28 uses AlmaLinux 8 with dnf
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
+          CIBW_BEFORE_ALL_LINUX: >
+            dnf install -y epel-release &&
+            dnf install -y hdf5-devel blosc-devel
+          CIBW_BEFORE_ALL_MACOS: brew install hdf5 c-blosc
+          CIBW_REPAIR_WHEEL_COMMAND_LINUX: >
+            auditwheel repair -w {dest_dir} {wheel}
+          CIBW_REPAIR_WHEEL_COMMAND_MACOS: >
+            delocate-wheel -w {dest_dir} {wheel}
+          CIBW_TEST_REQUIRES: pytest
+          CIBW_TEST_COMMAND: >
+            python -c "import readdy; print(readdy.__version__)"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-${{ matrix.os }}
+          path: wheelhouse/*.whl
+
+  build-sdist:
+    name: Source distribution
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - run: pipx run build --sdist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sdist
+          path: dist/*.tar.gz
+
+  publish:
+    name: Publish to PyPI
+    needs: [test-cpp, build-wheels, build-sdist]
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: wheels-*
+          merge-multiple: true
+          path: dist/
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: sdist
+          path: dist/
+
+      - uses: pypa/gh-action-pypi-publish@release/v1
