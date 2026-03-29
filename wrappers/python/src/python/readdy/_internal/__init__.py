@@ -41,6 +41,11 @@ from .readdybinding.common.util import *
 
 register_blosc_hdf5_plugin()
 
+try:
+    import hdf5plugin  # noqa: F401 -- registers blosc filter for h5py
+except ImportError:
+    pass
+
 kernel_provider = KernelProvider.get()
 if putils.get_readdy_plugin_dir().exists():
     kernel_provider.load_from_dir(str(putils.get_readdy_plugin_dir()))
